@@ -2,6 +2,7 @@ package com.phaiffertech.platform.core.user.service;
 
 import com.phaiffertech.platform.core.iam.domain.Role;
 import com.phaiffertech.platform.shared.domain.enums.RoleCode;
+import com.phaiffertech.platform.core.audit.service.AuditableAction;
 import com.phaiffertech.platform.core.iam.repository.RoleRepository;
 import com.phaiffertech.platform.core.iam.domain.UserTenant;
 import com.phaiffertech.platform.core.iam.repository.UserTenantRepository;
@@ -11,14 +12,17 @@ import com.phaiffertech.platform.core.user.dto.UserCreateRequest;
 import com.phaiffertech.platform.core.user.dto.UserResponse;
 import com.phaiffertech.platform.core.user.mapper.UserMapper;
 import com.phaiffertech.platform.shared.exception.ResourceNotFoundException;
-import com.phaiffertech.platform.shared.response.PageResponse;
+import com.phaiffertech.platform.shared.domain.enums.AuditActionType;
+import com.phaiffertech.platform.shared.pagination.PageRequestDto;
+import com.phaiffertech.platform.shared.pagination.PageResponseDto;
+import com.phaiffertech.platform.shared.pagination.PaginationUtils;
 import com.phaiffertech.platform.shared.tenancy.TenantContext;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -44,6 +48,7 @@ public class UserService {
     }
 
     @Transactional
+    @AuditableAction(action = AuditActionType.CREATE, entity = "user")
     public UserResponse create(UserCreateRequest request) {
         UUID tenantId = TenantContext.getRequiredTenantId();
 
@@ -76,10 +81,13 @@ public class UserService {
     }
 
     @Transactional(readOnly = true)
-    public PageResponse<UserResponse> list(int page, int size) {
+    public PageResponseDto<UserResponse> list(PageRequestDto pageRequest) {
         UUID tenantId = TenantContext.getRequiredTenantId();
 
-        Page<UserTenant> mappings = userTenantRepository.findAllByTenantIdAndActiveTrue(tenantId, PageRequest.of(page, size));
+        Page<UserTenant> mappings = userTenantRepository.findAllByTenantIdAndActiveTrue(
+                tenantId,
+                PaginationUtils.toPageable(pageRequest, Sort.by(Sort.Direction.ASC, "createdAt"))
+        );
 
         Set<UUID> userIds = mappings.getContent().stream().map(UserTenant::getUserId).collect(Collectors.toSet());
         Set<UUID> roleIds = mappings.getContent().stream().map(UserTenant::getRoleId).collect(Collectors.toSet());
@@ -89,19 +97,15 @@ public class UserService {
         Map<UUID, Role> rolesById = roleRepository.findAllById(roleIds).stream()
                 .collect(Collectors.toMap(Role::getId, role -> role));
 
-        return new PageResponse<>(
-                mappings.getContent().stream().map(mapping -> {
-                    User user = usersById.get(mapping.getUserId());
-                    Role role = rolesById.get(mapping.getRoleId());
-                    if (user == null || role == null) {
-                        return new UserResponse(mapping.getUserId(), "unknown", "unknown", "unknown", false);
-                    }
-                    return UserMapper.toResponse(user, role);
-                }).toList(),
-                mappings.getTotalElements(),
-                mappings.getTotalPages(),
-                mappings.getNumber(),
-                mappings.getSize()
-        );
+        Page<UserResponse> mappedResult = mappings.map(mapping -> {
+            User user = usersById.get(mapping.getUserId());
+            Role role = rolesById.get(mapping.getRoleId());
+            if (user == null || role == null) {
+                return new UserResponse(mapping.getUserId(), "unknown", "unknown", "unknown", false);
+            }
+            return UserMapper.toResponse(user, role);
+        });
+
+        return PaginationUtils.fromPage(mappedResult);
     }
 }

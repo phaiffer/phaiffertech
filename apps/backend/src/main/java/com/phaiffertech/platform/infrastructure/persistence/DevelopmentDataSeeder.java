@@ -79,7 +79,23 @@ public class DevelopmentDataSeeder implements CommandLineRunner {
     }
 
     private void seedPermissions() {
-        List<String> permissions = List.of("TENANT_READ", "TENANT_WRITE", "USER_READ", "USER_WRITE", "MODULE_READ");
+        List<String> permissions = List.of(
+                "TENANT_READ",
+                "TENANT_WRITE",
+                "USER_READ",
+                "USER_WRITE",
+                "MODULE_READ",
+                "crm.contact.read",
+                "crm.contact.create",
+                "crm.contact.update",
+                "crm.contact.delete",
+                "crm.lead.read",
+                "crm.lead.create",
+                "crm.lead.update",
+                "crm.lead.delete",
+                "pet.client.read",
+                "iot.device.read"
+        );
         for (String code : permissions) {
             if (!permissionRepository.existsByCode(code)) {
                 Permission permission = new Permission();

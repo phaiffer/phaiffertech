@@ -4,6 +4,7 @@ import com.phaiffertech.platform.core.auth.service.AuthService;
 import com.phaiffertech.platform.core.auth.dto.AuthTokenResponse;
 import com.phaiffertech.platform.core.auth.dto.AuthenticatedUserResponse;
 import com.phaiffertech.platform.core.auth.dto.LoginRequest;
+import com.phaiffertech.platform.core.auth.dto.LogoutRequest;
 import com.phaiffertech.platform.core.auth.dto.RefreshRequest;
 import com.phaiffertech.platform.shared.response.ApiResponse;
 import jakarta.validation.Valid;
@@ -31,6 +32,12 @@ public class AuthController {
     @PostMapping("/refresh")
     public ApiResponse<AuthTokenResponse> refresh(@Valid @RequestBody RefreshRequest request) {
         return ApiResponse.success(authService.refresh(request));
+    }
+
+    @PostMapping("/logout")
+    public ApiResponse<Void> logout(@Valid @RequestBody LogoutRequest request) {
+        authService.logout(request);
+        return ApiResponse.success(null);
     }
 
     @GetMapping("/me")

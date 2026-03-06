@@ -15,7 +15,8 @@ public final class AuthMapper {
                 user.getEmail(),
                 user.getFullName(),
                 principal.tenantId(),
-                principal.role()
+                principal.role(),
+                principal.permissions()
         );
     }
 
@@ -25,7 +26,8 @@ public final class AuthMapper {
                 principal.email(),
                 fullName,
                 principal.tenantId(),
-                principal.role()
+                principal.role(),
+                principal.permissions()
         );
     }
 }

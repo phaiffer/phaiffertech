@@ -1,15 +1,19 @@
 package com.phaiffertech.platform.modules.iot.device.service;
 
+import com.phaiffertech.platform.core.audit.service.AuditableAction;
 import com.phaiffertech.platform.modules.iot.device.domain.IotDevice;
-import com.phaiffertech.platform.modules.iot.device.repository.IotDeviceRepository;
 import com.phaiffertech.platform.modules.iot.device.dto.IotDeviceCreateRequest;
 import com.phaiffertech.platform.modules.iot.device.dto.IotDeviceResponse;
 import com.phaiffertech.platform.modules.iot.device.mapper.IotDeviceMapper;
-import com.phaiffertech.platform.shared.response.PageResponse;
+import com.phaiffertech.platform.modules.iot.device.repository.IotDeviceRepository;
+import com.phaiffertech.platform.shared.domain.enums.AuditActionType;
+import com.phaiffertech.platform.shared.pagination.PageRequestDto;
+import com.phaiffertech.platform.shared.pagination.PageResponseDto;
+import com.phaiffertech.platform.shared.pagination.PaginationUtils;
 import com.phaiffertech.platform.shared.tenancy.TenantContext;
 import java.util.UUID;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,6 +27,7 @@ public class IotDeviceService {
     }
 
     @Transactional
+    @AuditableAction(action = AuditActionType.CREATE, entity = "iot_device")
     public IotDeviceResponse create(IotDeviceCreateRequest request) {
         UUID tenantId = TenantContext.getRequiredTenantId();
 
@@ -37,16 +42,14 @@ public class IotDeviceService {
     }
 
     @Transactional(readOnly = true)
-    public PageResponse<IotDeviceResponse> list(int page, int size) {
+    public PageResponseDto<IotDeviceResponse> list(PageRequestDto pageRequest) {
         UUID tenantId = TenantContext.getRequiredTenantId();
-        Page<IotDevice> result = repository.findAllByTenantId(tenantId, PageRequest.of(page, size));
+        Page<IotDeviceResponse> result = repository.findAllByTenantIdAndSearch(
+                        tenantId,
+                        pageRequest.normalizedSearch(),
+                        PaginationUtils.toPageable(pageRequest, Sort.by(Sort.Direction.DESC, "createdAt")))
+                .map(IotDeviceMapper::toResponse);
 
-        return new PageResponse<>(
-                result.getContent().stream().map(IotDeviceMapper::toResponse).toList(),
-                result.getTotalElements(),
-                result.getTotalPages(),
-                result.getNumber(),
-                result.getSize()
-        );
+        return PaginationUtils.fromPage(result);
     }
 }

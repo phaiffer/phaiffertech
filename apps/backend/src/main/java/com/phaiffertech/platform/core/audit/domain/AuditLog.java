@@ -4,16 +4,20 @@ import com.phaiffertech.platform.shared.domain.base.BaseTenantEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
+import java.util.UUID;
 
 @Entity
 @Table(name = "audit_logs")
 public class AuditLog extends BaseTenantEntity {
 
+    @Column(name = "user_id", columnDefinition = "char(36)")
+    private UUID userId;
+
     @Column(name = "action", nullable = false, length = 80)
     private String action;
 
     @Column(name = "entity_name", nullable = false, length = 120)
-    private String entityName;
+    private String entity;
 
     @Column(name = "entity_id", length = 36)
     private String entityId;
@@ -24,6 +28,14 @@ public class AuditLog extends BaseTenantEntity {
     @Column(name = "ip_address", length = 64)
     private String ipAddress;
 
+    public UUID getUserId() {
+        return userId;
+    }
+
+    public void setUserId(UUID userId) {
+        this.userId = userId;
+    }
+
     public String getAction() {
         return action;
     }
@@ -32,12 +44,12 @@ public class AuditLog extends BaseTenantEntity {
         this.action = action;
     }
 
-    public String getEntityName() {
-        return entityName;
+    public String getEntity() {
+        return entity;
     }
 
-    public void setEntityName(String entityName) {
-        this.entityName = entityName;
+    public void setEntity(String entity) {
+        this.entity = entity;
     }
 
     public String getEntityId() {

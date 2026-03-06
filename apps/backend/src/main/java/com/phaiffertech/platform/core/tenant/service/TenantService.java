@@ -5,9 +5,13 @@ import com.phaiffertech.platform.core.tenant.dto.TenantCreateRequest;
 import com.phaiffertech.platform.core.tenant.dto.TenantResponse;
 import com.phaiffertech.platform.core.tenant.mapper.TenantMapper;
 import com.phaiffertech.platform.core.tenant.repository.TenantRepository;
-import com.phaiffertech.platform.shared.response.PageResponse;
+import com.phaiffertech.platform.core.audit.service.AuditableAction;
+import com.phaiffertech.platform.shared.domain.enums.AuditActionType;
+import com.phaiffertech.platform.shared.pagination.PageRequestDto;
+import com.phaiffertech.platform.shared.pagination.PageResponseDto;
+import com.phaiffertech.platform.shared.pagination.PaginationUtils;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,6 +25,7 @@ public class TenantService {
     }
 
     @Transactional
+    @AuditableAction(action = AuditActionType.CREATE, entity = "tenant")
     public TenantResponse create(TenantCreateRequest request) {
         if (tenantRepository.existsByCodeIgnoreCase(request.code())) {
             throw new IllegalArgumentException("Tenant code already exists.");
@@ -36,14 +41,11 @@ public class TenantService {
     }
 
     @Transactional(readOnly = true)
-    public PageResponse<TenantResponse> list(int page, int size) {
-        Page<Tenant> result = tenantRepository.findAll(PageRequest.of(page, size));
-        return new PageResponse<>(
-                result.getContent().stream().map(TenantMapper::toResponse).toList(),
-                result.getTotalElements(),
-                result.getTotalPages(),
-                result.getNumber(),
-                result.getSize()
-        );
+    public PageResponseDto<TenantResponse> list(PageRequestDto pageRequest) {
+        Page<TenantResponse> result = tenantRepository.findAll(
+                        PaginationUtils.toPageable(pageRequest, Sort.by(Sort.Direction.ASC, "name")))
+                .map(TenantMapper::toResponse);
+
+        return PaginationUtils.fromPage(result);
     }
 }

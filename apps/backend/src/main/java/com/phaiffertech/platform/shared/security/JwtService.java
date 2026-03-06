@@ -6,8 +6,11 @@ import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.Collection;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import javax.crypto.SecretKey;
 import org.springframework.stereotype.Service;
@@ -33,7 +36,8 @@ public class JwtService {
                 .claims(Map.of(
                         "tenantId", user.tenantId().toString(),
                         "role", user.role(),
-                        "email", user.email()
+                        "email", user.email(),
+                        "permissions", user.permissions()
                 ))
                 .signWith(signingKey())
                 .compact();
@@ -54,11 +58,13 @@ public class JwtService {
 
     public AuthenticatedUser toAuthenticatedUser(String token) {
         Claims claims = parseClaims(token);
+        Set<String> permissions = extractPermissions(claims);
         return new AuthenticatedUser(
                 UUID.fromString(claims.getSubject()),
                 UUID.fromString(claims.get("tenantId", String.class)),
                 claims.get("email", String.class),
-                claims.get("role", String.class)
+                claims.get("role", String.class),
+                permissions
         );
     }
 
@@ -69,5 +75,21 @@ public class JwtService {
     private SecretKey signingKey() {
         byte[] keyBytes = Decoders.BASE64.decode(jwtProperties.getSecret());
         return Keys.hmacShaKeyFor(keyBytes);
+    }
+
+    private Set<String> extractPermissions(Claims claims) {
+        Object permissions = claims.get("permissions");
+        if (!(permissions instanceof Collection<?> values)) {
+            return Set.of();
+        }
+
+        Set<String> resolved = new HashSet<>();
+        for (Object value : values) {
+            if (value instanceof String permission && !permission.isBlank()) {
+                resolved.add(permission);
+            }
+        }
+
+        return Set.copyOf(resolved);
     }
 }

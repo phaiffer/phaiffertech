@@ -1,15 +1,19 @@
 package com.phaiffertech.platform.modules.pet.client.service;
 
+import com.phaiffertech.platform.core.audit.service.AuditableAction;
 import com.phaiffertech.platform.modules.pet.client.domain.PetClient;
-import com.phaiffertech.platform.modules.pet.client.repository.PetClientRepository;
 import com.phaiffertech.platform.modules.pet.client.dto.PetClientCreateRequest;
 import com.phaiffertech.platform.modules.pet.client.dto.PetClientResponse;
 import com.phaiffertech.platform.modules.pet.client.mapper.PetClientMapper;
-import com.phaiffertech.platform.shared.response.PageResponse;
+import com.phaiffertech.platform.modules.pet.client.repository.PetClientRepository;
+import com.phaiffertech.platform.shared.domain.enums.AuditActionType;
+import com.phaiffertech.platform.shared.pagination.PageRequestDto;
+import com.phaiffertech.platform.shared.pagination.PageResponseDto;
+import com.phaiffertech.platform.shared.pagination.PaginationUtils;
 import com.phaiffertech.platform.shared.tenancy.TenantContext;
 import java.util.UUID;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,6 +27,7 @@ public class PetClientService {
     }
 
     @Transactional
+    @AuditableAction(action = AuditActionType.CREATE, entity = "pet_client")
     public PetClientResponse create(PetClientCreateRequest request) {
         UUID tenantId = TenantContext.getRequiredTenantId();
 
@@ -37,16 +42,14 @@ public class PetClientService {
     }
 
     @Transactional(readOnly = true)
-    public PageResponse<PetClientResponse> list(int page, int size) {
+    public PageResponseDto<PetClientResponse> list(PageRequestDto pageRequest) {
         UUID tenantId = TenantContext.getRequiredTenantId();
-        Page<PetClient> result = repository.findAllByTenantId(tenantId, PageRequest.of(page, size));
+        Page<PetClientResponse> result = repository.findAllByTenantIdAndSearch(
+                        tenantId,
+                        pageRequest.normalizedSearch(),
+                        PaginationUtils.toPageable(pageRequest, Sort.by(Sort.Direction.DESC, "createdAt")))
+                .map(PetClientMapper::toResponse);
 
-        return new PageResponse<>(
-                result.getContent().stream().map(PetClientMapper::toResponse).toList(),
-                result.getTotalElements(),
-                result.getTotalPages(),
-                result.getNumber(),
-                result.getSize()
-        );
+        return PaginationUtils.fromPage(result);
     }
 }

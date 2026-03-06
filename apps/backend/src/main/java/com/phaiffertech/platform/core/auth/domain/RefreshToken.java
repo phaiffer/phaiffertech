@@ -14,8 +14,8 @@ public class RefreshToken extends BaseTenantEntity {
     @Column(name = "user_id", nullable = false, columnDefinition = "char(36)")
     private UUID userId;
 
-    @Column(name = "token", nullable = false, unique = true, length = 255)
-    private String token;
+    @Column(name = "token_hash", nullable = false, unique = true, length = 64)
+    private String tokenHash;
 
     @Column(name = "expires_at", nullable = false)
     private Instant expiresAt;
@@ -31,12 +31,12 @@ public class RefreshToken extends BaseTenantEntity {
         this.userId = userId;
     }
 
-    public String getToken() {
-        return token;
+    public String getTokenHash() {
+        return tokenHash;
     }
 
-    public void setToken(String token) {
-        this.token = token;
+    public void setTokenHash(String tokenHash) {
+        this.tokenHash = tokenHash;
     }
 
     public Instant getExpiresAt() {

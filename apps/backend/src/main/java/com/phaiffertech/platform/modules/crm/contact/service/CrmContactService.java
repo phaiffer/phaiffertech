@@ -1,15 +1,19 @@
 package com.phaiffertech.platform.modules.crm.contact.service;
 
+import com.phaiffertech.platform.core.audit.service.AuditableAction;
 import com.phaiffertech.platform.modules.crm.contact.domain.CrmContact;
-import com.phaiffertech.platform.modules.crm.contact.repository.CrmContactRepository;
 import com.phaiffertech.platform.modules.crm.contact.dto.CrmContactCreateRequest;
 import com.phaiffertech.platform.modules.crm.contact.dto.CrmContactResponse;
 import com.phaiffertech.platform.modules.crm.contact.mapper.CrmContactMapper;
-import com.phaiffertech.platform.shared.response.PageResponse;
+import com.phaiffertech.platform.modules.crm.contact.repository.CrmContactRepository;
+import com.phaiffertech.platform.shared.domain.enums.AuditActionType;
+import com.phaiffertech.platform.shared.pagination.PageRequestDto;
+import com.phaiffertech.platform.shared.pagination.PageResponseDto;
+import com.phaiffertech.platform.shared.pagination.PaginationUtils;
 import com.phaiffertech.platform.shared.tenancy.TenantContext;
 import java.util.UUID;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,6 +27,7 @@ public class CrmContactService {
     }
 
     @Transactional
+    @AuditableAction(action = AuditActionType.CREATE, entity = "crm_contact")
     public CrmContactResponse create(CrmContactCreateRequest request) {
         UUID tenantId = TenantContext.getRequiredTenantId();
 
@@ -38,16 +43,14 @@ public class CrmContactService {
     }
 
     @Transactional(readOnly = true)
-    public PageResponse<CrmContactResponse> list(int page, int size) {
+    public PageResponseDto<CrmContactResponse> list(PageRequestDto pageRequest) {
         UUID tenantId = TenantContext.getRequiredTenantId();
-        Page<CrmContact> result = repository.findAllByTenantId(tenantId, PageRequest.of(page, size));
+        Page<CrmContactResponse> result = repository.findAllByTenantIdAndSearch(
+                        tenantId,
+                        pageRequest.normalizedSearch(),
+                        PaginationUtils.toPageable(pageRequest, Sort.by(Sort.Direction.DESC, "createdAt")))
+                .map(CrmContactMapper::toResponse);
 
-        return new PageResponse<>(
-                result.getContent().stream().map(CrmContactMapper::toResponse).toList(),
-                result.getTotalElements(),
-                result.getTotalPages(),
-                result.getNumber(),
-                result.getSize()
-        );
+        return PaginationUtils.fromPage(result);
     }
 }

@@ -4,9 +4,13 @@ import com.phaiffertech.platform.shared.domain.base.BaseTenantEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.Where;
 
 @Entity
 @Table(name = "pet_clients")
+@SQLDelete(sql = "UPDATE pet_clients SET deleted_at = CURRENT_TIMESTAMP WHERE id = ?")
+@Where(clause = "deleted_at IS NULL")
 public class PetClient extends BaseTenantEntity {
 
     @Column(name = "full_name", nullable = false, length = 150)

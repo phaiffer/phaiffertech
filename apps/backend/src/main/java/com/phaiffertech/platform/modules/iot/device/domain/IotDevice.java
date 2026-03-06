@@ -5,9 +5,13 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
 import java.time.Instant;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.Where;
 
 @Entity
 @Table(name = "iot_devices")
+@SQLDelete(sql = "UPDATE iot_devices SET deleted_at = CURRENT_TIMESTAMP WHERE id = ?")
+@Where(clause = "deleted_at IS NULL")
 public class IotDevice extends BaseTenantEntity {
 
     @Column(name = "name", nullable = false, length = 120)
