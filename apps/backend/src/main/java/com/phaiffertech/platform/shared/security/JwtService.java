@@ -36,6 +36,7 @@ public class JwtService {
                 .claims(Map.of(
                         "tenantId", user.tenantId().toString(),
                         "role", user.role(),
+                        "roles", user.roles(),
                         "email", user.email(),
                         "permissions", user.permissions()
                 ))
@@ -58,12 +59,17 @@ public class JwtService {
 
     public AuthenticatedUser toAuthenticatedUser(String token) {
         Claims claims = parseClaims(token);
+        Set<String> roles = extractStringSet(claims, "roles");
+        if (roles.isEmpty()) {
+            roles = Set.of(claims.get("role", String.class));
+        }
         Set<String> permissions = extractPermissions(claims);
         return new AuthenticatedUser(
                 UUID.fromString(claims.getSubject()),
                 UUID.fromString(claims.get("tenantId", String.class)),
                 claims.get("email", String.class),
                 claims.get("role", String.class),
+                roles,
                 permissions
         );
     }
@@ -78,15 +84,19 @@ public class JwtService {
     }
 
     private Set<String> extractPermissions(Claims claims) {
-        Object permissions = claims.get("permissions");
-        if (!(permissions instanceof Collection<?> values)) {
+        return extractStringSet(claims, "permissions");
+    }
+
+    private Set<String> extractStringSet(Claims claims, String claimKey) {
+        Object claim = claims.get(claimKey);
+        if (!(claim instanceof Collection<?> values)) {
             return Set.of();
         }
 
         Set<String> resolved = new HashSet<>();
         for (Object value : values) {
-            if (value instanceof String permission && !permission.isBlank()) {
-                resolved.add(permission);
+            if (value instanceof String text && !text.isBlank()) {
+                resolved.add(text);
             }
         }
 

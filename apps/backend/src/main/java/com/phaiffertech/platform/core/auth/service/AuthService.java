@@ -9,11 +9,9 @@ import com.phaiffertech.platform.core.auth.dto.LogoutRequest;
 import com.phaiffertech.platform.core.auth.dto.RefreshRequest;
 import com.phaiffertech.platform.core.auth.mapper.AuthMapper;
 import com.phaiffertech.platform.core.auth.repository.RefreshTokenRepository;
-import com.phaiffertech.platform.core.iam.domain.Role;
 import com.phaiffertech.platform.core.iam.domain.UserTenant;
-import com.phaiffertech.platform.core.iam.repository.PermissionRepository;
-import com.phaiffertech.platform.core.iam.repository.RoleRepository;
 import com.phaiffertech.platform.core.iam.repository.UserTenantRepository;
+import com.phaiffertech.platform.core.iam.service.TenantAuthorizationResolver;
 import com.phaiffertech.platform.core.tenant.domain.Tenant;
 import com.phaiffertech.platform.core.tenant.repository.TenantRepository;
 import com.phaiffertech.platform.core.user.domain.User;
@@ -26,7 +24,6 @@ import com.phaiffertech.platform.shared.security.JwtProperties;
 import com.phaiffertech.platform.shared.security.JwtService;
 import java.time.Instant;
 import java.util.Map;
-import java.util.Set;
 import java.util.UUID;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -38,8 +35,7 @@ public class AuthService {
     private final TenantRepository tenantRepository;
     private final UserRepository userRepository;
     private final UserTenantRepository userTenantRepository;
-    private final RoleRepository roleRepository;
-    private final PermissionRepository permissionRepository;
+    private final TenantAuthorizationResolver tenantAuthorizationResolver;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final JwtProperties jwtProperties;
@@ -52,8 +48,7 @@ public class AuthService {
             TenantRepository tenantRepository,
             UserRepository userRepository,
             UserTenantRepository userTenantRepository,
-            RoleRepository roleRepository,
-            PermissionRepository permissionRepository,
+            TenantAuthorizationResolver tenantAuthorizationResolver,
             PasswordEncoder passwordEncoder,
             JwtService jwtService,
             JwtProperties jwtProperties,
@@ -65,8 +60,7 @@ public class AuthService {
         this.tenantRepository = tenantRepository;
         this.userRepository = userRepository;
         this.userTenantRepository = userTenantRepository;
-        this.roleRepository = roleRepository;
-        this.permissionRepository = permissionRepository;
+        this.tenantAuthorizationResolver = tenantAuthorizationResolver;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
         this.jwtProperties = jwtProperties;
@@ -91,16 +85,14 @@ public class AuthService {
         UserTenant userTenant = userTenantRepository.findByTenantIdAndUserIdAndActiveTrue(tenant.getId(), user.getId())
                 .orElseThrow(() -> new ForbiddenOperationException("User has no active access to tenant."));
 
-        Role role = roleRepository.findById(userTenant.getRoleId())
-                .orElseThrow(() -> new ResourceNotFoundException("Role mapping not found."));
-
-        Set<String> permissions = permissionRepository.findPermissionCodesByRoleId(role.getId());
+        TenantAuthorizationResolver.ResolvedTenantAuthorization resolved = tenantAuthorizationResolver.resolve(userTenant);
         AuthenticatedUser principal = new AuthenticatedUser(
                 user.getId(),
                 tenant.getId(),
                 user.getEmail(),
-                role.getCode(),
-                permissions
+                resolved.primaryRole(),
+                resolved.roles(),
+                resolved.permissions()
         );
 
         AuthTokenResponse response = createTokenResponse(principal, user.getFullName());
@@ -111,7 +103,7 @@ public class AuthService {
                 "LOGIN",
                 "auth",
                 user.getId().toString(),
-                Map.of("role", role.getCode())
+                Map.of("roles", resolved.roles())
         );
 
         return response;
@@ -138,19 +130,17 @@ public class AuthService {
                         storedToken.getUserId())
                 .orElseThrow(() -> new ForbiddenOperationException("User access revoked for tenant."));
 
-        Role role = roleRepository.findById(userTenant.getRoleId())
-                .orElseThrow(() -> new ResourceNotFoundException("Role mapping not found."));
-
         storedToken.setRevokedAt(Instant.now());
         refreshTokenRepository.save(storedToken);
 
-        Set<String> permissions = permissionRepository.findPermissionCodesByRoleId(role.getId());
+        TenantAuthorizationResolver.ResolvedTenantAuthorization resolved = tenantAuthorizationResolver.resolve(userTenant);
         AuthenticatedUser principal = new AuthenticatedUser(
                 user.getId(),
                 storedToken.getTenantId(),
                 user.getEmail(),
-                role.getCode(),
-                permissions
+                resolved.primaryRole(),
+                resolved.roles(),
+                resolved.permissions()
         );
 
         AuthTokenResponse response = createTokenResponse(principal, user.getFullName());
@@ -161,7 +151,7 @@ public class AuthService {
                 "REFRESH_TOKEN",
                 "refresh_tokens",
                 storedToken.getId().toString(),
-                Map.of("rotated", true)
+                Map.of("rotated", true, "roles", resolved.roles())
         );
 
         return response;

@@ -10,7 +10,8 @@ public class PermissionAuthorizationService {
             return false;
         }
 
-        if ("PLATFORM_ADMIN".equals(user.role())) {
+        if ((user.roles() != null && user.roles().contains("PLATFORM_ADMIN"))
+                || "PLATFORM_ADMIN".equals(user.role())) {
             return true;
         }
 

@@ -7,6 +7,8 @@ import com.phaiffertech.platform.shared.domain.enums.RoleCode;
 import com.phaiffertech.platform.core.iam.repository.RoleRepository;
 import com.phaiffertech.platform.core.iam.domain.UserTenant;
 import com.phaiffertech.platform.core.iam.repository.UserTenantRepository;
+import com.phaiffertech.platform.core.iam.domain.UserTenantRole;
+import com.phaiffertech.platform.core.iam.repository.UserTenantRoleRepository;
 import com.phaiffertech.platform.core.module.domain.ModuleDefinition;
 import com.phaiffertech.platform.core.module.repository.ModuleDefinitionRepository;
 import com.phaiffertech.platform.core.module.domain.TenantModule;
@@ -32,6 +34,7 @@ public class DevelopmentDataSeeder implements CommandLineRunner {
     private final TenantRepository tenantRepository;
     private final UserRepository userRepository;
     private final UserTenantRepository userTenantRepository;
+    private final UserTenantRoleRepository userTenantRoleRepository;
     private final ModuleDefinitionRepository moduleDefinitionRepository;
     private final TenantModuleRepository tenantModuleRepository;
     private final PasswordEncoder passwordEncoder;
@@ -42,6 +45,7 @@ public class DevelopmentDataSeeder implements CommandLineRunner {
             TenantRepository tenantRepository,
             UserRepository userRepository,
             UserTenantRepository userTenantRepository,
+            UserTenantRoleRepository userTenantRoleRepository,
             ModuleDefinitionRepository moduleDefinitionRepository,
             TenantModuleRepository tenantModuleRepository,
             PasswordEncoder passwordEncoder
@@ -51,6 +55,7 @@ public class DevelopmentDataSeeder implements CommandLineRunner {
         this.tenantRepository = tenantRepository;
         this.userRepository = userRepository;
         this.userTenantRepository = userTenantRepository;
+        this.userTenantRoleRepository = userTenantRoleRepository;
         this.moduleDefinitionRepository = moduleDefinitionRepository;
         this.tenantModuleRepository = tenantModuleRepository;
         this.passwordEncoder = passwordEncoder;
@@ -164,13 +169,23 @@ public class DevelopmentDataSeeder implements CommandLineRunner {
                     return userRepository.save(user);
                 });
 
-        if (!userTenantRepository.existsByTenantIdAndUserId(defaultTenant.getId(), adminUser.getId())) {
+        UserTenant userTenant = userTenantRepository.findByTenantIdAndUserIdAndActiveTrue(defaultTenant.getId(), adminUser.getId())
+                .orElse(null);
+
+        if (userTenant == null) {
             UserTenant link = new UserTenant();
             link.setTenantId(defaultTenant.getId());
             link.setUserId(adminUser.getId());
             link.setRoleId(platformAdmin.getId());
             link.setActive(true);
-            userTenantRepository.save(link);
+            userTenant = userTenantRepository.save(link);
+        }
+
+        if (!userTenantRoleRepository.existsByUserTenantIdAndRoleId(userTenant.getId(), platformAdmin.getId())) {
+            UserTenantRole tenantRole = new UserTenantRole();
+            tenantRole.setUserTenantId(userTenant.getId());
+            tenantRole.setRoleId(platformAdmin.getId());
+            userTenantRoleRepository.save(tenantRole);
         }
     }
 }

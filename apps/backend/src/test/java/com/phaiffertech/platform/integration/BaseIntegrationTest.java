@@ -13,6 +13,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
@@ -36,6 +37,9 @@ public abstract class BaseIntegrationTest {
 
     @Autowired
     protected TestRestTemplate restTemplate;
+
+    @Autowired
+    protected JdbcTemplate jdbcTemplate;
 
     @DynamicPropertySource
     static void configureDatasource(DynamicPropertyRegistry registry) {
@@ -105,6 +109,15 @@ public abstract class BaseIntegrationTest {
 
     protected String randomSearchMarker() {
         return UUID.randomUUID().toString().substring(0, 8);
+    }
+
+    protected void executeSql(String sql, Object... args) {
+        jdbcTemplate.update(sql, args);
+    }
+
+    protected int countRows(String sql, Object... args) {
+        Integer count = jdbcTemplate.queryForObject(sql, Integer.class, args);
+        return count == null ? 0 : count;
     }
 
     private ResponseEntity<JsonNode> exchange(

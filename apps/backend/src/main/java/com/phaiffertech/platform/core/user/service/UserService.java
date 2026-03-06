@@ -5,7 +5,10 @@ import com.phaiffertech.platform.shared.domain.enums.RoleCode;
 import com.phaiffertech.platform.core.audit.service.AuditableAction;
 import com.phaiffertech.platform.core.iam.repository.RoleRepository;
 import com.phaiffertech.platform.core.iam.domain.UserTenant;
+import com.phaiffertech.platform.core.iam.domain.UserTenantRole;
 import com.phaiffertech.platform.core.iam.repository.UserTenantRepository;
+import com.phaiffertech.platform.core.iam.repository.UserTenantRoleRepository;
+import com.phaiffertech.platform.core.iam.service.TenantAuthorizationResolver;
 import com.phaiffertech.platform.core.user.domain.User;
 import com.phaiffertech.platform.core.user.repository.UserRepository;
 import com.phaiffertech.platform.core.user.dto.UserCreateRequest;
@@ -32,17 +35,23 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final UserTenantRepository userTenantRepository;
+    private final UserTenantRoleRepository userTenantRoleRepository;
+    private final TenantAuthorizationResolver tenantAuthorizationResolver;
     private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
 
     public UserService(
             UserRepository userRepository,
             UserTenantRepository userTenantRepository,
+            UserTenantRoleRepository userTenantRoleRepository,
+            TenantAuthorizationResolver tenantAuthorizationResolver,
             RoleRepository roleRepository,
             PasswordEncoder passwordEncoder
     ) {
         this.userRepository = userRepository;
         this.userTenantRepository = userTenantRepository;
+        this.userTenantRoleRepository = userTenantRoleRepository;
+        this.tenantAuthorizationResolver = tenantAuthorizationResolver;
         this.roleRepository = roleRepository;
         this.passwordEncoder = passwordEncoder;
     }
@@ -75,7 +84,14 @@ public class UserService {
         userTenant.setUserId(user.getId());
         userTenant.setRoleId(role.getId());
         userTenant.setActive(true);
-        userTenantRepository.save(userTenant);
+        userTenant = userTenantRepository.save(userTenant);
+
+        if (!userTenantRoleRepository.existsByUserTenantIdAndRoleId(userTenant.getId(), role.getId())) {
+            UserTenantRole userTenantRole = new UserTenantRole();
+            userTenantRole.setUserTenantId(userTenant.getId());
+            userTenantRole.setRoleId(role.getId());
+            userTenantRoleRepository.save(userTenantRole);
+        }
 
         return UserMapper.toResponse(user, role);
     }
@@ -90,20 +106,18 @@ public class UserService {
         );
 
         Set<UUID> userIds = mappings.getContent().stream().map(UserTenant::getUserId).collect(Collectors.toSet());
-        Set<UUID> roleIds = mappings.getContent().stream().map(UserTenant::getRoleId).collect(Collectors.toSet());
 
         Map<UUID, User> usersById = userRepository.findAllById(userIds).stream()
                 .collect(Collectors.toMap(User::getId, user -> user));
-        Map<UUID, Role> rolesById = roleRepository.findAllById(roleIds).stream()
-                .collect(Collectors.toMap(Role::getId, role -> role));
 
         Page<UserResponse> mappedResult = mappings.map(mapping -> {
             User user = usersById.get(mapping.getUserId());
-            Role role = rolesById.get(mapping.getRoleId());
-            if (user == null || role == null) {
+            if (user == null) {
                 return new UserResponse(mapping.getUserId(), "unknown", "unknown", "unknown", false);
             }
-            return UserMapper.toResponse(user, role);
+
+            String primaryRole = tenantAuthorizationResolver.resolvePrimaryRole(mapping);
+            return new UserResponse(user.getId(), user.getEmail(), user.getFullName(), primaryRole, user.isActive());
         });
 
         return PaginationUtils.fromPage(mappedResult);

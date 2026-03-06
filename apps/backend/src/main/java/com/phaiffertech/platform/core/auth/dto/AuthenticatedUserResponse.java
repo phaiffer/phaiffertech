@@ -9,6 +9,7 @@ public record AuthenticatedUserResponse(
         String fullName,
         UUID tenantId,
         String role,
+        Set<String> roles,
         Set<String> permissions
 ) {
 }
