@@ -1,0 +1,29 @@
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.iml
+
+# Env
+.env
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Node
+node_modules/
+.next/
+out/
+
+# Java
+**/target/
+**/.mvn/wrapper/maven-wrapper.jar
+
+# Misc
+coverage/

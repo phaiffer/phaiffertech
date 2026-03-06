@@ -1,0 +1,14 @@
+package com.phaiffertech.platform.core.user.repository;
+
+import com.phaiffertech.platform.core.user.domain.User;
+
+import java.util.Optional;
+import java.util.UUID;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+public interface UserRepository extends JpaRepository<User, UUID> {
+
+    Optional<User> findByEmailIgnoreCase(String email);
+
+    boolean existsByEmailIgnoreCase(String email);
+}
