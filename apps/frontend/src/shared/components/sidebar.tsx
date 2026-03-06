@@ -8,7 +8,9 @@ const items = [
   { href: '/dashboard', label: 'Dashboard' },
   { href: '/tenants', label: 'Tenants' },
   { href: '/users', label: 'Users' },
-  { href: '/crm', label: 'CRM' },
+  { href: '/crm', label: 'CRM Home' },
+  { href: '/crm/contacts', label: 'CRM Contacts' },
+  { href: '/crm/leads', label: 'CRM Leads' },
   { href: '/pet', label: 'Pet' },
   { href: '/iot', label: 'IoT' },
   { href: '/settings', label: 'Settings' }
@@ -25,9 +27,11 @@ export function Sidebar() {
         <p className="mt-1 text-lg font-semibold">SaaS Control Plane</p>
       </div>
 
-      <nav className="flex-1 space-y-1">
+      <nav className="flex-1 space-y-1 overflow-y-auto">
         {items.map((item) => {
-          const active = pathname === item.href;
+          const active = item.href === '/crm'
+            ? pathname === '/crm'
+            : pathname === item.href || pathname.startsWith(`${item.href}/`);
           return (
             <Link
               key={item.href}
