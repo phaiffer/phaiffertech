@@ -26,14 +26,15 @@ Next.js admin console for the unified platform.
 - `src/shared/auth`
   - `useAuth`
   - `ProtectedRoute`
-- `src/shared/permissions`
-  - `hasPermission`
+- `src/shared/auth`
   - `usePermissions`
-  - `PermissionGate`
+  - `PermissionGuard`
+- `src/shared/permissions`
+  - `hasPermission` / `hasAnyPermission` (low-level helpers)
 - `src/shared/services`
   - centralized API client usage
 - `src/shared/ui`
-  - `DataTable`, `Pagination`, `SearchInput`, `FormInput`, `FormSelect`, `ConfirmDialog`
+  - `DataTable`, `Pagination`, `SearchBar`, `FormInput`, `FormSelect`, `ConfirmDialog`
 
 ## Pages
 

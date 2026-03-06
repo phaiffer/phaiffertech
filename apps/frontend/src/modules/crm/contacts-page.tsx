@@ -11,9 +11,9 @@ import { DataTable, DataTableColumn } from '@/shared/ui/data-table';
 import { FormSelect } from '@/shared/ui/form-select';
 import { PageTitle } from '@/shared/ui/page-title';
 import { Pagination } from '@/shared/ui/pagination';
-import { SearchInput } from '@/shared/ui/search-input';
+import { SearchBar } from '@/shared/ui/search-bar';
 import { ConfirmDialog } from '@/shared/ui/confirm-dialog';
-import { PermissionGate } from '@/shared/permissions/permission-gate';
+import { PermissionGuard } from '@/shared/auth/PermissionGuard';
 
 const pageSize = 10;
 const statusOptions = [
@@ -104,16 +104,16 @@ export function CrmContactsPage() {
       header: 'Ações',
       render: (contact) => (
         <div className="flex gap-2">
-          <PermissionGate permission="crm.contact.update">
+          <PermissionGuard permission="crm.contact.update">
             <Link
               href={`/crm/contacts/${contact.id}`}
               className="rounded-lg border border-slate-300 px-2 py-1 text-xs font-medium text-slate-700"
             >
               Editar
             </Link>
-          </PermissionGate>
+          </PermissionGuard>
 
-          <PermissionGate permission="crm.contact.delete">
+          <PermissionGuard permission="crm.contact.delete">
             <button
               type="button"
               onClick={() => setDeleteCandidate(contact)}
@@ -121,14 +121,14 @@ export function CrmContactsPage() {
             >
               Excluir
             </button>
-          </PermissionGate>
+          </PermissionGuard>
         </div>
       )
     }
   ];
 
   return (
-    <PermissionGate
+    <PermissionGuard
       permission="crm.contact.read"
       fallback={<div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">Você não possui permissão para visualizar contatos.</div>}
     >
@@ -139,7 +139,7 @@ export function CrmContactsPage() {
         />
 
         <div className="grid gap-3 rounded-xl border border-slate-200 bg-white p-4 md:grid-cols-[1fr_180px_auto_auto]">
-          <SearchInput
+          <SearchBar
             value={searchInput}
             onChange={setSearchInput}
             placeholder="Nome, email, empresa"
@@ -171,14 +171,14 @@ export function CrmContactsPage() {
         </div>
 
         <div className="flex justify-end">
-          <PermissionGate permission="crm.contact.create">
+          <PermissionGuard permission="crm.contact.create">
             <Link
               href="/crm/contacts/new"
               className="rounded-lg bg-action px-4 py-2 text-sm font-medium text-white"
             >
               Novo contato
             </Link>
-          </PermissionGate>
+          </PermissionGuard>
         </div>
 
         {error ? (
@@ -209,6 +209,6 @@ export function CrmContactsPage() {
           onConfirm={handleConfirmDelete}
         />
       </div>
-    </PermissionGate>
+    </PermissionGuard>
   );
 }

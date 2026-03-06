@@ -8,7 +8,7 @@ import { ApiClientError } from '@/shared/lib/http';
 import { FormInput } from '@/shared/ui/form-input';
 import { FormSelect } from '@/shared/ui/form-select';
 import { PageTitle } from '@/shared/ui/page-title';
-import { PermissionGate } from '@/shared/permissions/permission-gate';
+import { PermissionGuard } from '@/shared/auth/PermissionGuard';
 
 const statusOptions = [
   { value: 'ACTIVE', label: 'ACTIVE' },
@@ -94,7 +94,7 @@ export function ContactFormPage({ contactId }: ContactFormPageProps) {
   }
 
   return (
-    <PermissionGate
+    <PermissionGuard
       permission={requiredPermission}
       fallback={<div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">Você não possui permissão para esta ação.</div>}
     >
@@ -133,6 +133,6 @@ export function ContactFormPage({ contactId }: ContactFormPageProps) {
         {error ? <div className="rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{error}</div> : null}
         {success ? <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">{success}</div> : null}
       </div>
-    </PermissionGate>
+    </PermissionGuard>
   );
 }

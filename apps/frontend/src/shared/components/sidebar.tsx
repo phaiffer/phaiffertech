@@ -1,7 +1,7 @@
 'use client';
 
 import { useAuth } from '@/shared/auth/use-auth';
-import { usePermissions } from '@/shared/permissions/use-permissions';
+import { usePermissions } from '@/shared/auth/usePermissions';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
@@ -20,13 +20,13 @@ const items = [
 export function Sidebar() {
   const pathname = usePathname();
   const { session, signOut } = useAuth();
-  const { canAny } = usePermissions();
+  const { hasAnyPermission } = usePermissions();
 
   const visibleItems = items.filter((item) => {
     if (!item.anyOf || item.anyOf.length === 0) {
       return true;
     }
-    return canAny(item.anyOf);
+    return hasAnyPermission(item.anyOf);
   });
 
   return (
