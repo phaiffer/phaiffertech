@@ -49,12 +49,14 @@ Backend package root is fixed as:
 
 - Modular monolith (`shared`, `core`, `modules`, `infrastructure`).
 - Multi-tenancy with `tenant_id` and `TenantContext` enforcement.
+- Tenant-scoped authorization model with `user_tenants` + `user_tenant_roles`.
 - JWT auth with refresh token hash + rotation + logout revocation.
 - Granular permission checks via `@RequirePermission("...")`.
 - Automatic audit logs for CRUD/auth events.
 - Soft delete support (`deleted_at`) on key business entities.
-- Shared pagination contract (`page`, `size`, `sort`, `search`).
+- Shared pagination contract (`page`, `size`, `sort`, `direction`, `search`) returning `items`/`totalItems` with legacy compatibility.
 - CRM v1 with full Contacts and Leads workflows.
+- IoT split between control plane (device/admin operations) and data plane (telemetry ingestion/processing).
 
 ## Flyway Migrations
 
@@ -68,6 +70,7 @@ Current migrations:
 - `V6__seed_permissions.sql`
 - `V7__refresh_token_security.sql`
 - `V8__crm_extended_schema.sql`
+- `V9__tenant_role_model.sql`
 
 ## Main Endpoints (`/api/v1`)
 
@@ -94,6 +97,7 @@ Current migrations:
 ### Pet / IoT
 - `GET|POST /pet/clients`
 - `GET|POST /iot/devices`
+- `GET|POST /iot/telemetry`
 
 Swagger UI:
 - `http://localhost:8080/swagger-ui.html`

@@ -21,11 +21,13 @@ Spring Boot backend for the modular multi-tenant SaaS platform.
 ## Key Capabilities
 
 - Multi-tenancy with `TenantContext` and tenant isolation filter.
+- Tenant-scoped role resolution with `user_tenants` + `user_tenant_roles`.
 - Refresh token hashing + rotation + logout revocation.
 - Permission annotation `@RequirePermission`.
 - Automatic audit logging for auth and CRUD actions.
-- Shared pagination (`page`, `size`, `sort`, `search`).
+- Shared pagination (`page`, `size`, `sort`, `direction`, `search`) with `items`/`totalItems` response fields.
 - CRM v1 contacts/leads CRUD.
+- IoT control plane/data plane split with telemetry ingestion abstractions.
 
 ## Flyway Migrations
 
@@ -37,6 +39,7 @@ Spring Boot backend for the modular multi-tenant SaaS platform.
 - `V6__seed_permissions.sql`
 - `V7__refresh_token_security.sql`
 - `V8__crm_extended_schema.sql`
+- `V9__tenant_role_model.sql`
 
 ## Development Seed
 

@@ -49,7 +49,16 @@ com.phaiffertech.platform
 │   ├── pet
 │   │   └── client
 │   └── iot
-│       └── device
+│       ├── alarm
+│       ├── control
+│       ├── device
+│       ├── ingestion
+│       ├── maintenance
+│       ├── monitoring
+│       ├── processing
+│       ├── report
+│       ├── sensor
+│       └── telemetry
 └── infrastructure
     ├── docs
     ├── persistence
@@ -72,9 +81,11 @@ com.phaiffertech.platform
 
 ### Authorization
 - Role-based authorities remain active (`ROLE_*`).
+- Roles are resolved per tenant through `user_tenants` + `user_tenant_roles`.
 - Granular permissions introduced with `@RequirePermission("...")`.
 - Permission inheritance via `role_permissions`.
 - Permissions are loaded at login/refresh and embedded in JWT claims.
+- JWT carries `user_id`, `tenant_id`, `role`, `roles`, and `permissions`.
 
 Examples:
 - `crm.contact.read`
@@ -112,15 +123,36 @@ Key business entities (CRM/Pet/IoT) use:
 Shared classes under `shared/pagination`:
 - `PageRequestDto`
 - `PageResponseDto`
+- `PageMapper`
 - `PaginationUtils`
 
 Standard query params:
 - `page`
 - `size`
 - `sort`
+- `direction`
 - `search`
 
-Applied on list endpoints across core/modules.
+Standard response shape:
+- `items`
+- `page`
+- `size`
+- `totalItems`
+- `totalPages`
+
+Legacy fields (`content`, `totalElements`) are still returned for compatibility.
+
+Applied on list endpoints across core/modules, including CRM contacts/leads, pet clients and IoT devices.
+
+## IoT Control/Data Plane Split
+
+- Control plane: administrative flows (`device`, `alarm`, and related operational modules).
+- Data plane: telemetry/ingestion (`telemetry`, `ingestion`, `processing`).
+- Abstractions:
+  - `TelemetryWriter`
+  - `TelemetryReader`
+  - `AlarmEvaluator`
+- Current persistence implementation is MySQL (`MySqlTelemetryStore`), preserving future storage swap flexibility.
 
 ## CRM Module v1
 
@@ -145,6 +177,7 @@ Current migrations:
 - `V6__seed_permissions.sql`
 - `V7__refresh_token_security.sql`
 - `V8__crm_extended_schema.sql`
+- `V9__tenant_role_model.sql`
 
 `V1` was preserved for backward compatibility. New capabilities were added incrementally.
 
@@ -156,8 +189,11 @@ Integration tests are under:
 Coverage includes:
 - auth (`login`, `refresh`, `me`)
 - multi-tenant isolation
+- tenant role resolution and permission inheritance
+- standardized pagination contract validation
 - CRM contact CRUD
 - IoT device create/list
+- IoT telemetry ingestion/list + alarm evaluation
 - Pet client create
 
 Test runtime uses Testcontainers + MySQL, with automatic skip when Docker is unavailable/incompatible.
