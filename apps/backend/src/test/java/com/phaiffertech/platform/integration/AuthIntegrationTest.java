@@ -1,5 +1,7 @@
 package com.phaiffertech.platform.integration;
 
+import com.phaiffertech.platform.support.AbstractIntegrationTest;
+
 import com.fasterxml.jackson.databind.JsonNode;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
@@ -9,7 +11,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-class AuthIntegrationTest extends BaseIntegrationTest {
+class AuthIntegrationTest extends AbstractIntegrationTest {
 
     @Test
     void loginShouldReturnAccessAndRefreshTokensWithPermissions() {

@@ -1,9 +1,10 @@
-package com.phaiffertech.platform.integration;
+package com.phaiffertech.platform.support;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import java.util.Map;
 import java.util.UUID;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
@@ -15,22 +16,11 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.DynamicPropertyRegistry;
-import org.springframework.test.context.DynamicPropertySource;
-import org.testcontainers.containers.MySQLContainer;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
 
-@Testcontainers(disabledWithoutDocker = true)
+@Tag("integration")
 @ActiveProfiles("test")
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-public abstract class BaseIntegrationTest {
-
-    @Container
-    static final MySQLContainer<?> MYSQL = new MySQLContainer<>("mysql:8.0.36")
-            .withDatabaseName("platform_db")
-            .withUsername("platform_user")
-            .withPassword("platform_pass");
+public abstract class AbstractIntegrationTest extends IntegrationTestContainersConfig {
 
     @LocalServerPort
     private int port;
@@ -41,16 +31,6 @@ public abstract class BaseIntegrationTest {
     @Autowired
     protected JdbcTemplate jdbcTemplate;
 
-    @DynamicPropertySource
-    static void configureDatasource(DynamicPropertyRegistry registry) {
-        registry.add("spring.datasource.url", MYSQL::getJdbcUrl);
-        registry.add("spring.datasource.username", MYSQL::getUsername);
-        registry.add("spring.datasource.password", MYSQL::getPassword);
-        registry.add("spring.flyway.enabled", () -> true);
-        registry.add("spring.jpa.hibernate.ddl-auto", () -> "validate");
-        registry.add("app.security.jwt.secret", () -> "ZmFrZV9qd3Rfc2VjcmV0X2Zvcl9kZXZlbG9wbWVudF9vbmx5XzEyMzQ1");
-    }
-
     protected AuthSession loginAsDefaultAdmin() {
         ResponseEntity<JsonNode> response = postPublic("/auth/login", Map.of(
                 "tenantCode", "default",
@@ -59,15 +39,7 @@ public abstract class BaseIntegrationTest {
         ));
 
         Assertions.assertEquals(200, response.getStatusCode().value());
-        JsonNode body = requireBody(response);
-        JsonNode data = body.path("data");
-
-        return new AuthSession(
-                data.path("accessToken").asText(),
-                data.path("refreshToken").asText(),
-                data.path("user").path("tenantId").asText(),
-                data.path("user").path("userId").asText()
-        );
+        return sessionFromLoginPayload(requireBody(response).path("data"));
     }
 
     protected ResponseEntity<JsonNode> get(String path, AuthSession session) {
@@ -118,6 +90,15 @@ public abstract class BaseIntegrationTest {
     protected int countRows(String sql, Object... args) {
         Integer count = jdbcTemplate.queryForObject(sql, Integer.class, args);
         return count == null ? 0 : count;
+    }
+
+    protected AuthSession sessionFromLoginPayload(JsonNode data) {
+        return new AuthSession(
+                data.path("accessToken").asText(),
+                data.path("refreshToken").asText(),
+                data.path("user").path("tenantId").asText(),
+                data.path("user").path("userId").asText()
+        );
     }
 
     private ResponseEntity<JsonNode> exchange(

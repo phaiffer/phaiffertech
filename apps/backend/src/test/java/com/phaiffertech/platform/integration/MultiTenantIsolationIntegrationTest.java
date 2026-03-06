@@ -1,5 +1,7 @@
 package com.phaiffertech.platform.integration;
 
+import com.phaiffertech.platform.support.AbstractIntegrationTest;
+
 import com.fasterxml.jackson.databind.JsonNode;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
@@ -7,7 +9,7 @@ import org.springframework.http.ResponseEntity;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-class MultiTenantIsolationIntegrationTest extends BaseIntegrationTest {
+class MultiTenantIsolationIntegrationTest extends AbstractIntegrationTest {
 
     @Test
     void shouldBlockAccessWhenTenantHeaderDoesNotMatchAuthenticatedTenant() {

@@ -1,5 +1,7 @@
 package com.phaiffertech.platform.integration;
 
+import com.phaiffertech.platform.support.AbstractIntegrationTest;
+
 import com.fasterxml.jackson.databind.JsonNode;
 import java.util.Map;
 import java.util.UUID;
@@ -9,7 +11,7 @@ import org.springframework.http.ResponseEntity;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-class TenantRoleResolutionIntegrationTest extends BaseIntegrationTest {
+class TenantRoleResolutionIntegrationTest extends AbstractIntegrationTest {
 
     private static final String DEFAULT_TENANT_ID = "11111111-1111-1111-1111-111111111111";
     private static final String DEFAULT_USER_TENANT_ID = "33333333-3333-3333-3333-333333333333";
