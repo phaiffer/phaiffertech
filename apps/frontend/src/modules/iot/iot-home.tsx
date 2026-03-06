@@ -1,6 +1,7 @@
 'use client';
 
 import { FormEvent, useEffect, useState } from 'react';
+import { resolvePageItems } from '@/shared/lib/pagination';
 import { iotService } from '@/shared/services/iot-service';
 import { IotDevice } from '@/shared/types/iot';
 import { PageTitle } from '@/shared/ui/page-title';
@@ -16,7 +17,7 @@ export function IotHome() {
   async function load() {
     try {
       const page = await iotService.listDevices();
-      setDevices(page.content);
+      setDevices(resolvePageItems(page));
       setError(null);
     } catch (err) {
       setError((err as Error).message);

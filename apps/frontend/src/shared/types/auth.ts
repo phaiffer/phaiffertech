@@ -4,6 +4,7 @@ export type AuthenticatedUser = {
   fullName: string;
   tenantId: string;
   role: string;
+  roles?: string[];
   permissions: string[];
 };
 

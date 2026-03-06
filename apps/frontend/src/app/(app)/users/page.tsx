@@ -1,6 +1,7 @@
 'use client';
 
 import { FormEvent, useEffect, useState } from 'react';
+import { resolvePageItems } from '@/shared/lib/pagination';
 import { userService } from '@/shared/services/user-service';
 import { PlatformUser } from '@/shared/types/user';
 import { PageTitle } from '@/shared/ui/page-title';
@@ -21,7 +22,7 @@ export default function UsersPage() {
   async function loadUsers() {
     try {
       const data = await userService.list();
-      setUsers(data.content);
+      setUsers(resolvePageItems(data));
       setError(null);
     } catch (err) {
       setError((err as Error).message);

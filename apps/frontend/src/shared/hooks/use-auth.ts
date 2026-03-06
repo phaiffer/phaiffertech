@@ -1,1 +1,1 @@
-export { useAuth } from '@/shared/components/auth-provider';
+export { useAuth } from '@/shared/auth/use-auth';

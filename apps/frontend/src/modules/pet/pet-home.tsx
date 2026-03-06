@@ -1,6 +1,7 @@
 'use client';
 
 import { FormEvent, useEffect, useState } from 'react';
+import { resolvePageItems } from '@/shared/lib/pagination';
 import { petService } from '@/shared/services/pet-service';
 import { PetClient } from '@/shared/types/pet';
 import { PageTitle } from '@/shared/ui/page-title';
@@ -17,7 +18,7 @@ export function PetHome() {
   async function load() {
     try {
       const page = await petService.listClients();
-      setClients(page.content);
+      setClients(resolvePageItems(page));
       setError(null);
     } catch (err) {
       setError((err as Error).message);

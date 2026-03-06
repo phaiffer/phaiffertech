@@ -1,6 +1,6 @@
 'use client';
 
-import { useAuth } from '@/shared/components/auth-provider';
+import { useAuth } from '@/shared/auth/use-auth';
 import { usePathname, useRouter } from 'next/navigation';
 import { ReactNode, useEffect } from 'react';
 

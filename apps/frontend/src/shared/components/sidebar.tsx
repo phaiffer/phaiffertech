@@ -1,24 +1,33 @@
 'use client';
 
-import { useAuth } from '@/shared/components/auth-provider';
+import { useAuth } from '@/shared/auth/use-auth';
+import { usePermissions } from '@/shared/permissions/use-permissions';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
 const items = [
   { href: '/dashboard', label: 'Dashboard' },
-  { href: '/tenants', label: 'Tenants' },
-  { href: '/users', label: 'Users' },
-  { href: '/crm', label: 'CRM Home' },
-  { href: '/crm/contacts', label: 'CRM Contacts' },
-  { href: '/crm/leads', label: 'CRM Leads' },
-  { href: '/pet', label: 'Pet' },
-  { href: '/iot', label: 'IoT' },
+  { href: '/tenants', label: 'Tenants', anyOf: ['TENANT_READ'] },
+  { href: '/users', label: 'Users', anyOf: ['USER_READ'] },
+  { href: '/crm', label: 'CRM Home', anyOf: ['crm.contact.read', 'crm.lead.read'] },
+  { href: '/crm/contacts', label: 'CRM Contacts', anyOf: ['crm.contact.read'] },
+  { href: '/crm/leads', label: 'CRM Leads', anyOf: ['crm.lead.read'] },
+  { href: '/pet', label: 'Pet', anyOf: ['pet.client.read'] },
+  { href: '/iot', label: 'IoT', anyOf: ['iot.device.read'] },
   { href: '/settings', label: 'Settings' }
 ];
 
 export function Sidebar() {
   const pathname = usePathname();
   const { session, signOut } = useAuth();
+  const { canAny } = usePermissions();
+
+  const visibleItems = items.filter((item) => {
+    if (!item.anyOf || item.anyOf.length === 0) {
+      return true;
+    }
+    return canAny(item.anyOf);
+  });
 
   return (
     <aside className="flex h-screen w-72 flex-col border-r border-slate-200 bg-white/90 px-4 py-5 backdrop-blur">
@@ -28,7 +37,7 @@ export function Sidebar() {
       </div>
 
       <nav className="flex-1 space-y-1 overflow-y-auto">
-        {items.map((item) => {
+        {visibleItems.map((item) => {
           const active = item.href === '/crm'
             ? pathname === '/crm'
             : pathname === item.href || pathname.startsWith(`${item.href}/`);

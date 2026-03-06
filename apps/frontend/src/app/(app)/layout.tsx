@@ -1,12 +1,12 @@
 'use client';
 
-import { AuthGuard } from '@/shared/components/auth-guard';
+import { ProtectedRoute } from '@/shared/auth/protected-route';
 import { AppShell } from '@/shared/components/app-shell';
 
 export default function PrivateLayout({ children }: { children: React.ReactNode }) {
   return (
-    <AuthGuard>
+    <ProtectedRoute>
       <AppShell>{children}</AppShell>
-    </AuthGuard>
+    </ProtectedRoute>
   );
 }

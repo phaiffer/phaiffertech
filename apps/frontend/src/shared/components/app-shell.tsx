@@ -2,7 +2,7 @@
 
 import { ReactNode } from 'react';
 import { Sidebar } from '@/shared/components/sidebar';
-import { useAuth } from '@/shared/components/auth-provider';
+import { useAuth } from '@/shared/auth/use-auth';
 
 export function AppShell({ children }: { children: ReactNode }) {
   const { session } = useAuth();

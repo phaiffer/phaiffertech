@@ -1,6 +1,7 @@
 'use client';
 
 import { FormEvent, useEffect, useState } from 'react';
+import { resolvePageItems } from '@/shared/lib/pagination';
 import { crmService } from '@/shared/services/crm-service';
 import { CrmContact } from '@/shared/types/crm';
 import { PageTitle } from '@/shared/ui/page-title';
@@ -17,7 +18,7 @@ export function CrmHome() {
   async function load() {
     try {
       const page = await crmService.listContacts();
-      setContacts(page.content);
+      setContacts(resolvePageItems(page));
       setError(null);
     } catch (err) {
       setError((err as Error).message);

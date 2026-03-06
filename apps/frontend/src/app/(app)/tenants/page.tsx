@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { resolvePageItems } from '@/shared/lib/pagination';
 import { tenantService } from '@/shared/services/tenant-service';
 import { Tenant } from '@/shared/types/tenant';
 import { PageTitle } from '@/shared/ui/page-title';
@@ -13,7 +14,7 @@ export default function TenantsPage() {
   useEffect(() => {
     tenantService
       .list()
-      .then((page) => setTenants(page.content))
+      .then((page) => setTenants(resolvePageItems(page)))
       .catch((err: Error) => setError(err.message));
   }, []);
 

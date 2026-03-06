@@ -5,8 +5,10 @@ export type ApiEnvelope<T> = {
 };
 
 export type PageResponse<T> = {
-  content: T[];
-  totalElements: number;
+  items?: T[];
+  content?: T[];
+  totalItems?: number;
+  totalElements?: number;
   totalPages: number;
   page: number;
   size: number;
