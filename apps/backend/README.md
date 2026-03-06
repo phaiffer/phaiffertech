@@ -82,6 +82,7 @@ mvn -Dgroups=integration test
 Test support base classes:
 - `src/test/java/com/phaiffertech/platform/support/IntegrationTestContainersConfig.java`
 - `src/test/java/com/phaiffertech/platform/support/AbstractIntegrationTest.java`
+- CRM integration suite: `src/test/java/com/phaiffertech/platform/integration/crm`
 
 Important:
 - Integration tests require Docker.
