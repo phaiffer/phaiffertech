@@ -1,17 +1,16 @@
-package com.phaiffertech.platform.modules.crm.contact.dto;
+package com.phaiffertech.platform.modules.crm.lead.dto;
 
 import java.time.Instant;
 import java.util.UUID;
 
-public record CrmContactResponse(
+public record CrmLeadResponse(
         UUID id,
-        String firstName,
-        String lastName,
+        String name,
         String email,
         String phone,
-        String company,
+        String source,
         String status,
-        UUID ownerUserId,
+        UUID assignedUserId,
         Instant createdAt,
         Instant updatedAt
 ) {

@@ -4,6 +4,7 @@ import com.phaiffertech.platform.shared.domain.base.BaseTenantEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
+import java.util.UUID;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.Where;
 
@@ -13,11 +14,14 @@ import org.hibernate.annotations.Where;
 @Where(clause = "deleted_at IS NULL")
 public class CrmLead extends BaseTenantEntity {
 
-    @Column(name = "contact_name", nullable = false, length = 150)
-    private String contactName;
+    @Column(name = "name", nullable = false, length = 150)
+    private String name;
 
     @Column(name = "email", length = 180)
     private String email;
+
+    @Column(name = "phone", length = 40)
+    private String phone;
 
     @Column(name = "source", length = 80)
     private String source;
@@ -25,12 +29,15 @@ public class CrmLead extends BaseTenantEntity {
     @Column(name = "status", nullable = false, length = 40)
     private String status = "NEW";
 
-    public String getContactName() {
-        return contactName;
+    @Column(name = "assigned_user_id", columnDefinition = "char(36)")
+    private UUID assignedUserId;
+
+    public String getName() {
+        return name;
     }
 
-    public void setContactName(String contactName) {
-        this.contactName = contactName;
+    public void setName(String name) {
+        this.name = name;
     }
 
     public String getEmail() {
@@ -55,5 +62,21 @@ public class CrmLead extends BaseTenantEntity {
 
     public void setStatus(String status) {
         this.status = status;
+    }
+
+    public UUID getAssignedUserId() {
+        return assignedUserId;
+    }
+
+    public void setAssignedUserId(UUID assignedUserId) {
+        this.assignedUserId = assignedUserId;
+    }
+
+    public String getPhone() {
+        return phone;
+    }
+
+    public void setPhone(String phone) {
+        this.phone = phone;
     }
 }

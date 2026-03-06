@@ -4,6 +4,7 @@ import com.phaiffertech.platform.shared.domain.base.BaseTenantEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
+import java.util.UUID;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.Where;
 
@@ -25,8 +26,14 @@ public class CrmContact extends BaseTenantEntity {
     @Column(name = "phone", length = 40)
     private String phone;
 
+    @Column(name = "company", length = 160)
+    private String company;
+
     @Column(name = "status", nullable = false, length = 40)
     private String status = "ACTIVE";
+
+    @Column(name = "owner_user_id", columnDefinition = "char(36)")
+    private UUID ownerUserId;
 
     public String getFirstName() {
         return firstName;
@@ -66,5 +73,21 @@ public class CrmContact extends BaseTenantEntity {
 
     public void setStatus(String status) {
         this.status = status;
+    }
+
+    public String getCompany() {
+        return company;
+    }
+
+    public void setCompany(String company) {
+        this.company = company;
+    }
+
+    public UUID getOwnerUserId() {
+        return ownerUserId;
+    }
+
+    public void setOwnerUserId(UUID ownerUserId) {
+        this.ownerUserId = ownerUserId;
     }
 }

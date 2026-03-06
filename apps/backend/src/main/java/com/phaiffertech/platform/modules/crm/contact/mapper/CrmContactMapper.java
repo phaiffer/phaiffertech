@@ -15,7 +15,11 @@ public final class CrmContactMapper {
                 contact.getLastName(),
                 contact.getEmail(),
                 contact.getPhone(),
-                contact.getStatus()
+                contact.getCompany(),
+                contact.getStatus(),
+                contact.getOwnerUserId(),
+                contact.getCreatedAt(),
+                contact.getUpdatedAt()
         );
     }
 }
