@@ -1,62 +1,85 @@
 # Backend - Platform API
 
-Backend Spring Boot 3.x (Java 21) em arquitetura **Modular Monolith** com base multi-tenant (single database, shared schema).
+Spring Boot backend for the modular multi-tenant SaaS platform.
 
 ## Stack
 
 - Java 21
 - Spring Boot 3.3.x
+- Maven
 - Spring Security (JWT + RBAC)
 - Spring Data JPA
 - Flyway
 - MySQL 8
 - Springdoc OpenAPI
 
-## Estrutura principal
+## Package Root
+
+- `com.phaiffertech.platform`
+
+## Package Structure
 
 ```text
-src/main/java/com/phaiffertech/platform
+com.phaiffertech.platform
 ├── shared
+│   ├── config
+│   ├── domain
+│   │   ├── base
+│   │   └── enums
+│   ├── exception
+│   ├── response
+│   ├── security
+│   ├── tenancy
+│   └── util
 ├── core
+│   ├── auth
+│   ├── tenant
+│   ├── user
+│   ├── iam
+│   ├── settings
+│   ├── audit
+│   ├── notification
+│   ├── attachment
+│   ├── subscription
+│   └── module
 ├── modules
+│   ├── crm
+│   ├── pet
+│   └── iot
 └── infrastructure
 ```
 
-## Funcionalidades iniciais
+## Flyway Migrations
 
-- Multi-tenancy com `TenantContext` e `tenant_id` em entidades de negócio.
-- Autenticação com JWT access token + refresh token.
-- RBAC inicial com papéis:
-  - `PLATFORM_ADMIN`
-  - `TENANT_OWNER`
-  - `TENANT_ADMIN`
-  - `MANAGER`
-  - `OPERATOR`
-  - `VIEWER`
-  - `CUSTOMER_PORTAL_USER`
-- Endpoints REST em `/api/v1`.
-- Tratamento global de erros.
-- OpenAPI/Swagger em `/swagger-ui.html`.
-- Seed de desenvolvimento (`dev`) com tenant e usuário admin.
+- `V1__init_schema.sql` (preserved for compatibility)
+- `V2__init_crm_schema.sql`
+- `V3__init_pet_schema.sql`
+- `V4__init_iot_schema.sql`
+- `V5__seed_reference_data.sql`
 
-## Usuário de desenvolvimento
+## Development Seed
 
-Com profile `dev` ativo:
+Reference data and default tenant/admin are seeded by Flyway (`V5`) and reinforced by `DevelopmentDataSeeder` in `dev` profile for local safety.
 
+Default credentials:
 - Tenant: `default`
-- E-mail: `admin@local.test`
-- Senha: `Admin@123`
+- Email: `admin@local.test`
+- Password: `Admin@123`
 
-## Rodar localmente (sem Docker)
-
-1. Suba MySQL 8 e ajuste variáveis em `application.yml`/env.
-2. Execute:
+## Run Locally
 
 ```bash
 mvn spring-boot:run
 ```
 
-## Rodar testes
+## Compile and Package
+
+```bash
+mvn -DskipTests compile
+mvn -DskipTests package
+```
+
+## Test
 
 ```bash
 mvn test

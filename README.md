@@ -1,13 +1,13 @@
 # Phaiffer Platform Monorepo
 
-Base inicial de uma plataforma SaaS unificada, multi-tenant e modular, construída para consolidar cenários CRM, Pet e IoT.
+Unified multi-tenant SaaS platform foundation for CRM, Pet and IoT domains.
 
 ## Stack
 
 ### Backend
-
 - Java 21
 - Spring Boot 3.x
+- Maven
 - Spring Security (JWT + RBAC)
 - Spring Data JPA
 - Flyway
@@ -15,130 +15,144 @@ Base inicial de uma plataforma SaaS unificada, multi-tenant e modular, construí
 - OpenAPI/Swagger
 
 ### Frontend
-
 - Next.js (App Router)
 - TypeScript
 - Tailwind CSS
 
-### Infra local
+### Infra
+- Docker Compose
+- MySQL + Backend + Frontend
+- Optional Adminer profile
 
-- Docker Compose (MySQL + Backend + Frontend)
+## Package Root
 
-## Estrutura do monorepo
+Backend package root is fixed as:
+
+- `com.phaiffertech.platform`
+
+## Monorepo Structure
 
 ```text
 .
+├── Makefile
+├── docker-compose.yml
+├── .env.example
 ├── apps/
 │   ├── backend/
 │   └── frontend/
 ├── docs/
-├── infra/
-│   ├── docker/
-│   └── terraform/
-├── .editorconfig
-├── .env.example
-├── .gitignore
-├── docker-compose.yml
-└── README.md
+└── infra/
 ```
 
-## Arquitetura adotada
+## Backend Package Tree (high level)
 
-- **Modular Monolith** no backend.
-- **Multi-tenant** desde o início (single DB/shared schema).
-- `tenant_id` em tabelas de negócio.
-- Módulos desacoplados em `core` e `modules`.
-- Estrutura pronta para evolução e extração futura.
+```text
+com.phaiffertech.platform
+├── PlatformApplication
+├── shared
+├── core
+├── modules
+└── infrastructure
+```
 
-Mais detalhes em [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
+Detailed package organization is documented in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 
-## Entregáveis implementados nesta fase
+## Flyway Strategy
 
-- Monorepo inicial completo.
-- Backend Spring Boot funcional com segurança JWT.
-- Frontend Next.js funcional com login e dashboard.
-- Docker Compose com MySQL, backend e frontend.
-- Migrations Flyway iniciais.
-- Seed dev opcional automatizado.
-- Endpoints core + módulos CRM/Pet/IoT.
+Existing migration `V1__init_schema.sql` was preserved for compatibility with already-initialized environments.
 
-## Endpoints principais (`/api/v1`)
+Incremental migrations were added:
+- `V2__init_crm_schema.sql`
+- `V3__init_pet_schema.sql`
+- `V4__init_iot_schema.sql`
+- `V5__seed_reference_data.sql`
 
-### Saúde
+## Main Endpoints (`/api/v1`)
 
 - `GET /health`
-
-### Auth
-
 - `POST /auth/login`
 - `POST /auth/refresh`
 - `GET /auth/me`
-
-### Core
-
-- `GET /tenants`
-- `POST /tenants`
-- `GET /users`
-- `POST /users`
+- `GET|POST /tenants`
+- `GET|POST /users`
 - `GET /modules`
+- `GET|POST /crm/contacts`
+- `GET|POST /pet/clients`
+- `GET|POST /iot/devices`
 
-### CRM
+Swagger UI:
+- `http://localhost:8080/swagger-ui.html`
 
-- `GET /crm/contacts`
-- `POST /crm/contacts`
+## Quick Start with Docker
 
-### Pet
-
-- `GET /pet/clients`
-- `POST /pet/clients`
-
-### IoT
-
-- `GET /iot/devices`
-- `POST /iot/devices`
-
-## OpenAPI
-
-- Swagger UI: `http://localhost:8080/swagger-ui.html`
-
-## Como executar localmente
-
-1. Copie variáveis:
+1. Copy environment file:
 
 ```bash
 cp .env.example .env
 ```
 
-2. Suba os serviços:
+2. Start stack:
 
 ```bash
-docker compose up --build
+make up
 ```
 
-3. Acesse:
-
+3. Access services:
 - Frontend: `http://localhost:3000`
 - Backend: `http://localhost:8080`
 - Swagger: `http://localhost:8080/swagger-ui.html`
+- Adminer (optional): `http://localhost:8081` (`docker compose --profile tools up -d`)
 
-## Credenciais dev (profile `dev`)
+## Local Development (without Docker)
+
+Backend:
+
+```bash
+make backend
+```
+
+Frontend:
+
+```bash
+make frontend
+```
+
+## Makefile Commands
+
+List all commands:
+
+```bash
+make help
+```
+
+Most used:
+- `make up`
+- `make down`
+- `make status`
+- `make logs`
+- `make build`
+- `make test`
+- `make lint`
+- `make db-shell`
+- `make migrate`
+- `make seed`
+
+## Dev Credentials
 
 - Tenant code: `default`
-- E-mail: `admin@local.test`
-- Senha: `Admin@123`
+- Email: `admin@local.test`
+- Password: `Admin@123`
 
-## Variáveis principais
+## Ports
 
-Definidas em `.env.example`:
+- MySQL: `3306`
+- Backend: `8080`
+- Frontend: `3000`
+- Adminer: `8081` (optional)
 
-- `MYSQL_*`
-- `APP_SECURITY_JWT_*`
-- `APP_CORS_ALLOWED_ORIGINS`
-- `NEXT_PUBLIC_API_URL`
+## Next Recommended Steps
 
-## Próximos passos recomendados
-
-1. Expandir RBAC para permissões finas por recurso.
-2. Adicionar testes de integração (auth, tenant isolation, módulos).
-3. Implementar observabilidade (logs estruturados, métricas, tracing).
-4. Iniciar módulos Terraform para OCI e pipelines CI/CD.
+1. Add integration tests (auth, tenancy isolation, module endpoints).
+2. Expand granular permissions beyond role-level checks.
+3. Add CI pipeline gates for Flyway + backend compile + frontend lint/build.
+4. Add Terraform modules for OCI environments.

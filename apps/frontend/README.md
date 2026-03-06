@@ -1,15 +1,14 @@
 # Frontend - Platform Console
 
-Frontend Next.js (App Router + TypeScript + Tailwind) para operar a plataforma SaaS multi-tenant.
+Next.js admin console for the unified multi-tenant platform.
 
 ## Stack
 
-- Next.js 14
+- Next.js 14 (App Router)
 - TypeScript
-- App Router
 - Tailwind CSS
 
-## Estrutura principal
+## Structure
 
 ```text
 src/
@@ -18,12 +17,12 @@ src/
 └── shared/
 ```
 
-## Funcionalidades iniciais
+## Current Features
 
-- Tela de login integrada ao backend (`/api/v1/auth/login`).
-- Controle de sessão inicial (access/refresh token em localStorage).
-- Layout autenticado com sidebar + header + área de conteúdo.
-- Páginas funcionais:
+- Login integrated with backend JWT auth.
+- Session state (access token, refresh token, authenticated user).
+- Authenticated layout with sidebar + header + content.
+- Pages:
   - Dashboard
   - Tenants
   - Users
@@ -31,13 +30,24 @@ src/
   - Pet
   - IoT
   - Settings
-- Cliente HTTP centralizado com headers de `Authorization` e `X-Tenant-Id`.
+- Centralized HTTP client with `Authorization` and `X-Tenant-Id` headers.
 
-## Rodar localmente (sem Docker)
+## Run Locally
 
 ```bash
 npm install
 npm run dev
 ```
 
-Aplicação em `http://localhost:3000`.
+or from monorepo root:
+
+```bash
+make frontend
+```
+
+## Build and Lint
+
+```bash
+npm run build
+npm run lint
+```

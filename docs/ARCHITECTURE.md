@@ -1,59 +1,140 @@
-# Arquitetura Inicial da Plataforma
+# Platform Architecture
 
-## Visão Geral
+## Overview
 
-A solução foi iniciada como **Modular Monolith** com foco em:
+The project is implemented as a **Modular Monolith** with multi-tenancy from day one.
 
-- Multi-tenancy desde o primeiro commit
-- Segurança centralizada (JWT + RBAC)
-- Estrutura organizada para futura extração de serviços
-- Baixo acoplamento entre domínios
+Key principles:
+- Single database + shared schema
+- `tenant_id` on business tables
+- JWT authentication + RBAC authorization
+- Domain-oriented package boundaries
+- Incremental Flyway migrations
 
-## Estratégia de Multi-tenancy
+## Backend Package Root
 
-- Modelo: **single database + shared schema**
-- `tenant_id` em tabelas de negócio
-- `TenantContext` por request
-- Header suportado: `X-Tenant-Id`
-- Controle anti-cross-tenant via filtros + consultas por tenant
+- `com.phaiffertech.platform`
 
-## Backend
+## Backend Package Tree
 
-### Camadas
+```text
+com.phaiffertech.platform
+├── PlatformApplication
+├── shared
+│   ├── config
+│   ├── domain
+│   │   ├── base
+│   │   └── enums
+│   ├── exception
+│   ├── response
+│   ├── security
+│   ├── tenancy
+│   └── util
+├── core
+│   ├── auth
+│   │   ├── controller
+│   │   ├── dto
+│   │   ├── mapper
+│   │   ├── repository
+│   │   └── service
+│   ├── tenant
+│   │   ├── controller
+│   │   ├── dto
+│   │   ├── domain
+│   │   ├── mapper
+│   │   ├── repository
+│   │   └── service
+│   ├── user
+│   │   ├── controller
+│   │   ├── dto
+│   │   ├── domain
+│   │   ├── mapper
+│   │   ├── repository
+│   │   └── service
+│   ├── iam
+│   │   ├── controller
+│   │   ├── dto
+│   │   ├── domain
+│   │   ├── mapper
+│   │   ├── repository
+│   │   └── service
+│   ├── settings
+│   ├── audit
+│   ├── notification
+│   ├── attachment
+│   ├── subscription
+│   └── module
+├── modules
+│   ├── crm
+│   │   ├── contact
+│   │   ├── lead
+│   │   ├── company
+│   │   ├── deal
+│   │   ├── pipeline
+│   │   ├── task
+│   │   ├── note
+│   │   └── campaign
+│   ├── pet
+│   │   ├── client
+│   │   ├── petprofile
+│   │   ├── appointment
+│   │   ├── servicecatalog
+│   │   ├── product
+│   │   ├── inventory
+│   │   ├── invoice
+│   │   ├── subscription
+│   │   └── portal
+│   └── iot
+│       ├── device
+│       ├── telemetry
+│       ├── alarm
+│       ├── sensor
+│       ├── maintenance
+│       ├── report
+│       ├── monitoring
+│       └── ingestion
+└── infrastructure
+    ├── docs
+    ├── persistence
+    └── web
+```
 
-- `shared`: configuração, segurança, tratamento de erro, resposta padrão
-- `core`: auth, tenant, user, iam, module registry, audit e fundamentos
-- `modules`: domínios CRM, Pet e IoT
-- `infrastructure`: seed e pontos de integração técnica
+## Multi-Tenancy
 
-### Padrões
+- Context holder: `TenantContext`
+- Request filter: `TenantContextFilter`
+- Tenant config: `TenantProperties`
+- Enforced by tenant-scoped repositories and request validation
 
-- REST em `/api/v1`
-- DTOs request/response
-- Paginação nas listagens
-- Flyway para versionamento de banco
-- OpenAPI/Swagger
+## Security
 
-## Frontend
+- Access token: JWT
+- Refresh token: persistent table with revocation support
+- Roles:
+  - `PLATFORM_ADMIN`
+  - `TENANT_OWNER`
+  - `TENANT_ADMIN`
+  - `MANAGER`
+  - `OPERATOR`
+  - `VIEWER`
+  - `CUSTOMER_PORTAL_USER`
 
-### Estrutura
+## Migration Strategy
 
-- `app`: rotas e layouts (público/autenticado)
-- `modules`: telas por domínio (crm, pet, iot)
-- `shared`: serviços, cliente HTTP, sessão, UI e tipos
+To preserve Flyway compatibility with already initialized environments:
+- Existing `V1__init_schema.sql` was preserved.
+- New migrations are incremental:
+  - `V2__init_crm_schema.sql`
+  - `V3__init_pet_schema.sql`
+  - `V4__init_iot_schema.sql`
+  - `V5__seed_reference_data.sql`
 
-### Fluxo de sessão
+## Docker and Makefile
 
-1. Login com `tenantCode`, `email`, `password`
-2. Armazenamento de `accessToken`, `refreshToken` e usuário
-3. Envio automático de:
-   - `Authorization: Bearer <token>`
-   - `X-Tenant-Id: <tenantId>`
+`docker-compose.yml` runs:
+- `mysql`
+- `backend`
+- `frontend`
+- `adminer` (optional profile `tools`)
 
-## Evolução planejada
-
-- Permissões granulares (ABAC/RBAC híbrido)
-- Soft delete consistente por entidade
-- Observabilidade avançada (tracing/metrics/logs estruturados)
-- Terraform para OCI com ambientes dev/stg/prod
-- CI/CD e quality gates (testes, SAST, migrations checks)
+Root `Makefile` standardizes local operations for run/build/test/lint/migrate/logs.
