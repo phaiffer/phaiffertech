@@ -1,6 +1,6 @@
 # Phaiffer Platform Monorepo
 
-Unified multi-tenant SaaS platform foundation for CRM, Pet and IoT domains.
+Unified multi-tenant SaaS platform (CRM, Pet and IoT) built as a modular monolith.
 
 ## Stack
 
@@ -12,7 +12,7 @@ Unified multi-tenant SaaS platform foundation for CRM, Pet and IoT domains.
 - Spring Data JPA
 - Flyway
 - MySQL 8
-- OpenAPI/Swagger
+- Springdoc OpenAPI
 - Testcontainers (integration tests)
 
 ### Frontend
@@ -22,12 +22,11 @@ Unified multi-tenant SaaS platform foundation for CRM, Pet and IoT domains.
 
 ### Infra
 - Docker Compose
-- MySQL + Backend + Frontend (+ optional Adminer profile)
-- Root Makefile for local workflows
+- Root Makefile
 
 ## Package Root
 
-Backend package root is fixed as:
+Backend package root is fixed:
 
 - `com.phaiffertech.platform`
 
@@ -45,22 +44,19 @@ Backend package root is fixed as:
 └── infra/
 ```
 
-## Backend Highlights
+## Platform Highlights
 
-- Modular monolith (`shared`, `core`, `modules`, `infrastructure`).
-- Multi-tenancy with `tenant_id` and `TenantContext` enforcement.
-- Tenant-scoped authorization model with `user_tenants` + `user_tenant_roles`.
-- JWT auth with refresh token hash + rotation + logout revocation.
-- Granular permission checks via `@RequirePermission("...")`.
-- Automatic audit logs for CRUD/auth events.
-- Soft delete support (`deleted_at`) on key business entities.
-- Shared pagination contract (`page`, `size`, `sort`, `direction`, `search`) returning `items`/`totalItems` with legacy compatibility.
-- CRM v1 with full Contacts and Leads workflows.
-- IoT split between control plane (device/admin operations) and data plane (telemetry ingestion/processing).
+- Modular monolith with clear boundaries: `shared`, `core`, `modules`, `infrastructure`.
+- Multi-tenancy with tenant context enforcement and tenant-isolated queries.
+- Authorization model with `user_tenants` + `user_tenant_roles` + `role_permissions`.
+- JWT access token + secure refresh token (hash + rotation + revoke on logout).
+- Granular permission checks via `@RequirePermission`.
+- Automatic auditing for auth and CRUD flows.
+- Soft delete with `deleted_at` on business entities.
+- Standard pagination contract (`page`, `size`, `sort`, `direction`, `search`).
+- IoT split between control plane and data plane abstractions.
 
 ## Flyway Migrations
-
-Current migrations:
 
 - `V1__init_schema.sql`
 - `V2__init_crm_schema.sql`
@@ -71,6 +67,9 @@ Current migrations:
 - `V7__refresh_token_security.sql`
 - `V8__crm_extended_schema.sql`
 - `V9__tenant_role_model.sql`
+- `V10__crm_contacts_leads_improvements.sql`
+- `V11__crm_pipeline_and_deals.sql`
+- `V12__crm_notes_and_tasks.sql`
 
 ## Main Endpoints (`/api/v1`)
 
@@ -87,12 +86,22 @@ Current migrations:
 - `GET /modules`
 
 ### CRM
-- `GET|POST /crm/contacts`
-- `GET|PUT|DELETE /crm/contacts/{id}`
-- `PATCH /crm/contacts/{id}/restore`
-- `GET|POST /crm/leads`
-- `PUT|DELETE /crm/leads/{id}`
-- `PATCH /crm/leads/{id}/restore`
+- Contacts:
+  - `GET|POST /crm/contacts`
+  - `GET|PUT|DELETE /crm/contacts/{id}`
+  - `PATCH /crm/contacts/{id}/restore`
+- Leads:
+  - `GET|POST /crm/leads`
+  - `GET|PUT|DELETE /crm/leads/{id}`
+  - `PATCH /crm/leads/{id}/restore`
+- Pipeline/Deal base:
+  - `GET|POST /crm/pipelines`
+  - `GET|POST /crm/deals`
+  - `PUT /crm/deals/{id}`
+- Notes/Tasks base:
+  - `GET|POST /crm/notes`
+  - `GET|POST /crm/tasks`
+  - `PUT /crm/tasks/{id}`
 
 ### Pet / IoT
 - `GET|POST /pet/clients`
@@ -102,22 +111,26 @@ Current migrations:
 Swagger UI:
 - `http://localhost:8080/swagger-ui.html`
 
-## Frontend Screens
+## Frontend
 
-- `/login`
-- `/dashboard`
-- `/tenants`
-- `/users`
-- `/crm`
-- `/crm/contacts`
-- `/crm/leads`
-- `/pet`
-- `/iot`
-- `/settings`
+Implemented pages:
 
-## Quick Start with Docker
+- Public/Auth: `/login`
+- Core: `/dashboard`, `/tenants`, `/users`, `/settings`
+- CRM:
+  - `/crm`
+  - `/crm/contacts`, `/crm/contacts/new`, `/crm/contacts/[id]`
+  - `/crm/leads`, `/crm/leads/new`, `/crm/leads/[id]`
+- Modules: `/pet`, `/iot`
 
-1. Copy environment file:
+Guards:
+- Route protection via authenticated layout (`ProtectedRoute`).
+- Permission checks via `PermissionGate` + `usePermissions`.
+- Sidebar module visibility based on permissions.
+
+## Quick Start (Docker)
+
+1. Copy env file:
 
 ```bash
 cp .env.example .env
@@ -129,13 +142,13 @@ cp .env.example .env
 make up
 ```
 
-3. Access services:
+3. Access:
 - Frontend: `http://localhost:3000`
 - Backend: `http://localhost:8080`
 - Swagger: `http://localhost:8080/swagger-ui.html`
 - Adminer (optional): `http://localhost:8081` (`docker compose --profile tools up -d`)
 
-## Local Development (without Docker)
+## Local Development
 
 Backend:
 
@@ -149,35 +162,51 @@ Frontend:
 make frontend
 ```
 
-## Makefile Commands
+## Makefile
 
-List all commands:
+List commands:
 
 ```bash
 make help
 ```
 
-Main commands:
-- `make up`
-- `make down`
-- `make status`
-- `make logs-follow`
-- `make docker-build`
-- `make docker-reset-db`
-- `make build`
-- `make test-backend`
-- `make test-integration`
-- `make lint`
-- `make migrate`
-- `make crm-seed`
+Main targets:
+- `make up`, `make down`, `make restart`, `make status`
+- `make logs-follow`, `make logs-backend`, `make logs-frontend`, `make logs-db`
+- `make docker-build`, `make docker-reset-db`
+- `make test`, `make test-backend`, `make test-integration`, `make test-unit`
+- `make build`, `make verify`
+- `make migrate`, `make crm-seed`, `make db-shell`
 
 ## Integration Tests
 
-Integration tests live at:
+Integration tests are under:
 
 - `apps/backend/src/test/java/com/phaiffertech/platform/integration`
+- `apps/backend/src/test/java/com/phaiffertech/platform/support`
 
-They use Testcontainers + MySQL. If Docker is unavailable/incompatible, tests are skipped automatically (`@Testcontainers(disabledWithoutDocker = true)`).
+Current coverage includes:
+- auth (`login`, `refresh`, `me`)
+- tenant isolation
+- tenant-role resolution and permission inheritance
+- permission enforcement
+- CRM contacts/leads CRUD
+- Pet clients create/list
+- IoT devices create/list
+- IoT telemetry write/read
+- pagination contract
+
+Execution:
+
+```bash
+make test-integration
+# or
+cd apps/backend && mvn -Dgroups=integration test
+```
+
+Notes:
+- Testcontainers + MySQL are mandatory for integration tests.
+- Maven is configured to set Docker `api.version=1.44` to support modern Docker daemons with minimum API 1.44.
 
 ## Dev Credentials
 
@@ -185,16 +214,9 @@ They use Testcontainers + MySQL. If Docker is unavailable/incompatible, tests ar
 - Email: `admin@local.test`
 - Password: `Admin@123`
 
-## Ports
+## Default Ports
 
 - MySQL: `3306`
 - Backend: `8080`
 - Frontend: `3000`
-- Adminer: `8081` (optional)
-
-## Next Recommended Steps
-
-1. Add field-level permission policies and admin UI for role-permission management.
-2. Add background jobs for refresh token cleanup and audit retention.
-3. Add CI pipeline with mandatory integration tests in Docker-capable runners.
-4. Expand CRM (pipelines/deals/tasks) following the same module conventions.
+- Adminer: `8081`

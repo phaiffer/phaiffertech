@@ -2,20 +2,20 @@
 
 ## Overview
 
-The platform is implemented as a **modular monolith** with multi-tenancy from day one.
+The platform is implemented as a **modular monolith** with multi-tenancy from the beginning.
 
-Core principles:
-- single database + shared schema
-- `tenant_id` isolation on tenant-scoped data
-- strict package boundaries by domain module
-- JWT authentication + role and permission-based authorization
-- incremental Flyway migrations
+Principles:
+- single MySQL database, shared schema
+- tenant isolation by `tenant_id`
+- domain boundaries by package/module
+- incremental evolution through Flyway migrations
+- security first (JWT + tenant roles + permissions)
 
 ## Backend Package Root
 
 - `com.phaiffertech.platform`
 
-## Backend Package Tree
+## Backend Package Layout
 
 ```text
 com.phaiffertech.platform
@@ -45,20 +45,24 @@ com.phaiffertech.platform
 ├── modules
 │   ├── crm
 │   │   ├── contact
-│   │   └── lead
+│   │   ├── lead
+│   │   ├── pipeline
+│   │   ├── deal
+│   │   ├── note
+│   │   └── task
 │   ├── pet
 │   │   └── client
 │   └── iot
-│       ├── alarm
 │       ├── control
 │       ├── device
-│       ├── ingestion
-│       ├── maintenance
-│       ├── monitoring
+│       ├── telemetry
 │       ├── processing
-│       ├── report
+│       ├── alarm
+│       ├── ingestion
 │       ├── sensor
-│       └── telemetry
+│       ├── maintenance
+│       ├── report
+│       └── monitoring
 └── infrastructure
     ├── docs
     ├── persistence
@@ -67,60 +71,62 @@ com.phaiffertech.platform
 
 ## Multi-Tenancy
 
-- `TenantContext` stores current tenant ID per request.
-- `TenantContextFilter` enforces header/authenticated tenant consistency.
-- Cross-tenant access is blocked early (`403`) before business logic.
+- `TenantContext` carries active tenant ID per request.
+- `TenantContextFilter` validates tenant header against authenticated context.
+- Tenant-scoped queries are mandatory on business data.
+- Cross-tenant access is rejected with `403`.
 
-## Security Model
+## Authorization Model
 
-### Authentication
-- JWT access token.
-- Refresh token persisted with hash (`SHA-256`) and expiry.
-- Refresh rotation: old refresh token revoked on refresh/login.
-- Logout endpoint revokes refresh token.
+Entities:
+- `users` (global identity)
+- `tenants` (organization)
+- `user_tenants` (user-tenant binding)
+- `user_tenant_roles` (roles bound to the active user-tenant relation)
+- `roles`, `permissions`, `role_permissions`
 
-### Authorization
-- Role-based authorities remain active (`ROLE_*`).
-- Roles are resolved per tenant through `user_tenants` + `user_tenant_roles`.
-- Granular permissions introduced with `@RequirePermission("...")`.
-- Permission inheritance via `role_permissions`.
-- Permissions are loaded at login/refresh and embedded in JWT claims.
-- JWT carries `user_id`, `tenant_id`, `role`, `roles`, and `permissions`.
+Resolution flow:
+1. Login identifies user + tenant.
+2. System resolves `user_tenant` and `user_tenant_roles`.
+3. Permissions are aggregated from `role_permissions`.
+4. JWT includes `user_id`, `tenant_id`, `roles`, `permissions`.
 
-Examples:
-- `crm.contact.read`
-- `crm.contact.create`
-- `crm.lead.update`
-- `pet.client.read`
-- `iot.device.read`
+Enforcement:
+- role checks via Spring Security
+- granular checks via `@RequirePermission("...")`
+
+## Refresh Token Security
+
+- Raw refresh token is never stored.
+- `refresh_tokens.token_hash` stores SHA-256 hash.
+- Rotation on refresh: old token revoked, new token generated.
+- Logout endpoint revokes active token.
 
 ## Auditing
 
-### Audit entity
-`audit_logs` stores:
-- `tenant_id`
-- `user_id`
-- `action`
-- `entity_name`
-- `entity_id`
-- `payload`
-- `created_at`
+`audit_logs` captures:
+- tenant and user context
+- action (`CREATE`, `UPDATE`, `DELETE`, `LOGIN`, `REFRESH_TOKEN`, etc.)
+- entity and entity id
+- optional payload snapshot
+- timestamp
 
-### Automatic logging
-- CRUD operations are annotated with `@AuditableAction`.
-- Auth events (`LOGIN`, `REFRESH_TOKEN`, `LOGOUT`) are logged in auth service.
+Audit events are emitted by AOP annotation (`@AuditableAction`) and auth flows.
 
 ## Soft Delete
 
-Key business entities (CRM/Pet/IoT) use:
-- `deleted_at` column
-- logical delete operations in services
+Business entities use:
+- `deleted_at`
 - `@Where(clause = "deleted_at IS NULL")`
-- optional restore endpoints (`PATCH .../restore`)
+- optional restore endpoints where relevant
 
-## Pagination and Filtering Standard
+This preserves history and avoids hard-delete by default.
 
-Shared classes under `shared/pagination`:
+## Pagination Contract
+
+Shared package: `shared.pagination`
+
+Main classes:
 - `PageRequestDto`
 - `PageResponseDto`
 - `PageMapper`
@@ -133,42 +139,51 @@ Standard query params:
 - `direction`
 - `search`
 
-Standard response shape:
+Standard response:
 - `items`
 - `page`
 - `size`
 - `totalItems`
 - `totalPages`
 
-Legacy fields (`content`, `totalElements`) are still returned for compatibility.
+Legacy fields (`content`, `totalElements`) remain for compatibility.
 
-Applied on list endpoints across core/modules, including CRM contacts/leads, pet clients and IoT devices.
-
-## IoT Control/Data Plane Split
-
-- Control plane: administrative flows (`device`, `alarm`, and related operational modules).
-- Data plane: telemetry/ingestion (`telemetry`, `ingestion`, `processing`).
-- Abstractions:
-  - `TelemetryWriter`
-  - `TelemetryReader`
-  - `AlarmEvaluator`
-- Current persistence implementation is MySQL (`MySqlTelemetryStore`), preserving future storage swap flexibility.
-
-## CRM Module v1
+## CRM v1
 
 ### Contacts
-- Full CRUD + restore
-- search + pagination
-- validation and permission checks
+- CRUD + restore
+- search by name/email/company
+- filters by status and owner
+- soft delete + auditing + permission checks
 
 ### Leads
-- Full list/create/update/delete + restore
-- search + pagination
-- validation and permission checks
+- CRUD + restore
+- search and filters by status/source/assigned user
+- soft delete + auditing + permission checks
+
+### Pipeline/Deals base
+- pipeline + stages
+- deals with pipeline/stage/contact/lead references
+
+### Notes/Tasks base
+- tenant-scoped notes linked by related type/id
+- tenant-scoped tasks with assignee and due date
+
+## IoT Control Plane vs Data Plane
+
+- Control plane: administrative CRUD (`device`, alarms and operational metadata).
+- Data plane: telemetry ingestion and processing.
+
+Abstractions:
+- `TelemetryWriter`
+- `TelemetryReader`
+- `AlarmEvaluator`
+
+Current implementation uses MySQL (`MySqlTelemetryStore`) but keeps interface boundaries ready for future storage extraction.
 
 ## Migration Strategy
 
-Current migrations:
+Current migration chain:
 - `V1__init_schema.sql`
 - `V2__init_crm_schema.sql`
 - `V3__init_pet_schema.sql`
@@ -178,31 +193,33 @@ Current migrations:
 - `V7__refresh_token_security.sql`
 - `V8__crm_extended_schema.sql`
 - `V9__tenant_role_model.sql`
+- `V10__crm_contacts_leads_improvements.sql`
+- `V11__crm_pipeline_and_deals.sql`
+- `V12__crm_notes_and_tasks.sql`
 
-`V1` was preserved for backward compatibility. New capabilities were added incrementally.
+Previous migrations were preserved; new changes are strictly incremental.
 
-## Tests
+## Test Architecture
 
-Integration tests are under:
-- `apps/backend/src/test/java/com/phaiffertech/platform/integration`
+Folders:
+- `src/test/java/com/phaiffertech/platform/support`
+- `src/test/java/com/phaiffertech/platform/integration`
+
+Base classes:
+- `IntegrationTestContainersConfig` (singleton MySQL Testcontainer + dynamic datasource properties)
+- `AbstractIntegrationTest` (HTTP and SQL helpers)
 
 Coverage includes:
-- auth (`login`, `refresh`, `me`)
-- multi-tenant isolation
-- tenant role resolution and permission inheritance
-- standardized pagination contract validation
-- CRM contact CRUD
-- IoT device create/list
-- IoT telemetry ingestion/list + alarm evaluation
-- Pet client create
+- auth login/refresh/me
+- tenant isolation
+- tenant role and permission resolution
+- permission enforcement
+- CRM contacts/leads CRUD
+- pet clients create/list
+- IoT devices create/list
+- IoT telemetry write/read
+- pagination contract
 
-Test runtime uses Testcontainers + MySQL, with automatic skip when Docker is unavailable/incompatible.
-
-## Makefile Role
-
-Root `Makefile` is the main developer entrypoint for:
-- stack lifecycle (`up`, `down`, `restart`, `status`)
-- docker tooling (`docker-build`, `docker-reset-db`, `logs-follow`)
-- backend/frontend local run and build
-- migration and seed helpers (`migrate`, `crm-seed`)
-- backend test targets (`test-backend`, `test-integration`)
+Docker compatibility note:
+- tests run with Testcontainers and require Docker.
+- Maven sets `api.version=1.44` for compatibility with modern Docker daemons (minimum API 1.44).

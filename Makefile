@@ -6,8 +6,8 @@ FRONTEND_DIR := apps/frontend
 CRM_SEED_SQL := infra/docker/sql/crm-seed.sql
 
 .PHONY: help up down restart rebuild status logs logs-follow logs-backend logs-frontend logs-db docker-build docker-reset-db \
-	build test test-backend test-integration lint clean backend frontend install-backend install-frontend \
-	package-backend package-frontend db-shell migrate seed crm-seed swagger
+	build test test-backend test-integration test-unit lint clean backend frontend install-backend install-frontend \
+	package-backend package-frontend db-shell migrate seed crm-seed swagger verify
 
 help: ## List available commands
 	@awk 'BEGIN {FS = ":.*##"; printf "\nAvailable targets:\n"} /^[a-zA-Z0-9_.-]+:.*##/ { printf "  %-20s %s\n", $$1, $$2 }' $(MAKEFILE_LIST)
@@ -69,13 +69,16 @@ backend: ## Run backend locally (requires local MySQL)
 frontend: ## Run frontend locally
 	cd $(FRONTEND_DIR) && npm run dev
 
-test: test-backend ## Run backend tests
+test: test-backend ## Run backend tests (unit + integration)
 
-test-backend: ## Run backend unit/integration test suite
+test-backend: ## Run backend test suite
 	cd $(BACKEND_DIR) && mvn test
 
-test-integration: ## Run only integration tests (Testcontainers)
-	cd $(BACKEND_DIR) && mvn -Dtest='*IntegrationTest' test
+test-integration: ## Run only integration tests (tag: integration)
+	cd $(BACKEND_DIR) && mvn -Dgroups=integration test
+
+test-unit: ## Run tests excluding integration tag
+	cd $(BACKEND_DIR) && mvn -Dgroups='!integration' test
 
 lint: ## Run frontend lint and backend compile validation
 	cd $(FRONTEND_DIR) && npm run lint
@@ -100,3 +103,5 @@ crm-seed: ## Seed sample CRM contacts and leads for local development
 
 swagger: ## Print Swagger URL
 	@echo "Swagger UI: http://localhost:$${BACKEND_PORT:-8080}/swagger-ui.html"
+
+verify: lint test package-backend package-frontend ## Run lint, tests and build artifacts

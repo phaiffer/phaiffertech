@@ -1,6 +1,6 @@
 # Frontend - Platform Console
 
-Next.js admin console for the unified multi-tenant platform.
+Next.js admin console for the unified platform.
 
 ## Stack
 
@@ -8,45 +8,64 @@ Next.js admin console for the unified multi-tenant platform.
 - TypeScript
 - Tailwind CSS
 
-## Structure
-
-```text
-src/
-├── app/
-├── modules/
-└── shared/
-```
-
-## Current Features
+## Current Scope
 
 - Login integrated with backend JWT auth.
-- Session state with user role and permissions.
-- Authenticated layout with sidebar + header + content.
-- CRM v1 pages:
-  - `/crm`
-  - `/crm/contacts`
-  - `/crm/leads`
-- Shared reusable UI components:
-  - `DataTable`
-  - `Pagination`
-  - `FormInput`
-  - `FormSelect`
-- Centralized HTTP client with tenant and auth headers.
+- Authenticated app shell (sidebar + header + content).
+- Session model with user, roles and permissions.
+- Auth guard for protected routes.
+- Permission guard for actions/components.
+- Sidebar visibility by permission.
+- CRM v1 UI:
+  - contacts list/create/edit/delete
+  - leads list/create/edit/delete
+  - search + pagination + loading/empty/error states
 
-## Run Locally
+## Key Shared Modules
+
+- `src/shared/auth`
+  - `useAuth`
+  - `ProtectedRoute`
+- `src/shared/permissions`
+  - `hasPermission`
+  - `usePermissions`
+  - `PermissionGate`
+- `src/shared/services`
+  - centralized API client usage
+- `src/shared/ui`
+  - `DataTable`, `Pagination`, `SearchInput`, `FormInput`, `FormSelect`, `ConfirmDialog`
+
+## Pages
+
+- `/login`
+- `/dashboard`
+- `/tenants`
+- `/users`
+- `/crm`
+- `/crm/contacts`
+- `/crm/contacts/new`
+- `/crm/contacts/[id]`
+- `/crm/leads`
+- `/crm/leads/new`
+- `/crm/leads/[id]`
+- `/pet`
+- `/iot`
+- `/settings`
+
+## Run
 
 ```bash
 npm install
 npm run dev
 ```
 
-or from monorepo root:
+From monorepo root:
 
 ```bash
 make frontend
 ```
 
-## Build and Lint
+## Quality Checks
 
 ```bash
 npm run lint
