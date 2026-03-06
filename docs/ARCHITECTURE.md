@@ -204,6 +204,7 @@ Previous migrations were preserved; new changes are strictly incremental.
 Folders:
 - `src/test/java/com/phaiffertech/platform/support`
 - `src/test/java/com/phaiffertech/platform/integration`
+- `src/test/java/com/phaiffertech/platform/integration/crm`
 
 Base classes:
 - `IntegrationTestContainersConfig` (singleton MySQL Testcontainer + dynamic datasource properties)

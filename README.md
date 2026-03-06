@@ -125,7 +125,7 @@ Implemented pages:
 
 Guards:
 - Route protection via authenticated layout (`ProtectedRoute`).
-- Permission checks via `PermissionGate` + `usePermissions`.
+- Permission checks via `PermissionGuard` + `usePermissions`.
 - Sidebar module visibility based on permissions.
 
 ## Quick Start (Docker)
@@ -183,6 +183,7 @@ Main targets:
 Integration tests are under:
 
 - `apps/backend/src/test/java/com/phaiffertech/platform/integration`
+- `apps/backend/src/test/java/com/phaiffertech/platform/integration/crm`
 - `apps/backend/src/test/java/com/phaiffertech/platform/support`
 
 Current coverage includes:
