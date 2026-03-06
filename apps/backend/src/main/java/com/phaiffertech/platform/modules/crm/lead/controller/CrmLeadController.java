@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -33,8 +34,13 @@ public class CrmLeadController {
 
     @GetMapping
     @RequirePermission("crm.lead.read")
-    public ApiResponse<PageResponseDto<CrmLeadResponse>> list(@Valid @ModelAttribute PageRequestDto pageRequest) {
-        return ApiResponse.success(service.list(pageRequest));
+    public ApiResponse<PageResponseDto<CrmLeadResponse>> list(
+            @Valid @ModelAttribute PageRequestDto pageRequest,
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) String source,
+            @RequestParam(required = false) UUID assignedUserId
+    ) {
+        return ApiResponse.success(service.list(pageRequest, status, source, assignedUserId));
     }
 
     @PostMapping
@@ -50,6 +56,12 @@ public class CrmLeadController {
             @Valid @RequestBody CrmLeadUpdateRequest request
     ) {
         return ApiResponse.success(service.update(id, request));
+    }
+
+    @GetMapping("/{id}")
+    @RequirePermission("crm.lead.read")
+    public ApiResponse<CrmLeadResponse> getById(@PathVariable UUID id) {
+        return ApiResponse.success(service.getById(id));
     }
 
     @DeleteMapping("/{id}")

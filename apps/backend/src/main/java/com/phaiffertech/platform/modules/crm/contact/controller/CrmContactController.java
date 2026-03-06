@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -39,8 +40,12 @@ public class CrmContactController {
 
     @GetMapping
     @RequirePermission("crm.contact.read")
-    public ApiResponse<PageResponseDto<CrmContactResponse>> list(@Valid @ModelAttribute PageRequestDto pageRequest) {
-        return ApiResponse.success(service.list(pageRequest));
+    public ApiResponse<PageResponseDto<CrmContactResponse>> list(
+            @Valid @ModelAttribute PageRequestDto pageRequest,
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) UUID ownerUserId
+    ) {
+        return ApiResponse.success(service.list(pageRequest, status, ownerUserId));
     }
 
     @GetMapping("/{id}")

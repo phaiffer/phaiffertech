@@ -48,10 +48,12 @@ public class CrmContactService {
     }
 
     @Transactional(readOnly = true)
-    public PageResponseDto<CrmContactResponse> list(PageRequestDto pageRequest) {
+    public PageResponseDto<CrmContactResponse> list(PageRequestDto pageRequest, String status, UUID ownerUserId) {
         UUID tenantId = TenantContext.getRequiredTenantId();
         Page<CrmContactResponse> result = repository.findAllByTenantIdAndSearch(
                         tenantId,
+                        normalizeFilter(status),
+                        ownerUserId,
                         pageRequest.normalizedSearch(),
                         PaginationUtils.toPageable(pageRequest, Sort.by(Sort.Direction.DESC, "createdAt")))
                 .map(CrmContactMapper::toResponse);
@@ -116,5 +118,12 @@ public class CrmContactService {
             return "ACTIVE";
         }
         return status.trim().toUpperCase();
+    }
+
+    private String normalizeFilter(String value) {
+        if (value == null || value.isBlank()) {
+            return null;
+        }
+        return value.trim().toUpperCase();
     }
 }

@@ -47,15 +47,32 @@ public class CrmLeadService {
     }
 
     @Transactional(readOnly = true)
-    public PageResponseDto<CrmLeadResponse> list(PageRequestDto pageRequest) {
+    public PageResponseDto<CrmLeadResponse> list(
+            PageRequestDto pageRequest,
+            String status,
+            String source,
+            UUID assignedUserId
+    ) {
         UUID tenantId = TenantContext.getRequiredTenantId();
         Page<CrmLeadResponse> result = repository.findAllByTenantIdAndSearch(
                         tenantId,
+                        normalizeFilter(status),
+                        normalizeFilter(source),
+                        assignedUserId,
                         pageRequest.normalizedSearch(),
                         PaginationUtils.toPageable(pageRequest, Sort.by(Sort.Direction.DESC, "createdAt")))
                 .map(CrmLeadMapper::toResponse);
 
         return PaginationUtils.fromPage(result);
+    }
+
+    @Transactional(readOnly = true)
+    public CrmLeadResponse getById(UUID id) {
+        UUID tenantId = TenantContext.getRequiredTenantId();
+        CrmLead lead = repository.findByIdAndTenantId(id, tenantId)
+                .orElseThrow(() -> new ResourceNotFoundException("Lead not found."));
+
+        return CrmLeadMapper.toResponse(lead);
     }
 
     @Transactional
@@ -104,5 +121,12 @@ public class CrmLeadService {
             return "NEW";
         }
         return status.trim().toUpperCase();
+    }
+
+    private String normalizeFilter(String value) {
+        if (value == null || value.isBlank()) {
+            return null;
+        }
+        return value.trim().toUpperCase();
     }
 }
