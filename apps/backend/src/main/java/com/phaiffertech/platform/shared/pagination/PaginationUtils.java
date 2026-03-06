@@ -11,7 +11,7 @@ public final class PaginationUtils {
     }
 
     public static Pageable toPageable(PageRequestDto request, Sort defaultSort) {
-        Sort sort = resolveSort(request == null ? null : request.sort(), defaultSort);
+        Sort sort = resolveSort(request, defaultSort);
         int page = request == null ? 0 : request.resolvedPage();
         int size = request == null ? 20 : request.resolvedSize();
 
@@ -19,32 +19,31 @@ public final class PaginationUtils {
     }
 
     public static <T> PageResponseDto<T> fromPage(Page<T> page) {
-        return new PageResponseDto<>(
-                page.getContent(),
-                page.getTotalElements(),
-                page.getTotalPages(),
-                page.getNumber(),
-                page.getSize()
-        );
+        return PageMapper.toResponse(page);
     }
 
-    private static Sort resolveSort(String sortValue, Sort defaultSort) {
-        if (sortValue == null || sortValue.isBlank()) {
+    private static Sort resolveSort(PageRequestDto request, Sort defaultSort) {
+        if (request == null || request.normalizedSort() == null) {
             return defaultSort;
         }
 
+        String sortValue = request.normalizedSort();
         String[] tokens = sortValue.split(",");
         if (tokens.length == 0 || tokens[0].isBlank()) {
             return defaultSort;
         }
 
         String property = tokens[0].trim();
-        String direction = tokens.length > 1 ? tokens[1].trim() : "asc";
-
-        Sort.Direction parsedDirection = "desc".equalsIgnoreCase(direction)
-                ? Sort.Direction.DESC
-                : Sort.Direction.ASC;
+        String direction = tokens.length > 1 ? tokens[1].trim() : request.normalizedDirection();
+        Sort.Direction parsedDirection = parseDirection(direction);
 
         return Sort.by(parsedDirection, property);
+    }
+
+    private static Sort.Direction parseDirection(String directionValue) {
+        if ("desc".equalsIgnoreCase(directionValue)) {
+            return Sort.Direction.DESC;
+        }
+        return Sort.Direction.ASC;
     }
 }

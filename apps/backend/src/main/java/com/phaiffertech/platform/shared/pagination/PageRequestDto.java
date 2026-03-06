@@ -7,6 +7,7 @@ public record PageRequestDto(
         @Min(0) Integer page,
         @Min(1) @Max(200) Integer size,
         String sort,
+        String direction,
         String search
 ) {
     public int resolvedPage() {
@@ -24,5 +25,13 @@ public record PageRequestDto(
 
         String value = search.trim();
         return value.isEmpty() ? null : value;
+    }
+
+    public String normalizedSort() {
+        return sort == null || sort.isBlank() ? null : sort.trim();
+    }
+
+    public String normalizedDirection() {
+        return direction == null || direction.isBlank() ? null : direction.trim().toLowerCase();
     }
 }

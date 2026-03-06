@@ -25,6 +25,6 @@ class PetIntegrationTest extends BaseIntegrationTest {
 
         ResponseEntity<JsonNode> listResponse = get("/pet/clients?page=0&size=20&search=" + marker, session);
         assertEquals(200, listResponse.getStatusCode().value());
-        assertTrue(requireBody(listResponse).path("data").path("content").size() >= 1);
+        assertTrue(requireBody(listResponse).path("data").path("items").size() >= 1);
     }
 }

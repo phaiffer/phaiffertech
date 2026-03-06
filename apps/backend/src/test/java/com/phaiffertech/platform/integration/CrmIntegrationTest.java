@@ -31,9 +31,9 @@ class CrmIntegrationTest extends BaseIntegrationTest {
 
         ResponseEntity<JsonNode> listResponse = get("/crm/contacts?page=0&size=20&search=" + marker, session);
         assertEquals(200, listResponse.getStatusCode().value());
-        JsonNode content = requireBody(listResponse).path("data").path("content");
-        assertTrue(content.isArray());
-        assertTrue(content.size() >= 1);
+        JsonNode items = requireBody(listResponse).path("data").path("items");
+        assertTrue(items.isArray());
+        assertTrue(items.size() >= 1);
 
         ResponseEntity<JsonNode> updateResponse = put("/crm/contacts/" + contactId, Map.of(
                 "firstName", "Johnny" + marker,
@@ -52,6 +52,6 @@ class CrmIntegrationTest extends BaseIntegrationTest {
 
         ResponseEntity<JsonNode> listAfterDelete = get("/crm/contacts?page=0&size=20&search=" + marker, session);
         assertEquals(200, listAfterDelete.getStatusCode().value());
-        assertEquals(0, requireBody(listAfterDelete).path("data").path("content").size());
+        assertEquals(0, requireBody(listAfterDelete).path("data").path("items").size());
     }
 }
