@@ -2,6 +2,7 @@ package com.phaiffertech.platform.modules.iot.device.repository;
 
 import com.phaiffertech.platform.modules.iot.device.domain.IotDevice;
 
+import java.util.Optional;
 import java.util.UUID;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -10,6 +11,8 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 public interface IotDeviceRepository extends JpaRepository<IotDevice, UUID> {
+
+    Optional<IotDevice> findByIdAndTenantId(UUID id, UUID tenantId);
 
     @Query("""
             SELECT d
