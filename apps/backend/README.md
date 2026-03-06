@@ -7,59 +7,40 @@ Spring Boot backend for the modular multi-tenant SaaS platform.
 - Java 21
 - Spring Boot 3.3.x
 - Maven
-- Spring Security (JWT + RBAC)
+- Spring Security (JWT + RBAC + granular permissions)
 - Spring Data JPA
 - Flyway
 - MySQL 8
 - Springdoc OpenAPI
+- Testcontainers (integration tests)
 
 ## Package Root
 
 - `com.phaiffertech.platform`
 
-## Package Structure
+## Key Capabilities
 
-```text
-com.phaiffertech.platform
-├── shared
-│   ├── config
-│   ├── domain
-│   │   ├── base
-│   │   └── enums
-│   ├── exception
-│   ├── response
-│   ├── security
-│   ├── tenancy
-│   └── util
-├── core
-│   ├── auth
-│   ├── tenant
-│   ├── user
-│   ├── iam
-│   ├── settings
-│   ├── audit
-│   ├── notification
-│   ├── attachment
-│   ├── subscription
-│   └── module
-├── modules
-│   ├── crm
-│   ├── pet
-│   └── iot
-└── infrastructure
-```
+- Multi-tenancy with `TenantContext` and tenant isolation filter.
+- Refresh token hashing + rotation + logout revocation.
+- Permission annotation `@RequirePermission`.
+- Automatic audit logging for auth and CRUD actions.
+- Shared pagination (`page`, `size`, `sort`, `search`).
+- CRM v1 contacts/leads CRUD.
 
 ## Flyway Migrations
 
-- `V1__init_schema.sql` (preserved for compatibility)
+- `V1__init_schema.sql`
 - `V2__init_crm_schema.sql`
 - `V3__init_pet_schema.sql`
 - `V4__init_iot_schema.sql`
 - `V5__seed_reference_data.sql`
+- `V6__seed_permissions.sql`
+- `V7__refresh_token_security.sql`
+- `V8__crm_extended_schema.sql`
 
 ## Development Seed
 
-Reference data and default tenant/admin are seeded by Flyway (`V5`) and reinforced by `DevelopmentDataSeeder` in `dev` profile for local safety.
+Reference data and default tenant/admin are seeded by Flyway and reinforced by `DevelopmentDataSeeder` in `dev` profile.
 
 Default credentials:
 - Tenant: `default`
@@ -72,15 +53,20 @@ Default credentials:
 mvn spring-boot:run
 ```
 
-## Compile and Package
+## Build
 
 ```bash
-mvn -DskipTests compile
-mvn -DskipTests package
+mvn clean compile
+mvn package
 ```
 
-## Test
+## Tests
 
 ```bash
 mvn test
 ```
+
+Integration tests are under:
+- `src/test/java/com/phaiffertech/platform/integration`
+
+They require a Docker-compatible runtime for Testcontainers; otherwise tests are skipped.

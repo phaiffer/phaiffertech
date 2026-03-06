@@ -3,9 +3,11 @@ SHELL := /bin/bash
 COMPOSE := docker compose
 BACKEND_DIR := apps/backend
 FRONTEND_DIR := apps/frontend
+CRM_SEED_SQL := infra/docker/sql/crm-seed.sql
 
-.PHONY: help up down restart rebuild status logs logs-backend logs-frontend logs-db build test lint clean \
-	backend frontend install-backend install-frontend package-backend package-frontend db-shell migrate seed swagger
+.PHONY: help up down restart rebuild status logs logs-follow logs-backend logs-frontend logs-db docker-build docker-reset-db \
+	build test test-backend test-integration lint clean backend frontend install-backend install-frontend \
+	package-backend package-frontend db-shell migrate seed crm-seed swagger
 
 help: ## List available commands
 	@awk 'BEGIN {FS = ":.*##"; printf "\nAvailable targets:\n"} /^[a-zA-Z0-9_.-]+:.*##/ { printf "  %-20s %s\n", $$1, $$2 }' $(MAKEFILE_LIST)
@@ -29,6 +31,8 @@ status: ## Show service status
 logs: ## Tail all service logs
 	$(COMPOSE) logs -f --tail=200
 
+logs-follow: logs ## Alias to tail all service logs
+
 logs-backend: ## Tail backend logs
 	$(COMPOSE) logs -f --tail=200 backend
 
@@ -37,6 +41,13 @@ logs-frontend: ## Tail frontend logs
 
 logs-db: ## Tail mysql logs
 	$(COMPOSE) logs -f --tail=200 mysql
+
+docker-build: ## Build docker images without starting containers
+	$(COMPOSE) build
+
+docker-reset-db: ## Reset database volume and restart stack
+	$(COMPOSE) down -v
+	$(COMPOSE) up -d mysql backend frontend
 
 build: package-backend package-frontend ## Build backend and frontend artifacts locally
 
@@ -58,8 +69,13 @@ backend: ## Run backend locally (requires local MySQL)
 frontend: ## Run frontend locally
 	cd $(FRONTEND_DIR) && npm run dev
 
-test: ## Run backend tests
+test: test-backend ## Run backend tests
+
+test-backend: ## Run backend unit/integration test suite
 	cd $(BACKEND_DIR) && mvn test
+
+test-integration: ## Run only integration tests (Testcontainers)
+	cd $(BACKEND_DIR) && mvn -Dtest='*IntegrationTest' test
 
 lint: ## Run frontend lint and backend compile validation
 	cd $(FRONTEND_DIR) && npm run lint
@@ -77,6 +93,10 @@ migrate: ## Trigger Flyway migrations by starting backend against mysql
 
 seed: ## Re-run development seed by restarting backend (dev profile)
 	$(COMPOSE) restart backend
+
+crm-seed: ## Seed sample CRM contacts and leads for local development
+	@test -f $(CRM_SEED_SQL) || (echo "Missing $(CRM_SEED_SQL)" && exit 1)
+	$(COMPOSE) exec -T mysql sh -c 'mysql -u"$${MYSQL_USER:-platform_user}" -p"$${MYSQL_PASSWORD:-platform_pass}" "$${MYSQL_DATABASE:-platform_db}"' < $(CRM_SEED_SQL)
 
 swagger: ## Print Swagger URL
 	@echo "Swagger UI: http://localhost:$${BACKEND_PORT:-8080}/swagger-ui.html"

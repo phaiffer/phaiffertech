@@ -20,17 +20,18 @@ src/
 ## Current Features
 
 - Login integrated with backend JWT auth.
-- Session state (access token, refresh token, authenticated user).
+- Session state with user role and permissions.
 - Authenticated layout with sidebar + header + content.
-- Pages:
-  - Dashboard
-  - Tenants
-  - Users
-  - CRM
-  - Pet
-  - IoT
-  - Settings
-- Centralized HTTP client with `Authorization` and `X-Tenant-Id` headers.
+- CRM v1 pages:
+  - `/crm`
+  - `/crm/contacts`
+  - `/crm/leads`
+- Shared reusable UI components:
+  - `DataTable`
+  - `Pagination`
+  - `FormInput`
+  - `FormSelect`
+- Centralized HTTP client with tenant and auth headers.
 
 ## Run Locally
 
@@ -48,6 +49,6 @@ make frontend
 ## Build and Lint
 
 ```bash
-npm run build
 npm run lint
+npm run build
 ```

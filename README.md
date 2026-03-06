@@ -8,11 +8,12 @@ Unified multi-tenant SaaS platform foundation for CRM, Pet and IoT domains.
 - Java 21
 - Spring Boot 3.x
 - Maven
-- Spring Security (JWT + RBAC)
+- Spring Security (JWT + RBAC + granular permissions)
 - Spring Data JPA
 - Flyway
 - MySQL 8
 - OpenAPI/Swagger
+- Testcontainers (integration tests)
 
 ### Frontend
 - Next.js (App Router)
@@ -21,8 +22,8 @@ Unified multi-tenant SaaS platform foundation for CRM, Pet and IoT domains.
 
 ### Infra
 - Docker Compose
-- MySQL + Backend + Frontend
-- Optional Adminer profile
+- MySQL + Backend + Frontend (+ optional Adminer profile)
+- Root Makefile for local workflows
 
 ## Package Root
 
@@ -44,44 +45,71 @@ Backend package root is fixed as:
 └── infra/
 ```
 
-## Backend Package Tree (high level)
+## Backend Highlights
 
-```text
-com.phaiffertech.platform
-├── PlatformApplication
-├── shared
-├── core
-├── modules
-└── infrastructure
-```
+- Modular monolith (`shared`, `core`, `modules`, `infrastructure`).
+- Multi-tenancy with `tenant_id` and `TenantContext` enforcement.
+- JWT auth with refresh token hash + rotation + logout revocation.
+- Granular permission checks via `@RequirePermission("...")`.
+- Automatic audit logs for CRUD/auth events.
+- Soft delete support (`deleted_at`) on key business entities.
+- Shared pagination contract (`page`, `size`, `sort`, `search`).
+- CRM v1 with full Contacts and Leads workflows.
 
-Detailed package organization is documented in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
+## Flyway Migrations
 
-## Flyway Strategy
+Current migrations:
 
-Existing migration `V1__init_schema.sql` was preserved for compatibility with already-initialized environments.
-
-Incremental migrations were added:
+- `V1__init_schema.sql`
 - `V2__init_crm_schema.sql`
 - `V3__init_pet_schema.sql`
 - `V4__init_iot_schema.sql`
 - `V5__seed_reference_data.sql`
+- `V6__seed_permissions.sql`
+- `V7__refresh_token_security.sql`
+- `V8__crm_extended_schema.sql`
 
 ## Main Endpoints (`/api/v1`)
 
-- `GET /health`
+### Auth
 - `POST /auth/login`
 - `POST /auth/refresh`
+- `POST /auth/logout`
 - `GET /auth/me`
+
+### Core
+- `GET /health`
 - `GET|POST /tenants`
 - `GET|POST /users`
 - `GET /modules`
+
+### CRM
 - `GET|POST /crm/contacts`
+- `GET|PUT|DELETE /crm/contacts/{id}`
+- `PATCH /crm/contacts/{id}/restore`
+- `GET|POST /crm/leads`
+- `PUT|DELETE /crm/leads/{id}`
+- `PATCH /crm/leads/{id}/restore`
+
+### Pet / IoT
 - `GET|POST /pet/clients`
 - `GET|POST /iot/devices`
 
 Swagger UI:
 - `http://localhost:8080/swagger-ui.html`
+
+## Frontend Screens
+
+- `/login`
+- `/dashboard`
+- `/tenants`
+- `/users`
+- `/crm`
+- `/crm/contacts`
+- `/crm/leads`
+- `/pet`
+- `/iot`
+- `/settings`
 
 ## Quick Start with Docker
 
@@ -125,17 +153,27 @@ List all commands:
 make help
 ```
 
-Most used:
+Main commands:
 - `make up`
 - `make down`
 - `make status`
-- `make logs`
+- `make logs-follow`
+- `make docker-build`
+- `make docker-reset-db`
 - `make build`
-- `make test`
+- `make test-backend`
+- `make test-integration`
 - `make lint`
-- `make db-shell`
 - `make migrate`
-- `make seed`
+- `make crm-seed`
+
+## Integration Tests
+
+Integration tests live at:
+
+- `apps/backend/src/test/java/com/phaiffertech/platform/integration`
+
+They use Testcontainers + MySQL. If Docker is unavailable/incompatible, tests are skipped automatically (`@Testcontainers(disabledWithoutDocker = true)`).
 
 ## Dev Credentials
 
@@ -152,7 +190,7 @@ Most used:
 
 ## Next Recommended Steps
 
-1. Add integration tests (auth, tenancy isolation, module endpoints).
-2. Expand granular permissions beyond role-level checks.
-3. Add CI pipeline gates for Flyway + backend compile + frontend lint/build.
-4. Add Terraform modules for OCI environments.
+1. Add field-level permission policies and admin UI for role-permission management.
+2. Add background jobs for refresh token cleanup and audit retention.
+3. Add CI pipeline with mandatory integration tests in Docker-capable runners.
+4. Expand CRM (pipelines/deals/tasks) following the same module conventions.
