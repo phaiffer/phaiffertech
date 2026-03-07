@@ -6,7 +6,7 @@ import org.testcontainers.containers.MySQLContainer;
 
 public abstract class IntegrationTestContainersConfig {
 
-    private static final String DOCKER_API_VERSION = "1.44";
+    private static final String DEFAULT_DOCKER_API_VERSION = "1.44";
 
     protected static final MySQLContainer<?> MYSQL = new MySQLContainer<>("mysql:8.0.36")
             .withDatabaseName("platform_db")
@@ -14,9 +14,11 @@ public abstract class IntegrationTestContainersConfig {
             .withPassword("platform_pass");
 
     static {
-        if (System.getProperty("api.version") == null || System.getProperty("api.version").isBlank()) {
-            System.setProperty("api.version", DOCKER_API_VERSION);
+        String configuredApiVersion = System.getenv("DOCKER_API_VERSION");
+        if (configuredApiVersion == null || configuredApiVersion.isBlank()) {
+            configuredApiVersion = DEFAULT_DOCKER_API_VERSION;
         }
+        System.setProperty("api.version", configuredApiVersion);
         MYSQL.start();
     }
 

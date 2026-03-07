@@ -1,9 +1,10 @@
 package com.phaiffertech.platform.integration;
 
-import com.phaiffertech.platform.support.AbstractIntegrationTest;
-
 import com.fasterxml.jackson.databind.JsonNode;
+import com.phaiffertech.platform.support.AbstractIntegrationTest;
+import java.time.Instant;
 import java.util.Map;
+import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.ResponseEntity;
 
@@ -19,7 +20,7 @@ class IotTelemetryIntegrationTest extends AbstractIntegrationTest {
 
         ResponseEntity<JsonNode> createDevice = post("/iot/devices", Map.of(
                 "name", "Telemetry-Device-" + marker,
-                "serialNumber", "TLM-" + marker,
+                "identifier", "TLM-" + marker,
                 "status", "ONLINE"
         ), session);
 
@@ -28,17 +29,25 @@ class IotTelemetryIntegrationTest extends AbstractIntegrationTest {
 
         ResponseEntity<JsonNode> ingestResponse = post("/iot/telemetry", Map.of(
                 "deviceId", deviceId,
-                "metric", "temperature",
-                "value", 95.3
+                "metricName", "temperature",
+                "metricValue", 95.3,
+                "unit", "c",
+                "metadata", Map.of("source", "integration-test")
         ), session);
 
         assertEquals(200, ingestResponse.getStatusCode().value());
         JsonNode telemetry = requireBody(ingestResponse).path("data");
         assertEquals(deviceId, telemetry.path("deviceId").asText());
-        assertEquals("temperature", telemetry.path("metric").asText());
+        assertEquals("temperature", telemetry.path("metricName").asText());
+
+        String recordedAt = telemetry.path("recordedAt").asText();
+        Instant from = Instant.parse(recordedAt).minusSeconds(60);
+        Instant to = Instant.parse(recordedAt).plusSeconds(60);
 
         ResponseEntity<JsonNode> listResponse = get(
-                "/iot/telemetry?page=0&size=20&search=temperature",
+                "/iot/telemetry?page=0&size=20&search=temperature&deviceId=" + deviceId
+                        + "&recordedFrom=" + from
+                        + "&recordedTo=" + to,
                 session
         );
 
@@ -51,5 +60,18 @@ class IotTelemetryIntegrationTest extends AbstractIntegrationTest {
                 deviceId
         );
         assertTrue(alarmCount >= 1);
+    }
+
+    @Test
+    void shouldBlockTelemetryAccessWhenTenantHeaderDoesNotMatchAuthenticatedTenant() {
+        AuthSession session = loginAsDefaultAdmin();
+
+        ResponseEntity<JsonNode> response = get(
+                "/iot/telemetry?page=0&size=20",
+                session,
+                UUID.randomUUID().toString()
+        );
+
+        assertEquals(403, response.getStatusCode().value());
     }
 }
