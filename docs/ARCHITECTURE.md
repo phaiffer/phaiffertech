@@ -27,7 +27,11 @@ com.phaiffertech.platform
 │   │   ├── base
 │   │   └── enums
 │   ├── exception
+│   ├── health
+│   ├── logging
+│   ├── metrics
 │   ├── pagination
+│   ├── ratelimit
 │   ├── response
 │   ├── security
 │   ├── tenancy
@@ -79,6 +83,35 @@ com.phaiffertech.platform
 - Tenant-scoped queries are mandatory on business data.
 - Cross-tenant access is rejected with `403`.
 
+## Observability
+
+### Structured Logging
+- Logback JSON output (`logback-spring.xml`)
+- MDC context: `trace_id`, `span_id`, `tenant_id`, `user_id`
+- Request log filter emits method/path/status/duration
+
+### Metrics
+- Actuator endpoints:
+  - `/actuator/metrics`
+  - `/actuator/prometheus`
+- Custom counters:
+  - `crm.contacts.created`
+  - `pet.appointments.created`
+  - `iot.telemetry.received`
+  - `iot.alarms.triggered`
+  - `auth.attempts` (tagged by outcome)
+
+### Tracing
+- Micrometer tracing bridge with OpenTelemetry.
+- Trace and span identifiers are correlated into structured logs.
+
+### Health
+- Expanded `/actuator/health` with:
+  - database indicator
+  - migration status indicator
+  - redis future-ready indicator
+  - telemetry pipeline indicator
+
 ## Shared CRUD Layer
 
 `shared.crud` centralizes recurring CRUD behavior without hiding module rules.
@@ -115,6 +148,19 @@ Resolution flow:
 Enforcement:
 - role checks via Spring Security
 - granular checks via `@RequirePermission("...")`
+- module guard for `/api/v1/crm/**`, `/api/v1/pet/**`, `/api/v1/iot/**`
+- feature flag checks (global and tenant-scoped)
+
+## Rate Limiting
+
+- Bucket4j filter-based strategy in `shared.ratelimit`.
+- Policies:
+  - auth endpoints: 10 req/min
+  - default API: 100 req/min
+  - telemetry ingestion (`POST /api/v1/iot/telemetry`): 500 req/min
+
+Support table:
+- `rate_limit_policies` (future policy externalization)
 
 ## Refresh Token Security
 
@@ -220,6 +266,8 @@ Current migration chain:
 - `V13__pet_v1_schema.sql`
 - `V14__iot_v1_schema.sql`
 - `V15__seed_pet_iot_permissions.sql`
+- `V16__feature_flags.sql`
+- `V17__rate_limit_support.sql`
 
 Previous migrations were preserved; new changes are strictly incremental.
 
@@ -249,3 +297,21 @@ Coverage includes:
 Docker compatibility note:
 - tests run with Testcontainers and require Docker.
 - Integration test bootstrap sets `api.version=1.44` by default, overridable through `DOCKER_API_VERSION`.
+
+## DevOps Foundation
+
+### CI
+- GitHub Actions workflow at `.github/workflows/ci.yml`
+- Runs backend build/tests, frontend lint/build and docker image build
+
+### Docker Compose Profiles
+- default (sem profile): mysql + backend + frontend
+- `tools`: adminer
+- `observability`: prometheus + grafana + loki
+
+### Terraform (Oracle Cloud)
+Base IaC scaffolding at `infra/terraform`:
+- provider and variables
+- network (VCN, subnets, route/security primitives)
+- compute and load balancer
+- managed MySQL service blueprint

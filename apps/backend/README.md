@@ -13,6 +13,7 @@ Spring Boot backend for the modular multi-tenant platform.
 - MySQL 8
 - Springdoc OpenAPI
 - Testcontainers
+- Micrometer + Prometheus + OpenTelemetry tracing bridge
 
 ## Package Root
 
@@ -32,6 +33,11 @@ Spring Boot backend for the modular multi-tenant platform.
 - Soft delete support with `deleted_at` and restore flows.
 - Standard pagination DTOs and mapping utilities.
 - Shared CRUD support layer in `shared.crud` to reduce boilerplate in tenant modules.
+- Structured JSON request logging with tenant/user/trace correlation.
+- Rate limiting via Bucket4j.
+- Feature flags (global + tenant) and module access guard.
+- Brute-force protection on login endpoint.
+- Expanded actuator health indicators for migration and telemetry pipeline status.
 
 ## CRM v1 Scope
 
@@ -73,6 +79,15 @@ Spring Boot backend for the modular multi-tenant platform.
 - `V13__pet_v1_schema.sql`
 - `V14__iot_v1_schema.sql`
 - `V15__seed_pet_iot_permissions.sql`
+- `V16__feature_flags.sql`
+- `V17__rate_limit_support.sql`
+
+## Operational Endpoints
+
+- `GET /actuator/health`
+- `GET /actuator/metrics`
+- `GET /actuator/prometheus`
+- `GET /api/v1/feature-flags`
 
 ## Run Locally
 

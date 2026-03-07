@@ -15,7 +15,8 @@ Next.js admin console for the unified platform.
 - Session model with user, roles and permissions.
 - Auth guard for protected routes.
 - Permission guard for actions/components.
-- Sidebar visibility by permission.
+- Sidebar visibility by permission and backend module enablement.
+- Global error boundary and client-side structured logging.
 - CRM v1 UI:
   - contacts list/create/edit/delete
   - leads list/create/edit/delete
@@ -44,6 +45,8 @@ Next.js admin console for the unified platform.
   - `PermissionGate`
 - `src/shared/services`
   - centralized API client usage (`crm-service`, `pet-service`, `iot-service`, etc.)
+- `src/shared/observability`
+  - client logger for structured browser-side logs
 - `src/shared/ui`
   - `DataTable`, `Pagination`, `SearchBar`, `FormInput`, `FormSelect`, `DateTimeInput`, `ConfirmDialog`
 
@@ -89,3 +92,8 @@ make frontend
 npm run lint
 npm run build
 ```
+
+## Runtime Notes
+
+- Feature flags and module enablement are resolved server-side and reflected in module navigation.
+- Module-disabled API access returns `403` from backend guard, and UI sections are hidden from sidebar.

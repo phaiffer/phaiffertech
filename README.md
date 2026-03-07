@@ -9,6 +9,7 @@ Unified multi-tenant SaaS platform (CRM, Pet and IoT) built as a modular monolit
 - Spring Boot 3.x
 - Maven
 - Spring Security (JWT + RBAC + granular permissions)
+- Micrometer + Prometheus + OpenTelemetry tracing bridge
 - Spring Data JPA
 - Flyway
 - MySQL 8
@@ -22,6 +23,8 @@ Unified multi-tenant SaaS platform (CRM, Pet and IoT) built as a modular monolit
 
 ### Infra
 - Docker Compose
+- GitHub Actions CI
+- Terraform (OCI base)
 - Root Makefile
 
 ## Package Root
@@ -56,6 +59,10 @@ Backend package root is fixed:
 - Soft delete with `deleted_at` on business entities.
 - Standard pagination contract (`page`, `size`, `sort`, `direction`, `search`).
 - IoT split between control plane and data plane abstractions.
+- Structured JSON logs with tenant/user/trace correlation.
+- Actuator metrics + Prometheus endpoint.
+- API rate limiting (auth, default API, telemetry ingestion).
+- Feature flags (global + tenant) and module enablement guards.
 
 ## Flyway Migrations
 
@@ -74,6 +81,8 @@ Backend package root is fixed:
 - `V13__pet_v1_schema.sql`
 - `V14__iot_v1_schema.sql`
 - `V15__seed_pet_iot_permissions.sql`
+- `V16__feature_flags.sql`
+- `V17__rate_limit_support.sql`
 
 ## Main Endpoints (`/api/v1`)
 
@@ -88,6 +97,10 @@ Backend package root is fixed:
 - `GET|POST /tenants`
 - `GET|POST /users`
 - `GET /modules`
+- `GET /feature-flags`
+- `GET /actuator/metrics`
+- `GET /actuator/prometheus`
+- `GET /actuator/health`
 
 ### CRM
 - Contacts:
@@ -159,7 +172,8 @@ Implemented pages:
 Guards:
 - Route protection via authenticated layout (`ProtectedRoute`).
 - Permission checks via `PermissionGuard` + `usePermissions`.
-- Sidebar module visibility based on permissions.
+- Sidebar module visibility based on permissions + module enablement/feature flags.
+- Global error boundary + client-side structured logger.
 
 ## Quick Start (Docker)
 
@@ -180,6 +194,8 @@ make up
 - Backend: `http://localhost:8080`
 - Swagger: `http://localhost:8080/swagger-ui.html`
 - Adminer (optional): `http://localhost:8081` (`docker compose --profile tools up -d`)
+- Prometheus (optional): `http://localhost:9090` (`make observability-up`)
+- Grafana (optional): `http://localhost:3001` (`make observability-up`)
 
 ## Local Development
 
@@ -205,11 +221,20 @@ make help
 
 Main targets:
 - `make up`, `make down`, `make restart`, `make status`
-- `make logs-follow`, `make logs-all`, `make logs-backend`, `make logs-frontend`, `make logs-db`
+- `make logs-follow`, `make logs-all`, `make logs-json`, `make logs-backend`, `make logs-frontend`, `make logs-db`
 - `make docker-build`, `make docker-reset-db`
 - `make test`, `make test-backend`, `make test-integration`, `make test-unit`, `make test-pet`, `make test-iot`
-- `make build`, `make verify`
+- `make build`, `make verify`, `make ci`
+- `make metrics`
+- `make observability-up`, `make observability-down`
+- `make terraform-init`, `make terraform-plan`
 - `make migrate`, `make crm-seed`, `make pet-seed`, `make iot-seed`, `make db-shell`
+
+## Docker Profiles
+
+- default (sem profile): mysql + backend + frontend
+- `tools`: adminer
+- `observability`: prometheus + grafana + loki
 
 ## Integration Tests
 
@@ -240,6 +265,24 @@ make test-integration
 Notes:
 - Testcontainers + MySQL are mandatory for integration tests.
 - Integration test bootstrap sets Docker `api.version=1.44` by default (can be overridden with `DOCKER_API_VERSION`).
+
+## CI/CD
+
+- Workflow file: `.github/workflows/ci.yml`
+- Stages:
+  - backend `mvn clean verify`
+  - frontend `npm ci && npm run lint && npm run build`
+  - docker build (`docker compose build backend frontend`)
+
+## Terraform (OCI)
+
+Initial IaC base is available at `infra/terraform`:
+- `provider.tf`
+- `variables.tf`
+- `network.tf`
+- `compute.tf`
+- `mysql.tf`
+- `outputs.tf`
 
 ## Dev Credentials
 
