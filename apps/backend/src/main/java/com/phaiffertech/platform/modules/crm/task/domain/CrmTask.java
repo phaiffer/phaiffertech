@@ -27,8 +27,23 @@ public class CrmTask extends BaseTenantEntity {
     @Column(name = "status", nullable = false, length = 40)
     private String status = "OPEN";
 
+    @Column(name = "priority", nullable = false, length = 40)
+    private String priority = "MEDIUM";
+
     @Column(name = "assigned_user_id", columnDefinition = "char(36)")
     private UUID assignedUserId;
+
+    @Column(name = "company_id", columnDefinition = "char(36)")
+    private UUID companyId;
+
+    @Column(name = "contact_id", columnDefinition = "char(36)")
+    private UUID contactId;
+
+    @Column(name = "lead_id", columnDefinition = "char(36)")
+    private UUID leadId;
+
+    @Column(name = "deal_id", columnDefinition = "char(36)")
+    private UUID dealId;
 
     @Column(name = "related_type", nullable = false, length = 60)
     private String relatedType;
@@ -68,12 +83,52 @@ public class CrmTask extends BaseTenantEntity {
         this.status = status;
     }
 
+    public String getPriority() {
+        return priority;
+    }
+
+    public void setPriority(String priority) {
+        this.priority = priority;
+    }
+
     public UUID getAssignedUserId() {
         return assignedUserId;
     }
 
     public void setAssignedUserId(UUID assignedUserId) {
         this.assignedUserId = assignedUserId;
+    }
+
+    public UUID getCompanyId() {
+        return companyId;
+    }
+
+    public void setCompanyId(UUID companyId) {
+        this.companyId = companyId;
+    }
+
+    public UUID getContactId() {
+        return contactId;
+    }
+
+    public void setContactId(UUID contactId) {
+        this.contactId = contactId;
+    }
+
+    public UUID getLeadId() {
+        return leadId;
+    }
+
+    public void setLeadId(UUID leadId) {
+        this.leadId = leadId;
+    }
+
+    public UUID getDealId() {
+        return dealId;
+    }
+
+    public void setDealId(UUID dealId) {
+        this.dealId = dealId;
     }
 
     public String getRelatedType() {

@@ -6,8 +6,11 @@ import java.util.UUID;
 
 public record CrmNoteCreateRequest(
         @NotBlank String content,
-        @NotBlank String relatedType,
-        @NotNull UUID relatedId,
-        UUID authorUserId
+        UUID companyId,
+        UUID contactId,
+        UUID leadId,
+        UUID dealId,
+        String relatedType,
+        UUID relatedId
 ) {
 }

@@ -1,6 +1,9 @@
 package com.phaiffertech.platform.modules.crm.lead.service;
 
 import com.phaiffertech.platform.core.audit.service.AuditableAction;
+import com.phaiffertech.platform.modules.crm.company.service.CrmCompanyService;
+import com.phaiffertech.platform.modules.crm.contact.domain.CrmContact;
+import com.phaiffertech.platform.modules.crm.contact.repository.CrmContactRepository;
 import com.phaiffertech.platform.modules.crm.lead.domain.CrmLead;
 import com.phaiffertech.platform.modules.crm.lead.dto.CrmLeadCreateRequest;
 import com.phaiffertech.platform.modules.crm.lead.dto.CrmLeadResponse;
@@ -26,10 +29,18 @@ public class CrmLeadService extends BaseTenantCrudService<
         CrmLeadResponse> {
 
     private final CrmLeadRepository repository;
+    private final CrmCompanyService companyService;
+    private final CrmContactRepository contactRepository;
 
-    public CrmLeadService(CrmLeadRepository repository) {
+    public CrmLeadService(
+            CrmLeadRepository repository,
+            CrmCompanyService companyService,
+            CrmContactRepository contactRepository
+    ) {
         super(repository, repository, CrmLeadMapper.INSTANCE, "Lead not found.");
         this.repository = repository;
+        this.companyService = companyService;
+        this.contactRepository = contactRepository;
     }
 
     @Transactional
@@ -43,6 +54,8 @@ public class CrmLeadService extends BaseTenantCrudService<
             PageRequestDto pageRequest,
             String status,
             String source,
+            UUID companyId,
+            UUID contactId,
             UUID assignedUserId
     ) {
         return doList(
@@ -52,6 +65,8 @@ public class CrmLeadService extends BaseTenantCrudService<
                         currentTenantId(),
                         BaseSearchSpecificationBuilder.normalizeUpper(status),
                         BaseSearchSpecificationBuilder.normalizeUpper(source),
+                        companyId,
+                        contactId,
                         assignedUserId,
                         query.search(),
                         query.pageable()
@@ -80,5 +95,29 @@ public class CrmLeadService extends BaseTenantCrudService<
     @AuditableAction(action = AuditActionType.RESTORE, entity = "crm_lead")
     public CrmLeadResponse restore(UUID id) {
         return doRestore(id);
+    }
+
+    @Override
+    public void beforeCreate(UUID tenantId, CrmLeadCreateRequest request, CrmLead entity) {
+        validateReferences(tenantId, entity);
+    }
+
+    @Override
+    public void beforeUpdate(UUID tenantId, CrmLeadUpdateRequest request, CrmLead entity) {
+        validateReferences(tenantId, entity);
+    }
+
+    private void validateReferences(UUID tenantId, CrmLead entity) {
+        if (entity.getCompanyId() != null) {
+            companyService.requireActiveCompany(tenantId, entity.getCompanyId());
+        }
+
+        if (entity.getContactId() != null) {
+            CrmContact contact = contactRepository.findByIdAndTenantId(entity.getContactId(), tenantId)
+                    .orElseThrow(() -> new com.phaiffertech.platform.shared.exception.ResourceNotFoundException("Contact not found."));
+            if (entity.getCompanyId() != null && contact.getCompanyId() != null && !entity.getCompanyId().equals(contact.getCompanyId())) {
+                throw new IllegalArgumentException("Lead contact must belong to the selected company.");
+            }
+        }
     }
 }

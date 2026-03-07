@@ -7,9 +7,10 @@ import com.phaiffertech.platform.modules.crm.deal.service.CrmDealService;
 import com.phaiffertech.platform.shared.pagination.PageRequestDto;
 import com.phaiffertech.platform.shared.pagination.PageResponseDto;
 import com.phaiffertech.platform.shared.response.ApiResponse;
+import com.phaiffertech.platform.shared.security.RequirePermission;
 import jakarta.validation.Valid;
 import java.util.UUID;
-import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -30,23 +31,42 @@ public class CrmDealController {
     }
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('PLATFORM_ADMIN','TENANT_OWNER','TENANT_ADMIN','MANAGER','OPERATOR','VIEWER')")
-    public ApiResponse<PageResponseDto<CrmDealResponse>> list(@Valid @ModelAttribute PageRequestDto pageRequest) {
-        return ApiResponse.success(service.list(pageRequest));
+    @RequirePermission("crm.deal.read")
+    public ApiResponse<PageResponseDto<CrmDealResponse>> list(
+            @Valid @ModelAttribute PageRequestDto pageRequest,
+            @org.springframework.web.bind.annotation.RequestParam(required = false) String status,
+            @org.springframework.web.bind.annotation.RequestParam(required = false) UUID companyId,
+            @org.springframework.web.bind.annotation.RequestParam(required = false) UUID pipelineStageId,
+            @org.springframework.web.bind.annotation.RequestParam(required = false) UUID ownerUserId
+    ) {
+        return ApiResponse.success(service.list(pageRequest, status, companyId, pipelineStageId, ownerUserId));
+    }
+
+    @GetMapping("/{id}")
+    @RequirePermission("crm.deal.read")
+    public ApiResponse<CrmDealResponse> getById(@PathVariable UUID id) {
+        return ApiResponse.success(service.getById(id));
     }
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('PLATFORM_ADMIN','TENANT_OWNER','TENANT_ADMIN','MANAGER','OPERATOR')")
+    @RequirePermission("crm.deal.create")
     public ApiResponse<CrmDealResponse> create(@Valid @RequestBody CrmDealCreateRequest request) {
         return ApiResponse.success(service.create(request));
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('PLATFORM_ADMIN','TENANT_OWNER','TENANT_ADMIN','MANAGER','OPERATOR')")
+    @RequirePermission("crm.deal.update")
     public ApiResponse<CrmDealResponse> update(
             @PathVariable UUID id,
             @Valid @RequestBody CrmDealUpdateRequest request
     ) {
         return ApiResponse.success(service.update(id, request));
+    }
+
+    @DeleteMapping("/{id}")
+    @RequirePermission("crm.deal.delete")
+    public ApiResponse<Void> delete(@PathVariable UUID id) {
+        service.delete(id);
+        return ApiResponse.success(null);
     }
 }

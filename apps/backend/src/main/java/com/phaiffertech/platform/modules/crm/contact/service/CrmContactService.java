@@ -1,6 +1,8 @@
 package com.phaiffertech.platform.modules.crm.contact.service;
 
 import com.phaiffertech.platform.core.audit.service.AuditableAction;
+import com.phaiffertech.platform.modules.crm.company.domain.CrmCompany;
+import com.phaiffertech.platform.modules.crm.company.service.CrmCompanyService;
 import com.phaiffertech.platform.modules.crm.contact.domain.CrmContact;
 import com.phaiffertech.platform.modules.crm.contact.dto.CrmContactCreateRequest;
 import com.phaiffertech.platform.modules.crm.contact.dto.CrmContactResponse;
@@ -27,11 +29,17 @@ public class CrmContactService extends BaseTenantCrudService<
         CrmContactResponse> {
 
     private final CrmContactRepository repository;
+    private final CrmCompanyService companyService;
     private final PlatformMetricsService platformMetricsService;
 
-    public CrmContactService(CrmContactRepository repository, PlatformMetricsService platformMetricsService) {
+    public CrmContactService(
+            CrmContactRepository repository,
+            CrmCompanyService companyService,
+            PlatformMetricsService platformMetricsService
+    ) {
         super(repository, repository, CrmContactMapper.INSTANCE, "Contact not found.");
         this.repository = repository;
+        this.companyService = companyService;
         this.platformMetricsService = platformMetricsService;
     }
 
@@ -44,13 +52,19 @@ public class CrmContactService extends BaseTenantCrudService<
     }
 
     @Transactional(readOnly = true)
-    public PageResponseDto<CrmContactResponse> list(PageRequestDto pageRequest, String status, UUID ownerUserId) {
+    public PageResponseDto<CrmContactResponse> list(
+            PageRequestDto pageRequest,
+            String status,
+            UUID companyId,
+            UUID ownerUserId
+    ) {
         return doList(
                 pageRequest,
                 Sort.by(Sort.Direction.DESC, "createdAt"),
                 (BasePageQuery query) -> repository.findAllByTenantIdAndSearch(
                         currentTenantId(),
                         BaseSearchSpecificationBuilder.normalizeUpper(status),
+                        companyId,
                         ownerUserId,
                         query.search(),
                         query.pageable()
@@ -79,5 +93,23 @@ public class CrmContactService extends BaseTenantCrudService<
     @AuditableAction(action = AuditActionType.RESTORE, entity = "crm_contact")
     public CrmContactResponse restore(UUID id) {
         return doRestore(id);
+    }
+
+    @Override
+    public void beforeCreate(UUID tenantId, CrmContactCreateRequest request, CrmContact entity) {
+        hydrateCompany(tenantId, entity);
+    }
+
+    @Override
+    public void beforeUpdate(UUID tenantId, CrmContactUpdateRequest request, CrmContact entity) {
+        hydrateCompany(tenantId, entity);
+    }
+
+    private void hydrateCompany(UUID tenantId, CrmContact entity) {
+        if (entity.getCompanyId() == null) {
+            return;
+        }
+        CrmCompany company = companyService.requireActiveCompany(tenantId, entity.getCompanyId());
+        entity.setCompany(company.getName());
     }
 }

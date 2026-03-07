@@ -9,6 +9,7 @@ public record CrmContactCreateRequest(
         String lastName,
         @Email String email,
         String phone,
+        UUID companyId,
         String company,
         String status,
         UUID ownerUserId

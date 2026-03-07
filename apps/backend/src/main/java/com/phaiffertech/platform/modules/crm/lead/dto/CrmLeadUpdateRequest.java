@@ -10,6 +10,9 @@ public record CrmLeadUpdateRequest(
         String phone,
         String source,
         @NotBlank String status,
-        UUID assignedUserId
+        UUID assignedUserId,
+        UUID companyId,
+        UUID contactId,
+        String notes
 ) {
 }

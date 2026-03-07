@@ -15,6 +15,8 @@ public interface CrmPipelineRepository extends JpaRepository<CrmPipeline, UUID> 
 
     Optional<CrmPipeline> findByIdAndTenantId(UUID id, UUID tenantId);
 
+    Optional<CrmPipeline> findFirstByTenantIdAndDefaultPipelineTrueOrderByCreatedAtAsc(UUID tenantId);
+
     @Modifying
     @Query("""
             UPDATE CrmPipeline p

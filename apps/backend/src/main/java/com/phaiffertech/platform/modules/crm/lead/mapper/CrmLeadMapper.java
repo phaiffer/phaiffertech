@@ -26,6 +26,9 @@ public final class CrmLeadMapper implements BaseCrudMapper<
         lead.setSource(resolveSource(request.source()));
         lead.setStatus(resolveStatus(request.status()));
         lead.setAssignedUserId(request.assignedUserId());
+        lead.setCompanyId(request.companyId());
+        lead.setContactId(request.contactId());
+        lead.setNotes(normalize(request.notes()));
         return lead;
     }
 
@@ -37,6 +40,9 @@ public final class CrmLeadMapper implements BaseCrudMapper<
         entity.setSource(resolveSource(request.source()));
         entity.setStatus(resolveStatus(request.status()));
         entity.setAssignedUserId(request.assignedUserId());
+        entity.setCompanyId(request.companyId());
+        entity.setContactId(request.contactId());
+        entity.setNotes(normalize(request.notes()));
     }
 
     @Override
@@ -49,6 +55,9 @@ public final class CrmLeadMapper implements BaseCrudMapper<
                 lead.getSource(),
                 lead.getStatus(),
                 lead.getAssignedUserId(),
+                lead.getCompanyId(),
+                lead.getContactId(),
+                lead.getNotes(),
                 lead.getCreatedAt(),
                 lead.getUpdatedAt()
         );
@@ -62,9 +71,14 @@ public final class CrmLeadMapper implements BaseCrudMapper<
     }
 
     private String resolveSource(String source) {
-        if (source == null || source.isBlank()) {
+        String normalized = normalize(source);
+        return normalized == null ? null : normalized.toUpperCase();
+    }
+
+    private String normalize(String value) {
+        if (value == null || value.isBlank()) {
             return null;
         }
-        return source.trim().toUpperCase();
+        return value.trim();
     }
 }

@@ -11,6 +11,9 @@ public record CrmLeadResponse(
         String source,
         String status,
         UUID assignedUserId,
+        UUID companyId,
+        UUID contactId,
+        String notes,
         Instant createdAt,
         Instant updatedAt
 ) {

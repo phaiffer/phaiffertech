@@ -9,6 +9,7 @@ public record CrmContactUpdateRequest(
         String lastName,
         @Email String email,
         String phone,
+        UUID companyId,
         String company,
         @NotBlank String status,
         UUID ownerUserId

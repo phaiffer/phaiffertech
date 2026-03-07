@@ -25,14 +25,20 @@ public class CrmDeal extends BaseTenantEntity {
     @Column(name = "amount", precision = 15, scale = 2)
     private BigDecimal amount;
 
+    @Column(name = "currency", nullable = false, length = 8)
+    private String currency = "BRL";
+
     @Column(name = "status", nullable = false, length = 40)
     private String status = "OPEN";
 
     @Column(name = "pipeline_id", nullable = false, columnDefinition = "char(36)")
     private UUID pipelineId;
 
-    @Column(name = "stage_id", columnDefinition = "char(36)")
-    private UUID stageId;
+    @Column(name = "pipeline_stage_id", columnDefinition = "char(36)")
+    private UUID pipelineStageId;
+
+    @Column(name = "company_id", columnDefinition = "char(36)")
+    private UUID companyId;
 
     @Column(name = "contact_id", columnDefinition = "char(36)")
     private UUID contactId;
@@ -86,12 +92,20 @@ public class CrmDeal extends BaseTenantEntity {
         this.pipelineId = pipelineId;
     }
 
-    public UUID getStageId() {
-        return stageId;
+    public UUID getPipelineStageId() {
+        return pipelineStageId;
     }
 
-    public void setStageId(UUID stageId) {
-        this.stageId = stageId;
+    public void setPipelineStageId(UUID pipelineStageId) {
+        this.pipelineStageId = pipelineStageId;
+    }
+
+    public UUID getCompanyId() {
+        return companyId;
+    }
+
+    public void setCompanyId(UUID companyId) {
+        this.companyId = companyId;
     }
 
     public UUID getContactId() {
@@ -116,6 +130,14 @@ public class CrmDeal extends BaseTenantEntity {
 
     public void setOwnerUserId(UUID ownerUserId) {
         this.ownerUserId = ownerUserId;
+    }
+
+    public String getCurrency() {
+        return currency;
+    }
+
+    public void setCurrency(String currency) {
+        this.currency = currency;
     }
 
     public LocalDate getExpectedCloseDate() {

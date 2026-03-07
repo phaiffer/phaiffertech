@@ -43,9 +43,10 @@ public class CrmContactController {
     public ApiResponse<PageResponseDto<CrmContactResponse>> list(
             @Valid @ModelAttribute PageRequestDto pageRequest,
             @RequestParam(required = false) String status,
+            @RequestParam(required = false) UUID companyId,
             @RequestParam(required = false) UUID ownerUserId
     ) {
-        return ApiResponse.success(service.list(pageRequest, status, ownerUserId));
+        return ApiResponse.success(service.list(pageRequest, status, companyId, ownerUserId));
     }
 
     @GetMapping("/{id}")

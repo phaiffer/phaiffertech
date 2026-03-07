@@ -18,6 +18,8 @@ public interface CrmLeadRepository extends JpaRepository<CrmLead, UUID>, BaseTen
             WHERE l.tenantId = :tenantId
               AND (:status IS NULL OR UPPER(l.status) = UPPER(:status))
               AND (:source IS NULL OR UPPER(COALESCE(l.source, '')) = UPPER(:source))
+              AND (:companyId IS NULL OR l.companyId = :companyId)
+              AND (:contactId IS NULL OR l.contactId = :contactId)
               AND (:assignedUserId IS NULL OR l.assignedUserId = :assignedUserId)
               AND (:search IS NULL OR
                    LOWER(l.name) LIKE LOWER(CONCAT('%', :search, '%')) OR
@@ -30,6 +32,8 @@ public interface CrmLeadRepository extends JpaRepository<CrmLead, UUID>, BaseTen
             @Param("tenantId") UUID tenantId,
             @Param("status") String status,
             @Param("source") String source,
+            @Param("companyId") UUID companyId,
+            @Param("contactId") UUID contactId,
             @Param("assignedUserId") UUID assignedUserId,
             @Param("search") String search,
             Pageable pageable

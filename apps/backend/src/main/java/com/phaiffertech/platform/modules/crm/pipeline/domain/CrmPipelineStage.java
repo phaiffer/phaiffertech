@@ -20,8 +20,17 @@ public class CrmPipelineStage extends BaseTenantEntity {
     @Column(name = "name", nullable = false, length = 120)
     private String name;
 
-    @Column(name = "sort_order", nullable = false)
-    private int sortOrder;
+    @Column(name = "code", length = 60)
+    private String code;
+
+    @Column(name = "position", nullable = false)
+    private int position;
+
+    @Column(name = "color", length = 24)
+    private String color;
+
+    @Column(name = "is_default", nullable = false)
+    private boolean defaultStage;
 
     public UUID getPipelineId() {
         return pipelineId;
@@ -39,11 +48,35 @@ public class CrmPipelineStage extends BaseTenantEntity {
         this.name = name;
     }
 
-    public int getSortOrder() {
-        return sortOrder;
+    public String getCode() {
+        return code;
     }
 
-    public void setSortOrder(int sortOrder) {
-        this.sortOrder = sortOrder;
+    public void setCode(String code) {
+        this.code = code;
+    }
+
+    public int getPosition() {
+        return position;
+    }
+
+    public void setPosition(int position) {
+        this.position = position;
+    }
+
+    public String getColor() {
+        return color;
+    }
+
+    public void setColor(String color) {
+        this.color = color;
+    }
+
+    public boolean isDefaultStage() {
+        return defaultStage;
+    }
+
+    public void setDefaultStage(boolean defaultStage) {
+        this.defaultStage = defaultStage;
     }
 }

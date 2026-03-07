@@ -64,6 +64,36 @@ Backend package root is fixed:
 - API rate limiting (auth, default API, telemetry ingestion).
 - Feature flags (global + tenant) and module enablement guards.
 
+## CRM Delivery Status
+
+Legacy CRM reference was analyzed in `../crm-platform` only as a functional reference. Main conclusions:
+
+- Legacy domains found: companies, contacts, leads, deals, pipeline stages, tasks, notes, campaigns, conversations, attachments, notifications, audit/activity, dashboard, invites, onboarding and chatbot.
+- CRM V1 in this platform now covers: companies, contacts, leads, deals, pipeline stages, tasks, notes, activity feed and dashboard summary.
+- Cross-module concerns remain outside CRM: notifications, attachments, invites and onboarding belong conceptually to `core`.
+- Deferred to CRM V2: campaigns, conversations and chatbot-oriented flows.
+
+Gap decision summary:
+
+| Domain | Status na nova plataforma |
+| --- | --- |
+| companies | já implementado |
+| contacts | já implementado |
+| leads | já implementado |
+| deals | já implementado |
+| pipeline stages | já implementado |
+| tasks | já implementado |
+| notes | já implementado |
+| activity feed | já implementado |
+| dashboard | já implementado |
+| notifications | mover para core |
+| attachments | mover para core |
+| invites | mover para core |
+| onboarding | mover para core |
+| campaigns | adiar para CRM V2 |
+| conversations | adiar para CRM V2 |
+| chatbot | adiar para CRM V2 |
+
 ## Flyway Migrations
 
 - `V1__init_schema.sql`
@@ -83,6 +113,9 @@ Backend package root is fixed:
 - `V15__seed_pet_iot_permissions.sql`
 - `V16__feature_flags.sql`
 - `V17__rate_limit_support.sql`
+- `V18__crm_companies_pipeline_deals.sql`
+- `V19__crm_tasks_notes_activity.sql`
+- `V20__crm_permissions_seed.sql`
 
 ## Main Endpoints (`/api/v1`)
 
@@ -103,6 +136,9 @@ Backend package root is fixed:
 - `GET /actuator/health`
 
 ### CRM
+- Companies:
+  - `GET|POST /crm/companies`
+  - `GET|PUT|DELETE /crm/companies/{id}`
 - Contacts:
   - `GET|POST /crm/contacts`
   - `GET|PUT|DELETE /crm/contacts/{id}`
@@ -111,14 +147,21 @@ Backend package root is fixed:
   - `GET|POST /crm/leads`
   - `GET|PUT|DELETE /crm/leads/{id}`
   - `PATCH /crm/leads/{id}/restore`
-- Pipeline/Deal base:
-  - `GET|POST /crm/pipelines`
+- Pipeline stages:
+  - `GET|POST /crm/pipeline-stages`
+  - `GET|PUT|DELETE /crm/pipeline-stages/{id}`
+- Deals:
   - `GET|POST /crm/deals`
-  - `PUT /crm/deals/{id}`
-- Notes/Tasks base:
-  - `GET|POST /crm/notes`
+  - `GET|PUT|DELETE /crm/deals/{id}`
+- Tasks:
   - `GET|POST /crm/tasks`
-  - `PUT /crm/tasks/{id}`
+  - `GET|PUT|DELETE /crm/tasks/{id}`
+- Notes:
+  - `GET|POST /crm/notes`
+  - `GET|PUT|DELETE /crm/notes/{id}`
+- Activity and dashboard:
+  - `GET /crm/activity`
+  - `GET /crm/dashboard/summary`
 
 ### Pet / IoT
 - Pet clients:
@@ -156,8 +199,15 @@ Implemented pages:
 - Core: `/dashboard`, `/tenants`, `/users`, `/settings`
 - CRM:
   - `/crm`
+  - `/crm/dashboard`
+  - `/crm/activity`
+  - `/crm/companies`
   - `/crm/contacts`, `/crm/contacts/new`, `/crm/contacts/[id]`
   - `/crm/leads`, `/crm/leads/new`, `/crm/leads/[id]`
+  - `/crm/deals`
+  - `/crm/pipeline`
+  - `/crm/tasks`
+  - `/crm/notes`
 - PET:
   - `/pet`
   - `/pet/clients`
@@ -250,6 +300,8 @@ Current coverage includes:
 - tenant-role resolution and permission inheritance
 - permission enforcement
 - CRM contacts/leads CRUD
+- CRM companies/deals/pipeline/tasks/notes CRUD
+- CRM dashboard summary and activity feed
 - PET clients/profiles/appointments CRUD
 - IoT devices/alarms CRUD
 - IoT telemetry write/read

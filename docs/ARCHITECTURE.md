@@ -49,11 +49,15 @@ com.phaiffertech.platform
 │   └── module
 ├── modules
 │   ├── crm
+│   │   ├── activity
+│   │   ├── company
 │   │   ├── contact
+│   │   ├── dashboard
 │   │   ├── lead
 │   │   ├── pipeline
 │   │   ├── deal
 │   │   ├── note
+│   │   ├── shared
 │   │   └── task
 │   ├── pet
 │   │   ├── client
@@ -215,26 +219,113 @@ Standard response:
 
 Legacy fields (`content`, `totalElements`) remain for compatibility.
 
-## CRM v1
+## Legacy CRM Functional Summary
 
-### Contacts
-- CRUD + restore
-- search by name/email/company
-- filters by status and owner
-- soft delete + auditing + permission checks
+The legacy CRM at `../crm-platform` was inspected only as a reference source. Functional findings:
 
-### Leads
-- CRUD + restore
-- search and filters by status/source/assigned user
-- soft delete + auditing + permission checks
+- companies: tenant/organization scoped company registry with owner, contact channels, status and audit trail.
+- contacts: linked to companies, unique email rules, soft delete and owner/status filtering.
+- leads: source and status management, optional company/contact linkage, notes and conversion to deal.
+- deals: stage transitions, expected close date, amount/probability and linkage with company/contact/lead.
+- pipeline stages: ordered stages with default stage handling.
+- tasks: linked to CRM entities, due date/assignee, notification emission and audit logging.
+- notes: linked to CRM entities, author tracking and audit logging.
+- campaigns: campaign registry with targets from contacts/leads and schedule validation.
+- conversations: conversation and message threads, plus attachment linkage.
+- attachments: generic file linkage to CRM entities.
+- notifications: user-level operational notifications.
+- activity feed: audit-log-based event history.
+- dashboard: summary counts plus task and pipeline snapshots.
+- invites/onboarding: tenant bootstrap and initial admin creation.
+- chatbot: conversational helper with stored conversation history.
 
-### Pipeline/Deals base
-- pipeline + stages
-- deals with pipeline/stage/contact/lead references
+## CRM Gap Analysis and Scope
 
-### Notes/Tasks base
-- tenant-scoped notes linked by related type/id
-- tenant-scoped tasks with assignee and due date
+The table below reflects the decision taken for the new platform after comparing the legacy CRM against `apps/backend/src/main/java/com/phaiffertech/platform/modules/crm`.
+
+| Funcionalidade | Status na nova plataforma | Decisão |
+| --- | --- | --- |
+| companies | não implementado no início da etapa | já implementado em CRM V1 |
+| contacts | parcialmente implementado no início da etapa | já implementado em CRM V1 |
+| leads | parcialmente implementado no início da etapa | já implementado em CRM V1 |
+| deals | parcialmente implementado no início da etapa | já implementado em CRM V1 |
+| pipeline stages | parcialmente implementado no início da etapa | já implementado em CRM V1 |
+| tasks | parcialmente implementado no início da etapa | já implementado em CRM V1 |
+| notes | parcialmente implementado no início da etapa | já implementado em CRM V1 |
+| activity feed | não implementado no início da etapa | já implementado em CRM V1 usando `core.audit` |
+| dashboard summary | não implementado no início da etapa | já implementado em CRM V1 |
+| notifications | não integrado no CRM | mover para `core.notification` |
+| attachments | não implementado no CRM | mover para `core.attachment` |
+| invites | fora do módulo CRM | mover para `core`/tenant lifecycle |
+| onboarding | fora do módulo CRM | mover para `core`/tenant lifecycle |
+| campaigns | não implementado | adiar para CRM V2 |
+| conversations | não implementado | adiar para CRM V2 |
+| chatbot | não implementado | adiar para CRM V2 |
+
+## CRM V1 Scope
+
+Mandatory scope delivered:
+
+- companies
+- contacts
+- leads
+- deals
+- pipeline stages
+- tasks
+- notes
+
+Recommended V1 scope delivered:
+
+- activity feed (`GET /api/v1/crm/activity`)
+- dashboard summary (`GET /api/v1/crm/dashboard/summary`)
+
+Core-aligned scope:
+
+- notifications remain a core concern and should be integrated from `core.notification`
+- attachments remain a core concern and should reuse `core.attachment`
+- invites and onboarding stay in core because they are tenant lifecycle workflows, not CRM records
+
+Deferred to CRM V2:
+
+- campaigns
+- conversations
+- advanced attachments and richer document flows
+- chatbot
+
+## CRM V1 Implementation Notes
+
+Implemented backend domains:
+
+- `modules.crm.company`
+- `modules.crm.contact`
+- `modules.crm.lead`
+- `modules.crm.pipeline`
+- `modules.crm.deal`
+- `modules.crm.task`
+- `modules.crm.note`
+- `modules.crm.activity`
+- `modules.crm.dashboard`
+
+Common guarantees across CRM V1:
+
+- true multi-tenancy through mandatory `tenant_id` scoping
+- soft delete on CRM entities
+- audit trail integration
+- standard paginated list contract
+- granular permissions with `@RequirePermission`
+- tenant isolation in read/write validation
+
+Main V1 permissions:
+
+- `crm.company.read|create|update|delete`
+- `crm.contact.read|create|update|delete`
+- `crm.lead.read|create|update|delete`
+- `crm.deal.read|create|update|delete`
+- `crm.pipeline.read|create|update|delete`
+- `crm.task.read|create|update|delete`
+- `crm.note.read|create|update|delete`
+- `crm.activity.read`
+- `crm.dashboard.read`
 
 ## IoT Control Plane vs Data Plane
 
@@ -268,6 +359,9 @@ Current migration chain:
 - `V15__seed_pet_iot_permissions.sql`
 - `V16__feature_flags.sql`
 - `V17__rate_limit_support.sql`
+- `V18__crm_companies_pipeline_deals.sql`
+- `V19__crm_tasks_notes_activity.sql`
+- `V20__crm_permissions_seed.sql`
 
 Previous migrations were preserved; new changes are strictly incremental.
 
@@ -287,7 +381,8 @@ Coverage includes:
 - tenant isolation
 - tenant role and permission resolution
 - permission enforcement
-- CRM contacts/leads CRUD
+- CRM companies/contacts/leads/deals/pipeline/tasks/notes CRUD
+- CRM dashboard summary and activity feed
 - PET clients/profiles/appointments CRUD
 - IoT devices/alarms CRUD
 - IoT telemetry write/read

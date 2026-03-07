@@ -10,6 +10,9 @@ public record CrmLeadCreateRequest(
         String phone,
         String source,
         String status,
-        UUID assignedUserId
+        UUID assignedUserId,
+        UUID companyId,
+        UUID contactId,
+        String notes
 ) {
 }

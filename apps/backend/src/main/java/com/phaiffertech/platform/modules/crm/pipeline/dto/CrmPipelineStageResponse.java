@@ -5,6 +5,9 @@ import java.util.UUID;
 public record CrmPipelineStageResponse(
         UUID id,
         String name,
-        int sortOrder
+        String code,
+        int position,
+        String color,
+        boolean isDefault
 ) {
 }

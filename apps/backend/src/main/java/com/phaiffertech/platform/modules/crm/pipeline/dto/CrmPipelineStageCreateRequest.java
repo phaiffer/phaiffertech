@@ -5,6 +5,9 @@ import jakarta.validation.constraints.NotBlank;
 
 public record CrmPipelineStageCreateRequest(
         @NotBlank String name,
-        @Min(1) Integer sortOrder
+        String code,
+        @Min(1) Integer position,
+        String color,
+        Boolean isDefault
 ) {
 }

@@ -9,6 +9,7 @@ public record CrmContactResponse(
         String lastName,
         String email,
         String phone,
+        UUID companyId,
         String company,
         String status,
         UUID ownerUserId,

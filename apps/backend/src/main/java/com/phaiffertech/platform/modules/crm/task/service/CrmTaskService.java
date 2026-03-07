@@ -1,6 +1,7 @@
 package com.phaiffertech.platform.modules.crm.task.service;
 
 import com.phaiffertech.platform.core.audit.service.AuditableAction;
+import com.phaiffertech.platform.modules.crm.shared.service.CrmRelationResolverService;
 import com.phaiffertech.platform.modules.crm.task.domain.CrmTask;
 import com.phaiffertech.platform.modules.crm.task.dto.CrmTaskCreateRequest;
 import com.phaiffertech.platform.modules.crm.task.dto.CrmTaskResponse;
@@ -23,22 +24,47 @@ import org.springframework.transaction.annotation.Transactional;
 public class CrmTaskService {
 
     private final CrmTaskRepository repository;
+    private final CrmRelationResolverService relationResolverService;
 
-    public CrmTaskService(CrmTaskRepository repository) {
+    public CrmTaskService(CrmTaskRepository repository, CrmRelationResolverService relationResolverService) {
         this.repository = repository;
+        this.relationResolverService = relationResolverService;
     }
 
     @Transactional(readOnly = true)
-    public PageResponseDto<CrmTaskResponse> list(PageRequestDto pageRequest) {
+    public PageResponseDto<CrmTaskResponse> list(
+            PageRequestDto pageRequest,
+            String status,
+            String priority,
+            UUID assignedUserId,
+            UUID companyId,
+            UUID contactId,
+            UUID leadId,
+            UUID dealId
+    ) {
         UUID tenantId = TenantContext.getRequiredTenantId();
         Page<CrmTaskResponse> result = repository.findAllByTenantAndSearch(
                         tenantId,
+                        normalizeUpper(status),
+                        normalizeUpper(priority),
+                        assignedUserId,
+                        companyId,
+                        contactId,
+                        leadId,
+                        dealId,
                         pageRequest.normalizedSearch(),
-                        PaginationUtils.toPageable(pageRequest, Sort.by(Sort.Direction.DESC, "createdAt"))
+                        PaginationUtils.toPageable(pageRequest, Sort.by(Sort.Direction.DESC, "dueDate"))
                 )
                 .map(CrmTaskMapper::toResponse);
 
         return PaginationUtils.fromPage(result);
+    }
+
+    @Transactional(readOnly = true)
+    public CrmTaskResponse getById(UUID id) {
+        UUID tenantId = TenantContext.getRequiredTenantId();
+        return CrmTaskMapper.toResponse(repository.findByIdAndTenantId(id, tenantId)
+                .orElseThrow(() -> new ResourceNotFoundException("Task not found.")));
     }
 
     @Transactional
@@ -46,9 +72,7 @@ public class CrmTaskService {
     public CrmTaskResponse create(CrmTaskCreateRequest request) {
         CrmTask task = new CrmTask();
         task.setTenantId(TenantContext.getRequiredTenantId());
-        apply(task, request.title(), request.description(), request.dueDate(), request.status(),
-                request.assignedUserId(), request.relatedType(), request.relatedId());
-
+        apply(task, request);
         return CrmTaskMapper.toResponse(repository.save(task));
     }
 
@@ -58,30 +82,66 @@ public class CrmTaskService {
         UUID tenantId = TenantContext.getRequiredTenantId();
         CrmTask task = repository.findByIdAndTenantId(id, tenantId)
                 .orElseThrow(() -> new ResourceNotFoundException("Task not found."));
-
-        apply(task, request.title(), request.description(), request.dueDate(), request.status(),
-                request.assignedUserId(), request.relatedType(), request.relatedId());
-
+        apply(task, request);
         return CrmTaskMapper.toResponse(repository.save(task));
     }
 
-    private void apply(
-            CrmTask task,
-            String title,
-            String description,
-            java.time.Instant dueDate,
-            String status,
-            UUID assignedUserId,
-            String relatedType,
-            UUID relatedId
-    ) {
-        task.setTitle(title.trim());
-        task.setDescription(description);
-        task.setDueDate(dueDate);
-        task.setStatus(resolveStatus(status));
-        task.setAssignedUserId(assignedUserId);
-        task.setRelatedType(relatedType.trim().toUpperCase());
-        task.setRelatedId(relatedId);
+    @Transactional
+    @AuditableAction(action = AuditActionType.DELETE, entity = "crm_task")
+    public void delete(UUID id) {
+        UUID tenantId = TenantContext.getRequiredTenantId();
+        CrmTask task = repository.findByIdAndTenantId(id, tenantId)
+                .orElseThrow(() -> new ResourceNotFoundException("Task not found."));
+        task.setDeletedAt(java.time.Instant.now());
+        repository.save(task);
+    }
+
+    private void apply(CrmTask task, CrmTaskCreateRequest request) {
+        var relation = relationResolverService.resolveAndValidate(
+                TenantContext.getRequiredTenantId(),
+                request.companyId(),
+                request.contactId(),
+                request.leadId(),
+                request.dealId(),
+                request.relatedType(),
+                request.relatedId()
+        );
+        task.setTitle(request.title().trim());
+        task.setDescription(normalize(request.description()));
+        task.setDueDate(request.dueDate());
+        task.setStatus(resolveStatus(request.status()));
+        task.setPriority(resolvePriority(request.priority()));
+        task.setAssignedUserId(request.assignedUserId());
+        task.setRelatedType(relation.relatedType());
+        task.setRelatedId(relation.relatedId());
+        task.setCompanyId(relation.companyId());
+        task.setContactId(relation.contactId());
+        task.setLeadId(relation.leadId());
+        task.setDealId(relation.dealId());
+    }
+
+    private void apply(CrmTask task, CrmTaskUpdateRequest request) {
+        var relation = relationResolverService.resolveAndValidate(
+                TenantContext.getRequiredTenantId(),
+                request.companyId(),
+                request.contactId(),
+                request.leadId(),
+                request.dealId(),
+                request.relatedType(),
+                request.relatedId()
+        );
+        task.setTitle(request.title().trim());
+        task.setDescription(normalize(request.description()));
+        task.setDueDate(request.dueDate());
+        task.setStatus(resolveStatus(request.status()));
+        task.setPriority(resolvePriority(request.priority()));
+        task.setAssignedUserId(request.assignedUserId());
+        task.setRelatedType(relation.relatedType());
+        task.setRelatedId(relation.relatedId());
+        task.setCompanyId(relation.companyId());
+        task.setContactId(relation.contactId());
+        task.setLeadId(relation.leadId());
+        task.setDealId(relation.dealId());
     }
 
     private String resolveStatus(String status) {
@@ -89,5 +149,24 @@ public class CrmTaskService {
             return "OPEN";
         }
         return status.trim().toUpperCase();
+    }
+
+    private String resolvePriority(String priority) {
+        if (priority == null || priority.isBlank()) {
+            return "MEDIUM";
+        }
+        return priority.trim().toUpperCase();
+    }
+
+    private String normalizeUpper(String value) {
+        String normalized = normalize(value);
+        return normalized == null ? null : normalized.toUpperCase();
+    }
+
+    private String normalize(String value) {
+        if (value == null || value.isBlank()) {
+            return null;
+        }
+        return value.trim();
     }
 }

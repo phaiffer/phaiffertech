@@ -24,6 +24,7 @@ public final class CrmContactMapper implements BaseCrudMapper<
         contact.setLastName(request.lastName());
         contact.setEmail(request.email());
         contact.setPhone(request.phone());
+        contact.setCompanyId(request.companyId());
         contact.setCompany(request.company());
         contact.setStatus(resolveStatus(request.status()));
         contact.setOwnerUserId(request.ownerUserId());
@@ -36,6 +37,7 @@ public final class CrmContactMapper implements BaseCrudMapper<
         entity.setLastName(request.lastName());
         entity.setEmail(request.email());
         entity.setPhone(request.phone());
+        entity.setCompanyId(request.companyId());
         entity.setCompany(request.company());
         entity.setStatus(resolveStatus(request.status()));
         entity.setOwnerUserId(request.ownerUserId());
@@ -49,6 +51,7 @@ public final class CrmContactMapper implements BaseCrudMapper<
                 contact.getLastName(),
                 contact.getEmail(),
                 contact.getPhone(),
+                contact.getCompanyId(),
                 contact.getCompany(),
                 contact.getStatus(),
                 contact.getOwnerUserId(),

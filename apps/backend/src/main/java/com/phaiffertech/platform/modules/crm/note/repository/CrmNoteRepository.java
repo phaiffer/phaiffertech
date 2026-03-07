@@ -14,13 +14,21 @@ public interface CrmNoteRepository extends JpaRepository<CrmNote, UUID> {
             SELECT n
             FROM CrmNote n
             WHERE n.tenantId = :tenantId
-              AND (:relatedType IS NULL OR UPPER(n.relatedType) = UPPER(:relatedType))
-              AND (:relatedId IS NULL OR n.relatedId = :relatedId)
+              AND (:companyId IS NULL OR n.companyId = :companyId)
+              AND (:contactId IS NULL OR n.contactId = :contactId)
+              AND (:leadId IS NULL OR n.leadId = :leadId)
+              AND (:dealId IS NULL OR n.dealId = :dealId)
+              AND (:search IS NULL OR LOWER(n.content) LIKE LOWER(CONCAT('%', :search, '%')))
             """)
     Page<CrmNote> findAllByTenantAndRelation(
             @Param("tenantId") UUID tenantId,
-            @Param("relatedType") String relatedType,
-            @Param("relatedId") UUID relatedId,
+            @Param("companyId") UUID companyId,
+            @Param("contactId") UUID contactId,
+            @Param("leadId") UUID leadId,
+            @Param("dealId") UUID dealId,
+            @Param("search") String search,
             Pageable pageable
     );
+
+    java.util.Optional<CrmNote> findByIdAndTenantId(UUID id, UUID tenantId);
 }

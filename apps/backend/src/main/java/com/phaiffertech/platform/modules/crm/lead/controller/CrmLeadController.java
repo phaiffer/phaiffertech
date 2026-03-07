@@ -38,9 +38,11 @@ public class CrmLeadController {
             @Valid @ModelAttribute PageRequestDto pageRequest,
             @RequestParam(required = false) String status,
             @RequestParam(required = false) String source,
+            @RequestParam(required = false) UUID companyId,
+            @RequestParam(required = false) UUID contactId,
             @RequestParam(required = false) UUID assignedUserId
     ) {
-        return ApiResponse.success(service.list(pageRequest, status, source, assignedUserId));
+        return ApiResponse.success(service.list(pageRequest, status, source, companyId, contactId, assignedUserId));
     }
 
     @PostMapping

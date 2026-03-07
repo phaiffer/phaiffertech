@@ -32,6 +32,15 @@ public class CrmLead extends BaseTenantEntity {
     @Column(name = "assigned_user_id", columnDefinition = "char(36)")
     private UUID assignedUserId;
 
+    @Column(name = "company_id", columnDefinition = "char(36)")
+    private UUID companyId;
+
+    @Column(name = "contact_id", columnDefinition = "char(36)")
+    private UUID contactId;
+
+    @Column(name = "notes")
+    private String notes;
+
     public String getName() {
         return name;
     }
@@ -70,6 +79,30 @@ public class CrmLead extends BaseTenantEntity {
 
     public void setAssignedUserId(UUID assignedUserId) {
         this.assignedUserId = assignedUserId;
+    }
+
+    public UUID getCompanyId() {
+        return companyId;
+    }
+
+    public void setCompanyId(UUID companyId) {
+        this.companyId = companyId;
+    }
+
+    public UUID getContactId() {
+        return contactId;
+    }
+
+    public void setContactId(UUID contactId) {
+        this.contactId = contactId;
+    }
+
+    public String getNotes() {
+        return notes;
+    }
+
+    public void setNotes(String notes) {
+        this.notes = notes;
     }
 
     public String getPhone() {

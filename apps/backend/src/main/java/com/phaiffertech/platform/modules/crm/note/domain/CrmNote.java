@@ -17,6 +17,18 @@ public class CrmNote extends BaseTenantEntity {
     @Column(name = "content", nullable = false)
     private String content;
 
+    @Column(name = "company_id", columnDefinition = "char(36)")
+    private UUID companyId;
+
+    @Column(name = "contact_id", columnDefinition = "char(36)")
+    private UUID contactId;
+
+    @Column(name = "lead_id", columnDefinition = "char(36)")
+    private UUID leadId;
+
+    @Column(name = "deal_id", columnDefinition = "char(36)")
+    private UUID dealId;
+
     @Column(name = "related_type", nullable = false, length = 60)
     private String relatedType;
 
@@ -40,6 +52,38 @@ public class CrmNote extends BaseTenantEntity {
 
     public void setRelatedType(String relatedType) {
         this.relatedType = relatedType;
+    }
+
+    public UUID getCompanyId() {
+        return companyId;
+    }
+
+    public void setCompanyId(UUID companyId) {
+        this.companyId = companyId;
+    }
+
+    public UUID getContactId() {
+        return contactId;
+    }
+
+    public void setContactId(UUID contactId) {
+        this.contactId = contactId;
+    }
+
+    public UUID getLeadId() {
+        return leadId;
+    }
+
+    public void setLeadId(UUID leadId) {
+        this.leadId = leadId;
+    }
+
+    public UUID getDealId() {
+        return dealId;
+    }
+
+    public void setDealId(UUID dealId) {
+        this.dealId = dealId;
     }
 
     public UUID getRelatedId() {

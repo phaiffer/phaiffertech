@@ -12,9 +12,14 @@ public final class CrmNoteMapper {
         return new CrmNoteResponse(
                 note.getId(),
                 note.getContent(),
+                note.getCompanyId(),
+                note.getContactId(),
+                note.getLeadId(),
+                note.getDealId(),
                 note.getRelatedType(),
                 note.getRelatedId(),
                 note.getAuthorUserId(),
+                note.getCreatedBy(),
                 note.getCreatedAt(),
                 note.getUpdatedAt()
         );

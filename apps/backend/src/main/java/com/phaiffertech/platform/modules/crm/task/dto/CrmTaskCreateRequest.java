@@ -10,8 +10,13 @@ public record CrmTaskCreateRequest(
         String description,
         Instant dueDate,
         String status,
+        String priority,
         UUID assignedUserId,
-        @NotBlank String relatedType,
-        @NotNull UUID relatedId
+        UUID companyId,
+        UUID contactId,
+        UUID leadId,
+        UUID dealId,
+        String relatedType,
+        UUID relatedId
 ) {
 }

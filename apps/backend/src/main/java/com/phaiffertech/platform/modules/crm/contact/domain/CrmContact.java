@@ -29,6 +29,9 @@ public class CrmContact extends BaseTenantEntity {
     @Column(name = "company", length = 160)
     private String company;
 
+    @Column(name = "company_id", columnDefinition = "char(36)")
+    private UUID companyId;
+
     @Column(name = "status", nullable = false, length = 40)
     private String status = "ACTIVE";
 
@@ -81,6 +84,14 @@ public class CrmContact extends BaseTenantEntity {
 
     public void setCompany(String company) {
         this.company = company;
+    }
+
+    public UUID getCompanyId() {
+        return companyId;
+    }
+
+    public void setCompanyId(UUID companyId) {
+        this.companyId = companyId;
     }
 
     public UUID getOwnerUserId() {

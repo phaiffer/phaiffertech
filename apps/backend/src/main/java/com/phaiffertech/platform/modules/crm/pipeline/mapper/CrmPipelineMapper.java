@@ -27,6 +27,13 @@ public final class CrmPipelineMapper {
     }
 
     public static CrmPipelineStageResponse toStageResponse(CrmPipelineStage stage) {
-        return new CrmPipelineStageResponse(stage.getId(), stage.getName(), stage.getSortOrder());
+        return new CrmPipelineStageResponse(
+                stage.getId(),
+                stage.getName(),
+                stage.getCode(),
+                stage.getPosition(),
+                stage.getColor(),
+                stage.isDefaultStage()
+        );
     }
 }

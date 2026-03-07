@@ -18,6 +18,7 @@ public interface CrmContactRepository extends JpaRepository<CrmContact, UUID>, B
             FROM CrmContact c
             WHERE c.tenantId = :tenantId
               AND (:status IS NULL OR UPPER(c.status) = UPPER(:status))
+              AND (:companyId IS NULL OR c.companyId = :companyId)
               AND (:ownerUserId IS NULL OR c.ownerUserId = :ownerUserId)
               AND (:search IS NULL OR
                    LOWER(c.firstName) LIKE LOWER(CONCAT('%', :search, '%')) OR
@@ -30,6 +31,7 @@ public interface CrmContactRepository extends JpaRepository<CrmContact, UUID>, B
     Page<CrmContact> findAllByTenantIdAndSearch(
             @Param("tenantId") UUID tenantId,
             @Param("status") String status,
+            @Param("companyId") UUID companyId,
             @Param("ownerUserId") UUID ownerUserId,
             @Param("search") String search,
             Pageable pageable
