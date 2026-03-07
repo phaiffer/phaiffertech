@@ -42,6 +42,12 @@ services:
       APP_SECURITY_JWT_REFRESH_DAYS: ${APP_SECURITY_JWT_REFRESH_DAYS:-7}
       APP_CORS_ALLOWED_ORIGINS: ${APP_CORS_ALLOWED_ORIGINS:-http://localhost:3000}
       APP_TENANT_HEADER: ${APP_TENANT_HEADER:-X-Tenant-Id}
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:8080/actuator/health >/dev/null || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
     ports:
       - "${BACKEND_PORT:-8080}:8080"
     networks:
@@ -55,7 +61,7 @@ services:
     restart: unless-stopped
     depends_on:
       backend:
-        condition: service_started
+        condition: service_healthy
     environment:
       NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8080/api/v1}
     ports:

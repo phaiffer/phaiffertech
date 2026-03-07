@@ -45,7 +45,11 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
       method: options.method ?? 'GET',
       error: error instanceof Error ? error.message : 'unknown'
     });
-    throw new ApiClientError('Falha de comunicação com a API.', 0, 'NETWORK_ERROR');
+    throw new ApiClientError(
+      'Falha de comunicação com a API. O backend pode estar inicializando ou indisponível.',
+      0,
+      'NETWORK_ERROR'
+    );
   }
 
   if (!response.ok) {

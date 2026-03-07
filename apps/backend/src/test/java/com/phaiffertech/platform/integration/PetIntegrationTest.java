@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.phaiffertech.platform.support.AbstractIntegrationTest;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.ZoneOffset;
 import java.util.Map;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
@@ -289,17 +290,30 @@ class PetIntegrationTest extends AbstractIntegrationTest {
         String petId = createPet(session, clientId, marker);
         String serviceId = createService(session, marker);
         String professionalId = createProfessional(session, marker);
+        Instant appointmentToday = LocalDate.now(ZoneOffset.UTC).atTime(12, 0).toInstant(ZoneOffset.UTC);
+        Instant appointmentFuture = LocalDate.now(ZoneOffset.UTC).plusDays(1).atTime(9, 0).toInstant(ZoneOffset.UTC);
 
-        ResponseEntity<JsonNode> createAppointment = post("/pet/appointments", Map.of(
+        ResponseEntity<JsonNode> createAppointmentToday = post("/pet/appointments", Map.of(
                 "clientId", clientId,
                 "petId", petId,
                 "serviceId", serviceId,
                 "professionalId", professionalId,
-                "scheduledAt", Instant.now().plusSeconds(5400).toString(),
+                "scheduledAt", appointmentToday.toString(),
                 "status", "SCHEDULED",
-                "notes", "Dashboard appointment " + marker
+                "notes", "Dashboard appointment today " + marker
         ), session);
-        assertEquals(200, createAppointment.getStatusCode().value());
+        assertEquals(200, createAppointmentToday.getStatusCode().value());
+
+        ResponseEntity<JsonNode> createAppointmentFuture = post("/pet/appointments", Map.of(
+                "clientId", clientId,
+                "petId", petId,
+                "serviceId", serviceId,
+                "professionalId", professionalId,
+                "scheduledAt", appointmentFuture.toString(),
+                "status", "SCHEDULED",
+                "notes", "Dashboard appointment future " + marker
+        ), session);
+        assertEquals(200, createAppointmentFuture.getStatusCode().value());
 
         ResponseEntity<JsonNode> createMedicalRecord = post("/pet/medical-records", Map.of(
                 "petId", petId,

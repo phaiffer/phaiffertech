@@ -10,7 +10,11 @@ const spaceGrotesk = Space_Grotesk({
 
 export const metadata: Metadata = {
   title: 'Phaiffer Platform',
-  description: 'Unified multi-tenant SaaS platform'
+  description: 'Unified multi-tenant SaaS platform',
+  icons: {
+    icon: '/favicon.ico',
+    shortcut: '/favicon.ico'
+  }
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

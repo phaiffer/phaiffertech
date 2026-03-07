@@ -1,4 +1,4 @@
-package com.phaiffertech.platform.modules.iot.device.service;
+package com.phaiffertech.platform.modules.iot.processing.service;
 
 import com.phaiffertech.platform.modules.iot.alarm.repository.IotAlarmRepository;
 import com.phaiffertech.platform.modules.iot.device.domain.IotDevice;
