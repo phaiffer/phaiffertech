@@ -12,8 +12,14 @@ const items = [
   { href: '/crm', label: 'CRM Home', anyOf: ['crm.contact.read', 'crm.lead.read'] },
   { href: '/crm/contacts', label: 'CRM Contacts', anyOf: ['crm.contact.read'] },
   { href: '/crm/leads', label: 'CRM Leads', anyOf: ['crm.lead.read'] },
-  { href: '/pet', label: 'Pet', anyOf: ['pet.client.read'] },
-  { href: '/iot', label: 'IoT', anyOf: ['iot.device.read'] },
+  { href: '/pet', label: 'Pet Home', anyOf: ['pet.client.read', 'pet.profile.read', 'pet.appointment.read'] },
+  { href: '/pet/clients', label: 'Pet Clients', anyOf: ['pet.client.read'] },
+  { href: '/pet/pets', label: 'Pet Profiles', anyOf: ['pet.profile.read'] },
+  { href: '/pet/appointments', label: 'Pet Appointments', anyOf: ['pet.appointment.read'] },
+  { href: '/iot', label: 'IoT Home', anyOf: ['iot.device.read', 'iot.alarm.read', 'iot.telemetry.read'] },
+  { href: '/iot/devices', label: 'IoT Devices', anyOf: ['iot.device.read'] },
+  { href: '/iot/alarms', label: 'IoT Alarms', anyOf: ['iot.alarm.read'] },
+  { href: '/iot/telemetry', label: 'IoT Telemetry', anyOf: ['iot.telemetry.read'] },
   { href: '/settings', label: 'Settings' }
 ];
 
@@ -38,8 +44,8 @@ export function Sidebar() {
 
       <nav className="flex-1 space-y-1 overflow-y-auto">
         {visibleItems.map((item) => {
-          const active = item.href === '/crm'
-            ? pathname === '/crm'
+          const active = item.href === '/crm' || item.href === '/pet' || item.href === '/iot'
+            ? pathname === item.href
             : pathname === item.href || pathname.startsWith(`${item.href}/`);
           return (
             <Link

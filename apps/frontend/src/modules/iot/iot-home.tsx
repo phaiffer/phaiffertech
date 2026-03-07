@@ -1,80 +1,45 @@
 'use client';
 
-import { FormEvent, useEffect, useState } from 'react';
-import { resolvePageItems } from '@/shared/lib/pagination';
-import { iotService } from '@/shared/services/iot-service';
-import { IotDevice } from '@/shared/types/iot';
+import Link from 'next/link';
+import { PermissionGuard } from '@/shared/auth/PermissionGuard';
 import { PageTitle } from '@/shared/ui/page-title';
-import { Table } from '@/shared/ui/table';
 
 export function IotHome() {
-  const [devices, setDevices] = useState<IotDevice[]>([]);
-  const [error, setError] = useState<string | null>(null);
-
-  const [name, setName] = useState('');
-  const [serialNumber, setSerialNumber] = useState('');
-
-  async function load() {
-    try {
-      const page = await iotService.listDevices();
-      setDevices(resolvePageItems(page));
-      setError(null);
-    } catch (err) {
-      setError((err as Error).message);
-    }
-  }
-
-  useEffect(() => {
-    load();
-  }, []);
-
-  async function handleCreate(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    try {
-      await iotService.createDevice({ name, serialNumber });
-      setName('');
-      setSerialNumber('');
-      await load();
-    } catch (err) {
-      setError((err as Error).message);
-    }
-  }
-
   return (
     <div className="space-y-5">
-      <PageTitle title="IoT" description="Recurso inicial: dispositivos e monitoramento base." />
+      <PageTitle title="IoT Module" description="Control plane e data plane com dispositivos, alarmes e telemetria." />
 
-      <form onSubmit={handleCreate} className="grid gap-3 rounded-xl border border-slate-200 bg-white p-4 md:grid-cols-3">
-        <input
-          value={name}
-          onChange={(event) => setName(event.target.value)}
-          className="rounded-lg border border-slate-300 px-3 py-2 text-sm"
-          placeholder="Nome do dispositivo"
-          required
-        />
-        <input
-          value={serialNumber}
-          onChange={(event) => setSerialNumber(event.target.value)}
-          className="rounded-lg border border-slate-300 px-3 py-2 text-sm"
-          placeholder="Serial"
-          required
-        />
-        <button type="submit" className="rounded-lg bg-action px-4 py-2 text-sm font-medium text-white">
-          Novo device
-        </button>
-      </form>
+      <div className="grid gap-4 md:grid-cols-3">
+        <PermissionGuard permission="iot.device.read">
+          <Link
+            href="/iot/devices"
+            className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm transition hover:border-action"
+          >
+            <h3 className="text-sm font-semibold text-slate-900">Devices</h3>
+            <p className="mt-2 text-sm text-slate-600">Cadastro e manutenção de dispositivos IoT.</p>
+          </Link>
+        </PermissionGuard>
 
-      {error ? <p className="text-sm text-rose-700">{error}</p> : null}
+        <PermissionGuard permission="iot.alarm.read">
+          <Link
+            href="/iot/alarms"
+            className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm transition hover:border-action"
+          >
+            <h3 className="text-sm font-semibold text-slate-900">Alarms</h3>
+            <p className="mt-2 text-sm text-slate-600">Eventos, severidade e reconhecimento de alarmes.</p>
+          </Link>
+        </PermissionGuard>
 
-      <Table headers={['Nome', 'Serial', 'Status']}>
-        {devices.map((device) => (
-          <tr key={device.id}>
-            <td className="px-4 py-2">{device.name}</td>
-            <td className="px-4 py-2">{device.serialNumber}</td>
-            <td className="px-4 py-2">{device.status}</td>
-          </tr>
-        ))}
-      </Table>
+        <PermissionGuard permission="iot.telemetry.read">
+          <Link
+            href="/iot/telemetry"
+            className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm transition hover:border-action"
+          >
+            <h3 className="text-sm font-semibold text-slate-900">Telemetry</h3>
+            <p className="mt-2 text-sm text-slate-600">Ingestão e consulta paginada de métricas.</p>
+          </Link>
+        </PermissionGuard>
+      </div>
     </div>
   );
 }
