@@ -64,11 +64,12 @@ com.phaiffertech.platform
 │   │   ├── petprofile
 │   │   └── appointment
 │   └── iot
-│       ├── control
 │       ├── device
+│       ├── register
 │       ├── telemetry
 │       ├── processing
 │       ├── alarm
+│       ├── control
 │       ├── ingestion
 │       ├── sensor
 │       ├── maintenance
@@ -132,7 +133,7 @@ Main components:
 Applied modules:
 - CRM: contacts and leads
 - PET: clients, profiles and appointments
-- IoT: devices and alarms
+- IoT: devices, registers, maintenance and alarms where CRUD is sufficient; telemetry keeps explicit data-plane services
 
 ## Authorization Model
 
@@ -218,6 +219,143 @@ Standard response:
 - `totalPages`
 
 Legacy fields (`content`, `totalElements`) remain for compatibility.
+
+## IoT Legacy Functional Summary
+
+The legacy reference at `../iotsystem` was inspected as a reference source only. Main findings:
+
+- control-plane domains: devices, registers, alarm rules/events, maintenance orders, reports metadata, governance/plans/quotas and audit trail
+- data-plane and runtime flows: telemetry ingestion, telemetry poller, device health history, dashboard summaries and alert generation
+- integrations found in the legacy repository:
+  - dedicated telemetry poller service
+  - Kafka topics for raw/status/dead-letter telemetry
+  - split OLTP + TSDB design with separate datasource/flyway ADRs
+  - health indicators, metrics, tracing and rate limiting support
+- high-value features reused as V1 scope in this platform:
+  - device registry
+  - logical registers/sensors
+  - telemetry ingestion/query
+  - alarms with acknowledge
+  - maintenance queue
+  - operational dashboard and summary reports
+
+Important modeling decision for the new platform:
+
+- the legacy `register` concept includes protocol-level concerns such as addresses and function codes
+- IoT V1 in this platform models `registers` as logical telemetry channels linked to a device
+- protocol/runtime specifics remain future-ready and were not copied into the new control plane
+
+## IoT Gap Analysis
+
+Comparison baseline:
+
+- legacy reference: `../iotsystem`
+- current platform code:
+  - `apps/backend/src/main/java/com/phaiffertech/platform/modules/iot`
+  - `apps/frontend/src/app/(app)/iot`
+  - `apps/frontend/src/modules/iot`
+
+| Funcionalidade | Status na nova plataforma |
+| --- | --- |
+| devices | já implementado |
+| registers / sensors | já implementado |
+| telemetry write | já implementado |
+| telemetry read/query | já implementado |
+| alarms | já implementado |
+| alarm acknowledge | já implementado |
+| maintenance | já implementado |
+| reports | já implementado |
+| monitoring dashboard | já implementado |
+| polling | adiar para IoT V2 |
+| device health | parcialmente implementado |
+| governance / quotas | depende de abstração futura |
+| metrics / tracing | parcialmente implementado |
+| activity / audit | parcialmente implementado |
+
+Status interpretation:
+
+- `já implementado`: delivered in backend + frontend with tenant-aware flows
+- `parcialmente implementado`: basic coverage exists, but not at the same operational depth as legacy
+- `depende de abstração futura`: belongs partly to shared subscription/governance layers, not only IoT
+- `adiar para IoT V2`: intentionally excluded from commercial V1 scope
+
+## IoT V1 Scope
+
+Mandatory V1 delivered:
+
+- devices
+- registers
+- telemetry ingestion
+- telemetry query
+- alarms
+- alarm acknowledge
+- maintenance
+- dashboard summary
+
+Recommended V1 delivered:
+
+- reports summary
+- device status
+- operational counters
+- basic last-seen/health logic
+
+Explicitly deferred to IoT V2:
+
+- Kafka as mandatory ingestion backbone
+- TSDB/TimescaleDB as mandatory telemetry store
+- advanced polling orchestration
+- advanced risk scoring
+- predictive analytics
+- advanced quotas/plans/governance
+- deep observability by device and analytical dashboards
+
+## IoT Control Plane vs Data Plane
+
+Control plane responsibilities:
+
+- devices
+- registers
+- maintenance
+- configuration and metadata concerns
+
+Data plane responsibilities:
+
+- telemetry ingestion
+- telemetry storage abstraction
+- telemetry query
+- alarm evaluation
+- monitoring summaries
+- report aggregates
+
+Current backend abstractions that preserve this split:
+
+- `TelemetryWriter`
+- `TelemetryReader`
+- `AlarmEvaluator`
+- `DeviceStatusService`
+- `MonitoringSummaryService`
+
+This keeps MySQL practical for the current stage without treating it as the permanent final architecture for telemetry.
+
+## IoT V1 Implementation Notes
+
+Backend domains now in active use:
+
+- `modules.iot.device`
+- `modules.iot.register`
+- `modules.iot.telemetry`
+- `modules.iot.alarm`
+- `modules.iot.maintenance`
+- `modules.iot.monitoring`
+- `modules.iot.report`
+- `modules.iot.processing`
+
+Device health rule in V1:
+
+- `ALERT` when a critical open alarm exists for the device
+- `ONLINE` when recent telemetry and/or fresh `lastSeenAt` is available without critical open alarm
+- `OFFLINE` when the device has stale last-seen / no recent telemetry
+- `MAINTENANCE` remains available as an explicit operational status on the control plane
 
 ## Legacy CRM Functional Summary
 

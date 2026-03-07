@@ -12,6 +12,8 @@ public interface TelemetryReader {
             UUID tenantId,
             PageRequestDto pageRequest,
             UUID deviceId,
+            UUID registerId,
+            String metricName,
             Instant recordedFrom,
             Instant recordedTo
     );

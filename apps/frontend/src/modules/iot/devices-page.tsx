@@ -1,12 +1,9 @@
 'use client';
 
 import { FormEvent, useCallback, useEffect, useState } from 'react';
+import { PermissionGuard } from '@/shared/auth/PermissionGuard';
 import { ApiClientError } from '@/shared/lib/http';
 import { resolvePageItems, resolveTotalItems } from '@/shared/lib/pagination';
-import { iotService } from '@/shared/services/iot-service';
-import { PageResponse } from '@/shared/types/common';
-import { IotDevice } from '@/shared/types/iot';
-import { PermissionGuard } from '@/shared/auth/PermissionGuard';
 import { ConfirmDialog } from '@/shared/ui/confirm-dialog';
 import { DataTable, DataTableColumn } from '@/shared/ui/data-table';
 import { FormInput } from '@/shared/ui/form-input';
@@ -14,6 +11,10 @@ import { FormSelect } from '@/shared/ui/form-select';
 import { PageTitle } from '@/shared/ui/page-title';
 import { Pagination } from '@/shared/ui/pagination';
 import { SearchBar } from '@/shared/ui/search-bar';
+import { iotService } from '@/shared/services/iot-service';
+import { PageResponse } from '@/shared/types/common';
+import { IotDevice } from '@/shared/types/iot';
+import { formatDateTime } from '@/modules/iot/iot-utils';
 
 const pageSize = 10;
 
@@ -21,7 +22,8 @@ const statusOptions = [
   { value: '', label: 'Todos' },
   { value: 'ONLINE', label: 'ONLINE' },
   { value: 'OFFLINE', label: 'OFFLINE' },
-  { value: 'MAINTENANCE', label: 'MAINTENANCE' }
+  { value: 'MAINTENANCE', label: 'MAINTENANCE' },
+  { value: 'ALERT', label: 'ALERT' }
 ];
 
 const formStatusOptions = statusOptions.filter((option) => option.value);
@@ -57,6 +59,7 @@ export function IotDevicesPage() {
   const [identifier, setIdentifier] = useState('');
   const [type, setType] = useState('');
   const [location, setLocation] = useState('');
+  const [description, setDescription] = useState('');
   const [status, setStatus] = useState('ONLINE');
   const [submitting, setSubmitting] = useState(false);
 
@@ -73,15 +76,14 @@ export function IotDevicesPage() {
       });
       setPageData(result);
     } catch (err) {
-      const message = err instanceof ApiClientError ? err.message : 'Erro ao carregar dispositivos.';
-      setError(message);
+      setError(err instanceof ApiClientError ? err.message : 'Erro ao carregar devices.');
     } finally {
       setLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    load(0, search, typeFilter, statusFilter);
+    void load(0, search, typeFilter, statusFilter);
   }, [load, search, typeFilter, statusFilter]);
 
   function resetForm() {
@@ -90,6 +92,7 @@ export function IotDevicesPage() {
     setIdentifier('');
     setType('');
     setLocation('');
+    setDescription('');
     setStatus('ONLINE');
   }
 
@@ -99,6 +102,7 @@ export function IotDevicesPage() {
     setIdentifier(device.identifier ?? device.serialNumber ?? '');
     setType(device.type ?? '');
     setLocation(device.location ?? '');
+    setDescription(device.description ?? '');
     setStatus(device.status);
     setSuccess(null);
     setError(null);
@@ -116,23 +120,23 @@ export function IotDevicesPage() {
       identifier,
       type: type || undefined,
       location: location || undefined,
+      description: description || undefined,
       status
     };
 
     try {
       if (editingId) {
         await iotService.updateDevice(editingId, payload);
-        setSuccess('Dispositivo atualizado com sucesso.');
+        setSuccess('Device atualizado com sucesso.');
       } else {
         await iotService.createDevice(payload);
-        setSuccess('Dispositivo criado com sucesso.');
+        setSuccess('Device criado com sucesso.');
       }
 
       resetForm();
       await load(pageData.page, search, typeFilter, statusFilter);
     } catch (err) {
-      const message = err instanceof ApiClientError ? err.message : 'Erro ao salvar dispositivo.';
-      setError(message);
+      setError(err instanceof ApiClientError ? err.message : 'Erro ao salvar device.');
     } finally {
       setSubmitting(false);
     }
@@ -146,11 +150,10 @@ export function IotDevicesPage() {
     try {
       await iotService.deleteDevice(deleteCandidate.id);
       setDeleteCandidate(null);
-      setSuccess('Dispositivo removido com sucesso.');
+      setSuccess('Device removido com sucesso.');
       await load(pageData.page, search, typeFilter, statusFilter);
     } catch (err) {
-      const message = err instanceof ApiClientError ? err.message : 'Erro ao excluir dispositivo.';
-      setError(message);
+      setError(err instanceof ApiClientError ? err.message : 'Erro ao excluir device.');
     }
   }
 
@@ -160,13 +163,23 @@ export function IotDevicesPage() {
   const columns: DataTableColumn<IotDevice>[] = [
     {
       key: 'name',
-      header: 'Nome',
-      render: (device) => device.name
+      header: 'Device',
+      render: (device) => (
+        <div>
+          <p className="font-medium text-slate-900">{device.name}</p>
+          <p className="text-xs text-slate-500">{device.identifier ?? device.serialNumber ?? '-'}</p>
+        </div>
+      )
     },
     {
-      key: 'identifier',
-      header: 'Identifier',
-      render: (device) => device.identifier ?? device.serialNumber ?? '-'
+      key: 'context',
+      header: 'Contexto',
+      render: (device) => (
+        <div>
+          <p>{device.location ?? '-'}</p>
+          <p className="text-xs text-slate-500">{device.description ?? 'Sem descrição'}</p>
+        </div>
+      )
     },
     {
       key: 'type',
@@ -177,6 +190,11 @@ export function IotDevicesPage() {
       key: 'status',
       header: 'Status',
       render: (device) => device.status
+    },
+    {
+      key: 'lastSeenAt',
+      header: 'Last seen',
+      render: (device) => formatDateTime(device.lastSeenAt)
     },
     {
       key: 'actions',
@@ -210,13 +228,16 @@ export function IotDevicesPage() {
   return (
     <PermissionGuard
       permission="iot.device.read"
-      fallback={<div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">Você não possui permissão para visualizar dispositivos.</div>}
+      fallback={<div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">Você não possui permissão para visualizar devices.</div>}
     >
       <div className="space-y-5">
-        <PageTitle title="IoT Devices" description="Cadastro e operação do control plane de dispositivos." />
+        <PageTitle
+          title="IoT Devices"
+          description="Cadastro de devices com contexto operacional, status básico e última comunicação."
+        />
 
-        <div className="grid gap-3 rounded-xl border border-slate-200 bg-white p-4 md:grid-cols-[1fr_180px_180px_auto_auto]">
-          <SearchBar value={searchInput} onChange={setSearchInput} placeholder="Nome, identifier, localização" />
+        <div className="grid gap-3 rounded-xl border border-slate-200 bg-white p-4 md:grid-cols-2 xl:grid-cols-5">
+          <SearchBar value={searchInput} onChange={setSearchInput} placeholder="Nome, identifier, localização ou descrição" />
           <FormSelect label="Tipo" value={typeFilter} options={typeOptions} onChange={setTypeFilter} />
           <FormSelect label="Status" value={statusFilter} options={statusOptions} onChange={setStatusFilter} />
           <button
@@ -241,20 +262,21 @@ export function IotDevicesPage() {
         </div>
 
         <PermissionGuard permission={editingId ? 'iot.device.update' : 'iot.device.create'}>
-          <form onSubmit={handleSubmit} className="grid gap-3 rounded-xl border border-slate-200 bg-white p-4 md:grid-cols-3">
+          <form onSubmit={handleSubmit} className="grid gap-3 rounded-xl border border-slate-200 bg-white p-4 md:grid-cols-2 xl:grid-cols-3">
             <FormInput label="Nome" value={name} onChange={setName} required />
             <FormInput label="Identifier" value={identifier} onChange={setIdentifier} required />
             <FormSelect label="Tipo" value={type} options={typeOptions} onChange={setType} />
             <FormInput label="Localização" value={location} onChange={setLocation} />
+            <FormInput label="Descrição" value={description} onChange={setDescription} />
             <FormSelect label="Status" value={status} options={formStatusOptions} onChange={setStatus} />
 
-            <div className="md:col-span-3 flex gap-2">
+            <div className="flex gap-2 xl:col-span-3">
               <button
                 type="submit"
                 disabled={submitting}
                 className="rounded-lg bg-action px-4 py-2 text-sm font-medium text-white disabled:opacity-60"
               >
-                {submitting ? 'Salvando...' : editingId ? 'Atualizar dispositivo' : 'Criar dispositivo'}
+                {submitting ? 'Salvando...' : editingId ? 'Atualizar device' : 'Criar device'}
               </button>
               {editingId ? (
                 <button
@@ -277,7 +299,7 @@ export function IotDevicesPage() {
           rows={rows}
           getRowKey={(row) => row.id}
           loading={loading}
-          emptyMessage="Nenhum dispositivo encontrado."
+          emptyMessage="Nenhum device encontrado."
         />
 
         <Pagination
@@ -289,7 +311,7 @@ export function IotDevicesPage() {
 
         <ConfirmDialog
           open={Boolean(deleteCandidate)}
-          title="Excluir dispositivo"
+          title="Excluir device"
           description={deleteCandidate ? `Confirma a exclusão de ${deleteCandidate.name}?` : undefined}
           confirmLabel="Excluir"
           onCancel={() => setDeleteCandidate(null)}

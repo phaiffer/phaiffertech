@@ -55,12 +55,35 @@ Spring Boot backend for the modular multi-tenant platform.
 ## IoT v1 Scope
 
 - Devices CRUD + restore + search + pagination.
+- Registers CRUD + restore + search + pagination.
 - Alarms CRUD + acknowledge + restore.
-- Telemetry write/read with paginated query by device and period.
+- Maintenance CRUD + restore + search + pagination.
+- Telemetry write/read with paginated query by device, register, metric and period.
+- Monitoring and reporting:
+  - `GET /api/v1/iot/dashboard/summary`
+  - `GET /api/v1/iot/reports/summary`
 - Control plane and data plane abstractions:
   - `TelemetryWriter`
   - `TelemetryReader`
   - `AlarmEvaluator`
+  - `DeviceStatusService`
+  - `MonitoringSummaryService`
+
+Legacy-guided decisions:
+
+- `../iotsystem` was used only as a reference for business scope, not copied into the monorepo.
+- `registers` were modeled as logical telemetry channels instead of importing legacy protocol-specific details directly.
+- telemetry remains on MySQL for this stage, but access goes through data-plane abstractions to keep TSDB evolution open.
+
+Current IoT V1 permissions:
+
+- `iot.device.read|create|update|delete`
+- `iot.register.read|create|update|delete`
+- `iot.telemetry.read|write`
+- `iot.alarm.read|create|update|delete|ack`
+- `iot.maintenance.read|create|update|delete`
+- `iot.dashboard.read`
+- `iot.report.read`
 
 ## Migrations
 
@@ -81,6 +104,37 @@ Spring Boot backend for the modular multi-tenant platform.
 - `V15__seed_pet_iot_permissions.sql`
 - `V16__feature_flags.sql`
 - `V17__rate_limit_support.sql`
+- `V18__crm_companies_pipeline_deals.sql`
+- `V19__crm_tasks_notes_activity.sql`
+- `V20__crm_permissions_seed.sql`
+- `V21__iot_devices_registers.sql`
+- `V22__iot_telemetry_alarms.sql`
+- `V23__iot_maintenance_dashboard_permissions.sql`
+
+## IoT API Surface
+
+- Devices:
+  - `GET|POST /api/v1/iot/devices`
+  - `GET|PUT|DELETE /api/v1/iot/devices/{id}`
+  - `PATCH /api/v1/iot/devices/{id}/restore`
+- Registers:
+  - `GET|POST /api/v1/iot/registers`
+  - `GET|PUT|DELETE /api/v1/iot/registers/{id}`
+  - `PATCH /api/v1/iot/registers/{id}/restore`
+- Telemetry:
+  - `GET|POST /api/v1/iot/telemetry`
+- Alarms:
+  - `GET|POST /api/v1/iot/alarms`
+  - `GET|PUT|DELETE /api/v1/iot/alarms/{id}`
+  - `POST /api/v1/iot/alarms/{id}/acknowledge`
+  - `PATCH /api/v1/iot/alarms/{id}/restore`
+- Maintenance:
+  - `GET|POST /api/v1/iot/maintenance`
+  - `GET|PUT|DELETE /api/v1/iot/maintenance/{id}`
+  - `PATCH /api/v1/iot/maintenance/{id}/restore`
+- Monitoring and reports:
+  - `GET /api/v1/iot/dashboard/summary`
+  - `GET /api/v1/iot/reports/summary`
 
 ## Operational Endpoints
 

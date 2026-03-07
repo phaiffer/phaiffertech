@@ -18,6 +18,7 @@ public final class IotTelemetryMapper {
         return new IotTelemetryResponse(
                 record.getId(),
                 record.getDeviceId(),
+                record.getRegisterId(),
                 record.getMetricName(),
                 record.getMetricValue(),
                 record.getUnit(),

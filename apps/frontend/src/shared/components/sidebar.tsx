@@ -40,10 +40,27 @@ const items = [
   { href: '/pet/clients', label: 'Pet Clients', anyOf: ['pet.client.read'], moduleCode: 'PET' },
   { href: '/pet/pets', label: 'Pet Profiles', anyOf: ['pet.profile.read'], moduleCode: 'PET' },
   { href: '/pet/appointments', label: 'Pet Appointments', anyOf: ['pet.appointment.read'], moduleCode: 'PET' },
-  { href: '/iot', label: 'IoT Home', anyOf: ['iot.device.read', 'iot.alarm.read', 'iot.telemetry.read'], moduleCode: 'IOT' },
+  {
+    href: '/iot',
+    label: 'IoT Home',
+    anyOf: [
+      'iot.dashboard.read',
+      'iot.device.read',
+      'iot.register.read',
+      'iot.telemetry.read',
+      'iot.alarm.read',
+      'iot.maintenance.read',
+      'iot.report.read'
+    ],
+    moduleCode: 'IOT'
+  },
+  { href: '/iot/dashboard', label: 'IoT Dashboard', anyOf: ['iot.dashboard.read'], moduleCode: 'IOT' },
   { href: '/iot/devices', label: 'IoT Devices', anyOf: ['iot.device.read'], moduleCode: 'IOT' },
+  { href: '/iot/registers', label: 'IoT Registers', anyOf: ['iot.register.read'], moduleCode: 'IOT' },
   { href: '/iot/alarms', label: 'IoT Alarms', anyOf: ['iot.alarm.read'], moduleCode: 'IOT' },
   { href: '/iot/telemetry', label: 'IoT Telemetry', anyOf: ['iot.telemetry.read'], moduleCode: 'IOT' },
+  { href: '/iot/maintenance', label: 'IoT Maintenance', anyOf: ['iot.maintenance.read'], moduleCode: 'IOT' },
+  { href: '/iot/reports', label: 'IoT Reports', anyOf: ['iot.report.read'], moduleCode: 'IOT' },
   { href: '/settings', label: 'Settings' }
 ];
 

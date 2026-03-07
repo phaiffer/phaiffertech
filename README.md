@@ -94,6 +94,55 @@ Gap decision summary:
 | conversations | adiar para CRM V2 |
 | chatbot | adiar para CRM V2 |
 
+## IoT Delivery Status
+
+The legacy IoT reference at `../iotsystem` was analyzed only as a functional and technical reference. Main legacy findings:
+
+- domains: devices, registers, telemetry ingestion, alarms, maintenance, reports, device health, audit, governance/plans/quotas and observability
+- operational flows: telemetry poller, alarm events, maintenance closeout, executive reporting and health history
+- architecture references: ADRs for Kafka-based telemetry pipeline and split OLTP + TSDB storage
+- commercial value retained for V1: configurable device/register base, telemetry ingestion and query, alarm lifecycle, maintenance queue and operational summary dashboards
+
+Gap analysis used for IoT V1 scope:
+
+| Funcionalidade | Status na nova plataforma |
+| --- | --- |
+| devices | já implementado |
+| registers / sensors | já implementado |
+| telemetry write | já implementado |
+| telemetry read/query | já implementado |
+| alarms | já implementado |
+| alarm acknowledge | já implementado |
+| maintenance | já implementado |
+| reports | já implementado |
+| monitoring dashboard | já implementado |
+| polling | adiar para IoT V2 |
+| device health | parcialmente implementado |
+| governance / quotas | depende de abstração futura |
+| metrics / tracing | parcialmente implementado |
+| activity / audit | parcialmente implementado |
+
+IoT V1 delivered:
+
+- devices
+- registers modeled as logical telemetry channels
+- telemetry ingestion and query
+- alarms + acknowledge
+- maintenance
+- dashboard summary
+- basic reports summary
+- basic device health/status based on `lastSeenAt`, recent telemetry and critical open alarms
+
+Deferred to IoT V2:
+
+- Kafka-first ingestion pipeline
+- TSDB/TimescaleDB mandatory storage
+- advanced polling
+- advanced risk scoring
+- predictive analytics
+- advanced plan/quota governance
+- deep per-device observability and analytics dashboards
+
 ## Flyway Migrations
 
 - `V1__init_schema.sql`
@@ -116,6 +165,9 @@ Gap decision summary:
 - `V18__crm_companies_pipeline_deals.sql`
 - `V19__crm_tasks_notes_activity.sql`
 - `V20__crm_permissions_seed.sql`
+- `V21__iot_devices_registers.sql`
+- `V22__iot_telemetry_alarms.sql`
+- `V23__iot_maintenance_dashboard_permissions.sql`
 
 ## Main Endpoints (`/api/v1`)
 
@@ -180,6 +232,10 @@ Gap decision summary:
   - `GET|POST /iot/devices`
   - `GET|PUT|DELETE /iot/devices/{id}`
   - `PATCH /iot/devices/{id}/restore`
+- IoT registers:
+  - `GET|POST /iot/registers`
+  - `GET|PUT|DELETE /iot/registers/{id}`
+  - `PATCH /iot/registers/{id}/restore`
 - IoT alarms:
   - `GET|POST /iot/alarms`
   - `GET|PUT|DELETE /iot/alarms/{id}`
@@ -187,6 +243,13 @@ Gap decision summary:
   - `PATCH /iot/alarms/{id}/restore`
 - IoT telemetry:
   - `GET|POST /iot/telemetry`
+- IoT maintenance:
+  - `GET|POST /iot/maintenance`
+  - `GET|PUT|DELETE /iot/maintenance/{id}`
+  - `PATCH /iot/maintenance/{id}/restore`
+- IoT monitoring and reports:
+  - `GET /iot/dashboard/summary`
+  - `GET /iot/reports/summary`
 
 Swagger UI:
 - `http://localhost:8080/swagger-ui.html`
@@ -215,9 +278,13 @@ Implemented pages:
   - `/pet/appointments`
 - IoT:
   - `/iot`
+  - `/iot/dashboard`
   - `/iot/devices`
+  - `/iot/registers`
   - `/iot/alarms`
   - `/iot/telemetry`
+  - `/iot/maintenance`
+  - `/iot/reports`
 
 Guards:
 - Route protection via authenticated layout (`ProtectedRoute`).

@@ -9,6 +9,7 @@ import java.util.UUID;
 public record IotTelemetryResponse(
         UUID id,
         UUID deviceId,
+        UUID registerId,
         String metricName,
         BigDecimal metricValue,
         String unit,

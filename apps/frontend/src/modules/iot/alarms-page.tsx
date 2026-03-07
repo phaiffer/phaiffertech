@@ -1,12 +1,9 @@
 'use client';
 
 import { FormEvent, useCallback, useEffect, useMemo, useState } from 'react';
+import { PermissionGuard } from '@/shared/auth/PermissionGuard';
 import { ApiClientError } from '@/shared/lib/http';
 import { resolvePageItems, resolveTotalItems } from '@/shared/lib/pagination';
-import { iotService } from '@/shared/services/iot-service';
-import { PageResponse } from '@/shared/types/common';
-import { IotAlarm, IotDevice } from '@/shared/types/iot';
-import { PermissionGuard } from '@/shared/auth/PermissionGuard';
 import { ConfirmDialog } from '@/shared/ui/confirm-dialog';
 import { DataTable, DataTableColumn } from '@/shared/ui/data-table';
 import { DateTimeInput } from '@/shared/ui/datetime-input';
@@ -15,6 +12,16 @@ import { FormSelect } from '@/shared/ui/form-select';
 import { PageTitle } from '@/shared/ui/page-title';
 import { Pagination } from '@/shared/ui/pagination';
 import { SearchBar } from '@/shared/ui/search-bar';
+import { iotService } from '@/shared/services/iot-service';
+import { PageResponse } from '@/shared/types/common';
+import { IotAlarm, IotDevice, IotRegister } from '@/shared/types/iot';
+import {
+  formatDateTime,
+  resolveDeviceLabel,
+  resolveRegisterLabel,
+  toDateTimeLocal,
+  toIsoDate
+} from '@/modules/iot/iot-utils';
 
 const pageSize = 10;
 
@@ -45,26 +52,10 @@ const initialPage: PageResponse<IotAlarm> = {
   size: pageSize
 };
 
-function toDateTimeLocal(isoValue?: string) {
-  if (!isoValue) {
-    return '';
-  }
-
-  const date = new Date(isoValue);
-  const timezoneOffset = date.getTimezoneOffset() * 60_000;
-  return new Date(date.getTime() - timezoneOffset).toISOString().slice(0, 16);
-}
-
-function toIsoDate(value: string) {
-  if (!value) {
-    return undefined;
-  }
-  return new Date(value).toISOString();
-}
-
 export function IotAlarmsPage() {
   const [pageData, setPageData] = useState<PageResponse<IotAlarm>>(initialPage);
   const [devices, setDevices] = useState<IotDevice[]>([]);
+  const [registers, setRegisters] = useState<IotRegister[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
@@ -74,9 +65,13 @@ export function IotAlarmsPage() {
   const [statusFilter, setStatusFilter] = useState('');
   const [severityFilter, setSeverityFilter] = useState('');
   const [deviceFilterId, setDeviceFilterId] = useState('');
+  const [registerFilterId, setRegisterFilterId] = useState('');
+  const [triggeredFrom, setTriggeredFrom] = useState('');
+  const [triggeredTo, setTriggeredTo] = useState('');
 
   const [editingId, setEditingId] = useState<string | null>(null);
   const [deviceId, setDeviceId] = useState('');
+  const [registerId, setRegisterId] = useState('');
   const [code, setCode] = useState('');
   const [message, setMessage] = useState('');
   const [severity, setSeverity] = useState('HIGH');
@@ -87,26 +82,61 @@ export function IotAlarmsPage() {
 
   const [deleteCandidate, setDeleteCandidate] = useState<IotAlarm | null>(null);
 
-  const deviceOptions = useMemo(() => {
-    return [
-      { value: '', label: 'Todos' },
-      ...devices.map((device) => ({ value: device.id, label: device.name }))
-    ];
-  }, [devices]);
+  const deviceOptions = useMemo(() => [
+    { value: '', label: 'Todos' },
+    ...devices.map((device) => ({ value: device.id, label: device.name }))
+  ], [devices]);
 
-  const formDeviceOptions = useMemo(() => {
-    return [
-      { value: '', label: 'Selecione um dispositivo' },
-      ...devices.map((device) => ({ value: device.id, label: `${device.name} (${device.identifier ?? device.serialNumber ?? '-'})` }))
-    ];
-  }, [devices]);
+  const formDeviceOptions = useMemo(() => [
+    { value: '', label: 'Selecione um dispositivo' },
+    ...devices.map((device) => ({ value: device.id, label: `${device.name} (${device.identifier ?? device.serialNumber ?? '-'})` }))
+  ], [devices]);
+
+  const visibleFilterRegisters = useMemo(() => {
+    if (!deviceFilterId) {
+      return registers;
+    }
+    return registers.filter((register) => register.deviceId === deviceFilterId);
+  }, [deviceFilterId, registers]);
+
+  const visibleFormRegisters = useMemo(() => {
+    if (!deviceId) {
+      return registers;
+    }
+    return registers.filter((register) => register.deviceId === deviceId);
+  }, [deviceId, registers]);
+
+  const registerOptions = useMemo(() => [
+    { value: '', label: 'Todos' },
+    ...visibleFilterRegisters.map((register) => ({
+      value: register.id,
+      label: `${register.name} (${register.metricName})`
+    }))
+  ], [visibleFilterRegisters]);
+
+  const formRegisterOptions = useMemo(() => [
+    { value: '', label: 'Sem register específico' },
+    ...visibleFormRegisters.map((register) => ({
+      value: register.id,
+      label: `${register.name} (${register.metricName})`
+    }))
+  ], [visibleFormRegisters]);
 
   const loadDevices = useCallback(async () => {
     try {
-      const result = await iotService.listDevices(0, 200, '');
+      const result = await iotService.listDevices(0, 300, '');
       setDevices(resolvePageItems(result));
     } catch {
       setDevices([]);
+    }
+  }, []);
+
+  const loadRegisters = useCallback(async () => {
+    try {
+      const result = await iotService.listRegisters(0, 300, '');
+      setRegisters(resolvePageItems(result));
+    } catch {
+      setRegisters([]);
     }
   }, []);
 
@@ -114,8 +144,11 @@ export function IotAlarmsPage() {
     page: number,
     currentSearch: string,
     currentDeviceId: string,
+    currentRegisterId: string,
     currentSeverity: string,
-    currentStatus: string
+    currentStatus: string,
+    currentTriggeredFrom: string,
+    currentTriggeredTo: string
   ) => {
     setLoading(true);
     setError(null);
@@ -123,29 +156,45 @@ export function IotAlarmsPage() {
     try {
       const result = await iotService.listAlarms(page, pageSize, currentSearch, {
         deviceId: currentDeviceId || undefined,
+        registerId: currentRegisterId || undefined,
         severity: currentSeverity || undefined,
-        status: currentStatus || undefined
+        status: currentStatus || undefined,
+        triggeredFrom: toIsoDate(currentTriggeredFrom),
+        triggeredTo: toIsoDate(currentTriggeredTo)
       });
       setPageData(result);
     } catch (err) {
-      const message = err instanceof ApiClientError ? err.message : 'Erro ao carregar alarmes.';
-      setError(message);
+      setError(err instanceof ApiClientError ? err.message : 'Erro ao carregar alarmes.');
     } finally {
       setLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    loadDevices();
-  }, [loadDevices]);
+    void loadDevices();
+    void loadRegisters();
+  }, [loadDevices, loadRegisters]);
 
   useEffect(() => {
-    load(0, search, deviceFilterId, severityFilter, statusFilter);
-  }, [load, search, deviceFilterId, severityFilter, statusFilter]);
+    void load(0, search, deviceFilterId, registerFilterId, severityFilter, statusFilter, triggeredFrom, triggeredTo);
+  }, [load, search, deviceFilterId, registerFilterId, severityFilter, statusFilter, triggeredFrom, triggeredTo]);
+
+  useEffect(() => {
+    if (registerFilterId && !visibleFilterRegisters.some((register) => register.id === registerFilterId)) {
+      setRegisterFilterId('');
+    }
+  }, [registerFilterId, visibleFilterRegisters]);
+
+  useEffect(() => {
+    if (registerId && !visibleFormRegisters.some((register) => register.id === registerId)) {
+      setRegisterId('');
+    }
+  }, [registerId, visibleFormRegisters]);
 
   function resetForm() {
     setEditingId(null);
     setDeviceId('');
+    setRegisterId('');
     setCode('');
     setMessage('');
     setSeverity('HIGH');
@@ -157,6 +206,7 @@ export function IotAlarmsPage() {
   function beginEdit(alarm: IotAlarm) {
     setEditingId(alarm.id);
     setDeviceId(alarm.deviceId);
+    setRegisterId(alarm.registerId ?? '');
     setCode(alarm.code);
     setMessage(alarm.message);
     setSeverity(alarm.severity);
@@ -181,6 +231,7 @@ export function IotAlarmsPage() {
 
     const payload = {
       deviceId,
+      registerId: registerId || undefined,
       code,
       message,
       severity,
@@ -191,10 +242,7 @@ export function IotAlarmsPage() {
 
     try {
       if (editingId) {
-        await iotService.updateAlarm(editingId, {
-          ...payload,
-          status
-        });
+        await iotService.updateAlarm(editingId, payload);
         setSuccess('Alarme atualizado com sucesso.');
       } else {
         await iotService.createAlarm(payload);
@@ -202,10 +250,9 @@ export function IotAlarmsPage() {
       }
 
       resetForm();
-      await load(pageData.page, search, deviceFilterId, severityFilter, statusFilter);
+      await load(pageData.page, search, deviceFilterId, registerFilterId, severityFilter, statusFilter, triggeredFrom, triggeredTo);
     } catch (err) {
-      const message = err instanceof ApiClientError ? err.message : 'Erro ao salvar alarme.';
-      setError(message);
+      setError(err instanceof ApiClientError ? err.message : 'Erro ao salvar alarme.');
     } finally {
       setSubmitting(false);
     }
@@ -220,10 +267,9 @@ export function IotAlarmsPage() {
       await iotService.deleteAlarm(deleteCandidate.id);
       setDeleteCandidate(null);
       setSuccess('Alarme removido com sucesso.');
-      await load(pageData.page, search, deviceFilterId, severityFilter, statusFilter);
+      await load(pageData.page, search, deviceFilterId, registerFilterId, severityFilter, statusFilter, triggeredFrom, triggeredTo);
     } catch (err) {
-      const message = err instanceof ApiClientError ? err.message : 'Erro ao excluir alarme.';
-      setError(message);
+      setError(err instanceof ApiClientError ? err.message : 'Erro ao excluir alarme.');
     }
   }
 
@@ -231,10 +277,9 @@ export function IotAlarmsPage() {
     try {
       await iotService.acknowledgeAlarm(alarm.id);
       setSuccess('Alarme reconhecido com sucesso.');
-      await load(pageData.page, search, deviceFilterId, severityFilter, statusFilter);
+      await load(pageData.page, search, deviceFilterId, registerFilterId, severityFilter, statusFilter, triggeredFrom, triggeredTo);
     } catch (err) {
-      const message = err instanceof ApiClientError ? err.message : 'Erro ao reconhecer alarme.';
-      setError(message);
+      setError(err instanceof ApiClientError ? err.message : 'Erro ao reconhecer alarme.');
     }
   }
 
@@ -243,14 +288,24 @@ export function IotAlarmsPage() {
 
   const columns: DataTableColumn<IotAlarm>[] = [
     {
-      key: 'code',
-      header: 'Código',
-      render: (alarm) => alarm.code
+      key: 'alarm',
+      header: 'Alarme',
+      render: (alarm) => (
+        <div>
+          <p className="font-medium text-slate-900">{alarm.code}</p>
+          <p className="text-xs text-slate-500">{alarm.message}</p>
+        </div>
+      )
     },
     {
-      key: 'message',
-      header: 'Mensagem',
-      render: (alarm) => alarm.message
+      key: 'device',
+      header: 'Device',
+      render: (alarm) => resolveDeviceLabel(devices, alarm.deviceId)
+    },
+    {
+      key: 'register',
+      header: 'Register',
+      render: (alarm) => resolveRegisterLabel(registers, alarm.registerId)
     },
     {
       key: 'severity',
@@ -265,7 +320,23 @@ export function IotAlarmsPage() {
     {
       key: 'triggeredAt',
       header: 'Disparado em',
-      render: (alarm) => new Date(alarm.triggeredAt).toLocaleString('pt-BR')
+      render: (alarm) => formatDateTime(alarm.triggeredAt)
+    },
+    {
+      key: 'ack',
+      header: 'Ack',
+      render: (alarm) => {
+        if (!alarm.acknowledgedAt) {
+          return '-';
+        }
+
+        return (
+          <div>
+            <p>{formatDateTime(alarm.acknowledgedAt)}</p>
+            <p className="text-xs text-slate-500">{alarm.acknowledgedBy ?? 'sem usuário'}</p>
+          </div>
+        );
+      }
     },
     {
       key: 'actions',
@@ -286,8 +357,8 @@ export function IotAlarmsPage() {
             <button
               type="button"
               onClick={() => handleAcknowledge(alarm)}
-              className="rounded-lg border border-emerald-300 px-2 py-1 text-xs font-medium text-emerald-700"
-              disabled={alarm.status === 'ACKNOWLEDGED'}
+              className="rounded-lg border border-emerald-300 px-2 py-1 text-xs font-medium text-emerald-700 disabled:opacity-50"
+              disabled={alarm.status !== 'OPEN'}
             >
               Ack
             </button>
@@ -313,38 +384,50 @@ export function IotAlarmsPage() {
       fallback={<div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">Você não possui permissão para visualizar alarmes.</div>}
     >
       <div className="space-y-5">
-        <PageTitle title="IoT Alarms" description="Gestão de alarmes com reconhecimento e filtros operacionais." />
+        <PageTitle
+          title="IoT Alarms"
+          description="Gestão de alarmes com vínculo opcional a register, filtros operacionais e acknowledge."
+        />
 
-        <div className="grid gap-3 rounded-xl border border-slate-200 bg-white p-4 md:grid-cols-[1fr_240px_180px_180px_auto_auto]">
-          <SearchBar value={searchInput} onChange={setSearchInput} placeholder="Código, mensagem, severidade" />
-          <FormSelect label="Dispositivo" value={deviceFilterId} options={deviceOptions} onChange={setDeviceFilterId} />
+        <div className="grid gap-3 rounded-xl border border-slate-200 bg-white p-4 md:grid-cols-2 xl:grid-cols-4">
+          <SearchBar value={searchInput} onChange={setSearchInput} placeholder="Código, mensagem ou severidade" />
+          <FormSelect label="Device" value={deviceFilterId} options={deviceOptions} onChange={setDeviceFilterId} />
+          <FormSelect label="Register" value={registerFilterId} options={registerOptions} onChange={setRegisterFilterId} />
           <FormSelect label="Severidade" value={severityFilter} options={severityOptions} onChange={setSeverityFilter} />
           <FormSelect label="Status" value={statusFilter} options={statusOptions} onChange={setStatusFilter} />
-          <button
-            type="button"
-            onClick={() => setSearch(searchInput)}
-            className="rounded-lg bg-action px-4 py-2 text-sm font-medium text-white"
-          >
-            Buscar
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              setSearchInput('');
-              setSearch('');
-              setDeviceFilterId('');
-              setSeverityFilter('');
-              setStatusFilter('');
-            }}
-            className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700"
-          >
-            Limpar
-          </button>
+          <DateTimeInput label="Disparado de" value={triggeredFrom} onChange={setTriggeredFrom} />
+          <DateTimeInput label="Disparado até" value={triggeredTo} onChange={setTriggeredTo} />
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={() => setSearch(searchInput)}
+              className="rounded-lg bg-action px-4 py-2 text-sm font-medium text-white"
+            >
+              Buscar
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setSearchInput('');
+                setSearch('');
+                setDeviceFilterId('');
+                setRegisterFilterId('');
+                setSeverityFilter('');
+                setStatusFilter('');
+                setTriggeredFrom('');
+                setTriggeredTo('');
+              }}
+              className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700"
+            >
+              Limpar
+            </button>
+          </div>
         </div>
 
         <PermissionGuard permission={editingId ? 'iot.alarm.update' : 'iot.alarm.create'}>
-          <form onSubmit={handleSubmit} className="grid gap-3 rounded-xl border border-slate-200 bg-white p-4 md:grid-cols-3">
-            <FormSelect label="Dispositivo" value={deviceId} options={formDeviceOptions} onChange={setDeviceId} />
+          <form onSubmit={handleSubmit} className="grid gap-3 rounded-xl border border-slate-200 bg-white p-4 md:grid-cols-2 xl:grid-cols-4">
+            <FormSelect label="Device" value={deviceId} options={formDeviceOptions} onChange={setDeviceId} />
+            <FormSelect label="Register" value={registerId} options={formRegisterOptions} onChange={setRegisterId} />
             <FormInput label="Código" value={code} onChange={setCode} required />
             <FormSelect label="Severidade" value={severity} options={formSeverityOptions} onChange={setSeverity} />
             <FormInput label="Mensagem" value={message} onChange={setMessage} required />
@@ -352,7 +435,7 @@ export function IotAlarmsPage() {
             <DateTimeInput label="Disparado em" value={triggeredAt} onChange={setTriggeredAt} />
             <DateTimeInput label="Reconhecido em" value={acknowledgedAt} onChange={setAcknowledgedAt} />
 
-            <div className="md:col-span-3 flex gap-2">
+            <div className="flex gap-2 xl:col-span-4">
               <button
                 type="submit"
                 disabled={submitting}
@@ -388,7 +471,7 @@ export function IotAlarmsPage() {
           page={pageData.page}
           totalPages={pageData.totalPages}
           totalElements={totalItems}
-          onPageChange={(nextPage) => load(nextPage, search, deviceFilterId, severityFilter, statusFilter)}
+          onPageChange={(nextPage) => load(nextPage, search, deviceFilterId, registerFilterId, severityFilter, statusFilter, triggeredFrom, triggeredTo)}
         />
 
         <ConfirmDialog

@@ -18,6 +18,7 @@ public interface IotAlarmRepository extends JpaRepository<IotAlarm, UUID>, BaseT
             FROM IotAlarm a
             WHERE a.tenantId = :tenantId
               AND (:deviceId IS NULL OR a.deviceId = :deviceId)
+              AND (:registerId IS NULL OR a.registerId = :registerId)
               AND (:severity IS NULL OR UPPER(a.severity) = UPPER(:severity))
               AND (:status IS NULL OR UPPER(a.status) = UPPER(:status))
               AND (:triggeredFrom IS NULL OR a.triggeredAt >= :triggeredFrom)
@@ -31,6 +32,7 @@ public interface IotAlarmRepository extends JpaRepository<IotAlarm, UUID>, BaseT
     Page<IotAlarm> findAllByTenantIdAndSearch(
             @Param("tenantId") UUID tenantId,
             @Param("deviceId") UUID deviceId,
+            @Param("registerId") UUID registerId,
             @Param("severity") String severity,
             @Param("status") String status,
             @Param("triggeredFrom") Instant triggeredFrom,
@@ -51,5 +53,29 @@ public interface IotAlarmRepository extends JpaRepository<IotAlarm, UUID>, BaseT
     Optional<IotAlarm> findByIdIncludingDeleted(
             @Param("id") UUID id,
             @Param("tenantId") UUID tenantId
+    );
+
+    boolean existsByTenantIdAndDeviceIdAndSeverityAndStatusIn(
+            UUID tenantId,
+            UUID deviceId,
+            String severity,
+            Iterable<String> statuses
+    );
+
+    @Query("""
+            SELECT CASE WHEN COUNT(a) > 0 THEN true ELSE false END
+            FROM IotAlarm a
+            WHERE a.tenantId = :tenantId
+              AND a.deviceId = :deviceId
+              AND ((:registerId IS NULL AND a.registerId IS NULL) OR a.registerId = :registerId)
+              AND UPPER(a.code) = UPPER(:code)
+              AND UPPER(a.status) IN :statuses
+            """)
+    boolean existsOpenAlarm(
+            @Param("tenantId") UUID tenantId,
+            @Param("deviceId") UUID deviceId,
+            @Param("registerId") UUID registerId,
+            @Param("code") String code,
+            @Param("statuses") Iterable<String> statuses
     );
 }

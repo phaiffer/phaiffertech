@@ -22,6 +22,9 @@ import org.springframework.test.context.ActiveProfiles;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 public abstract class AbstractIntegrationTest extends IntegrationTestContainersConfig {
 
+    private static final String DEFAULT_PASSWORD_HASH = "$2a$10$28RqVTDwgyR5J0XvjGFsUOhADXAU/xi/VX0fhlSoBv46MgMc3HDJi";
+    private static final String DEFAULT_PASSWORD = "Admin@123";
+
     @LocalServerPort
     private int port;
 
@@ -32,12 +35,44 @@ public abstract class AbstractIntegrationTest extends IntegrationTestContainersC
     protected JdbcTemplate jdbcTemplate;
 
     protected AuthSession loginAsDefaultAdmin() {
-        ResponseEntity<JsonNode> response = postPublic("/auth/login", Map.of(
-                "tenantCode", "default",
-                "email", "admin@local.test",
-                "password", "Admin@123"
-        ));
+        ResponseEntity<JsonNode> response = login("default", "admin@local.test", DEFAULT_PASSWORD);
 
+        Assertions.assertEquals(200, response.getStatusCode().value());
+        return sessionFromLoginPayload(requireBody(response).path("data"));
+    }
+
+    protected AuthSession createTenantAdminSession(String tenantCode, String email) {
+        String tenantId = UUID.randomUUID().toString();
+        String userId = UUID.randomUUID().toString();
+
+        executeSql(
+                "INSERT INTO tenants (id, name, code, status) VALUES (?, ?, ?, 'ACTIVE')",
+                tenantId,
+                "Tenant " + tenantCode,
+                tenantCode
+        );
+        executeSql(
+                "INSERT INTO users (id, email, password_hash, full_name, active) VALUES (?, ?, ?, ?, b'1')",
+                userId,
+                email,
+                DEFAULT_PASSWORD_HASH,
+                "Tenant Admin " + tenantCode
+        );
+        executeSql(
+                """
+                INSERT INTO user_tenants (id, tenant_id, user_id, role_id, active)
+                SELECT ?, ?, ?, r.id, b'1'
+                FROM roles r
+                WHERE r.code = 'TENANT_ADMIN'
+                """,
+                UUID.randomUUID().toString(),
+                tenantId,
+                userId
+        );
+        enableTenantModule(tenantId, "CORE_PLATFORM");
+        enableTenantModule(tenantId, "IOT");
+
+        ResponseEntity<JsonNode> response = login(tenantCode, email, DEFAULT_PASSWORD);
         Assertions.assertEquals(200, response.getStatusCode().value());
         return sessionFromLoginPayload(requireBody(response).path("data"));
     }
@@ -122,5 +157,27 @@ public abstract class AbstractIntegrationTest extends IntegrationTestContainersC
     }
 
     protected record AuthSession(String accessToken, String refreshToken, String tenantId, String userId) {
+    }
+
+    private ResponseEntity<JsonNode> login(String tenantCode, String email, String password) {
+        return postPublic("/auth/login", Map.of(
+                "tenantCode", tenantCode,
+                "email", email,
+                "password", password
+        ));
+    }
+
+    private void enableTenantModule(String tenantId, String moduleCode) {
+        executeSql(
+                """
+                INSERT INTO tenant_modules (id, tenant_id, module_definition_id, enabled)
+                SELECT ?, ?, m.id, b'1'
+                FROM module_definitions m
+                WHERE m.code = ?
+                """,
+                UUID.randomUUID().toString(),
+                tenantId,
+                moduleCode
+        );
     }
 }

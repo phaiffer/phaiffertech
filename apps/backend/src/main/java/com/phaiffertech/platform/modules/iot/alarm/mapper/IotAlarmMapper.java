@@ -22,6 +22,7 @@ public final class IotAlarmMapper implements BaseCrudMapper<
     public IotAlarm toNewEntity(IotAlarmCreateRequest request) {
         IotAlarm alarm = new IotAlarm();
         alarm.setDeviceId(request.deviceId());
+        alarm.setRegisterId(request.registerId());
         alarm.setCode(request.code().trim().toUpperCase());
         alarm.setMessage(request.message().trim());
         alarm.setSeverity(request.severity().trim().toUpperCase());
@@ -33,6 +34,7 @@ public final class IotAlarmMapper implements BaseCrudMapper<
     @Override
     public void updateEntity(IotAlarm entity, IotAlarmUpdateRequest request) {
         entity.setDeviceId(request.deviceId());
+        entity.setRegisterId(request.registerId());
         entity.setCode(request.code().trim().toUpperCase());
         entity.setMessage(request.message().trim());
         entity.setSeverity(request.severity().trim().toUpperCase());
@@ -46,12 +48,14 @@ public final class IotAlarmMapper implements BaseCrudMapper<
         return new IotAlarmResponse(
                 alarm.getId(),
                 alarm.getDeviceId(),
+                alarm.getRegisterId(),
                 alarm.getCode(),
                 alarm.getMessage(),
                 alarm.getSeverity(),
                 alarm.getStatus(),
                 alarm.getTriggeredAt(),
                 alarm.getAcknowledgedAt(),
+                alarm.getAcknowledgedBy(),
                 alarm.getCreatedAt(),
                 alarm.getUpdatedAt()
         );

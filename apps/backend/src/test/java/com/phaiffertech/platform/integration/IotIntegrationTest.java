@@ -23,6 +23,7 @@ class IotIntegrationTest extends AbstractIntegrationTest {
                 "identifier", "ID-" + marker,
                 "type", "SENSOR",
                 "location", "Room A",
+                "description", "Primary temperature sensor",
                 "status", "ONLINE"
         ), session);
 
@@ -38,11 +39,13 @@ class IotIntegrationTest extends AbstractIntegrationTest {
                 "identifier", "ID-" + marker,
                 "type", "SENSOR",
                 "location", "Room B",
+                "description", "Updated description",
                 "status", "OFFLINE"
         ), session);
 
         assertEquals(200, updateResponse.getStatusCode().value());
         assertEquals("OFFLINE", requireBody(updateResponse).path("data").path("status").asText());
+        assertEquals("Updated description", requireBody(updateResponse).path("data").path("description").asText());
 
         ResponseEntity<JsonNode> deleteResponse = delete("/iot/devices/" + deviceId, session);
         assertEquals(200, deleteResponse.getStatusCode().value());
@@ -93,6 +96,7 @@ class IotIntegrationTest extends AbstractIntegrationTest {
         ResponseEntity<JsonNode> acknowledgeResponse = post("/iot/alarms/" + alarmId + "/acknowledge", Map.of(), session);
         assertEquals(200, acknowledgeResponse.getStatusCode().value());
         assertEquals("ACKNOWLEDGED", requireBody(acknowledgeResponse).path("data").path("status").asText());
+        assertEquals(session.userId(), requireBody(acknowledgeResponse).path("data").path("acknowledgedBy").asText());
 
         ResponseEntity<JsonNode> listResponse = get(
                 "/iot/alarms?page=0&size=20&status=ACKNOWLEDGED&deviceId=" + deviceId,
@@ -100,6 +104,37 @@ class IotIntegrationTest extends AbstractIntegrationTest {
         );
         assertEquals(200, listResponse.getStatusCode().value());
         assertTrue(requireBody(listResponse).path("data").path("items").size() >= 1);
+    }
+
+    @Test
+    void shouldKeepDeviceIsolationAcrossTenants() {
+        AuthSession session = loginAsDefaultAdmin();
+        String marker = randomSearchMarker();
+        String otherTenantId = UUID.randomUUID().toString();
+
+        executeSql(
+                "INSERT INTO tenants (id, name, code, status) VALUES (?, ?, ?, 'ACTIVE')",
+                otherTenantId,
+                "Other Tenant " + marker,
+                "other-" + marker
+        );
+        executeSql(
+                """
+                INSERT INTO iot_devices (id, tenant_id, name, serial_number, identifier, status)
+                VALUES (?, ?, ?, ?, ?, ?)
+                """,
+                UUID.randomUUID().toString(),
+                otherTenantId,
+                "Other Device-" + marker,
+                "ISO-" + marker,
+                "ISO-" + marker,
+                "ONLINE"
+        );
+
+        ResponseEntity<JsonNode> secondTenantList = get("/iot/devices?page=0&size=20&search=" + marker, session);
+
+        assertEquals(200, secondTenantList.getStatusCode().value());
+        assertEquals(0, requireBody(secondTenantList).path("data").path("items").size());
     }
 
     @Test

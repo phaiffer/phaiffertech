@@ -27,10 +27,14 @@ Next.js admin console for the unified platform.
   - appointments list/create/edit/delete
   - search, filters and pagination
 - IoT v1 UI:
+  - dashboard summary
   - devices list/create/edit/delete
+  - registers list/create/edit/delete
   - alarms list/create/edit/delete + acknowledge
   - telemetry write + read list
-  - search, filters and pagination
+  - maintenance list/create/edit/delete
+  - reports summary
+  - search, filters, pagination and permission-aware actions
 
 ## Key Shared Modules
 
@@ -68,9 +72,13 @@ Next.js admin console for the unified platform.
 - `/pet/pets`
 - `/pet/appointments`
 - `/iot`
+- `/iot/dashboard`
 - `/iot/devices`
+- `/iot/registers`
 - `/iot/alarms`
 - `/iot/telemetry`
+- `/iot/maintenance`
+- `/iot/reports`
 - `/settings`
 
 ## Run
@@ -97,3 +105,7 @@ npm run build
 
 - Feature flags and module enablement are resolved server-side and reflected in module navigation.
 - Module-disabled API access returns `403` from backend guard, and UI sections are hidden from sidebar.
+- IoT UI mirrors the V1 split between control plane and data plane:
+  - control plane: devices, registers, maintenance
+  - data plane: telemetry, alarms, dashboard and reports
+- IoT actions are wrapped with `PermissionGuard` so CRUD, acknowledge and summary views follow the backend permission model.

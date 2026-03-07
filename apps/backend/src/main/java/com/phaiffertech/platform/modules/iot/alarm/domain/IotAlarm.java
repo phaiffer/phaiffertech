@@ -18,6 +18,9 @@ public class IotAlarm extends BaseTenantEntity {
     @Column(name = "device_id", nullable = false, columnDefinition = "char(36)")
     private UUID deviceId;
 
+    @Column(name = "register_id", columnDefinition = "char(36)")
+    private UUID registerId;
+
     @Column(name = "code", nullable = false, length = 80)
     private String code;
 
@@ -36,6 +39,9 @@ public class IotAlarm extends BaseTenantEntity {
     @Column(name = "acknowledged_at")
     private Instant acknowledgedAt;
 
+    @Column(name = "acknowledged_by", columnDefinition = "char(36)")
+    private UUID acknowledgedBy;
+
     public UUID getDeviceId() {
         return deviceId;
     }
@@ -50,6 +56,14 @@ public class IotAlarm extends BaseTenantEntity {
 
     public void setCode(String code) {
         this.code = code;
+    }
+
+    public UUID getRegisterId() {
+        return registerId;
+    }
+
+    public void setRegisterId(UUID registerId) {
+        this.registerId = registerId;
     }
 
     public String getSeverity() {
@@ -90,5 +104,13 @@ public class IotAlarm extends BaseTenantEntity {
 
     public void setAcknowledgedAt(Instant acknowledgedAt) {
         this.acknowledgedAt = acknowledgedAt;
+    }
+
+    public UUID getAcknowledgedBy() {
+        return acknowledgedBy;
+    }
+
+    public void setAcknowledgedBy(UUID acknowledgedBy) {
+        this.acknowledgedBy = acknowledgedBy;
     }
 }

@@ -8,6 +8,7 @@ public record IotDeviceCreateRequest(
         @NotBlank @JsonAlias("serialNumber") String identifier,
         String type,
         String location,
+        String description,
         String status
 ) {
 }

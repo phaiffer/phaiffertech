@@ -38,6 +38,9 @@ public class IotAlarmController {
     public ApiResponse<PageResponseDto<IotAlarmResponse>> list(
             @Valid @ModelAttribute PageRequestDto pageRequest,
             @RequestParam(required = false) UUID deviceId,
+            @RequestParam(name = "device_id", required = false) UUID deviceIdSnake,
+            @RequestParam(required = false) UUID registerId,
+            @RequestParam(name = "register_id", required = false) UUID registerIdSnake,
             @RequestParam(required = false) String severity,
             @RequestParam(required = false) String status,
             @RequestParam(required = false) Instant triggeredFrom,
@@ -45,7 +48,8 @@ public class IotAlarmController {
     ) {
         return ApiResponse.success(service.list(
                 pageRequest,
-                deviceId,
+                deviceId != null ? deviceId : deviceIdSnake,
+                registerId != null ? registerId : registerIdSnake,
                 severity,
                 status,
                 triggeredFrom,

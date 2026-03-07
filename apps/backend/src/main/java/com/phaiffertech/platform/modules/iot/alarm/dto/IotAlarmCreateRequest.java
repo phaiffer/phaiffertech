@@ -7,6 +7,7 @@ import java.util.UUID;
 
 public record IotAlarmCreateRequest(
         @NotNull UUID deviceId,
+        UUID registerId,
         @NotBlank String code,
         @NotBlank String message,
         @NotBlank String severity,

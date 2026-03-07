@@ -10,6 +10,7 @@ import java.util.UUID;
 
 public record IotTelemetryCreateRequest(
         @NotNull UUID deviceId,
+        UUID registerId,
         @NotBlank @JsonAlias("metric") String metricName,
         @NotNull @JsonAlias("value") BigDecimal metricValue,
         String unit,

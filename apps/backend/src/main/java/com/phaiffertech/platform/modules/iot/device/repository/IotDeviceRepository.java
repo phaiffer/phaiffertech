@@ -3,6 +3,7 @@ package com.phaiffertech.platform.modules.iot.device.repository;
 import com.phaiffertech.platform.modules.iot.device.domain.IotDevice;
 import com.phaiffertech.platform.shared.crud.BaseTenantCrudRepository;
 import java.util.Optional;
+import java.util.List;
 import java.util.UUID;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -24,6 +25,7 @@ public interface IotDeviceRepository extends JpaRepository<IotDevice, UUID>, Bas
                    LOWER(d.name) LIKE LOWER(CONCAT('%', :search, '%')) OR
                    LOWER(d.identifier) LIKE LOWER(CONCAT('%', :search, '%')) OR
                    LOWER(COALESCE(d.location, '')) LIKE LOWER(CONCAT('%', :search, '%')) OR
+                   LOWER(COALESCE(d.description, '')) LIKE LOWER(CONCAT('%', :search, '%')) OR
                    LOWER(COALESCE(d.status, '')) LIKE LOWER(CONCAT('%', :search, '%')))
             """)
     Page<IotDevice> findAllByTenantIdAndSearch(
@@ -45,4 +47,6 @@ public interface IotDeviceRepository extends JpaRepository<IotDevice, UUID>, Bas
             @Param("id") UUID id,
             @Param("tenantId") UUID tenantId
     );
+
+    List<IotDevice> findAllByTenantIdOrderByCreatedAtDesc(UUID tenantId);
 }

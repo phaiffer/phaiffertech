@@ -25,6 +25,7 @@ public final class IotDeviceMapper implements BaseCrudMapper<
         device.setSerialNumber(request.identifier().trim());
         device.setType(normalizeUpper(request.type()));
         device.setLocation(request.location());
+        device.setDescription(normalizeText(request.description()));
         device.setStatus(resolveStatus(request.status()));
         return device;
     }
@@ -36,6 +37,7 @@ public final class IotDeviceMapper implements BaseCrudMapper<
         entity.setSerialNumber(request.identifier().trim());
         entity.setType(normalizeUpper(request.type()));
         entity.setLocation(request.location());
+        entity.setDescription(normalizeText(request.description()));
         entity.setStatus(resolveStatus(request.status()));
     }
 
@@ -47,6 +49,7 @@ public final class IotDeviceMapper implements BaseCrudMapper<
                 device.getIdentifier(),
                 device.getType(),
                 device.getLocation(),
+                device.getDescription(),
                 device.getStatus(),
                 device.getLastSeenAt(),
                 device.getCreatedAt(),
@@ -66,5 +69,12 @@ public final class IotDeviceMapper implements BaseCrudMapper<
             return null;
         }
         return value.trim().toUpperCase();
+    }
+
+    private String normalizeText(String value) {
+        if (value == null || value.isBlank()) {
+            return null;
+        }
+        return value.trim();
     }
 }

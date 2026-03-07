@@ -29,6 +29,9 @@ public class IotDevice extends BaseTenantEntity {
     @Column(name = "location", length = 150)
     private String location;
 
+    @Column(name = "description", length = 255)
+    private String description;
+
     @Column(name = "status", nullable = false, length = 40)
     private String status = "ONLINE";
 
@@ -73,6 +76,14 @@ public class IotDevice extends BaseTenantEntity {
 
     public void setLocation(String location) {
         this.location = location;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
     }
 
     public String getStatus() {

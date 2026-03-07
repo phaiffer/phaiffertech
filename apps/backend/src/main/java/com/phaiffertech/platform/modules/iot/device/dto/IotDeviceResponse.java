@@ -10,6 +10,7 @@ public record IotDeviceResponse(
         String identifier,
         String type,
         String location,
+        String description,
         String status,
         Instant lastSeenAt,
         Instant createdAt,

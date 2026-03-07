@@ -1,6 +1,7 @@
 package com.phaiffertech.platform.modules.iot.alarm.service;
 
 import com.phaiffertech.platform.core.audit.service.AuditableAction;
+import com.phaiffertech.platform.modules.iot.register.repository.IotRegisterRepository;
 import com.phaiffertech.platform.modules.iot.alarm.domain.IotAlarm;
 import com.phaiffertech.platform.modules.iot.alarm.dto.IotAlarmCreateRequest;
 import com.phaiffertech.platform.modules.iot.alarm.dto.IotAlarmResponse;
@@ -8,6 +9,7 @@ import com.phaiffertech.platform.modules.iot.alarm.dto.IotAlarmUpdateRequest;
 import com.phaiffertech.platform.modules.iot.alarm.mapper.IotAlarmMapper;
 import com.phaiffertech.platform.modules.iot.alarm.repository.IotAlarmRepository;
 import com.phaiffertech.platform.modules.iot.device.repository.IotDeviceRepository;
+import com.phaiffertech.platform.shared.security.CurrentUserService;
 import com.phaiffertech.platform.shared.crud.BasePageQuery;
 import com.phaiffertech.platform.shared.crud.BaseSearchSpecificationBuilder;
 import com.phaiffertech.platform.shared.crud.BaseTenantCrudService;
@@ -31,27 +33,35 @@ public class IotAlarmService extends BaseTenantCrudService<
 
     private final IotAlarmRepository repository;
     private final IotDeviceRepository deviceRepository;
+    private final IotRegisterRepository registerRepository;
+    private final CurrentUserService currentUserService;
     private final PlatformMetricsService platformMetricsService;
 
     public IotAlarmService(
             IotAlarmRepository repository,
             IotDeviceRepository deviceRepository,
+            IotRegisterRepository registerRepository,
+            CurrentUserService currentUserService,
             PlatformMetricsService platformMetricsService
     ) {
         super(repository, repository, IotAlarmMapper.INSTANCE, "IoT alarm not found.");
         this.repository = repository;
         this.deviceRepository = deviceRepository;
+        this.registerRepository = registerRepository;
+        this.currentUserService = currentUserService;
         this.platformMetricsService = platformMetricsService;
     }
 
     @Override
     public void beforeCreate(UUID tenantId, IotAlarmCreateRequest request, IotAlarm entity) {
         validateDevice(tenantId, request.deviceId());
+        validateRegister(tenantId, request.deviceId(), request.registerId());
     }
 
     @Override
     public void beforeUpdate(UUID tenantId, IotAlarmUpdateRequest request, IotAlarm entity) {
         validateDevice(tenantId, request.deviceId());
+        validateRegister(tenantId, request.deviceId(), request.registerId());
     }
 
     @Transactional
@@ -66,6 +76,7 @@ public class IotAlarmService extends BaseTenantCrudService<
     public PageResponseDto<IotAlarmResponse> list(
             PageRequestDto pageRequest,
             UUID deviceId,
+            UUID registerId,
             String severity,
             String status,
             Instant triggeredFrom,
@@ -77,6 +88,7 @@ public class IotAlarmService extends BaseTenantCrudService<
                 (BasePageQuery query) -> repository.findAllByTenantIdAndSearch(
                         currentTenantId(),
                         deviceId,
+                        registerId,
                         BaseSearchSpecificationBuilder.normalizeUpper(severity),
                         BaseSearchSpecificationBuilder.normalizeUpper(status),
                         triggeredFrom,
@@ -111,6 +123,7 @@ public class IotAlarmService extends BaseTenantCrudService<
         IotAlarm alarm = getOrThrow(id, tenantId);
         alarm.setStatus("ACKNOWLEDGED");
         alarm.setAcknowledgedAt(Instant.now());
+        alarm.setAcknowledgedBy(currentUserService.getRequiredUser().userId());
         return IotAlarmMapper.INSTANCE.toResponse(repository.save(alarm));
     }
 
@@ -123,5 +136,17 @@ public class IotAlarmService extends BaseTenantCrudService<
     private void validateDevice(UUID tenantId, UUID deviceId) {
         deviceRepository.findByIdAndTenantId(deviceId, tenantId)
                 .orElseThrow(() -> new ResourceNotFoundException("IoT device not found for tenant."));
+    }
+
+    private void validateRegister(UUID tenantId, UUID deviceId, UUID registerId) {
+        if (registerId == null) {
+            return;
+        }
+
+        var register = registerRepository.findByIdAndTenantId(registerId, tenantId)
+                .orElseThrow(() -> new ResourceNotFoundException("IoT register not found for tenant."));
+        if (!register.getDeviceId().equals(deviceId)) {
+            throw new IllegalArgumentException("IoT register does not belong to the informed device.");
+        }
     }
 }

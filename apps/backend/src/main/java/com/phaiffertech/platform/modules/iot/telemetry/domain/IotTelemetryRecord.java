@@ -19,6 +19,9 @@ public class IotTelemetryRecord extends BaseTenantEntity {
     @Column(name = "device_id", nullable = false, columnDefinition = "char(36)")
     private UUID deviceId;
 
+    @Column(name = "register_id", columnDefinition = "char(36)")
+    private UUID registerId;
+
     @Column(name = "metric_name", nullable = false, length = 80)
     private String metricName;
 
@@ -48,6 +51,14 @@ public class IotTelemetryRecord extends BaseTenantEntity {
 
     public void setMetricName(String metricName) {
         this.metricName = metricName;
+    }
+
+    public UUID getRegisterId() {
+        return registerId;
+    }
+
+    public void setRegisterId(UUID registerId) {
+        this.registerId = registerId;
     }
 
     public BigDecimal getMetricValue() {

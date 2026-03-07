@@ -8,6 +8,7 @@ public record IotDeviceUpdateRequest(
         @NotBlank @JsonAlias("serialNumber") String identifier,
         String type,
         String location,
+        String description,
         @NotBlank String status
 ) {
 }

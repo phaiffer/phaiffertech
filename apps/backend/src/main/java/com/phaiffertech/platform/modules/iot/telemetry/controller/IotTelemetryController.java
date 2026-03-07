@@ -43,15 +43,26 @@ public class IotTelemetryController {
     public ApiResponse<PageResponseDto<IotTelemetryResponse>> list(
             @Valid @ModelAttribute PageRequestDto pageRequest,
             @RequestParam(required = false) UUID deviceId,
+            @RequestParam(name = "device_id", required = false) UUID deviceIdSnake,
+            @RequestParam(required = false) UUID registerId,
+            @RequestParam(name = "register_id", required = false) UUID registerIdSnake,
+            @RequestParam(required = false) String metricName,
+            @RequestParam(name = "metric_name", required = false) String metricNameSnake,
+            @RequestParam(required = false) Instant startAt,
+            @RequestParam(name = "start_at", required = false) Instant startAtSnake,
+            @RequestParam(required = false) Instant endAt,
+            @RequestParam(name = "end_at", required = false) Instant endAtSnake,
             @RequestParam(required = false) Instant recordedFrom,
             @RequestParam(required = false) Instant recordedTo
     ) {
         return ApiResponse.success(telemetryReader.list(
                 TenantContext.getRequiredTenantId(),
                 pageRequest,
-                deviceId,
-                recordedFrom,
-                recordedTo
+                deviceId != null ? deviceId : deviceIdSnake,
+                registerId != null ? registerId : registerIdSnake,
+                metricName != null ? metricName : metricNameSnake,
+                recordedFrom != null ? recordedFrom : (startAt != null ? startAt : startAtSnake),
+                recordedTo != null ? recordedTo : (endAt != null ? endAt : endAtSnake)
         ));
     }
 }
