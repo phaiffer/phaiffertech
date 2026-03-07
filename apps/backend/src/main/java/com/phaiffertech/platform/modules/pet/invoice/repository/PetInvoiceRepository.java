@@ -12,6 +12,8 @@ import org.springframework.data.repository.query.Param;
 
 public interface PetInvoiceRepository extends JpaRepository<PetInvoice, UUID>, BaseTenantCrudRepository<PetInvoice> {
 
+    long countByTenantIdAndDeletedAtIsNull(UUID tenantId);
+
     @Query("""
             SELECT i
             FROM PetInvoice i

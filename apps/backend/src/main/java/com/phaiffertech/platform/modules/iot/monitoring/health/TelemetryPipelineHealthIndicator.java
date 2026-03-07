@@ -1,4 +1,4 @@
-package com.phaiffertech.platform.shared.health;
+package com.phaiffertech.platform.modules.iot.monitoring.health;
 
 import com.phaiffertech.platform.modules.iot.processing.TelemetryReader;
 import com.phaiffertech.platform.modules.iot.processing.TelemetryWriter;

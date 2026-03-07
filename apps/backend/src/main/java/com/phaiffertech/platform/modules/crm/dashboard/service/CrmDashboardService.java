@@ -18,7 +18,11 @@ public class CrmDashboardService {
 
     @Transactional(readOnly = true)
     public CrmDashboardSummaryResponse summary() {
-        UUID tenantId = TenantContext.getRequiredTenantId();
+        return summary(TenantContext.getRequiredTenantId());
+    }
+
+    @Transactional(readOnly = true)
+    public CrmDashboardSummaryResponse summary(UUID tenantId) {
         return new CrmDashboardSummaryResponse(
                 repository.countContacts(tenantId),
                 repository.countLeads(tenantId),

@@ -50,6 +50,7 @@ com.phaiffertech.platform
 ├── modules
 │   ├── crm
 │   │   ├── activity
+│   │   ├── capability
 │   │   ├── company
 │   │   ├── contact
 │   │   ├── dashboard
@@ -61,6 +62,7 @@ com.phaiffertech.platform
 │   │   └── task
 │   ├── pet
 │   │   ├── client
+│   │   ├── capability
 │   │   ├── petprofile
 │   │   ├── appointment
 │   │   ├── servicecatalog
@@ -76,6 +78,7 @@ com.phaiffertech.platform
 │   │   └── portal
 │   └── iot
 │       ├── device
+│       ├── capability
 │       ├── register
 │       ├── telemetry
 │       ├── processing
@@ -91,6 +94,103 @@ com.phaiffertech.platform
     ├── persistence
     └── web
 ```
+
+## Core And Vertical Boundaries
+
+Core owns platform concerns only:
+- `core.auth`, `core.tenant`, `core.user`, `core.iam`
+- `core.settings`
+- `core.audit`, `core.notification`, `core.attachment`
+- `core.module` for registry, feature flags, tenant module bindings and aggregated dashboard entrypoints
+- `shared.*` for technical infrastructure, shared CRUD primitives and cross-module contracts
+
+Vertical modules own business rules:
+- `modules.crm`: companies, contacts, leads, deals, pipeline, tasks, notes, activity and CRM dashboard
+- `modules.iot`: devices, registers, telemetry, alarms, maintenance, monitoring and reports
+- `modules.pet`: clients, pets, appointments, services, professionals, medical records, vaccinations, prescriptions, products, inventory and invoices
+
+Explicit rule:
+- core cannot contain CRM, IoT or Pet business logic
+- one vertical module cannot access another vertical module directly
+- cross-module reads must happen through contracts/capabilities, not through another module repository
+
+## Architectural Findings
+
+Repository analysis on `2026-03-07` found:
+
+- no direct repository access from CRM to IoT/Pet, from IoT to CRM/Pet, or from Pet to CRM/IoT
+- no direct vertical imports inside `core.*`
+- one critical leakage existed before this refactor: `shared.health.TelemetryPipelineHealthIndicator` imported IoT telemetry abstractions and therefore mixed vertical behavior into shared/core-like infrastructure
+- module enablement already existed in backend, but the registry response did not distinguish tenant module binding from feature flag state, which blurred tenant access rules on the frontend
+- there was no central aggregated dashboard contract; any future platform dashboard risked pulling repositories from multiple vertical modules into core
+
+Corrections applied in this stage:
+
+- telemetry pipeline health moved to `modules.iot.monitoring.health`
+- `shared.contracts.module` introduced as the explicit cross-module contract package
+- `/api/v1/dashboard/summary` introduced as a core aggregation endpoint backed only by capabilities
+- `/api/v1/modules` now returns `moduleEnabled`, `featureFlagEnabled` and `available`
+
+## Module Capabilities And Contracts
+
+Cross-module contracts now live in:
+- `shared.contracts.module.ModuleSummaryCapability`
+- `shared.contracts.module.ModuleSummaryView`
+- `shared.contracts.module.ModuleMetricView`
+
+Implemented module capabilities:
+- `modules.crm.capability.CrmDashboardCapability`
+- `modules.iot.capability.IotDashboardCapability`
+- `modules.pet.capability.PetDashboardCapability`
+
+Capability rules:
+- the contract exposes summary data only
+- core consumes the contract interface, never a vertical repository
+- each vertical module keeps ownership of how its summary is built internally
+
+Current pragmatic scope:
+- this stage standardizes dashboard/summary aggregation first
+- narrower capabilities such as contact summary, device status summary or pet owner summary can be added later only where a real integration needs them
+
+## Module Enablement Model
+
+Three separate concepts now remain explicit:
+
+1. Module enabled
+   - tenant condition
+   - stored in `tenant_modules`
+   - answers: "is this tenant subscribed/allowed to use the module?"
+2. Feature flag
+   - rollout condition
+   - stored in `feature_flags`
+   - answers: "should this capability be exposed right now for this tenant?"
+3. Permission
+   - user/role condition
+   - resolved from JWT + `role_permissions`
+   - answers: "can this authenticated user perform this action?"
+
+Backend flow:
+
+- `ModuleAccessService` evaluates module availability from tenant binding + feature flag
+- `ModuleAccessGuard` blocks `/api/v1/crm/**`, `/api/v1/iot/**` and `/api/v1/pet/**` when unavailable
+- `@RequirePermission` still enforces per-endpoint authorization after module access passes
+
+Frontend flow:
+
+- sidebar hides module menus when `available=false`
+- route-level `ModuleGuard` blocks `/crm`, `/iot` and `/pet` screens when the module is unavailable
+- dashboard shows the difference between tenant binding, feature flag and final availability
+
+## Dashboard Aggregation
+
+Platform-level aggregation is now intentionally thin:
+
+- `PlatformDashboardService` depends on `List<ModuleSummaryCapability>`
+- each capability returns a `ModuleSummaryView`
+- the core dashboard filters capabilities through `ModuleAccessService`
+- the core dashboard does not import vertical repositories or entities
+
+This keeps the platform dashboard extensible without turning `core` into a god service.
 
 ## Multi-Tenancy
 
@@ -126,7 +226,7 @@ com.phaiffertech.platform
   - database indicator
   - migration status indicator
   - redis future-ready indicator
-  - telemetry pipeline indicator
+  - telemetry pipeline indicator, implemented inside `modules.iot.monitoring.health`
 
 ## Shared CRUD Layer
 
@@ -168,6 +268,7 @@ Enforcement:
 - role checks via Spring Security
 - granular checks via `@RequirePermission("...")`
 - module guard for `/api/v1/crm/**`, `/api/v1/pet/**`, `/api/v1/iot/**`
+- module availability computed from tenant module binding + feature flag
 - feature flag checks (global and tenant-scoped)
 
 ## Rate Limiting

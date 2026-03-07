@@ -13,6 +13,8 @@ import org.springframework.data.repository.query.Param;
 
 public interface PetAppointmentRepository extends JpaRepository<PetAppointment, UUID>, BaseTenantCrudRepository<PetAppointment> {
 
+    long countByTenantIdAndDeletedAtIsNull(UUID tenantId);
+
     @Query("""
             SELECT a
             FROM PetAppointment a

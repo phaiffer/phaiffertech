@@ -45,7 +45,11 @@ public class IotDashboardService implements MonitoringSummaryService {
     @Override
     @Transactional(readOnly = true)
     public IotDashboardSummaryResponse summary() {
-        UUID tenantId = TenantContext.getRequiredTenantId();
+        return summary(TenantContext.getRequiredTenantId());
+    }
+
+    @Transactional(readOnly = true)
+    public IotDashboardSummaryResponse summary(UUID tenantId) {
         Instant now = Instant.now();
 
         long activeDevices = 0L;

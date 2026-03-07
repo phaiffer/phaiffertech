@@ -2,10 +2,9 @@
 
 import { useAuth } from '@/shared/auth/use-auth';
 import { usePermissions } from '@/shared/auth/usePermissions';
-import { moduleService } from '@/shared/services/module-service';
+import { useModuleCatalog } from '@/shared/modules/use-module-catalog';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useEffect, useState } from 'react';
 
 const items = [
   { href: '/dashboard', label: 'Dashboard' },
@@ -74,20 +73,14 @@ export function Sidebar() {
   const pathname = usePathname();
   const { session, signOut } = useAuth();
   const { hasAnyPermission } = usePermissions();
-  const [enabledModules, setEnabledModules] = useState<Set<string> | null>(null);
-
-  useEffect(() => {
-    moduleService
-      .list()
-      .then((modules) => setEnabledModules(new Set(modules.filter((moduleItem) => moduleItem.enabled).map((moduleItem) => moduleItem.code))))
-      .catch(() => setEnabledModules(new Set()));
-  }, []);
+  const { modules, loading } = useModuleCatalog();
+  const availableModules = new Set(modules.filter((moduleItem) => moduleItem.available).map((moduleItem) => moduleItem.code));
 
   const visibleItems = items.filter((item) => {
-    if (item.moduleCode && enabledModules === null) {
+    if (item.moduleCode && loading) {
       return false;
     }
-    if (item.moduleCode && enabledModules && !enabledModules.has(item.moduleCode)) {
+    if (item.moduleCode && !availableModules.has(item.moduleCode)) {
       return false;
     }
     if (!item.anyOf || item.anyOf.length === 0) {

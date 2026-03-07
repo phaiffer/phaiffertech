@@ -64,6 +64,34 @@ Backend package root is fixed:
 - API rate limiting (auth, default API, telemetry ingestion).
 - Feature flags (global + tenant) and module enablement guards.
 
+## Architecture Guardrails
+
+Core ownership:
+
+- `core.auth`, `core.tenant`, `core.user`, `core.iam`
+- `core.settings`, `core.audit`, `core.notification`, `core.attachment`
+- `core.module` for module registry, feature flags and tenant module enablement
+- `shared.*` only for technical infrastructure, CRUD primitives and cross-module contracts
+
+Vertical ownership:
+
+- `modules.crm`: companies, contacts, leads, deals, pipeline, tasks, notes, CRM dashboard/activity
+- `modules.iot`: devices, registers, telemetry, alarms, maintenance, monitoring and reports
+- `modules.pet`: clients, pets, appointments, services, professionals, medical records, vaccinations, prescriptions, products, inventory and invoices
+
+Enforced rules:
+
+- core/shared cannot import business classes from `modules.crm`, `modules.iot` or `modules.pet`
+- one vertical module cannot import another vertical module directly
+- cross-module aggregation happens through `shared.contracts.module.ModuleSummaryCapability`
+- module access is centralized in `core.module.ModuleAccessService` and enforced by `shared.security.ModuleAccessGuard`
+
+Current architectural corrections:
+
+- the old telemetry pipeline health indicator was moved out of `shared.health` into `modules.iot.monitoring.health`
+- `/api/v1/modules` now separates `moduleEnabled`, `featureFlagEnabled` and `available`
+- `/api/v1/dashboard/summary` now aggregates module summaries through capabilities instead of direct repository access from core
+
 ## CRM Delivery Status
 
 Legacy CRM reference was analyzed in `../crm-platform` only as a functional reference. Main conclusions:
@@ -233,6 +261,7 @@ Note:
 - `GET|POST /tenants`
 - `GET|POST /users`
 - `GET /modules`
+- `GET /dashboard/summary`
 - `GET /feature-flags`
 - `GET /actuator/metrics`
 - `GET /actuator/prometheus`

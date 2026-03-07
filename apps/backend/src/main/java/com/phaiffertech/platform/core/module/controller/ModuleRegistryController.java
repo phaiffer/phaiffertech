@@ -20,6 +20,6 @@ public class ModuleRegistryController {
 
     @GetMapping
     public ApiResponse<List<ModuleViewResponse>> list() {
-        return ApiResponse.success(moduleRegistryService.listEnabledModulesForTenant());
+        return ApiResponse.success(moduleRegistryService.listModulesForTenant());
     }
 }

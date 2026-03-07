@@ -1,5 +1,6 @@
 package com.phaiffertech.platform.core.module.service;
 
+import com.phaiffertech.platform.core.module.domain.PlatformModule;
 import com.phaiffertech.platform.core.module.domain.ModuleDefinition;
 import com.phaiffertech.platform.core.module.featureflag.service.FeatureFlagService;
 import com.phaiffertech.platform.core.module.repository.ModuleDefinitionRepository;
@@ -29,38 +30,51 @@ public class ModuleAccessService {
 
     @Transactional(readOnly = true)
     public boolean isPathEnabled(UUID tenantId, String requestPath) {
-        Optional<String> moduleCode = resolveModuleCode(requestPath);
-        if (moduleCode.isEmpty()) {
+        Optional<PlatformModule> module = resolveModule(requestPath);
+        if (module.isEmpty()) {
             return true;
         }
 
-        String code = moduleCode.get();
-        String moduleFlag = code.toLowerCase(Locale.ROOT) + ".enabled";
-        if (!featureFlagService.isEnabled(moduleFlag, tenantId)) {
-            return false;
-        }
+        return isModuleAvailable(tenantId, module.get().getCode());
+    }
 
-        Optional<ModuleDefinition> moduleDefinition = moduleDefinitionRepository.findByCodeAndActiveTrueAndDeletedAtIsNull(code);
-        if (moduleDefinition.isEmpty()) {
-            return false;
-        }
+    @Transactional(readOnly = true)
+    public boolean isModuleAvailable(UUID tenantId, String moduleCode) {
+        return evaluate(tenantId, moduleCode).available();
+    }
 
-        return tenantModuleRepository.existsByTenantIdAndModuleDefinitionIdAndEnabledTrueAndDeletedAtIsNull(
-                tenantId,
-                moduleDefinition.get().getId()
+    @Transactional(readOnly = true)
+    public ModuleAccessStatus evaluate(UUID tenantId, String moduleCode) {
+        Optional<ModuleDefinition> moduleDefinition = moduleDefinitionRepository
+                .findByCodeAndActiveTrueAndDeletedAtIsNull(moduleCode);
+
+        boolean featureFlagEnabled = isFeatureFlagEnabled(tenantId, moduleCode);
+        boolean moduleEnabled = moduleDefinition
+                .map(definition -> tenantModuleRepository.existsByTenantIdAndModuleDefinitionIdAndEnabledTrueAndDeletedAtIsNull(
+                        tenantId,
+                        definition.getId()
+                ))
+                .orElse(false);
+
+        return new ModuleAccessStatus(
+                moduleCode,
+                moduleEnabled,
+                featureFlagEnabled,
+                moduleEnabled && featureFlagEnabled
         );
     }
 
+    public Optional<PlatformModule> resolveModule(String requestPath) {
+        return PlatformModule.fromRequestPath(requestPath);
+    }
+
     public Optional<String> resolveModuleCode(String requestPath) {
-        if (requestPath.startsWith("/api/v1/crm")) {
-            return Optional.of("CRM");
-        }
-        if (requestPath.startsWith("/api/v1/pet")) {
-            return Optional.of("PET");
-        }
-        if (requestPath.startsWith("/api/v1/iot")) {
-            return Optional.of("IOT");
-        }
-        return Optional.empty();
+        return resolveModule(requestPath).map(PlatformModule::getCode);
+    }
+
+    private boolean isFeatureFlagEnabled(UUID tenantId, String moduleCode) {
+        return PlatformModule.fromCode(moduleCode)
+                .map(platformModule -> featureFlagService.isEnabled(platformModule.getFeatureFlagKey(), tenantId))
+                .orElseGet(() -> featureFlagService.isEnabled(moduleCode.toLowerCase(Locale.ROOT) + ".enabled", tenantId));
     }
 }

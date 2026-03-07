@@ -42,6 +42,10 @@ public abstract class AbstractIntegrationTest extends IntegrationTestContainersC
     }
 
     protected AuthSession createTenantAdminSession(String tenantCode, String email) {
+        return createTenantAdminSession(tenantCode, email, "CORE_PLATFORM", "IOT");
+    }
+
+    protected AuthSession createTenantAdminSession(String tenantCode, String email, String... moduleCodes) {
         String tenantId = UUID.randomUUID().toString();
         String userId = UUID.randomUUID().toString();
 
@@ -69,12 +73,34 @@ public abstract class AbstractIntegrationTest extends IntegrationTestContainersC
                 tenantId,
                 userId
         );
-        enableTenantModule(tenantId, "CORE_PLATFORM");
-        enableTenantModule(tenantId, "IOT");
+        enableTenantModules(tenantId, moduleCodes);
 
         ResponseEntity<JsonNode> response = login(tenantCode, email, DEFAULT_PASSWORD);
         Assertions.assertEquals(200, response.getStatusCode().value());
         return sessionFromLoginPayload(requireBody(response).path("data"));
+    }
+
+    protected void enableTenantModules(String tenantId, String... moduleCodes) {
+        for (String moduleCode : moduleCodes) {
+            enableTenantModule(tenantId, moduleCode);
+        }
+    }
+
+    protected void upsertTenantFeatureFlag(String tenantId, String flagKey, boolean enabled) {
+        executeSql(
+                """
+                INSERT INTO feature_flags (id, flag_key, enabled, tenant_id, created_by, updated_by)
+                VALUES (?, ?, ?, ?, 'test', 'test')
+                ON DUPLICATE KEY UPDATE
+                    enabled = VALUES(enabled),
+                    deleted_at = NULL,
+                    updated_by = 'test'
+                """,
+                UUID.randomUUID().toString(),
+                flagKey,
+                enabled,
+                tenantId
+        );
     }
 
     protected ResponseEntity<JsonNode> get(String path, AuthSession session) {

@@ -4,6 +4,9 @@ public record ModuleViewResponse(
         String code,
         String name,
         String description,
-        boolean enabled
+        boolean enabled,
+        boolean moduleEnabled,
+        boolean featureFlagEnabled,
+        boolean available
 ) {
 }
