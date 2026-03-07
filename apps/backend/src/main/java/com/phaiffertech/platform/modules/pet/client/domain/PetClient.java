@@ -16,11 +16,20 @@ public class PetClient extends BaseTenantEntity {
     @Column(name = "full_name", nullable = false, length = 150)
     private String fullName;
 
+    @Column(name = "name", nullable = false, length = 150)
+    private String name;
+
     @Column(name = "email", length = 180)
     private String email;
 
     @Column(name = "phone", length = 40)
     private String phone;
+
+    @Column(name = "document", length = 60)
+    private String document;
+
+    @Column(name = "status", nullable = false, length = 40)
+    private String status = "ACTIVE";
 
     public String getFullName() {
         return fullName;
@@ -28,6 +37,14 @@ public class PetClient extends BaseTenantEntity {
 
     public void setFullName(String fullName) {
         this.fullName = fullName;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
     }
 
     public String getEmail() {
@@ -44,5 +61,21 @@ public class PetClient extends BaseTenantEntity {
 
     public void setPhone(String phone) {
         this.phone = phone;
+    }
+
+    public String getDocument() {
+        return document;
+    }
+
+    public void setDocument(String document) {
+        this.document = document;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
     }
 }

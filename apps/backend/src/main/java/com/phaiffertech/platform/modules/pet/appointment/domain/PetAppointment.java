@@ -6,10 +6,17 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
 import java.time.Instant;
 import java.util.UUID;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.Where;
 
 @Entity
 @Table(name = "pet_appointments")
+@SQLDelete(sql = "UPDATE pet_appointments SET deleted_at = CURRENT_TIMESTAMP WHERE id = ?")
+@Where(clause = "deleted_at IS NULL")
 public class PetAppointment extends BaseTenantEntity {
+
+    @Column(name = "client_id", nullable = false, columnDefinition = "char(36)")
+    private UUID clientId;
 
     @Column(name = "pet_id", nullable = false, columnDefinition = "char(36)")
     private UUID petId;
@@ -17,11 +24,25 @@ public class PetAppointment extends BaseTenantEntity {
     @Column(name = "scheduled_at", nullable = false)
     private Instant scheduledAt;
 
+    @Column(name = "service_name", nullable = false, length = 120)
+    private String serviceName;
+
     @Column(name = "status", nullable = false, length = 40)
     private String status = "SCHEDULED";
 
     @Column(name = "notes", columnDefinition = "text")
     private String notes;
+
+    @Column(name = "assigned_user_id", columnDefinition = "char(36)")
+    private UUID assignedUserId;
+
+    public UUID getClientId() {
+        return clientId;
+    }
+
+    public void setClientId(UUID clientId) {
+        this.clientId = clientId;
+    }
 
     public UUID getPetId() {
         return petId;
@@ -39,6 +60,14 @@ public class PetAppointment extends BaseTenantEntity {
         this.scheduledAt = scheduledAt;
     }
 
+    public String getServiceName() {
+        return serviceName;
+    }
+
+    public void setServiceName(String serviceName) {
+        this.serviceName = serviceName;
+    }
+
     public String getStatus() {
         return status;
     }
@@ -53,5 +82,13 @@ public class PetAppointment extends BaseTenantEntity {
 
     public void setNotes(String notes) {
         this.notes = notes;
+    }
+
+    public UUID getAssignedUserId() {
+        return assignedUserId;
+    }
+
+    public void setAssignedUserId(UUID assignedUserId) {
+        this.assignedUserId = assignedUserId;
     }
 }

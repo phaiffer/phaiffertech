@@ -10,12 +10,14 @@ import com.phaiffertech.platform.shared.response.ApiResponse;
 import com.phaiffertech.platform.shared.security.RequirePermission;
 import com.phaiffertech.platform.shared.tenancy.TenantContext;
 import jakarta.validation.Valid;
-import org.springframework.security.access.prepost.PreAuthorize;
+import java.time.Instant;
+import java.util.UUID;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -31,14 +33,25 @@ public class IotTelemetryController {
     }
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('PLATFORM_ADMIN','TENANT_OWNER','TENANT_ADMIN','MANAGER','OPERATOR')")
+    @RequirePermission("iot.telemetry.write")
     public ApiResponse<IotTelemetryResponse> ingest(@Valid @RequestBody IotTelemetryCreateRequest request) {
         return ApiResponse.success(telemetryWriter.write(TenantContext.getRequiredTenantId(), request));
     }
 
     @GetMapping
-    @RequirePermission("iot.device.read")
-    public ApiResponse<PageResponseDto<IotTelemetryResponse>> list(@Valid @ModelAttribute PageRequestDto pageRequest) {
-        return ApiResponse.success(telemetryReader.list(TenantContext.getRequiredTenantId(), pageRequest));
+    @RequirePermission("iot.telemetry.read")
+    public ApiResponse<PageResponseDto<IotTelemetryResponse>> list(
+            @Valid @ModelAttribute PageRequestDto pageRequest,
+            @RequestParam(required = false) UUID deviceId,
+            @RequestParam(required = false) Instant recordedFrom,
+            @RequestParam(required = false) Instant recordedTo
+    ) {
+        return ApiResponse.success(telemetryReader.list(
+                TenantContext.getRequiredTenantId(),
+                pageRequest,
+                deviceId,
+                recordedFrom,
+                recordedTo
+        ));
     }
 }

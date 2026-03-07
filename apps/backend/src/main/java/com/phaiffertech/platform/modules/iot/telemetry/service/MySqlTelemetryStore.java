@@ -1,5 +1,7 @@
 package com.phaiffertech.platform.modules.iot.telemetry.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.phaiffertech.platform.core.audit.service.AuditableAction;
 import com.phaiffertech.platform.modules.iot.device.repository.IotDeviceRepository;
 import com.phaiffertech.platform.modules.iot.processing.AlarmEvaluator;
@@ -28,15 +30,18 @@ public class MySqlTelemetryStore implements TelemetryWriter, TelemetryReader {
     private final IotTelemetryRecordRepository telemetryRecordRepository;
     private final IotDeviceRepository deviceRepository;
     private final AlarmEvaluator alarmEvaluator;
+    private final ObjectMapper objectMapper;
 
     public MySqlTelemetryStore(
             IotTelemetryRecordRepository telemetryRecordRepository,
             IotDeviceRepository deviceRepository,
-            AlarmEvaluator alarmEvaluator
+            AlarmEvaluator alarmEvaluator,
+            ObjectMapper objectMapper
     ) {
         this.telemetryRecordRepository = telemetryRecordRepository;
         this.deviceRepository = deviceRepository;
         this.alarmEvaluator = alarmEvaluator;
+        this.objectMapper = objectMapper;
     }
 
     @Override
@@ -49,8 +54,10 @@ public class MySqlTelemetryStore implements TelemetryWriter, TelemetryReader {
         IotTelemetryRecord record = new IotTelemetryRecord();
         record.setTenantId(tenantId);
         record.setDeviceId(request.deviceId());
-        record.setMetric(normalizeMetric(request.metric()));
-        record.setValue(request.value());
+        record.setMetricName(normalizeMetric(request.metricName()));
+        record.setMetricValue(request.metricValue());
+        record.setUnit(normalizeUnit(request.unit()));
+        record.setMetadata(toJson(request.metadata()));
         record.setRecordedAt(request.recordedAt() == null ? Instant.now() : request.recordedAt());
 
         IotTelemetryRecord saved = telemetryRecordRepository.save(record);
@@ -61,9 +68,18 @@ public class MySqlTelemetryStore implements TelemetryWriter, TelemetryReader {
 
     @Override
     @Transactional(readOnly = true)
-    public PageResponseDto<IotTelemetryResponse> list(UUID tenantId, PageRequestDto pageRequest) {
+    public PageResponseDto<IotTelemetryResponse> list(
+            UUID tenantId,
+            PageRequestDto pageRequest,
+            UUID deviceId,
+            Instant recordedFrom,
+            Instant recordedTo
+    ) {
         Page<IotTelemetryResponse> result = telemetryRecordRepository.findAllByTenantIdAndSearch(
                         tenantId,
+                        deviceId,
+                        recordedFrom,
+                        recordedTo,
                         pageRequest.normalizedSearch(),
                         PaginationUtils.toPageable(pageRequest, Sort.by(Sort.Direction.DESC, "recordedAt"))
                 )
@@ -74,5 +90,23 @@ public class MySqlTelemetryStore implements TelemetryWriter, TelemetryReader {
 
     private String normalizeMetric(String metric) {
         return metric.trim().toLowerCase();
+    }
+
+    private String normalizeUnit(String unit) {
+        if (unit == null || unit.isBlank()) {
+            return null;
+        }
+        return unit.trim().toLowerCase();
+    }
+
+    private String toJson(Object metadata) {
+        if (metadata == null) {
+            return null;
+        }
+        try {
+            return objectMapper.writeValueAsString(metadata);
+        } catch (JsonProcessingException ignored) {
+            return null;
+        }
     }
 }

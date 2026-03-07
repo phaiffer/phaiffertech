@@ -1,6 +1,7 @@
 package com.phaiffertech.platform.modules.crm.contact.repository;
 
 import com.phaiffertech.platform.modules.crm.contact.domain.CrmContact;
+import com.phaiffertech.platform.shared.crud.BaseTenantCrudRepository;
 
 import java.util.Optional;
 import java.util.UUID;
@@ -10,7 +11,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-public interface CrmContactRepository extends JpaRepository<CrmContact, UUID> {
+public interface CrmContactRepository extends JpaRepository<CrmContact, UUID>, BaseTenantCrudRepository<CrmContact> {
 
     @Query("""
             SELECT c

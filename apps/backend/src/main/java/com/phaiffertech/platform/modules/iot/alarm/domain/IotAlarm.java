@@ -6,13 +6,20 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
 import java.time.Instant;
 import java.util.UUID;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.Where;
 
 @Entity
 @Table(name = "iot_alarms")
+@SQLDelete(sql = "UPDATE iot_alarms SET deleted_at = CURRENT_TIMESTAMP WHERE id = ?")
+@Where(clause = "deleted_at IS NULL")
 public class IotAlarm extends BaseTenantEntity {
 
     @Column(name = "device_id", nullable = false, columnDefinition = "char(36)")
     private UUID deviceId;
+
+    @Column(name = "code", nullable = false, length = 80)
+    private String code;
 
     @Column(name = "severity", nullable = false, length = 40)
     private String severity;
@@ -26,8 +33,8 @@ public class IotAlarm extends BaseTenantEntity {
     @Column(name = "triggered_at", nullable = false)
     private Instant triggeredAt;
 
-    @Column(name = "resolved_at")
-    private Instant resolvedAt;
+    @Column(name = "acknowledged_at")
+    private Instant acknowledgedAt;
 
     public UUID getDeviceId() {
         return deviceId;
@@ -35,6 +42,14 @@ public class IotAlarm extends BaseTenantEntity {
 
     public void setDeviceId(UUID deviceId) {
         this.deviceId = deviceId;
+    }
+
+    public String getCode() {
+        return code;
+    }
+
+    public void setCode(String code) {
+        this.code = code;
     }
 
     public String getSeverity() {
@@ -69,11 +84,11 @@ public class IotAlarm extends BaseTenantEntity {
         this.triggeredAt = triggeredAt;
     }
 
-    public Instant getResolvedAt() {
-        return resolvedAt;
+    public Instant getAcknowledgedAt() {
+        return acknowledgedAt;
     }
 
-    public void setResolvedAt(Instant resolvedAt) {
-        this.resolvedAt = resolvedAt;
+    public void setAcknowledgedAt(Instant acknowledgedAt) {
+        this.acknowledgedAt = acknowledgedAt;
     }
 }

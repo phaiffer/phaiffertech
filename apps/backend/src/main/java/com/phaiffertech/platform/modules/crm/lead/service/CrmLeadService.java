@@ -7,43 +7,35 @@ import com.phaiffertech.platform.modules.crm.lead.dto.CrmLeadResponse;
 import com.phaiffertech.platform.modules.crm.lead.dto.CrmLeadUpdateRequest;
 import com.phaiffertech.platform.modules.crm.lead.mapper.CrmLeadMapper;
 import com.phaiffertech.platform.modules.crm.lead.repository.CrmLeadRepository;
+import com.phaiffertech.platform.shared.crud.BasePageQuery;
+import com.phaiffertech.platform.shared.crud.BaseSearchSpecificationBuilder;
+import com.phaiffertech.platform.shared.crud.BaseTenantCrudService;
 import com.phaiffertech.platform.shared.domain.enums.AuditActionType;
-import com.phaiffertech.platform.shared.exception.ResourceNotFoundException;
 import com.phaiffertech.platform.shared.pagination.PageRequestDto;
 import com.phaiffertech.platform.shared.pagination.PageResponseDto;
-import com.phaiffertech.platform.shared.pagination.PaginationUtils;
-import com.phaiffertech.platform.shared.tenancy.TenantContext;
-import java.time.Instant;
 import java.util.UUID;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
-public class CrmLeadService {
+public class CrmLeadService extends BaseTenantCrudService<
+        CrmLead,
+        CrmLeadCreateRequest,
+        CrmLeadUpdateRequest,
+        CrmLeadResponse> {
 
     private final CrmLeadRepository repository;
 
     public CrmLeadService(CrmLeadRepository repository) {
+        super(repository, repository, CrmLeadMapper.INSTANCE, "Lead not found.");
         this.repository = repository;
     }
 
     @Transactional
     @AuditableAction(action = AuditActionType.CREATE, entity = "crm_lead")
     public CrmLeadResponse create(CrmLeadCreateRequest request) {
-        UUID tenantId = TenantContext.getRequiredTenantId();
-
-        CrmLead lead = new CrmLead();
-        lead.setTenantId(tenantId);
-        lead.setName(request.name().trim());
-        lead.setEmail(request.email());
-        lead.setPhone(request.phone());
-        lead.setSource(request.source());
-        lead.setStatus(resolveStatus(request.status()));
-        lead.setAssignedUserId(request.assignedUserId());
-
-        return CrmLeadMapper.toResponse(repository.save(lead));
+        return doCreate(request);
     }
 
     @Transactional(readOnly = true)
@@ -53,80 +45,40 @@ public class CrmLeadService {
             String source,
             UUID assignedUserId
     ) {
-        UUID tenantId = TenantContext.getRequiredTenantId();
-        Page<CrmLeadResponse> result = repository.findAllByTenantIdAndSearch(
-                        tenantId,
-                        normalizeFilter(status),
-                        normalizeFilter(source),
+        return doList(
+                pageRequest,
+                Sort.by(Sort.Direction.DESC, "createdAt"),
+                (BasePageQuery query) -> repository.findAllByTenantIdAndSearch(
+                        currentTenantId(),
+                        BaseSearchSpecificationBuilder.normalizeUpper(status),
+                        BaseSearchSpecificationBuilder.normalizeUpper(source),
                         assignedUserId,
-                        pageRequest.normalizedSearch(),
-                        PaginationUtils.toPageable(pageRequest, Sort.by(Sort.Direction.DESC, "createdAt")))
-                .map(CrmLeadMapper::toResponse);
-
-        return PaginationUtils.fromPage(result);
+                        query.search(),
+                        query.pageable()
+                )
+        );
     }
 
     @Transactional(readOnly = true)
     public CrmLeadResponse getById(UUID id) {
-        UUID tenantId = TenantContext.getRequiredTenantId();
-        CrmLead lead = repository.findByIdAndTenantId(id, tenantId)
-                .orElseThrow(() -> new ResourceNotFoundException("Lead not found."));
-
-        return CrmLeadMapper.toResponse(lead);
+        return doGetById(id);
     }
 
     @Transactional
     @AuditableAction(action = AuditActionType.UPDATE, entity = "crm_lead")
     public CrmLeadResponse update(UUID id, CrmLeadUpdateRequest request) {
-        UUID tenantId = TenantContext.getRequiredTenantId();
-        CrmLead lead = repository.findByIdAndTenantId(id, tenantId)
-                .orElseThrow(() -> new ResourceNotFoundException("Lead not found."));
-
-        lead.setName(request.name().trim());
-        lead.setEmail(request.email());
-        lead.setPhone(request.phone());
-        lead.setSource(request.source());
-        lead.setStatus(resolveStatus(request.status()));
-        lead.setAssignedUserId(request.assignedUserId());
-
-        return CrmLeadMapper.toResponse(repository.save(lead));
+        return doUpdate(id, request);
     }
 
     @Transactional
     @AuditableAction(action = AuditActionType.DELETE, entity = "crm_lead")
     public void delete(UUID id) {
-        UUID tenantId = TenantContext.getRequiredTenantId();
-
-        CrmLead lead = repository.findByIdAndTenantId(id, tenantId)
-                .orElseThrow(() -> new ResourceNotFoundException("Lead not found."));
-
-        lead.setDeletedAt(Instant.now());
-        repository.save(lead);
+        doSoftDelete(id);
     }
 
     @Transactional
     @AuditableAction(action = AuditActionType.RESTORE, entity = "crm_lead")
     public CrmLeadResponse restore(UUID id) {
-        UUID tenantId = TenantContext.getRequiredTenantId();
-
-        CrmLead lead = repository.findByIdIncludingDeleted(id, tenantId)
-                .orElseThrow(() -> new ResourceNotFoundException("Lead not found."));
-
-        lead.setDeletedAt(null);
-        return CrmLeadMapper.toResponse(repository.save(lead));
-    }
-
-    private String resolveStatus(String status) {
-        if (status == null || status.isBlank()) {
-            return "NEW";
-        }
-        return status.trim().toUpperCase();
-    }
-
-    private String normalizeFilter(String value) {
-        if (value == null || value.isBlank()) {
-            return null;
-        }
-        return value.trim().toUpperCase();
+        return doRestore(id);
     }
 }

@@ -30,6 +30,7 @@ public class ThresholdAlarmEvaluator implements AlarmEvaluator {
         IotAlarm alarm = new IotAlarm();
         alarm.setTenantId(telemetryRecord.getTenantId());
         alarm.setDeviceId(telemetryRecord.getDeviceId());
+        alarm.setCode("THRESHOLD_EXCEEDED");
         alarm.setSeverity("HIGH");
         alarm.setStatus("OPEN");
         alarm.setTriggeredAt(telemetryRecord.getRecordedAt());
