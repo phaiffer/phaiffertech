@@ -1,4 +1,5 @@
 import { clearSession, getSession } from '@/shared/lib/session';
+import { logClientError, logClientInfo } from '@/shared/observability/client-logger';
 import { ApiEnvelope, ApiErrorEnvelope } from '@/shared/types/common';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8080/api/v1';
@@ -31,11 +32,21 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
     headers.set('X-Tenant-Id', session.user.tenantId);
   }
 
-  const response = await fetch(`${API_BASE_URL}${path}`, {
-    ...options,
-    headers,
-    body: options.body !== undefined ? JSON.stringify(options.body) : undefined
-  });
+  let response: Response;
+  try {
+    response = await fetch(`${API_BASE_URL}${path}`, {
+      ...options,
+      headers,
+      body: options.body !== undefined ? JSON.stringify(options.body) : undefined
+    });
+  } catch (error) {
+    logClientError('apiClient', 'Network request failed', {
+      path,
+      method: options.method ?? 'GET',
+      error: error instanceof Error ? error.message : 'unknown'
+    });
+    throw new ApiClientError('Falha de comunicação com a API.', 0, 'NETWORK_ERROR');
+  }
 
   if (!response.ok) {
     let payload: ApiErrorEnvelope | null = null;
@@ -48,6 +59,13 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
     if (response.status === 401) {
       clearSession();
     }
+
+    logClientInfo('apiClient', 'API request failed', {
+      path,
+      method: options.method ?? 'GET',
+      status: response.status,
+      code: payload?.code
+    });
 
     throw new ApiClientError(
       payload?.message ?? 'Erro inesperado da API.',

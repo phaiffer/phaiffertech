@@ -2,24 +2,26 @@
 
 import { useAuth } from '@/shared/auth/use-auth';
 import { usePermissions } from '@/shared/auth/usePermissions';
+import { moduleService } from '@/shared/services/module-service';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useEffect, useState } from 'react';
 
 const items = [
   { href: '/dashboard', label: 'Dashboard' },
   { href: '/tenants', label: 'Tenants', anyOf: ['TENANT_READ'] },
   { href: '/users', label: 'Users', anyOf: ['USER_READ'] },
-  { href: '/crm', label: 'CRM Home', anyOf: ['crm.contact.read', 'crm.lead.read'] },
-  { href: '/crm/contacts', label: 'CRM Contacts', anyOf: ['crm.contact.read'] },
-  { href: '/crm/leads', label: 'CRM Leads', anyOf: ['crm.lead.read'] },
-  { href: '/pet', label: 'Pet Home', anyOf: ['pet.client.read', 'pet.profile.read', 'pet.appointment.read'] },
-  { href: '/pet/clients', label: 'Pet Clients', anyOf: ['pet.client.read'] },
-  { href: '/pet/pets', label: 'Pet Profiles', anyOf: ['pet.profile.read'] },
-  { href: '/pet/appointments', label: 'Pet Appointments', anyOf: ['pet.appointment.read'] },
-  { href: '/iot', label: 'IoT Home', anyOf: ['iot.device.read', 'iot.alarm.read', 'iot.telemetry.read'] },
-  { href: '/iot/devices', label: 'IoT Devices', anyOf: ['iot.device.read'] },
-  { href: '/iot/alarms', label: 'IoT Alarms', anyOf: ['iot.alarm.read'] },
-  { href: '/iot/telemetry', label: 'IoT Telemetry', anyOf: ['iot.telemetry.read'] },
+  { href: '/crm', label: 'CRM Home', anyOf: ['crm.contact.read', 'crm.lead.read'], moduleCode: 'CRM' },
+  { href: '/crm/contacts', label: 'CRM Contacts', anyOf: ['crm.contact.read'], moduleCode: 'CRM' },
+  { href: '/crm/leads', label: 'CRM Leads', anyOf: ['crm.lead.read'], moduleCode: 'CRM' },
+  { href: '/pet', label: 'Pet Home', anyOf: ['pet.client.read', 'pet.profile.read', 'pet.appointment.read'], moduleCode: 'PET' },
+  { href: '/pet/clients', label: 'Pet Clients', anyOf: ['pet.client.read'], moduleCode: 'PET' },
+  { href: '/pet/pets', label: 'Pet Profiles', anyOf: ['pet.profile.read'], moduleCode: 'PET' },
+  { href: '/pet/appointments', label: 'Pet Appointments', anyOf: ['pet.appointment.read'], moduleCode: 'PET' },
+  { href: '/iot', label: 'IoT Home', anyOf: ['iot.device.read', 'iot.alarm.read', 'iot.telemetry.read'], moduleCode: 'IOT' },
+  { href: '/iot/devices', label: 'IoT Devices', anyOf: ['iot.device.read'], moduleCode: 'IOT' },
+  { href: '/iot/alarms', label: 'IoT Alarms', anyOf: ['iot.alarm.read'], moduleCode: 'IOT' },
+  { href: '/iot/telemetry', label: 'IoT Telemetry', anyOf: ['iot.telemetry.read'], moduleCode: 'IOT' },
   { href: '/settings', label: 'Settings' }
 ];
 
@@ -27,8 +29,22 @@ export function Sidebar() {
   const pathname = usePathname();
   const { session, signOut } = useAuth();
   const { hasAnyPermission } = usePermissions();
+  const [enabledModules, setEnabledModules] = useState<Set<string> | null>(null);
+
+  useEffect(() => {
+    moduleService
+      .list()
+      .then((modules) => setEnabledModules(new Set(modules.filter((moduleItem) => moduleItem.enabled).map((moduleItem) => moduleItem.code))))
+      .catch(() => setEnabledModules(new Set()));
+  }, []);
 
   const visibleItems = items.filter((item) => {
+    if (item.moduleCode && enabledModules === null) {
+      return false;
+    }
+    if (item.moduleCode && enabledModules && !enabledModules.has(item.moduleCode)) {
+      return false;
+    }
     if (!item.anyOf || item.anyOf.length === 0) {
       return true;
     }
