@@ -22,6 +22,7 @@ com.phaiffertech.platform
 ├── PlatformApplication
 ├── shared
 │   ├── config
+│   ├── crud
 │   ├── domain
 │   │   ├── base
 │   │   └── enums
@@ -51,7 +52,9 @@ com.phaiffertech.platform
 │   │   ├── note
 │   │   └── task
 │   ├── pet
-│   │   └── client
+│   │   ├── client
+│   │   ├── petprofile
+│   │   └── appointment
 │   └── iot
 │       ├── control
 │       ├── device
@@ -75,6 +78,24 @@ com.phaiffertech.platform
 - `TenantContextFilter` validates tenant header against authenticated context.
 - Tenant-scoped queries are mandatory on business data.
 - Cross-tenant access is rejected with `403`.
+
+## Shared CRUD Layer
+
+`shared.crud` centralizes recurring CRUD behavior without hiding module rules.
+
+Main components:
+- `BaseTenantCrudService`
+- `BaseTenantCrudRepository`
+- `BaseCrudMapper`
+- `BaseSearchSpecificationBuilder`
+- `BasePageQuery`
+- `BaseSoftDeleteService`
+- `BaseAuditableCrudHooks`
+
+Applied modules:
+- CRM: contacts and leads
+- PET: clients, profiles and appointments
+- IoT: devices and alarms
 
 ## Authorization Model
 
@@ -196,6 +217,9 @@ Current migration chain:
 - `V10__crm_contacts_leads_improvements.sql`
 - `V11__crm_pipeline_and_deals.sql`
 - `V12__crm_notes_and_tasks.sql`
+- `V13__pet_v1_schema.sql`
+- `V14__iot_v1_schema.sql`
+- `V15__seed_pet_iot_permissions.sql`
 
 Previous migrations were preserved; new changes are strictly incremental.
 
@@ -216,11 +240,12 @@ Coverage includes:
 - tenant role and permission resolution
 - permission enforcement
 - CRM contacts/leads CRUD
-- pet clients create/list
-- IoT devices create/list
+- PET clients/profiles/appointments CRUD
+- IoT devices/alarms CRUD
 - IoT telemetry write/read
+- shared CRUD behavior (tenant filter + soft delete + paginated list contract)
 - pagination contract
 
 Docker compatibility note:
 - tests run with Testcontainers and require Docker.
-- Maven sets `api.version=1.44` for compatibility with modern Docker daemons (minimum API 1.44).
+- Integration test bootstrap sets `api.version=1.44` by default, overridable through `DOCKER_API_VERSION`.

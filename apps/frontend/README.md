@@ -20,6 +20,16 @@ Next.js admin console for the unified platform.
   - contacts list/create/edit/delete
   - leads list/create/edit/delete
   - search + pagination + loading/empty/error states
+- PET v1 UI:
+  - clients list/create/edit/delete
+  - pet profiles list/create/edit/delete
+  - appointments list/create/edit/delete
+  - search, filters and pagination
+- IoT v1 UI:
+  - devices list/create/edit/delete
+  - alarms list/create/edit/delete + acknowledge
+  - telemetry write + read list
+  - search, filters and pagination
 
 ## Key Shared Modules
 
@@ -30,11 +40,12 @@ Next.js admin console for the unified platform.
   - `usePermissions`
   - `PermissionGuard`
 - `src/shared/permissions`
-  - `hasPermission` / `hasAnyPermission` (low-level helpers)
+  - `hasPermission` / `hasAnyPermission`
+  - `PermissionGate`
 - `src/shared/services`
-  - centralized API client usage
+  - centralized API client usage (`crm-service`, `pet-service`, `iot-service`, etc.)
 - `src/shared/ui`
-  - `DataTable`, `Pagination`, `SearchBar`, `FormInput`, `FormSelect`, `ConfirmDialog`
+  - `DataTable`, `Pagination`, `SearchBar`, `FormInput`, `FormSelect`, `DateTimeInput`, `ConfirmDialog`
 
 ## Pages
 
@@ -50,7 +61,13 @@ Next.js admin console for the unified platform.
 - `/crm/leads/new`
 - `/crm/leads/[id]`
 - `/pet`
+- `/pet/clients`
+- `/pet/pets`
+- `/pet/appointments`
 - `/iot`
+- `/iot/devices`
+- `/iot/alarms`
+- `/iot/telemetry`
 - `/settings`
 
 ## Run

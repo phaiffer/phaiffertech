@@ -47,6 +47,7 @@ Backend package root is fixed:
 ## Platform Highlights
 
 - Modular monolith with clear boundaries: `shared`, `core`, `modules`, `infrastructure`.
+- Shared anti-duplication application layer in `shared.crud` for tenant-safe CRUD flows.
 - Multi-tenancy with tenant context enforcement and tenant-isolated queries.
 - Authorization model with `user_tenants` + `user_tenant_roles` + `role_permissions`.
 - JWT access token + secure refresh token (hash + rotation + revoke on logout).
@@ -70,6 +71,9 @@ Backend package root is fixed:
 - `V10__crm_contacts_leads_improvements.sql`
 - `V11__crm_pipeline_and_deals.sql`
 - `V12__crm_notes_and_tasks.sql`
+- `V13__pet_v1_schema.sql`
+- `V14__iot_v1_schema.sql`
+- `V15__seed_pet_iot_permissions.sql`
 
 ## Main Endpoints (`/api/v1`)
 
@@ -104,9 +108,29 @@ Backend package root is fixed:
   - `PUT /crm/tasks/{id}`
 
 ### Pet / IoT
-- `GET|POST /pet/clients`
-- `GET|POST /iot/devices`
-- `GET|POST /iot/telemetry`
+- Pet clients:
+  - `GET|POST /pet/clients`
+  - `GET|PUT|DELETE /pet/clients/{id}`
+  - `PATCH /pet/clients/{id}/restore`
+- Pet profiles:
+  - `GET|POST /pet/pets`
+  - `GET|PUT|DELETE /pet/pets/{id}`
+  - `PATCH /pet/pets/{id}/restore`
+- Pet appointments:
+  - `GET|POST /pet/appointments`
+  - `GET|PUT|DELETE /pet/appointments/{id}`
+  - `PATCH /pet/appointments/{id}/restore`
+- IoT devices:
+  - `GET|POST /iot/devices`
+  - `GET|PUT|DELETE /iot/devices/{id}`
+  - `PATCH /iot/devices/{id}/restore`
+- IoT alarms:
+  - `GET|POST /iot/alarms`
+  - `GET|PUT|DELETE /iot/alarms/{id}`
+  - `POST /iot/alarms/{id}/acknowledge`
+  - `PATCH /iot/alarms/{id}/restore`
+- IoT telemetry:
+  - `GET|POST /iot/telemetry`
 
 Swagger UI:
 - `http://localhost:8080/swagger-ui.html`
@@ -121,7 +145,16 @@ Implemented pages:
   - `/crm`
   - `/crm/contacts`, `/crm/contacts/new`, `/crm/contacts/[id]`
   - `/crm/leads`, `/crm/leads/new`, `/crm/leads/[id]`
-- Modules: `/pet`, `/iot`
+- PET:
+  - `/pet`
+  - `/pet/clients`
+  - `/pet/pets`
+  - `/pet/appointments`
+- IoT:
+  - `/iot`
+  - `/iot/devices`
+  - `/iot/alarms`
+  - `/iot/telemetry`
 
 Guards:
 - Route protection via authenticated layout (`ProtectedRoute`).
@@ -172,11 +205,11 @@ make help
 
 Main targets:
 - `make up`, `make down`, `make restart`, `make status`
-- `make logs-follow`, `make logs-backend`, `make logs-frontend`, `make logs-db`
+- `make logs-follow`, `make logs-all`, `make logs-backend`, `make logs-frontend`, `make logs-db`
 - `make docker-build`, `make docker-reset-db`
-- `make test`, `make test-backend`, `make test-integration`, `make test-unit`
+- `make test`, `make test-backend`, `make test-integration`, `make test-unit`, `make test-pet`, `make test-iot`
 - `make build`, `make verify`
-- `make migrate`, `make crm-seed`, `make db-shell`
+- `make migrate`, `make crm-seed`, `make pet-seed`, `make iot-seed`, `make db-shell`
 
 ## Integration Tests
 
@@ -192,22 +225,21 @@ Current coverage includes:
 - tenant-role resolution and permission inheritance
 - permission enforcement
 - CRM contacts/leads CRUD
-- Pet clients create/list
-- IoT devices create/list
+- PET clients/profiles/appointments CRUD
+- IoT devices/alarms CRUD
 - IoT telemetry write/read
+- shared CRUD behavior (soft delete, tenant filter, pagination behavior)
 - pagination contract
 
 Execution:
 
 ```bash
 make test-integration
-# or
-cd apps/backend && mvn -Dgroups=integration test
 ```
 
 Notes:
 - Testcontainers + MySQL are mandatory for integration tests.
-- Maven is configured to set Docker `api.version=1.44` to support modern Docker daemons with minimum API 1.44.
+- Integration test bootstrap sets Docker `api.version=1.44` by default (can be overridden with `DOCKER_API_VERSION`).
 
 ## Dev Credentials
 

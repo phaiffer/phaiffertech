@@ -4,10 +4,12 @@ COMPOSE := docker compose
 BACKEND_DIR := apps/backend
 FRONTEND_DIR := apps/frontend
 CRM_SEED_SQL := infra/docker/sql/crm-seed.sql
+PET_SEED_SQL := infra/docker/sql/pet-seed.sql
+IOT_SEED_SQL := infra/docker/sql/iot-seed.sql
 
 .PHONY: help up down restart rebuild status logs logs-follow logs-backend logs-frontend logs-db docker-build docker-reset-db \
-	build test test-backend test-integration test-unit lint clean backend frontend install-backend install-frontend \
-	package-backend package-frontend db-shell migrate seed crm-seed swagger verify
+	build test test-backend test-integration test-unit test-pet test-iot lint clean backend frontend install-backend install-frontend \
+	package-backend package-frontend db-shell migrate seed crm-seed pet-seed iot-seed logs-all swagger verify
 
 help: ## List available commands
 	@awk 'BEGIN {FS = ":.*##"; printf "\nAvailable targets:\n"} /^[a-zA-Z0-9_.-]+:.*##/ { printf "  %-20s %s\n", $$1, $$2 }' $(MAKEFILE_LIST)
@@ -32,6 +34,7 @@ logs: ## Tail all service logs
 	$(COMPOSE) logs -f --tail=200
 
 logs-follow: logs ## Alias to tail all service logs
+logs-all: logs ## Alias to tail all service logs
 
 logs-backend: ## Tail backend logs
 	$(COMPOSE) logs -f --tail=200 backend
@@ -74,11 +77,17 @@ test: test-backend ## Run backend tests (unit + integration)
 test-backend: ## Run backend test suite
 	cd $(BACKEND_DIR) && mvn test
 
-test-integration: ## Run only integration tests (tag: integration)
-	cd $(BACKEND_DIR) && mvn -Dgroups=integration test
+test-integration: ## Run only backend integration tests
+	cd $(BACKEND_DIR) && mvn -Dtest='*IntegrationTest' test
 
-test-unit: ## Run tests excluding integration tag
-	cd $(BACKEND_DIR) && mvn -Dgroups='!integration' test
+test-unit: ## Run backend tests excluding integration classes
+	cd $(BACKEND_DIR) && mvn -Dtest='!*IntegrationTest' test
+
+test-pet: ## Run PET integration tests
+	cd $(BACKEND_DIR) && mvn -Dtest=PetIntegrationTest test
+
+test-iot: ## Run IoT integration tests
+	cd $(BACKEND_DIR) && mvn -Dtest='IotIntegrationTest,IotTelemetryIntegrationTest' test
 
 lint: ## Run frontend lint and backend compile validation
 	cd $(FRONTEND_DIR) && npm run lint
@@ -100,6 +109,14 @@ seed: ## Re-run development seed by restarting backend (dev profile)
 crm-seed: ## Seed sample CRM contacts and leads for local development
 	@test -f $(CRM_SEED_SQL) || (echo "Missing $(CRM_SEED_SQL)" && exit 1)
 	$(COMPOSE) exec -T mysql sh -c 'mysql -u"$${MYSQL_USER:-platform_user}" -p"$${MYSQL_PASSWORD:-platform_pass}" "$${MYSQL_DATABASE:-platform_db}"' < $(CRM_SEED_SQL)
+
+pet-seed: ## Seed sample PET data for local development
+	@test -f $(PET_SEED_SQL) || (echo "Missing $(PET_SEED_SQL)" && exit 1)
+	$(COMPOSE) exec -T mysql sh -c 'mysql -u"$${MYSQL_USER:-platform_user}" -p"$${MYSQL_PASSWORD:-platform_pass}" "$${MYSQL_DATABASE:-platform_db}"' < $(PET_SEED_SQL)
+
+iot-seed: ## Seed sample IoT data for local development
+	@test -f $(IOT_SEED_SQL) || (echo "Missing $(IOT_SEED_SQL)" && exit 1)
+	$(COMPOSE) exec -T mysql sh -c 'mysql -u"$${MYSQL_USER:-platform_user}" -p"$${MYSQL_PASSWORD:-platform_pass}" "$${MYSQL_DATABASE:-platform_db}"' < $(IOT_SEED_SQL)
 
 swagger: ## Print Swagger URL
 	@echo "Swagger UI: http://localhost:$${BACKEND_PORT:-8080}/swagger-ui.html"

@@ -31,6 +31,7 @@ Spring Boot backend for the modular multi-tenant platform.
 - Automatic auditing for auth and business actions.
 - Soft delete support with `deleted_at` and restore flows.
 - Standard pagination DTOs and mapping utilities.
+- Shared CRUD support layer in `shared.crud` to reduce boilerplate in tenant modules.
 
 ## CRM v1 Scope
 
@@ -38,6 +39,22 @@ Spring Boot backend for the modular multi-tenant platform.
 - Leads CRUD + restore + filters + pagination.
 - Pipeline/deal base endpoints.
 - Notes/tasks base endpoints.
+
+## PET v1 Scope
+
+- Clients CRUD + restore + search + pagination.
+- Pet profiles CRUD + restore + tenant-safe client linkage.
+- Appointments CRUD + restore + filters by status/date/user/client/pet.
+
+## IoT v1 Scope
+
+- Devices CRUD + restore + search + pagination.
+- Alarms CRUD + acknowledge + restore.
+- Telemetry write/read with paginated query by device and period.
+- Control plane and data plane abstractions:
+  - `TelemetryWriter`
+  - `TelemetryReader`
+  - `AlarmEvaluator`
 
 ## Migrations
 
@@ -53,6 +70,9 @@ Spring Boot backend for the modular multi-tenant platform.
 - `V10__crm_contacts_leads_improvements.sql`
 - `V11__crm_pipeline_and_deals.sql`
 - `V12__crm_notes_and_tasks.sql`
+- `V13__pet_v1_schema.sql`
+- `V14__iot_v1_schema.sql`
+- `V15__seed_pet_iot_permissions.sql`
 
 ## Run Locally
 
@@ -76,7 +96,7 @@ mvn test
 Run only integration tests:
 
 ```bash
-mvn -Dgroups=integration test
+mvn -Dtest='*IntegrationTest' test
 ```
 
 Test support base classes:
@@ -86,7 +106,7 @@ Test support base classes:
 
 Important:
 - Integration tests require Docker.
-- Maven surefire sets `api.version=1.44` for Docker client compatibility.
+- Integration test bootstrap sets `api.version=1.44` by default (override with `DOCKER_API_VERSION`).
 
 ## Development Seed
 
