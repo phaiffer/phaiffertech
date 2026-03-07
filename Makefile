@@ -149,3 +149,8 @@ terraform-plan: ## Generate Terraform execution plan
 ci: verify docker-build ## Run local CI flow (verify + docker build)
 
 verify: lint test package-backend package-frontend ## Run lint, tests and build artifacts
+
+
+validate-iot:
+	chmod +x scripts/validation/iot_operational_validation.sh
+	./scripts/validation/iot_operational_validation.sh
