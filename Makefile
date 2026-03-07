@@ -154,3 +154,11 @@ verify: lint test package-backend package-frontend ## Run lint, tests and build 
 validate-iot:
 	chmod +x scripts/validation/iot_operational_validation.sh
 	./scripts/validation/iot_operational_validation.sh
+
+seed-iot-demo:
+	chmod +x scripts/seed/iot_demo_seed.sh
+	./scripts/seed/iot_demo_seed.sh
+
+cleanup-iot-demo:
+	chmod +x scripts/seed/iot_demo_cleanup.sh
+	./scripts/seed/iot_demo_cleanup.sh
