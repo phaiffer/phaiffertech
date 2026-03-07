@@ -1,9 +1,30 @@
-# Infra Terraform (Planejado)
+# Infra Terraform (OCI Base)
 
-Estrutura reservada para IaC futura em Oracle Cloud.
+Base inicial de IaC para Oracle Cloud Infrastructure.
 
-Próximas etapas sugeridas:
+Arquivos disponíveis:
 
-1. Definir módulos base (network, compute, database, observability)
-2. Criar workspaces por ambiente (dev/stg/prod)
-3. Integrar pipeline de deploy
+- `provider.tf`
+- `variables.tf`
+- `network.tf`
+- `compute.tf`
+- `mysql.tf`
+- `outputs.tf`
+
+Objetivo desta fase:
+
+- Estruturar VCN, subnets e segurança de rede.
+- Definir compute e load balancer para aplicação.
+- Definir blueprint para MySQL managed service.
+- Preparar evolução para ambientes `dev/stg/prod`.
+
+Execução local:
+
+```bash
+make terraform-init
+make terraform-plan
+```
+
+Observação:
+
+- Esta base é preparatória e não foi aplicada automaticamente em cloud nesta etapa.
