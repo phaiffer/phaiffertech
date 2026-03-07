@@ -25,10 +25,28 @@ server:
   port: ${SERVER_PORT:8080}
 
 management:
+  endpoint:
+    health:
+      show-details: always
+    prometheus:
+      enabled: true
   endpoints:
     web:
       exposure:
-        include: health,info
+        include: health,info,metrics,prometheus
+  metrics:
+    tags:
+      service: ${spring.application.name}
+  tracing:
+    enabled: true
+    sampling:
+      probability: ${MANAGEMENT_TRACING_SAMPLING_PROBABILITY:1.0}
+  otlp:
+    tracing:
+      endpoint: ${OTEL_EXPORTER_OTLP_ENDPOINT:http://localhost:4318/v1/traces}
+  health:
+    db:
+      enabled: true
 
 springdoc:
   swagger-ui:
@@ -38,6 +56,7 @@ app:
   cors:
     allowed-origins:
       - ${APP_CORS_ALLOWED_ORIGINS:http://localhost:3000}
+      - ${APP_CORS_ALLOWED_ORIGINS_ALT:http://127.0.0.1:3000}
   tenant:
     header-name: ${APP_TENANT_HEADER:X-Tenant-Id}
   security:
@@ -46,3 +65,12 @@ app:
       access-minutes: ${APP_SECURITY_JWT_ACCESS_MINUTES:15}
       refresh-days: ${APP_SECURITY_JWT_REFRESH_DAYS:7}
       issuer: ${APP_SECURITY_JWT_ISSUER:platform-api}
+    bruteforce:
+      enabled: ${APP_SECURITY_BRUTEFORCE_ENABLED:true}
+      max-attempts: ${APP_SECURITY_BRUTEFORCE_MAX_ATTEMPTS:5}
+      lock-minutes: ${APP_SECURITY_BRUTEFORCE_LOCK_MINUTES:15}
+  rate-limit:
+    enabled: ${APP_RATE_LIMIT_ENABLED:true}
+    auth-per-minute: ${APP_RATE_LIMIT_AUTH_PER_MINUTE:10}
+    api-per-minute: ${APP_RATE_LIMIT_API_PER_MINUTE:100}
+    telemetry-per-minute: ${APP_RATE_LIMIT_TELEMETRY_PER_MINUTE:500}

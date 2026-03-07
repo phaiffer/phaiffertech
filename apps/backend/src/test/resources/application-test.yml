@@ -1,0 +1,15 @@
+app:
+  rate-limit:
+    enabled: false
+  security:
+    bruteforce:
+      enabled: false
+
+management:
+  tracing:
+    enabled: false
+
+logging:
+  level:
+    root: INFO
+    org.hibernate.SQL: WARN

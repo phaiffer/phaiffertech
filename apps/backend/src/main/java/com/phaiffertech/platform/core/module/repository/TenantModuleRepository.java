@@ -9,4 +9,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 public interface TenantModuleRepository extends JpaRepository<TenantModule, UUID> {
 
     List<TenantModule> findByTenantIdAndEnabledTrue(UUID tenantId);
+
+    boolean existsByTenantIdAndModuleDefinitionIdAndEnabledTrueAndDeletedAtIsNull(UUID tenantId, UUID moduleDefinitionId);
 }

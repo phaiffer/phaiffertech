@@ -11,6 +11,7 @@ import com.phaiffertech.platform.shared.crud.BasePageQuery;
 import com.phaiffertech.platform.shared.crud.BaseSearchSpecificationBuilder;
 import com.phaiffertech.platform.shared.crud.BaseTenantCrudService;
 import com.phaiffertech.platform.shared.domain.enums.AuditActionType;
+import com.phaiffertech.platform.shared.metrics.PlatformMetricsService;
 import com.phaiffertech.platform.shared.pagination.PageRequestDto;
 import com.phaiffertech.platform.shared.pagination.PageResponseDto;
 import java.util.UUID;
@@ -26,16 +27,20 @@ public class CrmContactService extends BaseTenantCrudService<
         CrmContactResponse> {
 
     private final CrmContactRepository repository;
+    private final PlatformMetricsService platformMetricsService;
 
-    public CrmContactService(CrmContactRepository repository) {
+    public CrmContactService(CrmContactRepository repository, PlatformMetricsService platformMetricsService) {
         super(repository, repository, CrmContactMapper.INSTANCE, "Contact not found.");
         this.repository = repository;
+        this.platformMetricsService = platformMetricsService;
     }
 
     @Transactional
     @AuditableAction(action = AuditActionType.CREATE, entity = "crm_contact")
     public CrmContactResponse create(CrmContactCreateRequest request) {
-        return doCreate(request);
+        CrmContactResponse response = doCreate(request);
+        platformMetricsService.incrementCrmContactsCreated();
+        return response;
     }
 
     @Transactional(readOnly = true)

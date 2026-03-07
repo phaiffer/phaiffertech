@@ -14,6 +14,7 @@ import com.phaiffertech.platform.modules.iot.telemetry.mapper.IotTelemetryMapper
 import com.phaiffertech.platform.modules.iot.telemetry.repository.IotTelemetryRecordRepository;
 import com.phaiffertech.platform.shared.domain.enums.AuditActionType;
 import com.phaiffertech.platform.shared.exception.ResourceNotFoundException;
+import com.phaiffertech.platform.shared.metrics.PlatformMetricsService;
 import com.phaiffertech.platform.shared.pagination.PageRequestDto;
 import com.phaiffertech.platform.shared.pagination.PageResponseDto;
 import com.phaiffertech.platform.shared.pagination.PaginationUtils;
@@ -31,17 +32,20 @@ public class MySqlTelemetryStore implements TelemetryWriter, TelemetryReader {
     private final IotDeviceRepository deviceRepository;
     private final AlarmEvaluator alarmEvaluator;
     private final ObjectMapper objectMapper;
+    private final PlatformMetricsService platformMetricsService;
 
     public MySqlTelemetryStore(
             IotTelemetryRecordRepository telemetryRecordRepository,
             IotDeviceRepository deviceRepository,
             AlarmEvaluator alarmEvaluator,
-            ObjectMapper objectMapper
+            ObjectMapper objectMapper,
+            PlatformMetricsService platformMetricsService
     ) {
         this.telemetryRecordRepository = telemetryRecordRepository;
         this.deviceRepository = deviceRepository;
         this.alarmEvaluator = alarmEvaluator;
         this.objectMapper = objectMapper;
+        this.platformMetricsService = platformMetricsService;
     }
 
     @Override
@@ -62,6 +66,7 @@ public class MySqlTelemetryStore implements TelemetryWriter, TelemetryReader {
 
         IotTelemetryRecord saved = telemetryRecordRepository.save(record);
         alarmEvaluator.evaluate(saved);
+        platformMetricsService.incrementIotTelemetryReceived();
 
         return IotTelemetryMapper.toResponse(saved);
     }

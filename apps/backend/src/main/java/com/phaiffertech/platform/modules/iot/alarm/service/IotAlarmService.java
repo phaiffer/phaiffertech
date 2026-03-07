@@ -13,6 +13,7 @@ import com.phaiffertech.platform.shared.crud.BaseSearchSpecificationBuilder;
 import com.phaiffertech.platform.shared.crud.BaseTenantCrudService;
 import com.phaiffertech.platform.shared.domain.enums.AuditActionType;
 import com.phaiffertech.platform.shared.exception.ResourceNotFoundException;
+import com.phaiffertech.platform.shared.metrics.PlatformMetricsService;
 import com.phaiffertech.platform.shared.pagination.PageRequestDto;
 import com.phaiffertech.platform.shared.pagination.PageResponseDto;
 import java.time.Instant;
@@ -30,11 +31,17 @@ public class IotAlarmService extends BaseTenantCrudService<
 
     private final IotAlarmRepository repository;
     private final IotDeviceRepository deviceRepository;
+    private final PlatformMetricsService platformMetricsService;
 
-    public IotAlarmService(IotAlarmRepository repository, IotDeviceRepository deviceRepository) {
+    public IotAlarmService(
+            IotAlarmRepository repository,
+            IotDeviceRepository deviceRepository,
+            PlatformMetricsService platformMetricsService
+    ) {
         super(repository, repository, IotAlarmMapper.INSTANCE, "IoT alarm not found.");
         this.repository = repository;
         this.deviceRepository = deviceRepository;
+        this.platformMetricsService = platformMetricsService;
     }
 
     @Override
@@ -50,7 +57,9 @@ public class IotAlarmService extends BaseTenantCrudService<
     @Transactional
     @AuditableAction(action = AuditActionType.CREATE, entity = "iot_alarm")
     public IotAlarmResponse create(IotAlarmCreateRequest request) {
-        return doCreate(request);
+        IotAlarmResponse response = doCreate(request);
+        platformMetricsService.incrementIotAlarmsTriggered();
+        return response;
     }
 
     @Transactional(readOnly = true)

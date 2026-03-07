@@ -15,6 +15,7 @@ import com.phaiffertech.platform.shared.crud.BaseSearchSpecificationBuilder;
 import com.phaiffertech.platform.shared.crud.BaseTenantCrudService;
 import com.phaiffertech.platform.shared.domain.enums.AuditActionType;
 import com.phaiffertech.platform.shared.exception.ResourceNotFoundException;
+import com.phaiffertech.platform.shared.metrics.PlatformMetricsService;
 import com.phaiffertech.platform.shared.pagination.PageRequestDto;
 import com.phaiffertech.platform.shared.pagination.PageResponseDto;
 import java.time.Instant;
@@ -33,16 +34,19 @@ public class PetAppointmentService extends BaseTenantCrudService<
     private final PetAppointmentRepository repository;
     private final PetClientRepository petClientRepository;
     private final PetProfileRepository petProfileRepository;
+    private final PlatformMetricsService platformMetricsService;
 
     public PetAppointmentService(
             PetAppointmentRepository repository,
             PetClientRepository petClientRepository,
-            PetProfileRepository petProfileRepository
+            PetProfileRepository petProfileRepository,
+            PlatformMetricsService platformMetricsService
     ) {
         super(repository, repository, PetAppointmentMapper.INSTANCE, "Pet appointment not found.");
         this.repository = repository;
         this.petClientRepository = petClientRepository;
         this.petProfileRepository = petProfileRepository;
+        this.platformMetricsService = platformMetricsService;
     }
 
     @Override
@@ -58,7 +62,9 @@ public class PetAppointmentService extends BaseTenantCrudService<
     @Transactional
     @AuditableAction(action = AuditActionType.CREATE, entity = "pet_appointment")
     public PetAppointmentResponse create(PetAppointmentCreateRequest request) {
-        return doCreate(request);
+        PetAppointmentResponse response = doCreate(request);
+        platformMetricsService.incrementPetAppointmentsCreated();
+        return response;
     }
 
     @Transactional(readOnly = true)

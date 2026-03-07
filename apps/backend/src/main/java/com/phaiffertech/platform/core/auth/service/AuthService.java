@@ -18,6 +18,7 @@ import com.phaiffertech.platform.core.user.domain.User;
 import com.phaiffertech.platform.core.user.repository.UserRepository;
 import com.phaiffertech.platform.shared.exception.ForbiddenOperationException;
 import com.phaiffertech.platform.shared.exception.ResourceNotFoundException;
+import com.phaiffertech.platform.shared.metrics.PlatformMetricsService;
 import com.phaiffertech.platform.shared.security.AuthenticatedUser;
 import com.phaiffertech.platform.shared.security.CurrentUserService;
 import com.phaiffertech.platform.shared.security.JwtProperties;
@@ -43,6 +44,7 @@ public class AuthService {
     private final RefreshTokenHashService refreshTokenHashService;
     private final CurrentUserService currentUserService;
     private final AuditLogService auditLogService;
+    private final PlatformMetricsService platformMetricsService;
 
     public AuthService(
             TenantRepository tenantRepository,
@@ -55,7 +57,8 @@ public class AuthService {
             RefreshTokenRepository refreshTokenRepository,
             RefreshTokenHashService refreshTokenHashService,
             CurrentUserService currentUserService,
-            AuditLogService auditLogService
+            AuditLogService auditLogService,
+            PlatformMetricsService platformMetricsService
     ) {
         this.tenantRepository = tenantRepository;
         this.userRepository = userRepository;
@@ -68,22 +71,33 @@ public class AuthService {
         this.refreshTokenHashService = refreshTokenHashService;
         this.currentUserService = currentUserService;
         this.auditLogService = auditLogService;
+        this.platformMetricsService = platformMetricsService;
     }
 
     @Transactional
     public AuthTokenResponse login(LoginRequest request) {
         Tenant tenant = tenantRepository.findByCodeIgnoreCase(request.tenantCode())
-                .orElseThrow(() -> new ResourceNotFoundException("Tenant not found."));
+                .orElseThrow(() -> {
+                    platformMetricsService.recordAuthenticationAttempt(false);
+                    return new ResourceNotFoundException("Tenant not found.");
+                });
 
         User user = userRepository.findByEmailIgnoreCase(request.email())
-                .orElseThrow(() -> new ResourceNotFoundException("Invalid credentials."));
+                .orElseThrow(() -> {
+                    platformMetricsService.recordAuthenticationAttempt(false);
+                    return new ResourceNotFoundException("Invalid credentials.");
+                });
 
         if (!user.isActive() || !passwordEncoder.matches(request.password(), user.getPasswordHash())) {
+            platformMetricsService.recordAuthenticationAttempt(false);
             throw new ForbiddenOperationException("Invalid credentials.");
         }
 
         UserTenant userTenant = userTenantRepository.findByTenantIdAndUserIdAndActiveTrue(tenant.getId(), user.getId())
-                .orElseThrow(() -> new ForbiddenOperationException("User has no active access to tenant."));
+                .orElseThrow(() -> {
+                    platformMetricsService.recordAuthenticationAttempt(false);
+                    return new ForbiddenOperationException("User has no active access to tenant.");
+                });
 
         TenantAuthorizationResolver.ResolvedTenantAuthorization resolved = tenantAuthorizationResolver.resolve(userTenant);
         AuthenticatedUser principal = new AuthenticatedUser(
@@ -96,6 +110,7 @@ public class AuthService {
         );
 
         AuthTokenResponse response = createTokenResponse(principal, user.getFullName());
+        platformMetricsService.recordAuthenticationAttempt(true);
 
         auditLogService.logEvent(
                 tenant.getId(),
