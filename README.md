@@ -91,6 +91,18 @@ Current architectural corrections:
 - the old telemetry pipeline health indicator was moved out of `shared.health` into `modules.iot.monitoring.health`
 - `/api/v1/modules` now separates `moduleEnabled`, `featureFlagEnabled` and `available`
 - `/api/v1/dashboard/summary` now aggregates module summaries through capabilities instead of direct repository access from core
+- dashboard payloads are standardized in `shared.dashboard.dto`, while each vertical module owns its own operational summary endpoint
+
+## Dashboard Architecture
+
+- Platform dashboard: `GET /api/v1/dashboard/summary`
+- CRM dashboard: `GET /api/v1/crm/dashboard/summary`
+- IoT dashboard: `GET /api/v1/iot/dashboard/summary`
+- Pet dashboard: `GET /api/v1/pet/dashboard/summary`
+- Cross-module aggregation contract: `shared.contracts.module.ModuleSummaryCapability`
+- Shared dashboard payloads: `DashboardSummaryCardDto`, `DashboardCountMetricDto`, `DashboardListItemDto`, `DashboardTimeSeriesPointDto`, `DashboardSectionDto`, `DashboardModuleSummaryDto`, `PlatformDashboardResponseDto`
+- Frontend widgets: `SummaryCard`, `DashboardSection`, `MetricGrid`, `StatusBadge`, `RecentItemsList`, `SimpleBarChart`, `SimpleLineChart`, `EmptyStateCard`
+- Access model: module enabled is tenant-scoped, feature flag is rollout-scoped, permission is user-scoped
 
 ## CRM Delivery Status
 
@@ -244,6 +256,7 @@ Deferred to IoT V2:
 - `V25__pet_appointments_services.sql`
 - `V26__pet_medical_records.sql`
 - `V27__pet_products_inventory_invoices.sql`
+- `V28__pet_dashboard_permission.sql`
 
 Note:
 - Pet V1 expansion requested originally as `V17..V20` was created as `V24..V27`, because `V17..V23` were already allocated in the existing Flyway chain and could not be reused safely.
@@ -296,6 +309,8 @@ Note:
   - `GET /crm/dashboard/summary`
 
 ### Pet / IoT
+- Pet dashboard:
+  - `GET /pet/dashboard/summary`
 - Pet clients:
   - `GET|POST /pet/clients`
   - `GET|PUT|DELETE /pet/clients/{id}`
@@ -385,6 +400,7 @@ Implemented pages:
   - `/crm/notes`
 - PET:
   - `/pet`
+  - `/pet/dashboard`
   - `/pet/clients`
   - `/pet/pets`
   - `/pet/appointments`

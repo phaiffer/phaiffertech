@@ -1,6 +1,9 @@
 package com.phaiffertech.platform.support;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import org.junit.jupiter.api.Assertions;
@@ -72,6 +75,71 @@ public abstract class AbstractIntegrationTest extends IntegrationTestContainersC
                 UUID.randomUUID().toString(),
                 tenantId,
                 userId
+        );
+        enableTenantModules(tenantId, moduleCodes);
+
+        ResponseEntity<JsonNode> response = login(tenantCode, email, DEFAULT_PASSWORD);
+        Assertions.assertEquals(200, response.getStatusCode().value());
+        return sessionFromLoginPayload(requireBody(response).path("data"));
+    }
+
+    protected AuthSession createTenantSessionWithPermissions(
+            String tenantCode,
+            String email,
+            List<String> permissionCodes,
+            String... moduleCodes
+    ) {
+        String tenantId = UUID.randomUUID().toString();
+        String userId = UUID.randomUUID().toString();
+        String roleId = UUID.randomUUID().toString();
+        String userTenantId = UUID.randomUUID().toString();
+        String roleCode = "TEST_" + tenantCode.toUpperCase().replace('-', '_') + "_" + UUID.randomUUID().toString().substring(0, 8);
+
+        executeSql(
+                "INSERT INTO tenants (id, name, code, status) VALUES (?, ?, ?, 'ACTIVE')",
+                tenantId,
+                "Tenant " + tenantCode,
+                tenantCode
+        );
+        executeSql(
+                "INSERT INTO users (id, email, password_hash, full_name, active) VALUES (?, ?, ?, ?, b'1')",
+                userId,
+                email,
+                DEFAULT_PASSWORD_HASH,
+                "Custom Role " + tenantCode
+        );
+        executeSql(
+                "INSERT INTO roles (id, code, name, description, system_role) VALUES (?, ?, ?, ?, b'0')",
+                roleId,
+                roleCode,
+                "Test Role " + tenantCode,
+                "Test role for integration scenarios"
+        );
+
+        if (permissionCodes != null && !permissionCodes.isEmpty()) {
+            String placeholders = String.join(",", Collections.nCopies(permissionCodes.size(), "?"));
+            List<Object> args = new ArrayList<>();
+            args.add(roleId);
+            args.addAll(permissionCodes);
+
+            executeSql(
+                    "INSERT INTO role_permissions (role_id, permission_id) SELECT ?, p.id FROM permissions p WHERE p.code IN (" + placeholders + ")",
+                    args.toArray()
+            );
+        }
+
+        executeSql(
+                "INSERT INTO user_tenants (id, tenant_id, user_id, role_id, active) VALUES (?, ?, ?, ?, b'1')",
+                userTenantId,
+                tenantId,
+                userId,
+                roleId
+        );
+        executeSql(
+                "INSERT INTO user_tenant_roles (id, user_tenant_id, role_id, created_at) VALUES (?, ?, ?, NOW())",
+                UUID.randomUUID().toString(),
+                userTenantId,
+                roleId
         );
         enableTenantModules(tenantId, moduleCodes);
 

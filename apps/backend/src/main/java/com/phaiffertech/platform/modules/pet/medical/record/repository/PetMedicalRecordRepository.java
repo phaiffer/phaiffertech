@@ -2,6 +2,7 @@ package com.phaiffertech.platform.modules.pet.medical.record.repository;
 
 import com.phaiffertech.platform.modules.pet.medical.record.domain.PetMedicalRecord;
 import com.phaiffertech.platform.shared.crud.BaseTenantCrudRepository;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import org.springframework.data.domain.Page;
@@ -12,6 +13,8 @@ import org.springframework.data.repository.query.Param;
 
 public interface PetMedicalRecordRepository
         extends JpaRepository<PetMedicalRecord, UUID>, BaseTenantCrudRepository<PetMedicalRecord> {
+
+    List<PetMedicalRecord> findTop5ByTenantIdOrderByCreatedAtDesc(UUID tenantId);
 
     @Query("""
             SELECT r

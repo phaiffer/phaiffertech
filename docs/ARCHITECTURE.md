@@ -130,13 +130,19 @@ Corrections applied in this stage:
 - `shared.contracts.module` introduced as the explicit cross-module contract package
 - `/api/v1/dashboard/summary` introduced as a core aggregation endpoint backed only by capabilities
 - `/api/v1/modules` now returns `moduleEnabled`, `featureFlagEnabled` and `available`
+- module dashboards now expose standardized summary payloads through `/api/v1/crm/dashboard/summary`, `/api/v1/iot/dashboard/summary` and `/api/v1/pet/dashboard/summary`
 
 ## Module Capabilities And Contracts
 
 Cross-module contracts now live in:
 - `shared.contracts.module.ModuleSummaryCapability`
-- `shared.contracts.module.ModuleSummaryView`
-- `shared.contracts.module.ModuleMetricView`
+- `shared.dashboard.dto.DashboardSummaryCardDto`
+- `shared.dashboard.dto.DashboardCountMetricDto`
+- `shared.dashboard.dto.DashboardListItemDto`
+- `shared.dashboard.dto.DashboardTimeSeriesPointDto`
+- `shared.dashboard.dto.DashboardSectionDto`
+- `shared.dashboard.dto.DashboardModuleSummaryDto`
+- `shared.dashboard.dto.PlatformDashboardResponseDto`
 
 Implemented module capabilities:
 - `modules.crm.capability.CrmDashboardCapability`
@@ -186,11 +192,35 @@ Frontend flow:
 Platform-level aggregation is now intentionally thin:
 
 - `PlatformDashboardService` depends on `List<ModuleSummaryCapability>`
-- each capability returns a `ModuleSummaryView`
+- each capability returns a `DashboardModuleSummaryDto`
 - the core dashboard filters capabilities through `ModuleAccessService`
+- the core dashboard also filters capabilities through dashboard permissions resolved from the authenticated user
 - the core dashboard does not import vertical repositories or entities
 
 This keeps the platform dashboard extensible without turning `core` into a god service.
+
+## Dashboard Architecture
+
+Adopted dashboard model:
+
+1. Platform dashboard
+   - executive summary only
+   - aggregates core-owned counts plus `ModuleSummaryCapability` outputs
+2. Module dashboards
+   - CRM, IoT and Pet own their operational summaries and can query only their own repositories
+3. Shared payload model
+   - cards, grouped metrics, recent items, time series and reusable sections are standardized in `shared.dashboard.dto`
+4. Frontend widget model
+   - widgets live under `apps/frontend/src/shared/dashboard` and render the same payload shape for all modules
+
+Access rules on dashboards:
+
+- `ModuleAccessGuard` still blocks module routes when the tenant does not have the module available
+- module dashboard endpoints still require explicit permissions:
+  - `crm.dashboard.read`
+  - `iot.dashboard.read`
+  - `pet.dashboard.read`
+- the platform dashboard omits module sections that are unavailable or unauthorized instead of querying module internals directly
 
 ## Multi-Tenancy
 

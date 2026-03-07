@@ -14,6 +14,8 @@ public interface PetInvoiceRepository extends JpaRepository<PetInvoice, UUID>, B
 
     long countByTenantIdAndDeletedAtIsNull(UUID tenantId);
 
+    long countByTenantIdAndStatusIn(UUID tenantId, Iterable<String> statuses);
+
     @Query("""
             SELECT i
             FROM PetInvoice i

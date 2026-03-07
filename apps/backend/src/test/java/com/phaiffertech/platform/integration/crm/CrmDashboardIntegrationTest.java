@@ -54,6 +54,9 @@ class CrmDashboardIntegrationTest extends AbstractIntegrationTest {
         assertTrue(data.path("tasksPendentes").asLong() >= 1);
         assertTrue(data.path("dealsPorStatus").has("OPEN"));
         assertTrue(data.path("leadsPorStatus").has("QUALIFIED"));
+        assertTrue(data.path("summaryCards").size() >= 5);
+        assertTrue(data.path("sections").size() >= 2);
+        assertTrue(data.path("sections").get(0).path("items").size() >= 1);
     }
 
     private String createCompany(AuthSession session, String marker) {

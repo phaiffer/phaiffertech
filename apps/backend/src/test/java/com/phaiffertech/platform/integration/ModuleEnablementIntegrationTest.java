@@ -3,6 +3,7 @@ package com.phaiffertech.platform.integration;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.phaiffertech.platform.support.AbstractIntegrationTest;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.ResponseEntity;
@@ -94,7 +95,42 @@ class ModuleEnablementIntegrationTest extends AbstractIntegrationTest {
         assertTrue(moduleCodes.contains("CRM"));
         assertFalse(moduleCodes.contains("PET"));
         assertFalse(moduleCodes.contains("IOT"));
-        assertTrue(summaries.get(0).path("metrics").size() > 0);
+        assertTrue(requireBody(dashboardResponse).path("data").path("coreSummary").path("cards").size() > 0);
+        assertTrue(summaries.get(0).path("summaryCards").size() > 0);
+    }
+
+    @Test
+    void shouldHideModuleSectionsFromGlobalDashboardWhenUserLacksDashboardPermission() {
+        AuthSession session = createTenantSessionWithPermissions(
+                "tenant-no-dashboard-permission",
+                "tenant-no-dashboard-permission@example.test",
+                List.of(),
+                "CRM",
+                "IOT",
+                "PET"
+        );
+
+        ResponseEntity<JsonNode> response = get("/dashboard/summary", session);
+        assertEquals(200, response.getStatusCode().value());
+
+        JsonNode data = requireBody(response).path("data");
+        assertTrue(data.path("coreSummary").path("cards").size() > 0);
+        assertEquals(0, data.path("modules").size());
+    }
+
+    @Test
+    void shouldBlockPetDashboardWhenPermissionIsMissingEvenIfModuleIsEnabled() {
+        AuthSession session = createTenantSessionWithPermissions(
+                "tenant-pet-dashboard-blocked",
+                "tenant-pet-dashboard-blocked@example.test",
+                List.of("pet.client.read"),
+                "PET"
+        );
+
+        ResponseEntity<JsonNode> response = get("/pet/dashboard/summary", session);
+
+        assertEquals(403, response.getStatusCode().value());
+        assertEquals("FORBIDDEN", requireBody(response).path("code").asText());
     }
 
     private JsonNode findModule(JsonNode modules, String code) {

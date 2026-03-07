@@ -3,9 +3,7 @@ package com.phaiffertech.platform.modules.iot.capability;
 import com.phaiffertech.platform.core.module.domain.PlatformModule;
 import com.phaiffertech.platform.modules.iot.monitoring.dto.IotDashboardSummaryResponse;
 import com.phaiffertech.platform.modules.iot.monitoring.service.IotDashboardService;
-import com.phaiffertech.platform.shared.contracts.module.ModuleMetricView;
-import com.phaiffertech.platform.shared.contracts.module.ModuleSummaryView;
-import java.util.List;
+import com.phaiffertech.platform.shared.dashboard.dto.DashboardModuleSummaryDto;
 import java.util.UUID;
 import org.springframework.stereotype.Service;
 
@@ -24,20 +22,19 @@ public class IotDashboardCapabilityService implements IotDashboardCapability {
     }
 
     @Override
-    public ModuleSummaryView summarize(UUID tenantId) {
+    public String requiredPermission() {
+        return "iot.dashboard.read";
+    }
+
+    @Override
+    public DashboardModuleSummaryDto summarize(UUID tenantId) {
         IotDashboardSummaryResponse summary = iotDashboardService.summary(tenantId);
-        return new ModuleSummaryView(
+        return new DashboardModuleSummaryDto(
                 moduleCode(),
                 "IoT",
                 "Devices, alarms, telemetry flow and maintenance queue.",
                 "/iot/dashboard",
-                List.of(
-                        new ModuleMetricView("devices", "Devices", summary.totalDevices()),
-                        new ModuleMetricView("activeDevices", "Active", summary.activeDevices()),
-                        new ModuleMetricView("offlineDevices", "Offline", summary.offlineDevices()),
-                        new ModuleMetricView("openAlarms", "Open Alarms", summary.totalAlarmsOpen()),
-                        new ModuleMetricView("maintenance", "Pending Maintenance", summary.pendingMaintenance())
-                )
+                summary.summaryCards()
         );
     }
 }

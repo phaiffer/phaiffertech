@@ -3,6 +3,7 @@ package com.phaiffertech.platform.modules.iot.alarm.repository;
 import com.phaiffertech.platform.modules.iot.alarm.domain.IotAlarm;
 import com.phaiffertech.platform.shared.crud.BaseTenantCrudRepository;
 import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import org.springframework.data.domain.Page;
@@ -78,4 +79,6 @@ public interface IotAlarmRepository extends JpaRepository<IotAlarm, UUID>, BaseT
             @Param("code") String code,
             @Param("statuses") Iterable<String> statuses
     );
+
+    List<IotAlarm> findTop5ByTenantIdOrderByTriggeredAtDesc(UUID tenantId);
 }

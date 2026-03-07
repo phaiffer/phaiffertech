@@ -3,6 +3,7 @@ import { PageResponse } from '@/shared/types/common';
 import {
   PetAppointment,
   PetClient,
+  PetDashboardSummary,
   PetInvoice,
   PetInventoryMovement,
   PetMedicalRecord,
@@ -409,5 +410,7 @@ export const petService = {
 
   deleteInvoice: (id: string) => apiClient.delete<void>(`/pet/invoices/${id}`),
 
-  restoreInvoice: (id: string) => apiClient.patch<PetInvoice>(`/pet/invoices/${id}/restore`)
+  restoreInvoice: (id: string) => apiClient.patch<PetInvoice>(`/pet/invoices/${id}/restore`),
+
+  getDashboardSummary: () => apiClient.get<PetDashboardSummary>('/pet/dashboard/summary')
 };

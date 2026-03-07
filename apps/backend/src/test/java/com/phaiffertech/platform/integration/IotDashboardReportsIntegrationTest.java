@@ -72,6 +72,9 @@ class IotDashboardReportsIntegrationTest extends AbstractIntegrationTest {
         assertEquals(1, dashboardData.path("pendingMaintenance").asInt());
         assertTrue(dashboardData.path("devicesLastSeenSummary").path("last_5m").asInt() >= 1);
         assertTrue(dashboardData.path("devicesLastSeenSummary").path("never_seen").asInt() >= 1);
+        assertTrue(dashboardData.path("summaryCards").size() >= 6);
+        assertTrue(dashboardData.path("sections").size() >= 2);
+        assertTrue(dashboardData.path("sections").get(0).path("items").size() >= 1);
 
         ResponseEntity<JsonNode> reports = get("/iot/reports/summary", session);
         assertEquals(200, reports.getStatusCode().value());

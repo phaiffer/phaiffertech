@@ -1,10 +1,15 @@
 package com.phaiffertech.platform.shared.contracts.module;
 
+import com.phaiffertech.platform.shared.dashboard.dto.DashboardModuleSummaryDto;
 import java.util.UUID;
 
 public interface ModuleSummaryCapability {
 
     String moduleCode();
 
-    ModuleSummaryView summarize(UUID tenantId);
+    default String requiredPermission() {
+        return null;
+    }
+
+    DashboardModuleSummaryDto summarize(UUID tenantId);
 }

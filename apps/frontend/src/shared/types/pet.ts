@@ -1,3 +1,5 @@
+import { DashboardSection, DashboardSummaryCard } from '@/shared/types/dashboard';
+
 export type PetClient = {
   id: string;
   name: string;
@@ -122,4 +124,16 @@ export type PetInvoice = {
   issuedAt: string;
   createdAt: string;
   updatedAt: string;
+};
+
+export type PetDashboardSummary = {
+  totalClients: number;
+  totalPets: number;
+  appointmentsToday: number;
+  upcomingAppointments: number;
+  totalServices: number;
+  lowStockProducts: number;
+  pendingInvoices: number;
+  summaryCards: DashboardSummaryCard[];
+  sections: DashboardSection[];
 };

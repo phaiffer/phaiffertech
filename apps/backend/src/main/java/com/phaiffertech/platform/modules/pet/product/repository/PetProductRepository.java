@@ -12,6 +12,8 @@ import org.springframework.data.repository.query.Param;
 
 public interface PetProductRepository extends JpaRepository<PetProduct, UUID>, BaseTenantCrudRepository<PetProduct> {
 
+    long countByTenantIdAndStockQuantityLessThanEqual(UUID tenantId, int stockQuantityThreshold);
+
     @Query("""
             SELECT p
             FROM PetProduct p

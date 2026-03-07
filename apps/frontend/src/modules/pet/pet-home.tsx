@@ -10,6 +10,16 @@ export function PetHome() {
       <PageTitle title="Pet Module" description="Operações do módulo PET: clientes, pets e agenda de atendimentos." />
 
       <div className="grid gap-4 md:grid-cols-4">
+        <PermissionGuard permission="pet.dashboard.read">
+          <Link
+            href="/pet/dashboard"
+            className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm transition hover:border-action"
+          >
+            <h3 className="text-sm font-semibold text-slate-900">Pet Dashboard</h3>
+            <p className="mt-2 text-sm text-slate-600">Visão executiva e operacional da clínica e do comercial.</p>
+          </Link>
+        </PermissionGuard>
+
         <PermissionGuard permission="pet.client.read">
           <Link
             href="/pet/clients"

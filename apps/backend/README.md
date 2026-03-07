@@ -66,6 +66,8 @@ Current capability contracts:
 - `CrmDashboardCapability`
 - `IotDashboardCapability`
 - `PetDashboardCapability`
+- all of them implement `shared.contracts.module.ModuleSummaryCapability`
+- dashboard responses share DTOs in `shared.dashboard.dto`
 
 ## CRM v1 Scope
 
@@ -83,6 +85,8 @@ Current capability contracts:
 - Professionals CRUD + pagination.
 - Medical records, vaccinations and prescriptions CRUD.
 - Products, inventory movements and invoices CRUD.
+- Operational dashboard:
+  - `GET /api/v1/pet/dashboard/summary`
 
 ## IoT v1 Scope
 
@@ -121,6 +125,10 @@ Current IoT V1 permissions:
 - `iot.dashboard.read`
 - `iot.report.read`
 
+Current Pet dashboard permission:
+
+- `pet.dashboard.read`
+
 ## Migrations
 
 - `V1__init_schema.sql`
@@ -150,6 +158,7 @@ Current IoT V1 permissions:
 - `V25__pet_appointments_services.sql`
 - `V26__pet_medical_records.sql`
 - `V27__pet_products_inventory_invoices.sql`
+- `V28__pet_dashboard_permission.sql`
 
 ## IoT API Surface
 
@@ -184,6 +193,9 @@ Current IoT V1 permissions:
 - `GET /api/v1/modules`
 - `GET /api/v1/dashboard/summary`
 - `GET /api/v1/feature-flags`
+- `GET /api/v1/crm/dashboard/summary`
+- `GET /api/v1/iot/dashboard/summary`
+- `GET /api/v1/pet/dashboard/summary`
 
 ## Module Access Model
 
@@ -200,6 +212,11 @@ The `/api/v1/modules` response now exposes:
 - `available`
 
 `available` is the final value used by the frontend menus and module guards.
+
+Dashboard-specific behavior:
+
+- platform dashboard includes only module summaries that are both available for the tenant and allowed by user permission
+- module dashboards build their own operational summaries and never expose repositories to other modules
 
 ## Run Locally
 

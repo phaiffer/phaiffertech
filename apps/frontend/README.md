@@ -17,11 +17,14 @@ Next.js admin console for the unified platform.
 - Permission guard for actions/components.
 - Sidebar visibility by permission and backend module enablement.
 - Global error boundary and client-side structured logging.
+- Shared dashboard widget layer for cards, lists and simple charts.
 - CRM v1 UI:
+  - dashboard summary
   - contacts list/create/edit/delete
   - leads list/create/edit/delete
   - search + pagination + loading/empty/error states
 - PET v1 UI:
+  - dashboard summary
   - clients list/create/edit/delete
   - pet profiles list/create/edit/delete
   - appointments list/create/edit/delete
@@ -49,6 +52,8 @@ Next.js admin console for the unified platform.
   - `PermissionGate`
 - `src/shared/services`
   - centralized API client usage (`crm-service`, `pet-service`, `iot-service`, etc.)
+- `src/shared/dashboard`
+  - reusable dashboard widgets and section renderers
 - `src/shared/observability`
   - client logger for structured browser-side logs
 - `src/shared/ui`
@@ -61,6 +66,7 @@ Next.js admin console for the unified platform.
 - `/tenants`
 - `/users`
 - `/crm`
+- `/crm/dashboard`
 - `/crm/contacts`
 - `/crm/contacts/new`
 - `/crm/contacts/[id]`
@@ -68,6 +74,7 @@ Next.js admin console for the unified platform.
 - `/crm/leads/new`
 - `/crm/leads/[id]`
 - `/pet`
+- `/pet/dashboard`
 - `/pet/clients`
 - `/pet/pets`
 - `/pet/appointments`
@@ -105,6 +112,8 @@ npm run build
 
 - Feature flags and module enablement are resolved server-side and reflected in module navigation.
 - Module-disabled API access returns `403` from backend guard, and UI sections are hidden from sidebar.
+- Module dashboards require explicit dashboard permissions even when the module is enabled for the tenant.
+- The global dashboard renders only the backend aggregation payload and does not query module internals directly.
 - IoT UI mirrors the V1 split between control plane and data plane:
   - control plane: devices, registers, maintenance
   - data plane: telemetry, alarms, dashboard and reports

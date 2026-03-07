@@ -1,3 +1,5 @@
+import { DashboardSection, DashboardSummaryCard } from '@/shared/types/dashboard';
+
 export type CrmContact = {
   id: string;
   firstName: string;
@@ -119,4 +121,6 @@ export type CrmDashboardSummary = {
   dealsPorStatus: Record<string, number>;
   tasksPendentes: number;
   leadsPorStatus: Record<string, number>;
+  summaryCards: DashboardSummaryCard[];
+  sections: DashboardSection[];
 };

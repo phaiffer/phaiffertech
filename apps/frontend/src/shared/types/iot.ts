@@ -1,3 +1,5 @@
+import { DashboardSection, DashboardSummaryCard } from '@/shared/types/dashboard';
+
 export type IotDevice = {
   id: string;
   name: string;
@@ -77,6 +79,8 @@ export type IotDashboardSummary = {
   telemetryPointsLast24h: number;
   pendingMaintenance: number;
   devicesLastSeenSummary: Record<string, number>;
+  summaryCards: DashboardSummaryCard[];
+  sections: DashboardSection[];
 };
 
 export type IotReportSummary = {

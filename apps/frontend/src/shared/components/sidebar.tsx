@@ -36,6 +36,7 @@ const items = [
   { href: '/crm/tasks', label: 'CRM Tasks', anyOf: ['crm.task.read'], moduleCode: 'CRM' },
   { href: '/crm/notes', label: 'CRM Notes', anyOf: ['crm.note.read'], moduleCode: 'CRM' },
   { href: '/pet', label: 'Pet Home', anyOf: ['pet.client.read', 'pet.profile.read', 'pet.appointment.read'], moduleCode: 'PET' },
+  { href: '/pet/dashboard', label: 'Pet Dashboard', anyOf: ['pet.dashboard.read'], moduleCode: 'PET' },
   { href: '/pet/clients', label: 'Pet Clients', anyOf: ['pet.client.read'], moduleCode: 'PET' },
   { href: '/pet/pets', label: 'Pet Profiles', anyOf: ['pet.profile.read'], moduleCode: 'PET' },
   { href: '/pet/services', label: 'Pet Services', anyOf: ['pet.service.read'], moduleCode: 'PET' },

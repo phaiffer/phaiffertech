@@ -1,7 +1,7 @@
 package com.phaiffertech.platform.core.module.controller;
 
-import com.phaiffertech.platform.core.module.dto.PlatformDashboardSummaryResponse;
 import com.phaiffertech.platform.core.module.service.PlatformDashboardService;
+import com.phaiffertech.platform.shared.dashboard.dto.PlatformDashboardResponseDto;
 import com.phaiffertech.platform.shared.response.ApiResponse;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -18,7 +18,7 @@ public class PlatformDashboardController {
     }
 
     @GetMapping("/summary")
-    public ApiResponse<PlatformDashboardSummaryResponse> summary() {
+    public ApiResponse<PlatformDashboardResponseDto> summary() {
         return ApiResponse.success(platformDashboardService.summary());
     }
 }

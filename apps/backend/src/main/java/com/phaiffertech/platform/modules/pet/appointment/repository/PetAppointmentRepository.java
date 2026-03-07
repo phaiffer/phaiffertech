@@ -3,6 +3,7 @@ package com.phaiffertech.platform.modules.pet.appointment.repository;
 import com.phaiffertech.platform.modules.pet.appointment.domain.PetAppointment;
 import com.phaiffertech.platform.shared.crud.BaseTenantCrudRepository;
 import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import org.springframework.data.domain.Page;
@@ -14,6 +15,12 @@ import org.springframework.data.repository.query.Param;
 public interface PetAppointmentRepository extends JpaRepository<PetAppointment, UUID>, BaseTenantCrudRepository<PetAppointment> {
 
     long countByTenantIdAndDeletedAtIsNull(UUID tenantId);
+
+    long countByTenantIdAndScheduledAtBetween(UUID tenantId, Instant scheduledFrom, Instant scheduledTo);
+
+    long countByTenantIdAndScheduledAtGreaterThanEqual(UUID tenantId, Instant scheduledFrom);
+
+    List<PetAppointment> findTop5ByTenantIdAndScheduledAtGreaterThanEqualOrderByScheduledAtAsc(UUID tenantId, Instant scheduledFrom);
 
     @Query("""
             SELECT a

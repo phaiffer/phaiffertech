@@ -281,6 +281,69 @@ class PetIntegrationTest extends AbstractIntegrationTest {
     }
 
     @Test
+    void shouldReturnPetDashboardSummary() {
+        AuthSession session = loginAsDefaultAdmin();
+        String marker = randomSearchMarker();
+
+        String clientId = createClient(session, marker);
+        String petId = createPet(session, clientId, marker);
+        String serviceId = createService(session, marker);
+        String professionalId = createProfessional(session, marker);
+
+        ResponseEntity<JsonNode> createAppointment = post("/pet/appointments", Map.of(
+                "clientId", clientId,
+                "petId", petId,
+                "serviceId", serviceId,
+                "professionalId", professionalId,
+                "scheduledAt", Instant.now().plusSeconds(5400).toString(),
+                "status", "SCHEDULED",
+                "notes", "Dashboard appointment " + marker
+        ), session);
+        assertEquals(200, createAppointment.getStatusCode().value());
+
+        ResponseEntity<JsonNode> createMedicalRecord = post("/pet/medical-records", Map.of(
+                "petId", petId,
+                "professionalId", professionalId,
+                "description", "Dashboard record " + marker,
+                "diagnosis", "Diagnosis " + marker,
+                "treatment", "Treatment " + marker
+        ), session);
+        assertEquals(200, createMedicalRecord.getStatusCode().value());
+
+        ResponseEntity<JsonNode> createLowStockProduct = post("/pet/products", Map.of(
+                "name", "Low Stock " + marker,
+                "sku", "LOW-" + marker,
+                "price", 10.0,
+                "stockQuantity", 3
+        ), session);
+        assertEquals(200, createLowStockProduct.getStatusCode().value());
+
+        ResponseEntity<JsonNode> createPendingInvoice = post("/pet/invoices", Map.of(
+                "clientId", clientId,
+                "totalAmount", 55.0,
+                "status", "ISSUED",
+                "issuedAt", Instant.now().toString()
+        ), session);
+        assertEquals(200, createPendingInvoice.getStatusCode().value());
+
+        ResponseEntity<JsonNode> response = get("/pet/dashboard/summary", session);
+        assertEquals(200, response.getStatusCode().value());
+
+        JsonNode data = requireBody(response).path("data");
+        assertTrue(data.path("totalClients").asInt() >= 1);
+        assertTrue(data.path("totalPets").asInt() >= 1);
+        assertTrue(data.path("appointmentsToday").asInt() >= 1);
+        assertTrue(data.path("upcomingAppointments").asInt() >= 1);
+        assertTrue(data.path("totalServices").asInt() >= 1);
+        assertTrue(data.path("lowStockProducts").asInt() >= 1);
+        assertTrue(data.path("pendingInvoices").asInt() >= 1);
+        assertTrue(data.path("summaryCards").size() >= 7);
+        assertTrue(data.path("sections").size() >= 2);
+        assertTrue(data.path("sections").get(0).path("items").size() >= 1);
+        assertTrue(data.path("sections").get(1).path("items").size() >= 1);
+    }
+
+    @Test
     void shouldBlockPetRequestsWhenTenantHeaderDoesNotMatchAuthenticatedTenant() {
         AuthSession session = loginAsDefaultAdmin();
 

@@ -3,8 +3,7 @@ package com.phaiffertech.platform.modules.crm.capability;
 import com.phaiffertech.platform.core.module.domain.PlatformModule;
 import com.phaiffertech.platform.modules.crm.dashboard.dto.CrmDashboardSummaryResponse;
 import com.phaiffertech.platform.modules.crm.dashboard.service.CrmDashboardService;
-import com.phaiffertech.platform.shared.contracts.module.ModuleMetricView;
-import com.phaiffertech.platform.shared.contracts.module.ModuleSummaryView;
+import com.phaiffertech.platform.shared.dashboard.dto.DashboardModuleSummaryDto;
 import java.util.List;
 import java.util.UUID;
 import org.springframework.stereotype.Service;
@@ -24,20 +23,19 @@ public class CrmDashboardCapabilityService implements CrmDashboardCapability {
     }
 
     @Override
-    public ModuleSummaryView summarize(UUID tenantId) {
+    public String requiredPermission() {
+        return "crm.dashboard.read";
+    }
+
+    @Override
+    public DashboardModuleSummaryDto summarize(UUID tenantId) {
         CrmDashboardSummaryResponse summary = crmDashboardService.summary(tenantId);
-        return new ModuleSummaryView(
+        return new DashboardModuleSummaryDto(
                 moduleCode(),
                 "CRM",
                 "Companies, contacts, leads, deals and pending work.",
                 "/crm/dashboard",
-                List.of(
-                        new ModuleMetricView("companies", "Companies", summary.totalCompanies()),
-                        new ModuleMetricView("contacts", "Contacts", summary.totalContacts()),
-                        new ModuleMetricView("leads", "Leads", summary.totalLeads()),
-                        new ModuleMetricView("deals", "Deals", summary.totalDeals()),
-                        new ModuleMetricView("tasksPending", "Pending Tasks", summary.tasksPendentes())
-                )
+                summary.summaryCards()
         );
     }
 }

@@ -13,6 +13,8 @@ import org.springframework.data.repository.query.Param;
 public interface PetServiceCatalogRepository
         extends JpaRepository<PetServiceCatalog, UUID>, BaseTenantCrudRepository<PetServiceCatalog> {
 
+    long countByTenantId(UUID tenantId);
+
     @Query("""
             SELECT s
             FROM PetServiceCatalog s

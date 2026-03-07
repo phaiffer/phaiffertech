@@ -10,6 +10,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface UserTenantRepository extends JpaRepository<UserTenant, UUID> {
 
+    long countByTenantIdAndActiveTrue(UUID tenantId);
+
     Optional<UserTenant> findByTenantIdAndUserIdAndActiveTrue(UUID tenantId, UUID userId);
 
     Page<UserTenant> findAllByTenantIdAndActiveTrue(UUID tenantId, Pageable pageable);

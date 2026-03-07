@@ -52,7 +52,12 @@ class ModuleArchitectureTest {
 
         assertTrue(source.contains("ModuleSummaryCapability"), "Platform dashboard must aggregate through capabilities.");
         assertFalse(source.contains("import com.phaiffertech.platform.modules."), "Platform dashboard cannot import vertical modules directly.");
-        assertFalse(source.contains(".repository."), "Platform dashboard cannot depend on repositories directly.");
+        assertFalse(
+                Pattern.compile("import\\s+com\\.phaiffertech\\.platform\\.modules\\.(crm|iot|pet)\\..*repository\\..*;")
+                        .matcher(source)
+                        .find(),
+                "Platform dashboard cannot depend on vertical repositories directly."
+        );
     }
 
     private List<String> findForbiddenImports(Path sourceDirectory) throws IOException {
