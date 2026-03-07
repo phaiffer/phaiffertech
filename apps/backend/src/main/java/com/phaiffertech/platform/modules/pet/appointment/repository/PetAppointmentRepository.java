@@ -18,9 +18,10 @@ public interface PetAppointmentRepository extends JpaRepository<PetAppointment, 
             FROM PetAppointment a
             WHERE a.tenantId = :tenantId
               AND (:status IS NULL OR UPPER(a.status) = UPPER(:status))
-              AND (:assignedUserId IS NULL OR a.assignedUserId = :assignedUserId)
+              AND (:professionalId IS NULL OR a.professionalId = :professionalId)
               AND (:clientId IS NULL OR a.clientId = :clientId)
               AND (:petId IS NULL OR a.petId = :petId)
+              AND (:serviceId IS NULL OR a.serviceId = :serviceId)
               AND (:scheduledFrom IS NULL OR a.scheduledAt >= :scheduledFrom)
               AND (:scheduledTo IS NULL OR a.scheduledAt <= :scheduledTo)
               AND (:search IS NULL OR
@@ -31,9 +32,10 @@ public interface PetAppointmentRepository extends JpaRepository<PetAppointment, 
     Page<PetAppointment> findAllByTenantIdAndSearch(
             @Param("tenantId") UUID tenantId,
             @Param("status") String status,
-            @Param("assignedUserId") UUID assignedUserId,
+            @Param("professionalId") UUID professionalId,
             @Param("clientId") UUID clientId,
             @Param("petId") UUID petId,
+            @Param("serviceId") UUID serviceId,
             @Param("scheduledFrom") Instant scheduledFrom,
             @Param("scheduledTo") Instant scheduledTo,
             @Param("search") String search,

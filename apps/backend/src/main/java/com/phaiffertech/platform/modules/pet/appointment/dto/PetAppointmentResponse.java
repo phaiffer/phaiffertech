@@ -7,11 +7,12 @@ public record PetAppointmentResponse(
         UUID id,
         UUID clientId,
         UUID petId,
-        Instant scheduledAt,
+        UUID serviceId,
         String serviceName,
+        UUID professionalId,
+        Instant scheduledAt,
         String status,
         String notes,
-        UUID assignedUserId,
         Instant createdAt,
         Instant updatedAt
 ) {

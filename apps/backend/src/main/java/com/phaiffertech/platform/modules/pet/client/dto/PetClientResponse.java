@@ -10,6 +10,7 @@ public record PetClientResponse(
         String email,
         String phone,
         String document,
+        String address,
         String status,
         Instant createdAt,
         Instant updatedAt

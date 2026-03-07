@@ -37,6 +37,9 @@ public class PetProfile extends BaseTenantEntity {
     @Column(name = "weight", precision = 10, scale = 2)
     private BigDecimal weight;
 
+    @Column(name = "color", length = 80)
+    private String color;
+
     @Column(name = "notes", columnDefinition = "text")
     private String notes;
 
@@ -94,6 +97,14 @@ public class PetProfile extends BaseTenantEntity {
 
     public void setWeight(BigDecimal weight) {
         this.weight = weight;
+    }
+
+    public String getColor() {
+        return color;
+    }
+
+    public void setColor(String color) {
+        this.color = color;
     }
 
     public String getNotes() {

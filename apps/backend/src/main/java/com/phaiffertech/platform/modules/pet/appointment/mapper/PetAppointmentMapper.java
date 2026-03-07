@@ -22,11 +22,11 @@ public final class PetAppointmentMapper implements BaseCrudMapper<
         PetAppointment appointment = new PetAppointment();
         appointment.setClientId(request.clientId());
         appointment.setPetId(request.petId());
+        appointment.setServiceId(request.serviceId());
+        appointment.setProfessionalId(request.professionalId());
         appointment.setScheduledAt(request.scheduledAt());
-        appointment.setServiceName(request.serviceName().trim());
         appointment.setStatus(resolveStatus(request.status()));
         appointment.setNotes(request.notes());
-        appointment.setAssignedUserId(request.assignedUserId());
         return appointment;
     }
 
@@ -34,11 +34,11 @@ public final class PetAppointmentMapper implements BaseCrudMapper<
     public void updateEntity(PetAppointment entity, PetAppointmentUpdateRequest request) {
         entity.setClientId(request.clientId());
         entity.setPetId(request.petId());
+        entity.setServiceId(request.serviceId());
+        entity.setProfessionalId(request.professionalId());
         entity.setScheduledAt(request.scheduledAt());
-        entity.setServiceName(request.serviceName().trim());
         entity.setStatus(resolveStatus(request.status()));
         entity.setNotes(request.notes());
-        entity.setAssignedUserId(request.assignedUserId());
     }
 
     @Override
@@ -47,11 +47,12 @@ public final class PetAppointmentMapper implements BaseCrudMapper<
                 appointment.getId(),
                 appointment.getClientId(),
                 appointment.getPetId(),
-                appointment.getScheduledAt(),
+                appointment.getServiceId(),
                 appointment.getServiceName(),
+                appointment.getProfessionalId(),
+                appointment.getScheduledAt(),
                 appointment.getStatus(),
                 appointment.getNotes(),
-                appointment.getAssignedUserId(),
                 appointment.getCreatedAt(),
                 appointment.getUpdatedAt()
         );

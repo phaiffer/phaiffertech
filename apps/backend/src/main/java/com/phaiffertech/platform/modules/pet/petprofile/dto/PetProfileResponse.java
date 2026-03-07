@@ -14,6 +14,7 @@ public record PetProfileResponse(
         LocalDate birthDate,
         String gender,
         BigDecimal weight,
+        String color,
         String notes,
         Instant createdAt,
         Instant updatedAt

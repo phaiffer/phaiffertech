@@ -8,10 +8,10 @@ import java.util.UUID;
 public record PetAppointmentUpdateRequest(
         @NotNull UUID clientId,
         @NotNull UUID petId,
+        @NotNull UUID serviceId,
+        @NotNull UUID professionalId,
         @NotNull Instant scheduledAt,
-        @NotBlank String serviceName,
         @NotBlank String status,
-        String notes,
-        UUID assignedUserId
+        String notes
 ) {
 }

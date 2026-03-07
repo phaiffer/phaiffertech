@@ -50,6 +50,7 @@ export function PetProfilesPage() {
   const [birthDate, setBirthDate] = useState('');
   const [gender, setGender] = useState('');
   const [weight, setWeight] = useState('');
+  const [color, setColor] = useState('');
   const [notes, setNotes] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
@@ -117,6 +118,7 @@ export function PetProfilesPage() {
     setBirthDate('');
     setGender('');
     setWeight('');
+    setColor('');
     setNotes('');
   }
 
@@ -129,6 +131,7 @@ export function PetProfilesPage() {
     setBirthDate(profile.birthDate ?? '');
     setGender(profile.gender ?? '');
     setWeight(profile.weight === undefined ? '' : String(profile.weight));
+    setColor(profile.color ?? '');
     setNotes(profile.notes ?? '');
     setSuccess(null);
     setError(null);
@@ -162,6 +165,7 @@ export function PetProfilesPage() {
       birthDate: birthDate || undefined,
       gender: gender || undefined,
       weight: parsedWeight,
+      color: color || undefined,
       notes: notes || undefined
     };
 
@@ -218,6 +222,11 @@ export function PetProfilesPage() {
       key: 'breed',
       header: 'Raça',
       render: (profile) => profile.breed ?? '-'
+    },
+    {
+      key: 'color',
+      header: 'Cor',
+      render: (profile) => profile.color ?? '-'
     },
     {
       key: 'client',
@@ -296,6 +305,7 @@ export function PetProfilesPage() {
             <FormInput label="Data de nascimento" value={birthDate} onChange={setBirthDate} type="date" />
             <FormSelect label="Gênero" value={gender} options={genderOptions} onChange={setGender} />
             <FormInput label="Peso (kg)" value={weight} onChange={setWeight} />
+            <FormInput label="Cor" value={color} onChange={setColor} />
             <div className="md:col-span-2">
               <FormInput label="Notas" value={notes} onChange={setNotes} />
             </div>

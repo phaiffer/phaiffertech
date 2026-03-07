@@ -62,7 +62,18 @@ com.phaiffertech.platform
 │   ├── pet
 │   │   ├── client
 │   │   ├── petprofile
-│   │   └── appointment
+│   │   ├── appointment
+│   │   ├── servicecatalog
+│   │   ├── professional
+│   │   ├── medical
+│   │   │   ├── record
+│   │   │   ├── vaccination
+│   │   │   └── prescription
+│   │   ├── product
+│   │   ├── inventory
+│   │   ├── invoice
+│   │   ├── subscription
+│   │   └── portal
 │   └── iot
 │       ├── device
 │       ├── register
@@ -132,8 +143,11 @@ Main components:
 
 Applied modules:
 - CRM: contacts and leads
-- PET: clients, profiles and appointments
+- PET: clients, profiles, appointments, services, professionals, medical records, vaccinations, prescriptions, products and invoices
 - IoT: devices, registers, maintenance and alarms where CRUD is sufficient; telemetry keeps explicit data-plane services
+
+Exception:
+- `modules.pet.inventory` keeps an explicit service because stock snapshot recalculation must remain transactional when movements are created, edited, deleted or restored
 
 ## Authorization Model
 
@@ -465,6 +479,121 @@ Main V1 permissions:
 - `crm.activity.read`
 - `crm.dashboard.read`
 
+## Legacy PetFlow Functional Summary
+
+The legacy PetFlow at `../petflow` was inspected only as a functional reference. Relevant findings:
+
+- operational domains found in code: clients/tutors, pets, appointments/agenda, products, inventory transactions, subscriptions, finance/invoices, dashboard/reports and client portal endpoints
+- clinical and commercial rules found in legacy services:
+  - deactivating a client or pet cancels future scheduled appointments
+  - appointment flows validate company ownership and active client/pet relations
+  - inventory movements cannot drive stock below zero
+  - appointments covered by subscription should not be invoiced as regular cash sales
+  - client portal booking is restricted to the authenticated client and that client's pets
+- important structural limit in the legacy reference:
+  - no mature standalone modules were found for service catalog, professionals, medical records, vaccinations or prescriptions
+  - those capabilities were therefore modeled natively for the SaaS platform instead of copied from legacy assumptions
+
+## Pet Gap Analysis and Scope
+
+Comparison baseline:
+
+- legacy reference: `../petflow`
+- current platform code:
+  - `apps/backend/src/main/java/com/phaiffertech/platform/modules/pet`
+  - `apps/frontend/src/app/(app)/pet`
+  - `apps/frontend/src/modules/pet`
+
+| Funcionalidade | Status na nova plataforma |
+| --- | --- |
+| clients | já implementado |
+| pets | já implementado |
+| appointments | já implementado |
+| services | já implementado |
+| professionals | já implementado |
+| medical records | já implementado |
+| vaccinations | já implementado |
+| prescriptions | já implementado |
+| products | já implementado |
+| inventory | já implementado |
+| invoices | já implementado |
+| subscriptions | adiar para Pet V2 |
+| notifications / reminders | adiar para Pet V2 |
+| reports | adiar para Pet V2 |
+| agenda | parcialmente implementado |
+| client portal | adiar para Pet V2 |
+
+Status interpretation:
+
+- `já implementado`: backend + frontend tenant-aware CRUD delivered in Pet V1
+- `parcialmente implementado`: there is operational coverage, but not at the legacy UX depth yet
+- `adiar para Pet V2`: intentionally excluded from the commercial/clinical SaaS baseline for this stage
+
+## Pet V1 Scope
+
+Mandatory clinical scope delivered:
+
+- clients
+- pets
+- appointments
+- services
+- professionals
+- medical records
+- vaccinations
+- prescriptions
+
+Commercial V1 delivered:
+
+- products
+- inventory
+- invoices
+
+Explicitly deferred to Pet V2:
+
+- subscriptions aligned with shared platform billing/governance
+- automatic reminders/notifications
+- client portal
+- advanced reports
+- external integrations
+
+## Pet V1 Implementation Notes
+
+Implemented backend domains now in active use:
+
+- `modules.pet.client`
+- `modules.pet.petprofile`
+- `modules.pet.appointment`
+- `modules.pet.servicecatalog`
+- `modules.pet.professional`
+- `modules.pet.medical.record`
+- `modules.pet.medical.vaccination`
+- `modules.pet.medical.prescription`
+- `modules.pet.product`
+- `modules.pet.inventory`
+- `modules.pet.invoice`
+
+Main architectural decisions:
+
+- existing core auth, tenant, RBAC and permission layers were reused; no PetFlow auth/user model was ported
+- legacy appointment `service_name` history was normalized into `pet_services`, and appointments now reference `service_id`
+- professionals, medical records, vaccinations and prescriptions were introduced as first-class tenant entities because the legacy implementation did not provide reusable modular boundaries for them
+- inventory is modeled as movement history plus current stock snapshot on product, keeping auditability without breaking the shared CRUD conventions elsewhere
+- subscriptions, reminders and client portal remain future work because they depend on broader shared-platform concerns and should not be hard-copied from a standalone product
+
+Main Pet V1 permissions:
+
+- `pet.client.read|create|update|delete`
+- `pet.profile.read|create|update|delete`
+- `pet.appointment.read|create|update|delete`
+- `pet.service.read|create|update|delete`
+- `pet.professional.read|create|update|delete`
+- `pet.medical-record.read|create|update|delete`
+- `pet.vaccination.read|create|update|delete`
+- `pet.prescription.read|create|update|delete`
+- `pet.product.read|create|update|delete`
+- `pet.inventory.read|create|update|delete`
+- `pet.invoice.read|create|update|delete`
+
 ## IoT Control Plane vs Data Plane
 
 - Control plane: administrative CRUD (`device`, alarms and operational metadata).
@@ -500,8 +629,19 @@ Current migration chain:
 - `V18__crm_companies_pipeline_deals.sql`
 - `V19__crm_tasks_notes_activity.sql`
 - `V20__crm_permissions_seed.sql`
+- `V21__iot_devices_registers.sql`
+- `V22__iot_telemetry_alarms.sql`
+- `V23__iot_maintenance_dashboard_permissions.sql`
+- `V24__pet_clients_pets.sql`
+- `V25__pet_appointments_services.sql`
+- `V26__pet_medical_records.sql`
+- `V27__pet_products_inventory_invoices.sql`
 
 Previous migrations were preserved; new changes are strictly incremental.
+
+Important note:
+
+- the requested Pet V1 migrations were introduced as `V24..V27`, not `V17..V20`, because the existing repository already had later Flyway versions allocated and reusing them would break the migration chain
 
 ## Test Architecture
 
@@ -522,6 +662,9 @@ Coverage includes:
 - CRM companies/contacts/leads/deals/pipeline/tasks/notes CRUD
 - CRM dashboard summary and activity feed
 - PET clients/profiles/appointments CRUD
+- PET services/professionals CRUD
+- PET medical records/vaccinations/prescriptions CRUD
+- PET products/inventory/invoices CRUD
 - IoT devices/alarms CRUD
 - IoT telemetry write/read
 - shared CRUD behavior (tenant filter + soft delete + paginated list contract)

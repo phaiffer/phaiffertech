@@ -9,6 +9,7 @@ public record PetClientUpdateRequest(
         @Email String email,
         String phone,
         String document,
+        String address,
         @NotBlank String status
 ) {
 }

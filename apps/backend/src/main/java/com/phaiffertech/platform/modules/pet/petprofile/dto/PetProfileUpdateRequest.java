@@ -14,6 +14,7 @@ public record PetProfileUpdateRequest(
         LocalDate birthDate,
         String gender,
         BigDecimal weight,
+        String color,
         String notes
 ) {
 }

@@ -39,7 +39,13 @@ const items = [
   { href: '/pet', label: 'Pet Home', anyOf: ['pet.client.read', 'pet.profile.read', 'pet.appointment.read'], moduleCode: 'PET' },
   { href: '/pet/clients', label: 'Pet Clients', anyOf: ['pet.client.read'], moduleCode: 'PET' },
   { href: '/pet/pets', label: 'Pet Profiles', anyOf: ['pet.profile.read'], moduleCode: 'PET' },
+  { href: '/pet/services', label: 'Pet Services', anyOf: ['pet.service.read'], moduleCode: 'PET' },
+  { href: '/pet/professionals', label: 'Pet Professionals', anyOf: ['pet.professional.read'], moduleCode: 'PET' },
   { href: '/pet/appointments', label: 'Pet Appointments', anyOf: ['pet.appointment.read'], moduleCode: 'PET' },
+  { href: '/pet/medical-records', label: 'Medical Records', anyOf: ['pet.medical-record.read'], moduleCode: 'PET' },
+  { href: '/pet/products', label: 'Pet Products', anyOf: ['pet.product.read'], moduleCode: 'PET' },
+  { href: '/pet/inventory', label: 'Pet Inventory', anyOf: ['pet.inventory.read'], moduleCode: 'PET' },
+  { href: '/pet/invoices', label: 'Pet Invoices', anyOf: ['pet.invoice.read'], moduleCode: 'PET' },
   {
     href: '/iot',
     label: 'IoT Home',

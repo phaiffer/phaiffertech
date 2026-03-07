@@ -21,7 +21,8 @@ public interface PetClientRepository extends JpaRepository<PetClient, UUID>, Bas
                    LOWER(c.name) LIKE LOWER(CONCAT('%', :search, '%')) OR
                    LOWER(COALESCE(c.email, '')) LIKE LOWER(CONCAT('%', :search, '%')) OR
                    LOWER(COALESCE(c.phone, '')) LIKE LOWER(CONCAT('%', :search, '%')) OR
-                   LOWER(COALESCE(c.document, '')) LIKE LOWER(CONCAT('%', :search, '%')))
+                   LOWER(COALESCE(c.document, '')) LIKE LOWER(CONCAT('%', :search, '%')) OR
+                   LOWER(COALESCE(c.address, '')) LIKE LOWER(CONCAT('%', :search, '%')))
             """)
     Page<PetClient> findAllByTenantIdAndSearch(
             @Param("tenantId") UUID tenantId,

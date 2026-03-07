@@ -26,6 +26,7 @@ public final class PetClientMapper implements BaseCrudMapper<
         client.setEmail(request.email());
         client.setPhone(request.phone());
         client.setDocument(request.document());
+        client.setAddress(request.address());
         client.setStatus(resolveStatus(request.status()));
         return client;
     }
@@ -38,6 +39,7 @@ public final class PetClientMapper implements BaseCrudMapper<
         entity.setEmail(request.email());
         entity.setPhone(request.phone());
         entity.setDocument(request.document());
+        entity.setAddress(request.address());
         entity.setStatus(resolveStatus(request.status()));
     }
 
@@ -49,6 +51,7 @@ public final class PetClientMapper implements BaseCrudMapper<
                 client.getEmail(),
                 client.getPhone(),
                 client.getDocument(),
+                client.getAddress(),
                 client.getStatus(),
                 client.getCreatedAt(),
                 client.getUpdatedAt()

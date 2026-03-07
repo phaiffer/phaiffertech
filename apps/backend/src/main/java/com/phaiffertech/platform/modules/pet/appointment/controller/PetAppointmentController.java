@@ -40,18 +40,20 @@ public class PetAppointmentController {
             @RequestParam(required = false) String status,
             @RequestParam(required = false) Instant scheduledFrom,
             @RequestParam(required = false) Instant scheduledTo,
-            @RequestParam(required = false) UUID assignedUserId,
+            @RequestParam(required = false) UUID professionalId,
             @RequestParam(required = false) UUID clientId,
-            @RequestParam(required = false) UUID petId
+            @RequestParam(required = false) UUID petId,
+            @RequestParam(required = false) UUID serviceId
     ) {
         return ApiResponse.success(service.list(
                 pageRequest,
                 status,
                 scheduledFrom,
                 scheduledTo,
-                assignedUserId,
+                professionalId,
                 clientId,
-                petId
+                petId,
+                serviceId
         ));
     }
 

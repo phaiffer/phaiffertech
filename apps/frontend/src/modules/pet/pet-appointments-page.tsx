@@ -5,7 +5,7 @@ import { ApiClientError } from '@/shared/lib/http';
 import { resolvePageItems, resolveTotalItems } from '@/shared/lib/pagination';
 import { petService } from '@/shared/services/pet-service';
 import { PageResponse } from '@/shared/types/common';
-import { PetAppointment, PetClient, PetProfile } from '@/shared/types/pet';
+import { PetAppointment, PetClient, PetProfessional, PetProfile, PetServiceCatalog } from '@/shared/types/pet';
 import { PermissionGuard } from '@/shared/auth/PermissionGuard';
 import { ConfirmDialog } from '@/shared/ui/confirm-dialog';
 import { DataTable, DataTableColumn } from '@/shared/ui/data-table';
@@ -57,6 +57,8 @@ export function PetAppointmentsPage() {
   const [pageData, setPageData] = useState<PageResponse<PetAppointment>>(initialPage);
   const [clients, setClients] = useState<PetClient[]>([]);
   const [profiles, setProfiles] = useState<PetProfile[]>([]);
+  const [services, setServices] = useState<PetServiceCatalog[]>([]);
+  const [professionals, setProfessionals] = useState<PetProfessional[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
@@ -66,12 +68,15 @@ export function PetAppointmentsPage() {
   const [statusFilter, setStatusFilter] = useState('');
   const [clientFilterId, setClientFilterId] = useState('');
   const [petFilterId, setPetFilterId] = useState('');
+  const [serviceFilterId, setServiceFilterId] = useState('');
+  const [professionalFilterId, setProfessionalFilterId] = useState('');
 
   const [editingId, setEditingId] = useState<string | null>(null);
   const [clientId, setClientId] = useState('');
   const [petId, setPetId] = useState('');
+  const [serviceId, setServiceId] = useState('');
+  const [professionalId, setProfessionalId] = useState('');
   const [scheduledAt, setScheduledAt] = useState('');
-  const [serviceName, setServiceName] = useState('');
   const [status, setStatus] = useState('SCHEDULED');
   const [notes, setNotes] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -112,6 +117,20 @@ export function PetAppointmentsPage() {
     ];
   }, [profiles]);
 
+  const serviceOptions = useMemo(() => {
+    return [
+      { value: '', label: 'Todos' },
+      ...services.map((service) => ({ value: service.id, label: service.name }))
+    ];
+  }, [services]);
+
+  const professionalOptions = useMemo(() => {
+    return [
+      { value: '', label: 'Todos' },
+      ...professionals.map((professional) => ({ value: professional.id, label: professional.name }))
+    ];
+  }, [professionals]);
+
   const formPetOptions = useMemo(() => {
     return [
       { value: '', label: 'Selecione um pet' },
@@ -119,18 +138,38 @@ export function PetAppointmentsPage() {
     ];
   }, [filteredProfiles]);
 
+  const formServiceOptions = useMemo(() => {
+    return [
+      { value: '', label: 'Selecione um serviço' },
+      ...services.map((service) => ({ value: service.id, label: service.name }))
+    ];
+  }, [services]);
+
+  const formProfessionalOptions = useMemo(() => {
+    return [
+      { value: '', label: 'Selecione um profissional' },
+      ...professionals.map((professional) => ({ value: professional.id, label: professional.name }))
+    ];
+  }, [professionals]);
+
   const loadReferences = useCallback(async () => {
     try {
-      const [clientPage, profilePage] = await Promise.all([
+      const [clientPage, profilePage, servicePage, professionalPage] = await Promise.all([
         petService.listClients(0, 200, ''),
-        petService.listProfiles(0, 200, '')
+        petService.listProfiles(0, 200, ''),
+        petService.listServices(0, 200, ''),
+        petService.listProfessionals(0, 200, '')
       ]);
 
       setClients(resolvePageItems(clientPage));
       setProfiles(resolvePageItems(profilePage));
+      setServices(resolvePageItems(servicePage));
+      setProfessionals(resolvePageItems(professionalPage));
     } catch {
       setClients([]);
       setProfiles([]);
+      setServices([]);
+      setProfessionals([]);
     }
   }, []);
 
@@ -139,7 +178,9 @@ export function PetAppointmentsPage() {
     currentSearch: string,
     currentStatus: string,
     currentClientId: string,
-    currentPetId: string
+    currentPetId: string,
+    currentServiceId: string,
+    currentProfessionalId: string
   ) => {
     setLoading(true);
     setError(null);
@@ -148,7 +189,9 @@ export function PetAppointmentsPage() {
       const result = await petService.listAppointments(page, pageSize, currentSearch, {
         status: currentStatus || undefined,
         clientId: currentClientId || undefined,
-        petId: currentPetId || undefined
+        petId: currentPetId || undefined,
+        serviceId: currentServiceId || undefined,
+        professionalId: currentProfessionalId || undefined
       });
       setPageData(result);
     } catch (err) {
@@ -164,15 +207,16 @@ export function PetAppointmentsPage() {
   }, [loadReferences]);
 
   useEffect(() => {
-    load(0, search, statusFilter, clientFilterId, petFilterId);
-  }, [load, search, statusFilter, clientFilterId, petFilterId]);
+    load(0, search, statusFilter, clientFilterId, petFilterId, serviceFilterId, professionalFilterId);
+  }, [load, search, statusFilter, clientFilterId, petFilterId, serviceFilterId, professionalFilterId]);
 
   function resetForm() {
     setEditingId(null);
     setClientId('');
     setPetId('');
+    setServiceId('');
+    setProfessionalId('');
     setScheduledAt('');
-    setServiceName('');
     setStatus('SCHEDULED');
     setNotes('');
   }
@@ -181,8 +225,9 @@ export function PetAppointmentsPage() {
     setEditingId(appointment.id);
     setClientId(appointment.clientId);
     setPetId(appointment.petId);
+    setServiceId(appointment.serviceId);
+    setProfessionalId(appointment.professionalId);
     setScheduledAt(toDateTimeLocal(appointment.scheduledAt));
-    setServiceName(appointment.serviceName);
     setStatus(appointment.status);
     setNotes(appointment.notes ?? '');
     setSuccess(null);
@@ -192,8 +237,8 @@ export function PetAppointmentsPage() {
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
-    if (!clientId || !petId) {
-      setError('Selecione cliente e pet para o atendimento.');
+    if (!clientId || !petId || !serviceId || !professionalId) {
+      setError('Selecione cliente, pet, serviço e profissional para o atendimento.');
       return;
     }
 
@@ -210,8 +255,9 @@ export function PetAppointmentsPage() {
     const payload = {
       clientId,
       petId,
+      serviceId,
+      professionalId,
       scheduledAt: isoScheduledAt,
-      serviceName,
       status,
       notes: notes || undefined
     };
@@ -226,7 +272,7 @@ export function PetAppointmentsPage() {
       }
 
       resetForm();
-      await load(pageData.page, search, statusFilter, clientFilterId, petFilterId);
+      await load(pageData.page, search, statusFilter, clientFilterId, petFilterId, serviceFilterId, professionalFilterId);
     } catch (err) {
       const message = err instanceof ApiClientError ? err.message : 'Erro ao salvar atendimento.';
       setError(message);
@@ -244,7 +290,7 @@ export function PetAppointmentsPage() {
       await petService.deleteAppointment(deleteCandidate.id);
       setDeleteCandidate(null);
       setSuccess('Atendimento removido com sucesso.');
-      await load(pageData.page, search, statusFilter, clientFilterId, petFilterId);
+      await load(pageData.page, search, statusFilter, clientFilterId, petFilterId, serviceFilterId, professionalFilterId);
     } catch (err) {
       const message = err instanceof ApiClientError ? err.message : 'Erro ao excluir atendimento.';
       setError(message);
@@ -287,6 +333,14 @@ export function PetAppointmentsPage() {
       }
     },
     {
+      key: 'professional',
+      header: 'Profissional',
+      render: (appointment) => {
+        const professional = professionals.find((entry) => entry.id === appointment.professionalId);
+        return professional?.name ?? appointment.professionalId;
+      }
+    },
+    {
       key: 'actions',
       header: 'Ações',
       render: (appointment) => (
@@ -323,11 +377,18 @@ export function PetAppointmentsPage() {
       <div className="space-y-5">
         <PageTitle title="Pet Appointments" description="Agenda de atendimentos com filtros e gerenciamento completo." />
 
-        <div className="grid gap-3 rounded-xl border border-slate-200 bg-white p-4 md:grid-cols-[1fr_180px_240px_240px_auto_auto]">
+        <div className="grid gap-3 rounded-xl border border-slate-200 bg-white p-4 md:grid-cols-[1fr_180px_220px_220px_220px_220px_auto_auto]">
           <SearchBar value={searchInput} onChange={setSearchInput} placeholder="Serviço, status, notas" />
           <FormSelect label="Status" value={statusFilter} options={statusOptions} onChange={setStatusFilter} />
           <FormSelect label="Cliente" value={clientFilterId} options={clientOptions} onChange={setClientFilterId} />
           <FormSelect label="Pet" value={petFilterId} options={petOptions} onChange={setPetFilterId} />
+          <FormSelect label="Serviço" value={serviceFilterId} options={serviceOptions} onChange={setServiceFilterId} />
+          <FormSelect
+            label="Profissional"
+            value={professionalFilterId}
+            options={professionalOptions}
+            onChange={setProfessionalFilterId}
+          />
           <button
             type="button"
             onClick={() => setSearch(searchInput)}
@@ -343,6 +404,8 @@ export function PetAppointmentsPage() {
               setStatusFilter('');
               setClientFilterId('');
               setPetFilterId('');
+              setServiceFilterId('');
+              setProfessionalFilterId('');
             }}
             className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700"
           >
@@ -354,8 +417,14 @@ export function PetAppointmentsPage() {
           <form onSubmit={handleSubmit} className="grid gap-3 rounded-xl border border-slate-200 bg-white p-4 md:grid-cols-3">
             <FormSelect label="Cliente" value={clientId} options={formClientOptions} onChange={setClientId} />
             <FormSelect label="Pet" value={petId} options={formPetOptions} onChange={setPetId} />
+            <FormSelect label="Serviço" value={serviceId} options={formServiceOptions} onChange={setServiceId} />
+            <FormSelect
+              label="Profissional"
+              value={professionalId}
+              options={formProfessionalOptions}
+              onChange={setProfessionalId}
+            />
             <DateTimeInput label="Data e hora" value={scheduledAt} onChange={setScheduledAt} required />
-            <FormInput label="Serviço" value={serviceName} onChange={setServiceName} required />
             <FormSelect label="Status" value={status} options={formStatusOptions} onChange={setStatus} />
             <FormInput label="Notas" value={notes} onChange={setNotes} />
 
@@ -395,7 +464,16 @@ export function PetAppointmentsPage() {
           page={pageData.page}
           totalPages={pageData.totalPages}
           totalElements={totalItems}
-          onPageChange={(nextPage) => load(nextPage, search, statusFilter, clientFilterId, petFilterId)}
+          onPageChange={(nextPage) =>
+            load(
+              nextPage,
+              search,
+              statusFilter,
+              clientFilterId,
+              petFilterId,
+              serviceFilterId,
+              professionalFilterId
+            )}
         />
 
         <ConfirmDialog

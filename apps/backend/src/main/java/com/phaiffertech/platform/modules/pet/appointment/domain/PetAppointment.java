@@ -21,6 +21,12 @@ public class PetAppointment extends BaseTenantEntity {
     @Column(name = "pet_id", nullable = false, columnDefinition = "char(36)")
     private UUID petId;
 
+    @Column(name = "service_id", columnDefinition = "char(36)")
+    private UUID serviceId;
+
+    @Column(name = "professional_id", columnDefinition = "char(36)")
+    private UUID professionalId;
+
     @Column(name = "scheduled_at", nullable = false)
     private Instant scheduledAt;
 
@@ -32,9 +38,6 @@ public class PetAppointment extends BaseTenantEntity {
 
     @Column(name = "notes", columnDefinition = "text")
     private String notes;
-
-    @Column(name = "assigned_user_id", columnDefinition = "char(36)")
-    private UUID assignedUserId;
 
     public UUID getClientId() {
         return clientId;
@@ -50,6 +53,22 @@ public class PetAppointment extends BaseTenantEntity {
 
     public void setPetId(UUID petId) {
         this.petId = petId;
+    }
+
+    public UUID getServiceId() {
+        return serviceId;
+    }
+
+    public void setServiceId(UUID serviceId) {
+        this.serviceId = serviceId;
+    }
+
+    public UUID getProfessionalId() {
+        return professionalId;
+    }
+
+    public void setProfessionalId(UUID professionalId) {
+        this.professionalId = professionalId;
     }
 
     public Instant getScheduledAt() {
@@ -82,13 +101,5 @@ public class PetAppointment extends BaseTenantEntity {
 
     public void setNotes(String notes) {
         this.notes = notes;
-    }
-
-    public UUID getAssignedUserId() {
-        return assignedUserId;
-    }
-
-    public void setAssignedUserId(UUID assignedUserId) {
-        this.assignedUserId = assignedUserId;
     }
 }

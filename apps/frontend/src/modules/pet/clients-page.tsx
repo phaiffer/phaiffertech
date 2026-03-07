@@ -51,6 +51,7 @@ export function PetClientsPage() {
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [document, setDocument] = useState('');
+  const [address, setAddress] = useState('');
   const [status, setStatus] = useState('ACTIVE');
   const [submitting, setSubmitting] = useState(false);
 
@@ -82,6 +83,7 @@ export function PetClientsPage() {
     setEmail('');
     setPhone('');
     setDocument('');
+    setAddress('');
     setStatus('ACTIVE');
   }
 
@@ -91,6 +93,7 @@ export function PetClientsPage() {
     setEmail(client.email ?? '');
     setPhone(client.phone ?? '');
     setDocument(client.document ?? '');
+    setAddress(client.address ?? '');
     setStatus(client.status);
     setSuccess(null);
     setError(null);
@@ -110,6 +113,7 @@ export function PetClientsPage() {
           email: email || undefined,
           phone: phone || undefined,
           document: document || undefined,
+          address: address || undefined,
           status
         });
         setSuccess('Cliente atualizado com sucesso.');
@@ -119,6 +123,7 @@ export function PetClientsPage() {
           email: email || undefined,
           phone: phone || undefined,
           document: document || undefined,
+          address: address || undefined,
           status
         });
         setSuccess('Cliente criado com sucesso.');
@@ -170,6 +175,11 @@ export function PetClientsPage() {
       render: (client) => client.phone ?? '-'
     },
     {
+      key: 'address',
+      header: 'Endereço',
+      render: (client) => client.address ?? '-'
+    },
+    {
       key: 'status',
       header: 'Status',
       render: (client) => client.status
@@ -212,7 +222,7 @@ export function PetClientsPage() {
         <PageTitle title="Pet Clients" description="Gestão de clientes do módulo PET com busca, paginação e soft delete." />
 
         <div className="grid gap-3 rounded-xl border border-slate-200 bg-white p-4 md:grid-cols-[1fr_180px_auto_auto]">
-          <SearchBar value={searchInput} onChange={setSearchInput} placeholder="Nome, email, telefone" />
+          <SearchBar value={searchInput} onChange={setSearchInput} placeholder="Nome, email, telefone, endereço" />
           <FormSelect label="Status" value={statusFilter} options={statusOptions} onChange={setStatusFilter} />
           <button
             type="button"
@@ -240,6 +250,7 @@ export function PetClientsPage() {
             <FormInput label="Email" value={email} onChange={setEmail} type="email" />
             <FormInput label="Telefone" value={phone} onChange={setPhone} />
             <FormInput label="Documento" value={document} onChange={setDocument} />
+            <FormInput label="Endereço" value={address} onChange={setAddress} />
             <FormSelect label="Status" value={status} options={formStatusOptions} onChange={setStatus} />
 
             <div className="md:col-span-2 flex gap-2">

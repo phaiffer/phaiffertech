@@ -10,6 +10,10 @@ import com.phaiffertech.platform.modules.pet.appointment.repository.PetAppointme
 import com.phaiffertech.platform.modules.pet.client.repository.PetClientRepository;
 import com.phaiffertech.platform.modules.pet.petprofile.domain.PetProfile;
 import com.phaiffertech.platform.modules.pet.petprofile.repository.PetProfileRepository;
+import com.phaiffertech.platform.modules.pet.professional.domain.PetProfessional;
+import com.phaiffertech.platform.modules.pet.professional.repository.PetProfessionalRepository;
+import com.phaiffertech.platform.modules.pet.servicecatalog.domain.PetServiceCatalog;
+import com.phaiffertech.platform.modules.pet.servicecatalog.repository.PetServiceCatalogRepository;
 import com.phaiffertech.platform.shared.crud.BasePageQuery;
 import com.phaiffertech.platform.shared.crud.BaseSearchSpecificationBuilder;
 import com.phaiffertech.platform.shared.crud.BaseTenantCrudService;
@@ -34,29 +38,35 @@ public class PetAppointmentService extends BaseTenantCrudService<
     private final PetAppointmentRepository repository;
     private final PetClientRepository petClientRepository;
     private final PetProfileRepository petProfileRepository;
+    private final PetServiceCatalogRepository petServiceCatalogRepository;
+    private final PetProfessionalRepository petProfessionalRepository;
     private final PlatformMetricsService platformMetricsService;
 
     public PetAppointmentService(
             PetAppointmentRepository repository,
             PetClientRepository petClientRepository,
             PetProfileRepository petProfileRepository,
+            PetServiceCatalogRepository petServiceCatalogRepository,
+            PetProfessionalRepository petProfessionalRepository,
             PlatformMetricsService platformMetricsService
     ) {
         super(repository, repository, PetAppointmentMapper.INSTANCE, "Pet appointment not found.");
         this.repository = repository;
         this.petClientRepository = petClientRepository;
         this.petProfileRepository = petProfileRepository;
+        this.petServiceCatalogRepository = petServiceCatalogRepository;
+        this.petProfessionalRepository = petProfessionalRepository;
         this.platformMetricsService = platformMetricsService;
     }
 
     @Override
     public void beforeCreate(UUID tenantId, PetAppointmentCreateRequest request, PetAppointment entity) {
-        validateRelations(tenantId, request.clientId(), request.petId());
+        hydrateAndValidateRelations(tenantId, request.clientId(), request.petId(), request.serviceId(), request.professionalId(), entity);
     }
 
     @Override
     public void beforeUpdate(UUID tenantId, PetAppointmentUpdateRequest request, PetAppointment entity) {
-        validateRelations(tenantId, request.clientId(), request.petId());
+        hydrateAndValidateRelations(tenantId, request.clientId(), request.petId(), request.serviceId(), request.professionalId(), entity);
     }
 
     @Transactional
@@ -73,9 +83,10 @@ public class PetAppointmentService extends BaseTenantCrudService<
             String status,
             Instant scheduledFrom,
             Instant scheduledTo,
-            UUID assignedUserId,
+            UUID professionalId,
             UUID clientId,
-            UUID petId
+            UUID petId,
+            UUID serviceId
     ) {
         return doList(
                 pageRequest,
@@ -83,9 +94,10 @@ public class PetAppointmentService extends BaseTenantCrudService<
                 (BasePageQuery query) -> repository.findAllByTenantIdAndSearch(
                         currentTenantId(),
                         BaseSearchSpecificationBuilder.normalizeUpper(status),
-                        assignedUserId,
+                        professionalId,
                         clientId,
                         petId,
+                        serviceId,
                         scheduledFrom,
                         scheduledTo,
                         query.search(),
@@ -117,7 +129,14 @@ public class PetAppointmentService extends BaseTenantCrudService<
         return doRestore(id);
     }
 
-    private void validateRelations(UUID tenantId, UUID clientId, UUID petId) {
+    private void hydrateAndValidateRelations(
+            UUID tenantId,
+            UUID clientId,
+            UUID petId,
+            UUID serviceId,
+            UUID professionalId,
+            PetAppointment entity
+    ) {
         petClientRepository.findByIdAndTenantId(clientId, tenantId)
                 .orElseThrow(() -> new ResourceNotFoundException("Pet client not found for tenant."));
 
@@ -127,5 +146,15 @@ public class PetAppointmentService extends BaseTenantCrudService<
         if (!profile.getClientId().equals(clientId)) {
             throw new ResourceNotFoundException("Pet profile does not belong to the informed client.");
         }
+
+        PetServiceCatalog serviceCatalog = petServiceCatalogRepository.findByIdAndTenantId(serviceId, tenantId)
+                .orElseThrow(() -> new ResourceNotFoundException("Pet service not found for tenant."));
+
+        PetProfessional professional = petProfessionalRepository.findByIdAndTenantId(professionalId, tenantId)
+                .orElseThrow(() -> new ResourceNotFoundException("Pet professional not found for tenant."));
+
+        entity.setServiceId(serviceCatalog.getId());
+        entity.setServiceName(serviceCatalog.getName());
+        entity.setProfessionalId(professional.getId());
     }
 }

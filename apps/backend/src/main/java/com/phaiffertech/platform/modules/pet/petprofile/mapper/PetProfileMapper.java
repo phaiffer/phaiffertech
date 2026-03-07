@@ -27,6 +27,7 @@ public final class PetProfileMapper implements BaseCrudMapper<
         profile.setBirthDate(request.birthDate());
         profile.setGender(normalizeUpper(request.gender()));
         profile.setWeight(request.weight());
+        profile.setColor(request.color());
         profile.setNotes(request.notes());
         return profile;
     }
@@ -40,6 +41,7 @@ public final class PetProfileMapper implements BaseCrudMapper<
         entity.setBirthDate(request.birthDate());
         entity.setGender(normalizeUpper(request.gender()));
         entity.setWeight(request.weight());
+        entity.setColor(request.color());
         entity.setNotes(request.notes());
     }
 
@@ -54,6 +56,7 @@ public final class PetProfileMapper implements BaseCrudMapper<
                 profile.getBirthDate(),
                 profile.getGender(),
                 profile.getWeight(),
+                profile.getColor(),
                 profile.getNotes(),
                 profile.getCreatedAt(),
                 profile.getUpdatedAt()

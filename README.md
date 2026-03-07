@@ -94,6 +94,50 @@ Gap decision summary:
 | conversations | adiar para CRM V2 |
 | chatbot | adiar para CRM V2 |
 
+## Pet Delivery Status
+
+The legacy PetFlow reference was analyzed in `../petflow` strictly as a functional reference. Main conclusions:
+
+- Legacy domains effectively implemented: clients/tutors, pets, appointments/agenda, products, inventory transactions, subscriptions, finance/invoices, dashboard/reports and client portal endpoints.
+- Legacy business flows retained as reference: client/pet deactivation cascades to scheduled appointments, tenant/company ownership validation on clinical actions, stock cannot go negative, and subscription-covered appointments should not be invoiced twice.
+- Legacy gaps also mattered: PetFlow does not expose mature standalone modules for service catalog, professionals, medical records, vaccinations or prescriptions, so these were modeled natively for the SaaS platform instead of being copied blindly.
+- Multi-tenant SaaS concerns were not reusable from legacy; tenant isolation, auth, RBAC and permissions remain owned by platform core.
+
+Gap decision summary for Pet V1:
+
+| Funcionalidade | Status na nova plataforma |
+| --- | --- |
+| clients | já implementado |
+| pets | já implementado |
+| appointments | já implementado |
+| services | já implementado |
+| professionals | já implementado |
+| medical records | já implementado |
+| vaccinations | já implementado |
+| prescriptions | já implementado |
+| products | já implementado |
+| inventory | já implementado |
+| invoices | já implementado |
+| subscriptions | adiar para Pet V2 |
+| notifications / reminders | adiar para Pet V2 |
+| reports | adiar para Pet V2 |
+| agenda | parcialmente implementado |
+| client portal | adiar para Pet V2 |
+
+Pet V1 delivered in this platform:
+
+- clinical base: clients, pets, appointments, services, professionals, medical records, vaccinations and prescriptions
+- commercial base: products, inventory and invoices
+- SaaS guarantees: tenant-aware CRUD, granular permissions, soft delete, standard pagination and Next.js management pages
+
+Deferred to Pet V2:
+
+- subscription lifecycle aligned with shared platform billing/governance
+- automatic reminders/notifications
+- client portal
+- advanced reports
+- external integrations
+
 ## IoT Delivery Status
 
 The legacy IoT reference at `../iotsystem` was analyzed only as a functional and technical reference. Main legacy findings:
@@ -168,6 +212,13 @@ Deferred to IoT V2:
 - `V21__iot_devices_registers.sql`
 - `V22__iot_telemetry_alarms.sql`
 - `V23__iot_maintenance_dashboard_permissions.sql`
+- `V24__pet_clients_pets.sql`
+- `V25__pet_appointments_services.sql`
+- `V26__pet_medical_records.sql`
+- `V27__pet_products_inventory_invoices.sql`
+
+Note:
+- Pet V1 expansion requested originally as `V17..V20` was created as `V24..V27`, because `V17..V23` were already allocated in the existing Flyway chain and could not be reused safely.
 
 ## Main Endpoints (`/api/v1`)
 
@@ -228,6 +279,38 @@ Deferred to IoT V2:
   - `GET|POST /pet/appointments`
   - `GET|PUT|DELETE /pet/appointments/{id}`
   - `PATCH /pet/appointments/{id}/restore`
+- Pet services:
+  - `GET|POST /pet/services`
+  - `GET|PUT|DELETE /pet/services/{id}`
+  - `PATCH /pet/services/{id}/restore`
+- Pet professionals:
+  - `GET|POST /pet/professionals`
+  - `GET|PUT|DELETE /pet/professionals/{id}`
+  - `PATCH /pet/professionals/{id}/restore`
+- Pet medical records:
+  - `GET|POST /pet/medical-records`
+  - `GET|PUT|DELETE /pet/medical-records/{id}`
+  - `PATCH /pet/medical-records/{id}/restore`
+- Pet vaccinations:
+  - `GET|POST /pet/vaccinations`
+  - `GET|PUT|DELETE /pet/vaccinations/{id}`
+  - `PATCH /pet/vaccinations/{id}/restore`
+- Pet prescriptions:
+  - `GET|POST /pet/prescriptions`
+  - `GET|PUT|DELETE /pet/prescriptions/{id}`
+  - `PATCH /pet/prescriptions/{id}/restore`
+- Pet products:
+  - `GET|POST /pet/products`
+  - `GET|PUT|DELETE /pet/products/{id}`
+  - `PATCH /pet/products/{id}/restore`
+- Pet inventory:
+  - `GET|POST /pet/inventory`
+  - `GET|PUT|DELETE /pet/inventory/{id}`
+  - `PATCH /pet/inventory/{id}/restore`
+- Pet invoices:
+  - `GET|POST /pet/invoices`
+  - `GET|PUT|DELETE /pet/invoices/{id}`
+  - `PATCH /pet/invoices/{id}/restore`
 - IoT devices:
   - `GET|POST /iot/devices`
   - `GET|PUT|DELETE /iot/devices/{id}`
@@ -276,6 +359,12 @@ Implemented pages:
   - `/pet/clients`
   - `/pet/pets`
   - `/pet/appointments`
+  - `/pet/services`
+  - `/pet/professionals`
+  - `/pet/medical-records`
+  - `/pet/products`
+  - `/pet/inventory`
+  - `/pet/invoices`
 - IoT:
   - `/iot`
   - `/iot/dashboard`
@@ -370,6 +459,9 @@ Current coverage includes:
 - CRM companies/deals/pipeline/tasks/notes CRUD
 - CRM dashboard summary and activity feed
 - PET clients/profiles/appointments CRUD
+- PET services/professionals CRUD
+- PET medical records/vaccinations/prescriptions CRUD
+- PET products/inventory/invoices CRUD
 - IoT devices/alarms CRUD
 - IoT telemetry write/read
 - shared CRUD behavior (soft delete, tenant filter, pagination behavior)
