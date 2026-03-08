@@ -1,45 +1,17 @@
 'use client';
 
-import { ReactNode, useMemo } from 'react';
+import { ReactNode } from 'react';
 import Link from 'next/link';
 import { usePublicSite } from '@/shared/public/public-site-provider';
+import { getPublicSiteMessages } from '@/shared/public/public-site-messages';
 
 type PublicSiteShellProps = {
   children: ReactNode;
 };
 
-const copy = {
-  'pt-BR': {
-    brandEyebrow: 'Phaiffer Platform',
-    brandTitle: 'SaaS Control Plane',
-    navPlatform: 'Plataforma',
-    navModules: 'Módulos',
-    navArchitecture: 'Arquitetura',
-    navLogin: 'Entrar',
-    navHome: 'Início',
-    themeLight: 'Light',
-    themeDark: 'Dark',
-    localeLabel: 'Idioma',
-    footerText: 'PhaifferTech Platform · Institutional shell prepared for bilingual public experience.'
-  },
-  'en-US': {
-    brandEyebrow: 'Phaiffer Platform',
-    brandTitle: 'SaaS Control Plane',
-    navPlatform: 'Platform',
-    navModules: 'Modules',
-    navArchitecture: 'Architecture',
-    navLogin: 'Login',
-    navHome: 'Home',
-    themeLight: 'Light',
-    themeDark: 'Dark',
-    localeLabel: 'Language',
-    footerText: 'PhaifferTech Platform · Institutional shell prepared for a bilingual public experience.'
-  }
-} as const;
-
 export function PublicSiteShell({ children }: PublicSiteShellProps) {
   const { locale, theme, setLocale, setTheme } = usePublicSite();
-  const t = useMemo(() => copy[locale], [locale]);
+  const t = getPublicSiteMessages(locale).shell;
 
   return (
     <div className="min-h-screen bg-[var(--background)] text-[var(--foreground)] transition-colors">

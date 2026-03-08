@@ -1,97 +1,12 @@
 'use client';
 
-import { useMemo } from 'react';
 import Link from 'next/link';
 import { usePublicSite } from '@/shared/public/public-site-provider';
-
-const copy = {
-  'pt-BR': {
-    heroEyebrow: 'Plataforma modular para operações reais',
-    heroTitle: 'Software institucional e produto SaaS na mesma base.',
-    heroDescription:
-      'Uma experiência pública mais limpa para apresentação comercial, conectada a uma plataforma multi-tenant com CRM, IoT e PetFlow.',
-    heroPrimaryCta: 'Acessar plataforma',
-    heroSecondaryCta: 'Ver arquitetura',
-    platformCardEyebrow: 'Multi-tenant',
-    platformCardTitle: 'JWT + RBAC + Modules',
-    platformCardText:
-      'Camada pública conectada a uma plataforma operacional com isolamento por tenant, permissões e habilitação modular.',
-    frontendCardEyebrow: 'Frontend',
-    frontendCardTitle: 'Next.js App Router',
-    backendCardEyebrow: 'Backend',
-    backendCardTitle: 'Spring Boot + Multi-tenant',
-    modulesTitle: 'Capacidades da plataforma',
-    modulesDescription:
-      'Apresente apenas o que faz sentido para cada cliente, sem poluição visual e com separação clara entre produto, operação e contexto comercial.',
-    moduleCoreTitle: 'Core Platform',
-    moduleCoreText:
-      'Auth, tenants, IAM, settings, attachments, audit, subscription e governança central.',
-    moduleCrmTitle: 'CRM',
-    moduleCrmText:
-      'Leads, deals, contacts, pipeline, tasks, notes e visão comercial operacional.',
-    moduleIotTitle: 'IoT',
-    moduleIotText:
-      'Devices, telemetry, alarms, maintenance, reports e narrativa executiva para demo.',
-    modulePetTitle: 'PetFlow',
-    modulePetText:
-      'Clientes, pets, agenda, medical workflow, inventory, invoices e operação clínica.',
-    architectureEyebrow: 'Architecture',
-    architectureTitle: 'Base preparada para evolução',
-    architectureText:
-      'Esta camada pública já fica pronta para evoluir com internacionalização completa, dark/light mode e integração visual com a plataforma autenticada.',
-    ctaEyebrow: 'Pronto para apresentar',
-    ctaTitle: 'Uma entrada institucional mais forte para vender melhor o produto.',
-    ctaText:
-      'Ajuste a narrativa pública da PhaifferTech antes de seguir com o refinamento dos módulos internos.',
-    ctaPrimary: 'Acessar plataforma',
-    ctaSecondary: 'Ir para login'
-  },
-  'en-US': {
-    heroEyebrow: 'Modular platform for real operations',
-    heroTitle: 'Institutional software and SaaS product in the same foundation.',
-    heroDescription:
-      'A cleaner public-facing experience for commercial presentations, connected to a multi-tenant platform with CRM, IoT and PetFlow.',
-    heroPrimaryCta: 'Open platform',
-    heroSecondaryCta: 'View architecture',
-    platformCardEyebrow: 'Multi-tenant',
-    platformCardTitle: 'JWT + RBAC + Modules',
-    platformCardText:
-      'Public layer connected to an operational platform with tenant isolation, permissions and modular enablement.',
-    frontendCardEyebrow: 'Frontend',
-    frontendCardTitle: 'Next.js App Router',
-    backendCardEyebrow: 'Backend',
-    backendCardTitle: 'Spring Boot + Multi-tenant',
-    modulesTitle: 'Platform capabilities',
-    modulesDescription:
-      'Present only what matters to each customer, without visual noise and with clear separation between product, operations and commercial context.',
-    moduleCoreTitle: 'Core Platform',
-    moduleCoreText:
-      'Auth, tenants, IAM, settings, attachments, audit, subscription and central governance.',
-    moduleCrmTitle: 'CRM',
-    moduleCrmText:
-      'Leads, deals, contacts, pipeline, tasks, notes and operational commercial visibility.',
-    moduleIotTitle: 'IoT',
-    moduleIotText:
-      'Devices, telemetry, alarms, maintenance, reports and executive demo storytelling.',
-    modulePetTitle: 'PetFlow',
-    modulePetText:
-      'Clients, pets, scheduling, medical workflow, inventory, invoices and clinic operations.',
-    architectureEyebrow: 'Architecture',
-    architectureTitle: 'Foundation ready for evolution',
-    architectureText:
-      'This public layer is ready to evolve with full internationalization, dark/light mode and visual integration with the authenticated platform.',
-    ctaEyebrow: 'Presentation ready',
-    ctaTitle: 'A stronger institutional entry point to sell the product better.',
-    ctaText:
-      'Adjust the public narrative of PhaifferTech before continuing with the refinement of the internal modules.',
-    ctaPrimary: 'Open platform',
-    ctaSecondary: 'Go to login'
-  }
-} as const;
+import { getPublicSiteMessages } from '@/shared/public/public-site-messages';
 
 export default function PublicHomePage() {
   const { locale } = usePublicSite();
-  const t = useMemo(() => copy[locale], [locale]);
+  const t = getPublicSiteMessages(locale).home;
 
   return (
     <>

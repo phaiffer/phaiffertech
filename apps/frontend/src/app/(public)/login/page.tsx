@@ -1,66 +1,12 @@
 'use client';
 
-import { FormEvent, useEffect, useMemo, useState } from 'react';
+import { FormEvent, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { authService } from '@/shared/services/auth-service';
 import { ApiClientError } from '@/shared/lib/http';
 import { useAuth } from '@/shared/hooks/use-auth';
 import { usePublicSite } from '@/shared/public/public-site-provider';
-
-const copy = {
-  'pt-BR': {
-    eyebrow: 'Acesso à plataforma',
-    title: 'Entre na PhaifferTech Platform',
-    description:
-      'Acesse a operação multi-tenant com permissões, módulos habilitados por contrato e visão executiva por contexto de negócio.',
-    tenantCodeLabel: 'Tenant Code',
-    emailLabel: 'E-mail',
-    passwordLabel: 'Senha',
-    submitLabel: 'Entrar',
-    loadingLabel: 'Entrando...',
-    helperTitle: 'Ambiente institucional + operação SaaS',
-    helperText:
-      'A área pública apresenta a proposta da plataforma. A área autenticada entrega a operação real com CRM, IoT e PetFlow conforme o escopo contratado.',
-    contractTitle: 'Experiência orientada por contrato',
-    contractText:
-      'Cada cliente visualiza apenas os módulos e permissões compatíveis com o plano contratado.',
-    governanceTitle: 'Governança central',
-    governanceText:
-      'Autenticação, tenants, IAM, settings e trilha operacional integrados na mesma base.',
-    demoTitle: 'Narrativa pronta para demo',
-    demoText:
-      'A apresentação institucional e os dashboards operacionais seguem a mesma identidade visual.',
-    errorFallback: 'Falha inesperada ao autenticar.',
-    demoEmail: 'Demo e-mail',
-    demoPassword: 'Demo password'
-  },
-  'en-US': {
-    eyebrow: 'Platform access',
-    title: 'Sign in to PhaifferTech Platform',
-    description:
-      'Access a multi-tenant operation with permissions, contract-based modules and executive visibility by business context.',
-    tenantCodeLabel: 'Tenant Code',
-    emailLabel: 'Email',
-    passwordLabel: 'Password',
-    submitLabel: 'Sign in',
-    loadingLabel: 'Signing in...',
-    helperTitle: 'Institutional experience + SaaS operation',
-    helperText:
-      'The public area presents the platform narrative. The authenticated area delivers the real operation with CRM, IoT and PetFlow according to the contracted scope.',
-    contractTitle: 'Contract-oriented experience',
-    contractText:
-      'Each customer only sees the modules and permissions that match the contracted plan.',
-    governanceTitle: 'Central governance',
-    governanceText:
-      'Authentication, tenants, IAM, settings and operational traceability integrated in the same foundation.',
-    demoTitle: 'Demo-ready narrative',
-    demoText:
-      'The institutional presentation and the operational dashboards follow the same visual identity.',
-    errorFallback: 'Unexpected authentication failure.',
-    demoEmail: 'Demo email',
-    demoPassword: 'Demo password'
-  }
-} as const;
+import { getPublicSiteMessages } from '@/shared/public/public-site-messages';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -74,6 +20,8 @@ export default function LoginPage() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const t = getPublicSiteMessages(locale).login;
+
   useEffect(() => {
     if (!isLoading && isAuthenticated) {
       router.replace('/dashboard');
@@ -84,8 +32,6 @@ export default function LoginPage() {
     const params = new URLSearchParams(window.location.search);
     setNextRoute(params.get('next') || '/dashboard');
   }, []);
-
-  const t = useMemo(() => copy[locale], [locale]);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -203,7 +149,7 @@ export default function LoginPage() {
         <aside className="grid gap-4">
           <section className="rounded-[2rem] border border-[var(--border)] bg-[var(--surface)] p-8 shadow-card">
             <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-slate-500">
-              Platform context
+              {t.platformContextEyebrow}
             </p>
             <h2 className="mt-3 text-2xl font-semibold text-[var(--foreground)]">
               {t.helperTitle}
@@ -214,7 +160,7 @@ export default function LoginPage() {
           <div className="grid gap-4 sm:grid-cols-2">
             <section className="rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-6 shadow-card">
               <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-500">
-                Contract scope
+                {t.contractScopeEyebrow}
               </p>
               <h3 className="mt-2 text-lg font-semibold text-[var(--foreground)]">
                 {t.contractTitle}
@@ -224,7 +170,7 @@ export default function LoginPage() {
 
             <section className="rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-6 shadow-card">
               <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-500">
-                Governance
+                {t.governanceEyebrow}
               </p>
               <h3 className="mt-2 text-lg font-semibold text-[var(--foreground)]">
                 {t.governanceTitle}
@@ -235,7 +181,7 @@ export default function LoginPage() {
 
           <section className="rounded-[2rem] border border-[var(--border)] bg-[var(--surface)] p-6 shadow-card">
             <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-500">
-              Demo readiness
+              {t.demoReadinessEyebrow}
             </p>
             <h3 className="mt-2 text-lg font-semibold text-[var(--foreground)]">
               {t.demoTitle}
