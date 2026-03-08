@@ -5,6 +5,7 @@ import { PermissionGuard } from '@/shared/auth/PermissionGuard';
 import { DashboardSection } from '@/shared/dashboard/dashboard-section';
 import { EmptyStateCard } from '@/shared/dashboard/empty-state-card';
 import { MetricGrid } from '@/shared/dashboard/metric-grid';
+import { SummaryCard } from '@/shared/dashboard/summary-card';
 import { ApiClientError } from '@/shared/lib/http';
 import { iotService } from '@/shared/services/iot-service';
 import { IotDashboardSummary } from '@/shared/types/iot';
@@ -92,8 +93,8 @@ export function IotDashboardPage() {
           <>
             <MetricGrid cards={executiveCards} columns="md:grid-cols-2 xl:grid-cols-3" />
 
-            <section className="rounded-3xl border border-slate-200 bg-panel p-5 shadow-card">
-              <div className="mb-5">
+            <section className="space-y-4">
+              <div>
                 <h2 className="text-base font-semibold text-ink">Demo Narrative</h2>
                 <p className="mt-1 text-sm text-slate-500">
                   Use esta leitura para conduzir reuniões comerciais: comece pelo panorama executivo,
@@ -103,57 +104,49 @@ export function IotDashboardPage() {
               </div>
 
               <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-                <a
-                  href="/iot/devices"
-                  className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition hover:border-action hover:shadow-md"
-                >
-                  <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
-                    Step 1
-                  </div>
-                  <div className="mt-2 text-sm font-semibold text-slate-900">Inspect fleet</div>
-                  <div className="mt-1 text-sm text-slate-500">
-                    Review device inventory, status and operational footprint.
-                  </div>
-                </a>
+                <SummaryCard
+                  card={{
+                    key: 'iot-demo-step-1',
+                    label: 'Step 1 — Inspect fleet',
+                    value: summary.totalDevices,
+                    status: summary.offlineDevices > 0 ? 'warn' : 'ok',
+                    href: '/iot/devices',
+                    trend: 'Review device inventory, status and operational footprint.'
+                  }}
+                />
 
-                <a
-                  href="/iot/alarms"
-                  className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition hover:border-action hover:shadow-md"
-                >
-                  <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
-                    Step 2
-                  </div>
-                  <div className="mt-2 text-sm font-semibold text-slate-900">Review alarm pressure</div>
-                  <div className="mt-1 text-sm text-slate-500">
-                    Show open alarms, severity concentration and acknowledge workflow.
-                  </div>
-                </a>
+                <SummaryCard
+                  card={{
+                    key: 'iot-demo-step-2',
+                    label: 'Step 2 — Review alarm pressure',
+                    value: summary.totalAlarmsOpen,
+                    status: summary.totalAlarmsOpen > 0 ? 'alert' : 'ok',
+                    href: '/iot/alarms',
+                    trend: 'Show open alarms, severity concentration and acknowledge workflow.'
+                  }}
+                />
 
-                <a
-                  href="/iot/telemetry"
-                  className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition hover:border-action hover:shadow-md"
-                >
-                  <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
-                    Step 3
-                  </div>
-                  <div className="mt-2 text-sm font-semibold text-slate-900">Inspect telemetry</div>
-                  <div className="mt-1 text-sm text-slate-500">
-                    Confirm recent readings, thresholds and device-level traceability.
-                  </div>
-                </a>
+                <SummaryCard
+                  card={{
+                    key: 'iot-demo-step-3',
+                    label: 'Step 3 — Inspect telemetry',
+                    value: summary.telemetryPointsLast24h,
+                    status: summary.telemetryPointsLast24h > 0 ? 'info' : 'warn',
+                    href: '/iot/telemetry',
+                    trend: 'Confirm recent readings, thresholds and device-level traceability.'
+                  }}
+                />
 
-                <a
-                  href="/iot/maintenance"
-                  className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition hover:border-action hover:shadow-md"
-                >
-                  <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
-                    Step 4
-                  </div>
-                  <div className="mt-2 text-sm font-semibold text-slate-900">Close the loop</div>
-                  <div className="mt-1 text-sm text-slate-500">
-                    Link incidents to maintenance backlog and operational response.
-                  </div>
-                </a>
+                <SummaryCard
+                  card={{
+                    key: 'iot-demo-step-4',
+                    label: 'Step 4 — Close the loop',
+                    value: summary.pendingMaintenance,
+                    status: summary.pendingMaintenance > 0 ? 'warn' : 'ok',
+                    href: '/iot/maintenance',
+                    trend: 'Link incidents to maintenance backlog and operational response.'
+                  }}
+                />
               </div>
             </section>
 
