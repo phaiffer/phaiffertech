@@ -290,11 +290,20 @@ export function buildIotFleetRecencySection(summary: IotDashboardSummary): Dashb
 }
 
 export function orderIotDashboardSections(sections: DashboardSection[]) {
+  /**
+   * Orders dashboard sections following a clear operational narrative.
+   *
+   * 1. Operational overview (executive snapshot)
+   * 2. Fleet recency (device freshness)
+   * 3. Alarm pressure
+   * 4. Any additional backend-provided sections
+   */
+
   const preferredOrder = [
-    'iot-alarms',
-    'iot-last-seen',
+    'iot-operational-overview',
     'iot-fleet-recency-overview',
-    'iot-operational-overview'
+    'iot-alarms',
+    'iot-last-seen'
   ];
 
   return [...sections].sort((left, right) => {
