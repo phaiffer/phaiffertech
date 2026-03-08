@@ -9,6 +9,7 @@ PASSWORD="${PASSWORD:-Admin@123}"
 
 WORK_DIR="$(mktemp -d)"
 ACCESS_TOKEN=""
+RUN_SUFFIX="$(date +%s)"
 DEVICE_ID=""
 REGISTER_ID=""
 ALARM_ID=""
@@ -150,11 +151,50 @@ print(json.dumps(data, indent=2, ensure_ascii=False))
 PY
 }
 
+delete_created_resources() {
+  if [[ -n "${MAINTENANCE_ID}" ]]; then
+    local maintenance_delete_response="${WORK_DIR}/maintenance_delete.json"
+    local maintenance_delete_status
+    maintenance_delete_status="$(request "DELETE" "/iot/maintenance/${MAINTENANCE_ID}" "" "${maintenance_delete_response}")"
+    if [[ "${maintenance_delete_status}" -ge 200 && "${maintenance_delete_status}" -lt 300 ]]; then
+      log "Deleted validation maintenance: ${MAINTENANCE_ID}"
+    fi
+  fi
+
+  if [[ -n "${ALARM_ID}" ]]; then
+    local alarm_delete_response="${WORK_DIR}/alarm_delete.json"
+    local alarm_delete_status
+    alarm_delete_status="$(request "DELETE" "/iot/alarms/${ALARM_ID}" "" "${alarm_delete_response}")"
+    if [[ "${alarm_delete_status}" -ge 200 && "${alarm_delete_status}" -lt 300 ]]; then
+      log "Deleted validation alarm: ${ALARM_ID}"
+    fi
+  fi
+
+  if [[ -n "${REGISTER_ID}" ]]; then
+    local register_delete_response="${WORK_DIR}/register_delete.json"
+    local register_delete_status
+    register_delete_status="$(request "DELETE" "/iot/registers/${REGISTER_ID}" "" "${register_delete_response}")"
+    if [[ "${register_delete_status}" -ge 200 && "${register_delete_status}" -lt 300 ]]; then
+      log "Deleted validation register: ${REGISTER_ID}"
+    fi
+  fi
+
+  if [[ -n "${DEVICE_ID}" ]]; then
+    local device_delete_response="${WORK_DIR}/device_delete.json"
+    local device_delete_status
+    device_delete_status="$(request "DELETE" "/iot/devices/${DEVICE_ID}" "" "${device_delete_response}")"
+    if [[ "${device_delete_status}" -ge 200 && "${device_delete_status}" -lt 300 ]]; then
+      log "Deleted validation device: ${DEVICE_ID}"
+    fi
+  fi
+}
+
 require_command curl
 require_command python3
 
 log "IoT operational validation started"
 log "API base URL: ${API_BASE_URL}"
+log "Validation run suffix: ${RUN_SUFFIX}"
 
 LOGIN_RESPONSE="${WORK_DIR}/login.json"
 LOGIN_STATUS="$(
@@ -186,13 +226,17 @@ assert_success_response "${MODULES_RESPONSE}" "${MODULES_STATUS}" "MODULES"
 
 log "Core auth and module access validated"
 
+DEVICE_IDENTIFIER="VAL-DEVICE-${RUN_SUFFIX}"
+REGISTER_CODE="TEMP_MAIN_${RUN_SUFFIX}"
+ALARM_CODE="TEMP_HIGH_${RUN_SUFFIX}"
+
 DEVICE_RESPONSE="${WORK_DIR}/device_create.json"
 DEVICE_STATUS="$(
   request "POST" "/iot/devices" \
     "$(cat <<JSON
 {
-  "name": "Validation Device",
-  "identifier": "VAL-DEVICE-001",
+  "name": "Validation Device ${RUN_SUFFIX}",
+  "identifier": "${DEVICE_IDENTIFIER}",
   "type": "GATEWAY",
   "location": "Validation Lab",
   "description": "Device created by IoT operational validation",
@@ -210,7 +254,7 @@ DEVICE_ID="$(extract_json "${DEVICE_RESPONSE}" "data.id")"
 log "Device created: ${DEVICE_ID}"
 
 DEVICE_LIST_RESPONSE="${WORK_DIR}/device_list.json"
-DEVICE_LIST_STATUS="$(request "GET" "/iot/devices?page=0&size=10&search=Validation" "" "${DEVICE_LIST_RESPONSE}")"
+DEVICE_LIST_STATUS="$(request "GET" "/iot/devices?page=0&size=10&search=${RUN_SUFFIX}" "" "${DEVICE_LIST_RESPONSE}")"
 assert_success_response "${DEVICE_LIST_RESPONSE}" "${DEVICE_LIST_STATUS}" "DEVICE_LIST"
 
 REGISTER_RESPONSE="${WORK_DIR}/register_create.json"
@@ -219,8 +263,8 @@ REGISTER_STATUS="$(
     "$(cat <<JSON
 {
   "deviceId": "${DEVICE_ID}",
-  "name": "Temperature Register",
-  "code": "TEMP_MAIN",
+  "name": "Temperature Register ${RUN_SUFFIX}",
+  "code": "${REGISTER_CODE}",
   "metricName": "temperature",
   "unit": "C",
   "dataType": "DECIMAL",
@@ -240,7 +284,7 @@ REGISTER_ID="$(extract_json "${REGISTER_RESPONSE}" "data.id")"
 log "Register created: ${REGISTER_ID}"
 
 REGISTER_LIST_RESPONSE="${WORK_DIR}/register_list.json"
-REGISTER_LIST_STATUS="$(request "GET" "/iot/registers?page=0&size=10&device_id=${DEVICE_ID}" "" "${REGISTER_LIST_RESPONSE}")"
+REGISTER_LIST_STATUS="$(request "GET" "/iot/registers?page=0&size=10&search=${RUN_SUFFIX}" "" "${REGISTER_LIST_RESPONSE}")"
 assert_success_response "${REGISTER_LIST_RESPONSE}" "${REGISTER_LIST_STATUS}" "REGISTER_LIST"
 
 TELEMETRY_WRITE_RESPONSE="${WORK_DIR}/telemetry_write.json"
@@ -279,7 +323,7 @@ ALARM_STATUS="$(
 {
   "deviceId": "${DEVICE_ID}",
   "registerId": "${REGISTER_ID}",
-  "code": "TEMP_HIGH",
+  "code": "${ALARM_CODE}",
   "message": "Temperature threshold exceeded during validation",
   "severity": "HIGH",
   "status": "OPEN",
@@ -306,7 +350,7 @@ MAINTENANCE_STATUS="$(
     "$(cat <<JSON
 {
   "deviceId": "${DEVICE_ID}",
-  "title": "Inspect overheating sensor",
+  "title": "Inspect overheating sensor ${RUN_SUFFIX}",
   "description": "Maintenance task created by IoT operational validation",
   "status": "OPEN",
   "priority": "HIGH",
@@ -342,15 +386,11 @@ print_response_summary "${MAINTENANCE_RESPONSE}" "MAINTENANCE CREATE"
 print_response_summary "${DASHBOARD_RESPONSE}" "DASHBOARD SUMMARY"
 print_response_summary "${REPORTS_RESPONSE}" "REPORTS SUMMARY"
 
+delete_created_resources
+
 cat <<EOF
 
 Validation checklist completed successfully.
-
-Created resources:
-- Device: ${DEVICE_ID}
-- Register: ${REGISTER_ID}
-- Alarm: ${ALARM_ID}
-- Maintenance: ${MAINTENANCE_ID}
 
 Validated flows:
 - Auth login
@@ -363,5 +403,8 @@ Validated flows:
 - Maintenance create
 - IoT dashboard summary
 - IoT reports summary
+
+Run suffix:
+- ${RUN_SUFFIX}
 
 EOF

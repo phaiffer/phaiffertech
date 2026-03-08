@@ -1,5 +1,5 @@
 import { IotDashboardPage } from '@/modules/iot/dashboard-page';
 
-export default function IotDashboardRoute() {
+export default function Page() {
   return <IotDashboardPage />;
 }
