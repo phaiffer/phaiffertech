@@ -5,8 +5,7 @@ import { useRouter } from 'next/navigation';
 import { authService } from '@/shared/services/auth-service';
 import { ApiClientError } from '@/shared/lib/http';
 import { useAuth } from '@/shared/hooks/use-auth';
-
-type LoginLocale = 'pt-BR' | 'en-US';
+import { usePublicSite } from '@/shared/public/public-site-provider';
 
 const copy = {
   'pt-BR': {
@@ -63,17 +62,9 @@ const copy = {
   }
 } as const;
 
-function getStoredLocale(): LoginLocale {
-  if (typeof window === 'undefined') {
-    return 'pt-BR';
-  }
-
-  const stored = window.localStorage.getItem('phaiffertech-public-locale');
-  return stored === 'en-US' ? 'en-US' : 'pt-BR';
-}
-
 export default function LoginPage() {
   const router = useRouter();
+  const { locale } = usePublicSite();
   const { isAuthenticated, isLoading, signIn } = useAuth();
 
   const [nextRoute, setNextRoute] = useState('/dashboard');
@@ -82,18 +73,6 @@ export default function LoginPage() {
   const [password, setPassword] = useState('Admin@123');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [locale, setLocale] = useState<LoginLocale>('pt-BR');
-
-  useEffect(() => {
-    setLocale(getStoredLocale());
-
-    function handleStorage() {
-      setLocale(getStoredLocale());
-    }
-
-    window.addEventListener('storage', handleStorage);
-    return () => window.removeEventListener('storage', handleStorage);
-  }, []);
 
   useEffect(() => {
     if (!isLoading && isAuthenticated) {

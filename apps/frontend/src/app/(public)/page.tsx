@@ -1,9 +1,8 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import Link from 'next/link';
-
-type PublicLocale = 'pt-BR' | 'en-US';
+import { usePublicSite } from '@/shared/public/public-site-provider';
 
 const copy = {
   'pt-BR': {
@@ -44,7 +43,7 @@ const copy = {
     ctaTitle: 'Uma entrada institucional mais forte para vender melhor o produto.',
     ctaText:
       'Ajuste a narrativa pública da PhaifferTech antes de seguir com o refinamento dos módulos internos.',
-    ctaPrimary: 'Entrar na plataforma',
+    ctaPrimary: 'Acessar plataforma',
     ctaSecondary: 'Ir para login'
   },
   'en-US': {
@@ -90,29 +89,8 @@ const copy = {
   }
 } as const;
 
-function getStoredLocale(): PublicLocale {
-  if (typeof window === 'undefined') {
-    return 'pt-BR';
-  }
-
-  const stored = window.localStorage.getItem('phaiffertech-public-locale');
-  return stored === 'en-US' ? 'en-US' : 'pt-BR';
-}
-
 export default function PublicHomePage() {
-  const [locale, setLocale] = useState<PublicLocale>('pt-BR');
-
-  useEffect(() => {
-    setLocale(getStoredLocale());
-
-    function handleStorage() {
-      setLocale(getStoredLocale());
-    }
-
-    window.addEventListener('storage', handleStorage);
-    return () => window.removeEventListener('storage', handleStorage);
-  }, []);
-
+  const { locale } = usePublicSite();
   const t = useMemo(() => copy[locale], [locale]);
 
   return (

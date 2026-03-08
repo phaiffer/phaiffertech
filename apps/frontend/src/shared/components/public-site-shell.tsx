@@ -1,10 +1,8 @@
 'use client';
 
-import { ReactNode, useEffect, useMemo, useState } from 'react';
+import { ReactNode, useMemo } from 'react';
 import Link from 'next/link';
-
-type PublicLocale = 'pt-BR' | 'en-US';
-type PublicTheme = 'light' | 'dark';
+import { usePublicSite } from '@/shared/public/public-site-provider';
 
 type PublicSiteShellProps = {
   children: ReactNode;
@@ -39,42 +37,8 @@ const copy = {
   }
 } as const;
 
-function getStoredTheme(): PublicTheme {
-  if (typeof window === 'undefined') {
-    return 'light';
-  }
-
-  const stored = window.localStorage.getItem('phaiffertech-public-theme');
-  return stored === 'dark' ? 'dark' : 'light';
-}
-
-function getStoredLocale(): PublicLocale {
-  if (typeof window === 'undefined') {
-    return 'pt-BR';
-  }
-
-  const stored = window.localStorage.getItem('phaiffertech-public-locale');
-  return stored === 'en-US' ? 'en-US' : 'pt-BR';
-}
-
 export function PublicSiteShell({ children }: PublicSiteShellProps) {
-  const [theme, setTheme] = useState<PublicTheme>('light');
-  const [locale, setLocale] = useState<PublicLocale>('pt-BR');
-
-  useEffect(() => {
-    setTheme(getStoredTheme());
-    setLocale(getStoredLocale());
-  }, []);
-
-  useEffect(() => {
-    document.documentElement.dataset.theme = theme;
-    window.localStorage.setItem('phaiffertech-public-theme', theme);
-  }, [theme]);
-
-  useEffect(() => {
-    window.localStorage.setItem('phaiffertech-public-locale', locale);
-  }, [locale]);
-
+  const { locale, theme, setLocale, setTheme } = usePublicSite();
   const t = useMemo(() => copy[locale], [locale]);
 
   return (
