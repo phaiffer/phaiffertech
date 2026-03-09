@@ -6,8 +6,8 @@ import com.phaiffertech.platform.core.user.dto.UserResponse;
 import com.phaiffertech.platform.shared.pagination.PageRequestDto;
 import com.phaiffertech.platform.shared.pagination.PageResponseDto;
 import com.phaiffertech.platform.shared.response.ApiResponse;
+import com.phaiffertech.platform.shared.security.RequirePermission;
 import jakarta.validation.Valid;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -26,13 +26,13 @@ public class UserController {
     }
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('PLATFORM_ADMIN','TENANT_OWNER','TENANT_ADMIN')")
+    @RequirePermission("USER_WRITE")
     public ApiResponse<UserResponse> create(@Valid @RequestBody UserCreateRequest request) {
         return ApiResponse.success(userService.create(request));
     }
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('PLATFORM_ADMIN','TENANT_OWNER','TENANT_ADMIN','MANAGER')")
+    @RequirePermission("USER_READ")
     public ApiResponse<PageResponseDto<UserResponse>> list(@Valid @ModelAttribute PageRequestDto pageRequest) {
         return ApiResponse.success(userService.list(pageRequest));
     }

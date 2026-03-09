@@ -6,8 +6,8 @@ import com.phaiffertech.platform.core.tenant.dto.TenantResponse;
 import com.phaiffertech.platform.shared.pagination.PageRequestDto;
 import com.phaiffertech.platform.shared.pagination.PageResponseDto;
 import com.phaiffertech.platform.shared.response.ApiResponse;
+import com.phaiffertech.platform.shared.security.RequirePermission;
 import jakarta.validation.Valid;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -26,13 +26,13 @@ public class TenantController {
     }
 
     @PostMapping
-    @PreAuthorize("hasRole('PLATFORM_ADMIN')")
+    @RequirePermission("TENANT_WRITE")
     public ApiResponse<TenantResponse> create(@Valid @RequestBody TenantCreateRequest request) {
         return ApiResponse.success(tenantService.create(request));
     }
 
     @GetMapping
-    @PreAuthorize("hasRole('PLATFORM_ADMIN')")
+    @RequirePermission("TENANT_READ")
     public ApiResponse<PageResponseDto<TenantResponse>> list(@Valid @ModelAttribute PageRequestDto pageRequest) {
         return ApiResponse.success(tenantService.list(pageRequest));
     }
