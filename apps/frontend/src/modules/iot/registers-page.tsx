@@ -87,6 +87,19 @@ function parseOptionalNumber(value: string) {
   return Number.isNaN(parsed) ? null : parsed;
 }
 
+function parseRequiredInteger(value: string) {
+  if (!value.trim()) {
+    return null;
+  }
+
+  const parsed = Number(value);
+  if (!Number.isInteger(parsed) || parsed < 0) {
+    return null;
+  }
+
+  return parsed;
+}
+
 function resolveTone(status: string) {
   switch (status) {
     case 'ACTIVE':
@@ -207,7 +220,7 @@ export function IotRegistersPage() {
       !metricFilter &&
       !statusFilter);
 
-  const demoRows = useMemo(() => {
+  const demoRows = useMemo<IotRegister[]>(() => {
     return buildDemoRegisters(displayDevices).filter((register) => {
       const matchesSearch =
         !search ||
@@ -223,7 +236,7 @@ export function IotRegistersPage() {
     });
   }, [deviceFilterId, displayDevices, metricFilter, search, statusFilter]);
 
-  const visibleRows = useDemoMode ? demoRows : realRows;
+  const visibleRows: IotRegister[] = useDemoMode ? demoRows : realRows;
   const displayTelemetry = useMemo(
     () =>
       useDemoMode
@@ -274,7 +287,8 @@ export function IotRegistersPage() {
   const activeRegisters = visibleRows.filter((register) => register.status === 'ACTIVE').length;
   const mappedDevices = new Set(visibleRows.map((register) => register.deviceId)).size;
   const fc03Registers = visibleRows.filter((register) =>
-    parseModbusMapping(register.code, register.metricName, register.name).functionCode === 'FC03'
+    (register.functionCode ?? parseModbusMapping(register.code, register.metricName, register.name).functionCode) ===
+    'FC03'
   ).length;
 
   function resetForm() {
@@ -318,8 +332,8 @@ export function IotRegistersPage() {
     setDeviceId(register.deviceId);
     setName(register.name);
     setMetricName(register.metricName);
-    setFunctionCode(mapping.functionCode);
-    setRegisterAddress(mapping.registerAddress);
+    setFunctionCode(register.functionCode ?? mapping.functionCode);
+    setRegisterAddress(register.registerAddress?.toString() ?? mapping.registerAddress);
     setUnit(register.unit ?? mapping.unit ?? '');
     setDataType(register.dataType);
     setMinThreshold(register.minThreshold?.toString() ?? '');
@@ -339,9 +353,15 @@ export function IotRegistersPage() {
 
     const parsedMin = parseOptionalNumber(minThreshold);
     const parsedMax = parseOptionalNumber(maxThreshold);
+    const parsedRegisterAddress = parseRequiredInteger(registerAddress);
 
     if (parsedMin === null || parsedMax === null) {
       setError('As faixas mínima e máxima devem ser números válidos.');
+      return;
+    }
+
+    if (parsedRegisterAddress === null) {
+      setError('O endereço / offset Modbus deve ser um número inteiro válido.');
       return;
     }
 
@@ -352,7 +372,9 @@ export function IotRegistersPage() {
     const payload = {
       deviceId,
       name,
-      code: buildModbusCode(functionCode, registerAddress),
+      code: buildModbusCode(functionCode, String(parsedRegisterAddress)),
+      functionCode,
+      registerAddress: parsedRegisterAddress,
       metricName,
       unit: unit || undefined,
       dataType,

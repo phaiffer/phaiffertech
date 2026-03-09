@@ -9,6 +9,8 @@ public record IotRegisterResponse(
         UUID deviceId,
         String name,
         String code,
+        String functionCode,
+        Integer registerAddress,
         String metricName,
         String unit,
         String dataType,

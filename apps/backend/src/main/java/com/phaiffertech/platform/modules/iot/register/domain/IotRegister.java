@@ -24,6 +24,12 @@ public class IotRegister extends BaseTenantEntity {
     @Column(name = "code", nullable = false, length = 80)
     private String code;
 
+    @Column(name = "function_code", length = 16)
+    private String functionCode;
+
+    @Column(name = "register_address")
+    private Integer registerAddress;
+
     @Column(name = "metric_name", nullable = false, length = 80)
     private String metricName;
 
@@ -64,6 +70,22 @@ public class IotRegister extends BaseTenantEntity {
 
     public void setCode(String code) {
         this.code = code;
+    }
+
+    public String getFunctionCode() {
+        return functionCode;
+    }
+
+    public void setFunctionCode(String functionCode) {
+        this.functionCode = functionCode;
+    }
+
+    public Integer getRegisterAddress() {
+        return registerAddress;
+    }
+
+    public void setRegisterAddress(Integer registerAddress) {
+        this.registerAddress = registerAddress;
     }
 
     public String getMetricName() {

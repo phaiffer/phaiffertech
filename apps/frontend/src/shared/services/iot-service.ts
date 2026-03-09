@@ -17,6 +17,12 @@ export type CreateDeviceInput = {
   location?: string;
   description?: string;
   status?: string;
+  transport?: string;
+  host?: string;
+  port?: number;
+  unitId?: number;
+  pollingProfile?: string;
+  gateway?: string;
 };
 
 export type UpdateDeviceInput = {
@@ -26,12 +32,20 @@ export type UpdateDeviceInput = {
   location?: string;
   description?: string;
   status: string;
+  transport?: string;
+  host?: string;
+  port?: number;
+  unitId?: number;
+  pollingProfile?: string;
+  gateway?: string;
 };
 
 export type CreateRegisterInput = {
   deviceId: string;
   name: string;
-  code: string;
+  code?: string;
+  functionCode?: string;
+  registerAddress?: number;
   metricName: string;
   unit?: string;
   dataType: string;
@@ -43,7 +57,9 @@ export type CreateRegisterInput = {
 export type UpdateRegisterInput = {
   deviceId: string;
   name: string;
-  code: string;
+  code?: string;
+  functionCode?: string;
+  registerAddress?: number;
   metricName: string;
   unit?: string;
   dataType: string;

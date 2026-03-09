@@ -40,6 +40,7 @@ public class IotRegisterService extends BaseTenantCrudService<
     public void beforeCreate(UUID tenantId, IotRegisterCreateRequest request, IotRegister entity) {
         validateDevice(tenantId, entity.getDeviceId());
         validateThresholds(entity.getMinThreshold(), entity.getMaxThreshold());
+        validateModbusMapping(entity);
         ensureUniqueCode(tenantId, entity.getDeviceId(), entity.getCode(), null);
     }
 
@@ -47,6 +48,7 @@ public class IotRegisterService extends BaseTenantCrudService<
     public void beforeUpdate(UUID tenantId, IotRegisterUpdateRequest request, IotRegister entity) {
         validateDevice(tenantId, entity.getDeviceId());
         validateThresholds(entity.getMinThreshold(), entity.getMaxThreshold());
+        validateModbusMapping(entity);
         ensureUniqueCode(tenantId, entity.getDeviceId(), entity.getCode(), entity.getId());
     }
 
@@ -117,6 +119,27 @@ public class IotRegisterService extends BaseTenantCrudService<
         }
     }
 
+    private void validateModbusMapping(IotRegister entity) {
+        boolean hasFunctionCode = hasText(entity.getFunctionCode());
+        boolean hasRegisterAddress = entity.getRegisterAddress() != null;
+
+        if (!hasText(entity.getCode())) {
+            throw new IllegalArgumentException("Register code or Modbus mapping is required.");
+        }
+
+        if (hasFunctionCode != hasRegisterAddress) {
+            throw new IllegalArgumentException("Register functionCode and registerAddress must be informed together.");
+        }
+
+        if (hasFunctionCode && !entity.getFunctionCode().matches("FC\\d{2}")) {
+            throw new IllegalArgumentException("Register functionCode must follow the FCxx format.");
+        }
+
+        if (hasRegisterAddress && entity.getRegisterAddress() < 0) {
+            throw new IllegalArgumentException("Register address must be zero or positive.");
+        }
+    }
+
     private void ensureUniqueCode(UUID tenantId, UUID deviceId, String code, UUID registerId) {
         boolean exists = registerId == null
                 ? repository.existsByTenantIdAndDeviceIdAndCodeIgnoreCaseAndDeletedAtIsNull(tenantId, deviceId, code)
@@ -137,5 +160,9 @@ public class IotRegisterService extends BaseTenantCrudService<
 
     private String normalizeMetric(String value) {
         return value == null || value.isBlank() ? null : value.trim().toLowerCase();
+    }
+
+    private boolean hasText(String value) {
+        return value != null && !value.isBlank();
     }
 }

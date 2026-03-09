@@ -32,6 +32,24 @@ public class IotDevice extends BaseTenantEntity {
     @Column(name = "description", length = 255)
     private String description;
 
+    @Column(name = "transport", length = 40)
+    private String transport;
+
+    @Column(name = "host", length = 120)
+    private String host;
+
+    @Column(name = "port")
+    private Integer port;
+
+    @Column(name = "unit_id")
+    private Integer unitId;
+
+    @Column(name = "polling_profile", length = 40)
+    private String pollingProfile;
+
+    @Column(name = "gateway", length = 120)
+    private String gateway;
+
     @Column(name = "status", nullable = false, length = 40)
     private String status = "ONLINE";
 
@@ -84,6 +102,54 @@ public class IotDevice extends BaseTenantEntity {
 
     public void setDescription(String description) {
         this.description = description;
+    }
+
+    public String getTransport() {
+        return transport;
+    }
+
+    public void setTransport(String transport) {
+        this.transport = transport;
+    }
+
+    public String getHost() {
+        return host;
+    }
+
+    public void setHost(String host) {
+        this.host = host;
+    }
+
+    public Integer getPort() {
+        return port;
+    }
+
+    public void setPort(Integer port) {
+        this.port = port;
+    }
+
+    public Integer getUnitId() {
+        return unitId;
+    }
+
+    public void setUnitId(Integer unitId) {
+        this.unitId = unitId;
+    }
+
+    public String getPollingProfile() {
+        return pollingProfile;
+    }
+
+    public void setPollingProfile(String pollingProfile) {
+        this.pollingProfile = pollingProfile;
+    }
+
+    public String getGateway() {
+        return gateway;
+    }
+
+    public void setGateway(String gateway) {
+        this.gateway = gateway;
     }
 
     public String getStatus() {

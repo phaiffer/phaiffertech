@@ -8,6 +8,12 @@ export type IotDevice = {
   type?: string;
   location?: string;
   description?: string;
+  transport?: string;
+  host?: string;
+  port?: number;
+  unitId?: number;
+  pollingProfile?: string;
+  gateway?: string;
   status: string;
   lastSeenAt?: string;
   createdAt: string;
@@ -19,6 +25,8 @@ export type IotRegister = {
   deviceId: string;
   name: string;
   code: string;
+  functionCode?: string;
+  registerAddress?: number;
   metricName: string;
   unit?: string;
   dataType: string;

@@ -38,6 +38,16 @@ public class IotDeviceService extends BaseTenantCrudService<
         return doCreate(request);
     }
 
+    @Override
+    public void beforeCreate(UUID tenantId, IotDeviceCreateRequest request, IotDevice entity) {
+        validateConnection(entity);
+    }
+
+    @Override
+    public void beforeUpdate(UUID tenantId, IotDeviceUpdateRequest request, IotDevice entity) {
+        validateConnection(entity);
+    }
+
     @Transactional(readOnly = true)
     public PageResponseDto<IotDeviceResponse> list(PageRequestDto pageRequest, String type, String status) {
         return doList(
@@ -74,5 +84,41 @@ public class IotDeviceService extends BaseTenantCrudService<
     @AuditableAction(action = AuditActionType.RESTORE, entity = "iot_device")
     public IotDeviceResponse restore(UUID id) {
         return doRestore(id);
+    }
+
+    private void validateConnection(IotDevice entity) {
+        if (!hasConnectionData(entity)) {
+            return;
+        }
+
+        String transport = entity.getTransport();
+        if (!"MODBUS_TCP".equals(transport) && !"MODBUS_RTU".equals(transport)) {
+            throw new IllegalArgumentException("Device transport must be MODBUS_TCP or MODBUS_RTU.");
+        }
+
+        if (!hasText(entity.getHost())) {
+            throw new IllegalArgumentException("Device host is required when Modbus connection is informed.");
+        }
+
+        if (entity.getPort() == null || entity.getPort() < 1 || entity.getPort() > 65535) {
+            throw new IllegalArgumentException("Device port must be between 1 and 65535.");
+        }
+
+        if (entity.getUnitId() == null || entity.getUnitId() < 0 || entity.getUnitId() > 255) {
+            throw new IllegalArgumentException("Device unitId must be between 0 and 255.");
+        }
+    }
+
+    private boolean hasConnectionData(IotDevice entity) {
+        return hasText(entity.getTransport())
+                || hasText(entity.getHost())
+                || entity.getPort() != null
+                || entity.getUnitId() != null
+                || hasText(entity.getPollingProfile())
+                || hasText(entity.getGateway());
+    }
+
+    private boolean hasText(String value) {
+        return value != null && !value.isBlank();
     }
 }

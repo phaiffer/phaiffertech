@@ -81,16 +81,35 @@ export function IotAddDevicePage() {
       return;
     }
 
+    const normalizedHost = host.trim();
+    const parsedPort = Number(port);
+    const parsedUnitId = Number(unitId);
+
+    if (!normalizedHost) {
+      setError('Informe o endpoint de comunicação Modbus do dispositivo.');
+      return;
+    }
+
+    if (!Number.isInteger(parsedPort) || parsedPort < 1 || parsedPort > 65535) {
+      setError('A porta Modbus deve ser um número inteiro entre 1 e 65535.');
+      return;
+    }
+
+    if (!Number.isInteger(parsedUnitId) || parsedUnitId < 0 || parsedUnitId > 255) {
+      setError('O Unit ID / Slave ID deve ser um número inteiro entre 0 e 255.');
+      return;
+    }
+
     setSubmitting(true);
     setError(null);
 
     const identifier =
-      technicalTag.trim() || `${host.replaceAll('.', '-')}-u${unitId.padStart(2, '0')}`;
+      technicalTag.trim() || `${normalizedHost.replaceAll('.', '-')}-u${unitId.padStart(2, '0')}`;
 
     const protocolSummary =
       transport === 'MODBUS_TCP'
-        ? `Modbus TCP ${host}:${port} • Unit ${unitId}`
-        : `Modbus RTU/RS-485 • Gateway ${host} • Slave ${unitId}`;
+        ? `Modbus TCP ${normalizedHost}:${port} • Unit ${unitId}`
+        : `Modbus RTU/RS-485 • Gateway ${normalizedHost} • Slave ${unitId}`;
 
     const variableSummary = selectedTemplateItems.map((item) => item.label).join(', ');
     const deviceDescription = [description.trim(), protocolSummary, `Variáveis: ${variableSummary}`]
@@ -104,7 +123,13 @@ export function IotAddDevicePage() {
         type: deviceType,
         location: location || undefined,
         description: deviceDescription || undefined,
-        status: 'ONLINE'
+        status: 'ONLINE',
+        transport,
+        host: normalizedHost,
+        port: parsedPort,
+        unitId: parsedUnitId,
+        pollingProfile,
+        gateway: transport === 'MODBUS_RTU' ? normalizedHost : undefined
       });
 
       router.push('/iot/devices?created=1');
@@ -219,7 +244,7 @@ export function IotAddDevicePage() {
                 value={description}
                 onChange={setDescription}
                 placeholder="Função do equipamento, criticidade e observações de campo."
-                helper="Esta descrição será enriquecida com o contexto de comunicação Modbus no payload persistido."
+                helper="Esta descrição complementa o contexto Modbus persistido explicitamente no backend."
               />
 
               <div className="rounded-[28px] border border-slate-800 bg-slate-950/35 p-5">

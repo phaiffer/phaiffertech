@@ -21,7 +21,8 @@ class IotRegistersMaintenanceIntegrationTest extends AbstractIntegrationTest {
         ResponseEntity<JsonNode> createResponse = post("/iot/registers", Map.of(
                 "deviceId", deviceId,
                 "name", "Pressure-" + marker,
-                "code", "PRS-" + marker,
+                "functionCode", "FC03",
+                "registerAddress", 40001,
                 "metricName", "pressure",
                 "unit", "bar",
                 "dataType", "DECIMAL",
@@ -31,6 +32,9 @@ class IotRegistersMaintenanceIntegrationTest extends AbstractIntegrationTest {
         ), session);
 
         assertEquals(200, createResponse.getStatusCode().value());
+        assertEquals("FC03:40001", requireBody(createResponse).path("data").path("code").asText());
+        assertEquals("FC03", requireBody(createResponse).path("data").path("functionCode").asText());
+        assertEquals(40001, requireBody(createResponse).path("data").path("registerAddress").asInt());
         String registerId = requireBody(createResponse).path("data").path("id").asText();
 
         ResponseEntity<JsonNode> listResponse = get(
@@ -43,7 +47,8 @@ class IotRegistersMaintenanceIntegrationTest extends AbstractIntegrationTest {
         ResponseEntity<JsonNode> updateResponse = put("/iot/registers/" + registerId, Map.of(
                 "deviceId", deviceId,
                 "name", "Pressure Updated-" + marker,
-                "code", "PRS-" + marker,
+                "functionCode", "FC04",
+                "registerAddress", 30011,
                 "metricName", "pressure",
                 "unit", "bar",
                 "dataType", "DECIMAL",
@@ -54,6 +59,9 @@ class IotRegistersMaintenanceIntegrationTest extends AbstractIntegrationTest {
 
         assertEquals(200, updateResponse.getStatusCode().value());
         assertEquals("INACTIVE", requireBody(updateResponse).path("data").path("status").asText());
+        assertEquals("FC04:30011", requireBody(updateResponse).path("data").path("code").asText());
+        assertEquals("FC04", requireBody(updateResponse).path("data").path("functionCode").asText());
+        assertEquals(30011, requireBody(updateResponse).path("data").path("registerAddress").asInt());
 
         ResponseEntity<JsonNode> deleteResponse = delete("/iot/registers/" + registerId, session);
         assertEquals(200, deleteResponse.getStatusCode().value());
@@ -107,6 +115,27 @@ class IotRegistersMaintenanceIntegrationTest extends AbstractIntegrationTest {
         ResponseEntity<JsonNode> afterDelete = get("/iot/maintenance?page=0&size=20&search=" + marker, session);
         assertEquals(200, afterDelete.getStatusCode().value());
         assertEquals(0, requireBody(afterDelete).path("data").path("items").size());
+    }
+
+    @Test
+    void shouldDeriveRegisterMappingFromLegacyCode() {
+        AuthSession session = loginAsDefaultAdmin();
+        String marker = randomSearchMarker();
+        String deviceId = createDevice(session, marker);
+
+        ResponseEntity<JsonNode> createResponse = post("/iot/registers", Map.of(
+                "deviceId", deviceId,
+                "name", "Legacy Register-" + marker,
+                "code", "FC04:30021",
+                "metricName", "temperature",
+                "unit", "c",
+                "dataType", "FLOAT32",
+                "status", "ACTIVE"
+        ), session);
+
+        assertEquals(200, createResponse.getStatusCode().value());
+        assertEquals("FC04", requireBody(createResponse).path("data").path("functionCode").asText());
+        assertEquals(30021, requireBody(createResponse).path("data").path("registerAddress").asInt());
     }
 
     private String createDevice(AuthSession session, String marker) {
