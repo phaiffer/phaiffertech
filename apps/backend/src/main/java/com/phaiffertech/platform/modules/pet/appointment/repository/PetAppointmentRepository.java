@@ -16,11 +16,21 @@ public interface PetAppointmentRepository extends JpaRepository<PetAppointment, 
 
     long countByTenantIdAndDeletedAtIsNull(UUID tenantId);
 
-    long countByTenantIdAndScheduledAtBetween(UUID tenantId, Instant scheduledFrom, Instant scheduledTo);
+    long countByTenantIdAndServiceIdIsNotNullAndProfessionalIdIsNotNullAndScheduledAtBetween(
+            UUID tenantId,
+            Instant scheduledFrom,
+            Instant scheduledTo
+    );
 
-    long countByTenantIdAndScheduledAtGreaterThanEqual(UUID tenantId, Instant scheduledFrom);
+    long countByTenantIdAndServiceIdIsNotNullAndProfessionalIdIsNotNullAndScheduledAtGreaterThanEqual(
+            UUID tenantId,
+            Instant scheduledFrom
+    );
 
-    List<PetAppointment> findTop5ByTenantIdAndScheduledAtGreaterThanEqualOrderByScheduledAtAsc(UUID tenantId, Instant scheduledFrom);
+    List<PetAppointment> findTop5ByTenantIdAndServiceIdIsNotNullAndProfessionalIdIsNotNullAndScheduledAtGreaterThanEqualOrderByScheduledAtAsc(
+            UUID tenantId,
+            Instant scheduledFrom
+    );
 
     @Query("""
             SELECT a

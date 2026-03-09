@@ -18,12 +18,15 @@ import com.phaiffertech.platform.shared.crud.BasePageQuery;
 import com.phaiffertech.platform.shared.crud.BaseSearchSpecificationBuilder;
 import com.phaiffertech.platform.shared.crud.BaseTenantCrudService;
 import com.phaiffertech.platform.shared.domain.enums.AuditActionType;
+import com.phaiffertech.platform.shared.exception.ConflictOperationException;
 import com.phaiffertech.platform.shared.exception.ResourceNotFoundException;
 import com.phaiffertech.platform.shared.metrics.PlatformMetricsService;
 import com.phaiffertech.platform.shared.pagination.PageRequestDto;
 import com.phaiffertech.platform.shared.pagination.PageResponseDto;
+import com.phaiffertech.platform.shared.pagination.PaginationUtils;
 import java.time.Instant;
 import java.util.UUID;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -88,27 +91,26 @@ public class PetAppointmentService extends BaseTenantCrudService<
             UUID petId,
             UUID serviceId
     ) {
-        return doList(
-                pageRequest,
-                Sort.by(Sort.Direction.DESC, "scheduledAt"),
-                (BasePageQuery query) -> repository.findAllByTenantIdAndSearch(
-                        currentTenantId(),
-                        BaseSearchSpecificationBuilder.normalizeUpper(status),
-                        professionalId,
-                        clientId,
-                        petId,
-                        serviceId,
-                        scheduledFrom,
-                        scheduledTo,
-                        query.search(),
-                        query.pageable()
-                )
-        );
+        BasePageQuery query = BasePageQuery.of(pageRequest, Sort.by(Sort.Direction.DESC, "scheduledAt"));
+        Page<PetAppointmentResponse> mapped = repository.findAllByTenantIdAndSearch(
+                currentTenantId(),
+                BaseSearchSpecificationBuilder.normalizeUpper(status),
+                professionalId,
+                clientId,
+                petId,
+                serviceId,
+                scheduledFrom,
+                scheduledTo,
+                query.search(),
+                query.pageable()
+        ).map(this::toValidatedResponse);
+
+        return PaginationUtils.fromPage(mapped);
     }
 
     @Transactional(readOnly = true)
     public PetAppointmentResponse getById(UUID id) {
-        return doGetById(id);
+        return toValidatedResponse(getOrThrow(id, currentTenantId()));
     }
 
     @Transactional
@@ -126,7 +128,18 @@ public class PetAppointmentService extends BaseTenantCrudService<
     @Transactional
     @AuditableAction(action = AuditActionType.RESTORE, entity = "pet_appointment")
     public PetAppointmentResponse restore(UUID id) {
-        return doRestore(id);
+        UUID tenantId = currentTenantId();
+        PetAppointment entity = getIncludingDeletedOrThrow(id, tenantId);
+
+        beforeRestore(tenantId, entity);
+        entity.setDeletedAt(null);
+
+        return toValidatedResponse(repository.save(entity));
+    }
+
+    @Override
+    public void beforeRestore(UUID tenantId, PetAppointment entity) {
+        validateContractIntegrity(entity);
     }
 
     private void hydrateAndValidateRelations(
@@ -156,5 +169,18 @@ public class PetAppointmentService extends BaseTenantCrudService<
         entity.setServiceId(serviceCatalog.getId());
         entity.setServiceName(serviceCatalog.getName());
         entity.setProfessionalId(professional.getId());
+    }
+
+    private PetAppointmentResponse toValidatedResponse(PetAppointment appointment) {
+        validateContractIntegrity(appointment);
+        return PetAppointmentMapper.INSTANCE.toResponse(appointment);
+    }
+
+    private void validateContractIntegrity(PetAppointment appointment) {
+        if (appointment.getServiceId() == null || appointment.getProfessionalId() == null) {
+            throw new ConflictOperationException(
+                    "Pet appointment data is inconsistent with the current contract and requires remediation."
+            );
+        }
     }
 }

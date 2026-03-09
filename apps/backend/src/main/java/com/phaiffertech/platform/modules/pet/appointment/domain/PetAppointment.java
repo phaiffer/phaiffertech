@@ -21,7 +21,7 @@ public class PetAppointment extends BaseTenantEntity {
     @Column(name = "pet_id", nullable = false, columnDefinition = "char(36)")
     private UUID petId;
 
-    @Column(name = "service_id", columnDefinition = "char(36)")
+    @Column(name = "service_id", nullable = false, columnDefinition = "char(36)")
     private UUID serviceId;
 
     @Column(name = "professional_id", columnDefinition = "char(36)")

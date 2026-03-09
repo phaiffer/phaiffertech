@@ -26,6 +26,12 @@ public class GlobalExceptionHandler {
                 .body(ApiErrorResponse.of("FORBIDDEN", ex.getMessage()));
     }
 
+    @ExceptionHandler(ConflictOperationException.class)
+    public ResponseEntity<ApiErrorResponse> handleConflict(ConflictOperationException ex) {
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(ApiErrorResponse.of("CONFLICT", ex.getMessage()));
+    }
+
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<ApiErrorResponse> handleIllegalArgument(IllegalArgumentException ex) {
         return ResponseEntity.badRequest()

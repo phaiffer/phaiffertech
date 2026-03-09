@@ -11,6 +11,7 @@ import com.phaiffertech.platform.modules.pet.product.domain.PetProduct;
 import com.phaiffertech.platform.modules.pet.product.repository.PetProductRepository;
 import com.phaiffertech.platform.shared.crud.BasePageQuery;
 import com.phaiffertech.platform.shared.domain.enums.AuditActionType;
+import com.phaiffertech.platform.shared.exception.ConflictOperationException;
 import com.phaiffertech.platform.shared.exception.ResourceNotFoundException;
 import com.phaiffertech.platform.shared.pagination.PageRequestDto;
 import com.phaiffertech.platform.shared.pagination.PageResponseDto;
@@ -120,6 +121,11 @@ public class PetInventoryMovementService {
         UUID tenantId = currentTenantId();
         PetInventoryMovement entity = repository.findByIdIncludingDeleted(id, tenantId)
                 .orElseThrow(() -> new ResourceNotFoundException("Pet inventory movement not found."));
+
+        if (entity.getDeletedAt() == null) {
+            throw new ConflictOperationException("Pet inventory movement is already active.");
+        }
+
         PetProduct product = getProductOrThrow(entity.getProductId(), tenantId);
 
         adjustStock(product, entity.getMovementType(), entity.getQuantity(), false);

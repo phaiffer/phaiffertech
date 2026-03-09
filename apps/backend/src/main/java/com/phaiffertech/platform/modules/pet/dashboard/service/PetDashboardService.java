@@ -66,8 +66,14 @@ public class PetDashboardService {
 
         long totalClients = clientRepository.countByTenantIdAndDeletedAtIsNull(tenantId);
         long totalPets = petProfileRepository.countByTenantIdAndDeletedAtIsNull(tenantId);
-        long appointmentsToday = appointmentRepository.countByTenantIdAndScheduledAtBetween(tenantId, startOfDay, endOfDay);
-        long upcomingAppointments = appointmentRepository.countByTenantIdAndScheduledAtGreaterThanEqual(tenantId, now);
+        long appointmentsToday = appointmentRepository
+                .countByTenantIdAndServiceIdIsNotNullAndProfessionalIdIsNotNullAndScheduledAtBetween(
+                        tenantId,
+                        startOfDay,
+                        endOfDay
+                );
+        long upcomingAppointments = appointmentRepository
+                .countByTenantIdAndServiceIdIsNotNullAndProfessionalIdIsNotNullAndScheduledAtGreaterThanEqual(tenantId, now);
         long totalServices = serviceCatalogRepository.countByTenantId(tenantId);
         long lowStockProducts = productRepository.countByTenantIdAndStockQuantityLessThanEqual(tenantId, LOW_STOCK_THRESHOLD);
         long pendingInvoices = invoiceRepository.countByTenantIdAndStatusIn(
@@ -104,7 +110,11 @@ public class PetDashboardService {
                                         new DashboardCountMetricDto("pending-invoices", "Pending Invoices", pendingInvoices),
                                         new DashboardCountMetricDto("low-stock-products", "Low Stock Products", lowStockProducts)
                                 ),
-                                appointmentRepository.findTop5ByTenantIdAndScheduledAtGreaterThanEqualOrderByScheduledAtAsc(tenantId, now).stream()
+                                appointmentRepository
+                                        .findTop5ByTenantIdAndServiceIdIsNotNullAndProfessionalIdIsNotNullAndScheduledAtGreaterThanEqualOrderByScheduledAtAsc(
+                                                tenantId,
+                                                now
+                                        ).stream()
                                         .map(appointment -> new DashboardListItemDto(
                                                 appointment.getId().toString(),
                                                 appointment.getServiceName(),

@@ -282,6 +282,115 @@ class PetIntegrationTest extends AbstractIntegrationTest {
     }
 
     @Test
+    void shouldRestoreDeletedInventoryMovementAndReapplyStockOnce() {
+        AuthSession session = loginAsDefaultAdmin();
+        String marker = randomSearchMarker();
+
+        ResponseEntity<JsonNode> createProduct = post("/pet/products", Map.of(
+                "name", "Restore Product " + marker,
+                "sku", "RESTORE-" + marker,
+                "price", 15.0,
+                "stockQuantity", 10
+        ), session);
+        assertEquals(200, createProduct.getStatusCode().value());
+        String productId = requireBody(createProduct).path("data").path("id").asText();
+
+        ResponseEntity<JsonNode> createInventory = post("/pet/inventory", Map.of(
+                "productId", productId,
+                "movementType", "IN",
+                "quantity", 4,
+                "notes", "Restore stock " + marker
+        ), session);
+        assertEquals(200, createInventory.getStatusCode().value());
+        String inventoryId = requireBody(createInventory).path("data").path("id").asText();
+
+        ResponseEntity<JsonNode> deleteInventory = delete("/pet/inventory/" + inventoryId, session);
+        assertEquals(200, deleteInventory.getStatusCode().value());
+
+        ResponseEntity<JsonNode> restoreInventory = patch("/pet/inventory/" + inventoryId + "/restore", null, session);
+        assertEquals(200, restoreInventory.getStatusCode().value());
+        assertEquals(inventoryId, requireBody(restoreInventory).path("data").path("id").asText());
+
+        ResponseEntity<JsonNode> productAfterRestore = get("/pet/products/" + productId, session);
+        assertEquals(200, productAfterRestore.getStatusCode().value());
+        assertEquals(14, requireBody(productAfterRestore).path("data").path("stockQuantity").asInt());
+
+        int activeCount = countRows(
+                "SELECT COUNT(*) FROM pet_inventory_movements WHERE id = ? AND deleted_at IS NULL",
+                inventoryId
+        );
+        assertEquals(1, activeCount);
+    }
+
+    @Test
+    void shouldRejectRestoringActiveInventoryMovementWithoutChangingStock() {
+        AuthSession session = loginAsDefaultAdmin();
+        String marker = randomSearchMarker();
+
+        ResponseEntity<JsonNode> createProduct = post("/pet/products", Map.of(
+                "name", "Conflict Product " + marker,
+                "sku", "CONFLICT-" + marker,
+                "price", 21.0,
+                "stockQuantity", 8
+        ), session);
+        assertEquals(200, createProduct.getStatusCode().value());
+        String productId = requireBody(createProduct).path("data").path("id").asText();
+
+        ResponseEntity<JsonNode> createInventory = post("/pet/inventory", Map.of(
+                "productId", productId,
+                "movementType", "IN",
+                "quantity", 3,
+                "notes", "Active restore " + marker
+        ), session);
+        assertEquals(200, createInventory.getStatusCode().value());
+        String inventoryId = requireBody(createInventory).path("data").path("id").asText();
+
+        ResponseEntity<JsonNode> restoreActiveInventory = patch("/pet/inventory/" + inventoryId + "/restore", null, session);
+        assertEquals(409, restoreActiveInventory.getStatusCode().value());
+        assertEquals("CONFLICT", requireBody(restoreActiveInventory).path("code").asText());
+
+        ResponseEntity<JsonNode> productAfterRejectedRestore = get("/pet/products/" + productId, session);
+        assertEquals(200, productAfterRejectedRestore.getStatusCode().value());
+        assertEquals(11, requireBody(productAfterRejectedRestore).path("data").path("stockQuantity").asInt());
+    }
+
+    @Test
+    void shouldRejectLegacyAppointmentWithoutRequiredProfessionalReference() {
+        AuthSession session = loginAsDefaultAdmin();
+        String marker = randomSearchMarker();
+
+        String clientId = createClient(session, marker);
+        String petId = createPet(session, clientId, marker);
+        String serviceId = createService(session, marker);
+        String professionalId = createProfessional(session, marker);
+
+        ResponseEntity<JsonNode> createAppointment = post("/pet/appointments", Map.of(
+                "clientId", clientId,
+                "petId", petId,
+                "serviceId", serviceId,
+                "professionalId", professionalId,
+                "scheduledAt", Instant.now().plusSeconds(3600).toString(),
+                "status", "SCHEDULED",
+                "notes", "Legacy integrity " + marker
+        ), session);
+        assertEquals(200, createAppointment.getStatusCode().value());
+        String appointmentId = requireBody(createAppointment).path("data").path("id").asText();
+
+        executeSql("UPDATE pet_appointments SET professional_id = NULL WHERE id = ?", appointmentId);
+
+        ResponseEntity<JsonNode> getAppointment = get("/pet/appointments/" + appointmentId, session);
+        assertEquals(409, getAppointment.getStatusCode().value());
+        assertEquals("CONFLICT", requireBody(getAppointment).path("code").asText());
+
+        ResponseEntity<JsonNode> listAppointments = get(
+                "/pet/appointments?page=0&size=20&search=" + marker,
+                session
+        );
+        assertEquals(409, listAppointments.getStatusCode().value());
+        assertEquals("CONFLICT", requireBody(listAppointments).path("code").asText());
+    }
+
+    @Test
     void shouldReturnPetDashboardSummary() {
         AuthSession session = loginAsDefaultAdmin();
         String marker = randomSearchMarker();
