@@ -1,13 +1,13 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { ReactNode, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/shared/auth/use-auth';
 import { usePermissions } from '@/shared/auth/usePermissions';
 import { useModuleCatalog } from '@/shared/modules/use-module-catalog';
 
-type SidebarGroup = 'core' | 'crm' | 'iot' | 'pet';
+type SidebarGroup = 'iot' | 'core' | 'crm' | 'pet';
 
 type SidebarItem = {
   href: string;
@@ -15,284 +15,281 @@ type SidebarItem = {
   anyOf?: string[];
   moduleCode?: 'CRM' | 'IOT' | 'PET';
   group: SidebarGroup;
+  icon: (props: { active: boolean }) => ReactNode;
 };
 
+function resolveScopeName(email?: string, tenantId?: string) {
+  const normalized = `${email ?? ''} ${tenantId ?? ''}`.toLowerCase();
+
+  if (normalized.includes('phaiffer')) {
+    return 'Phaiffer Industrial';
+  }
+
+  if (normalized.includes('innotech')) {
+    return 'InnoTech Solutions';
+  }
+
+  return tenantId ? `Tenant ${tenantId.slice(0, 8)}` : 'Escopo Industrial';
+}
+
+function resolveScopeSubtitle(email?: string) {
+  if (!email) {
+    return 'Industrial IoT';
+  }
+
+  if (email.includes('phaiffer')) {
+    return 'Industrial IoT';
+  }
+
+  return 'Operação conectada';
+}
+
+function NavIcon({
+  active,
+  path,
+  viewBox = '0 0 24 24'
+}: {
+  active: boolean;
+  path: ReactNode;
+  viewBox?: string;
+}) {
+  return (
+    <span
+      className={[
+        'inline-flex h-8 w-8 items-center justify-center rounded-xl border transition',
+        active
+          ? 'border-cyan-400/35 bg-cyan-400/14 text-cyan-200'
+          : 'border-slate-800 bg-slate-950/30 text-slate-400'
+      ].join(' ')}
+    >
+      <svg viewBox={viewBox} className="h-4.5 w-4.5" fill="none" stroke="currentColor" strokeWidth="1.8">
+        {path}
+      </svg>
+    </span>
+  );
+}
+
+const DashboardNavIcon = ({ active }: { active: boolean }) => (
+  <NavIcon
+    active={active}
+    path={
+      <>
+        <path d="M4 4h7v7H4zm9 0h7v7h-7zm-9 9h7v7H4zm9 3h7v4h-7z" />
+      </>
+    }
+  />
+);
+
+const DeviceNavIcon = ({ active }: { active: boolean }) => (
+  <NavIcon
+    active={active}
+    path={
+      <>
+        <rect x="8" y="3" width="8" height="18" rx="2" />
+        <path d="M10 7h4M10 11h4M10 15h4" />
+      </>
+    }
+  />
+);
+
+const AlarmNavIcon = ({ active }: { active: boolean }) => (
+  <NavIcon
+    active={active}
+    path={
+      <>
+        <path d="m12 4-8 14h16L12 4Z" />
+        <path d="M12 9v4m0 3h.01" />
+      </>
+    }
+  />
+);
+
+const AnalysisNavIcon = ({ active }: { active: boolean }) => (
+  <NavIcon
+    active={active}
+    path={
+      <>
+        <path d="M4 17 10 11l3 3 7-7" />
+        <path d="M15 7h5v5" />
+      </>
+    }
+  />
+);
+
+const AddDeviceNavIcon = ({ active }: { active: boolean }) => (
+  <NavIcon
+    active={active}
+    path={
+      <>
+        <path d="M12 4v16M4 12h16" />
+      </>
+    }
+  />
+);
+
+const WaveNavIcon = ({ active }: { active: boolean }) => (
+  <NavIcon
+    active={active}
+    path={
+      <>
+        <path d="M2 12c2.5 0 2.5-6 5-6s2.5 12 5 12 2.5-12 5-12 2.5 6 5 6" />
+      </>
+    }
+  />
+);
+
+const RegistersNavIcon = ({ active }: { active: boolean }) => (
+  <NavIcon
+    active={active}
+    path={
+      <>
+        <path d="M6 5h12M6 12h12M6 19h12" />
+        <path d="M4 5h.01M4 12h.01M4 19h.01" />
+      </>
+    }
+  />
+);
+
+const ToolNavIcon = ({ active }: { active: boolean }) => (
+  <NavIcon
+    active={active}
+    path={
+      <>
+        <path d="M14 7a4 4 0 1 1-5 5L4 17l3 3 5-5a4 4 0 0 1 5-5l-3 3" />
+      </>
+    }
+  />
+);
+
+const UserNavIcon = ({ active }: { active: boolean }) => (
+  <NavIcon
+    active={active}
+    path={
+      <>
+        <path d="M8 9a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm8 2a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" />
+        <path d="M2 21a6 6 0 0 1 12 0M14 21a5 5 0 0 1 8 0" />
+      </>
+    }
+    viewBox="0 0 24 24"
+  />
+);
+
+const SettingsNavIcon = ({ active }: { active: boolean }) => (
+  <NavIcon
+    active={active}
+    path={
+      <>
+        <path d="M12 8.5A3.5 3.5 0 1 0 12 15.5A3.5 3.5 0 1 0 12 8.5Z" />
+        <path d="m19.4 15 .8 1.3-1.5 2.5-1.5-.3a7.5 7.5 0 0 1-1.5.9l-.4 1.5H10.7l-.4-1.5a7.5 7.5 0 0 1-1.5-.9l-1.5.3-1.5-2.5.8-1.3a7.7 7.7 0 0 1 0-1.8l-.8-1.3 1.5-2.5 1.5.3a7.5 7.5 0 0 1 1.5-.9l.4-1.5h2.9l.4 1.5a7.5 7.5 0 0 1 1.5.9l1.5-.3 1.5 2.5-.8 1.3a7.7 7.7 0 0 1 0 1.8Z" />
+      </>
+    }
+  />
+);
+
 const items: SidebarItem[] = [
-  { href: '/dashboard', label: 'Dashboard', group: 'core' },
-  { href: '/tenants', label: 'Tenants', anyOf: ['TENANT_READ'], group: 'core' },
-  { href: '/users', label: 'Users', anyOf: ['USER_READ'], group: 'core' },
-  { href: '/settings', label: 'Settings', group: 'core' },
-
-  {
-    href: '/crm',
-    label: 'Overview',
-    anyOf: [
-      'crm.dashboard.read',
-      'crm.activity.read',
-      'crm.company.read',
-      'crm.contact.read',
-      'crm.lead.read',
-      'crm.deal.read',
-      'crm.pipeline.read',
-      'crm.task.read',
-      'crm.note.read'
-    ],
-    moduleCode: 'CRM',
-    group: 'crm'
-  },
-  {
-    href: '/crm/dashboard',
-    label: 'Dashboard',
-    anyOf: ['crm.dashboard.read'],
-    moduleCode: 'CRM',
-    group: 'crm'
-  },
-  {
-    href: '/crm/activity',
-    label: 'Activity',
-    anyOf: ['crm.activity.read'],
-    moduleCode: 'CRM',
-    group: 'crm'
-  },
-  {
-    href: '/crm/companies',
-    label: 'Companies',
-    anyOf: ['crm.company.read'],
-    moduleCode: 'CRM',
-    group: 'crm'
-  },
-  {
-    href: '/crm/contacts',
-    label: 'Contacts',
-    anyOf: ['crm.contact.read'],
-    moduleCode: 'CRM',
-    group: 'crm'
-  },
-  {
-    href: '/crm/leads',
-    label: 'Leads',
-    anyOf: ['crm.lead.read'],
-    moduleCode: 'CRM',
-    group: 'crm'
-  },
-  {
-    href: '/crm/deals',
-    label: 'Deals',
-    anyOf: ['crm.deal.read'],
-    moduleCode: 'CRM',
-    group: 'crm'
-  },
-  {
-    href: '/crm/pipeline',
-    label: 'Pipeline',
-    anyOf: ['crm.pipeline.read'],
-    moduleCode: 'CRM',
-    group: 'crm'
-  },
-  {
-    href: '/crm/tasks',
-    label: 'Tasks',
-    anyOf: ['crm.task.read'],
-    moduleCode: 'CRM',
-    group: 'crm'
-  },
-  {
-    href: '/crm/notes',
-    label: 'Notes',
-    anyOf: ['crm.note.read'],
-    moduleCode: 'CRM',
-    group: 'crm'
-  },
-
-  {
-    href: '/iot',
-    label: 'Overview',
-    anyOf: [
-      'iot.dashboard.read',
-      'iot.device.read',
-      'iot.register.read',
-      'iot.telemetry.read',
-      'iot.alarm.read',
-      'iot.maintenance.read',
-      'iot.report.read'
-    ],
-    moduleCode: 'IOT',
-    group: 'iot'
-  },
   {
     href: '/iot/dashboard',
     label: 'Dashboard',
     anyOf: ['iot.dashboard.read'],
     moduleCode: 'IOT',
-    group: 'iot'
-  },
-  {
-    href: '/iot/devices',
-    label: 'Devices',
-    anyOf: ['iot.device.read'],
-    moduleCode: 'IOT',
-    group: 'iot'
-  },
-  {
-    href: '/iot/registers',
-    label: 'Registers',
-    anyOf: ['iot.register.read'],
-    moduleCode: 'IOT',
-    group: 'iot'
+    group: 'iot',
+    icon: DashboardNavIcon
   },
   {
     href: '/iot/alarms',
-    label: 'Alarms',
+    label: 'Alarmes',
     anyOf: ['iot.alarm.read'],
     moduleCode: 'IOT',
-    group: 'iot'
+    group: 'iot',
+    icon: AlarmNavIcon
+  },
+  {
+    href: '/iot/observability',
+    label: 'Análise Global',
+    anyOf: ['iot.report.read'],
+    moduleCode: 'IOT',
+    group: 'iot',
+    icon: AnalysisNavIcon
+  },
+  {
+    href: '/iot/devices',
+    label: 'Dispositivos',
+    anyOf: ['iot.device.read'],
+    moduleCode: 'IOT',
+    group: 'iot',
+    icon: DeviceNavIcon
+  },
+  {
+    href: '/iot/add-device',
+    label: 'Adicionar Dispositivo',
+    anyOf: ['iot.device.create'],
+    moduleCode: 'IOT',
+    group: 'iot',
+    icon: AddDeviceNavIcon
   },
   {
     href: '/iot/telemetry',
-    label: 'Telemetry',
+    label: 'Telemetria',
     anyOf: ['iot.telemetry.read'],
     moduleCode: 'IOT',
-    group: 'iot'
+    group: 'iot',
+    icon: WaveNavIcon
+  },
+  {
+    href: '/iot/registers',
+    label: 'Registradores',
+    anyOf: ['iot.register.read'],
+    moduleCode: 'IOT',
+    group: 'iot',
+    icon: RegistersNavIcon
   },
   {
     href: '/iot/maintenance',
-    label: 'Maintenance',
+    label: 'Manutenção',
     anyOf: ['iot.maintenance.read'],
     moduleCode: 'IOT',
-    group: 'iot'
+    group: 'iot',
+    icon: ToolNavIcon
   },
   {
-    href: '/iot/reports',
-    label: 'Reports',
-    anyOf: ['iot.report.read'],
-    moduleCode: 'IOT',
-    group: 'iot'
-  },
-
-  {
-    href: '/pet',
-    label: 'Overview',
-    anyOf: ['pet.client.read', 'pet.profile.read', 'pet.appointment.read'],
-    moduleCode: 'PET',
-    group: 'pet'
+    href: '/dashboard',
+    label: 'Dashboard Geral',
+    group: 'core',
+    icon: DashboardNavIcon
   },
   {
-    href: '/pet/dashboard',
-    label: 'Dashboard',
-    anyOf: ['pet.dashboard.read'],
-    moduleCode: 'PET',
-    group: 'pet'
+    href: '/users',
+    label: 'Usuários',
+    anyOf: ['USER_READ'],
+    group: 'core',
+    icon: UserNavIcon
   },
   {
-    href: '/pet/clients',
-    label: 'Clients',
-    anyOf: ['pet.client.read'],
-    moduleCode: 'PET',
-    group: 'pet'
+    href: '/tenants',
+    label: 'Tenants',
+    anyOf: ['TENANT_READ'],
+    group: 'core',
+    icon: SettingsNavIcon
   },
   {
-    href: '/pet/pets',
-    label: 'Profiles',
-    anyOf: ['pet.profile.read'],
-    moduleCode: 'PET',
-    group: 'pet'
-  },
-  {
-    href: '/pet/services',
-    label: 'Services',
-    anyOf: ['pet.service.read'],
-    moduleCode: 'PET',
-    group: 'pet'
-  },
-  {
-    href: '/pet/professionals',
-    label: 'Professionals',
-    anyOf: ['pet.professional.read'],
-    moduleCode: 'PET',
-    group: 'pet'
-  },
-  {
-    href: '/pet/appointments',
-    label: 'Appointments',
-    anyOf: ['pet.appointment.read'],
-    moduleCode: 'PET',
-    group: 'pet'
-  },
-  {
-    href: '/pet/medical-records',
-    label: 'Medical Records',
-    anyOf: ['pet.medical-record.read'],
-    moduleCode: 'PET',
-    group: 'pet'
-  },
-  {
-    href: '/pet/products',
-    label: 'Products',
-    anyOf: ['pet.product.read'],
-    moduleCode: 'PET',
-    group: 'pet'
-  },
-  {
-    href: '/pet/inventory',
-    label: 'Inventory',
-    anyOf: ['pet.inventory.read'],
-    moduleCode: 'PET',
-    group: 'pet'
-  },
-  {
-    href: '/pet/invoices',
-    label: 'Invoices',
-    anyOf: ['pet.invoice.read'],
-    moduleCode: 'PET',
-    group: 'pet'
+    href: '/settings',
+    label: 'Settings',
+    group: 'core',
+    icon: SettingsNavIcon
   }
 ];
 
-const groupOrder: SidebarGroup[] = ['core', 'crm', 'iot', 'pet'];
+const groupOrder: SidebarGroup[] = ['iot', 'core', 'crm', 'pet'];
 
 const groupMeta: Record<SidebarGroup, { title: string }> = {
-  core: { title: 'Core' },
+  iot: { title: 'IoT System' },
+  core: { title: 'Plataforma' },
   crm: { title: 'CRM' },
-  iot: { title: 'IoT' },
   pet: { title: 'Pet' }
 };
 
 function isItemActive(pathname: string, href: string) {
-  if (href === '/crm' || href === '/iot' || href === '/pet') {
-    return pathname === href;
-  }
-
   return pathname === href || pathname.startsWith(`${href}/`);
-}
-
-function resolveActiveGroup(pathname: string): SidebarGroup {
-  if (pathname.startsWith('/crm')) {
-    return 'crm';
-  }
-
-  if (pathname.startsWith('/iot')) {
-    return 'iot';
-  }
-
-  if (pathname.startsWith('/pet')) {
-    return 'pet';
-  }
-
-  return 'core';
-}
-
-function Caret({ expanded }: { expanded: boolean }) {
-  return (
-    <span
-      aria-hidden="true"
-      className={[
-        'inline-flex h-5 w-5 items-center justify-center rounded-md text-[11px] font-bold text-slate-500 transition-transform',
-        expanded ? 'rotate-90' : ''
-      ].join(' ')}
-    >
-      ▶
-    </span>
-  );
 }
 
 export function Sidebar() {
@@ -300,8 +297,7 @@ export function Sidebar() {
   const { session, signOut } = useAuth();
   const { hasAnyPermission } = usePermissions();
   const { modules, loading } = useModuleCatalog();
-
-  const [expandedGroup, setExpandedGroup] = useState<SidebarGroup>('core');
+  const [selectedScope, setSelectedScope] = useState('current');
 
   const availableModules = useMemo(
     () =>
@@ -329,113 +325,106 @@ export function Sidebar() {
     });
   }, [availableModules, hasAnyPermission, loading]);
 
-  const groupedItems = useMemo(() => {
-    return groupOrder
-      .map((groupKey) => ({
-        key: groupKey,
-        title: groupMeta[groupKey].title,
-        items: visibleItems.filter((item) => item.group === groupKey)
-      }))
-      .filter((group) => group.items.length > 0);
-  }, [visibleItems]);
+  const groupedItems = useMemo(
+    () =>
+      groupOrder
+        .map((group) => ({
+          key: group,
+          title: groupMeta[group].title,
+          items: visibleItems.filter((item) => item.group === group)
+        }))
+        .filter((group) => group.items.length > 0),
+    [visibleItems]
+  );
 
-  useEffect(() => {
-    setExpandedGroup(resolveActiveGroup(pathname));
-  }, [pathname]);
+  const scopeName = resolveScopeName(session?.user.email, session?.user.tenantId);
+  const scopeSubtitle = resolveScopeSubtitle(session?.user.email);
 
   return (
-    <aside className="flex h-screen w-64 flex-col border-r border-slate-200 bg-white px-3 py-4">
-      <div className="mb-4 rounded-2xl bg-gradient-to-r from-ink to-action px-4 py-4 text-white shadow-card">
-        <p className="text-[10px] uppercase tracking-[0.18em] text-blue-100">
-          Phaiffer Platform
-        </p>
-        <p className="mt-1 text-base font-semibold">SaaS Control Plane</p>
+    <aside className="sticky top-0 flex h-screen w-[310px] flex-col border-r border-cyan-500/12 bg-[#020916]/96 px-4 py-5">
+      <div className="rounded-[28px] border border-cyan-500/16 bg-[linear-gradient(180deg,rgba(7,20,38,0.95),rgba(4,12,25,0.9))] p-4 shadow-[0_18px_60px_rgba(2,6,18,0.55)]">
+        <div className="flex items-start gap-3">
+          <span className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-cyan-500/22 bg-cyan-500/8 text-cyan-200">
+            <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="1.8">
+              <path d="M5 5h5v5H5zm9-1h5v6h-5zm-9 10h6v5H5zm10 0h4v4h-4z" />
+              <path d="M10 8h4m-1 6v-3" />
+            </svg>
+          </span>
+          <div className="min-w-0">
+            <p className="truncate text-lg font-semibold text-white">{scopeName}</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-cyan-300/80">
+              {scopeSubtitle}
+            </p>
+          </div>
+        </div>
+
+        <div className="mt-5 rounded-[24px] border border-slate-800 bg-slate-950/35 p-4">
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Escopo</p>
+          <p className="mt-2 text-sm font-medium text-white">Empresa ativa para operação</p>
+          <select
+            value={selectedScope}
+            onChange={(event) => setSelectedScope(event.target.value)}
+            className="mt-3 w-full rounded-2xl border border-slate-700 bg-slate-950/70 px-4 py-3 text-sm text-slate-100 focus:border-cyan-400 focus:outline-none"
+          >
+            <option value="current">{scopeName}</option>
+            <option value="multi-site">Operação Multi-site</option>
+            <option value="demo">Ambiente Demo IoT</option>
+          </select>
+          <p className="mt-2 text-xs text-slate-500">
+            O seletor está visualmente alinhado com a referência aprovada; nesta etapa ele não altera o tenant real da sessão.
+          </p>
+        </div>
       </div>
 
-      <nav className="flex-1 overflow-y-auto pr-1">
-        <div className="space-y-3">
-          {groupedItems.map((group) => {
-            const expanded = expandedGroup === group.key;
-            const groupHasActiveItem = group.items.some((item) =>
-              isItemActive(pathname, item.href)
-            );
+      <nav className="mt-6 flex-1 overflow-y-auto pr-1">
+        <div className="space-y-6">
+          {groupedItems.map((group) => (
+            <section key={group.key}>
+              <p className="px-3 text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-600">
+                {group.title}
+              </p>
+              <div className="mt-3 space-y-1.5">
+                {group.items.map((item) => {
+                  const active = isItemActive(pathname, item.href);
+                  const Icon = item.icon;
 
-            return (
-              <section
-                key={group.key}
-                className={[
-                  'rounded-2xl border p-2 transition',
-                  groupHasActiveItem
-                    ? 'border-slate-300 bg-slate-50'
-                    : 'border-slate-200 bg-white'
-                ].join(' ')}
-              >
-                <button
-                  type="button"
-                  onClick={() =>
-                    setExpandedGroup((current) =>
-                      current === group.key ? 'core' : group.key
-                    )
-                  }
-                  className={[
-                    'flex w-full items-center justify-between rounded-xl px-2 py-2 text-left transition',
-                    groupHasActiveItem
-                      ? 'bg-slate-100 text-slate-900'
-                      : 'text-slate-700 hover:bg-slate-50'
-                  ].join(' ')}
-                  aria-expanded={expanded}
-                  aria-controls={`sidebar-group-${group.key}`}
-                >
-                  <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">
-                    {group.title}
-                  </span>
-                  <Caret expanded={expanded} />
-                </button>
-
-                {expanded ? (
-                  <div
-                    id={`sidebar-group-${group.key}`}
-                    className="mt-2 space-y-1 border-t border-slate-200 pt-2"
-                  >
-                    {group.items.map((item) => {
-                      const active = isItemActive(pathname, item.href);
-
-                      return (
-                        <Link
-                          key={item.href}
-                          href={item.href}
-                          className={[
-                            'flex items-center rounded-xl px-3 py-2 text-sm transition',
-                            active
-                              ? 'bg-ink text-white shadow-sm'
-                              : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900'
-                          ].join(' ')}
-                        >
-                          <span className="truncate">{item.label}</span>
-                        </Link>
-                      );
-                    })}
-                  </div>
-                ) : null}
-              </section>
-            );
-          })}
+                  return (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      className={[
+                        'flex items-center gap-3 rounded-[22px] px-3 py-3 transition',
+                        active
+                          ? 'bg-cyan-400/10 text-white shadow-[inset_0_0_0_1px_rgba(34,211,238,0.25)]'
+                          : 'text-slate-300 hover:bg-slate-900/55 hover:text-white'
+                      ].join(' ')}
+                    >
+                      <Icon active={active} />
+                      <span className="truncate text-[15px] font-medium">{item.label}</span>
+                    </Link>
+                  );
+                })}
+              </div>
+            </section>
+          ))}
         </div>
       </nav>
 
-      <div className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 px-3 py-3 text-xs text-slate-600">
-        <p className="truncate font-semibold text-slate-800">{session?.user.fullName}</p>
-        <p className="truncate">{session?.user.email}</p>
-        <p className="mt-1 uppercase text-slate-500">{session?.user.role}</p>
+      <div className="mt-5 rounded-[28px] border border-slate-800 bg-slate-950/40 px-4 py-4">
+        <p className="truncate text-sm font-semibold text-white">{session?.user.fullName}</p>
+        <p className="mt-1 truncate text-sm text-slate-400">{session?.user.email}</p>
+        <p className="mt-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+          {session?.user.role}
+        </p>
 
         <button
           type="button"
           onClick={() => {
             void signOut();
           }}
-          className="mt-3 w-full rounded-xl bg-white px-3 py-2 text-sm font-medium text-slate-700 ring-1 ring-slate-200 transition hover:bg-slate-100"
+          className="mt-4 w-full rounded-2xl border border-rose-500/30 bg-rose-500/8 px-4 py-3 text-sm font-semibold text-rose-200 transition hover:bg-rose-500/14"
         >
-          Sair
+          Sair do Sistema
         </button>
       </div>
     </aside>

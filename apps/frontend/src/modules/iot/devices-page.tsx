@@ -1,38 +1,54 @@
 'use client';
 
-import { FormEvent, useCallback, useEffect, useState } from 'react';
+import { FormEvent, useCallback, useEffect, useMemo, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { PermissionGuard } from '@/shared/auth/PermissionGuard';
 import { ApiClientError } from '@/shared/lib/http';
 import { resolvePageItems, resolveTotalItems } from '@/shared/lib/pagination';
 import { ConfirmDialog } from '@/shared/ui/confirm-dialog';
-import { DataTable, DataTableColumn } from '@/shared/ui/data-table';
-import { FormInput } from '@/shared/ui/form-input';
-import { FormSelect } from '@/shared/ui/form-select';
-import { PageTitle } from '@/shared/ui/page-title';
 import { Pagination } from '@/shared/ui/pagination';
-import { SearchBar } from '@/shared/ui/search-bar';
 import { iotService } from '@/shared/services/iot-service';
 import { PageResponse } from '@/shared/types/common';
 import { IotDevice } from '@/shared/types/iot';
+import {
+  Chip,
+  DeviceIcon,
+  IotActionButton,
+  IotHeroAside,
+  IotNotice,
+  IotPageHeader,
+  IotPanel,
+  IotPrimaryButton,
+  IotSecondaryButton,
+  IotSelectField,
+  IotStatusPill,
+  IotTabButton,
+  IotTextField
+} from '@/modules/iot/iot-chrome';
+import { buildDemoDevicesFromReal, getOperationalProfile } from '@/modules/iot/iot-demo-data';
 import { formatDateTime } from '@/modules/iot/iot-utils';
 
 const pageSize = 10;
 
 const statusOptions = [
-  { value: '', label: 'Todos' },
+  { value: '', label: 'Todos os status' },
   { value: 'ONLINE', label: 'ONLINE' },
   { value: 'OFFLINE', label: 'OFFLINE' },
   { value: 'MAINTENANCE', label: 'MAINTENANCE' },
   { value: 'ALERT', label: 'ALERT' }
 ];
 
-const formStatusOptions = statusOptions.filter((option) => option.value);
-
 const typeOptions = [
-  { value: '', label: 'Todos' },
+  { value: '', label: 'Todos os tipos' },
   { value: 'SENSOR', label: 'SENSOR' },
   { value: 'GATEWAY', label: 'GATEWAY' },
   { value: 'ACTUATOR', label: 'ACTUATOR' }
+];
+
+const editableStatusOptions = statusOptions.filter((option) => option.value);
+const editableTypeOptions = [
+  { value: '', label: 'Sem categoria' },
+  ...typeOptions.filter((option) => option.value)
 ];
 
 const initialPage: PageResponse<IotDevice> = {
@@ -43,7 +59,22 @@ const initialPage: PageResponse<IotDevice> = {
   size: pageSize
 };
 
+function resolveTone(status: string) {
+  switch (status) {
+    case 'ONLINE':
+      return 'green' as const;
+    case 'OFFLINE':
+      return 'red' as const;
+    case 'ALERT':
+    case 'MAINTENANCE':
+      return 'amber' as const;
+    default:
+      return 'neutral' as const;
+  }
+}
+
 export function IotDevicesPage() {
+  const searchParams = useSearchParams();
   const [pageData, setPageData] = useState<PageResponse<IotDevice>>(initialPage);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -54,7 +85,7 @@ export function IotDevicesPage() {
   const [statusFilter, setStatusFilter] = useState('');
   const [typeFilter, setTypeFilter] = useState('');
 
-  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editingDevice, setEditingDevice] = useState<IotDevice | null>(null);
   const [name, setName] = useState('');
   const [identifier, setIdentifier] = useState('');
   const [type, setType] = useState('');
@@ -65,29 +96,80 @@ export function IotDevicesPage() {
 
   const [deleteCandidate, setDeleteCandidate] = useState<IotDevice | null>(null);
 
-  const load = useCallback(async (page: number, currentSearch: string, currentType: string, currentStatus: string) => {
-    setLoading(true);
-    setError(null);
+  const load = useCallback(
+    async (page: number, currentSearch: string, currentType: string, currentStatus: string) => {
+      setLoading(true);
+      setError(null);
 
-    try {
-      const result = await iotService.listDevices(page, pageSize, currentSearch, {
-        type: currentType || undefined,
-        status: currentStatus || undefined
-      });
-      setPageData(result);
-    } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : 'Erro ao carregar devices.');
-    } finally {
-      setLoading(false);
+      try {
+        const result = await iotService.listDevices(page, pageSize, currentSearch, {
+          type: currentType || undefined,
+          status: currentStatus || undefined
+        });
+        setPageData(result);
+      } catch (err) {
+        setError(err instanceof ApiClientError ? err.message : 'Erro ao carregar dispositivos.');
+      } finally {
+        setLoading(false);
+      }
+    },
+    []
+  );
+
+  useEffect(() => {
+    if (searchParams.get('created') === '1') {
+      setSuccess('Dispositivo criado com sucesso e pronto para aparecer na frota.');
     }
-  }, []);
+  }, [searchParams]);
 
   useEffect(() => {
     void load(0, search, typeFilter, statusFilter);
   }, [load, search, typeFilter, statusFilter]);
 
-  function resetForm() {
-    setEditingId(null);
+  const realRows = resolvePageItems(pageData);
+  const totalItems = resolveTotalItems(pageData);
+  const shouldUseDemo =
+    Boolean(error) ||
+    (!loading &&
+      totalItems === 0 &&
+      !search &&
+      !statusFilter &&
+      !typeFilter);
+
+  const demoRows = useMemo(() => {
+    const source = buildDemoDevicesFromReal([]);
+    return source.filter((device) => {
+      const matchesSearch =
+        !search ||
+        [device.name, device.identifier, device.location, device.description]
+          .filter(Boolean)
+          .join(' ')
+          .toLowerCase()
+          .includes(search.toLowerCase());
+      const matchesStatus = !statusFilter || device.status === statusFilter;
+      const matchesType = !typeFilter || device.type === typeFilter;
+      return matchesSearch && matchesStatus && matchesType;
+    });
+  }, [search, statusFilter, typeFilter]);
+
+  const visibleRows = shouldUseDemo ? demoRows : realRows;
+  const onlineCount = visibleRows.filter((device) => device.status === 'ONLINE').length;
+  const inactiveCount = visibleRows.filter((device) => device.status !== 'ONLINE').length;
+
+  function beginEdit(device: IotDevice) {
+    setEditingDevice(device);
+    setName(device.name);
+    setIdentifier(device.identifier ?? device.serialNumber ?? '');
+    setType(device.type ?? '');
+    setLocation(device.location ?? '');
+    setDescription(device.description ?? '');
+    setStatus(device.status);
+    setError(null);
+    setSuccess(null);
+  }
+
+  function resetEditor() {
+    setEditingDevice(null);
     setName('');
     setIdentifier('');
     setType('');
@@ -96,47 +178,32 @@ export function IotDevicesPage() {
     setStatus('ONLINE');
   }
 
-  function beginEdit(device: IotDevice) {
-    setEditingId(device.id);
-    setName(device.name);
-    setIdentifier(device.identifier ?? device.serialNumber ?? '');
-    setType(device.type ?? '');
-    setLocation(device.location ?? '');
-    setDescription(device.description ?? '');
-    setStatus(device.status);
-    setSuccess(null);
-    setError(null);
-  }
-
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleUpdate(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+
+    if (!editingDevice) {
+      return;
+    }
 
     setSubmitting(true);
     setError(null);
     setSuccess(null);
 
-    const payload = {
-      name,
-      identifier,
-      type: type || undefined,
-      location: location || undefined,
-      description: description || undefined,
-      status
-    };
-
     try {
-      if (editingId) {
-        await iotService.updateDevice(editingId, payload);
-        setSuccess('Device atualizado com sucesso.');
-      } else {
-        await iotService.createDevice(payload);
-        setSuccess('Device criado com sucesso.');
-      }
+      await iotService.updateDevice(editingDevice.id, {
+        name,
+        identifier,
+        type: type || undefined,
+        location: location || undefined,
+        description: description || undefined,
+        status
+      });
 
-      resetForm();
+      setSuccess('Dispositivo atualizado com sucesso.');
+      resetEditor();
       await load(pageData.page, search, typeFilter, statusFilter);
     } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : 'Erro ao salvar device.');
+      setError(err instanceof ApiClientError ? err.message : 'Erro ao atualizar dispositivo.');
     } finally {
       setSubmitting(false);
     }
@@ -150,168 +217,239 @@ export function IotDevicesPage() {
     try {
       await iotService.deleteDevice(deleteCandidate.id);
       setDeleteCandidate(null);
-      setSuccess('Device removido com sucesso.');
+      setSuccess('Dispositivo removido da frota com sucesso.');
       await load(pageData.page, search, typeFilter, statusFilter);
     } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : 'Erro ao excluir device.');
+      setError(err instanceof ApiClientError ? err.message : 'Erro ao excluir dispositivo.');
     }
   }
-
-  const rows = resolvePageItems(pageData);
-  const totalItems = resolveTotalItems(pageData);
-
-  const columns: DataTableColumn<IotDevice>[] = [
-    {
-      key: 'name',
-      header: 'Device',
-      render: (device) => (
-        <div>
-          <p className="font-medium text-slate-900">{device.name}</p>
-          <p className="text-xs text-slate-500">{device.identifier ?? device.serialNumber ?? '-'}</p>
-        </div>
-      )
-    },
-    {
-      key: 'context',
-      header: 'Contexto',
-      render: (device) => (
-        <div>
-          <p>{device.location ?? '-'}</p>
-          <p className="text-xs text-slate-500">{device.description ?? 'Sem descrição'}</p>
-        </div>
-      )
-    },
-    {
-      key: 'type',
-      header: 'Tipo',
-      render: (device) => device.type ?? '-'
-    },
-    {
-      key: 'status',
-      header: 'Status',
-      render: (device) => device.status
-    },
-    {
-      key: 'lastSeenAt',
-      header: 'Last seen',
-      render: (device) => formatDateTime(device.lastSeenAt)
-    },
-    {
-      key: 'actions',
-      header: 'Ações',
-      render: (device) => (
-        <div className="flex gap-2">
-          <PermissionGuard permission="iot.device.update">
-            <button
-              type="button"
-              onClick={() => beginEdit(device)}
-              className="rounded-lg border border-slate-300 px-2 py-1 text-xs font-medium text-slate-700"
-            >
-              Editar
-            </button>
-          </PermissionGuard>
-
-          <PermissionGuard permission="iot.device.delete">
-            <button
-              type="button"
-              onClick={() => setDeleteCandidate(device)}
-              className="rounded-lg border border-rose-300 px-2 py-1 text-xs font-medium text-rose-700"
-            >
-              Excluir
-            </button>
-          </PermissionGuard>
-        </div>
-      )
-    }
-  ];
 
   return (
     <PermissionGuard
       permission="iot.device.read"
-      fallback={<div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">Você não possui permissão para visualizar devices.</div>}
-    >
-      <div className="space-y-5">
-        <PageTitle
-          title="IoT Devices"
-          description="Cadastro de devices com contexto operacional, status básico e última comunicação."
-        />
-
-        <div className="grid gap-3 rounded-xl border border-slate-200 bg-white p-4 md:grid-cols-2 xl:grid-cols-5">
-          <SearchBar value={searchInput} onChange={setSearchInput} placeholder="Nome, identifier, localização ou descrição" />
-          <FormSelect label="Tipo" value={typeFilter} options={typeOptions} onChange={setTypeFilter} />
-          <FormSelect label="Status" value={statusFilter} options={statusOptions} onChange={setStatusFilter} />
-          <button
-            type="button"
-            onClick={() => setSearch(searchInput)}
-            className="rounded-lg bg-action px-4 py-2 text-sm font-medium text-white"
-          >
-            Buscar
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              setSearchInput('');
-              setSearch('');
-              setTypeFilter('');
-              setStatusFilter('');
-            }}
-            className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700"
-          >
-            Limpar
-          </button>
+      fallback={
+        <div className="rounded-2xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-200">
+          Você não possui permissão para visualizar a gestão de dispositivos.
         </div>
+      }
+    >
+      <div className="space-y-6">
+        <IotPageHeader
+          eyebrow="Fleet Management"
+          title="Gestão de Dispositivos"
+          description="Inventário operacional dos ativos conectados com status, contexto de comunicação e atalhos para onboarding Modbus."
+          chips={
+            <>
+              <Chip label="Dispositivos IoT" value={visibleRows.length} tone="green" icon={<DeviceIcon />} />
+              <Chip label="Ativos" value={onlineCount} tone="green" />
+              <Chip label="Inativos" value={inactiveCount} tone={inactiveCount > 0 ? 'amber' : 'green'} />
+            </>
+          }
+          action={<IotActionButton href="/iot/add-device">Adicionar dispositivo</IotActionButton>}
+          aside={
+            <IotHeroAside
+              title="Estado da Frota"
+              items={[
+                { label: 'Fonte', value: shouldUseDemo ? 'Demo assistida' : 'Endpoint real', tone: shouldUseDemo ? 'amber' : 'green' },
+                { label: 'Registros demo', value: visibleRows.length.toString(), tone: 'cyan' },
+                { label: 'Ações críticas', value: 'Editar / excluir', tone: shouldUseDemo ? 'amber' : 'green' }
+              ]}
+            />
+          }
+        />
 
-        <PermissionGuard permission={editingId ? 'iot.device.update' : 'iot.device.create'}>
-          <form onSubmit={handleSubmit} className="grid gap-3 rounded-xl border border-slate-200 bg-white p-4 md:grid-cols-2 xl:grid-cols-3">
-            <FormInput label="Nome" value={name} onChange={setName} required />
-            <FormInput label="Identifier" value={identifier} onChange={setIdentifier} required />
-            <FormSelect label="Tipo" value={type} options={typeOptions} onChange={setType} />
-            <FormInput label="Localização" value={location} onChange={setLocation} />
-            <FormInput label="Descrição" value={description} onChange={setDescription} />
-            <FormSelect label="Status" value={status} options={formStatusOptions} onChange={setStatus} />
+        {error ? (
+          <IotNotice
+            title="Listagem em modo demo"
+            description={`${error} A página continua operável para apresentação com um parque estático de referência.`}
+            tone="amber"
+          />
+        ) : null}
 
-            <div className="flex gap-2 xl:col-span-3">
-              <button
-                type="submit"
-                disabled={submitting}
-                className="rounded-lg bg-action px-4 py-2 text-sm font-medium text-white disabled:opacity-60"
+        {success ? (
+          <IotNotice title="Operação concluída" description={success} tone="green" />
+        ) : null}
+
+        <IotPanel
+          title="Filtros operacionais"
+          description="Refine a frota por nome, tipo e status sem sair do fluxo de demonstração."
+        >
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
+            <IotTextField
+              label="Busca"
+              value={searchInput}
+              onChange={setSearchInput}
+              placeholder="Nome, ID técnico ou localização"
+            />
+            <IotSelectField label="Tipo" value={typeFilter} onChange={setTypeFilter} options={typeOptions} />
+            <IotSelectField label="Status" value={statusFilter} onChange={setStatusFilter} options={statusOptions} />
+            <div className="flex items-end gap-3">
+              <IotPrimaryButton onClick={() => setSearch(searchInput)}>Aplicar</IotPrimaryButton>
+              <IotSecondaryButton
+                onClick={() => {
+                  setSearchInput('');
+                  setSearch('');
+                  setStatusFilter('');
+                  setTypeFilter('');
+                }}
               >
-                {submitting ? 'Salvando...' : editingId ? 'Atualizar device' : 'Criar device'}
-              </button>
-              {editingId ? (
-                <button
-                  type="button"
-                  onClick={resetForm}
-                  className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700"
-                >
-                  Cancelar edição
-                </button>
-              ) : null}
+                Limpar
+              </IotSecondaryButton>
             </div>
-          </form>
-        </PermissionGuard>
+            <div className="flex items-end gap-3">
+              <IotTabButton
+                label={`Ativos (${onlineCount})`}
+                active={statusFilter === 'ONLINE'}
+                onClick={() => setStatusFilter(statusFilter === 'ONLINE' ? '' : 'ONLINE')}
+              />
+              <IotTabButton
+                label={`Inativos (${inactiveCount})`}
+                active={statusFilter === 'OFFLINE'}
+                onClick={() => setStatusFilter(statusFilter === 'OFFLINE' ? '' : 'OFFLINE')}
+              />
+            </div>
+          </div>
+        </IotPanel>
 
-        {error ? <div className="rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{error}</div> : null}
-        {success ? <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">{success}</div> : null}
+        {editingDevice && !shouldUseDemo ? (
+          <IotPanel
+            title={`Editar ${editingDevice.name}`}
+            description="A edição continua conectada ao endpoint real existente do módulo IoT."
+          >
+            <form onSubmit={handleUpdate} className="space-y-5">
+              <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                <IotTextField label="Nome" value={name} onChange={setName} />
+                <IotTextField label="Identificador" value={identifier} onChange={setIdentifier} />
+                <IotSelectField label="Tipo" value={type} onChange={setType} options={editableTypeOptions} />
+                <IotTextField label="Localização" value={location} onChange={setLocation} />
+                <IotSelectField
+                  label="Status"
+                  value={status}
+                  onChange={setStatus}
+                  options={editableStatusOptions}
+                />
+                <IotTextField label="Descrição" value={description} onChange={setDescription} />
+              </div>
+              <div className="flex gap-3">
+                <IotPrimaryButton type="submit" disabled={submitting}>
+                  {submitting ? 'Atualizando...' : 'Atualizar dispositivo'}
+                </IotPrimaryButton>
+                <IotSecondaryButton onClick={resetEditor}>Cancelar</IotSecondaryButton>
+              </div>
+            </form>
+          </IotPanel>
+        ) : null}
 
-        <DataTable
-          columns={columns}
-          rows={rows}
-          getRowKey={(row) => row.id}
-          loading={loading}
-          emptyMessage="Nenhum device encontrado."
-        />
+        <IotPanel
+          title="Tabela operacional"
+          description="Lista densa com endpoint, protocolo, quantidade de leituras e última comunicação."
+        >
+          <div className="overflow-hidden rounded-[28px] border border-cyan-500/15">
+            <table className="min-w-full bg-[#050f1f]">
+              <thead className="border-b border-cyan-500/15 bg-[#061427]">
+                <tr>
+                  {['Nome', 'Contexto Modbus', 'Leituras', 'Status', 'Último contato', 'Ações'].map((header) => (
+                    <th
+                      key={header}
+                      className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.18em] text-slate-400"
+                    >
+                      {header}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-800 text-sm text-slate-200">
+                {loading ? (
+                  <tr>
+                    <td colSpan={6} className="px-4 py-10 text-center text-slate-500">
+                      Carregando dispositivos...
+                    </td>
+                  </tr>
+                ) : visibleRows.length === 0 ? (
+                  <tr>
+                    <td colSpan={6} className="px-4 py-10 text-center text-slate-500">
+                      Nenhum dispositivo encontrado para o filtro selecionado.
+                    </td>
+                  </tr>
+                ) : (
+                  visibleRows.map((device, index) => {
+                    const profile = getOperationalProfile(device, index);
+                    const tone = resolveTone(device.status);
 
-        <Pagination
-          page={pageData.page}
-          totalPages={pageData.totalPages}
-          totalElements={totalItems}
-          onPageChange={(nextPage) => load(nextPage, search, typeFilter, statusFilter)}
-        />
+                    return (
+                      <tr key={device.id} className="bg-[#071223]/80">
+                        <td className="px-4 py-4">
+                          <p className="font-semibold text-white">{device.name}</p>
+                          <p className="mt-1 text-sm text-slate-400">
+                            {device.identifier ?? device.serialNumber ?? '-'} • {device.location ?? profile.area}
+                          </p>
+                        </td>
+                        <td className="px-4 py-4">
+                          <p>{profile.transport}</p>
+                          <p className="mt-1 text-sm text-slate-400">
+                            {profile.host}:{profile.port} • Unit {profile.unitId}
+                          </p>
+                        </td>
+                        <td className="px-4 py-4">
+                          <p>{profile.registerCount} variáveis</p>
+                          <p className="mt-1 text-sm text-slate-400">
+                            Polling {profile.pollInterval} • Gateway {profile.gateway}
+                          </p>
+                        </td>
+                        <td className="px-4 py-4">
+                          <div className="flex flex-wrap gap-2">
+                            <IotStatusPill label={device.status} tone={tone} />
+                            <IotStatusPill label={profile.signal} tone={profile.health} />
+                          </div>
+                        </td>
+                        <td className="px-4 py-4 text-slate-400">{formatDateTime(device.lastSeenAt)}</td>
+                        <td className="px-4 py-4">
+                          <div className="flex flex-wrap gap-2">
+                            {!shouldUseDemo ? (
+                              <>
+                                <button
+                                  type="button"
+                                  onClick={() => beginEdit(device)}
+                                  className="rounded-2xl border border-slate-700 bg-slate-950/40 px-3 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-slate-200 transition hover:border-cyan-400/35"
+                                >
+                                  Editar
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => setDeleteCandidate(device)}
+                                  className="rounded-2xl border border-rose-500/30 bg-rose-500/8 px-3 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-rose-200 transition hover:bg-rose-500/12"
+                                >
+                                  Excluir
+                                </button>
+                              </>
+                            ) : (
+                              <span className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
+                                Somente visual
+                              </span>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
+              </tbody>
+            </table>
+          </div>
+        </IotPanel>
+
+        {!shouldUseDemo ? (
+          <Pagination
+            page={pageData.page}
+            totalPages={pageData.totalPages}
+            totalElements={totalItems}
+            onPageChange={(nextPage) => load(nextPage, search, typeFilter, statusFilter)}
+          />
+        ) : null}
 
         <ConfirmDialog
           open={Boolean(deleteCandidate)}
-          title="Excluir device"
+          title="Excluir dispositivo"
           description={deleteCandidate ? `Confirma a exclusão de ${deleteCandidate.name}?` : undefined}
           confirmLabel="Excluir"
           onCancel={() => setDeleteCandidate(null)}
