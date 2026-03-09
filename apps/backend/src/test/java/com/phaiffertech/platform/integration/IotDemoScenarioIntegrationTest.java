@@ -1,6 +1,7 @@
 package com.phaiffertech.platform.integration;
 
 import com.phaiffertech.platform.core.tenant.repository.TenantRepository;
+import com.phaiffertech.platform.modules.iot.demo.config.IotDemoProperties;
 import com.phaiffertech.platform.modules.iot.demo.service.IotDemoScenarioService;
 import com.phaiffertech.platform.modules.iot.monitoring.service.IotDashboardService;
 import com.phaiffertech.platform.modules.iot.report.service.IotReportService;
@@ -25,6 +26,9 @@ class IotDemoScenarioIntegrationTest extends AbstractIntegrationTest {
     private IotDemoScenarioService demoScenarioService;
 
     @Autowired
+    private IotDemoProperties demoProperties;
+
+    @Autowired
     private TenantRepository tenantRepository;
 
     @Autowired
@@ -38,6 +42,7 @@ class IotDemoScenarioIntegrationTest extends AbstractIntegrationTest {
 
     @AfterEach
     void cleanupDemoData() {
+        demoProperties.setMode("demo");
         UUID tenantId = defaultTenantId();
 
         executeSql(
@@ -116,6 +121,7 @@ class IotDemoScenarioIntegrationTest extends AbstractIntegrationTest {
 
     @Test
     void shouldSeedAndGenerateOperationalDemoData() {
+        demoProperties.setMode("demo");
         var firstSeed = demoScenarioService.ensureDemoBase();
         var secondSeed = demoScenarioService.ensureDemoBase();
 
@@ -187,6 +193,54 @@ class IotDemoScenarioIntegrationTest extends AbstractIntegrationTest {
         } finally {
             TenantContext.clear();
         }
+    }
+
+    @Test
+    void shouldExposePredictableTestModeForSmokeValidation() {
+        demoProperties.setMode("test");
+        demoScenarioService.ensureDemoBase();
+
+        var firstTick = demoScenarioService.generateTick();
+        var secondTick = demoScenarioService.generateTick();
+        var thirdTick = demoScenarioService.generateTick();
+        var fourthTick = demoScenarioService.generateTick();
+        var fifthTick = demoScenarioService.generateTick();
+
+        assertEquals("test", firstTick.mode());
+        assertEquals("test", secondTick.mode());
+        assertEquals(0, secondTick.anomalySignals());
+        assertTrue(thirdTick.anomalySignals() >= 1);
+        assertTrue(fourthTick.anomalySignals() >= 1);
+        assertTrue(fifthTick.anomalySignals() >= 1);
+        assertTrue(fifthTick.telemetryPoints() > 0);
+
+        UUID tenantId = defaultTenantId();
+
+        int testModeTelemetry = countRows(
+                """
+                SELECT COUNT(*)
+                FROM iot_telemetry_records t
+                JOIN iot_devices d ON d.id = t.device_id
+                WHERE t.tenant_id = ?
+                  AND d.identifier LIKE 'DEMO-IOT-%'
+                  AND t.metadata LIKE '%"simulatorMode":"test"%'
+                """,
+                tenantId.toString()
+        );
+        assertTrue(testModeTelemetry >= 10);
+
+        int deterministicAlarms = countRows(
+                """
+                SELECT COUNT(*)
+                FROM iot_alarms a
+                JOIN iot_devices d ON d.id = a.device_id
+                WHERE a.tenant_id = ?
+                  AND d.identifier LIKE 'DEMO-IOT-%'
+                  AND a.deleted_at IS NULL
+                """,
+                tenantId.toString()
+        );
+        assertTrue(deterministicAlarms >= 1);
     }
 
     private UUID defaultTenantId() {

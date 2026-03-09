@@ -93,6 +93,10 @@ export function IotDashboardPage() {
   const [error, setError] = useState<string | null>(null);
   const [lastRefreshAt, setLastRefreshAt] = useState<string | null>(null);
   const [alarmPressureSeries, setAlarmPressureSeries] = useState([
+    { label: '09:28', value: 1 },
+    { label: '09:36', value: 1 },
+    { label: '09:44', value: 2 },
+    { label: '09:52', value: 2 },
     { label: '10:00', value: 1 },
     { label: '10:08', value: 2 },
     { label: '10:16', value: 1 },
@@ -101,6 +105,10 @@ export function IotDashboardPage() {
     { label: '10:40', value: 2 }
   ]);
   const [throughputSeries, setThroughputSeries] = useState([
+    { label: '09:28', value: 88 },
+    { label: '09:36', value: 96 },
+    { label: '09:44', value: 104 },
+    { label: '09:52', value: 112 },
     { label: '10:00', value: 120 },
     { label: '10:08', value: 134 },
     { label: '10:16', value: 149 },

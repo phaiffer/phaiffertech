@@ -40,9 +40,11 @@ public class IotDemoAutomationRunner {
 
         var tick = scenarioService.generateTick();
         log.info(
-                "IoT demo live generation started at cycle {} with {} telemetry points emitted.",
+                "IoT demo generator started in '{}' mode at cycle {} with {} telemetry points and {} anomaly signals.",
+                tick.mode(),
                 tick.cycle(),
-                tick.telemetryPoints()
+                tick.telemetryPoints(),
+                tick.anomalySignals()
         );
     }
 
@@ -53,9 +55,11 @@ public class IotDemoAutomationRunner {
     public void generateTelemetry() {
         var tick = scenarioService.generateTick();
         log.debug(
-                "IoT demo cycle {} emitted {} telemetry points and created {} maintenance orders.",
+                "IoT demo cycle {} [{}] emitted {} telemetry points, {} anomaly signals and {} maintenance orders.",
                 tick.cycle(),
+                tick.mode(),
                 tick.telemetryPoints(),
+                tick.anomalySignals(),
                 tick.maintenanceCreated()
         );
     }

@@ -50,7 +50,7 @@ describe('IoT demo helpers', () => {
   it('mantem apenas os ultimos pulsos ao acumular serie viva', () => {
     let series = [] as Array<{ label: string; value: number }>;
 
-    for (let index = 0; index < 7; index++) {
+    for (let index = 0; index < 13; index++) {
       series = appendLiveTrendPoint(
         series,
         index + 1,
@@ -58,8 +58,8 @@ describe('IoT demo helpers', () => {
       );
     }
 
-    expect(series).toHaveLength(6);
+    expect(series).toHaveLength(12);
     expect(series[0]?.value).toBe(2);
-    expect(series[5]?.value).toBe(7);
+    expect(series[11]?.value).toBe(13);
   });
 });

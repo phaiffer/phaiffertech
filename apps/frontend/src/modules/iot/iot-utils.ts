@@ -49,7 +49,7 @@ export function appendLiveTrendPoint(
   series: IotLiveTrendPoint[],
   value: number,
   timestamp = new Date(),
-  maxPoints = 6
+  maxPoints = 12
 ) {
   const label = timestamp.toLocaleTimeString('pt-BR', {
     hour: '2-digit',

@@ -78,6 +78,10 @@ export function IotReportsPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [performanceSeries, setPerformanceSeries] = useState([
+    { label: '09:20', value: 70 },
+    { label: '09:30', value: 72 },
+    { label: '09:40', value: 75 },
+    { label: '09:50', value: 77 },
     { label: '10:00', value: 74 },
     { label: '10:10', value: 78 },
     { label: '10:20', value: 81 },
@@ -86,6 +90,10 @@ export function IotReportsPage() {
     { label: '10:50', value: 88 }
   ]);
   const [throughputSeries, setThroughputSeries] = useState([
+    { label: '09:20', value: 72 },
+    { label: '09:30', value: 84 },
+    { label: '09:40', value: 92 },
+    { label: '09:50', value: 104 },
     { label: '10:00', value: 96 },
     { label: '10:10', value: 124 },
     { label: '10:20', value: 148 },

@@ -7,9 +7,12 @@ import org.springframework.stereotype.Component;
 @ConfigurationProperties(prefix = "app.iot.demo")
 public class IotDemoProperties {
 
+    private static final String TEST_MODE = "test";
+
     private boolean enabled;
     private boolean seedOnStartup = true;
     private String tenantCode = "default";
+    private String mode = "demo";
     private long generationIntervalMs = 8000L;
     private long initialDelayMs = 12000L;
     private int maxPendingMaintenance = 6;
@@ -38,6 +41,14 @@ public class IotDemoProperties {
         this.tenantCode = tenantCode;
     }
 
+    public String getMode() {
+        return mode;
+    }
+
+    public void setMode(String mode) {
+        this.mode = mode == null || mode.isBlank() ? "demo" : mode.trim();
+    }
+
     public long getGenerationIntervalMs() {
         return generationIntervalMs;
     }
@@ -60,5 +71,13 @@ public class IotDemoProperties {
 
     public void setMaxPendingMaintenance(int maxPendingMaintenance) {
         this.maxPendingMaintenance = maxPendingMaintenance;
+    }
+
+    public String normalizedMode() {
+        return isTestMode() ? TEST_MODE : "demo";
+    }
+
+    public boolean isTestMode() {
+        return TEST_MODE.equalsIgnoreCase(mode);
     }
 }

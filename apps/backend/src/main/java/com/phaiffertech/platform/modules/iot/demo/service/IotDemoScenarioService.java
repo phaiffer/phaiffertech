@@ -39,10 +39,11 @@ public class IotDemoScenarioService {
     private static final List<String> OPEN_ALARM_STATUSES = List.of("OPEN", "ACKNOWLEDGED");
     private static final List<String> PENDING_MAINTENANCE_STATUSES = List.of("PENDING", "SCHEDULED", "IN_PROGRESS");
     private static final List<String> CRITICAL_ALARM_SEVERITIES = List.of("CRITICAL");
-    private static final String DEMO_SOURCE = "demo-simulator";
+    private static final String DEMO_SOURCE = "official-iot-demo-simulator";
     private static final String DEMO_ASSIGNEE = "Demo Field Team";
     private static final Duration START_OFFLINE_AGE = Duration.ofHours(2);
-    private static final int STARTUP_OFFLINE_WARMUP_CYCLES = 4;
+    private static final int DEMO_MODE_OFFLINE_WARMUP_CYCLES = 4;
+    private static final int TEST_MODE_OFFLINE_WARMUP_CYCLES = 2;
 
     private static final List<DemoDeviceProfile> DEVICE_PROFILES = List.of(
             new DemoDeviceProfile(
@@ -221,6 +222,7 @@ public class IotDemoScenarioService {
             long cycle = cycleCounter.incrementAndGet();
             Instant baseRecordedAt = Instant.now();
             int telemetryPoints = 0;
+            int anomalySignals = 0;
 
             for (DemoDeviceContext deviceContext : devices) {
                 if (shouldHoldDeviceOffline(deviceContext.profile(), cycle)) {
@@ -229,6 +231,10 @@ public class IotDemoScenarioService {
 
                 for (DemoRegisterContext registerContext : deviceContext.registers()) {
                     BigDecimal metricValue = simulateMetricValue(deviceContext.profile(), registerContext.profile(), cycle);
+                    if (isOutsideThreshold(metricValue, registerContext.profile())) {
+                        anomalySignals++;
+                    }
+
                     telemetryWriter.write(
                             tenantId,
                             new IotTelemetryCreateRequest(
@@ -246,7 +252,7 @@ public class IotDemoScenarioService {
             }
 
             int maintenanceCreated = syncMaintenanceFromCriticalAlarms(devices);
-            return new DemoTickSummary(cycle, telemetryPoints, maintenanceCreated);
+            return new DemoTickSummary(cycle, telemetryPoints, maintenanceCreated, properties.normalizedMode(), anomalySignals);
         });
     }
 
@@ -410,17 +416,20 @@ public class IotDemoScenarioService {
     }
 
     private boolean shouldHoldDeviceOffline(DemoDeviceProfile profile, long cycle) {
-        return profile.startsOffline() && cycle <= STARTUP_OFFLINE_WARMUP_CYCLES;
+        return profile.startsOffline() && cycle <= resolveOfflineWarmupCycles();
     }
 
     private Map<String, Object> buildMetadata(DemoDeviceProfile device, DemoRegisterProfile register, long cycle) {
         Map<String, Object> metadata = new LinkedHashMap<>();
         metadata.put("source", DEMO_SOURCE);
+        metadata.put("simulatorMode", properties.normalizedMode());
         metadata.put("functionCode", register.functionCode());
         metadata.put("registerAddress", register.registerAddress());
         metadata.put("deviceProfile", device.key());
         metadata.put("demoCycle", cycle);
         metadata.put("pollingProfile", device.pollingProfile());
+        metadata.put("scenarioState", resolveScenarioState(device, register, cycle));
+        metadata.put("referenceProfile", "modbus-baseline");
         return metadata;
     }
 
@@ -429,21 +438,28 @@ public class IotDemoScenarioService {
             return shouldHoldDeviceOffline(device, cycle) ? BigDecimal.ZERO : BigDecimal.ONE;
         }
 
+        if (properties.isTestMode()) {
+            return BigDecimal.valueOf(simulateTestMetricValue(device, register, cycle)).setScale(2, RoundingMode.HALF_UP);
+        }
+
         double value = register.baseValue()
                 + Math.sin((cycle + register.phaseOffset()) / 2.7d) * register.amplitude()
                 + Math.cos((cycle + register.phaseOffset()) / 4.9d) * register.noise();
 
-        value = applyExcursion(device.key(), register.metricName(), cycle, value, register);
+        value = applyDemoExcursion(device.key(), register.metricName(), cycle, value, register);
         return BigDecimal.valueOf(value).setScale(2, RoundingMode.HALF_UP);
     }
 
-    private double applyExcursion(
+    private double applyDemoExcursion(
             String deviceKey,
             String metricName,
             long cycle,
             double value,
             DemoRegisterProfile register
     ) {
+        if ("compressor".equals(deviceKey) && "temperature".equals(metricName) && cycle % 18L >= 4L && cycle % 18L <= 6L) {
+            return register.maxThreshold() + 2.5d + (cycle % 18L - 4L) * 1.2d;
+        }
         if ("compressor".equals(deviceKey) && "pressure".equals(metricName) && cycle % 10L <= 1L) {
             return register.maxThreshold() + (cycle % 10L == 0L ? 1.4d : 0.8d);
         }
@@ -457,9 +473,102 @@ public class IotDemoScenarioService {
             return register.minThreshold() - 10.0d;
         }
 
+        return clampDemoValue(register, value);
+    }
+
+    private double simulateTestMetricValue(DemoDeviceProfile device, DemoRegisterProfile register, long cycle) {
+        long scenarioStep = Math.floorMod(cycle - 1L, 6L);
+
+        if ("compressor".equals(device.key()) && "pressure".equals(register.metricName())) {
+            return switch ((int) scenarioStep) {
+                case 1 -> register.maxThreshold() - 0.3d;
+                case 2 -> register.maxThreshold() + 1.1d;
+                case 3 -> register.baseValue() + 0.2d;
+                default -> register.baseValue();
+            };
+        }
+        if ("tower".equals(device.key()) && "vibration".equals(register.metricName())) {
+            return switch ((int) scenarioStep) {
+                case 2 -> register.maxThreshold() + 0.9d;
+                case 3 -> register.maxThreshold() - 0.2d;
+                default -> register.baseValue();
+            };
+        }
+        if ("power-panel".equals(device.key()) && "battery".equals(register.metricName())) {
+            return switch ((int) scenarioStep) {
+                case 3 -> register.minThreshold() - 4.0d;
+                case 4 -> register.minThreshold() + 2.5d;
+                default -> register.baseValue();
+            };
+        }
+        if ("pump".equals(device.key()) && "level".equals(register.metricName())) {
+            return switch ((int) scenarioStep) {
+                case 4 -> register.minThreshold() - 8.0d;
+                case 5 -> register.baseValue() + 1.4d;
+                default -> register.baseValue();
+            };
+        }
+
+        double deterministicOffset = ((scenarioStep % 3L) - 1L) * Math.max(register.noise(), 0.25d);
+        return clampDemoValue(register, register.baseValue() + deterministicOffset);
+    }
+
+    private double clampDemoValue(DemoRegisterProfile register, double value) {
         double floor = register.minThreshold() - 1.5d;
         double ceiling = register.maxThreshold() + 1.5d;
         return Math.max(floor, Math.min(ceiling, value));
+    }
+
+    private int resolveOfflineWarmupCycles() {
+        return properties.isTestMode() ? TEST_MODE_OFFLINE_WARMUP_CYCLES : DEMO_MODE_OFFLINE_WARMUP_CYCLES;
+    }
+
+    private String resolveScenarioState(DemoDeviceProfile device, DemoRegisterProfile register, long cycle) {
+        if (shouldHoldDeviceOffline(device, cycle)) {
+            return "offline-warmup";
+        }
+        if (properties.isTestMode()) {
+            long scenarioStep = Math.floorMod(cycle - 1L, 6L);
+            if ("compressor".equals(device.key()) && "pressure".equals(register.metricName()) && scenarioStep == 2L) {
+                return "test-threshold-breach";
+            }
+            if ("tower".equals(device.key()) && "vibration".equals(register.metricName()) && scenarioStep == 2L) {
+                return "test-vibration-spike";
+            }
+            if ("power-panel".equals(device.key()) && "battery".equals(register.metricName()) && scenarioStep == 3L) {
+                return "test-battery-drop";
+            }
+            if ("pump".equals(device.key()) && "level".equals(register.metricName()) && scenarioStep == 4L) {
+                return "test-level-dip";
+            }
+            return "test-steady";
+        }
+
+        if ("compressor".equals(device.key()) && "temperature".equals(register.metricName()) && cycle % 18L >= 4L && cycle % 18L <= 6L) {
+            return "demo-thermal-ramp";
+        }
+        if ("compressor".equals(device.key()) && "pressure".equals(register.metricName()) && cycle % 10L <= 1L) {
+            return "demo-pressure-peak";
+        }
+        if ("tower".equals(device.key()) && "vibration".equals(register.metricName()) && cycle % 12L == 5L) {
+            return "demo-vibration-spike";
+        }
+        if ("power-panel".equals(device.key()) && "battery".equals(register.metricName()) && cycle % 14L >= 6L && cycle % 14L <= 7L) {
+            return "demo-battery-drop";
+        }
+        if ("pump".equals(device.key()) && "level".equals(register.metricName()) && cycle % 16L == 8L) {
+            return "demo-level-dip";
+        }
+        return "demo-steady";
+    }
+
+    private boolean isOutsideThreshold(BigDecimal metricValue, DemoRegisterProfile register) {
+        if ("BOOLEAN".equalsIgnoreCase(register.dataType())) {
+            return false;
+        }
+
+        double value = metricValue.doubleValue();
+        return value < register.minThreshold() || value > register.maxThreshold();
     }
 
     private BigDecimal toDecimal(Double value) {
@@ -491,7 +600,7 @@ public class IotDemoScenarioService {
     public record DemoSeedSummary(int totalDevices, int totalRegisters, int totalMaintenance) {
     }
 
-    public record DemoTickSummary(long cycle, int telemetryPoints, int maintenanceCreated) {
+    public record DemoTickSummary(long cycle, int telemetryPoints, int maintenanceCreated, String mode, int anomalySignals) {
     }
 
     private record DemoDeviceContext(DemoDeviceProfile profile, IotDevice device, List<DemoRegisterContext> registers) {

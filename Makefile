@@ -12,7 +12,8 @@ IOT_SEED_SQL := infra/docker/sql/iot-seed.sql
 .PHONY: help up down restart rebuild status logs logs-follow logs-backend logs-frontend logs-db docker-build docker-reset-db \
 	build test test-backend test-integration test-unit test-pet test-iot lint clean backend frontend install-backend install-frontend \
 	package-backend package-frontend db-shell migrate seed crm-seed pet-seed iot-seed logs-all swagger verify \
-	ci metrics logs-json observability-up observability-down terraform-init terraform-plan validate-iot-suite validate-iot-live
+	ci metrics logs-json observability-up observability-down terraform-init terraform-plan validate-iot-suite validate-iot-live \
+	simulate-iot-demo simulate-iot-test
 
 help: ## List available commands
 	@awk 'BEGIN {FS = ":.*##"; printf "\nAvailable targets:\n"} /^[a-zA-Z0-9_.-]+:.*##/ { printf "  %-20s %s\n", $$1, $$2 }' $(MAKEFILE_LIST)
@@ -170,3 +171,11 @@ seed-iot-demo:
 cleanup-iot-demo:
 	chmod +x scripts/seed/iot_demo_cleanup.sh
 	./scripts/seed/iot_demo_cleanup.sh
+
+simulate-iot-demo:
+	chmod +x scripts/seed/iot_demo_simulator.sh
+	./scripts/seed/iot_demo_simulator.sh demo
+
+simulate-iot-test:
+	chmod +x scripts/seed/iot_demo_simulator.sh
+	./scripts/seed/iot_demo_simulator.sh test

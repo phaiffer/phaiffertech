@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { ReactNode } from 'react';
+import { ReactNode, useId } from 'react';
 
 function cn(...values: Array<string | false | null | undefined>) {
   return values.filter(Boolean).join(' ');
@@ -570,37 +570,181 @@ export function IotMiniTrend({
   series: Array<{ label: string; value: number }>;
   accent?: string;
 }) {
-  const maxValue = Math.max(...series.map((item) => item.value), 1);
-  const points = series
-    .map((item, index) => {
-      const x = (index / Math.max(series.length - 1, 1)) * 100;
-      const y = 100 - (item.value / maxValue) * 100;
-      return `${x},${y}`;
-    })
-    .join(' ');
+  const gradientId = useId().replace(/:/g, '');
+  const safeSeries = series.length > 0 ? series : [{ label: '--:--', value: 0 }];
+  const values = safeSeries.map((item) => item.value);
+  const currentValue = values.at(-1) ?? 0;
+  const previousValue = values.at(-2) ?? currentValue;
+  const minValue = Math.min(...values);
+  const maxValue = Math.max(...values, 1);
+  const spread = Math.max(maxValue - minValue, Math.abs(maxValue) * 0.12, 1);
+  const floor = Math.max(0, minValue - spread * 0.18);
+  const ceiling = maxValue + spread * 0.18;
+  const domain = Math.max(ceiling - floor, 1);
+  const delta = currentValue - previousValue;
+  const leftPadding = 8;
+  const rightPadding = 98;
+  const topPadding = 12;
+  const bottomPadding = 88;
+  const chartHeight = bottomPadding - topPadding;
+  const chartWidth = rightPadding - leftPadding;
+
+  const formatValue = (value: number) =>
+    new Intl.NumberFormat('pt-BR', {
+      minimumFractionDigits: Number.isInteger(value) ? 0 : 1,
+      maximumFractionDigits: Number.isInteger(value) ? 0 : 1
+    }).format(value);
+
+  const points = safeSeries.map((item, index) => {
+    const x = leftPadding + (index / Math.max(safeSeries.length - 1, 1)) * chartWidth;
+    const y = bottomPadding - ((item.value - floor) / domain) * chartHeight;
+    return {
+      x,
+      y,
+      label: item.label,
+      value: item.value
+    };
+  });
+
+  const polylinePoints = points.map((point) => `${point.x},${point.y}`).join(' ');
+  const areaPoints = `${leftPadding},${bottomPadding} ${polylinePoints} ${rightPadding},${bottomPadding}`;
+  const gridValues = Array.from({ length: 4 }, (_, index) => ceiling - (domain / 3) * index);
+  const highlightedPoint = points.at(-1) ?? {
+    x: rightPadding,
+    y: bottomPadding,
+    label: '--:--',
+    value: currentValue
+  };
+  const amplitude = maxValue - minValue;
+  const trendLabel =
+    Math.abs(delta) < Math.max(spread * 0.05, 0.2)
+      ? 'Estável'
+      : delta > 0
+        ? 'Acelerando'
+        : 'Recuando';
+  const anchorLabels = [
+    safeSeries[0]?.label ?? '--:--',
+    safeSeries[Math.floor((safeSeries.length - 1) / 2)]?.label ?? '--:--',
+    safeSeries.at(-1)?.label ?? '--:--'
+  ];
 
   return (
-    <div className="rounded-[28px] border border-slate-800 bg-slate-950/35 p-5">
-      <p className="text-sm font-semibold text-white">{title}</p>
-      <div className="mt-4">
-        <svg viewBox="0 0 100 100" className="h-52 w-full overflow-visible">
+    <div className="rounded-[30px] border border-cyan-500/15 bg-[radial-gradient(circle_at_top_left,rgba(34,211,238,0.12),transparent_38%),linear-gradient(180deg,rgba(3,9,20,0.22),rgba(2,6,23,0.52))] p-5">
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+        <div>
+          <p className="text-sm font-semibold text-white">{title}</p>
+          <p className="mt-2 text-xs uppercase tracking-[0.22em] text-slate-500">
+            Tendência contínua com leitura operacional simplificada
+          </p>
+        </div>
+        <div className="rounded-[22px] border border-slate-800/90 bg-slate-950/55 px-4 py-3 text-right">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500">Pulso atual</p>
+          <p className="mt-2 text-3xl font-semibold tracking-tight" style={{ color: accent }}>
+            {formatValue(currentValue)}
+          </p>
+          <p
+            className={cn(
+              'mt-2 text-xs font-semibold uppercase tracking-[0.18em]',
+              delta >= 0 ? 'text-emerald-300' : 'text-rose-300'
+            )}
+          >
+            {delta >= 0 ? '+' : '-'}
+            {formatValue(Math.abs(delta))} vs. pulso anterior
+          </p>
+        </div>
+      </div>
+
+      <div className="mt-5 rounded-[28px] border border-slate-800/90 bg-slate-950/45 p-4">
+        <svg viewBox="0 0 100 100" className="h-72 w-full overflow-visible">
+          <defs>
+            <linearGradient id={`${gradientId}-area`} x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor={accent} stopOpacity="0.32" />
+              <stop offset="100%" stopColor={accent} stopOpacity="0" />
+            </linearGradient>
+          </defs>
+
+          {gridValues.map((gridValue, index) => {
+            const y = topPadding + (index / Math.max(gridValues.length - 1, 1)) * chartHeight;
+            return (
+              <g key={`${gridValue}-${index}`}>
+                <line
+                  x1={leftPadding}
+                  y1={y}
+                  x2={rightPadding}
+                  y2={y}
+                  stroke="rgba(71,85,105,0.55)"
+                  strokeDasharray="1.4 2.4"
+                  strokeWidth="0.5"
+                />
+                <text
+                  x="0"
+                  y={y + 1.5}
+                  fill="rgba(148,163,184,0.68)"
+                  fontSize="4"
+                  letterSpacing="0.12em"
+                >
+                  {formatValue(gridValue)}
+                </text>
+              </g>
+            );
+          })}
+
+          <polygon points={areaPoints} fill={`url(#${gradientId}-area)`} />
           <polyline
             fill="none"
             stroke={accent}
-            strokeWidth="2.5"
+            strokeOpacity="0.18"
+            strokeWidth="4.5"
             strokeLinejoin="round"
             strokeLinecap="round"
-            points={points}
+            points={polylinePoints}
           />
+          <polyline
+            fill="none"
+            stroke={accent}
+            strokeWidth="2.4"
+            strokeLinejoin="round"
+            strokeLinecap="round"
+            points={polylinePoints}
+          />
+          <circle cx={highlightedPoint.x} cy={highlightedPoint.y} r="2.2" fill={accent} />
+          <circle cx={highlightedPoint.x} cy={highlightedPoint.y} r="4.3" fill={accent} fillOpacity="0.12" />
         </svg>
-      </div>
-      <div className="mt-3 grid gap-2 text-xs uppercase tracking-[0.16em] text-slate-500 md:grid-cols-4 xl:grid-cols-6">
-        {series.map((point) => (
-          <div key={point.label} className="rounded-2xl border border-slate-800 bg-slate-950/55 px-3 py-2">
-            <span className="block">{point.label}</span>
-            <span className="mt-1 block text-sm font-semibold text-slate-200">{point.value}</span>
+
+        <div className="mt-4 grid gap-3 md:grid-cols-4">
+          <div className="rounded-2xl border border-slate-800 bg-slate-950/55 px-4 py-3">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">Atual</p>
+            <p className="mt-2 text-lg font-semibold text-white">{formatValue(currentValue)}</p>
           </div>
-        ))}
+          <div className="rounded-2xl border border-slate-800 bg-slate-950/55 px-4 py-3">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">Faixa</p>
+            <p className="mt-2 text-lg font-semibold text-white">
+              {formatValue(minValue)} - {formatValue(maxValue)}
+            </p>
+          </div>
+          <div className="rounded-2xl border border-slate-800 bg-slate-950/55 px-4 py-3">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">Amplitude</p>
+            <p className="mt-2 text-lg font-semibold text-white">{formatValue(amplitude)}</p>
+          </div>
+          <div className="rounded-2xl border border-slate-800 bg-slate-950/55 px-4 py-3">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">Tendência</p>
+            <p className="mt-2 text-lg font-semibold text-white">{trendLabel}</p>
+          </div>
+        </div>
+
+        <div className="mt-4 grid grid-cols-3 gap-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+          {anchorLabels.map((label, index) => (
+            <div
+              key={`${label}-${index}`}
+              className={cn(
+                'rounded-2xl border border-slate-800 bg-slate-950/55 px-3 py-2',
+                index === 1 ? 'text-center' : index === 2 ? 'text-right' : 'text-left'
+              )}
+            >
+              {label}
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );
