@@ -1,6 +1,7 @@
 'use client';
 
-import { clearSession, getSession, setSession } from '@/shared/lib/session';
+import { SESSION_CHANGE_EVENT, clearSession, getSession, setSession } from '@/shared/lib/session';
+import { authService } from '@/shared/services/auth-service';
 import { SessionState } from '@/shared/types/auth';
 import { useRouter } from 'next/navigation';
 import {
@@ -29,8 +30,64 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const router = useRouter();
 
   useEffect(() => {
-    setSessionState(getSession());
-    setIsLoading(false);
+    const syncSession = () => {
+      setSessionState(getSession());
+    };
+
+    window.addEventListener(SESSION_CHANGE_EVENT, syncSession);
+    return () => {
+      window.removeEventListener(SESSION_CHANGE_EVENT, syncSession);
+    };
+  }, []);
+
+  useEffect(() => {
+    let isActive = true;
+
+    async function bootstrapSession() {
+      const storedSession = getSession();
+
+      if (!storedSession) {
+        if (isActive) {
+          setSessionState(null);
+          setIsLoading(false);
+        }
+        return;
+      }
+
+      setSessionState(storedSession);
+
+      try {
+        const user = await authService.me();
+        if (!isActive) {
+          return;
+        }
+
+        const currentSession = getSession() ?? storedSession;
+        const validatedSession = {
+          ...currentSession,
+          user
+        };
+
+        setSession(validatedSession);
+        setSessionState(validatedSession);
+      } catch {
+        clearSession();
+        if (!isActive) {
+          return;
+        }
+        setSessionState(null);
+      } finally {
+        if (isActive) {
+          setIsLoading(false);
+        }
+      }
+    }
+
+    void bootstrapSession();
+
+    return () => {
+      isActive = false;
+    };
   }, []);
 
   const signIn = useCallback((newSession: SessionState) => {

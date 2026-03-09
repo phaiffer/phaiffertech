@@ -1,9 +1,22 @@
 import { SessionState } from '@/shared/types/auth';
 
 const SESSION_KEY = 'platform.session';
+export const SESSION_CHANGE_EVENT = 'platform:session-changed';
+
+function isBrowser(): boolean {
+  return typeof window !== 'undefined';
+}
+
+function notifySessionChange(): void {
+  if (!isBrowser()) {
+    return;
+  }
+
+  window.dispatchEvent(new Event(SESSION_CHANGE_EVENT));
+}
 
 export function getSession(): SessionState | null {
-  if (typeof window === 'undefined') {
+  if (!isBrowser()) {
     return null;
   }
 
@@ -21,15 +34,19 @@ export function getSession(): SessionState | null {
 }
 
 export function setSession(session: SessionState): void {
-  if (typeof window === 'undefined') {
+  if (!isBrowser()) {
     return;
   }
+
   localStorage.setItem(SESSION_KEY, JSON.stringify(session));
+  notifySessionChange();
 }
 
 export function clearSession(): void {
-  if (typeof window === 'undefined') {
+  if (!isBrowser()) {
     return;
   }
+
   localStorage.removeItem(SESSION_KEY);
+  notifySessionChange();
 }
