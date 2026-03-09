@@ -18,5 +18,8 @@ export const authService = {
   refresh: (refreshToken: string) =>
     apiClient.post<AuthTokenResponse>('/auth/refresh', { refreshToken }, { skipAuth: true }),
 
+  logout: (refreshToken: string) =>
+    apiClient.post<void>('/auth/logout', { refreshToken }),
+
   me: () => apiClient.get<AuthenticatedUser>('/auth/me')
 };

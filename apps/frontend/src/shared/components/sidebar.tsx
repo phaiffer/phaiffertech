@@ -430,7 +430,9 @@ export function Sidebar() {
 
         <button
           type="button"
-          onClick={signOut}
+          onClick={() => {
+            void signOut();
+          }}
           className="mt-3 w-full rounded-xl bg-white px-3 py-2 text-sm font-medium text-slate-700 ring-1 ring-slate-200 transition hover:bg-slate-100"
         >
           Sair

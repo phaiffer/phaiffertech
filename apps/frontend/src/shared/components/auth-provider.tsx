@@ -1,6 +1,8 @@
 'use client';
 
 import { SESSION_CHANGE_EVENT, clearSession, getSession, setSession } from '@/shared/lib/session';
+import { ApiClientError } from '@/shared/lib/http';
+import { logClientError, logClientInfo } from '@/shared/observability/client-logger';
 import { authService } from '@/shared/services/auth-service';
 import { SessionState } from '@/shared/types/auth';
 import { useRouter } from 'next/navigation';
@@ -19,7 +21,7 @@ type AuthContextValue = {
   isLoading: boolean;
   isAuthenticated: boolean;
   signIn: (session: SessionState) => void;
-  signOut: () => void;
+  signOut: () => Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
@@ -28,6 +30,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSessionState] = useState<SessionState | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
+
+  const logRemoteLogoutFailure = useCallback((error: unknown, attemptedRefreshToken: string | null) => {
+    if (error instanceof ApiClientError) {
+      logClientInfo('auth-provider', 'Remote logout failed', {
+        status: error.status,
+        code: error.code,
+        attemptedRefreshToken: attemptedRefreshToken ? 'present' : 'missing'
+      });
+      return;
+    }
+
+    logClientError('auth-provider', 'Unexpected remote logout failure', {
+      attemptedRefreshToken: attemptedRefreshToken ? 'present' : 'missing',
+      error: error instanceof Error ? error.message : 'unknown'
+    });
+  }, []);
 
   useEffect(() => {
     const syncSession = () => {
@@ -95,11 +113,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setSessionState(newSession);
   }, []);
 
-  const signOut = useCallback(() => {
-    clearSession();
-    setSessionState(null);
-    router.push('/login');
-  }, [router]);
+  const signOut = useCallback(async () => {
+    const storedSession = getSession() ?? session;
+    const initialRefreshToken = storedSession?.refreshToken ?? null;
+
+    try {
+      if (initialRefreshToken) {
+        try {
+          await authService.logout(initialRefreshToken);
+        } catch (error) {
+          const latestRefreshToken = getSession()?.refreshToken;
+
+          if (latestRefreshToken && latestRefreshToken !== initialRefreshToken) {
+            await authService.logout(latestRefreshToken);
+          } else {
+            throw error;
+          }
+        }
+      }
+    } catch (error) {
+      logRemoteLogoutFailure(error, initialRefreshToken);
+    } finally {
+      clearSession();
+      setSessionState(null);
+      router.push('/login');
+    }
+  }, [logRemoteLogoutFailure, router, session]);
 
   const value = useMemo<AuthContextValue>(() => ({
     session,
