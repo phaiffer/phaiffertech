@@ -265,7 +265,7 @@ function isItemActive(pathname: string, href: string) {
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
-function getActiveGroup(pathname: string): SidebarGroup {
+function resolveActiveGroup(pathname: string): SidebarGroup {
   if (pathname.startsWith('/crm')) {
     return 'crm';
   }
@@ -284,11 +284,11 @@ function getActiveGroup(pathname: string): SidebarGroup {
 function Caret({ expanded }: { expanded: boolean }) {
   return (
     <span
+      aria-hidden="true"
       className={[
-        'inline-flex h-5 w-5 items-center justify-center rounded-md text-xs font-bold text-slate-500 transition-transform',
+        'inline-flex h-5 w-5 items-center justify-center rounded-md text-[11px] font-bold text-slate-500 transition-transform',
         expanded ? 'rotate-90' : ''
       ].join(' ')}
-      aria-hidden="true"
     >
       ▶
     </span>
@@ -301,12 +301,7 @@ export function Sidebar() {
   const { hasAnyPermission } = usePermissions();
   const { modules, loading } = useModuleCatalog();
 
-  const [expandedGroups, setExpandedGroups] = useState<Record<SidebarGroup, boolean>>({
-    core: true,
-    crm: false,
-    iot: false,
-    pet: false
-  });
+  const [expandedGroup, setExpandedGroup] = useState<SidebarGroup>('core');
 
   const availableModules = useMemo(
     () =>
@@ -345,35 +340,25 @@ export function Sidebar() {
   }, [visibleItems]);
 
   useEffect(() => {
-    const activeGroup = getActiveGroup(pathname);
-
-    setExpandedGroups((current) => ({
-      core: activeGroup === 'core' ? true : current.core,
-      crm: activeGroup === 'crm',
-      iot: activeGroup === 'iot',
-      pet: activeGroup === 'pet'
-    }));
+    setExpandedGroup(resolveActiveGroup(pathname));
   }, [pathname]);
-
-  function toggleGroup(group: SidebarGroup) {
-    setExpandedGroups((current) => ({
-      ...current,
-      [group]: !current[group]
-    }));
-  }
 
   return (
     <aside className="flex h-screen w-64 flex-col border-r border-slate-200 bg-white px-3 py-4">
       <div className="mb-4 rounded-2xl bg-gradient-to-r from-ink to-action px-4 py-4 text-white shadow-card">
-        <p className="text-[10px] uppercase tracking-[0.18em] text-blue-100">Phaiffer Platform</p>
+        <p className="text-[10px] uppercase tracking-[0.18em] text-blue-100">
+          Phaiffer Platform
+        </p>
         <p className="mt-1 text-base font-semibold">SaaS Control Plane</p>
       </div>
 
       <nav className="flex-1 overflow-y-auto pr-1">
         <div className="space-y-3">
           {groupedItems.map((group) => {
-            const expanded = expandedGroups[group.key];
-            const groupHasActiveItem = group.items.some((item) => isItemActive(pathname, item.href));
+            const expanded = expandedGroup === group.key;
+            const groupHasActiveItem = group.items.some((item) =>
+              isItemActive(pathname, item.href)
+            );
 
             return (
               <section
@@ -387,7 +372,11 @@ export function Sidebar() {
               >
                 <button
                   type="button"
-                  onClick={() => toggleGroup(group.key)}
+                  onClick={() =>
+                    setExpandedGroup((current) =>
+                      current === group.key ? 'core' : group.key
+                    )
+                  }
                   className={[
                     'flex w-full items-center justify-between rounded-xl px-2 py-2 text-left transition',
                     groupHasActiveItem
@@ -400,7 +389,6 @@ export function Sidebar() {
                   <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">
                     {group.title}
                   </span>
-
                   <Caret expanded={expanded} />
                 </button>
 
