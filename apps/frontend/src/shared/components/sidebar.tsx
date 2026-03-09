@@ -205,7 +205,7 @@ const items: SidebarItem[] = [
   },
   {
     href: '/iot/observability',
-    label: 'Análise Global',
+    label: 'Observabilidade',
     anyOf: ['iot.report.read'],
     moduleCode: 'IOT',
     group: 'iot',
@@ -221,7 +221,7 @@ const items: SidebarItem[] = [
   },
   {
     href: '/iot/add-device',
-    label: 'Adicionar Dispositivo',
+    label: 'Cadastro Modbus',
     anyOf: ['iot.device.create'],
     moduleCode: 'IOT',
     group: 'iot',

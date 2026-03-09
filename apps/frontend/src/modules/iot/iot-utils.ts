@@ -62,6 +62,120 @@ export function resolveRegisterLabel(registers: IotRegister[], registerId?: stri
   return `${register.name} (${register.metricName})`;
 }
 
+export function resolveDeviceStatusLabel(status?: string) {
+  switch (status) {
+    case 'ONLINE':
+      return 'Online';
+    case 'OFFLINE':
+      return 'Offline';
+    case 'MAINTENANCE':
+      return 'Em manutenção';
+    case 'ALERT':
+      return 'Em alerta';
+    default:
+      return status ?? '-';
+  }
+}
+
+export function resolveDeviceTypeLabel(type?: string) {
+  switch (type) {
+    case 'SENSOR':
+      return 'Sensor';
+    case 'GATEWAY':
+      return 'Gateway';
+    case 'ACTUATOR':
+      return 'Atuador';
+    default:
+      return type ?? '-';
+  }
+}
+
+export function resolveAlarmStatusLabel(status?: string) {
+  switch (status) {
+    case 'OPEN':
+      return 'Aberto';
+    case 'ACKNOWLEDGED':
+      return 'Reconhecido';
+    case 'RESOLVED':
+      return 'Resolvido';
+    default:
+      return status ?? '-';
+  }
+}
+
+export function resolveAlarmSeverityLabel(severity?: string) {
+  switch (severity) {
+    case 'LOW':
+      return 'Baixa';
+    case 'MEDIUM':
+      return 'Média';
+    case 'HIGH':
+      return 'Alta';
+    case 'CRITICAL':
+      return 'Crítica';
+    default:
+      return severity ?? '-';
+  }
+}
+
+export function resolveRegisterStatusLabel(status?: string) {
+  switch (status) {
+    case 'ACTIVE':
+      return 'Ativo';
+    case 'INACTIVE':
+      return 'Inativo';
+    case 'MAINTENANCE':
+      return 'Em manutenção';
+    default:
+      return status ?? '-';
+  }
+}
+
+export function resolveMaintenanceStatusLabel(status?: string) {
+  switch (status) {
+    case 'PENDING':
+      return 'Pendente';
+    case 'SCHEDULED':
+      return 'Agendada';
+    case 'IN_PROGRESS':
+      return 'Em execução';
+    case 'COMPLETED':
+      return 'Concluída';
+    case 'CANCELLED':
+      return 'Cancelada';
+    default:
+      return status ?? '-';
+  }
+}
+
+export function resolveMaintenancePriorityLabel(priority?: string) {
+  switch (priority) {
+    case 'LOW':
+      return 'Baixa';
+    case 'MEDIUM':
+      return 'Média';
+    case 'HIGH':
+      return 'Alta';
+    case 'CRITICAL':
+      return 'Crítica';
+    default:
+      return priority ?? '-';
+  }
+}
+
+export function resolveTelemetryQualityLabel(quality?: string) {
+  switch (quality) {
+    case 'GOOD':
+      return 'Boa';
+    case 'WARN':
+      return 'Atenção';
+    case 'STALE':
+      return 'Sem atualização';
+    default:
+      return quality ?? '-';
+  }
+}
+
 function formatRecencyBucketLabel(bucket: string) {
   switch (bucket) {
     case 'last_5m':

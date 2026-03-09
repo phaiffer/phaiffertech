@@ -316,6 +316,73 @@ export function IotNotice({
   );
 }
 
+export function IotEmptyState({
+  title,
+  description,
+  tone = 'neutral',
+  compact = false
+}: {
+  title: string;
+  description: string;
+  tone?: Tone;
+  compact?: boolean;
+}) {
+  return (
+    <div
+      className={cn(
+        'rounded-[28px] border',
+        compact ? 'px-4 py-5' : 'px-5 py-6',
+        tone === 'red'
+          ? 'border-rose-500/30 bg-rose-500/8'
+          : tone === 'amber'
+            ? 'border-amber-500/30 bg-amber-500/8'
+            : tone === 'green'
+              ? 'border-emerald-500/30 bg-emerald-500/8'
+              : 'border-cyan-500/20 bg-cyan-500/8'
+      )}
+    >
+      <div className="flex items-start gap-3">
+        <span
+          className={cn(
+            'mt-1 inline-flex h-2.5 w-2.5 rounded-full',
+            tone === 'red'
+              ? 'bg-rose-400'
+              : tone === 'amber'
+                ? 'bg-amber-400'
+                : tone === 'green'
+                  ? 'bg-emerald-400'
+                  : 'bg-cyan-400'
+          )}
+        />
+        <div>
+          <p className="text-sm font-semibold text-white">{title}</p>
+          <p className="mt-1 text-sm leading-6 text-slate-400">{description}</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export function IotTableStateRow({
+  colSpan,
+  title,
+  description,
+  tone = 'neutral'
+}: {
+  colSpan: number;
+  title: string;
+  description: string;
+  tone?: Tone;
+}) {
+  return (
+    <tr>
+      <td colSpan={colSpan} className="px-4 py-5">
+        <IotEmptyState title={title} description={description} tone={tone} compact />
+      </td>
+    </tr>
+  );
+}
+
 export function IotActionButton({
   href,
   children
@@ -557,7 +624,7 @@ export function IotSurfaceLink({
       <h3 className="mt-3 text-xl font-semibold text-white">{title}</h3>
       <p className="mt-2 text-sm leading-6 text-slate-400">{description}</p>
       <span className="mt-5 inline-flex text-sm font-semibold text-cyan-200 transition group-hover:translate-x-1">
-        Abrir painel
+        Abrir fluxo
       </span>
     </Link>
   );

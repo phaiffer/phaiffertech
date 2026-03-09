@@ -21,7 +21,7 @@ import {
   IotSecondaryButton,
   IotSelectField,
   IotStatusPill,
-  IotTabButton,
+  IotTableStateRow,
   IotTextField,
   PlugIcon,
   WaveIcon
@@ -35,24 +35,28 @@ import {
   parseModbusMapping,
   resolveModbusVariableTemplate
 } from '@/modules/iot/iot-demo-data';
-import { formatDateTime, resolveDeviceLabel } from '@/modules/iot/iot-utils';
+import {
+  formatDateTime,
+  resolveDeviceLabel,
+  resolveRegisterStatusLabel
+} from '@/modules/iot/iot-utils';
 
 const pageSize = 10;
 
 const statusOptions = [
   { value: '', label: 'Todos os status' },
-  { value: 'ACTIVE', label: 'ACTIVE' },
-  { value: 'INACTIVE', label: 'INACTIVE' },
-  { value: 'MAINTENANCE', label: 'MAINTENANCE' }
+  { value: 'ACTIVE', label: 'Ativo' },
+  { value: 'INACTIVE', label: 'Inativo' },
+  { value: 'MAINTENANCE', label: 'Em manutenção' }
 ];
 
 const formStatusOptions = statusOptions.filter((option) => option.value);
 
 const functionOptions = [
-  { value: 'FC01', label: 'FC01 • Coil Status' },
-  { value: 'FC02', label: 'FC02 • Discrete Inputs' },
-  { value: 'FC03', label: 'FC03 • Holding Registers' },
-  { value: 'FC04', label: 'FC04 • Input Registers' }
+  { value: 'FC01', label: 'FC01 • Coil status' },
+  { value: 'FC02', label: 'FC02 • Entradas discretas' },
+  { value: 'FC03', label: 'FC03 • Holding registers' },
+  { value: 'FC04', label: 'FC04 • Input registers' }
 ];
 
 const dataTypeOptions = [
@@ -245,7 +249,7 @@ export function IotRegistersPage() {
 
   const deviceOptions = useMemo(
     () => [
-      { value: '', label: 'Todos os devices' },
+      { value: '', label: 'Todos os dispositivos' },
       ...displayDevices.map((device) => ({ value: device.id, label: device.name }))
     ],
     [displayDevices]
@@ -337,7 +341,7 @@ export function IotRegistersPage() {
     const parsedMax = parseOptionalNumber(maxThreshold);
 
     if (parsedMin === null || parsedMax === null) {
-      setError('Thresholds devem ser números válidos.');
+      setError('As faixas mínima e máxima devem ser números válidos.');
       return;
     }
 
@@ -408,14 +412,14 @@ export function IotRegistersPage() {
     >
       <div className="space-y-6">
         <IotPageHeader
-          eyebrow="Modbus Mapping Layer"
-          title="Registers"
-          description="Camada de configuração industrial dos canais Modbus: associação com device, função, endereço, tipo de dado, thresholds e leitura operacional mais recente."
+          eyebrow="Mapeamento industrial"
+          title="Registradores Modbus"
+          description="Camada de configuração industrial dos canais Modbus, conectando dispositivo, função, endereço, tipo de dado, faixas operacionais e leitura mais recente."
           chips={
             <>
-              <Chip label="Registers" value={visibleRows.length} tone="cyan" icon={<PlugIcon />} />
+              <Chip label="Registradores" value={visibleRows.length} tone="cyan" icon={<PlugIcon />} />
               <Chip label="Ativos" value={activeRegisters} tone="green" icon={<WaveIcon />} />
-              <Chip label="Devices mapeados" value={mappedDevices} tone="neutral" icon={<DeviceIcon />} />
+              <Chip label="Dispositivos mapeados" value={mappedDevices} tone="neutral" icon={<DeviceIcon />} />
               <Chip label="Holding regs" value={fc03Registers} tone="amber" icon={<BoltIcon />} />
             </>
           }
@@ -423,8 +427,8 @@ export function IotRegistersPage() {
             <IotHeroAside
               title="Estado do Mapeamento"
               items={[
-                { label: 'Fonte', value: useDemoMode ? 'Demo assistida' : 'Configuração real', tone: useDemoMode ? 'amber' : 'green' },
-                { label: 'Últimas leituras', value: `${latestTelemetryByRegister.size} canais`, tone: 'cyan' },
+                { label: 'Modo de leitura', value: useDemoMode ? 'Assistido para apresentação' : 'Configuração real ativa', tone: useDemoMode ? 'amber' : 'green' },
+                { label: 'Canais com leitura', value: `${latestTelemetryByRegister.size}`, tone: 'cyan' },
                 { label: 'Padrão dominante', value: 'Modbus FC03/FC04', tone: 'green' }
               ]}
             />
@@ -433,8 +437,8 @@ export function IotRegistersPage() {
 
         {error ? (
           <IotNotice
-            title="Registers em fallback visual"
-            description={`${error} A tela continua demonstrável com mapeamentos estáticos coerentes com a narrativa Modbus.`}
+            title="Integração indisponível no mapeamento"
+            description={`${error} A tela continua demonstrável em modo assistido com mapeamentos coerentes com a narrativa Modbus.`}
             tone="amber"
           />
         ) : null}
@@ -443,7 +447,7 @@ export function IotRegistersPage() {
 
         <IotPanel
           title="Filtros de mapeamento"
-          description="Refine a lista por ativo, métrica ou status antes de aprofundar no cadastro industrial."
+          description="Refine a lista por ativo, métrica ou status antes de aprofundar o mapeamento industrial."
         >
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
             <IotTextField
@@ -453,7 +457,7 @@ export function IotRegistersPage() {
               placeholder="Nome, código ou métrica"
             />
             <IotSelectField
-              label="Device"
+              label="Dispositivo"
               value={deviceFilterId}
               onChange={setDeviceFilterId}
               options={deviceOptions}
@@ -471,7 +475,7 @@ export function IotRegistersPage() {
               options={statusOptions}
             />
             <div className="flex items-end gap-3">
-              <IotPrimaryButton onClick={() => setSearch(searchInput)}>Aplicar</IotPrimaryButton>
+              <IotPrimaryButton onClick={() => setSearch(searchInput)}>Aplicar filtros</IotPrimaryButton>
               <IotSecondaryButton
                 onClick={() => {
                   setSearchInput('');
@@ -490,13 +494,13 @@ export function IotRegistersPage() {
         <div className="grid gap-6 xl:grid-cols-[minmax(0,1.2fr)_420px]">
           <IotPanel
             title={editingRegister ? `Editar ${editingRegister.name}` : 'Novo registrador Modbus'}
-            description="Cadastro apresentado como configuração industrial, reutilizando o contrato real de registers do backend."
+            description="Cadastro apresentado como configuração industrial, reutilizando o contrato real de registradores do backend."
           >
             <PermissionGuard permission={editingRegister ? 'iot.register.update' : 'iot.register.create'}>
               <form onSubmit={handleSubmit} className="space-y-5">
                 <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
                   <IotSelectField
-                    label="Device"
+                    label="Dispositivo"
                     value={deviceId}
                     onChange={setDeviceId}
                     options={formDeviceOptions}
@@ -536,14 +540,14 @@ export function IotRegistersPage() {
                   />
                   <IotTextField label="Unidade" value={unit} onChange={setUnit} placeholder="°C / bar / A" />
                   <IotTextField
-                    label="Threshold mínimo"
+                    label="Faixa mínima"
                     value={minThreshold}
                     onChange={setMinThreshold}
                     type="number"
                     placeholder="0"
                   />
                   <IotTextField
-                    label="Threshold máximo"
+                    label="Faixa máxima"
                     value={maxThreshold}
                     onChange={setMaxThreshold}
                     type="number"
@@ -575,10 +579,10 @@ export function IotRegistersPage() {
                 <div className="flex flex-wrap gap-3">
                   <IotPrimaryButton type="submit" disabled={submitting}>
                     {submitting
-                      ? 'Salvando...'
+                      ? 'Salvando mapeamento...'
                       : editingRegister
-                        ? 'Atualizar register'
-                        : 'Criar register'}
+                        ? 'Salvar ajustes'
+                        : 'Criar registrador'}
                   </IotPrimaryButton>
                   {editingRegister ? (
                     <IotSecondaryButton onClick={resetForm}>Cancelar edição</IotSecondaryButton>
@@ -626,14 +630,14 @@ export function IotRegistersPage() {
         </div>
 
         <IotPanel
-          title="Tabela operacional de registers"
-          description="Lista densa com associação ao ativo, mapeamento Modbus, thresholds e última leitura conhecida."
+          title="Tabela operacional de registradores"
+          description="Lista densa com associação ao ativo, mapeamento Modbus, faixas operacionais e última leitura conhecida."
         >
           <div className="overflow-hidden rounded-[28px] border border-cyan-500/15">
             <table className="min-w-full bg-[#050f1f]">
               <thead className="border-b border-cyan-500/15 bg-[#061427]">
                 <tr>
-                  {['Variável', 'Device', 'Mapeamento', 'Tipo / unidade', 'Thresholds', 'Última leitura', 'Status', 'Ações'].map((header) => (
+                  {['Variável', 'Dispositivo', 'Mapeamento', 'Tipo / unidade', 'Faixas', 'Última leitura', 'Status', 'Ações'].map((header) => (
                     <th
                       key={header}
                       className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.18em] text-slate-400"
@@ -645,17 +649,18 @@ export function IotRegistersPage() {
               </thead>
               <tbody className="divide-y divide-slate-800 text-sm text-slate-200">
                 {loading ? (
-                  <tr>
-                    <td colSpan={8} className="px-4 py-10 text-center text-slate-500">
-                      Carregando registradores...
-                    </td>
-                  </tr>
+                  <IotTableStateRow
+                    colSpan={8}
+                    title="Sincronizando os registradores"
+                    description="Consolidando mapeamento Modbus, faixas operacionais e vínculo com as leituras."
+                  />
                 ) : visibleRows.length === 0 ? (
-                  <tr>
-                    <td colSpan={8} className="px-4 py-10 text-center text-slate-500">
-                      Nenhum register encontrado para o filtro selecionado.
-                    </td>
-                  </tr>
+                  <IotTableStateRow
+                    colSpan={8}
+                    title="Nenhum registrador nesta janela"
+                    description="Ajuste os filtros ou mantenha a apresentação com o mapeamento assistido do módulo."
+                    tone="amber"
+                  />
                 ) : (
                   visibleRows.map((register) => {
                     const mapping = parseModbusMapping(
@@ -710,11 +715,11 @@ export function IotRegistersPage() {
                               </span>
                             </div>
                           ) : (
-                            <span className="text-slate-500">Sem leitura recente</span>
+                            <span className="text-slate-500">Sem leitura na janela atual</span>
                           )}
                         </td>
                         <td className="px-4 py-4">
-                          <IotStatusPill label={register.status} tone={resolveTone(register.status)} />
+                          <IotStatusPill label={resolveRegisterStatusLabel(register.status)} tone={resolveTone(register.status)} />
                         </td>
                         <td className="px-4 py-4">
                           <div className="flex flex-wrap gap-2">
@@ -741,7 +746,7 @@ export function IotRegistersPage() {
                               </>
                             ) : (
                               <span className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
-                                Somente visual
+                                Somente navegação
                               </span>
                             )}
                           </div>
@@ -768,10 +773,10 @@ export function IotRegistersPage() {
 
         <ConfirmDialog
           open={Boolean(deleteCandidate)}
-          title="Excluir register"
+          title="Excluir registrador"
           description={
             deleteCandidate
-              ? `Confirma a exclusão do register ${deleteCandidate.name}?`
+              ? `Confirma a exclusão do registrador ${deleteCandidate.name}?`
               : undefined
           }
           confirmLabel="Excluir"

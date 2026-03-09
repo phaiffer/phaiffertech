@@ -319,22 +319,37 @@ export const demoQuickActions = [
   {
     href: '/iot/devices',
     title: 'Dispositivos',
-    description: 'Estado da frota, status de comunicação e edição operacional do parque.'
+    description: 'Inventário operacional da frota com contexto de comunicação e estado dos ativos.'
   },
   {
     href: '/iot/add-device',
-    title: 'Adicionar Dispositivo',
-    description: 'Cadastro guiado com semântica Modbus TCP / RS-485 e seleção de medições.'
+    title: 'Cadastro Modbus',
+    description: 'Onboarding guiado do ativo com conexão, pacote inicial e contexto de campo.'
+  },
+  {
+    href: '/iot/registers',
+    title: 'Registradores',
+    description: 'Mapeamento industrial com função Modbus, endereço, tipo de dado e thresholds.'
+  },
+  {
+    href: '/iot/telemetry',
+    title: 'Telemetria',
+    description: 'Stream operacional com vínculo entre dispositivo, registrador e qualidade de coleta.'
   },
   {
     href: '/iot/alarms',
     title: 'Alarmes',
-    description: 'Pressão operacional, severidade, reconhecimento e resposta rápida.'
+    description: 'Fila de incidentes com severidade, reconhecimento e resposta operacional.'
+  },
+  {
+    href: '/iot/maintenance',
+    title: 'Manutenção',
+    description: 'Backlog de ação de campo conectado aos ativos e aos incidentes da operação.'
   },
   {
     href: '/iot/observability',
-    title: 'Análise Global',
-    description: 'Comparativo executivo com tendência, cobertura e leitura consolidada.'
+    title: 'Observabilidade',
+    description: 'Leitura consolidada que conecta dashboard, alarmes, telemetria e manutenção.'
   }
 ];
 

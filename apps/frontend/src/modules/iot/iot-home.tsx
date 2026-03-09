@@ -2,6 +2,7 @@
 
 import { PermissionGuard } from '@/shared/auth/PermissionGuard';
 import {
+  IotActionButton,
   Chip,
   DeviceIcon,
   IotHeroAside,
@@ -13,6 +14,8 @@ import {
 import { demoQuickActions } from '@/modules/iot/iot-demo-data';
 
 export function IotHome() {
+  const guidedFlows = demoQuickActions.length + 1;
+
   return (
     <PermissionGuard
       permission="iot.dashboard.read"
@@ -25,29 +28,30 @@ export function IotHome() {
       <div className="space-y-6">
         <IotPageHeader
           eyebrow="IoT System"
-          title="Hub Operacional do IoT"
-          description="Landing curta do módulo para acessar rapidamente os fluxos que foram priorizados para demo: dashboard, gestão de dispositivos, onboarding Modbus, alarmes e análise global."
+          title="Centro operacional do IoT"
+          description="Entrada do módulo para percorrer a narrativa completa da entrega: dashboard, frota conectada, onboarding Modbus, mapeamento, stream operacional, alarmes, manutenção e observabilidade."
           chips={
             <>
-              <Chip label="Demo ready" value="5 fluxos" tone="green" icon={<DeviceIcon />} />
-              <Chip label="Visual" value="industrial dark" tone="cyan" icon={<WaveIcon />} />
+              <Chip label="Fluxos guiados" value={guidedFlows} tone="green" icon={<DeviceIcon />} />
+              <Chip label="Linguagem" value="industrial dark" tone="cyan" icon={<WaveIcon />} />
             </>
           }
+          action={<IotActionButton href="/iot/dashboard">Abrir dashboard</IotActionButton>}
           aside={
             <IotHeroAside
-              title="Recorte Atual"
+              title="Narrativa da Entrega"
               items={[
-                { label: 'Prioridade', value: 'Dashboard + Frota', tone: 'green' },
-                { label: 'Onboarding', value: 'Modbus demo', tone: 'amber' },
-                { label: 'Narrativa', value: 'Executiva / operacional', tone: 'cyan' }
+                { label: 'Entrada', value: 'Dashboard e frota', tone: 'green' },
+                { label: 'Camada técnica', value: 'Modbus, registradores e stream', tone: 'cyan' },
+                { label: 'Fechamento', value: 'Alarmes, manutenção e observabilidade', tone: 'amber' }
               ]}
             />
           }
         />
 
         <IotPanel
-          title="Painéis priorizados"
-          description="Esses são os pontos do produto ajustados para o patamar visual aprovado pelo cliente nesta etapa."
+          title="Fluxos priorizados para apresentação"
+          description="Os acessos abaixo mantêm a sequência operacional do módulo sem sair da arquitetura consolidada nesta entrega."
         >
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
             {demoQuickActions.map((action) => (

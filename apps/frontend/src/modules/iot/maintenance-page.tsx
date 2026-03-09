@@ -23,7 +23,7 @@ import {
   IotSecondaryButton,
   IotSelectField,
   IotStatusPill,
-  IotTabButton,
+  IotTableStateRow,
   IotTextField,
   IotTextareaField
 } from '@/modules/iot/iot-chrome';
@@ -34,7 +34,10 @@ import {
 } from '@/modules/iot/iot-demo-data';
 import {
   formatDateTime,
+  resolveAlarmStatusLabel,
   resolveDeviceLabel,
+  resolveMaintenancePriorityLabel,
+  resolveMaintenanceStatusLabel,
   toDateTimeLocal,
   toIsoDate
 } from '@/modules/iot/iot-utils';
@@ -43,21 +46,21 @@ const pageSize = 10;
 
 const statusOptions = [
   { value: '', label: 'Todos os status' },
-  { value: 'PENDING', label: 'PENDING' },
-  { value: 'SCHEDULED', label: 'SCHEDULED' },
-  { value: 'IN_PROGRESS', label: 'IN_PROGRESS' },
-  { value: 'COMPLETED', label: 'COMPLETED' },
-  { value: 'CANCELLED', label: 'CANCELLED' }
+  { value: 'PENDING', label: 'Pendente' },
+  { value: 'SCHEDULED', label: 'Agendada' },
+  { value: 'IN_PROGRESS', label: 'Em execução' },
+  { value: 'COMPLETED', label: 'Concluída' },
+  { value: 'CANCELLED', label: 'Cancelada' }
 ];
 
 const formStatusOptions = statusOptions.filter((option) => option.value);
 
 const priorityOptions = [
   { value: '', label: 'Todas as prioridades' },
-  { value: 'LOW', label: 'LOW' },
-  { value: 'MEDIUM', label: 'MEDIUM' },
-  { value: 'HIGH', label: 'HIGH' },
-  { value: 'CRITICAL', label: 'CRITICAL' }
+  { value: 'LOW', label: 'Baixa' },
+  { value: 'MEDIUM', label: 'Média' },
+  { value: 'HIGH', label: 'Alta' },
+  { value: 'CRITICAL', label: 'Crítica' }
 ];
 
 const formPriorityOptions = priorityOptions.filter((option) => option.value);
@@ -179,7 +182,7 @@ export function IotMaintenancePage() {
         });
         setPageData(result);
       } catch (err) {
-        setError(err instanceof ApiClientError ? err.message : 'Erro ao carregar maintenance.');
+        setError(err instanceof ApiClientError ? err.message : 'Erro ao carregar o backlog de manutenção.');
       } finally {
         setLoading(false);
       }
@@ -231,7 +234,7 @@ export function IotMaintenancePage() {
 
   const deviceOptions = useMemo(
     () => [
-      { value: '', label: 'Todos os devices' },
+      { value: '', label: 'Todos os dispositivos' },
       ...displayDevices.map((device) => ({ value: device.id, label: device.name }))
     ],
     [displayDevices]
@@ -303,14 +306,14 @@ export function IotMaintenancePage() {
         setSuccess('Ordem de manutenção atualizada com sucesso.');
       } else {
         await iotService.createMaintenance(payload);
-        setSuccess('Ordem de manutenção criada com sucesso.');
+      setSuccess('Ordem de manutenção criada com sucesso.');
       }
 
       resetForm();
       await load(pageData.page, search, deviceFilterId, statusFilter, priorityFilter, startAt, endAt);
     } catch (err) {
       setError(
-        err instanceof ApiClientError ? err.message : 'Erro ao salvar maintenance.'
+        err instanceof ApiClientError ? err.message : 'Erro ao salvar a ordem de manutenção.'
       );
     } finally {
       setSubmitting(false);
@@ -329,7 +332,7 @@ export function IotMaintenancePage() {
       await load(pageData.page, search, deviceFilterId, statusFilter, priorityFilter, startAt, endAt);
     } catch (err) {
       setError(
-        err instanceof ApiClientError ? err.message : 'Erro ao excluir maintenance.'
+        err instanceof ApiClientError ? err.message : 'Erro ao excluir a ordem de manutenção.'
       );
     }
   }
@@ -350,13 +353,13 @@ export function IotMaintenancePage() {
     >
       <div className="space-y-6">
         <IotPageHeader
-          eyebrow="Operational Response Loop"
-          title="Maintenance"
-          description="Fechamento operacional entre ativo, incidente e ação de campo, mantendo o fluxo real de ordens do backend e enriquecendo a leitura industrial."
+          eyebrow="Fechamento operacional"
+          title="Backlog de manutenção"
+          description="Fechamento operacional entre ativo, incidente e ação de campo, mantendo o fluxo real de ordens do backend e reforçando a leitura industrial."
           chips={
             <>
               <Chip label="Pendentes" value={pendingCount} tone="amber" icon={<BoltIcon />} />
-              <Chip label="Em progresso" value={inProgressCount} tone="cyan" icon={<DeviceIcon />} />
+              <Chip label="Em execução" value={inProgressCount} tone="cyan" icon={<DeviceIcon />} />
               <Chip label="Concluídas" value={completedCount} tone="green" />
               <Chip label="Críticas" value={criticalCount} tone={criticalCount > 0 ? 'red' : 'green'} icon={<AlarmIcon />} />
             </>
@@ -365,9 +368,9 @@ export function IotMaintenancePage() {
             <IotHeroAside
               title="Estado do Backlog"
               items={[
-                { label: 'Modo', value: useDemoMode ? 'Demo assistida' : 'Ordens reais', tone: useDemoMode ? 'amber' : 'green' },
-                { label: 'Incidentes abertos', value: `${displayAlarms.length}`, tone: 'cyan' },
-                { label: 'Fechamento', value: completedCount > 0 ? 'Com histórico' : 'Em construção', tone: completedCount > 0 ? 'green' : 'amber' }
+                { label: 'Modo de leitura', value: useDemoMode ? 'Assistido para apresentação' : 'Ordens reais ativas', tone: useDemoMode ? 'amber' : 'green' },
+                { label: 'Alarmes de origem', value: `${displayAlarms.length}`, tone: 'cyan' },
+                { label: 'Fechamento do loop', value: completedCount > 0 ? 'Com histórico visível' : 'Ainda sem conclusão', tone: completedCount > 0 ? 'green' : 'amber' }
               ]}
             />
           }
@@ -375,8 +378,8 @@ export function IotMaintenancePage() {
 
         {error ? (
           <IotNotice
-            title="Maintenance em fallback visual"
-            description={`${error} A tela continua pronta para demo com backlog estático alinhado aos alarmes e devices.`}
+            title="Integração indisponível no backlog"
+            description={`${error} A tela continua pronta para apresentação em modo assistido com backlog alinhado aos alarmes e dispositivos.`}
             tone="amber"
           />
         ) : null}
@@ -394,7 +397,7 @@ export function IotMaintenancePage() {
               onChange={setSearchInput}
               placeholder="Título, causa ou equipe"
             />
-            <IotSelectField label="Device" value={deviceFilterId} onChange={setDeviceFilterId} options={deviceOptions} />
+            <IotSelectField label="Dispositivo" value={deviceFilterId} onChange={setDeviceFilterId} options={deviceOptions} />
             <IotSelectField label="Status" value={statusFilter} onChange={setStatusFilter} options={statusOptions} />
             <IotSelectField
               label="Prioridade"
@@ -405,7 +408,7 @@ export function IotMaintenancePage() {
             <IotDateTimeField label="De" value={startAt} onChange={setStartAt} />
             <IotDateTimeField label="Até" value={endAt} onChange={setEndAt} />
             <div className="flex items-end gap-3 xl:col-span-2">
-              <IotPrimaryButton onClick={() => setSearch(searchInput)}>Aplicar</IotPrimaryButton>
+              <IotPrimaryButton onClick={() => setSearch(searchInput)}>Aplicar filtros</IotPrimaryButton>
               <IotSecondaryButton
                 onClick={() => {
                   setSearchInput('');
@@ -426,7 +429,7 @@ export function IotMaintenancePage() {
         <div className="grid gap-6 xl:grid-cols-[minmax(0,1.25fr)_390px]">
           <IotPanel
             title="Board operacional"
-            description="Visão rápida das ordens em aberto, execução e histórico recente."
+            description="Visão rápida das ordens em aberto, em execução e concluídas para apoiar a conversa de backlog."
           >
             <div className="grid gap-4 md:grid-cols-3">
               {[
@@ -444,7 +447,7 @@ export function IotMaintenancePage() {
                     </div>
                     <div className="mt-4 space-y-3">
                       {columnRows.length === 0 ? (
-                        <p className="text-sm text-slate-500">Sem ordens nesta coluna.</p>
+                        <p className="text-sm text-slate-500">Nenhuma ordem nesta coluna no momento.</p>
                       ) : (
                         columnRows.map((record) => (
                           <div key={record.id} className="rounded-2xl border border-slate-800 bg-slate-950/55 px-4 py-3">
@@ -466,11 +469,11 @@ export function IotMaintenancePage() {
 
           <IotPanel
             title={editingRecord ? `Editar ${editingRecord.title}` : 'Nova ação de campo'}
-            description="A ordem continua sendo persistida no backend real do módulo IoT."
+            description="A ordem continua sendo persistida no backend real do módulo IoT, sem abrir nova frente de arquitetura."
           >
             <PermissionGuard permission={editingRecord ? 'iot.maintenance.update' : 'iot.maintenance.create'}>
               <form onSubmit={handleSubmit} className="space-y-4">
-                <IotSelectField label="Device" value={deviceId} onChange={setDeviceId} options={formDeviceOptions} />
+                <IotSelectField label="Dispositivo" value={deviceId} onChange={setDeviceId} options={formDeviceOptions} />
                 <IotTextField label="Título da ação" value={title} onChange={setTitle} required />
                 <IotTextareaField
                   label="Descrição / causa"
@@ -498,9 +501,9 @@ export function IotMaintenancePage() {
                 <div className="flex flex-wrap gap-3">
                   <IotPrimaryButton type="submit" disabled={submitting}>
                     {submitting
-                      ? 'Salvando...'
+                      ? 'Salvando ordem...'
                       : editingRecord
-                        ? 'Atualizar ordem'
+                        ? 'Salvar ajustes'
                         : 'Criar ordem'}
                   </IotPrimaryButton>
                   {editingRecord ? (
@@ -514,7 +517,7 @@ export function IotMaintenancePage() {
 
         <div className="grid gap-6 xl:grid-cols-[minmax(0,1.3fr)_360px]">
           <IotPanel
-            title="Tabela operacional de maintenance"
+            title="Tabela operacional do backlog"
             description="Backlog detalhado com ativo, gatilho, prioridade, agenda e responsável."
           >
             <div className="overflow-hidden rounded-[28px] border border-cyan-500/15">
@@ -532,18 +535,19 @@ export function IotMaintenancePage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-800 text-sm text-slate-200">
-                  {loading ? (
-                    <tr>
-                      <td colSpan={8} className="px-4 py-10 text-center text-slate-500">
-                        Carregando ordens de manutenção...
-                      </td>
-                    </tr>
+                {loading ? (
+                    <IotTableStateRow
+                      colSpan={8}
+                      title="Sincronizando o backlog"
+                      description="Consolidando ordens, prioridades, janelas de execução e responsáveis."
+                    />
                   ) : visibleRows.length === 0 ? (
-                    <tr>
-                      <td colSpan={8} className="px-4 py-10 text-center text-slate-500">
-                        Nenhuma ordem de maintenance encontrada.
-                      </td>
-                    </tr>
+                    <IotTableStateRow
+                      colSpan={8}
+                      title="Nenhuma ordem nesta janela"
+                      description="Ajuste os filtros ou mantenha a narrativa com o backlog assistido do módulo."
+                      tone="amber"
+                    />
                   ) : (
                     visibleRows.map((record) => {
                       const matchedAlarm = displayAlarms.find((alarm) => alarm.deviceId === record.deviceId);
@@ -567,10 +571,10 @@ export function IotMaintenancePage() {
                             <p className="mt-1 text-xs text-slate-500">{record.linkedAlarmCode ?? matchedAlarm?.code ?? 'Sem alarme vinculado'}</p>
                           </td>
                           <td className="px-4 py-4">
-                            <IotStatusPill label={record.priority} tone={resolvePriorityTone(record.priority)} />
+                            <IotStatusPill label={resolveMaintenancePriorityLabel(record.priority)} tone={resolvePriorityTone(record.priority)} />
                           </td>
                           <td className="px-4 py-4">
-                            <IotStatusPill label={record.status} tone={resolveStatusTone(record.status)} />
+                            <IotStatusPill label={resolveMaintenanceStatusLabel(record.status)} tone={resolveStatusTone(record.status)} />
                           </td>
                           <td className="px-4 py-4 text-slate-400">
                             <p>{formatDateTime(record.scheduledAt)}</p>
@@ -603,11 +607,11 @@ export function IotMaintenancePage() {
                                   </PermissionGuard>
                                 </>
                               ) : (
-                                <span className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
-                                  Somente visual
-                                </span>
-                              )}
-                            </div>
+                              <span className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
+                                  Somente navegação
+                              </span>
+                            )}
+                          </div>
                           </td>
                         </tr>
                       );
@@ -630,7 +634,7 @@ export function IotMaintenancePage() {
                 >
                   <div className="flex flex-wrap items-center gap-2">
                     <p className="font-semibold text-white">{alarm.code}</p>
-                    <IotStatusPill label={alarm.status} tone={resolveStatusTone(alarm.status === 'OPEN' ? 'PENDING' : 'IN_PROGRESS')} />
+                    <IotStatusPill label={resolveAlarmStatusLabel(alarm.status)} tone={resolveStatusTone(alarm.status === 'OPEN' ? 'PENDING' : 'IN_PROGRESS')} />
                   </div>
                   <p className="mt-2 text-sm text-slate-400">{alarm.message}</p>
                   <p className="mt-2 text-xs uppercase tracking-[0.16em] text-slate-500">
@@ -655,7 +659,7 @@ export function IotMaintenancePage() {
 
         <ConfirmDialog
           open={Boolean(deleteCandidate)}
-          title="Excluir maintenance"
+          title="Excluir ordem de manutenção"
           description={
             deleteCandidate
               ? `Confirma a exclusão da ordem ${deleteCandidate.title}?`

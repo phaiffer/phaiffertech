@@ -22,27 +22,28 @@ import {
   IotSecondaryButton,
   IotSelectField,
   IotStatusPill,
+  IotTableStateRow,
   IotTabButton,
   IotTextField
 } from '@/modules/iot/iot-chrome';
 import { buildDemoDevicesFromReal, getOperationalProfile } from '@/modules/iot/iot-demo-data';
-import { formatDateTime } from '@/modules/iot/iot-utils';
+import { formatDateTime, resolveDeviceStatusLabel, resolveDeviceTypeLabel } from '@/modules/iot/iot-utils';
 
 const pageSize = 10;
 
 const statusOptions = [
   { value: '', label: 'Todos os status' },
-  { value: 'ONLINE', label: 'ONLINE' },
-  { value: 'OFFLINE', label: 'OFFLINE' },
-  { value: 'MAINTENANCE', label: 'MAINTENANCE' },
-  { value: 'ALERT', label: 'ALERT' }
+  { value: 'ONLINE', label: 'Online' },
+  { value: 'OFFLINE', label: 'Offline' },
+  { value: 'MAINTENANCE', label: 'Em manutenção' },
+  { value: 'ALERT', label: 'Em alerta' }
 ];
 
 const typeOptions = [
   { value: '', label: 'Todos os tipos' },
-  { value: 'SENSOR', label: 'SENSOR' },
-  { value: 'GATEWAY', label: 'GATEWAY' },
-  { value: 'ACTUATOR', label: 'ACTUATOR' }
+  { value: 'SENSOR', label: 'Sensor' },
+  { value: 'GATEWAY', label: 'Gateway' },
+  { value: 'ACTUATOR', label: 'Atuador' }
 ];
 
 const editableStatusOptions = statusOptions.filter((option) => option.value);
@@ -154,7 +155,8 @@ export function IotDevicesPage() {
 
   const visibleRows = shouldUseDemo ? demoRows : realRows;
   const onlineCount = visibleRows.filter((device) => device.status === 'ONLINE').length;
-  const inactiveCount = visibleRows.filter((device) => device.status !== 'ONLINE').length;
+  const offlineCount = visibleRows.filter((device) => device.status === 'OFFLINE').length;
+  const attentionCount = visibleRows.filter((device) => device.status !== 'ONLINE').length;
 
   function beginEdit(device: IotDevice) {
     setEditingDevice(device);
@@ -235,24 +237,24 @@ export function IotDevicesPage() {
     >
       <div className="space-y-6">
         <IotPageHeader
-          eyebrow="Fleet Management"
-          title="Gestão de Dispositivos"
-          description="Inventário operacional dos ativos conectados com status, contexto de comunicação e atalhos para onboarding Modbus."
+          eyebrow="Frota conectada"
+          title="Dispositivos da operação"
+          description="Inventário operacional dos ativos conectados com status, contexto de comunicação e acesso direto ao onboarding Modbus."
           chips={
             <>
-              <Chip label="Dispositivos IoT" value={visibleRows.length} tone="green" icon={<DeviceIcon />} />
-              <Chip label="Ativos" value={onlineCount} tone="green" />
-              <Chip label="Inativos" value={inactiveCount} tone={inactiveCount > 0 ? 'amber' : 'green'} />
+              <Chip label="Dispositivos" value={visibleRows.length} tone="green" icon={<DeviceIcon />} />
+              <Chip label="Online" value={onlineCount} tone="green" />
+              <Chip label="Fora do nominal" value={attentionCount} tone={attentionCount > 0 ? 'amber' : 'green'} />
             </>
           }
-          action={<IotActionButton href="/iot/add-device">Adicionar dispositivo</IotActionButton>}
+          action={<IotActionButton href="/iot/add-device">Cadastrar dispositivo</IotActionButton>}
           aside={
             <IotHeroAside
               title="Estado da Frota"
               items={[
-                { label: 'Fonte', value: shouldUseDemo ? 'Demo assistida' : 'Endpoint real', tone: shouldUseDemo ? 'amber' : 'green' },
-                { label: 'Registros demo', value: visibleRows.length.toString(), tone: 'cyan' },
-                { label: 'Ações críticas', value: 'Editar / excluir', tone: shouldUseDemo ? 'amber' : 'green' }
+                { label: 'Modo de leitura', value: shouldUseDemo ? 'Assistido para apresentação' : 'Integração ativa', tone: shouldUseDemo ? 'amber' : 'green' },
+                { label: 'Ativos exibidos', value: visibleRows.length.toString(), tone: 'cyan' },
+                { label: 'Ações críticas', value: shouldUseDemo ? 'Somente navegação' : 'Editar e excluir', tone: shouldUseDemo ? 'amber' : 'green' }
               ]}
             />
           }
@@ -260,8 +262,8 @@ export function IotDevicesPage() {
 
         {error ? (
           <IotNotice
-            title="Listagem em modo demo"
-            description={`${error} A página continua operável para apresentação com um parque estático de referência.`}
+            title="Integração indisponível na frota"
+            description={`${error} A página continua utilizável em modo assistido com um parque de referência alinhado ao restante do módulo.`}
             tone="amber"
           />
         ) : null}
@@ -272,7 +274,7 @@ export function IotDevicesPage() {
 
         <IotPanel
           title="Filtros operacionais"
-          description="Refine a frota por nome, tipo e status sem sair do fluxo de demonstração."
+          description="Refine a frota por nome, tipo e status sem sair do fluxo operacional da apresentação."
         >
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
             <IotTextField
@@ -284,7 +286,7 @@ export function IotDevicesPage() {
             <IotSelectField label="Tipo" value={typeFilter} onChange={setTypeFilter} options={typeOptions} />
             <IotSelectField label="Status" value={statusFilter} onChange={setStatusFilter} options={statusOptions} />
             <div className="flex items-end gap-3">
-              <IotPrimaryButton onClick={() => setSearch(searchInput)}>Aplicar</IotPrimaryButton>
+              <IotPrimaryButton onClick={() => setSearch(searchInput)}>Aplicar filtros</IotPrimaryButton>
               <IotSecondaryButton
                 onClick={() => {
                   setSearchInput('');
@@ -303,7 +305,7 @@ export function IotDevicesPage() {
                 onClick={() => setStatusFilter(statusFilter === 'ONLINE' ? '' : 'ONLINE')}
               />
               <IotTabButton
-                label={`Inativos (${inactiveCount})`}
+                label={`Offline (${offlineCount})`}
                 active={statusFilter === 'OFFLINE'}
                 onClick={() => setStatusFilter(statusFilter === 'OFFLINE' ? '' : 'OFFLINE')}
               />
@@ -314,7 +316,7 @@ export function IotDevicesPage() {
         {editingDevice && !shouldUseDemo ? (
           <IotPanel
             title={`Editar ${editingDevice.name}`}
-            description="A edição continua conectada ao endpoint real existente do módulo IoT."
+            description="A edição permanece conectada ao contrato real do módulo IoT, sem alterar a estrutura consolidada."
           >
             <form onSubmit={handleUpdate} className="space-y-5">
               <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
@@ -332,7 +334,7 @@ export function IotDevicesPage() {
               </div>
               <div className="flex gap-3">
                 <IotPrimaryButton type="submit" disabled={submitting}>
-                  {submitting ? 'Atualizando...' : 'Atualizar dispositivo'}
+                  {submitting ? 'Atualizando ativo...' : 'Salvar ajustes'}
                 </IotPrimaryButton>
                 <IotSecondaryButton onClick={resetEditor}>Cancelar</IotSecondaryButton>
               </div>
@@ -342,7 +344,7 @@ export function IotDevicesPage() {
 
         <IotPanel
           title="Tabela operacional"
-          description="Lista densa com endpoint, protocolo, quantidade de leituras e última comunicação."
+          description="Lista densa com contexto Modbus, cobertura de leitura, status atual e último contato conhecido."
         >
           <div className="overflow-hidden rounded-[28px] border border-cyan-500/15">
             <table className="min-w-full bg-[#050f1f]">
@@ -360,17 +362,18 @@ export function IotDevicesPage() {
               </thead>
               <tbody className="divide-y divide-slate-800 text-sm text-slate-200">
                 {loading ? (
-                  <tr>
-                    <td colSpan={6} className="px-4 py-10 text-center text-slate-500">
-                      Carregando dispositivos...
-                    </td>
-                  </tr>
+                  <IotTableStateRow
+                    colSpan={6}
+                    title="Sincronizando a frota"
+                    description="Consolidando o inventário operacional e o contexto de comunicação dos ativos."
+                  />
                 ) : visibleRows.length === 0 ? (
-                  <tr>
-                    <td colSpan={6} className="px-4 py-10 text-center text-slate-500">
-                      Nenhum dispositivo encontrado para o filtro selecionado.
-                    </td>
-                  </tr>
+                  <IotTableStateRow
+                    colSpan={6}
+                    title="Nenhum dispositivo nesta janela"
+                    description="Ajuste os filtros ou siga em modo assistido para manter a narrativa da frota."
+                    tone="amber"
+                  />
                 ) : (
                   visibleRows.map((device, index) => {
                     const profile = getOperationalProfile(device, index);
@@ -382,6 +385,9 @@ export function IotDevicesPage() {
                           <p className="font-semibold text-white">{device.name}</p>
                           <p className="mt-1 text-sm text-slate-400">
                             {device.identifier ?? device.serialNumber ?? '-'} • {device.location ?? profile.area}
+                          </p>
+                          <p className="mt-1 text-xs uppercase tracking-[0.16em] text-slate-500">
+                            {resolveDeviceTypeLabel(device.type)} • {profile.transport}
                           </p>
                         </td>
                         <td className="px-4 py-4">
@@ -398,7 +404,7 @@ export function IotDevicesPage() {
                         </td>
                         <td className="px-4 py-4">
                           <div className="flex flex-wrap gap-2">
-                            <IotStatusPill label={device.status} tone={tone} />
+                            <IotStatusPill label={resolveDeviceStatusLabel(device.status)} tone={tone} />
                             <IotStatusPill label={profile.signal} tone={profile.health} />
                           </div>
                         </td>
@@ -424,7 +430,7 @@ export function IotDevicesPage() {
                               </>
                             ) : (
                               <span className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
-                                Somente visual
+                                Somente navegação
                               </span>
                             )}
                           </div>

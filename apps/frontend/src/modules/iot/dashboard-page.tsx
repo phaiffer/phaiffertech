@@ -118,9 +118,9 @@ export function IotDashboardPage() {
     >
       <div className="space-y-6">
         <IotPageHeader
-          eyebrow="Industrial IoT Command Center"
-          title="Visão Geral da Operação"
-          description="Leitura executiva da planta conectada com ênfase em disponibilidade, pressão de alarmes, ritmo de telemetria e backlog de resposta operacional."
+          eyebrow="Operação conectada"
+          title="Dashboard operacional"
+          description="Leitura executiva da planta conectada com foco em disponibilidade, pressão de alarmes, ritmo de telemetria e backlog de manutenção."
           chips={
             <>
               <Chip label="Dispositivos" value={snapshot.totalDevices} tone="cyan" icon={<DeviceIcon />} />
@@ -131,11 +131,11 @@ export function IotDashboardPage() {
           }
           aside={
             <IotHeroAside
-              title="Leitura Rápida"
+              title="Resumo do turno"
               items={[
-                { label: 'Modo', value: useDemoSnapshot ? 'Demo assistida' : 'Dados reais', tone: useDemoSnapshot ? 'amber' : 'green' },
-                { label: 'Atualização', value: loading ? 'Sincronizando' : 'Operacional', tone: loading ? 'cyan' : 'green' },
-                { label: 'Telemetry 24h', value: `${snapshot.telemetryPointsLast24h} pontos`, tone: 'cyan' }
+                { label: 'Modo de leitura', value: useDemoSnapshot ? 'Assistido para apresentação' : 'Integração ativa', tone: useDemoSnapshot ? 'amber' : 'green' },
+                { label: 'Atualização', value: loading ? 'Sincronizando agora' : 'Janela operacional estável', tone: loading ? 'cyan' : 'green' },
+                { label: 'Telemetria 24h', value: `${snapshot.telemetryPointsLast24h} pontos`, tone: 'cyan' }
               ]}
             />
           }
@@ -143,36 +143,36 @@ export function IotDashboardPage() {
 
         {error ? (
           <IotNotice
-            title="Dashboard em fallback visual"
-            description={`${error} A apresentação continua com um snapshot demo para manter a narrativa operacional aprovada pelo cliente.`}
+            title="Integração indisponível no dashboard"
+            description={`${error} A apresentação continua em modo assistido com um snapshot operacional coerente com o restante do módulo.`}
             tone="amber"
           />
         ) : null}
 
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
           <IotMetricCard
-            label="Dispositivos Totais"
+            label="Dispositivos totais"
             value={snapshot.totalDevices}
             footnote={`${snapshot.activeDevices} ativos • ${snapshot.offlineDevices} offline`}
             tone="cyan"
             icon={<DeviceIcon />}
           />
           <IotMetricCard
-            label="Alarmes Abertos"
+            label="Alarmes abertos"
             value={snapshot.totalAlarmsOpen}
             footnote="Incidentes priorizados por severidade e tempo aberto."
             tone={snapshot.totalAlarmsOpen > 0 ? 'amber' : 'green'}
             icon={<AlarmIcon />}
           />
           <IotMetricCard
-            label="Telemetry 24h"
+            label="Telemetria 24h"
             value={snapshot.telemetryPointsLast24h}
             footnote="Volume consolidado para leitura executiva de operação."
             tone="green"
             icon={<WaveIcon />}
           />
           <IotMetricCard
-            label="Backlog de Manutenção"
+            label="Backlog de manutenção"
             value={snapshot.pendingMaintenance}
             footnote="Fila operacional pendente para fechamento de loop."
             tone={snapshot.pendingMaintenance > 0 ? 'amber' : 'green'}
@@ -183,7 +183,7 @@ export function IotDashboardPage() {
         <div className="grid gap-6 xl:grid-cols-[minmax(0,1.2fr)_420px]">
           <IotPanel
             title="Estado dos dispositivos"
-            description="Painel de observação rápida dos ativos mais relevantes para a demo."
+            description="Observação rápida dos ativos mais relevantes para a apresentação e para a conversa operacional."
           >
             <div className="space-y-3">
               {recencyRows.map((row) => (
@@ -209,7 +209,7 @@ export function IotDashboardPage() {
 
           <IotPanel
             title="Resumo operacional"
-            description="Argumentos curtos para conduzir a reunião com o cliente."
+            description="Argumentos curtos para conduzir a reunião e conectar o dashboard às próximas telas do módulo."
           >
             <div className="space-y-3">
               <div className="rounded-[28px] border border-slate-800 bg-slate-950/35 p-5">
@@ -227,7 +227,7 @@ export function IotDashboardPage() {
                 </p>
                 <p className="mt-3 text-lg font-semibold text-white">{formatDateTime(new Date().toISOString())}</p>
                 <p className="mt-2 text-sm text-slate-400">
-                  Leitura preparada para demonstração em tempo real.
+                  Leitura preparada para demonstrar o estado atual da operação.
                 </p>
               </div>
             </div>
@@ -237,21 +237,21 @@ export function IotDashboardPage() {
         <div className="grid gap-6 xl:grid-cols-2">
           <IotPanel
             title="Pressão de alarmes"
-            description="Distribuição simplificada de incidentes para leitura imediata."
+            description="Distribuição simplificada de incidentes para leitura imediata e transição natural para a central de alarmes."
           >
             <IotMiniTrend title="Incidentes por dia" series={demoAlarmPressureSeries} accent="#f59e0b" />
           </IotPanel>
           <IotPanel
             title="Ritmo de telemetria"
-            description="Cadência visual para mostrar cobertura e atividade da planta."
+            description="Cadência visual para mostrar cobertura, atividade da planta e continuidade do stream operacional."
           >
             <IotMiniTrend title="Coletas por janela" series={demoThroughputSeries} accent="#22d3ee" />
           </IotPanel>
         </div>
 
         <IotPanel
-          title="Atalhos da demonstração"
-          description="Fluxo mínimo para apresentar o produto: panorama, dispositivos, onboarding e observabilidade."
+          title="Próximos fluxos da apresentação"
+          description="Sequência recomendada para navegar entre dispositivos, mapeamento, telemetria, alarmes, manutenção e observabilidade."
         >
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
             {demoQuickActions.map((action) => (

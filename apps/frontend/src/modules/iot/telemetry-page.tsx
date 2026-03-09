@@ -12,6 +12,7 @@ import {
   Chip,
   DeviceIcon,
   IotDateTimeField,
+  IotEmptyState,
   IotHeroAside,
   IotMiniTrend,
   IotNotice,
@@ -21,6 +22,7 @@ import {
   IotSecondaryButton,
   IotSelectField,
   IotStatusPill,
+  IotTableStateRow,
   IotTextField,
   WaveIcon
 } from '@/modules/iot/iot-chrome';
@@ -34,6 +36,7 @@ import {
   formatDateTime,
   resolveDeviceLabel,
   resolveRegisterLabel,
+  resolveTelemetryQualityLabel,
   toIsoDate
 } from '@/modules/iot/iot-utils';
 
@@ -234,7 +237,7 @@ export function IotTelemetryPage() {
 
   const deviceOptions = useMemo(
     () => [
-      { value: '', label: 'Todos os devices' },
+      { value: '', label: 'Todos os dispositivos' },
       ...displayDevices.map((device) => ({ value: device.id, label: device.name }))
     ],
     [displayDevices]
@@ -258,7 +261,7 @@ export function IotTelemetryPage() {
 
   const registerOptions = useMemo(
     () => [
-      { value: '', label: 'Todos os registers' },
+      { value: '', label: 'Todos os registradores' },
       ...visibleFilterRegisters.map((register) => ({
         value: register.id,
         label: `${register.name} (${register.metricName})`
@@ -280,7 +283,7 @@ export function IotTelemetryPage() {
 
   const formRegisterOptions = useMemo(
     () => [
-      { value: '', label: 'Sem register específico' },
+      { value: '', label: 'Sem registrador específico' },
       ...visibleFormRegisters.map((register) => ({
         value: register.id,
         label: `${register.name} (${register.metricName})`
@@ -392,13 +395,13 @@ export function IotTelemetryPage() {
     >
       <div className="space-y-6">
         <IotPageHeader
-          eyebrow="Operational Stream"
-          title="Telemetry"
-          description="Leitura operacional viva do IoT System com relação explícita entre device, register, mapeamento Modbus e comportamento de coleta."
+          eyebrow="Fluxo operacional"
+          title="Stream de telemetria"
+          description="Leitura operacional contínua do IoT System com relação explícita entre dispositivo, registrador, mapeamento Modbus e qualidade de coleta."
           chips={
             <>
               <Chip label="Pontos" value={visibleRows.length} tone="cyan" icon={<WaveIcon />} />
-              <Chip label="Devices em fluxo" value={devicesInFlow} tone="green" icon={<DeviceIcon />} />
+              <Chip label="Dispositivos em fluxo" value={devicesInFlow} tone="green" icon={<DeviceIcon />} />
               <Chip label="Métricas" value={uniqueMetrics} tone="neutral" />
             </>
           }
@@ -406,9 +409,9 @@ export function IotTelemetryPage() {
             <IotHeroAside
               title="Ritmo de Coleta"
               items={[
-                { label: 'Modo', value: useDemoMode ? 'Demo assistida' : 'Fluxo real', tone: useDemoMode ? 'amber' : 'green' },
-                { label: 'Último pulso', value: recentRows[0] ? formatDateTime(recentRows[0].recordedAt) : 'Sem coleta', tone: 'cyan' },
-                { label: 'Stream', value: recentRows.length > 0 ? 'Ativo' : 'Sem atividade', tone: recentRows.length > 0 ? 'green' : 'amber' }
+                { label: 'Modo de leitura', value: useDemoMode ? 'Assistido para apresentação' : 'Fluxo real ativo', tone: useDemoMode ? 'amber' : 'green' },
+                { label: 'Último pulso', value: recentRows[0] ? formatDateTime(recentRows[0].recordedAt) : 'Sem coleta recente', tone: 'cyan' },
+                { label: 'Estado do stream', value: recentRows.length > 0 ? 'Ativo' : 'Sem atividade', tone: recentRows.length > 0 ? 'green' : 'amber' }
               ]}
             />
           }
@@ -416,8 +419,8 @@ export function IotTelemetryPage() {
 
         {error ? (
           <IotNotice
-            title="Telemetria em fallback visual"
-            description={`${error} A experiência continua demonstrável com stream estático coerente com os registers e devices já configurados.`}
+            title="Integração indisponível no stream"
+            description={`${error} A experiência continua demonstrável em modo assistido com um stream coerente com os dispositivos e registradores já exibidos.`}
             tone="amber"
           />
         ) : null}
@@ -426,7 +429,7 @@ export function IotTelemetryPage() {
 
         <IotPanel
           title="Filtros de stream"
-          description="Refine o fluxo por ativo, register, métrica ou janela de coleta."
+          description="Refine o fluxo por ativo, registrador, métrica ou janela de coleta."
         >
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
             <IotTextField
@@ -435,8 +438,8 @@ export function IotTelemetryPage() {
               onChange={setSearchInput}
               placeholder="Métrica, unidade ou ativo"
             />
-            <IotSelectField label="Device" value={deviceFilterId} onChange={setDeviceFilterId} options={deviceOptions} />
-            <IotSelectField label="Register" value={registerFilterId} onChange={setRegisterFilterId} options={registerOptions} />
+            <IotSelectField label="Dispositivo" value={deviceFilterId} onChange={setDeviceFilterId} options={deviceOptions} />
+            <IotSelectField label="Registrador" value={registerFilterId} onChange={setRegisterFilterId} options={registerOptions} />
             <IotTextField
               label="Métrica"
               value={metricFilter}
@@ -446,7 +449,7 @@ export function IotTelemetryPage() {
             <IotDateTimeField label="De" value={startAt} onChange={setStartAt} />
             <IotDateTimeField label="Até" value={endAt} onChange={setEndAt} />
             <div className="flex items-end gap-3 xl:col-span-2">
-              <IotPrimaryButton onClick={() => setSearch(searchInput)}>Aplicar</IotPrimaryButton>
+              <IotPrimaryButton onClick={() => setSearch(searchInput)}>Aplicar filtros</IotPrimaryButton>
               <IotSecondaryButton
                 onClick={() => {
                   setSearchInput('');
@@ -467,13 +470,15 @@ export function IotTelemetryPage() {
         <div className="grid gap-6 xl:grid-cols-[minmax(0,1.25fr)_390px]">
           <IotPanel
             title="Leituras recentes"
-            description="Snapshot operacional das amostras mais recentes para apoiar a demo ao vivo."
+            description="Snapshot operacional das amostras mais recentes para reforçar a sensação de stream ao vivo."
           >
             <div className="space-y-3">
               {recentRows.length === 0 ? (
-                <div className="rounded-2xl border border-slate-800 bg-slate-950/35 px-4 py-6 text-sm text-slate-500">
-                  Nenhuma telemetria recente disponível.
-                </div>
+                <IotEmptyState
+                  title="Sem pulso recente nesta janela"
+                  description="Ajuste os filtros ou mantenha a apresentação com o stream assistido já consolidado no módulo."
+                  tone="amber"
+                />
               ) : (
                 recentRows.map((record) => {
                   const register = displayRegisters.find((entry) => entry.id === record.registerId);
@@ -504,7 +509,7 @@ export function IotTelemetryPage() {
                           label={`${record.metricValue}${record.unit ? ` ${record.unit}` : ''}`}
                           tone={resolveQualityTone(quality)}
                         />
-                        <IotStatusPill label={quality} tone={resolveQualityTone(quality)} />
+                        <IotStatusPill label={resolveTelemetryQualityLabel(quality)} tone={resolveQualityTone(quality)} />
                         <span className="text-sm text-slate-500">{formatDateTime(record.recordedAt)}</span>
                       </div>
                     </div>
@@ -517,11 +522,11 @@ export function IotTelemetryPage() {
           <PermissionGuard permission="iot.telemetry.write">
             <IotPanel
               title="Ingestão manual"
-              description="Entrada controlada para simular ou registrar uma leitura operacional."
+              description="Entrada controlada para simular ou registrar uma leitura operacional dentro do fluxo atual."
             >
               <form onSubmit={handleSubmit} className="space-y-4">
-                <IotSelectField label="Device" value={deviceId} onChange={setDeviceId} options={formDeviceOptions} />
-                <IotSelectField label="Register" value={registerId} onChange={setRegisterId} options={formRegisterOptions} />
+                <IotSelectField label="Dispositivo" value={deviceId} onChange={setDeviceId} options={formDeviceOptions} />
+                <IotSelectField label="Registrador" value={registerId} onChange={setRegisterId} options={formRegisterOptions} />
                 <IotTextField label="Métrica" value={metricName} onChange={setMetricName} required />
                 <IotTextField label="Valor" value={metricValue} onChange={setMetricValue} type="number" required />
                 <IotTextField label="Unidade" value={unit} onChange={setUnit} />
@@ -534,7 +539,7 @@ export function IotTelemetryPage() {
                 />
                 <div className="flex gap-3">
                   <IotPrimaryButton type="submit" disabled={submitting}>
-                    {submitting ? 'Registrando...' : 'Registrar leitura'}
+                    {submitting ? 'Registrando leitura...' : 'Registrar leitura'}
                   </IotPrimaryButton>
                 </div>
               </form>
@@ -551,19 +556,19 @@ export function IotTelemetryPage() {
           </IotPanel>
           <IotPanel
             title="Sinais do stream"
-            description="Indicadores curtos para leitura rápida com o cliente."
+            description="Indicadores curtos para leitura rápida e ligação natural com registradores e dashboard."
           >
             <div className="space-y-3">
               <div className="rounded-2xl border border-slate-800 bg-slate-950/35 px-4 py-4">
                 <p className="text-sm font-semibold text-white">Cobertura atual</p>
                 <p className="mt-2 text-sm text-slate-400">
-                  {devicesInFlow} device(s) e {uniqueMetrics} métrica(s) participando do stream exibido.
+                  {devicesInFlow} dispositivo(s) e {uniqueMetrics} métrica(s) participando do stream exibido.
                 </p>
               </div>
               <div className="rounded-2xl border border-slate-800 bg-slate-950/35 px-4 py-4">
-                <p className="text-sm font-semibold text-white">Relacionamento com registers</p>
+                <p className="text-sm font-semibold text-white">Relacionamento com registradores</p>
                 <p className="mt-2 text-sm text-slate-400">
-                  Cada leitura mantém o vínculo com register, função Modbus e endereço lógico.
+                  Cada leitura mantém o vínculo com registrador, função Modbus e endereço lógico.
                 </p>
               </div>
             </div>
@@ -572,13 +577,13 @@ export function IotTelemetryPage() {
 
         <IotPanel
           title="Tabela de telemetria"
-          description="Leitura densa para operação, com contexto de ativo, register e qualidade."
+          description="Leitura densa para operação, com contexto de ativo, registrador, mapeamento e qualidade."
         >
           <div className="overflow-hidden rounded-[28px] border border-cyan-500/15">
             <table className="min-w-full bg-[#050f1f]">
               <thead className="border-b border-cyan-500/15 bg-[#061427]">
                 <tr>
-                  {['Device', 'Register', 'Mapeamento', 'Métrica', 'Valor', 'Qualidade', 'Coletado em'].map((header) => (
+                  {['Dispositivo', 'Registrador', 'Mapeamento', 'Métrica', 'Valor', 'Qualidade', 'Coletado em'].map((header) => (
                     <th
                       key={header}
                       className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.18em] text-slate-400"
@@ -590,17 +595,18 @@ export function IotTelemetryPage() {
               </thead>
               <tbody className="divide-y divide-slate-800 text-sm text-slate-200">
                 {loading ? (
-                  <tr>
-                    <td colSpan={7} className="px-4 py-10 text-center text-slate-500">
-                      Carregando telemetria...
-                    </td>
-                  </tr>
+                  <IotTableStateRow
+                    colSpan={7}
+                    title="Sincronizando o stream"
+                    description="Consolidando as leituras recentes, o mapeamento Modbus e a qualidade dos pontos."
+                  />
                 ) : visibleRows.length === 0 ? (
-                  <tr>
-                    <td colSpan={7} className="px-4 py-10 text-center text-slate-500">
-                      Nenhum registro de telemetria encontrado.
-                    </td>
-                  </tr>
+                  <IotTableStateRow
+                    colSpan={7}
+                    title="Nenhum ponto nesta janela"
+                    description="Ajuste os filtros ou use o modo assistido para manter a leitura contínua da operação."
+                    tone="amber"
+                  />
                 ) : (
                   visibleRows.map((record) => {
                     const register = displayRegisters.find((entry) => entry.id === record.registerId);
@@ -635,7 +641,7 @@ export function IotTelemetryPage() {
                           />
                         </td>
                         <td className="px-4 py-4">
-                          <IotStatusPill label={quality} tone={resolveQualityTone(quality)} />
+                          <IotStatusPill label={resolveTelemetryQualityLabel(quality)} tone={resolveQualityTone(quality)} />
                         </td>
                         <td className="px-4 py-4 text-slate-400">{formatDateTime(record.recordedAt)}</td>
                       </tr>

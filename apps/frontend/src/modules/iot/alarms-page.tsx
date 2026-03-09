@@ -16,29 +16,37 @@ import {
   IotPageHeader,
   IotPanel,
   IotPrimaryButton,
+  IotSecondaryButton,
   IotSelectField,
   IotStatusPill,
+  IotTableStateRow,
   IotTabButton,
   IotTextField
 } from '@/modules/iot/iot-chrome';
 import { demoAlarmList } from '@/modules/iot/iot-demo-data';
-import { formatDateTime, resolveDeviceLabel, resolveRegisterLabel } from '@/modules/iot/iot-utils';
+import {
+  formatDateTime,
+  resolveAlarmSeverityLabel,
+  resolveAlarmStatusLabel,
+  resolveDeviceLabel,
+  resolveRegisterLabel
+} from '@/modules/iot/iot-utils';
 
 const pageSize = 10;
 
 const statusOptions = [
   { value: '', label: 'Todos os status' },
-  { value: 'OPEN', label: 'OPEN' },
-  { value: 'ACKNOWLEDGED', label: 'ACKNOWLEDGED' },
-  { value: 'RESOLVED', label: 'RESOLVED' }
+  { value: 'OPEN', label: 'Aberto' },
+  { value: 'ACKNOWLEDGED', label: 'Reconhecido' },
+  { value: 'RESOLVED', label: 'Resolvido' }
 ];
 
 const severityOptions = [
   { value: '', label: 'Todas as severidades' },
-  { value: 'LOW', label: 'LOW' },
-  { value: 'MEDIUM', label: 'MEDIUM' },
-  { value: 'HIGH', label: 'HIGH' },
-  { value: 'CRITICAL', label: 'CRITICAL' }
+  { value: 'LOW', label: 'Baixa' },
+  { value: 'MEDIUM', label: 'Média' },
+  { value: 'HIGH', label: 'Alta' },
+  { value: 'CRITICAL', label: 'Crítica' }
 ];
 
 const initialPage: PageResponse<IotAlarm> = {
@@ -187,9 +195,9 @@ export function IotAlarmsPage() {
     >
       <div className="space-y-6">
         <IotPageHeader
-          eyebrow="Operational Response"
-          title="Alarmes"
-          description="Fila operacional de eventos críticos com severidade, dispositivo afetado e ação rápida para reconhecimento."
+          eyebrow="Resposta operacional"
+          title="Central de alarmes"
+          description="Fila operacional de eventos críticos com severidade, ativo afetado, registrador associado e ação rápida para reconhecimento."
           chips={
             <>
               <Chip label="Abertos" value={openCount} tone={openCount > 0 ? 'red' : 'green'} icon={<AlarmIcon />} />
@@ -199,11 +207,11 @@ export function IotAlarmsPage() {
           }
           aside={
             <IotHeroAside
-              title="Situação Atual"
+              title="Situação do turno"
               items={[
-                { label: 'Modo', value: useDemoMode ? 'Demo assistida' : 'Fila real', tone: useDemoMode ? 'amber' : 'green' },
-                { label: 'Ação sugerida', value: openCount > 0 ? 'Reconhecer e escalonar' : 'Operação estável', tone: openCount > 0 ? 'red' : 'green' },
-                { label: 'Cobertura', value: `${visibleRows.length} registros`, tone: 'cyan' }
+                { label: 'Modo de leitura', value: useDemoMode ? 'Assistido para apresentação' : 'Fila real ativa', tone: useDemoMode ? 'amber' : 'green' },
+                { label: 'Ação sugerida', value: openCount > 0 ? 'Reconhecer e escalar' : 'Operação estável', tone: openCount > 0 ? 'red' : 'green' },
+                { label: 'Incidentes exibidos', value: `${visibleRows.length}`, tone: 'cyan' }
               ]}
             />
           }
@@ -211,8 +219,8 @@ export function IotAlarmsPage() {
 
         {error ? (
           <IotNotice
-            title="Falha de integração"
-            description={`${error} A tela permanece apresentável com um conjunto estático de incidentes.`}
+            title="Integração indisponível na central de alarmes"
+            description={`${error} A tela permanece apresentável em modo assistido com um conjunto estático de incidentes coerente com os ativos e registradores.`}
             tone="amber"
           />
         ) : null}
@@ -221,7 +229,7 @@ export function IotAlarmsPage() {
 
         <IotPanel
           title="Filtros operacionais"
-          description="Use severidade e status para conduzir a conversa de resposta a incidentes."
+          description="Use severidade, status e busca textual para conduzir a conversa de resposta a incidentes."
         >
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
             <IotTextField
@@ -243,7 +251,17 @@ export function IotAlarmsPage() {
               options={statusOptions}
             />
             <div className="flex items-end gap-3">
-              <IotPrimaryButton onClick={() => setSearch(searchInput)}>Aplicar</IotPrimaryButton>
+              <IotPrimaryButton onClick={() => setSearch(searchInput)}>Aplicar filtros</IotPrimaryButton>
+              <IotSecondaryButton
+                onClick={() => {
+                  setSearchInput('');
+                  setSearch('');
+                  setStatusFilter('');
+                  setSeverityFilter('');
+                }}
+              >
+                Limpar
+              </IotSecondaryButton>
             </div>
             <div className="flex items-end gap-3">
               <IotTabButton
@@ -263,13 +281,13 @@ export function IotAlarmsPage() {
         <div className="grid gap-6 xl:grid-cols-[minmax(0,1.3fr)_360px]">
           <IotPanel
             title="Fila de alarmes"
-            description="Leitura densa para times de operação com dispositivo, registrador e histórico do evento."
+            description="Leitura densa para o time operacional com ativo, registrador, mensagem e momento do evento."
           >
             <div className="overflow-hidden rounded-[28px] border border-cyan-500/15">
               <table className="min-w-full bg-[#050f1f]">
                 <thead className="border-b border-cyan-500/15 bg-[#061427]">
                   <tr>
-                    {['ID', 'Severidade', 'Status', 'Ativo', 'Register', 'Mensagem', 'Data/Hora', 'Ações'].map((header) => (
+                    {['Código', 'Severidade', 'Status', 'Ativo', 'Registrador', 'Mensagem', 'Data/hora', 'Ações'].map((header) => (
                       <th
                         key={header}
                         className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.18em] text-slate-400"
@@ -280,18 +298,19 @@ export function IotAlarmsPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-800 text-sm text-slate-200">
-                  {loading ? (
-                    <tr>
-                      <td colSpan={8} className="px-4 py-10 text-center text-slate-500">
-                        Carregando alarmes...
-                      </td>
-                    </tr>
+                {loading ? (
+                    <IotTableStateRow
+                      colSpan={8}
+                      title="Sincronizando a fila de alarmes"
+                      description="Consolidando severidade, status e relacionamento com ativos e registradores."
+                    />
                   ) : visibleRows.length === 0 ? (
-                    <tr>
-                      <td colSpan={8} className="px-4 py-10 text-center text-slate-500">
-                        Nenhum alarme encontrado para o filtro selecionado.
-                      </td>
-                    </tr>
+                    <IotTableStateRow
+                      colSpan={8}
+                      title="Nenhum alarme nesta janela"
+                      description="Ajuste os filtros ou mantenha a apresentação com a fila assistida do módulo."
+                      tone="amber"
+                    />
                   ) : (
                   visibleRows.map((alarm) => {
                       const deviceLabel = alarm.deviceName ?? resolveDeviceLabel(devices, alarm.deviceId);
@@ -304,10 +323,10 @@ export function IotAlarmsPage() {
                             <p className="font-semibold text-white">{alarm.code}</p>
                           </td>
                           <td className="px-4 py-4">
-                            <IotStatusPill label={alarm.severity} tone={resolveToneFromSeverity(alarm.severity)} />
+                            <IotStatusPill label={resolveAlarmSeverityLabel(alarm.severity)} tone={resolveToneFromSeverity(alarm.severity)} />
                           </td>
                           <td className="px-4 py-4">
-                            <IotStatusPill label={alarm.status} tone={resolveStatusTone(alarm.status)} />
+                            <IotStatusPill label={resolveAlarmStatusLabel(alarm.status)} tone={resolveStatusTone(alarm.status)} />
                           </td>
                           <td className="px-4 py-4 text-slate-300">{deviceLabel}</td>
                           <td className="px-4 py-4 text-slate-400">{registerLabel}</td>
@@ -326,7 +345,7 @@ export function IotAlarmsPage() {
                               </button>
                             ) : (
                               <span className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
-                                {useDemoMode ? 'Somente visual' : 'Sem ação'}
+                                {useDemoMode ? 'Somente navegação' : 'Sem ação'}
                               </span>
                             )}
                           </td>
@@ -341,14 +360,14 @@ export function IotAlarmsPage() {
 
           <IotPanel
             title="Playbook de resposta"
-            description="Roteiro enxuto para demonstrar priorização e fechamento do incidente."
+            description="Roteiro enxuto para demonstrar priorização, ownership e transição para manutenção."
           >
             <div className="space-y-3">
               {[
                 '1. Validar o ativo e o registrador afetado antes de escalar.',
                 '2. Reconhecer o alarme para registrar ownership operacional.',
-                '3. Direcionar manutenção quando houver repetição ou perda de heartbeat.',
-                '4. Fechar o loop no dashboard e na análise global.'
+                '3. Direcionar manutenção quando houver repetição, perda de heartbeat ou criticidade alta.',
+                '4. Fechar o loop no dashboard e na observabilidade consolidada.'
               ].map((step) => (
                 <div
                   key={step}

@@ -10,11 +10,13 @@ import {
   Chip,
   DeviceIcon,
   FactoryIcon,
+  IotEmptyState,
   IotHeroAside,
   IotNotice,
   IotPageHeader,
   IotPanel,
   IotPrimaryButton,
+  IotSectionLabel,
   IotSecondaryButton,
   IotSelectField,
   IotStatusPill,
@@ -128,23 +130,23 @@ export function IotAddDevicePage() {
     >
       <div className="space-y-6">
         <IotPageHeader
-          eyebrow="Cadastro Industrial"
-          title="Adicionar Dispositivo Modbus"
-          description="Cadastre um ativo industrial com contexto Modbus TCP ou RS-485. Nesta etapa o device é persistido no backend real e o mapeamento detalhado de registradores fica preparado em modo demo para continuidade."
+          eyebrow="Onboarding industrial"
+          title="Cadastrar dispositivo Modbus"
+          description="Cadastre um ativo industrial com contexto Modbus TCP ou RS-485, pacote inicial de medições e resumo confiável para continuidade em registradores e telemetria."
           chips={
             <>
               <Chip label="Protocolo" value={transport === 'MODBUS_TCP' ? 'TCP' : 'RS-485'} tone="cyan" icon={<PlugIcon />} />
-              <Chip label="Porta padrão" value={port} tone="neutral" icon={<BoltIcon />} />
+              <Chip label="Endpoint" value={port} tone="neutral" icon={<BoltIcon />} />
               <Chip label="Variáveis" value={selectedVariables.length} tone="green" icon={<DeviceIcon />} />
             </>
           }
           aside={
             <IotHeroAside
-              title="Contexto Operacional"
+              title="Roteiro do cadastro"
               items={[
-                { label: 'Fluxo', value: 'Onboarding Industrial', tone: 'cyan' },
-                { label: 'Leitura', value: 'Cadastro + medição', tone: 'green' },
-                { label: 'Persistência', value: 'Device real / Modbus demo', tone: 'amber' }
+                { label: 'Etapa 1', value: 'Identificar o ativo', tone: 'green' },
+                { label: 'Etapa 2', value: 'Definir a comunicação Modbus', tone: 'cyan' },
+                { label: 'Etapa 3', value: 'Selecionar o pacote inicial', tone: 'amber' }
               ]}
             />
           }
@@ -152,7 +154,7 @@ export function IotAddDevicePage() {
 
         {error ? (
           <IotNotice
-            title="Falha ao criar dispositivo"
+            title="Não foi possível concluir o cadastro"
             description={error}
             tone="red"
           />
@@ -161,9 +163,28 @@ export function IotAddDevicePage() {
         <div className="grid gap-6 xl:grid-cols-[minmax(0,1.2fr)_420px]">
           <IotPanel
             title="Configuração do ativo"
-            description="O formulário comunica o domínio Modbus já aprovado pelo cliente, sem alterar a arquitetura atual do módulo."
+            description="O formulário mantém o contrato atual do módulo e organiza o onboarding em uma sequência curta e confiável."
           >
             <form onSubmit={handleSubmit} className="space-y-6">
+              <div className="grid gap-3 md:grid-cols-3">
+                {[
+                  ['1. Ativo', 'Nome, tag técnica, localização e papel do equipamento.'],
+                  ['2. Comunicação', 'Protocolo, endpoint, Unit ID e cadência de coleta.'],
+                  ['3. Pacote inicial', 'Seleção do conjunto mínimo de variáveis para demo.']
+                ].map(([title, text]) => (
+                  <div
+                    key={title}
+                    className="rounded-[24px] border border-slate-800 bg-slate-950/35 px-4 py-4"
+                  >
+                    <p className="text-sm font-semibold text-white">{title}</p>
+                    <p className="mt-2 text-sm text-slate-400">{text}</p>
+                  </div>
+                ))}
+              </div>
+
+              <div>
+                <IotSectionLabel>Identificação do ativo</IotSectionLabel>
+              </div>
               <div className="grid gap-4 md:grid-cols-2">
                 <IotTextField
                   label="Nome do dispositivo"
@@ -202,12 +223,13 @@ export function IotAddDevicePage() {
               />
 
               <div className="rounded-[28px] border border-slate-800 bg-slate-950/35 p-5">
+                <IotSectionLabel>Comunicação Modbus</IotSectionLabel>
                 <div className="flex items-center gap-3">
                   <FactoryIcon />
                   <div>
                     <p className="text-lg font-semibold text-white">Camada de comunicação</p>
                     <p className="text-sm text-slate-400">
-                      Semântica industrial compatível com Modbus TCP / RS-485.
+                      Semântica industrial compatível com Modbus TCP e RS-485, sem alterar o contrato já consolidado.
                     </p>
                   </div>
                 </div>
@@ -259,6 +281,7 @@ export function IotAddDevicePage() {
                     <div className="mt-4 flex flex-wrap gap-2">
                       <IotStatusPill label={transport === 'MODBUS_TCP' ? 'TCP' : 'RS-485'} tone="cyan" />
                       <IotStatusPill label={`Polling ${pollingProfile}`} tone="green" />
+                      <IotStatusPill label={`${selectedVariables.length} variáveis`} tone="neutral" />
                     </div>
                   </div>
                 </div>
@@ -266,10 +289,10 @@ export function IotAddDevicePage() {
 
               <div className="flex flex-wrap gap-3">
                 <IotPrimaryButton type="submit" disabled={submitting}>
-                  {submitting ? 'Criando dispositivo...' : 'Criar ativo'}
+                  {submitting ? 'Salvando cadastro...' : 'Salvar e abrir a frota'}
                 </IotPrimaryButton>
                 <IotSecondaryButton onClick={() => router.push('/iot/devices')}>
-                  Cancelar
+                  Voltar para dispositivos
                 </IotSecondaryButton>
               </div>
             </form>
@@ -278,8 +301,11 @@ export function IotAddDevicePage() {
           <div className="space-y-6">
             <IotPanel
               title="Variáveis do dispositivo"
-              description="Selecione um pacote inicial de medições para a narrativa de demo e para o próximo ciclo de detalhamento de registradores."
+              description="Selecione o pacote inicial de medições para a narrativa de demo e para o próximo ciclo de detalhamento dos registradores."
             >
+              <div className="mb-4">
+                <IotSectionLabel>Pacote inicial de coleta</IotSectionLabel>
+              </div>
               <div className="space-y-3">
                 {modbusVariableTemplates.map((variable) => {
                   const checked = selectedVariables.includes(variable.id);
@@ -312,7 +338,7 @@ export function IotAddDevicePage() {
                           </div>
                           <p className="mt-1 text-sm text-slate-400">{variable.description}</p>
                           <p className="mt-2 text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
-                            Register {variable.registerAddress} • Unidade {variable.unit}
+                            Registrador {variable.registerAddress} • Unidade {variable.unit}
                           </p>
                         </div>
                       </div>
@@ -324,27 +350,35 @@ export function IotAddDevicePage() {
 
             <IotPanel
               title="Pacote selecionado"
-              description="Pré-visualização do contexto que ficará preparado para a continuação da camada de registradores."
+              description="Pré-visualização do contexto que ficará preparado para a continuidade do mapeamento e do stream operacional."
             >
-              <div className="space-y-3">
-                {selectedTemplateItems.map((item) => (
-                  <div
-                    key={item.id}
-                    className="rounded-2xl border border-slate-800 bg-slate-950/35 px-4 py-3"
-                  >
-                    <div className="flex flex-wrap items-center justify-between gap-3">
-                      <div>
-                        <p className="font-semibold text-white">{item.label}</p>
-                        <p className="text-sm text-slate-400">{item.description}</p>
-                      </div>
-                      <div className="text-right text-xs uppercase tracking-[0.16em] text-slate-500">
-                        <p>{item.registerAddress}</p>
-                        <p>{item.unit}</p>
+              {selectedTemplateItems.length === 0 ? (
+                <IotEmptyState
+                  title="Nenhuma variável selecionada"
+                  description="Escolha pelo menos uma medição para deixar o cadastro pronto para a sequência de registradores e telemetria."
+                  tone="amber"
+                />
+              ) : (
+                <div className="space-y-3">
+                  {selectedTemplateItems.map((item) => (
+                    <div
+                      key={item.id}
+                      className="rounded-2xl border border-slate-800 bg-slate-950/35 px-4 py-3"
+                    >
+                      <div className="flex flex-wrap items-center justify-between gap-3">
+                        <div>
+                          <p className="font-semibold text-white">{item.label}</p>
+                          <p className="text-sm text-slate-400">{item.description}</p>
+                        </div>
+                        <div className="text-right text-xs uppercase tracking-[0.16em] text-slate-500">
+                          <p>{item.registerAddress}</p>
+                          <p>{item.unit}</p>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )}
             </IotPanel>
           </div>
         </div>

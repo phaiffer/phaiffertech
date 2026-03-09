@@ -8,6 +8,7 @@ import { IotReportSummary } from '@/shared/types/iot';
 import {
   AnalysisIcon,
   Chip,
+  IotActionButton,
   IotHeroAside,
   IotMiniTrend,
   IotMetricCard,
@@ -101,23 +102,24 @@ export function IotReportsPage() {
     >
       <div className="space-y-6">
         <IotPageHeader
-          eyebrow="Executive Observability"
-          title="Análise Comparativa Global"
-          description="Comparação consolidada de desempenho, cobertura e atividade operacional para a narrativa executiva do IoT System."
+          eyebrow="Observabilidade operacional"
+          title="Observabilidade consolidada"
+          description="Leitura comparativa de disponibilidade, alarmes, telemetria e manutenção para a narrativa executiva do IoT System."
           chips={
             <>
-              <Chip label="Global" value="multi-ativo" tone="green" icon={<AnalysisIcon />} />
-              <Chip label="Devices" value={report.totalDevices} tone="cyan" />
-              <Chip label="Telemetry 24h" value={report.telemetryPointsLast24h} tone="neutral" />
+              <Chip label="Escopo" value="multiativo" tone="green" icon={<AnalysisIcon />} />
+              <Chip label="Dispositivos" value={report.totalDevices} tone="cyan" />
+              <Chip label="Telemetria 24h" value={report.telemetryPointsLast24h} tone="neutral" />
             </>
           }
+          action={<IotActionButton href="/iot/dashboard">Voltar ao dashboard</IotActionButton>}
           aside={
             <IotHeroAside
               title="Estado do Painel"
               items={[
-                { label: 'Fonte', value: usingDemo ? 'Demo assistida' : 'Dados reais', tone: usingDemo ? 'amber' : 'green' },
-                { label: 'Cobertura', value: Object.keys(report.devicesByStatus).length > 1 ? 'Multi-ativo' : 'Single asset', tone: 'cyan' },
-                { label: 'Atualização', value: loading ? 'Sincronizando' : 'OK', tone: loading ? 'cyan' : 'green' }
+                { label: 'Modo de leitura', value: usingDemo ? 'Assistido para apresentação' : 'Integração ativa', tone: usingDemo ? 'amber' : 'green' },
+                { label: 'Cobertura', value: Object.keys(report.devicesByStatus).length > 1 ? 'Multiativo' : 'Ativo único', tone: 'cyan' },
+                { label: 'Atualização', value: loading ? 'Sincronizando agora' : 'Painel pronto', tone: loading ? 'cyan' : 'green' }
               ]}
             />
           }
@@ -125,8 +127,8 @@ export function IotReportsPage() {
 
         {error ? (
           <IotNotice
-            title="Observability em fallback visual"
-            description={`${error} A tela continua demonstrável com um resumo estático coerente com o visual aprovado.`}
+            title="Integração indisponível na observabilidade"
+            description={`${error} A tela continua demonstrável em modo assistido com um resumo coerente com dashboard, alarmes e manutenção.`}
             tone="amber"
           />
         ) : null}
@@ -139,21 +141,21 @@ export function IotReportsPage() {
             tone="cyan"
           />
           <IotMetricCard
-            label="Consumo total"
-            value={`${report.telemetryPointsLast24h} kWh`}
-            footnote="Proxy executivo baseado nas medições consolidadas."
+            label="Volume consolidado"
+            value={`${report.telemetryPointsLast24h} pontos`}
+            footnote="Proxy executivo baseado nas medições consolidadas da janela atual."
             tone="green"
           />
           <IotMetricCard
             label="Cobertura"
-            value={Object.keys(report.devicesByStatus).length > 1 ? 'Multi-Ativo' : 'Mono-Ativo'}
-            footnote="Comparação preparada para múltiplos ativos e linhas."
+            value={Object.keys(report.devicesByStatus).length > 1 ? 'Multiativo' : 'Ativo único'}
+            footnote="Comparação preparada para múltiplos ativos e linhas operacionais."
             tone="neutral"
           />
           <IotMetricCard
             label="Gerado em"
             value={formatDateTime(report.generatedAt)}
-            footnote="Última consolidação da camada observability."
+            footnote="Última consolidação da camada de observabilidade."
             tone="green"
           />
         </div>
@@ -167,26 +169,26 @@ export function IotReportsPage() {
           </IotPanel>
 
           <IotPanel
-            title="Notas de leitura"
-            description="Resumo curto para conduzir a conversa comercial."
+            title="Leituras cruzadas do módulo"
+            description="Resumo curto para conectar observabilidade com as demais telas do IoT."
           >
             <div className="space-y-3">
               <div className="rounded-2xl border border-slate-800 bg-slate-950/35 px-4 py-4">
-                <p className="text-sm font-semibold text-white">Cobertura operacional</p>
+                <p className="text-sm font-semibold text-white">Dashboard</p>
                 <p className="mt-2 text-sm text-slate-400">
-                  O painel já comunica comparação de ativos e leitura consolidada.
+                  Use disponibilidade, telemetria 24h e backlog como a base da narrativa executiva.
                 </p>
               </div>
               <div className="rounded-2xl border border-slate-800 bg-slate-950/35 px-4 py-4">
-                <p className="text-sm font-semibold text-white">Narrativa executiva</p>
+                <p className="text-sm font-semibold text-white">Alarmes e manutenção</p>
                 <p className="mt-2 text-sm text-slate-400">
-                  Use disponibilidade, alarmes e eficiência como a sequência principal da demo.
+                  Cruze severidade de incidentes com o backlog de ação de campo para fechar o loop operacional.
                 </p>
               </div>
               <div className="rounded-2xl border border-slate-800 bg-slate-950/35 px-4 py-4">
-                <p className="text-sm font-semibold text-white">Estado do backend</p>
+                <p className="text-sm font-semibold text-white">Estado da camada</p>
                 <div className="mt-3 flex flex-wrap gap-2">
-                  <IotStatusPill label={usingDemo ? 'Mock parcial' : 'Resumo real'} tone={usingDemo ? 'amber' : 'green'} />
+                  <IotStatusPill label={usingDemo ? 'Modo assistido' : 'Resumo real'} tone={usingDemo ? 'amber' : 'green'} />
                 </div>
               </div>
             </div>
@@ -196,16 +198,16 @@ export function IotReportsPage() {
         <div className="grid gap-6 xl:grid-cols-2">
           <IotPanel
             title="Ritmo de coleta"
-            description="Cadência visual das coletas para reforçar cobertura temporal."
+            description="Cadência visual das coletas para reforçar cobertura temporal e ligação com o stream operacional."
           >
             <IotMiniTrend title="Coletas consolidadas" series={demoThroughputSeries} accent="#22d3ee" />
           </IotPanel>
           <IotPanel
             title="Distribuições consolidadas"
-            description="Blocos principais para explicar como a plataforma organiza a leitura global."
+            description="Blocos principais para explicar como a plataforma organiza a leitura global da operação."
           >
             <div className="grid gap-4">
-              <DistributionBlock title="Devices por status" values={report.devicesByStatus} />
+              <DistributionBlock title="Dispositivos por status" values={report.devicesByStatus} />
               <DistributionBlock title="Alarmes por severidade" values={report.alarmsBySeverity} />
               <DistributionBlock title="Telemetria por métrica" values={report.telemetryByMetric} />
             </div>
