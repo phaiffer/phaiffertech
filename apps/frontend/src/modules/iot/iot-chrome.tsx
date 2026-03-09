@@ -408,6 +408,7 @@ type FieldProps = {
   placeholder?: string;
   required?: boolean;
   helper?: string;
+  type?: string;
 };
 
 export function IotTextField({
@@ -416,12 +417,14 @@ export function IotTextField({
   onChange,
   placeholder,
   required = false,
-  helper
+  helper,
+  type = 'text'
 }: FieldProps) {
   return (
     <label className="block text-sm">
       <span className="mb-2 block font-medium text-slate-200">{label}</span>
       <input
+        type={type}
         value={value}
         onChange={(event) => onChange(event.target.value)}
         placeholder={placeholder}
@@ -479,6 +482,10 @@ export function IotSelectField({
       {helper ? <span className="mt-2 block text-xs text-slate-500">{helper}</span> : null}
     </label>
   );
+}
+
+export function IotDateTimeField(props: Omit<FieldProps, 'type'>) {
+  return <IotTextField {...props} type="datetime-local" />;
 }
 
 export function IotSectionLabel({ children }: { children: ReactNode }) {
