@@ -30,6 +30,7 @@ import { buildDemoDevicesFromReal, getOperationalProfile } from '@/modules/iot/i
 import { formatDateTime, resolveDeviceStatusLabel, resolveDeviceTypeLabel } from '@/modules/iot/iot-utils';
 
 const pageSize = 10;
+const devicesPollIntervalMs = 12_000;
 
 const statusOptions = [
   { value: '', label: 'Todos os status' },
@@ -98,9 +99,17 @@ export function IotDevicesPage() {
   const [deleteCandidate, setDeleteCandidate] = useState<IotDevice | null>(null);
 
   const load = useCallback(
-    async (page: number, currentSearch: string, currentType: string, currentStatus: string) => {
-      setLoading(true);
-      setError(null);
+    async (
+      page: number,
+      currentSearch: string,
+      currentType: string,
+      currentStatus: string,
+      options: { background?: boolean } = {}
+    ) => {
+      if (!options.background) {
+        setLoading(true);
+        setError(null);
+      }
 
       try {
         const result = await iotService.listDevices(page, pageSize, currentSearch, {
@@ -108,10 +117,15 @@ export function IotDevicesPage() {
           status: currentStatus || undefined
         });
         setPageData(result);
+        setError(null);
       } catch (err) {
-        setError(err instanceof ApiClientError ? err.message : 'Erro ao carregar dispositivos.');
+        if (!options.background) {
+          setError(err instanceof ApiClientError ? err.message : 'Erro ao carregar dispositivos.');
+        }
       } finally {
-        setLoading(false);
+        if (!options.background) {
+          setLoading(false);
+        }
       }
     },
     []
@@ -126,6 +140,14 @@ export function IotDevicesPage() {
   useEffect(() => {
     void load(0, search, typeFilter, statusFilter);
   }, [load, search, typeFilter, statusFilter]);
+
+  useEffect(() => {
+    const intervalId = window.setInterval(() => {
+      void load(pageData.page, search, typeFilter, statusFilter, { background: true });
+    }, devicesPollIntervalMs);
+
+    return () => window.clearInterval(intervalId);
+  }, [load, pageData.page, search, statusFilter, typeFilter]);
 
   const realRows = resolvePageItems(pageData);
   const totalItems = resolveTotalItems(pageData);

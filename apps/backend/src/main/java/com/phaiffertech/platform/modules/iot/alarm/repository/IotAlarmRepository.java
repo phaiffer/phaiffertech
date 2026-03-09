@@ -109,4 +109,10 @@ public interface IotAlarmRepository extends JpaRepository<IotAlarm, UUID>, BaseT
     );
 
     List<IotAlarm> findTop5ByTenantIdOrderByTriggeredAtDesc(UUID tenantId);
+
+    List<IotAlarm> findTop5ByTenantIdAndSeverityInAndStatusInOrderByTriggeredAtDesc(
+            UUID tenantId,
+            Collection<String> severities,
+            Collection<String> statuses
+    );
 }

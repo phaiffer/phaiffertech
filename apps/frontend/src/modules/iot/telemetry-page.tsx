@@ -41,6 +41,7 @@ import {
 } from '@/modules/iot/iot-utils';
 
 const pageSize = 10;
+const telemetryPollIntervalMs = 6_000;
 
 const initialPage: PageResponse<IotTelemetryRecord> = {
   items: [],
@@ -165,10 +166,13 @@ export function IotTelemetryPage() {
       currentRegisterId: string,
       currentMetricFilter: string,
       currentStartAt: string,
-      currentEndAt: string
+      currentEndAt: string,
+      options: { background?: boolean } = {}
     ) => {
-      setLoading(true);
-      setError(null);
+      if (!options.background) {
+        setLoading(true);
+        setError(null);
+      }
 
       try {
         const result = await iotService.listTelemetry(page, pageSize, currentSearch, {
@@ -179,10 +183,15 @@ export function IotTelemetryPage() {
           endAt: toIsoDate(currentEndAt)
         });
         setPageData(result);
+        setError(null);
       } catch (err) {
-        setError(err instanceof ApiClientError ? err.message : 'Erro ao carregar telemetria.');
+        if (!options.background) {
+          setError(err instanceof ApiClientError ? err.message : 'Erro ao carregar telemetria.');
+        }
       } finally {
-        setLoading(false);
+        if (!options.background) {
+          setLoading(false);
+        }
       }
     },
     []
@@ -196,6 +205,36 @@ export function IotTelemetryPage() {
   useEffect(() => {
     void load(0, search, deviceFilterId, registerFilterId, metricFilter, startAt, endAt);
   }, [load, search, deviceFilterId, registerFilterId, metricFilter, startAt, endAt]);
+
+  useEffect(() => {
+    const intervalId = window.setInterval(() => {
+      void loadDevices();
+      void loadRegisters();
+      void load(
+        pageData.page,
+        search,
+        deviceFilterId,
+        registerFilterId,
+        metricFilter,
+        startAt,
+        endAt,
+        { background: true }
+      );
+    }, telemetryPollIntervalMs);
+
+    return () => window.clearInterval(intervalId);
+  }, [
+    deviceFilterId,
+    endAt,
+    load,
+    loadDevices,
+    loadRegisters,
+    metricFilter,
+    pageData.page,
+    registerFilterId,
+    search,
+    startAt
+  ]);
 
   const displayDevices = useMemo(() => buildDemoDevicesFromReal(devices), [devices]);
   const displayRegisters = useMemo(

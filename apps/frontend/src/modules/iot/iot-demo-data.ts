@@ -367,10 +367,20 @@ export function getOperationalProfile(device: IotDevice, index: number) {
   return {
     ...base,
     health,
-    host: device.identifier?.includes('.')
-      ? device.identifier
-      : base.host,
-    area: device.location || base.area
+    host:
+      device.host ||
+      (device.identifier?.includes('.') ? device.identifier : base.host),
+    port: device.port ?? base.port,
+    unitId: device.unitId ?? base.unitId,
+    transport:
+      device.transport === 'MODBUS_RTU'
+        ? 'Modbus RTU / RS-485'
+        : device.transport === 'MODBUS_TCP'
+          ? 'Modbus TCP'
+          : base.transport,
+    pollInterval: device.pollingProfile || base.pollInterval,
+    area: device.location || base.area,
+    gateway: device.gateway || base.gateway
   };
 }
 

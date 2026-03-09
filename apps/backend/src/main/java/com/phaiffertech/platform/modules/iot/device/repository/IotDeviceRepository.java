@@ -15,6 +15,8 @@ public interface IotDeviceRepository extends JpaRepository<IotDevice, UUID>, Bas
 
     Optional<IotDevice> findByIdAndTenantId(UUID id, UUID tenantId);
 
+    Optional<IotDevice> findByTenantIdAndIdentifierIgnoreCaseAndDeletedAtIsNull(UUID tenantId, String identifier);
+
     @Query("""
             SELECT d
             FROM IotDevice d

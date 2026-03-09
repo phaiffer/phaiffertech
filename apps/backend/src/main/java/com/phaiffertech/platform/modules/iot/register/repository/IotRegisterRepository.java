@@ -51,6 +51,8 @@ public interface IotRegisterRepository extends JpaRepository<IotRegister, UUID>,
             String metricName
     );
 
+    List<IotRegister> findAllByTenantIdAndDeviceIdAndDeletedAtIsNullOrderByRegisterAddressAsc(UUID tenantId, UUID deviceId);
+
     boolean existsByTenantIdAndDeviceIdAndCodeIgnoreCaseAndDeletedAtIsNull(UUID tenantId, UUID deviceId, String code);
 
     boolean existsByTenantIdAndDeviceIdAndCodeIgnoreCaseAndIdNotAndDeletedAtIsNull(

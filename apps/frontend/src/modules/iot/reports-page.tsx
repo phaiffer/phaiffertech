@@ -19,10 +19,29 @@ import {
 } from '@/modules/iot/iot-chrome';
 import {
   buildDemoReportSummary,
-  demoObservabilitySeries,
-  demoThroughputSeries
 } from '@/modules/iot/iot-demo-data';
-import { formatDateTime, sortedEntries } from '@/modules/iot/iot-utils';
+import {
+  appendLiveTrendPoint,
+  formatDateTime,
+  sortedEntries
+} from '@/modules/iot/iot-utils';
+
+const reportsPollIntervalMs = 10_000;
+
+function buildOperationalScore(report: IotReportSummary) {
+  if (report.totalDevices === 0) {
+    return 0;
+  }
+
+  const online = report.devicesByStatus.ONLINE ?? 0;
+  const alert = report.devicesByStatus.ALERT ?? 0;
+  const offline = report.devicesByStatus.OFFLINE ?? 0;
+  const availabilityScore = (online / report.totalDevices) * 70;
+  const telemetryBonus = report.telemetryPointsLast24h > 0 ? 20 : 0;
+  const pressurePenalty = Math.min(35, report.openAlarms * 4 + report.pendingMaintenance * 3 + offline * 8 + alert * 4);
+
+  return Math.max(0, Math.round(availabilityScore + telemetryBonus + 10 - pressurePenalty));
+}
 
 function DistributionBlock({
   title,
@@ -58,28 +77,75 @@ export function IotReportsPage() {
   const [summary, setSummary] = useState<IotReportSummary | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [performanceSeries, setPerformanceSeries] = useState([
+    { label: '10:00', value: 74 },
+    { label: '10:10', value: 78 },
+    { label: '10:20', value: 81 },
+    { label: '10:30', value: 76 },
+    { label: '10:40', value: 84 },
+    { label: '10:50', value: 88 }
+  ]);
+  const [throughputSeries, setThroughputSeries] = useState([
+    { label: '10:00', value: 96 },
+    { label: '10:10', value: 124 },
+    { label: '10:20', value: 148 },
+    { label: '10:30', value: 172 },
+    { label: '10:40', value: 196 },
+    { label: '10:50', value: 224 }
+  ]);
 
   useEffect(() => {
-    void load();
-  }, []);
+    let active = true;
 
-  async function load() {
-    setLoading(true);
-    setError(null);
+    async function load(background = false) {
+      if (!background) {
+        setLoading(true);
+        setError(null);
+      }
 
-    try {
-      const result = await iotService.getReportSummary();
-      setSummary(result);
-    } catch (err) {
-      setError(
-        err instanceof ApiClientError
-          ? err.message
-          : 'Erro ao carregar a análise global do IoT.'
-      );
-    } finally {
-      setLoading(false);
+      try {
+        const result = await iotService.getReportSummary();
+        if (!active) {
+          return;
+        }
+
+        const refreshedAt = new Date();
+        setSummary(result);
+        setPerformanceSeries((current) =>
+          appendLiveTrendPoint(current, buildOperationalScore(result), refreshedAt)
+        );
+        setThroughputSeries((current) =>
+          appendLiveTrendPoint(current, result.telemetryPointsLast24h, refreshedAt)
+        );
+        setError(null);
+      } catch (err) {
+        if (!active || background) {
+          return;
+        }
+
+        setError(
+          err instanceof ApiClientError
+            ? err.message
+            : 'Erro ao carregar a análise global do IoT.'
+        );
+      } finally {
+        if (active && !background) {
+          setLoading(false);
+        }
+      }
     }
-  }
+
+    void load();
+
+    const intervalId = window.setInterval(() => {
+      void load(true);
+    }, reportsPollIntervalMs);
+
+    return () => {
+      active = false;
+      window.clearInterval(intervalId);
+    };
+  }, []);
 
   const report = useMemo(() => {
     if (!summary || summary.totalDevices === 0) {
@@ -119,7 +185,11 @@ export function IotReportsPage() {
               items={[
                 { label: 'Modo de leitura', value: usingDemo ? 'Assistido para apresentação' : 'Integração ativa', tone: usingDemo ? 'amber' : 'green' },
                 { label: 'Cobertura', value: Object.keys(report.devicesByStatus).length > 1 ? 'Multiativo' : 'Ativo único', tone: 'cyan' },
-                { label: 'Atualização', value: loading ? 'Sincronizando agora' : 'Painel pronto', tone: loading ? 'cyan' : 'green' }
+                {
+                  label: 'Atualização',
+                  value: loading ? 'Sincronizando agora' : formatDateTime(report.generatedAt),
+                  tone: loading ? 'cyan' : 'green'
+                }
               ]}
             />
           }
@@ -165,7 +235,7 @@ export function IotReportsPage() {
             title="Tendência de performance"
             description="Leitura comparativa para apoiar a discussão executiva sem depender de uma camada analítica completa nesta etapa."
           >
-            <IotMiniTrend title="Performance por janela" series={demoObservabilitySeries} accent="#60a5fa" />
+            <IotMiniTrend title="Performance por pulso" series={performanceSeries} accent="#60a5fa" />
           </IotPanel>
 
           <IotPanel
@@ -200,7 +270,7 @@ export function IotReportsPage() {
             title="Ritmo de coleta"
             description="Cadência visual das coletas para reforçar cobertura temporal e ligação com o stream operacional."
           >
-            <IotMiniTrend title="Coletas consolidadas" series={demoThroughputSeries} accent="#22d3ee" />
+            <IotMiniTrend title="Coletas consolidadas" series={throughputSeries} accent="#22d3ee" />
           </IotPanel>
           <IotPanel
             title="Distribuições consolidadas"

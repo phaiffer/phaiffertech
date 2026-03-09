@@ -60,4 +60,8 @@ public interface IotMaintenanceRepository extends JpaRepository<IotMaintenance, 
     long countByTenantIdAndStatusInAndDeletedAtIsNull(UUID tenantId, Collection<String> statuses);
 
     boolean existsByTenantIdAndDeviceIdAndStatusInAndDeletedAtIsNull(UUID tenantId, UUID deviceId, Collection<String> statuses);
+
+    boolean existsByTenantIdAndLinkedAlarmIdAndDeletedAtIsNull(UUID tenantId, UUID linkedAlarmId);
+
+    boolean existsByTenantIdAndTitleIgnoreCaseAndDeletedAtIsNull(UUID tenantId, String title);
 }

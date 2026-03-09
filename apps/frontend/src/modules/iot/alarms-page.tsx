@@ -33,6 +33,7 @@ import {
 } from '@/modules/iot/iot-utils';
 
 const pageSize = 10;
+const alarmsPollIntervalMs = 8_000;
 
 const statusOptions = [
   { value: '', label: 'Todos os status' },
@@ -121,9 +122,17 @@ export function IotAlarmsPage() {
   }, []);
 
   const load = useCallback(
-    async (page: number, currentSearch: string, currentSeverity: string, currentStatus: string) => {
-      setLoading(true);
-      setError(null);
+    async (
+      page: number,
+      currentSearch: string,
+      currentSeverity: string,
+      currentStatus: string,
+      options: { background?: boolean } = {}
+    ) => {
+      if (!options.background) {
+        setLoading(true);
+        setError(null);
+      }
 
       try {
         const result = await iotService.listAlarms(page, pageSize, currentSearch, {
@@ -131,10 +140,15 @@ export function IotAlarmsPage() {
           status: currentStatus || undefined
         });
         setPageData(result);
+        setError(null);
       } catch (err) {
-        setError(err instanceof ApiClientError ? err.message : 'Erro ao carregar alarmes.');
+        if (!options.background) {
+          setError(err instanceof ApiClientError ? err.message : 'Erro ao carregar alarmes.');
+        }
       } finally {
-        setLoading(false);
+        if (!options.background) {
+          setLoading(false);
+        }
       }
     },
     []
@@ -148,6 +162,16 @@ export function IotAlarmsPage() {
   useEffect(() => {
     void load(0, search, severityFilter, statusFilter);
   }, [load, search, severityFilter, statusFilter]);
+
+  useEffect(() => {
+    const intervalId = window.setInterval(() => {
+      void loadDevices();
+      void loadRegisters();
+      void load(pageData.page, search, severityFilter, statusFilter, { background: true });
+    }, alarmsPollIntervalMs);
+
+    return () => window.clearInterval(intervalId);
+  }, [load, loadDevices, loadRegisters, pageData.page, search, severityFilter, statusFilter]);
 
   async function acknowledgeAlarm(alarmId: string) {
     try {

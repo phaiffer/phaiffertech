@@ -3,8 +3,9 @@
 import { useEffect, useMemo, useState } from 'react';
 import { PermissionGuard } from '@/shared/auth/PermissionGuard';
 import { ApiClientError } from '@/shared/lib/http';
+import { resolvePageItems } from '@/shared/lib/pagination';
 import { iotService } from '@/shared/services/iot-service';
-import { IotDashboardSummary } from '@/shared/types/iot';
+import { IotDashboardSummary, IotDevice } from '@/shared/types/iot';
 import {
   AlarmIcon,
   BoltIcon,
@@ -23,12 +24,15 @@ import {
   WaveIcon
 } from '@/modules/iot/iot-chrome';
 import {
-  demoAlarmPressureSeries,
+  buildDemoDevicesFromReal,
   demoQuickActions,
-  demoThroughputSeries,
   getOperationalProfile
 } from '@/modules/iot/iot-demo-data';
-import { formatDateTime } from '@/modules/iot/iot-utils';
+import {
+  appendLiveTrendPoint,
+  formatDateTime,
+  resolveDeviceStatusLabel
+} from '@/modules/iot/iot-utils';
 
 const fallbackDashboard: IotDashboardSummary = {
   totalDevices: 3,
@@ -51,39 +55,120 @@ const fallbackDashboard: IotDashboardSummary = {
   sections: []
 };
 
-const watchlist = [
-  { name: 'Painel QGBT Sede', status: 'ONLINE', metric: 'LOW 18.4', updatedAt: 'agora', tone: 'green' as const },
-  { name: 'Compressor Parafuso CP-01', status: 'ALERT', metric: 'Alta pressão', updatedAt: 'há 7 min', tone: 'amber' as const },
-  { name: 'Bomba de Recirculação BM-03', status: 'OFFLINE', metric: 'Sem heartbeat', updatedAt: 'há 1h26', tone: 'red' as const }
-];
+const dashboardPollIntervalMs = 8_000;
+
+function resolveDeviceTone(status: string) {
+  switch (status) {
+    case 'OFFLINE':
+      return 'red' as const;
+    case 'ALERT':
+    case 'MAINTENANCE':
+      return 'amber' as const;
+    case 'ONLINE':
+      return 'green' as const;
+    default:
+      return 'neutral' as const;
+  }
+}
+
+function resolveOperationalNote(device: IotDevice) {
+  switch (device.status) {
+    case 'OFFLINE':
+      return 'Sem heartbeat recente';
+    case 'ALERT':
+      return 'Incidente operacional aberto';
+    case 'MAINTENANCE':
+      return 'Intervenção em andamento';
+    case 'ONLINE':
+      return 'Fluxo nominal';
+    default:
+      return resolveDeviceStatusLabel(device.status);
+  }
+}
 
 export function IotDashboardPage() {
   const [summary, setSummary] = useState<IotDashboardSummary | null>(null);
+  const [devices, setDevices] = useState<IotDevice[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [lastRefreshAt, setLastRefreshAt] = useState<string | null>(null);
+  const [alarmPressureSeries, setAlarmPressureSeries] = useState([
+    { label: '10:00', value: 1 },
+    { label: '10:08', value: 2 },
+    { label: '10:16', value: 1 },
+    { label: '10:24', value: 3 },
+    { label: '10:32', value: 2 },
+    { label: '10:40', value: 2 }
+  ]);
+  const [throughputSeries, setThroughputSeries] = useState([
+    { label: '10:00', value: 120 },
+    { label: '10:08', value: 134 },
+    { label: '10:16', value: 149 },
+    { label: '10:24', value: 163 },
+    { label: '10:32', value: 178 },
+    { label: '10:40', value: 196 }
+  ]);
 
   useEffect(() => {
-    void load();
-  }, []);
+    let active = true;
 
-  async function load() {
-    setLoading(true);
-    setError(null);
+    async function load(background = false) {
+      if (!background) {
+        setLoading(true);
+        setError(null);
+      }
 
-    try {
-      const result = await iotService.getDashboardSummary();
-      setSummary(result);
-    } catch (err) {
-      setError(
-        err instanceof ApiClientError ? err.message : 'Erro ao carregar o dashboard do IoT.'
-      );
-    } finally {
-      setLoading(false);
+      try {
+        const [dashboardSummary, devicesPage] = await Promise.all([
+          iotService.getDashboardSummary(),
+          iotService.listDevices(0, 4, '')
+        ]);
+
+        if (!active) {
+          return;
+        }
+
+        const refreshedAt = new Date();
+        setSummary(dashboardSummary);
+        setDevices(resolvePageItems(devicesPage));
+        setLastRefreshAt(refreshedAt.toISOString());
+        setAlarmPressureSeries((current) =>
+          appendLiveTrendPoint(current, dashboardSummary.totalAlarmsOpen, refreshedAt)
+        );
+        setThroughputSeries((current) =>
+          appendLiveTrendPoint(current, dashboardSummary.telemetryPointsLast24h, refreshedAt)
+        );
+        setError(null);
+      } catch (err) {
+        if (!active || background) {
+          return;
+        }
+
+        setError(
+          err instanceof ApiClientError ? err.message : 'Erro ao carregar o dashboard do IoT.'
+        );
+      } finally {
+        if (active && !background) {
+          setLoading(false);
+        }
+      }
     }
-  }
+
+    void load();
+
+    const intervalId = window.setInterval(() => {
+      void load(true);
+    }, dashboardPollIntervalMs);
+
+    return () => {
+      active = false;
+      window.clearInterval(intervalId);
+    };
+  }, []);
 
   const useDemoSnapshot = !summary || summary.totalDevices === 0;
   const snapshot = useDemoSnapshot ? fallbackDashboard : summary!;
+  const displayDevices = useMemo(() => buildDemoDevicesFromReal(devices), [devices]);
 
   const availability =
     snapshot.totalDevices === 0
@@ -91,21 +176,18 @@ export function IotDashboardPage() {
       : `${Math.round((snapshot.activeDevices / snapshot.totalDevices) * 100)}%`;
 
   const recencyRows = useMemo(() => {
-    return watchlist.map((item, index) => ({
-      ...item,
+    return displayDevices.slice(0, 3).map((device, index) => ({
+      name: device.name,
+      status: device.status,
+      metric: resolveOperationalNote(device),
+      updatedAt: device.lastSeenAt ? formatDateTime(device.lastSeenAt) : 'Sem leitura recente',
+      tone: resolveDeviceTone(device.status),
       profile: getOperationalProfile(
-        {
-          id: `watch-${index}`,
-          name: item.name,
-          identifier: `WATCH-${index + 1}`,
-          status: item.status,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString()
-        },
+        device,
         index
       )
     }));
-  }, []);
+  }, [displayDevices]);
 
   return (
     <PermissionGuard
@@ -134,7 +216,15 @@ export function IotDashboardPage() {
               title="Resumo do turno"
               items={[
                 { label: 'Modo de leitura', value: useDemoSnapshot ? 'Assistido para apresentação' : 'Integração ativa', tone: useDemoSnapshot ? 'amber' : 'green' },
-                { label: 'Atualização', value: loading ? 'Sincronizando agora' : 'Janela operacional estável', tone: loading ? 'cyan' : 'green' },
+                {
+                  label: 'Atualização',
+                  value: loading
+                    ? 'Sincronizando agora'
+                    : lastRefreshAt
+                      ? `Último pulso ${formatDateTime(lastRefreshAt)}`
+                      : 'Aguardando primeiro pulso',
+                  tone: loading ? 'cyan' : 'green'
+                },
                 { label: 'Telemetria 24h', value: `${snapshot.telemetryPointsLast24h} pontos`, tone: 'cyan' }
               ]}
             />
@@ -239,13 +329,13 @@ export function IotDashboardPage() {
             title="Pressão de alarmes"
             description="Distribuição simplificada de incidentes para leitura imediata e transição natural para a central de alarmes."
           >
-            <IotMiniTrend title="Incidentes por dia" series={demoAlarmPressureSeries} accent="#f59e0b" />
+            <IotMiniTrend title="Incidentes por pulso" series={alarmPressureSeries} accent="#f59e0b" />
           </IotPanel>
           <IotPanel
             title="Ritmo de telemetria"
             description="Cadência visual para mostrar cobertura, atividade da planta e continuidade do stream operacional."
           >
-            <IotMiniTrend title="Coletas por janela" series={demoThroughputSeries} accent="#22d3ee" />
+            <IotMiniTrend title="Coletas acumuladas 24h" series={throughputSeries} accent="#22d3ee" />
           </IotPanel>
         </div>
 

@@ -1,6 +1,11 @@
 import { DashboardSection, DashboardSummaryCard } from '@/shared/types/dashboard';
 import { IotDashboardSummary, IotDevice, IotRegister } from '@/shared/types/iot';
 
+export type IotLiveTrendPoint = {
+  label: string;
+  value: number;
+};
+
 export function formatDateTime(value?: string) {
   if (!value) {
     return '-';
@@ -38,6 +43,27 @@ export function toIsoDate(value: string) {
 
 export function sortedEntries(record: Record<string, number>) {
   return Object.entries(record).sort((left, right) => right[1] - left[1]);
+}
+
+export function appendLiveTrendPoint(
+  series: IotLiveTrendPoint[],
+  value: number,
+  timestamp = new Date(),
+  maxPoints = 6
+) {
+  const label = timestamp.toLocaleTimeString('pt-BR', {
+    hour: '2-digit',
+    minute: '2-digit'
+  });
+  const nextPoint = {
+    label,
+    value
+  };
+
+  const nextSeries =
+    series.at(-1)?.label === label ? [...series.slice(0, -1), nextPoint] : [...series, nextPoint];
+
+  return nextSeries.slice(-maxPoints);
 }
 
 export function resolveDeviceLabel(devices: IotDevice[], deviceId: string) {

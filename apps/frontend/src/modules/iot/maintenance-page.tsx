@@ -43,6 +43,7 @@ import {
 } from '@/modules/iot/iot-utils';
 
 const pageSize = 10;
+const maintenancePollIntervalMs = 12_000;
 
 const statusOptions = [
   { value: '', label: 'Todos os status' },
@@ -190,10 +191,13 @@ export function IotMaintenancePage() {
       currentStatus: string,
       currentPriority: string,
       currentStartAt: string,
-      currentEndAt: string
+      currentEndAt: string,
+      options: { background?: boolean } = {}
     ) => {
-      setLoading(true);
-      setError(null);
+      if (!options.background) {
+        setLoading(true);
+        setError(null);
+      }
 
       try {
         const result = await iotService.listMaintenance(page, pageSize, currentSearch, {
@@ -204,10 +208,15 @@ export function IotMaintenancePage() {
           endAt: toIsoDate(currentEndAt)
         });
         setPageData(result);
+        setError(null);
       } catch (err) {
-        setError(err instanceof ApiClientError ? err.message : 'Erro ao carregar o backlog de manutenção.');
+        if (!options.background) {
+          setError(err instanceof ApiClientError ? err.message : 'Erro ao carregar o backlog de manutenção.');
+        }
       } finally {
-        setLoading(false);
+        if (!options.background) {
+          setLoading(false);
+        }
       }
     },
     []
@@ -221,6 +230,36 @@ export function IotMaintenancePage() {
   useEffect(() => {
     void load(0, search, deviceFilterId, statusFilter, priorityFilter, startAt, endAt);
   }, [load, search, deviceFilterId, statusFilter, priorityFilter, startAt, endAt]);
+
+  useEffect(() => {
+    const intervalId = window.setInterval(() => {
+      void loadDevices();
+      void loadAlarms();
+      void load(
+        pageData.page,
+        search,
+        deviceFilterId,
+        statusFilter,
+        priorityFilter,
+        startAt,
+        endAt,
+        { background: true }
+      );
+    }, maintenancePollIntervalMs);
+
+    return () => window.clearInterval(intervalId);
+  }, [
+    deviceFilterId,
+    endAt,
+    load,
+    loadAlarms,
+    loadDevices,
+    pageData.page,
+    priorityFilter,
+    search,
+    startAt,
+    statusFilter
+  ]);
 
   const displayDevices = useMemo(() => buildDemoDevicesFromReal(devices), [devices]);
   const realRows = resolvePageItems(pageData);
