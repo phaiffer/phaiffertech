@@ -12,7 +12,7 @@ IOT_SEED_SQL := infra/docker/sql/iot-seed.sql
 .PHONY: help up down restart rebuild status logs logs-follow logs-backend logs-frontend logs-db docker-build docker-reset-db \
 	build test test-backend test-integration test-unit test-pet test-iot lint clean backend frontend install-backend install-frontend \
 	package-backend package-frontend db-shell migrate seed crm-seed pet-seed iot-seed logs-all swagger verify \
-	ci metrics logs-json observability-up observability-down terraform-init terraform-plan
+	ci metrics logs-json observability-up observability-down terraform-init terraform-plan validate-iot-suite validate-iot-live
 
 help: ## List available commands
 	@awk 'BEGIN {FS = ":.*##"; printf "\nAvailable targets:\n"} /^[a-zA-Z0-9_.-]+:.*##/ { printf "  %-20s %s\n", $$1, $$2 }' $(MAKEFILE_LIST)
@@ -152,6 +152,14 @@ verify: lint test package-backend package-frontend ## Run lint, tests and build 
 
 
 validate-iot:
+	chmod +x scripts/validation/iot_operational_validation.sh
+	./scripts/validation/iot_operational_validation.sh
+
+validate-iot-suite:
+	chmod +x scripts/validation/iot_validation_suite.sh
+	./scripts/validation/iot_validation_suite.sh
+
+validate-iot-live:
 	chmod +x scripts/validation/iot_operational_validation.sh
 	./scripts/validation/iot_operational_validation.sh
 

@@ -1,0 +1,82 @@
+{
+  "executedAt": "2026-03-09T19:21:12Z",
+  "finishedAt": "2026-03-09T19:22:56Z",
+  "finalStatus": "PASS",
+  "commands": [
+    "cd \"/home/willian/IdeaProjects/phaiffertech/apps/frontend\" && npm run lint",
+    "cd \"/home/willian/IdeaProjects/phaiffertech/apps/frontend\" && npm run test",
+    "cd \"/home/willian/IdeaProjects/phaiffertech/apps/frontend\" && npm run build",
+    "cd \"/home/willian/IdeaProjects/phaiffertech/apps/backend\" && mvn -Dtest=IotIntegrationTest,IotTelemetryIntegrationTest,IotRegistersMaintenanceIntegrationTest,IotDashboardReportsIntegrationTest,IotDemoScenarioIntegrationTest test",
+    "cd \"/home/willian/IdeaProjects/phaiffertech\" && API_BASE_URL=\"http://localhost:8080/api/v1\" TENANT_CODE=\"default\" EMAIL=\"admin@local.test\" PASSWORD=\"Admin@123\" ./scripts/validation/iot_operational_validation.sh"
+  ],
+  "steps": [
+    {
+      "name": "Frontend lint",
+      "status": "PASS",
+      "duration_seconds": "2",
+      "command": "cd \"/home/willian/IdeaProjects/phaiffertech/apps/frontend\" && npm run lint",
+      "note": "Validates Next.js lint for the frontend used by the IoT module."
+    },
+    {
+      "name": "Frontend tests",
+      "status": "PASS",
+      "duration_seconds": "6",
+      "command": "cd \"/home/willian/IdeaProjects/phaiffertech/apps/frontend\" && npm run test",
+      "note": "Runs Vitest, including the IoT smoke helper test and the existing frontend suite."
+    },
+    {
+      "name": "Frontend build",
+      "status": "PASS",
+      "duration_seconds": "30",
+      "command": "cd \"/home/willian/IdeaProjects/phaiffertech/apps/frontend\" && npm run build",
+      "note": "Confirms IoT routes compile inside the production frontend build."
+    },
+    {
+      "name": "Backend IoT integration suite",
+      "status": "PASS",
+      "duration_seconds": "65",
+      "command": "cd \"/home/willian/IdeaProjects/phaiffertech/apps/backend\" && mvn -Dtest=IotIntegrationTest,IotTelemetryIntegrationTest,IotRegistersMaintenanceIntegrationTest,IotDashboardReportsIntegrationTest,IotDemoScenarioIntegrationTest test",
+      "note": "Covers devices, registers, telemetry, alarms, maintenance, dashboard, reports and demo generator flow."
+    },
+    {
+      "name": "Live IoT API smoke",
+      "status": "SKIPPED",
+      "duration_seconds": "0",
+      "command": "cd \"/home/willian/IdeaProjects/phaiffertech\" && API_BASE_URL=\"http://localhost:8080/api/v1\" TENANT_CODE=\"default\" EMAIL=\"admin@local.test\" PASSWORD=\"Admin@123\" ./scripts/validation/iot_operational_validation.sh",
+      "note": "Skipped by default. Set RUN_LIVE_SMOKE=true to validate a running backend stack via HTTP."
+    }
+  ],
+  "backendTests": [
+    "IotIntegrationTest",
+    "IotTelemetryIntegrationTest",
+    "IotRegistersMaintenanceIntegrationTest",
+    "IotDashboardReportsIntegrationTest",
+    "IotDemoScenarioIntegrationTest"
+  ],
+  "frontendTests": [
+    "apps/frontend/src/modules/iot/iot-utils.test.ts",
+    "apps/frontend/src/shared/lib/http.test.ts",
+    "apps/frontend/src/shared/lib/session.test.ts",
+    "apps/frontend/src/shared/components/auth-provider.test.tsx",
+    "apps/frontend/src/app/(public)/login/page.test.tsx",
+    "apps/frontend/src/app/(app)/tenants/page.test.tsx",
+    "apps/frontend/src/app/(app)/users/page.test.tsx"
+  ],
+  "failures": [],
+  "skipped": [
+    {
+      "name": "Live IoT API smoke",
+      "status": "SKIPPED",
+      "duration_seconds": "0",
+      "command": "cd \"/home/willian/IdeaProjects/phaiffertech\" && API_BASE_URL=\"http://localhost:8080/api/v1\" TENANT_CODE=\"default\" EMAIL=\"admin@local.test\" PASSWORD=\"Admin@123\" ./scripts/validation/iot_operational_validation.sh",
+      "note": "Skipped by default. Set RUN_LIVE_SMOKE=true to validate a running backend stack via HTTP."
+    }
+  ],
+  "limitations": [
+    "Frontend IoT coverage remains lightweight and focused on smoke-level helper validation plus global frontend tests.",
+    "Live API smoke is optional and only runs when RUN_LIVE_SMOKE=true with an accessible backend environment.",
+    "The suite validates IoT readiness pragmatically; it does not create a full browser E2E framework."
+  ],
+  "conclusion": "IoT System passed code-level demo validation. Optional live API smoke was not executed in this run.",
+  "liveSmokeMode": "false"
+}

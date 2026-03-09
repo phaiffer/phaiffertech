@@ -240,7 +240,13 @@ DEVICE_STATUS="$(
   "type": "GATEWAY",
   "location": "Validation Lab",
   "description": "Device created by IoT operational validation",
-  "status": "ACTIVE"
+  "status": "ONLINE",
+  "transport": "MODBUS_TCP",
+  "host": "10.200.0.15",
+  "port": 502,
+  "unitId": 15,
+  "pollingProfile": "10s",
+  "gateway": "gw-validation-01"
 }
 JSON
 )" \
@@ -264,7 +270,8 @@ REGISTER_STATUS="$(
 {
   "deviceId": "${DEVICE_ID}",
   "name": "Temperature Register ${RUN_SUFFIX}",
-  "code": "${REGISTER_CODE}",
+  "functionCode": "FC03",
+  "registerAddress": 40021,
   "metricName": "temperature",
   "unit": "C",
   "dataType": "DECIMAL",
@@ -350,11 +357,16 @@ MAINTENANCE_STATUS="$(
     "$(cat <<JSON
 {
   "deviceId": "${DEVICE_ID}",
+  "linkedAlarmId": "${ALARM_ID}",
+  "linkedRegisterId": "${REGISTER_ID}",
   "title": "Inspect overheating sensor ${RUN_SUFFIX}",
   "description": "Maintenance task created by IoT operational validation",
-  "status": "OPEN",
+  "status": "PENDING",
   "priority": "HIGH",
-  "scheduledAt": "2026-03-08T09:00:00Z"
+  "origin": "ALARM",
+  "trigger": "Validation overheating incident",
+  "scheduledAt": "2026-03-08T09:00:00Z",
+  "assignedUserLabel": "Validation Field Team"
 }
 JSON
 )" \
@@ -396,11 +408,11 @@ Validated flows:
 - Auth login
 - Auth me
 - Module access
-- Device create/list
-- Register create/list
+- Device create/list with explicit Modbus connection
+- Register create/list with explicit functionCode/registerAddress
 - Telemetry write/read
 - Alarm create/acknowledge
-- Maintenance create
+- Maintenance create linked to incident context
 - IoT dashboard summary
 - IoT reports summary
 
