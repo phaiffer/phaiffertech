@@ -83,14 +83,16 @@ class IotRegistersMaintenanceIntegrationTest extends AbstractIntegrationTest {
                 "description", "Quarterly inspection",
                 "status", "PENDING",
                 "priority", "HIGH",
-                "scheduledAt", Instant.now().plusSeconds(3600).toString()
+                "scheduledAt", Instant.now().plusSeconds(3600).toString(),
+                "assignedUserLabel", "Field Team " + marker
         ), session);
 
         assertEquals(200, createResponse.getStatusCode().value());
         String maintenanceId = requireBody(createResponse).path("data").path("id").asText();
+        assertEquals("Field Team " + marker, requireBody(createResponse).path("data").path("assignedUserLabel").asText());
 
         ResponseEntity<JsonNode> listResponse = get(
-                "/iot/maintenance?page=0&size=20&deviceId=" + deviceId + "&status=PENDING",
+                "/iot/maintenance?page=0&size=20&deviceId=" + deviceId + "&status=PENDING&search=" + marker,
                 session
         );
         assertEquals(200, listResponse.getStatusCode().value());
@@ -103,11 +105,13 @@ class IotRegistersMaintenanceIntegrationTest extends AbstractIntegrationTest {
                 "status", "COMPLETED",
                 "priority", "MEDIUM",
                 "scheduledAt", Instant.now().minusSeconds(3600).toString(),
-                "completedAt", Instant.now().toString()
+                "completedAt", Instant.now().toString(),
+                "assignedUserLabel", "Planner " + marker
         ), session);
 
         assertEquals(200, updateResponse.getStatusCode().value());
         assertEquals("COMPLETED", requireBody(updateResponse).path("data").path("status").asText());
+        assertEquals("Planner " + marker, requireBody(updateResponse).path("data").path("assignedUserLabel").asText());
 
         ResponseEntity<JsonNode> deleteResponse = delete("/iot/maintenance/" + maintenanceId, session);
         assertEquals(200, deleteResponse.getStatusCode().value());
@@ -138,11 +142,81 @@ class IotRegistersMaintenanceIntegrationTest extends AbstractIntegrationTest {
         assertEquals(30021, requireBody(createResponse).path("data").path("registerAddress").asInt());
     }
 
+    @Test
+    void shouldLinkMaintenanceToOperationalAlarmContext() {
+        AuthSession session = loginAsDefaultAdmin();
+        String marker = randomSearchMarker();
+        String deviceId = createDevice(session, marker);
+        String registerId = createRegister(session, deviceId, marker);
+
+        ResponseEntity<JsonNode> telemetryResponse = post("/iot/telemetry", Map.of(
+                "deviceId", deviceId,
+                "registerId", registerId,
+                "metricName", "pressure",
+                "metricValue", 4.4,
+                "unit", "bar"
+        ), session);
+        assertEquals(200, telemetryResponse.getStatusCode().value());
+
+        ResponseEntity<JsonNode> alarmListResponse = get(
+                "/iot/alarms?page=0&size=20&deviceId=" + deviceId + "&status=OPEN",
+                session
+        );
+        assertEquals(200, alarmListResponse.getStatusCode().value());
+        JsonNode alarm = requireBody(alarmListResponse).path("data").path("items").get(0);
+        String alarmId = alarm.path("id").asText();
+        String alarmCode = alarm.path("code").asText();
+        String alarmMessage = alarm.path("message").asText();
+
+        ResponseEntity<JsonNode> createMaintenance = post("/iot/maintenance", Map.of(
+                "deviceId", deviceId,
+                "linkedAlarmId", alarmId,
+                "title", "Investigate pressure event-" + marker,
+                "status", "PENDING",
+                "priority", "CRITICAL",
+                "assignedUserLabel", "Field Crew " + marker
+        ), session);
+
+        assertEquals(200, createMaintenance.getStatusCode().value());
+        JsonNode maintenance = requireBody(createMaintenance).path("data");
+        assertEquals(alarmId, maintenance.path("linkedAlarmId").asText());
+        assertEquals(registerId, maintenance.path("linkedRegisterId").asText());
+        assertEquals(alarmCode, maintenance.path("linkedAlarmCode").asText());
+        assertEquals("ALARM", maintenance.path("origin").asText());
+        assertEquals(alarmMessage, maintenance.path("trigger").asText());
+        assertEquals("Field Crew " + marker, maintenance.path("assignedUserLabel").asText());
+
+        ResponseEntity<JsonNode> searchResponse = get(
+                "/iot/maintenance?page=0&size=20&search=" + marker,
+                session
+        );
+        assertEquals(200, searchResponse.getStatusCode().value());
+        assertTrue(requireBody(searchResponse).path("data").path("items").size() >= 1);
+    }
+
     private String createDevice(AuthSession session, String marker) {
         ResponseEntity<JsonNode> response = post("/iot/devices", Map.of(
                 "name", "Control-" + marker,
                 "identifier", "CTRL-" + marker,
                 "status", "ONLINE"
+        ), session);
+
+        assertEquals(200, response.getStatusCode().value());
+        return requireBody(response).path("data").path("id").asText();
+    }
+
+    private String createRegister(AuthSession session, String deviceId, String marker) {
+        ResponseEntity<JsonNode> response = post("/iot/registers", Map.of(
+                "deviceId", deviceId,
+                "name", "Pressure-" + marker,
+                "functionCode", "FC03",
+                "registerAddress", 40011,
+                "metricName", "pressure",
+                "unit", "bar",
+                "dataType", "DECIMAL",
+                "minThreshold", 1.2,
+                "maxThreshold", 3.8,
+                "status", "ACTIVE"
         ), session);
 
         assertEquals(200, response.getStatusCode().value());

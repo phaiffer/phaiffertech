@@ -26,6 +26,9 @@ public interface IotMaintenanceRepository extends JpaRepository<IotMaintenance, 
               AND (:search IS NULL OR
                    LOWER(m.title) LIKE LOWER(CONCAT('%', :search, '%')) OR
                    LOWER(COALESCE(m.description, '')) LIKE LOWER(CONCAT('%', :search, '%')) OR
+                   LOWER(COALESCE(m.origin, '')) LIKE LOWER(CONCAT('%', :search, '%')) OR
+                   LOWER(COALESCE(m.trigger, '')) LIKE LOWER(CONCAT('%', :search, '%')) OR
+                   LOWER(COALESCE(m.assignedUserLabel, '')) LIKE LOWER(CONCAT('%', :search, '%')) OR
                    LOWER(COALESCE(m.status, '')) LIKE LOWER(CONCAT('%', :search, '%')) OR
                    LOWER(COALESCE(m.priority, '')) LIKE LOWER(CONCAT('%', :search, '%')))
             """)

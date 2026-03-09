@@ -101,24 +101,34 @@ export type WriteTelemetryInput = {
 
 export type CreateMaintenanceInput = {
   deviceId: string;
+  linkedAlarmId?: string;
+  linkedRegisterId?: string;
   title: string;
   description?: string;
   status?: string;
   priority?: string;
+  origin?: string;
+  trigger?: string;
   scheduledAt?: string;
   completedAt?: string;
   assignedUserId?: string;
+  assignedUserLabel?: string;
 };
 
 export type UpdateMaintenanceInput = {
   deviceId: string;
+  linkedAlarmId?: string;
+  linkedRegisterId?: string;
   title: string;
   description?: string;
   status: string;
   priority: string;
+  origin?: string;
+  trigger?: string;
   scheduledAt?: string;
   completedAt?: string;
   assignedUserId?: string;
+  assignedUserLabel?: string;
 };
 
 type DeviceFilters = {

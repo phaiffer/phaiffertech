@@ -67,13 +67,19 @@ export type IotTelemetryRecord = {
 export type IotMaintenance = {
   id: string;
   deviceId: string;
+  linkedAlarmId?: string;
+  linkedRegisterId?: string;
+  linkedAlarmCode?: string;
   title: string;
   description?: string;
   status: string;
   priority: string;
+  origin?: string;
+  trigger?: string;
   scheduledAt?: string;
   completedAt?: string;
   assignedUserId?: string;
+  assignedUserLabel?: string;
   createdAt: string;
   updatedAt: string;
 };

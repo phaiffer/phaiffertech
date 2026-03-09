@@ -45,6 +45,8 @@ public interface IotAlarmRepository extends JpaRepository<IotAlarm, UUID>, BaseT
 
     Optional<IotAlarm> findByIdAndTenantId(UUID id, UUID tenantId);
 
+    List<IotAlarm> findAllByTenantIdAndIdIn(UUID tenantId, Collection<UUID> ids);
+
     @Query(value = """
             SELECT *
             FROM iot_alarms a

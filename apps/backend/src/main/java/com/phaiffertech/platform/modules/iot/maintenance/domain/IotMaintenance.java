@@ -18,6 +18,12 @@ public class IotMaintenance extends BaseTenantEntity {
     @Column(name = "device_id", nullable = false, columnDefinition = "char(36)")
     private UUID deviceId;
 
+    @Column(name = "linked_alarm_id", columnDefinition = "char(36)")
+    private UUID linkedAlarmId;
+
+    @Column(name = "linked_register_id", columnDefinition = "char(36)")
+    private UUID linkedRegisterId;
+
     @Column(name = "title", nullable = false, length = 150)
     private String title;
 
@@ -30,6 +36,12 @@ public class IotMaintenance extends BaseTenantEntity {
     @Column(name = "priority", nullable = false, length = 40)
     private String priority = "MEDIUM";
 
+    @Column(name = "origin", length = 40)
+    private String origin;
+
+    @Column(name = "trigger_message", length = 255)
+    private String trigger;
+
     @Column(name = "scheduled_at")
     private Instant scheduledAt;
 
@@ -39,12 +51,31 @@ public class IotMaintenance extends BaseTenantEntity {
     @Column(name = "assigned_user_id", columnDefinition = "char(36)")
     private UUID assignedUserId;
 
+    @Column(name = "assigned_user_label", length = 120)
+    private String assignedUserLabel;
+
     public UUID getDeviceId() {
         return deviceId;
     }
 
     public void setDeviceId(UUID deviceId) {
         this.deviceId = deviceId;
+    }
+
+    public UUID getLinkedAlarmId() {
+        return linkedAlarmId;
+    }
+
+    public void setLinkedAlarmId(UUID linkedAlarmId) {
+        this.linkedAlarmId = linkedAlarmId;
+    }
+
+    public UUID getLinkedRegisterId() {
+        return linkedRegisterId;
+    }
+
+    public void setLinkedRegisterId(UUID linkedRegisterId) {
+        this.linkedRegisterId = linkedRegisterId;
     }
 
     public String getTitle() {
@@ -79,6 +110,22 @@ public class IotMaintenance extends BaseTenantEntity {
         this.priority = priority;
     }
 
+    public String getOrigin() {
+        return origin;
+    }
+
+    public void setOrigin(String origin) {
+        this.origin = origin;
+    }
+
+    public String getTrigger() {
+        return trigger;
+    }
+
+    public void setTrigger(String trigger) {
+        this.trigger = trigger;
+    }
+
     public Instant getScheduledAt() {
         return scheduledAt;
     }
@@ -101,5 +148,13 @@ public class IotMaintenance extends BaseTenantEntity {
 
     public void setAssignedUserId(UUID assignedUserId) {
         this.assignedUserId = assignedUserId;
+    }
+
+    public String getAssignedUserLabel() {
+        return assignedUserLabel;
+    }
+
+    public void setAssignedUserLabel(String assignedUserLabel) {
+        this.assignedUserLabel = assignedUserLabel;
     }
 }

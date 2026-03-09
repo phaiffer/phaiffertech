@@ -75,11 +75,12 @@ const initialPage: PageResponse<IotMaintenance> = {
 
 type DisplayMaintenance = IotMaintenance & {
   deviceName?: string;
-  trigger?: string;
-  linkedAlarmCode?: string;
   ownerLabel?: string;
   shift?: string;
 };
+
+const uuidPattern =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 function resolveStatusTone(status: string) {
   switch (status) {
@@ -110,6 +111,28 @@ function resolvePriorityTone(priority: string) {
     default:
       return 'neutral' as const;
   }
+}
+
+function resolveAssignmentPayload(value: string) {
+  const trimmed = value.trim();
+  if (!trimmed) {
+    return {
+      assignedUserId: undefined,
+      assignedUserLabel: undefined
+    };
+  }
+
+  if (uuidPattern.test(trimmed)) {
+    return {
+      assignedUserId: trimmed,
+      assignedUserLabel: undefined
+    };
+  }
+
+  return {
+    assignedUserId: undefined,
+    assignedUserLabel: trimmed
+  };
 }
 
 export function IotMaintenancePage() {
@@ -272,7 +295,7 @@ export function IotMaintenancePage() {
     setPriority(record.priority);
     setScheduledAt(toDateTimeLocal(record.scheduledAt));
     setCompletedAt(toDateTimeLocal(record.completedAt));
-    setAssignedUserId(record.assignedUserId ?? '');
+    setAssignedUserId(record.assignedUserLabel ?? record.assignedUserId ?? '');
     setSuccess(null);
     setError(null);
   }
@@ -289,6 +312,8 @@ export function IotMaintenancePage() {
     setError(null);
     setSuccess(null);
 
+    const assignment = resolveAssignmentPayload(assignedUserId);
+
     const payload = {
       deviceId,
       title,
@@ -297,7 +322,7 @@ export function IotMaintenancePage() {
       priority,
       scheduledAt: toIsoDate(scheduledAt),
       completedAt: toIsoDate(completedAt),
-      assignedUserId: assignedUserId || undefined
+      ...assignment
     };
 
     try {
@@ -550,12 +575,18 @@ export function IotMaintenancePage() {
                     />
                   ) : (
                     visibleRows.map((record) => {
-                      const matchedAlarm = displayAlarms.find((alarm) => alarm.deviceId === record.deviceId);
+                      const matchedAlarm =
+                        displayAlarms.find((alarm) => alarm.id === record.linkedAlarmId) ??
+                        displayAlarms.find((alarm) => alarm.deviceId === record.deviceId);
                       const trigger =
                         record.trigger ??
                         matchedAlarm?.message ??
                         'Inspeção preventiva ou ação manual';
-                      const ownerLabel = record.ownerLabel ?? record.assignedUserId ?? 'Não atribuído';
+                      const ownerLabel =
+                        record.ownerLabel ??
+                        record.assignedUserLabel ??
+                        record.assignedUserId ??
+                        'Não atribuído';
 
                       return (
                         <tr key={record.id} className="bg-[#071223]/80">
