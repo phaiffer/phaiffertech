@@ -6,6 +6,6 @@ public record DeviceStatusSnapshot(
         String status,
         Instant lastSeenAt,
         boolean recentTelemetry,
-        boolean hasCriticalOpenAlarm
+        boolean hasOperationalOpenAlarm
 ) {
 }

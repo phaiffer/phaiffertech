@@ -2,6 +2,7 @@ package com.phaiffertech.platform.modules.iot.register.repository;
 
 import com.phaiffertech.platform.modules.iot.register.domain.IotRegister;
 import com.phaiffertech.platform.shared.crud.BaseTenantCrudRepository;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import org.springframework.data.domain.Page;
@@ -36,6 +37,19 @@ public interface IotRegisterRepository extends JpaRepository<IotRegister, UUID>,
     );
 
     Optional<IotRegister> findByIdAndTenantId(UUID id, UUID tenantId);
+
+    Optional<IotRegister> findByTenantIdAndDeviceIdAndFunctionCodeIgnoreCaseAndRegisterAddressAndDeletedAtIsNull(
+            UUID tenantId,
+            UUID deviceId,
+            String functionCode,
+            Integer registerAddress
+    );
+
+    List<IotRegister> findAllByTenantIdAndDeviceIdAndMetricNameIgnoreCaseAndDeletedAtIsNull(
+            UUID tenantId,
+            UUID deviceId,
+            String metricName
+    );
 
     boolean existsByTenantIdAndDeviceIdAndCodeIgnoreCaseAndDeletedAtIsNull(UUID tenantId, UUID deviceId, String code);
 

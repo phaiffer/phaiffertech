@@ -5,9 +5,9 @@ import com.phaiffertech.platform.modules.iot.device.domain.IotDevice;
 import com.phaiffertech.platform.modules.iot.device.repository.IotDeviceRepository;
 import com.phaiffertech.platform.modules.iot.processing.DeviceStatusService;
 import com.phaiffertech.platform.modules.iot.processing.DeviceStatusSnapshot;
+import com.phaiffertech.platform.modules.iot.processing.IotPollingProfileSupport;
 import com.phaiffertech.platform.modules.iot.telemetry.repository.IotTelemetryRecordRepository;
 import com.phaiffertech.platform.shared.exception.ResourceNotFoundException;
-import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
@@ -17,8 +17,8 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class BasicDeviceStatusService implements DeviceStatusService {
 
-    private static final Duration ONLINE_WINDOW = Duration.ofMinutes(15);
     private static final List<String> OPEN_ALARM_STATUSES = List.of("OPEN", "ACKNOWLEDGED");
+    private static final List<String> OPERATIONAL_ALARM_SEVERITIES = List.of("HIGH", "CRITICAL");
 
     private final IotDeviceRepository deviceRepository;
     private final IotTelemetryRecordRepository telemetryRecordRepository;
@@ -60,31 +60,32 @@ public class BasicDeviceStatusService implements DeviceStatusService {
     }
 
     private DeviceStatusSnapshot evaluateDevice(UUID tenantId, IotDevice device, Instant observedAt) {
+        Instant now = Instant.now();
         Instant latestTelemetryAt = telemetryRecordRepository.findLatestRecordedAt(tenantId, device.getId()).orElse(null);
         Instant lastSeenAt = max(device.getLastSeenAt(), max(latestTelemetryAt, observedAt));
-        boolean recentTelemetry = lastSeenAt != null && !lastSeenAt.isBefore(Instant.now().minus(ONLINE_WINDOW));
-        boolean hasCriticalOpenAlarm = alarmRepository.existsByTenantIdAndDeviceIdAndSeverityAndStatusIn(
+        boolean recentTelemetry = IotPollingProfileSupport.isFresh(lastSeenAt, device.getPollingProfile(), now);
+        boolean hasOperationalOpenAlarm = alarmRepository.existsByTenantIdAndDeviceIdAndSeverityInAndStatusIn(
                 tenantId,
                 device.getId(),
-                "CRITICAL",
+                OPERATIONAL_ALARM_SEVERITIES,
                 OPEN_ALARM_STATUSES
         );
 
-        String status = resolveStatus(device.getStatus(), recentTelemetry, hasCriticalOpenAlarm);
-        return new DeviceStatusSnapshot(status, lastSeenAt, recentTelemetry, hasCriticalOpenAlarm);
+        String status = resolveStatus(device.getStatus(), recentTelemetry, hasOperationalOpenAlarm);
+        return new DeviceStatusSnapshot(status, lastSeenAt, recentTelemetry, hasOperationalOpenAlarm);
     }
 
-    private String resolveStatus(String currentStatus, boolean recentTelemetry, boolean hasCriticalOpenAlarm) {
+    private String resolveStatus(String currentStatus, boolean recentTelemetry, boolean hasOperationalOpenAlarm) {
         if ("MAINTENANCE".equalsIgnoreCase(currentStatus)) {
             return "MAINTENANCE";
         }
-        if (hasCriticalOpenAlarm) {
+        if (!recentTelemetry) {
+            return "OFFLINE";
+        }
+        if (hasOperationalOpenAlarm) {
             return "ALERT";
         }
-        if (recentTelemetry) {
-            return "ONLINE";
-        }
-        return "OFFLINE";
+        return "ONLINE";
     }
 
     private Instant max(Instant left, Instant right) {

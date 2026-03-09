@@ -80,7 +80,7 @@ public class IotDashboardService implements MonitoringSummaryService {
             DeviceStatusSnapshot snapshot = deviceStatusService.evaluate(tenantId, device.getId());
             if ("OFFLINE".equalsIgnoreCase(snapshot.status())) {
                 offlineDevices++;
-            } else {
+            } else if ("ONLINE".equalsIgnoreCase(snapshot.status())) {
                 activeDevices++;
             }
             bucketLastSeen(lastSeenSummary, snapshot.lastSeenAt(), now);

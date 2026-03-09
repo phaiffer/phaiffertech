@@ -23,7 +23,8 @@ class IotDashboardReportsIntegrationTest extends AbstractIntegrationTest {
         ResponseEntity<JsonNode> createRegister = post("/iot/registers", Map.of(
                 "deviceId", deviceOnlineId,
                 "name", "Temperature-" + marker,
-                "code", "TMP-" + marker,
+                "functionCode", "FC03",
+                "registerAddress", 40001,
                 "metricName", "temperature",
                 "unit", "c",
                 "dataType", "DECIMAL",
@@ -65,7 +66,7 @@ class IotDashboardReportsIntegrationTest extends AbstractIntegrationTest {
         assertEquals(200, dashboard.getStatusCode().value());
         JsonNode dashboardData = requireBody(dashboard).path("data");
         assertEquals(2, dashboardData.path("totalDevices").asInt());
-        assertEquals(1, dashboardData.path("activeDevices").asInt());
+        assertEquals(0, dashboardData.path("activeDevices").asInt());
         assertEquals(1, dashboardData.path("offlineDevices").asInt());
         assertTrue(dashboardData.path("totalAlarmsOpen").asInt() >= 1);
         assertTrue(dashboardData.path("telemetryPointsLast24h").asInt() >= 2);

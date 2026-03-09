@@ -8,6 +8,8 @@ import com.phaiffertech.platform.modules.iot.register.repository.IotRegisterRepo
 import com.phaiffertech.platform.modules.iot.telemetry.domain.IotTelemetryRecord;
 import com.phaiffertech.platform.shared.metrics.PlatformMetricsService;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.util.Collection;
 import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,6 +20,10 @@ public class ThresholdAlarmEvaluator implements AlarmEvaluator {
     private static final BigDecimal TEMPERATURE_HIGH_THRESHOLD = BigDecimal.valueOf(80);
     private static final BigDecimal BATTERY_LOW_THRESHOLD = BigDecimal.valueOf(20);
     private static final List<String> OPEN_STATUSES = List.of("OPEN", "ACKNOWLEDGED");
+    private static final Collection<String> REGISTER_THRESHOLD_CODES = List.of(
+            "REGISTER_MIN_THRESHOLD",
+            "REGISTER_MAX_THRESHOLD"
+    );
 
     private final IotAlarmRepository alarmRepository;
     private final IotRegisterRepository registerRepository;
@@ -36,7 +42,10 @@ public class ThresholdAlarmEvaluator implements AlarmEvaluator {
     @Override
     @Transactional
     public void evaluate(IotTelemetryRecord telemetryRecord) {
-        AlarmDecision decision = evaluateDecision(telemetryRecord);
+        EvaluationOutcome outcome = evaluateDecision(telemetryRecord);
+        resolveOpenAlarms(telemetryRecord, outcome.resolveCodes());
+
+        AlarmDecision decision = outcome.decision();
         if (!decision.triggered()) {
             return;
         }
@@ -66,7 +75,7 @@ public class ThresholdAlarmEvaluator implements AlarmEvaluator {
         platformMetricsService.incrementIotAlarmsTriggered();
     }
 
-    private AlarmDecision evaluateDecision(IotTelemetryRecord telemetryRecord) {
+    private EvaluationOutcome evaluateDecision(IotTelemetryRecord telemetryRecord) {
         if (telemetryRecord.getRegisterId() != null) {
             IotRegister register = registerRepository.findByIdAndTenantId(
                     telemetryRecord.getRegisterId(),
@@ -80,55 +89,71 @@ public class ThresholdAlarmEvaluator implements AlarmEvaluator {
         String metric = telemetryRecord.getMetric() == null ? "" : telemetryRecord.getMetric().trim().toLowerCase();
         BigDecimal value = telemetryRecord.getValue();
         if (value == null) {
-            return AlarmDecision.none();
+            return EvaluationOutcome.none(List.of("THRESHOLD_EXCEEDED"));
         }
 
         if ("temperature".equals(metric) && value.compareTo(TEMPERATURE_HIGH_THRESHOLD) > 0) {
-            return new AlarmDecision(
-                    true,
-                    "THRESHOLD_EXCEEDED",
-                    "HIGH",
-                    buildMessage(telemetryRecord)
+            return EvaluationOutcome.triggered(
+                    new AlarmDecision(
+                            true,
+                            "THRESHOLD_EXCEEDED",
+                            resolveGenericSeverity(value, TEMPERATURE_HIGH_THRESHOLD, true),
+                            buildMessage(telemetryRecord)
+                    ),
+                    List.of("THRESHOLD_EXCEEDED")
             );
         }
         if ("battery".equals(metric) && value.compareTo(BATTERY_LOW_THRESHOLD) < 0) {
-            return new AlarmDecision(
-                    true,
-                    "THRESHOLD_EXCEEDED",
-                    "HIGH",
-                    buildMessage(telemetryRecord)
+            return EvaluationOutcome.triggered(
+                    new AlarmDecision(
+                            true,
+                            "THRESHOLD_EXCEEDED",
+                            resolveGenericSeverity(value, BATTERY_LOW_THRESHOLD, false),
+                            buildMessage(telemetryRecord)
+                    ),
+                    List.of("THRESHOLD_EXCEEDED")
             );
         }
-        return AlarmDecision.none();
+        return EvaluationOutcome.none(List.of("THRESHOLD_EXCEEDED"));
     }
 
-    private AlarmDecision evaluateRegisterThreshold(IotTelemetryRecord telemetryRecord, IotRegister register) {
+    private EvaluationOutcome evaluateRegisterThreshold(IotTelemetryRecord telemetryRecord, IotRegister register) {
+        if (!"ACTIVE".equalsIgnoreCase(register.getStatus())) {
+            return EvaluationOutcome.none(REGISTER_THRESHOLD_CODES);
+        }
+
         BigDecimal value = telemetryRecord.getValue();
         if (value == null) {
-            return AlarmDecision.none();
+            return EvaluationOutcome.none(REGISTER_THRESHOLD_CODES);
         }
 
         if (register.getMinThreshold() != null && value.compareTo(register.getMinThreshold()) < 0) {
-            return new AlarmDecision(
-                    true,
-                    "REGISTER_MIN_THRESHOLD",
-                    "CRITICAL",
-                    "Telemetry below minimum threshold for register " + register.getCode()
-                            + ": " + value + " < " + register.getMinThreshold()
+            return EvaluationOutcome.triggered(
+                    new AlarmDecision(
+                            true,
+                            "REGISTER_MIN_THRESHOLD",
+                            resolveThresholdSeverity(value, register.getMinThreshold(), false),
+                            "Telemetry below minimum threshold for register " + buildRegisterLabel(register)
+                                    + ": " + value + " < " + register.getMinThreshold()
+                    ),
+                    REGISTER_THRESHOLD_CODES
             );
         }
 
         if (register.getMaxThreshold() != null && value.compareTo(register.getMaxThreshold()) > 0) {
-            return new AlarmDecision(
-                    true,
-                    "REGISTER_MAX_THRESHOLD",
-                    "CRITICAL",
-                    "Telemetry above maximum threshold for register " + register.getCode()
-                            + ": " + value + " > " + register.getMaxThreshold()
+            return EvaluationOutcome.triggered(
+                    new AlarmDecision(
+                            true,
+                            "REGISTER_MAX_THRESHOLD",
+                            resolveThresholdSeverity(value, register.getMaxThreshold(), true),
+                            "Telemetry above maximum threshold for register " + buildRegisterLabel(register)
+                                    + ": " + value + " > " + register.getMaxThreshold()
+                    ),
+                    REGISTER_THRESHOLD_CODES
             );
         }
 
-        return AlarmDecision.none();
+        return EvaluationOutcome.none(REGISTER_THRESHOLD_CODES);
     }
 
     private String buildMessage(IotTelemetryRecord telemetryRecord) {
@@ -138,10 +163,68 @@ public class ThresholdAlarmEvaluator implements AlarmEvaluator {
                 + telemetryRecord.getValue();
     }
 
+    private String buildRegisterLabel(IotRegister register) {
+        if (register.getFunctionCode() != null && register.getRegisterAddress() != null) {
+            return register.getCode() + " (" + register.getFunctionCode() + ":" + register.getRegisterAddress() + ")";
+        }
+        return register.getCode();
+    }
+
+    private void resolveOpenAlarms(IotTelemetryRecord telemetryRecord, Collection<String> codes) {
+        if (codes == null || codes.isEmpty()) {
+            return;
+        }
+
+        List<IotAlarm> openAlarms = alarmRepository.findOpenAlarmsByCodes(
+                telemetryRecord.getTenantId(),
+                telemetryRecord.getDeviceId(),
+                telemetryRecord.getRegisterId(),
+                codes.stream().map(String::toUpperCase).toList(),
+                OPEN_STATUSES
+        );
+
+        openAlarms.forEach(alarm -> alarm.setStatus("RESOLVED"));
+        if (!openAlarms.isEmpty()) {
+            alarmRepository.saveAll(openAlarms);
+        }
+    }
+
+    private String resolveThresholdSeverity(BigDecimal value, BigDecimal threshold, boolean aboveThreshold) {
+        BigDecimal delta = aboveThreshold ? value.subtract(threshold) : threshold.subtract(value);
+        return isCriticalDeviation(delta, threshold) ? "CRITICAL" : "HIGH";
+    }
+
+    private String resolveGenericSeverity(BigDecimal value, BigDecimal threshold, boolean aboveThreshold) {
+        BigDecimal delta = aboveThreshold ? value.subtract(threshold) : threshold.subtract(value);
+        return isCriticalDeviation(delta, threshold) ? "CRITICAL" : "HIGH";
+    }
+
+    private boolean isCriticalDeviation(BigDecimal delta, BigDecimal threshold) {
+        if (delta == null || threshold == null || delta.compareTo(BigDecimal.ZERO) <= 0) {
+            return false;
+        }
+        if (threshold.compareTo(BigDecimal.ZERO) == 0) {
+            return true;
+        }
+        BigDecimal ratio = delta.abs().divide(threshold.abs(), 4, RoundingMode.HALF_UP);
+        return ratio.compareTo(new BigDecimal("0.10")) >= 0;
+    }
+
     private record AlarmDecision(boolean triggered, String code, String severity, String message) {
 
         private static AlarmDecision none() {
             return new AlarmDecision(false, null, null, null);
+        }
+    }
+
+    private record EvaluationOutcome(AlarmDecision decision, Collection<String> resolveCodes) {
+
+        private static EvaluationOutcome triggered(AlarmDecision decision, Collection<String> resolveCodes) {
+            return new EvaluationOutcome(decision, resolveCodes);
+        }
+
+        private static EvaluationOutcome none(Collection<String> resolveCodes) {
+            return new EvaluationOutcome(AlarmDecision.none(), resolveCodes);
         }
     }
 }

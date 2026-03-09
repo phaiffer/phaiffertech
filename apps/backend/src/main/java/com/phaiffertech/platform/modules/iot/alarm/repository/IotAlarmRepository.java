@@ -3,6 +3,7 @@ package com.phaiffertech.platform.modules.iot.alarm.repository;
 import com.phaiffertech.platform.modules.iot.alarm.domain.IotAlarm;
 import com.phaiffertech.platform.shared.crud.BaseTenantCrudRepository;
 import java.time.Instant;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -63,6 +64,13 @@ public interface IotAlarmRepository extends JpaRepository<IotAlarm, UUID>, BaseT
             Iterable<String> statuses
     );
 
+    boolean existsByTenantIdAndDeviceIdAndSeverityInAndStatusIn(
+            UUID tenantId,
+            UUID deviceId,
+            Collection<String> severities,
+            Collection<String> statuses
+    );
+
     @Query("""
             SELECT CASE WHEN COUNT(a) > 0 THEN true ELSE false END
             FROM IotAlarm a
@@ -78,6 +86,24 @@ public interface IotAlarmRepository extends JpaRepository<IotAlarm, UUID>, BaseT
             @Param("registerId") UUID registerId,
             @Param("code") String code,
             @Param("statuses") Iterable<String> statuses
+    );
+
+    @Query("""
+            SELECT a
+            FROM IotAlarm a
+            WHERE a.tenantId = :tenantId
+              AND a.deviceId = :deviceId
+              AND ((:registerId IS NULL AND a.registerId IS NULL) OR a.registerId = :registerId)
+              AND UPPER(a.code) IN :codes
+              AND UPPER(a.status) IN :statuses
+            ORDER BY a.triggeredAt DESC
+            """)
+    List<IotAlarm> findOpenAlarmsByCodes(
+            @Param("tenantId") UUID tenantId,
+            @Param("deviceId") UUID deviceId,
+            @Param("registerId") UUID registerId,
+            @Param("codes") Collection<String> codes,
+            @Param("statuses") Collection<String> statuses
     );
 
     List<IotAlarm> findTop5ByTenantIdOrderByTriggeredAtDesc(UUID tenantId);

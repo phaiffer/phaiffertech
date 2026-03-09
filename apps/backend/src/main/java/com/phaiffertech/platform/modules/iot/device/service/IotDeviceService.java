@@ -7,12 +7,16 @@ import com.phaiffertech.platform.modules.iot.device.dto.IotDeviceResponse;
 import com.phaiffertech.platform.modules.iot.device.dto.IotDeviceUpdateRequest;
 import com.phaiffertech.platform.modules.iot.device.mapper.IotDeviceMapper;
 import com.phaiffertech.platform.modules.iot.device.repository.IotDeviceRepository;
+import com.phaiffertech.platform.modules.iot.processing.DeviceStatusService;
+import com.phaiffertech.platform.modules.iot.processing.DeviceStatusSnapshot;
 import com.phaiffertech.platform.shared.crud.BasePageQuery;
 import com.phaiffertech.platform.shared.crud.BaseSearchSpecificationBuilder;
 import com.phaiffertech.platform.shared.crud.BaseTenantCrudService;
 import com.phaiffertech.platform.shared.domain.enums.AuditActionType;
 import com.phaiffertech.platform.shared.pagination.PageRequestDto;
 import com.phaiffertech.platform.shared.pagination.PageResponseDto;
+import com.phaiffertech.platform.shared.pagination.PaginationUtils;
+import org.springframework.data.domain.Page;
 import java.util.UUID;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
@@ -26,10 +30,12 @@ public class IotDeviceService extends BaseTenantCrudService<
         IotDeviceResponse> {
 
     private final IotDeviceRepository repository;
+    private final DeviceStatusService deviceStatusService;
 
-    public IotDeviceService(IotDeviceRepository repository) {
+    public IotDeviceService(IotDeviceRepository repository, DeviceStatusService deviceStatusService) {
         super(repository, repository, IotDeviceMapper.INSTANCE, "IoT device not found.");
         this.repository = repository;
+        this.deviceStatusService = deviceStatusService;
     }
 
     @Transactional
@@ -50,22 +56,21 @@ public class IotDeviceService extends BaseTenantCrudService<
 
     @Transactional(readOnly = true)
     public PageResponseDto<IotDeviceResponse> list(PageRequestDto pageRequest, String type, String status) {
-        return doList(
-                pageRequest,
-                Sort.by(Sort.Direction.DESC, "createdAt"),
-                (BasePageQuery query) -> repository.findAllByTenantIdAndSearch(
+        BasePageQuery query = BasePageQuery.of(pageRequest, Sort.by(Sort.Direction.DESC, "createdAt"));
+        Page<IotDeviceResponse> mapped = repository.findAllByTenantIdAndSearch(
                         currentTenantId(),
                         BaseSearchSpecificationBuilder.normalizeUpper(type),
                         BaseSearchSpecificationBuilder.normalizeUpper(status),
                         query.search(),
                         query.pageable()
                 )
-        );
+                .map(this::toOperationalResponse);
+        return PaginationUtils.fromPage(mapped);
     }
 
     @Transactional(readOnly = true)
     public IotDeviceResponse getById(UUID id) {
-        return doGetById(id);
+        return toOperationalResponse(getOrThrow(id, currentTenantId()));
     }
 
     @Transactional
@@ -120,5 +125,28 @@ public class IotDeviceService extends BaseTenantCrudService<
 
     private boolean hasText(String value) {
         return value != null && !value.isBlank();
+    }
+
+    private IotDeviceResponse toOperationalResponse(IotDevice device) {
+        IotDeviceResponse base = IotDeviceMapper.INSTANCE.toResponse(device);
+        DeviceStatusSnapshot snapshot = deviceStatusService.evaluate(device.getTenantId(), device.getId());
+        return new IotDeviceResponse(
+                base.id(),
+                base.name(),
+                base.identifier(),
+                base.type(),
+                base.location(),
+                base.description(),
+                base.transport(),
+                base.host(),
+                base.port(),
+                base.unitId(),
+                base.pollingProfile(),
+                base.gateway(),
+                snapshot.status(),
+                snapshot.lastSeenAt(),
+                base.createdAt(),
+                base.updatedAt()
+        );
     }
 }
