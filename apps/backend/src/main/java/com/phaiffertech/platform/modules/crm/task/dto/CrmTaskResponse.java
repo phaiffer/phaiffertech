@@ -20,6 +20,8 @@ public record CrmTaskResponse(
         String relatedModule,
         String relatedEntityType,
         UUID relatedId,
+        String relatedDisplayName,
+        String relatedDisplayContext,
         Instant createdAt,
         Instant updatedAt
 ) {

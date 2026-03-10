@@ -132,10 +132,32 @@ export function buildReferenceSummary(context: CanonicalReferenceContext) {
     : (context.compatibilityType ?? 'Sem vínculo');
 }
 
+export function buildReferenceHeadline(context: CanonicalReferenceContext, displayName?: string | null) {
+  const normalizedDisplayName = displayName?.trim();
+  return normalizedDisplayName || buildReferenceSummary(context);
+}
+
 export function buildReferenceDetail(context: CanonicalReferenceContext, relatedId?: string | null) {
   const parts = [context.referenceType ?? context.compatibilityType];
   if (relatedId) {
     parts.push(relatedId.slice(0, 8));
+  }
+  return parts.filter(Boolean).join(' · ');
+}
+
+export function buildReferenceContextLine(
+  context: CanonicalReferenceContext,
+  relatedId?: string | null,
+  displayContext?: string | null
+) {
+  const parts = [buildReferenceSummary(context)];
+  const normalizedContext = displayContext?.trim();
+  if (normalizedContext) {
+    parts.push(normalizedContext);
+  }
+  const detail = buildReferenceDetail(context, relatedId);
+  if (detail) {
+    parts.push(detail);
   }
   return parts.filter(Boolean).join(' · ');
 }

@@ -8,6 +8,7 @@ import com.phaiffertech.platform.modules.crm.note.dto.CrmNoteUpdateRequest;
 import com.phaiffertech.platform.modules.crm.note.mapper.CrmNoteMapper;
 import com.phaiffertech.platform.modules.crm.note.repository.CrmNoteRepository;
 import com.phaiffertech.platform.modules.crm.shared.service.CrmRelationResolverService;
+import com.phaiffertech.platform.shared.contracts.crm.CrmRelatedReferenceCapability;
 import com.phaiffertech.platform.shared.domain.enums.AuditActionType;
 import com.phaiffertech.platform.shared.exception.ResourceNotFoundException;
 import com.phaiffertech.platform.shared.pagination.PageRequestDto;
@@ -56,7 +57,7 @@ public class CrmNoteService {
                         pageRequest.normalizedSearch(),
                         PaginationUtils.toPageable(pageRequest, Sort.by(Sort.Direction.DESC, "createdAt"))
                 )
-                .map(CrmNoteMapper::toResponse);
+                .map(note -> toResponse(tenantId, note));
 
         return PaginationUtils.fromPage(result);
     }
@@ -64,19 +65,21 @@ public class CrmNoteService {
     @Transactional(readOnly = true)
     public CrmNoteResponse getById(UUID id) {
         UUID tenantId = TenantContext.getRequiredTenantId();
-        return CrmNoteMapper.toResponse(repository.findByIdAndTenantId(id, tenantId)
-                .orElseThrow(() -> new ResourceNotFoundException("Note not found.")));
+        CrmNote note = repository.findByIdAndTenantId(id, tenantId)
+                .orElseThrow(() -> new ResourceNotFoundException("Note not found."));
+        return toResponse(tenantId, note);
     }
 
     @Transactional
     @AuditableAction(action = AuditActionType.CREATE, entity = "crm_note")
     public CrmNoteResponse create(CrmNoteCreateRequest request) {
         CrmNote note = new CrmNote();
-        note.setTenantId(TenantContext.getRequiredTenantId());
+        UUID tenantId = TenantContext.getRequiredTenantId();
+        note.setTenantId(tenantId);
         apply(note, request.content(), request.companyId(), request.contactId(), request.leadId(), request.dealId(),
                 request.relatedType(), request.relatedReferenceType(), request.relatedId());
         note.setAuthorUserId(currentUserService.getRequiredUser().userId());
-        return CrmNoteMapper.toResponse(repository.save(note));
+        return toResponse(tenantId, repository.save(note));
     }
 
     @Transactional
@@ -87,7 +90,7 @@ public class CrmNoteService {
                 .orElseThrow(() -> new ResourceNotFoundException("Note not found."));
         apply(note, request.content(), request.companyId(), request.contactId(), request.leadId(), request.dealId(),
                 request.relatedType(), request.relatedReferenceType(), request.relatedId());
-        return CrmNoteMapper.toResponse(repository.save(note));
+        return toResponse(tenantId, repository.save(note));
     }
 
     @Transactional
@@ -128,5 +131,18 @@ public class CrmNoteService {
         note.setContactId(relation.contactId());
         note.setLeadId(relation.leadId());
         note.setDealId(relation.dealId());
+    }
+
+    private CrmNoteResponse toResponse(UUID tenantId, CrmNote note) {
+        CrmRelatedReferenceCapability.ReferenceDescriptor descriptor = relationResolverService.describeStoredRelation(
+                tenantId,
+                note.getRelatedType(),
+                note.getRelatedId(),
+                note.getCompanyId(),
+                note.getContactId(),
+                note.getLeadId(),
+                note.getDealId()
+        ).orElse(null);
+        return CrmNoteMapper.toResponse(note, descriptor);
     }
 }

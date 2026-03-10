@@ -75,18 +75,59 @@ class CrmTasksIntegrationTest extends AbstractIntegrationTest {
                 "status", "OPEN",
                 "priority", "MEDIUM",
                 "dueDate", Instant.now().plusSeconds(86400).toString(),
-                "relatedReferenceType", "PET.CLIENT",
+                "relatedReferenceType", "IOT.DEVICE",
                 "relatedId", externalId
         ), session);
 
         assertEquals(200, createResponse.getStatusCode().value());
-        assertEquals("PET.CLIENT", requireBody(createResponse).path("data").path("relatedType").asText());
-        assertEquals("PET.CLIENT", requireBody(createResponse).path("data").path("relatedReferenceType").asText());
-        assertEquals("PET", requireBody(createResponse).path("data").path("relatedModule").asText());
-        assertEquals("CLIENT", requireBody(createResponse).path("data").path("relatedEntityType").asText());
+        assertEquals("IOT.DEVICE", requireBody(createResponse).path("data").path("relatedType").asText());
+        assertEquals("IOT.DEVICE", requireBody(createResponse).path("data").path("relatedReferenceType").asText());
+        assertEquals("IOT", requireBody(createResponse).path("data").path("relatedModule").asText());
+        assertEquals("DEVICE", requireBody(createResponse).path("data").path("relatedEntityType").asText());
         assertEquals(externalId, requireBody(createResponse).path("data").path("relatedId").asText());
         JsonNode companyIdNode = requireBody(createResponse).path("data").path("companyId");
         assertTrue(companyIdNode.isMissingNode() || companyIdNode.isNull() || companyIdNode.asText().isBlank());
+    }
+
+    @Test
+    void shouldValidateAndEnrichPetClientRelationForTask() {
+        AuthSession session = loginAsDefaultAdmin();
+        String marker = randomSearchMarker();
+        String petClientId = createPetClient(session, marker);
+
+        ResponseEntity<JsonNode> createResponse = post("/crm/tasks", Map.of(
+                "title", "Pet Task " + marker,
+                "status", "OPEN",
+                "priority", "MEDIUM",
+                "dueDate", Instant.now().plusSeconds(86400).toString(),
+                "relatedReferenceType", "PET.CLIENT",
+                "relatedId", petClientId
+        ), session);
+
+        assertEquals(200, createResponse.getStatusCode().value());
+        assertEquals("PET.CLIENT", requireBody(createResponse).path("data").path("relatedReferenceType").asText());
+        assertEquals("PET", requireBody(createResponse).path("data").path("relatedModule").asText());
+        assertEquals("CLIENT", requireBody(createResponse).path("data").path("relatedEntityType").asText());
+        assertEquals("Pet Client " + marker, requireBody(createResponse).path("data").path("relatedDisplayName").asText());
+        assertTrue(requireBody(createResponse).path("data").path("relatedDisplayContext").asText().contains("@example.test"));
+    }
+
+    @Test
+    void shouldRejectUnknownPetClientRelationForTask() {
+        AuthSession session = loginAsDefaultAdmin();
+        String marker = randomSearchMarker();
+
+        ResponseEntity<JsonNode> createResponse = post("/crm/tasks", Map.of(
+                "title", "Missing Pet Task " + marker,
+                "status", "OPEN",
+                "priority", "MEDIUM",
+                "dueDate", Instant.now().plusSeconds(86400).toString(),
+                "relatedReferenceType", "PET.CLIENT",
+                "relatedId", UUID.randomUUID().toString()
+        ), session);
+
+        assertEquals(404, createResponse.getStatusCode().value());
+        assertEquals("NOT_FOUND", requireBody(createResponse).path("code").asText());
     }
 
     @Test
@@ -113,6 +154,15 @@ class CrmTasksIntegrationTest extends AbstractIntegrationTest {
         ResponseEntity<JsonNode> response = post("/crm/companies", Map.of(
                 "name", "Task Company " + marker,
                 "document", "TASK-" + marker,
+                "status", "ACTIVE"
+        ), session);
+        return requireBody(response).path("data").path("id").asText();
+    }
+
+    private String createPetClient(AuthSession session, String marker) {
+        ResponseEntity<JsonNode> response = post("/pet/clients", Map.of(
+                "name", "Pet Client " + marker,
+                "email", "pet." + marker + "@example.test",
                 "status", "ACTIVE"
         ), session);
         return requireBody(response).path("data").path("id").asText();

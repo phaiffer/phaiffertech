@@ -1,7 +1,11 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { buildReferenceDetail, buildReferenceSummary, resolveCanonicalReference } from '@/modules/crm/crm-reference-utils';
+import {
+  buildReferenceContextLine,
+  buildReferenceHeadline,
+  resolveCanonicalReference
+} from '@/modules/crm/crm-reference-utils';
 import { PermissionGuard } from '@/shared/auth/PermissionGuard';
 import { ApiClientError } from '@/shared/lib/http';
 import { resolvePageItems, resolveTotalItems } from '@/shared/lib/pagination';
@@ -62,8 +66,31 @@ export function CrmActivityPage() {
 
         return (
           <div>
-            <p className="font-medium text-slate-900">{buildReferenceSummary(entity)}</p>
-            <p className="text-xs text-slate-500">{buildReferenceDetail(entity, row.entityId)}</p>
+            <p className="font-medium text-slate-900">{buildReferenceHeadline(entity)}</p>
+            <p className="text-xs text-slate-500">{buildReferenceContextLine(entity, row.entityId)}</p>
+          </div>
+        );
+      }
+    },
+    {
+      key: 'related',
+      header: 'Relacionado a',
+      render: (row) => {
+        if (!row.relatedId) {
+          return '-';
+        }
+
+        const relation = resolveCanonicalReference({
+          compatibilityType: row.relatedType,
+          referenceType: row.relatedReferenceType,
+          moduleCode: row.relatedModule,
+          entityType: row.relatedEntityType
+        });
+
+        return (
+          <div>
+            <p className="font-medium text-slate-900">{buildReferenceHeadline(relation, row.relatedDisplayName)}</p>
+            <p className="text-xs text-slate-500">{buildReferenceContextLine(relation, row.relatedId, row.relatedDisplayContext)}</p>
           </div>
         );
       }
@@ -79,7 +106,7 @@ export function CrmActivityPage() {
       fallback={<div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">Você não possui permissão para visualizar a atividade do CRM.</div>}
     >
       <div className="space-y-5">
-        <PageTitle title="CRM Activity" description="Feed auditável com contexto canônico de entidade para leitura comercial e preparação futura cross-module." />
+        <PageTitle title="CRM Activity" description="Feed auditável com contexto canônico da entidade CRM e do vínculo relacionado quando houver referência cross-module." />
 
         {error ? <div className="rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{error}</div> : null}
 

@@ -12,6 +12,13 @@ public record CrmActivityResponse(
         String entityModule,
         String entityType,
         String entityId,
+        String relatedType,
+        String relatedReferenceType,
+        String relatedModule,
+        String relatedEntityType,
+        String relatedId,
+        String relatedDisplayName,
+        String relatedDisplayContext,
         UUID userId,
         JsonNode payload,
         Instant createdAt

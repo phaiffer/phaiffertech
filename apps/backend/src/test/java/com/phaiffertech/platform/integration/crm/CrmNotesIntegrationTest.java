@@ -63,18 +63,38 @@ class CrmNotesIntegrationTest extends AbstractIntegrationTest {
 
         ResponseEntity<JsonNode> createResponse = post("/crm/notes", Map.of(
                 "content", "External Note " + marker,
-                "relatedReferenceType", "PET.CLIENT",
+                "relatedReferenceType", "IOT.DEVICE",
                 "relatedId", externalId
         ), session);
 
         assertEquals(200, createResponse.getStatusCode().value());
-        assertEquals("PET.CLIENT", requireBody(createResponse).path("data").path("relatedType").asText());
-        assertEquals("PET.CLIENT", requireBody(createResponse).path("data").path("relatedReferenceType").asText());
-        assertEquals("PET", requireBody(createResponse).path("data").path("relatedModule").asText());
-        assertEquals("CLIENT", requireBody(createResponse).path("data").path("relatedEntityType").asText());
+        assertEquals("IOT.DEVICE", requireBody(createResponse).path("data").path("relatedType").asText());
+        assertEquals("IOT.DEVICE", requireBody(createResponse).path("data").path("relatedReferenceType").asText());
+        assertEquals("IOT", requireBody(createResponse).path("data").path("relatedModule").asText());
+        assertEquals("DEVICE", requireBody(createResponse).path("data").path("relatedEntityType").asText());
         assertEquals(externalId, requireBody(createResponse).path("data").path("relatedId").asText());
         JsonNode companyIdNode = requireBody(createResponse).path("data").path("companyId");
         assertTrue(companyIdNode.isMissingNode() || companyIdNode.isNull() || companyIdNode.asText().isBlank());
+    }
+
+    @Test
+    void shouldValidateAndEnrichPetProfileRelationForNote() {
+        AuthSession session = loginAsDefaultAdmin();
+        String marker = randomSearchMarker();
+        String petProfileId = createPetProfile(session, marker);
+
+        ResponseEntity<JsonNode> createResponse = post("/crm/notes", Map.of(
+                "content", "Pet Note " + marker,
+                "relatedReferenceType", "PET.PROFILE",
+                "relatedId", petProfileId
+        ), session);
+
+        assertEquals(200, createResponse.getStatusCode().value());
+        assertEquals("PET.PROFILE", requireBody(createResponse).path("data").path("relatedReferenceType").asText());
+        assertEquals("PET", requireBody(createResponse).path("data").path("relatedModule").asText());
+        assertEquals("PROFILE", requireBody(createResponse).path("data").path("relatedEntityType").asText());
+        assertEquals("Pet Profile " + marker, requireBody(createResponse).path("data").path("relatedDisplayName").asText());
+        assertTrue(requireBody(createResponse).path("data").path("relatedDisplayContext").asText().contains("Pet Owner " + marker));
     }
 
     private String createCompany(AuthSession session, String marker) {
@@ -84,5 +104,20 @@ class CrmNotesIntegrationTest extends AbstractIntegrationTest {
                 "status", "ACTIVE"
         ), session);
         return requireBody(response).path("data").path("id").asText();
+    }
+
+    private String createPetProfile(AuthSession session, String marker) {
+        ResponseEntity<JsonNode> clientResponse = post("/pet/clients", Map.of(
+                "name", "Pet Owner " + marker,
+                "status", "ACTIVE"
+        ), session);
+        String clientId = requireBody(clientResponse).path("data").path("id").asText();
+
+        ResponseEntity<JsonNode> profileResponse = post("/pet/pets", Map.of(
+                "clientId", clientId,
+                "name", "Pet Profile " + marker,
+                "species", "DOG"
+        ), session);
+        return requireBody(profileResponse).path("data").path("id").asText();
     }
 }

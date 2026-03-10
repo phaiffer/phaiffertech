@@ -98,6 +98,9 @@ export type CreateTaskInput = {
   contactId?: string;
   leadId?: string;
   dealId?: string;
+  relatedType?: string;
+  relatedReferenceType?: string;
+  relatedId?: string;
 };
 
 export type UpdateTaskInput = CreateTaskInput & {
@@ -110,6 +113,9 @@ export type CreateNoteInput = {
   contactId?: string;
   leadId?: string;
   dealId?: string;
+  relatedType?: string;
+  relatedReferenceType?: string;
+  relatedId?: string;
 };
 
 export type UpdateNoteInput = CreateNoteInput;

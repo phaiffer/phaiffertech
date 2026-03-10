@@ -15,6 +15,8 @@ public record CrmNoteResponse(
         String relatedModule,
         String relatedEntityType,
         UUID relatedId,
+        String relatedDisplayName,
+        String relatedDisplayContext,
         UUID authorUserId,
         String createdBy,
         Instant createdAt,

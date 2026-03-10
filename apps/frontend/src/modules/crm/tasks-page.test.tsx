@@ -2,7 +2,7 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { CrmTasksPage } from '@/modules/crm/tasks-page';
 
-const { hasPermissionMock, crmServiceMock } = vi.hoisted(() => ({
+const { hasPermissionMock, crmServiceMock, petServiceMock } = vi.hoisted(() => ({
   hasPermissionMock: vi.fn(),
   crmServiceMock: {
     listCompanies: vi.fn(),
@@ -13,6 +13,11 @@ const { hasPermissionMock, crmServiceMock } = vi.hoisted(() => ({
     createTask: vi.fn(),
     updateTask: vi.fn(),
     deleteTask: vi.fn()
+  },
+  petServiceMock: {
+    listClients: vi.fn(),
+    listProfiles: vi.fn(),
+    listAppointments: vi.fn()
   }
 }));
 
@@ -25,6 +30,10 @@ vi.mock('@/shared/auth/usePermissions', () => ({
 
 vi.mock('@/shared/services/crm-service', () => ({
   crmService: crmServiceMock
+}));
+
+vi.mock('@/shared/services/pet-service', () => ({
+  petService: petServiceMock
 }));
 
 function createPageResponse<T>(items: T[]) {
@@ -61,6 +70,9 @@ describe('CrmTasksPage', () => {
         updatedAt: '2026-03-10T09:00:00Z'
       }
     ]));
+    petServiceMock.listClients.mockResolvedValue(createPageResponse([]));
+    petServiceMock.listProfiles.mockResolvedValue(createPageResponse([]));
+    petServiceMock.listAppointments.mockResolvedValue(createPageResponse([]));
   });
 
   it('renders canonical CRM relation context and keeps legacy CRM editing compatible', async () => {
@@ -71,11 +83,60 @@ describe('CrmTasksPage', () => {
     });
 
     expect(screen.getByText('CRM / Company')).toBeInTheDocument();
-    expect(screen.getByText('CRM.COMPANY · 12345678')).toBeInTheDocument();
+    expect(screen.getByText('CRM / Company · CRM.COMPANY · 12345678')).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: 'Editar' }));
 
     expect(screen.getByLabelText('Tipo de vínculo')).toHaveValue('COMPANY');
     expect(screen.getByLabelText('Título')).toHaveValue('Ligar para cliente');
+  });
+
+  it('renders enriched pet references and allows editing when the matching pet permission is available', async () => {
+    crmServiceMock.listTasks.mockResolvedValue(createPageResponse([
+      {
+        id: 'task-2',
+        title: 'Follow-up do atendimento',
+        status: 'OPEN',
+        priority: 'MEDIUM',
+        relatedType: 'PET.APPOINTMENT',
+        relatedReferenceType: 'PET.APPOINTMENT',
+        relatedModule: 'PET',
+        relatedEntityType: 'APPOINTMENT',
+        relatedId: '87654321-1234-1234-1234-abcdefabcdef',
+        relatedDisplayName: 'Consulta clinica',
+        relatedDisplayContext: 'Nina · 2026-03-10T14:00:00Z',
+        createdAt: '2026-03-10T09:00:00Z',
+        updatedAt: '2026-03-10T09:00:00Z'
+      }
+    ]));
+    petServiceMock.listAppointments.mockResolvedValue(createPageResponse([
+      {
+        id: '87654321-1234-1234-1234-abcdefabcdef',
+        clientId: 'client-1',
+        petId: 'pet-1',
+        petName: 'Nina',
+        serviceId: 'service-1',
+        serviceName: 'Consulta clinica',
+        professionalId: 'professional-1',
+        scheduledAt: '2026-03-10T14:00:00Z',
+        status: 'SCHEDULED',
+        createdAt: '2026-03-10T09:00:00Z',
+        updatedAt: '2026-03-10T09:00:00Z'
+      }
+    ]));
+
+    render(<CrmTasksPage />);
+
+    await waitFor(() => {
+      expect(crmServiceMock.listTasks).toHaveBeenCalledTimes(1);
+    });
+
+    expect(screen.getByText('Consulta clinica')).toBeInTheDocument();
+    expect(screen.getByText('Pet / Appointment · Nina · 2026-03-10T14:00:00Z · PET.APPOINTMENT · 87654321')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Editar' }));
+
+    expect(screen.getByLabelText('Tipo de vínculo')).toHaveValue('PET.APPOINTMENT');
+    expect(screen.getByLabelText('Registro vinculado')).toHaveValue('87654321-1234-1234-1234-abcdefabcdef');
   });
 });

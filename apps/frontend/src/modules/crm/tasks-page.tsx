@@ -2,17 +2,26 @@
 
 import { useEffect, useState } from 'react';
 import {
-  buildReferenceDetail,
-  buildReferenceSummary,
-  isCrmEditableReference,
+  buildReferenceContextLine,
+  buildReferenceHeadline,
   resolveCanonicalReference
 } from '@/modules/crm/crm-reference-utils';
+import {
+  buildRelatedReferenceOptions,
+  buildRelatedReferencePayload,
+  buildRelatedReferenceTypeOptions,
+  CrmRelatedReferenceType,
+  resolveEditableReferenceType
+} from '@/modules/crm/crm-related-reference-catalog';
 import { PermissionGuard } from '@/shared/auth/PermissionGuard';
+import { usePermissions } from '@/shared/auth/usePermissions';
 import { ApiClientError } from '@/shared/lib/http';
 import { resolvePageItems, resolveTotalItems } from '@/shared/lib/pagination';
 import { crmService, CreateTaskInput, UpdateTaskInput } from '@/shared/services/crm-service';
+import { petService } from '@/shared/services/pet-service';
 import { CrmCompany, CrmContact, CrmDeal, CrmLead, CrmTask } from '@/shared/types/crm';
 import { PageResponse } from '@/shared/types/common';
+import { PetAppointment, PetClient, PetProfile } from '@/shared/types/pet';
 import { ConfirmDialog } from '@/shared/ui/confirm-dialog';
 import { DataTable, DataTableColumn } from '@/shared/ui/data-table';
 import { DateInput } from '@/shared/ui/date-input';
@@ -23,12 +32,6 @@ import { Pagination } from '@/shared/ui/pagination';
 import { SearchBar } from '@/shared/ui/search-bar';
 
 const pageSize = 10;
-const relationTypeOptions = [
-  { value: 'COMPANY', label: 'Empresa' },
-  { value: 'CONTACT', label: 'Contato' },
-  { value: 'LEAD', label: 'Lead' },
-  { value: 'DEAL', label: 'Negócio' }
-];
 const statusOptions = [
   { value: '', label: 'Todos' },
   { value: 'OPEN', label: 'OPEN' },
@@ -42,13 +45,24 @@ const priorityOptions = [
   { value: 'HIGH', label: 'HIGH' }
 ];
 const initialPage: PageResponse<CrmTask> = { items: [], totalItems: 0, totalPages: 0, page: 0, size: pageSize };
+const emptyCommonPage: PageResponse<CrmCompany | CrmContact | CrmLead | CrmDeal | PetClient | PetProfile | PetAppointment> = {
+  items: [],
+  totalItems: 0,
+  totalPages: 0,
+  page: 0,
+  size: 100
+};
 
 export function CrmTasksPage() {
+  const { hasPermission } = usePermissions();
   const [pageData, setPageData] = useState<PageResponse<CrmTask>>(initialPage);
   const [companies, setCompanies] = useState<CrmCompany[]>([]);
   const [contacts, setContacts] = useState<CrmContact[]>([]);
   const [leads, setLeads] = useState<CrmLead[]>([]);
   const [deals, setDeals] = useState<CrmDeal[]>([]);
+  const [petClients, setPetClients] = useState<PetClient[]>([]);
+  const [petProfiles, setPetProfiles] = useState<PetProfile[]>([]);
+  const [petAppointments, setPetAppointments] = useState<PetAppointment[]>([]);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -65,33 +79,48 @@ export function CrmTasksPage() {
   const [dueDate, setDueDate] = useState('');
   const [status, setStatus] = useState('OPEN');
   const [priority, setPriority] = useState('MEDIUM');
-  const [relationType, setRelationType] = useState('COMPANY');
+  const [relationType, setRelationType] = useState<CrmRelatedReferenceType>('COMPANY');
   const [relationId, setRelationId] = useState('');
 
+  const canReadPetClients = hasPermission('pet.client.read');
+  const canReadPetProfiles = hasPermission('pet.profile.read');
+  const canReadPetAppointments = hasPermission('pet.appointment.read');
+  const relationTypeOptions = buildRelatedReferenceTypeOptions({
+    canReadPetClients,
+    canReadPetProfiles,
+    canReadPetAppointments
+  });
+
   useEffect(() => {
+    async function loadSupportingData() {
+      try {
+        const [companiesPage, contactsPage, leadsPage, dealsPage, petClientsPage, petProfilesPage, petAppointmentsPage] = await Promise.all([
+          crmService.listCompanies(0, 100),
+          crmService.listContacts(0, 100),
+          crmService.listLeads(0, 100),
+          crmService.listDeals(0, 100),
+          canReadPetClients ? petService.listClients(0, 100) : Promise.resolve(emptyCommonPage as PageResponse<PetClient>),
+          canReadPetProfiles ? petService.listProfiles(0, 100) : Promise.resolve(emptyCommonPage as PageResponse<PetProfile>),
+          canReadPetAppointments ? petService.listAppointments(0, 100) : Promise.resolve(emptyCommonPage as PageResponse<PetAppointment>)
+        ]);
+        setCompanies(resolvePageItems(companiesPage));
+        setContacts(resolvePageItems(contactsPage));
+        setLeads(resolvePageItems(leadsPage));
+        setDeals(resolvePageItems(dealsPage));
+        setPetClients(resolvePageItems(petClientsPage));
+        setPetProfiles(resolvePageItems(petProfilesPage));
+        setPetAppointments(resolvePageItems(petAppointmentsPage));
+      } catch (err) {
+        setError(err instanceof ApiClientError ? err.message : 'Erro ao carregar referências de tarefa.');
+      }
+    }
+
     void loadSupportingData();
-  }, []);
+  }, [canReadPetAppointments, canReadPetClients, canReadPetProfiles]);
 
   useEffect(() => {
     void load(0, search, statusFilter, priorityFilter);
   }, [search, statusFilter, priorityFilter]);
-
-  async function loadSupportingData() {
-    try {
-      const [companiesPage, contactsPage, leadsPage, dealsPage] = await Promise.all([
-        crmService.listCompanies(0, 100),
-        crmService.listContacts(0, 100),
-        crmService.listLeads(0, 100),
-        crmService.listDeals(0, 100)
-      ]);
-      setCompanies(resolvePageItems(companiesPage));
-      setContacts(resolvePageItems(contactsPage));
-      setLeads(resolvePageItems(leadsPage));
-      setDeals(resolvePageItems(dealsPage));
-    } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : 'Erro ao carregar opções de tarefa.');
-    }
-  }
 
   async function load(page: number, currentSearch: string, currentStatus: string, currentPriority: string) {
     setLoading(true);
@@ -110,17 +139,15 @@ export function CrmTasksPage() {
   }
 
   function relationOptions() {
-    switch (relationType) {
-      case 'CONTACT':
-        return contacts.map((item) => ({ value: item.id, label: `${item.firstName} ${item.lastName ?? ''}`.trim() }));
-      case 'LEAD':
-        return leads.map((item) => ({ value: item.id, label: item.name }));
-      case 'DEAL':
-        return deals.map((item) => ({ value: item.id, label: item.title }));
-      case 'COMPANY':
-      default:
-        return companies.map((item) => ({ value: item.id, label: item.name }));
-    }
+    return buildRelatedReferenceOptions(relationType, {
+      companies,
+      contacts,
+      leads,
+      deals,
+      petClients,
+      petProfiles,
+      petAppointments
+    });
   }
 
   function resetForm() {
@@ -135,12 +162,7 @@ export function CrmTasksPage() {
   }
 
   function relationPayload(id: string) {
-    return {
-      companyId: relationType === 'COMPANY' ? id : undefined,
-      contactId: relationType === 'CONTACT' ? id : undefined,
-      leadId: relationType === 'LEAD' ? id : undefined,
-      dealId: relationType === 'DEAL' ? id : undefined
-    };
+    return buildRelatedReferencePayload(relationType, id);
   }
 
   async function handleSubmit() {
@@ -203,8 +225,8 @@ export function CrmTasksPage() {
 
         return (
           <div>
-            <p className="font-medium text-slate-900">{buildReferenceSummary(relation)}</p>
-            <p className="text-xs text-slate-500">{buildReferenceDetail(relation, row.relatedId)}</p>
+            <p className="font-medium text-slate-900">{buildReferenceHeadline(relation, row.relatedDisplayName)}</p>
+            <p className="text-xs text-slate-500">{buildReferenceContextLine(relation, row.relatedId, row.relatedDisplayContext)}</p>
           </div>
         );
       }
@@ -222,12 +244,15 @@ export function CrmTasksPage() {
           moduleCode: row.relatedModule,
           entityType: row.relatedEntityType
         });
-        const editableRelation = isCrmEditableReference(relation) ? relation.entityType : null;
+        const editableRelation = resolveEditableReferenceType(relation);
+        const canEditRelation = editableRelation
+          ? relationTypeOptions.some((option) => option.value === editableRelation)
+          : false;
 
         return (
           <div className="flex gap-2">
             <PermissionGuard permission="crm.task.update">
-              {editableRelation ? (
+              {canEditRelation && editableRelation ? (
                 <button
                   type="button"
                   onClick={() => {
@@ -271,7 +296,7 @@ export function CrmTasksPage() {
       fallback={<div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">Você não possui permissão para visualizar tarefas.</div>}
     >
       <div className="space-y-5">
-        <PageTitle title="CRM Tasks" description="Tarefas vinculadas a empresas, contatos, leads ou negócios." />
+        <PageTitle title="CRM Tasks" description="Tarefas vinculadas a registros do CRM e, quando permitido, a referências canônicas do PetFlow." />
 
         <div className="grid gap-3 rounded-xl border border-slate-200 bg-white p-4 md:grid-cols-[1fr_180px_180px_auto_auto]">
           <SearchBar value={searchInput} onChange={setSearchInput} placeholder="Título, descrição, prioridade" />
@@ -292,10 +317,10 @@ export function CrmTasksPage() {
             <DateInput label="Prazo" value={dueDate} onChange={setDueDate} />
             <FormSelect label="Status" value={status} options={statusOptions.filter((option) => option.value)} onChange={setStatus} />
             <FormSelect label="Prioridade" value={priority} options={priorityOptions.filter((option) => option.value)} onChange={setPriority} />
-            <FormSelect label="Tipo de vínculo" value={relationType} options={relationTypeOptions} onChange={(value) => { setRelationType(value); setRelationId(''); }} />
+            <FormSelect label="Tipo de vínculo" value={relationType} options={relationTypeOptions} onChange={(value) => { setRelationType(value as CrmRelatedReferenceType); setRelationId(''); }} />
             <FormSelect label="Registro vinculado" value={relationId} options={[{ value: '', label: 'Selecione' }, ...relationOptions()]} onChange={setRelationId} />
             <p className="text-xs text-slate-500 md:col-span-2">
-              Nesta etapa, o formulário continua criando vínculos apenas com registros internos do CRM. Referências canônicas externas são exibidas na lista, mas ficam em modo somente leitura aqui.
+              Os vínculos CRM legados continuam compatíveis. Referências Pet aparecem quando o usuário possui leitura do recurso correspondente e são enviadas pelo tipo canônico.
             </p>
             <div className="flex gap-2 md:col-span-2">
               <button

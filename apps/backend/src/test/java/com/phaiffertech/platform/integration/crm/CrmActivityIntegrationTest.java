@@ -21,6 +21,7 @@ class CrmActivityIntegrationTest extends AbstractIntegrationTest {
         String marker = randomSearchMarker();
         String companyId = createCompany(session, marker);
         String stageId = defaultPipelineStageId(session);
+        String petClientId = createPetClient(session, marker);
 
         post("/crm/contacts", Map.of(
                 "firstName", "Contact " + marker,
@@ -58,7 +59,8 @@ class CrmActivityIntegrationTest extends AbstractIntegrationTest {
                 "status", "OPEN",
                 "priority", "HIGH",
                 "dueDate", Instant.now().plusSeconds(86400).toString(),
-                "companyId", companyId
+                "relatedReferenceType", "PET.CLIENT",
+                "relatedId", petClientId
         ), session);
 
         post("/crm/notes", Map.of(
@@ -74,10 +76,16 @@ class CrmActivityIntegrationTest extends AbstractIntegrationTest {
         boolean noteEntityFound = false;
         for (JsonNode item : requireBody(response).path("data").path("items")) {
             eventTypes.add(item.path("eventType").asText());
-            if ("task.created".equals(item.path("eventType").asText())) {
+            if ("task.created".equals(item.path("eventType").asText())
+                    && ("Pet Activity " + marker).equals(item.path("relatedDisplayName").asText())) {
                 assertEquals("CRM.TASK", item.path("entityReferenceType").asText());
                 assertEquals("CRM", item.path("entityModule").asText());
                 assertEquals("TASK", item.path("entityType").asText());
+                assertEquals("PET.CLIENT", item.path("relatedReferenceType").asText());
+                assertEquals("PET", item.path("relatedModule").asText());
+                assertEquals("CLIENT", item.path("relatedEntityType").asText());
+                assertEquals(petClientId, item.path("relatedId").asText());
+                assertEquals("Pet Activity " + marker, item.path("relatedDisplayName").asText());
                 taskEntityFound = true;
             }
             if ("note.created".equals(item.path("eventType").asText())) {
@@ -109,5 +117,13 @@ class CrmActivityIntegrationTest extends AbstractIntegrationTest {
     private String defaultPipelineStageId(AuthSession session) {
         ResponseEntity<JsonNode> response = get("/crm/pipeline-stages?page=0&size=20", session);
         return requireBody(response).path("data").path("items").get(0).path("id").asText();
+    }
+
+    private String createPetClient(AuthSession session, String marker) {
+        ResponseEntity<JsonNode> response = post("/pet/clients", Map.of(
+                "name", "Pet Activity " + marker,
+                "status", "ACTIVE"
+        ), session);
+        return requireBody(response).path("data").path("id").asText();
     }
 }

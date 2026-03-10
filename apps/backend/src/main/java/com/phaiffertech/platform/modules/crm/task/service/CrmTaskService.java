@@ -8,6 +8,7 @@ import com.phaiffertech.platform.modules.crm.task.dto.CrmTaskResponse;
 import com.phaiffertech.platform.modules.crm.task.dto.CrmTaskUpdateRequest;
 import com.phaiffertech.platform.modules.crm.task.mapper.CrmTaskMapper;
 import com.phaiffertech.platform.modules.crm.task.repository.CrmTaskRepository;
+import com.phaiffertech.platform.shared.contracts.crm.CrmRelatedReferenceCapability;
 import com.phaiffertech.platform.shared.domain.enums.AuditActionType;
 import com.phaiffertech.platform.shared.exception.ResourceNotFoundException;
 import com.phaiffertech.platform.shared.pagination.PageRequestDto;
@@ -55,7 +56,7 @@ public class CrmTaskService {
                         pageRequest.normalizedSearch(),
                         PaginationUtils.toPageable(pageRequest, Sort.by(Sort.Direction.DESC, "dueDate"))
                 )
-                .map(CrmTaskMapper::toResponse);
+                .map(task -> toResponse(tenantId, task));
 
         return PaginationUtils.fromPage(result);
     }
@@ -63,17 +64,19 @@ public class CrmTaskService {
     @Transactional(readOnly = true)
     public CrmTaskResponse getById(UUID id) {
         UUID tenantId = TenantContext.getRequiredTenantId();
-        return CrmTaskMapper.toResponse(repository.findByIdAndTenantId(id, tenantId)
-                .orElseThrow(() -> new ResourceNotFoundException("Task not found.")));
+        CrmTask task = repository.findByIdAndTenantId(id, tenantId)
+                .orElseThrow(() -> new ResourceNotFoundException("Task not found."));
+        return toResponse(tenantId, task);
     }
 
     @Transactional
     @AuditableAction(action = AuditActionType.CREATE, entity = "crm_task")
     public CrmTaskResponse create(CrmTaskCreateRequest request) {
         CrmTask task = new CrmTask();
-        task.setTenantId(TenantContext.getRequiredTenantId());
+        UUID tenantId = TenantContext.getRequiredTenantId();
+        task.setTenantId(tenantId);
         apply(task, request);
-        return CrmTaskMapper.toResponse(repository.save(task));
+        return toResponse(tenantId, repository.save(task));
     }
 
     @Transactional
@@ -83,7 +86,7 @@ public class CrmTaskService {
         CrmTask task = repository.findByIdAndTenantId(id, tenantId)
                 .orElseThrow(() -> new ResourceNotFoundException("Task not found."));
         apply(task, request);
-        return CrmTaskMapper.toResponse(repository.save(task));
+        return toResponse(tenantId, repository.save(task));
     }
 
     @Transactional
@@ -170,5 +173,18 @@ public class CrmTaskService {
             return null;
         }
         return value.trim();
+    }
+
+    private CrmTaskResponse toResponse(UUID tenantId, CrmTask task) {
+        CrmRelatedReferenceCapability.ReferenceDescriptor descriptor = relationResolverService.describeStoredRelation(
+                tenantId,
+                task.getRelatedType(),
+                task.getRelatedId(),
+                task.getCompanyId(),
+                task.getContactId(),
+                task.getLeadId(),
+                task.getDealId()
+        ).orElse(null);
+        return CrmTaskMapper.toResponse(task, descriptor);
     }
 }

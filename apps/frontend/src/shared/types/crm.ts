@@ -87,6 +87,8 @@ export type CrmTask = {
   relatedModule?: string;
   relatedEntityType?: string;
   relatedId: string;
+  relatedDisplayName?: string;
+  relatedDisplayContext?: string;
   createdAt: string;
   updatedAt: string;
 };
@@ -103,6 +105,8 @@ export type CrmNote = {
   relatedModule?: string;
   relatedEntityType?: string;
   relatedId: string;
+  relatedDisplayName?: string;
+  relatedDisplayContext?: string;
   authorUserId?: string;
   createdBy?: string;
   createdAt: string;
@@ -117,6 +121,13 @@ export type CrmActivityItem = {
   entityModule?: string;
   entityType?: string;
   entityId: string;
+  relatedType?: string;
+  relatedReferenceType?: string;
+  relatedModule?: string;
+  relatedEntityType?: string;
+  relatedId?: string;
+  relatedDisplayName?: string;
+  relatedDisplayContext?: string;
   userId?: string;
   payload: Record<string, unknown>;
   createdAt: string;

@@ -44,13 +44,20 @@ describe('CrmActivityPage', () => {
         entityModule: 'CRM',
         entityType: 'TASK',
         entityId: 'abcdef12-1234-1234-1234-abcdefabcdef',
+        relatedType: 'PET.CLIENT',
+        relatedReferenceType: 'PET.CLIENT',
+        relatedModule: 'PET',
+        relatedEntityType: 'CLIENT',
+        relatedId: '87654321-4321-4321-4321-1234567890ab',
+        relatedDisplayName: 'Ana Tutor',
+        relatedDisplayContext: 'ana@example.test',
         payload: {},
         createdAt: '2026-03-10T09:00:00Z'
       }
     ]));
   });
 
-  it('renders canonical entity context for the activity feed', async () => {
+  it('renders canonical entity context and the related pet reference in the activity feed', async () => {
     render(<CrmActivityPage />);
 
     await waitFor(() => {
@@ -58,6 +65,8 @@ describe('CrmActivityPage', () => {
     });
 
     expect(screen.getByText('CRM / Task')).toBeInTheDocument();
-    expect(screen.getByText('CRM.TASK · abcdef12')).toBeInTheDocument();
+    expect(screen.getByText('CRM / Task · CRM.TASK · abcdef12')).toBeInTheDocument();
+    expect(screen.getByText('Ana Tutor')).toBeInTheDocument();
+    expect(screen.getByText('Pet / Client · ana@example.test · PET.CLIENT · 87654321')).toBeInTheDocument();
   });
 });

@@ -4,7 +4,10 @@ import com.phaiffertech.platform.modules.crm.company.service.CrmCompanyService;
 import com.phaiffertech.platform.modules.crm.contact.repository.CrmContactRepository;
 import com.phaiffertech.platform.modules.crm.deal.repository.CrmDealRepository;
 import com.phaiffertech.platform.modules.crm.lead.repository.CrmLeadRepository;
+import com.phaiffertech.platform.shared.contracts.crm.CrmRelatedReferenceCapability;
 import com.phaiffertech.platform.shared.exception.ResourceNotFoundException;
+import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import org.springframework.stereotype.Service;
 
@@ -17,17 +20,20 @@ public class CrmRelationResolverService {
     private final CrmContactRepository contactRepository;
     private final CrmLeadRepository leadRepository;
     private final CrmDealRepository dealRepository;
+    private final List<CrmRelatedReferenceCapability> relatedReferenceCapabilities;
 
     public CrmRelationResolverService(
             CrmCompanyService companyService,
             CrmContactRepository contactRepository,
             CrmLeadRepository leadRepository,
-            CrmDealRepository dealRepository
+            CrmDealRepository dealRepository,
+            List<CrmRelatedReferenceCapability> relatedReferenceCapabilities
     ) {
         this.companyService = companyService;
         this.contactRepository = contactRepository;
         this.leadRepository = leadRepository;
         this.dealRepository = dealRepository;
+        this.relatedReferenceCapabilities = relatedReferenceCapabilities == null ? List.of() : relatedReferenceCapabilities;
     }
 
     public RelationSelection resolveAndValidate(
@@ -64,6 +70,30 @@ public class CrmRelationResolverService {
         if (leadId != null && leadRepository.findByIdAndTenantId(leadId, tenantId).isEmpty()) {
             throw new ResourceNotFoundException("Lead not found.");
         }
+    }
+
+    public Optional<CrmRelatedReferenceCapability.ReferenceDescriptor> describeStoredRelation(
+            UUID tenantId,
+            String relatedType,
+            UUID relatedId,
+            UUID companyId,
+            UUID contactId,
+            UUID leadId,
+            UUID dealId
+    ) {
+        return describeRelation(tenantId, fromStored(relatedType, relatedId, companyId, contactId, leadId, dealId));
+    }
+
+    public Optional<CrmRelatedReferenceCapability.ReferenceDescriptor> describeRelation(
+            UUID tenantId,
+            RelationSelection relation
+    ) {
+        if (relation == null || relation.relatedReferenceType() == null || relation.relatedId() == null) {
+            return Optional.empty();
+        }
+
+        return findCapability(relation.relatedReferenceType())
+                .flatMap(capability -> capability.describeReference(tenantId, relation.relatedReferenceType(), relation.relatedId()));
     }
 
     private RelationSelection explicitSelection(UUID companyId, UUID contactId, UUID leadId, UUID dealId) {
@@ -176,10 +206,20 @@ public class CrmRelationResolverService {
                     .orElseThrow(() -> new ResourceNotFoundException("Lead not found."));
             case "CRM.DEAL" -> dealRepository.findByIdAndTenantId(relation.relatedId(), tenantId)
                     .orElseThrow(() -> new ResourceNotFoundException("Deal not found."));
-            default -> {
-                // Non-CRM references are accepted as external placeholders until cross-module bindings are introduced.
-            }
+            default -> findCapability(relation.relatedReferenceType())
+                    .ifPresent(capability -> capability.validateReference(tenantId, relation.relatedReferenceType(), relation.relatedId()));
         }
+    }
+
+    private Optional<CrmRelatedReferenceCapability> findCapability(String referenceType) {
+        String normalizedReference = normalizeToken(referenceType);
+        if (normalizedReference == null) {
+            return Optional.empty();
+        }
+
+        return relatedReferenceCapabilities.stream()
+                .filter(capability -> capability.supports(normalizedReference))
+                .findFirst();
     }
 
     public static RelationSelection fromStored(
