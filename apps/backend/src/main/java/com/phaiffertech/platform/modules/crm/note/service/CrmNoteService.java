@@ -42,6 +42,8 @@ public class CrmNoteService {
     @Transactional(readOnly = true)
     public PageResponseDto<CrmNoteResponse> list(
             PageRequestDto pageRequest,
+            String relatedReferenceType,
+            UUID relatedId,
             UUID companyId,
             UUID contactId,
             UUID leadId,
@@ -50,6 +52,8 @@ public class CrmNoteService {
         UUID tenantId = TenantContext.getRequiredTenantId();
         Page<CrmNoteResponse> result = repository.findAllByTenantAndRelation(
                         tenantId,
+                        normalizeRelatedReferenceType(relatedReferenceType),
+                        relatedId,
                         companyId,
                         contactId,
                         leadId,
@@ -131,6 +135,10 @@ public class CrmNoteService {
         note.setContactId(relation.contactId());
         note.setLeadId(relation.leadId());
         note.setDealId(relation.dealId());
+    }
+
+    private String normalizeRelatedReferenceType(String referenceType) {
+        return relationResolverService.normalizeFilterReferenceType(referenceType);
     }
 
     private CrmNoteResponse toResponse(UUID tenantId, CrmNote note) {

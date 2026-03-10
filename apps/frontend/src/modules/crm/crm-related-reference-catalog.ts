@@ -1,4 +1,4 @@
-import { CanonicalReferenceContext } from '@/modules/crm/crm-reference-utils';
+import { CanonicalReferenceContext, resolveCanonicalReference } from '@/modules/crm/crm-reference-utils';
 import { CrmCompany, CrmContact, CrmDeal, CrmLead } from '@/shared/types/crm';
 import { PetAppointment, PetClient, PetProfile } from '@/shared/types/pet';
 
@@ -103,4 +103,18 @@ export function resolveEditableReferenceType(context: CanonicalReferenceContext)
   }
 
   return null;
+}
+
+export function normalizeRelatedReferenceType(value?: string | null): CrmRelatedReferenceType | null {
+  if (!value) {
+    return null;
+  }
+
+  const context = resolveCanonicalReference({
+    compatibilityType: value,
+    referenceType: value,
+    fallbackReferenceType: value
+  });
+
+  return resolveEditableReferenceType(context);
 }

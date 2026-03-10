@@ -38,12 +38,25 @@ public class CrmTaskController {
             @RequestParam(required = false) String status,
             @RequestParam(required = false) String priority,
             @RequestParam(required = false) UUID assignedUserId,
+            @RequestParam(required = false) String relatedReferenceType,
+            @RequestParam(required = false) UUID relatedId,
             @RequestParam(required = false) UUID companyId,
             @RequestParam(required = false) UUID contactId,
             @RequestParam(required = false) UUID leadId,
             @RequestParam(required = false) UUID dealId
     ) {
-        return ApiResponse.success(service.list(pageRequest, status, priority, assignedUserId, companyId, contactId, leadId, dealId));
+        return ApiResponse.success(service.list(
+                pageRequest,
+                status,
+                priority,
+                assignedUserId,
+                relatedReferenceType,
+                relatedId,
+                companyId,
+                contactId,
+                leadId,
+                dealId
+        ));
     }
 
     @GetMapping("/{id}")

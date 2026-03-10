@@ -35,6 +35,13 @@ class CrmNotesIntegrationTest extends AbstractIntegrationTest {
         assertEquals("Note " + marker, requireBody(getResponse).path("data").path("content").asText());
         assertEquals("CRM.COMPANY", requireBody(getResponse).path("data").path("relatedReferenceType").asText());
 
+        ResponseEntity<JsonNode> compatibilityFilterResponse = get(
+                "/crm/notes?page=0&size=20&relatedReferenceType=COMPANY&relatedId=" + companyId,
+                session
+        );
+        assertEquals(200, compatibilityFilterResponse.getStatusCode().value());
+        assertEquals(noteId, requireBody(compatibilityFilterResponse).path("data").path("items").get(0).path("id").asText());
+
         ResponseEntity<JsonNode> listResponse = get("/crm/notes?page=0&size=20&search=" + marker, session);
         assertEquals(200, listResponse.getStatusCode().value());
         assertTrue(requireBody(listResponse).path("data").path("items").size() >= 1);
@@ -95,6 +102,14 @@ class CrmNotesIntegrationTest extends AbstractIntegrationTest {
         assertEquals("PROFILE", requireBody(createResponse).path("data").path("relatedEntityType").asText());
         assertEquals("Pet Profile " + marker, requireBody(createResponse).path("data").path("relatedDisplayName").asText());
         assertTrue(requireBody(createResponse).path("data").path("relatedDisplayContext").asText().contains("Pet Owner " + marker));
+
+        ResponseEntity<JsonNode> filteredResponse = get(
+                "/crm/notes?page=0&size=20&relatedReferenceType=PET.PROFILE&relatedId=" + petProfileId,
+                session
+        );
+        assertEquals(200, filteredResponse.getStatusCode().value());
+        assertEquals(1, requireBody(filteredResponse).path("data").path("items").size());
+        assertEquals("PET.PROFILE", requireBody(filteredResponse).path("data").path("items").get(0).path("relatedReferenceType").asText());
     }
 
     private String createCompany(AuthSession session, String marker) {

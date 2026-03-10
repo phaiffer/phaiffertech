@@ -49,6 +49,7 @@ function createPageResponse<T>(items: T[]) {
 describe('CrmNotesPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    window.history.pushState({}, '', '/crm/notes');
 
     hasPermissionMock.mockReturnValue(true);
     crmServiceMock.listCompanies.mockResolvedValue(createPageResponse([]));
@@ -100,8 +101,8 @@ describe('CrmNotesPage', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Editar' }));
 
-    expect(screen.getByLabelText('Tipo de vínculo')).toHaveValue('PET.CLIENT');
-    expect(screen.getByLabelText('Registro vinculado')).toHaveValue('87654321-4321-4321-4321-1234567890ab');
+    expect(screen.getAllByLabelText('Tipo de vínculo')[1]).toHaveValue('PET.CLIENT');
+    expect(screen.getAllByLabelText('Registro vinculado')[1]).toHaveValue('87654321-4321-4321-4321-1234567890ab');
   });
 
   it('keeps unsupported external placeholders read-only in the CRM form', async () => {
@@ -129,5 +130,31 @@ describe('CrmNotesPage', () => {
     expect(screen.getByText('IoT / Device')).toBeInTheDocument();
     expect(screen.getByText('Somente leitura')).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Editar' })).not.toBeInTheDocument();
+  });
+
+  it('applies canonical note filters from the query string for pet references', async () => {
+    window.history.pushState({}, '', '/crm/notes?relatedReferenceType=PET.CLIENT&relatedId=87654321-4321-4321-4321-1234567890ab');
+    petServiceMock.listClients.mockResolvedValue(createPageResponse([
+      {
+        id: '87654321-4321-4321-4321-1234567890ab',
+        name: 'Ana Tutor',
+        fullName: 'Ana Tutor',
+        createdAt: '2026-03-10T09:00:00Z',
+        updatedAt: '2026-03-10T09:00:00Z',
+        status: 'ACTIVE'
+      }
+    ]));
+
+    render(<CrmNotesPage />);
+
+    await waitFor(() => {
+      expect(crmServiceMock.listNotes).toHaveBeenCalledWith(0, 10, '', {
+        relatedReferenceType: 'PET.CLIENT',
+        relatedId: '87654321-4321-4321-4321-1234567890ab'
+      });
+    });
+
+    expect(screen.getAllByLabelText('Tipo de vínculo')[0]).toHaveValue('PET.CLIENT');
+    expect(screen.getAllByLabelText('Registro vinculado')[0]).toHaveValue('87654321-4321-4321-4321-1234567890ab');
   });
 });

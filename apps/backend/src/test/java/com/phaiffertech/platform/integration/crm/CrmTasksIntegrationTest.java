@@ -40,6 +40,13 @@ class CrmTasksIntegrationTest extends AbstractIntegrationTest {
         assertEquals("Task " + marker, requireBody(getResponse).path("data").path("title").asText());
         assertEquals("CRM.COMPANY", requireBody(getResponse).path("data").path("relatedReferenceType").asText());
 
+        ResponseEntity<JsonNode> compatibilityFilterResponse = get(
+                "/crm/tasks?page=0&size=20&relatedReferenceType=COMPANY&relatedId=" + companyId,
+                session
+        );
+        assertEquals(200, compatibilityFilterResponse.getStatusCode().value());
+        assertEquals(taskId, requireBody(compatibilityFilterResponse).path("data").path("items").get(0).path("id").asText());
+
         ResponseEntity<JsonNode> listResponse = get("/crm/tasks?page=0&size=20&search=" + marker, session);
         assertEquals(200, listResponse.getStatusCode().value());
         assertTrue(requireBody(listResponse).path("data").path("items").size() >= 1);
@@ -110,6 +117,14 @@ class CrmTasksIntegrationTest extends AbstractIntegrationTest {
         assertEquals("CLIENT", requireBody(createResponse).path("data").path("relatedEntityType").asText());
         assertEquals("Pet Client " + marker, requireBody(createResponse).path("data").path("relatedDisplayName").asText());
         assertTrue(requireBody(createResponse).path("data").path("relatedDisplayContext").asText().contains("@example.test"));
+
+        ResponseEntity<JsonNode> filteredResponse = get(
+                "/crm/tasks?page=0&size=20&relatedReferenceType=PET.CLIENT&relatedId=" + petClientId,
+                session
+        );
+        assertEquals(200, filteredResponse.getStatusCode().value());
+        assertEquals(1, requireBody(filteredResponse).path("data").path("items").size());
+        assertEquals("PET.CLIENT", requireBody(filteredResponse).path("data").path("items").get(0).path("relatedReferenceType").asText());
     }
 
     @Test

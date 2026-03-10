@@ -49,6 +49,7 @@ function createPageResponse<T>(items: T[]) {
 describe('CrmTasksPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    window.history.pushState({}, '', '/crm/tasks');
 
     hasPermissionMock.mockReturnValue(true);
     crmServiceMock.listCompanies.mockResolvedValue(createPageResponse([]));
@@ -87,7 +88,7 @@ describe('CrmTasksPage', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Editar' }));
 
-    expect(screen.getByLabelText('Tipo de vínculo')).toHaveValue('COMPANY');
+    expect(screen.getAllByLabelText('Tipo de vínculo')[1]).toHaveValue('COMPANY');
     expect(screen.getByLabelText('Título')).toHaveValue('Ligar para cliente');
   });
 
@@ -136,7 +137,35 @@ describe('CrmTasksPage', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Editar' }));
 
-    expect(screen.getByLabelText('Tipo de vínculo')).toHaveValue('PET.APPOINTMENT');
-    expect(screen.getByLabelText('Registro vinculado')).toHaveValue('87654321-1234-1234-1234-abcdefabcdef');
+    expect(screen.getAllByLabelText('Tipo de vínculo')[1]).toHaveValue('PET.APPOINTMENT');
+    expect(screen.getAllByLabelText('Registro vinculado')[1]).toHaveValue('87654321-1234-1234-1234-abcdefabcdef');
+  });
+
+  it('applies canonical relation filters from the query string for pet references', async () => {
+    window.history.pushState({}, '', '/crm/tasks?relatedReferenceType=PET.CLIENT&relatedId=client-99');
+    petServiceMock.listClients.mockResolvedValue(createPageResponse([
+      {
+        id: 'client-99',
+        name: 'Tutor Pet',
+        fullName: 'Tutor Pet',
+        status: 'ACTIVE',
+        createdAt: '2026-03-10T09:00:00Z',
+        updatedAt: '2026-03-10T09:00:00Z'
+      }
+    ]));
+
+    render(<CrmTasksPage />);
+
+    await waitFor(() => {
+      expect(crmServiceMock.listTasks).toHaveBeenCalledWith(0, 10, '', {
+        status: undefined,
+        priority: undefined,
+        relatedReferenceType: 'PET.CLIENT',
+        relatedId: 'client-99'
+      });
+    });
+
+    expect(screen.getAllByLabelText('Tipo de vínculo')[0]).toHaveValue('PET.CLIENT');
+    expect(screen.getAllByLabelText('Registro vinculado')[0]).toHaveValue('client-99');
   });
 });

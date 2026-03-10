@@ -38,6 +38,8 @@ public class CrmTaskService {
             String status,
             String priority,
             UUID assignedUserId,
+            String relatedReferenceType,
+            UUID relatedId,
             UUID companyId,
             UUID contactId,
             UUID leadId,
@@ -49,6 +51,8 @@ public class CrmTaskService {
                         normalizeUpper(status),
                         normalizeUpper(priority),
                         assignedUserId,
+                        normalizeRelatedReferenceType(relatedReferenceType),
+                        relatedId,
                         companyId,
                         contactId,
                         leadId,
@@ -154,6 +158,10 @@ public class CrmTaskService {
             return "OPEN";
         }
         return status.trim().toUpperCase();
+    }
+
+    private String normalizeRelatedReferenceType(String referenceType) {
+        return relationResolverService.normalizeFilterReferenceType(referenceType);
     }
 
     private String resolvePriority(String priority) {

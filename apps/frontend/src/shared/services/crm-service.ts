@@ -152,6 +152,8 @@ type TaskFilters = {
   status?: string;
   priority?: string;
   assignedUserId?: string;
+  relatedReferenceType?: string;
+  relatedId?: string;
   companyId?: string;
   contactId?: string;
   leadId?: string;
@@ -159,6 +161,8 @@ type TaskFilters = {
 };
 
 type NoteFilters = {
+  relatedReferenceType?: string;
+  relatedId?: string;
   companyId?: string;
   contactId?: string;
   leadId?: string;
@@ -283,6 +287,8 @@ export const crmService = {
         status: filters.status,
         priority: filters.priority,
         assignedUserId: filters.assignedUserId,
+        relatedReferenceType: filters.relatedReferenceType,
+        relatedId: filters.relatedId,
         companyId: filters.companyId,
         contactId: filters.contactId,
         leadId: filters.leadId,
@@ -301,6 +307,8 @@ export const crmService = {
   listNotes: (page = 0, size = 20, search = '', filters: NoteFilters = {}) =>
     apiClient.get<PageResponse<CrmNote>>(
       `/crm/notes?${queryString(page, size, search, {
+        relatedReferenceType: filters.relatedReferenceType,
+        relatedId: filters.relatedId,
         companyId: filters.companyId,
         contactId: filters.contactId,
         leadId: filters.leadId,

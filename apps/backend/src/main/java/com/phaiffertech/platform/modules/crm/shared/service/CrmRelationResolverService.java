@@ -96,6 +96,13 @@ public class CrmRelationResolverService {
                 .flatMap(capability -> capability.describeReference(tenantId, relation.relatedReferenceType(), relation.relatedId()));
     }
 
+    public String normalizeFilterReferenceType(String referenceType) {
+        if (referenceType == null || referenceType.isBlank()) {
+            return null;
+        }
+        return parseReferenceDescriptor(null, referenceType).referenceType();
+    }
+
     private RelationSelection explicitSelection(UUID companyId, UUID contactId, UUID leadId, UUID dealId) {
         int count = countNonNull(companyId, contactId, leadId, dealId);
         if (count == 0) {

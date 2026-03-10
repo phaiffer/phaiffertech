@@ -11,6 +11,7 @@ import {
   buildRelatedReferencePayload,
   buildRelatedReferenceTypeOptions,
   CrmRelatedReferenceType,
+  normalizeRelatedReferenceType,
   resolveEditableReferenceType
 } from '@/modules/crm/crm-related-reference-catalog';
 import { PermissionGuard } from '@/shared/auth/PermissionGuard';
@@ -68,11 +69,14 @@ export function CrmTasksPage() {
   const [error, setError] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [deleteCandidate, setDeleteCandidate] = useState<CrmTask | null>(null);
+  const [filtersReady, setFiltersReady] = useState(false);
 
   const [searchInput, setSearchInput] = useState('');
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [priorityFilter, setPriorityFilter] = useState('');
+  const [relationTypeFilter, setRelationTypeFilter] = useState<CrmRelatedReferenceType | ''>('');
+  const [relationIdFilter, setRelationIdFilter] = useState('');
 
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -90,6 +94,7 @@ export function CrmTasksPage() {
     canReadPetProfiles,
     canReadPetAppointments
   });
+  const relationFilterTypeOptions = [{ value: '', label: 'Todos' }, ...relationTypeOptions];
 
   useEffect(() => {
     async function loadSupportingData() {
@@ -119,16 +124,51 @@ export function CrmTasksPage() {
   }, [canReadPetAppointments, canReadPetClients, canReadPetProfiles]);
 
   useEffect(() => {
-    void load(0, search, statusFilter, priorityFilter);
-  }, [search, statusFilter, priorityFilter]);
+    if (filtersReady) {
+      return;
+    }
 
-  async function load(page: number, currentSearch: string, currentStatus: string, currentPriority: string) {
+    const params = typeof window === 'undefined'
+      ? new URLSearchParams()
+      : new URLSearchParams(window.location.search);
+    const initialRelationType = normalizeRelatedReferenceType(params.get('relatedReferenceType'));
+    const allowedRelationType = initialRelationType && relationTypeOptions.some((option) => option.value === initialRelationType)
+      ? initialRelationType
+      : '';
+
+    const initialSearch = params.get('search')?.trim() ?? '';
+    setSearchInput(initialSearch);
+    setSearch(initialSearch);
+    setStatusFilter(params.get('status')?.trim() ?? '');
+    setPriorityFilter(params.get('priority')?.trim() ?? '');
+    setRelationTypeFilter(allowedRelationType);
+    setRelationIdFilter(allowedRelationType ? (params.get('relatedId')?.trim() ?? '') : '');
+    setFiltersReady(true);
+  }, [filtersReady, relationTypeOptions]);
+
+  useEffect(() => {
+    if (!filtersReady) {
+      return;
+    }
+    void load(0, search, statusFilter, priorityFilter, relationTypeFilter, relationIdFilter);
+  }, [filtersReady, search, statusFilter, priorityFilter, relationTypeFilter, relationIdFilter]);
+
+  async function load(
+    page: number,
+    currentSearch: string,
+    currentStatus: string,
+    currentPriority: string,
+    currentRelationType: CrmRelatedReferenceType | '',
+    currentRelationId: string
+  ) {
     setLoading(true);
     setError(null);
     try {
       const result = await crmService.listTasks(page, pageSize, currentSearch, {
         status: currentStatus || undefined,
-        priority: currentPriority || undefined
+        priority: currentPriority || undefined,
+        relatedReferenceType: currentRelationType || undefined,
+        relatedId: currentRelationId || undefined
       });
       setPageData(result);
     } catch (err) {
@@ -138,8 +178,8 @@ export function CrmTasksPage() {
     }
   }
 
-  function relationOptions() {
-    return buildRelatedReferenceOptions(relationType, {
+  function relationOptions(currentRelationType: CrmRelatedReferenceType) {
+    return buildRelatedReferenceOptions(currentRelationType, {
       companies,
       contacts,
       leads,
@@ -189,7 +229,7 @@ export function CrmTasksPage() {
         await crmService.createTask(payload);
       }
       resetForm();
-      await load(pageData.page, search, statusFilter, priorityFilter);
+      await load(pageData.page, search, statusFilter, priorityFilter, relationTypeFilter, relationIdFilter);
     } catch (err) {
       setError(err instanceof ApiClientError ? err.message : 'Erro ao salvar tarefa.');
     } finally {
@@ -202,7 +242,7 @@ export function CrmTasksPage() {
     try {
       await crmService.deleteTask(deleteCandidate.id);
       setDeleteCandidate(null);
-      await load(pageData.page, search, statusFilter, priorityFilter);
+      await load(pageData.page, search, statusFilter, priorityFilter, relationTypeFilter, relationIdFilter);
     } catch (err) {
       setError(err instanceof ApiClientError ? err.message : 'Erro ao excluir tarefa.');
     }
@@ -298,14 +338,44 @@ export function CrmTasksPage() {
       <div className="space-y-5">
         <PageTitle title="CRM Tasks" description="Tarefas vinculadas a registros do CRM e, quando permitido, a referências canônicas do PetFlow." />
 
-        <div className="grid gap-3 rounded-xl border border-slate-200 bg-white p-4 md:grid-cols-[1fr_180px_180px_auto_auto]">
+        <div className="grid gap-3 rounded-xl border border-slate-200 bg-white p-4 xl:grid-cols-[1fr_160px_160px_180px_220px_auto_auto]">
           <SearchBar value={searchInput} onChange={setSearchInput} placeholder="Título, descrição, prioridade" />
           <FormSelect label="Status" value={statusFilter} options={statusOptions} onChange={setStatusFilter} />
           <FormSelect label="Prioridade" value={priorityFilter} options={priorityOptions} onChange={setPriorityFilter} />
+          <FormSelect
+            label="Tipo de vínculo"
+            value={relationTypeFilter}
+            options={relationFilterTypeOptions}
+            onChange={(value) => {
+              setRelationTypeFilter(value as CrmRelatedReferenceType | '');
+              setRelationIdFilter('');
+            }}
+          />
+          <FormSelect
+            label="Registro vinculado"
+            value={relationIdFilter}
+            options={[
+              { value: '', label: relationTypeFilter ? 'Todos' : 'Selecione um tipo' },
+              ...(relationTypeFilter ? relationOptions(relationTypeFilter) : [])
+            ]}
+            onChange={setRelationIdFilter}
+            disabled={!relationTypeFilter}
+          />
           <button type="button" onClick={() => setSearch(searchInput)} className="rounded-lg bg-action px-4 py-2 text-sm font-medium text-white">
             Buscar
           </button>
-          <button type="button" onClick={() => { setSearchInput(''); setSearch(''); setStatusFilter(''); setPriorityFilter(''); }} className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700">
+          <button
+            type="button"
+            onClick={() => {
+              setSearchInput('');
+              setSearch('');
+              setStatusFilter('');
+              setPriorityFilter('');
+              setRelationTypeFilter('');
+              setRelationIdFilter('');
+            }}
+            className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700"
+          >
             Limpar
           </button>
         </div>
@@ -318,7 +388,7 @@ export function CrmTasksPage() {
             <FormSelect label="Status" value={status} options={statusOptions.filter((option) => option.value)} onChange={setStatus} />
             <FormSelect label="Prioridade" value={priority} options={priorityOptions.filter((option) => option.value)} onChange={setPriority} />
             <FormSelect label="Tipo de vínculo" value={relationType} options={relationTypeOptions} onChange={(value) => { setRelationType(value as CrmRelatedReferenceType); setRelationId(''); }} />
-            <FormSelect label="Registro vinculado" value={relationId} options={[{ value: '', label: 'Selecione' }, ...relationOptions()]} onChange={setRelationId} />
+            <FormSelect label="Registro vinculado" value={relationId} options={[{ value: '', label: 'Selecione' }, ...relationOptions(relationType)]} onChange={setRelationId} />
             <p className="text-xs text-slate-500 md:col-span-2">
               Os vínculos CRM legados continuam compatíveis. Referências Pet aparecem quando o usuário possui leitura do recurso correspondente e são enviadas pelo tipo canônico.
             </p>
@@ -342,7 +412,12 @@ export function CrmTasksPage() {
 
         <DataTable columns={columns} rows={rows} getRowKey={(row) => row.id} loading={loading} emptyMessage="Nenhuma tarefa encontrada." />
 
-        <Pagination page={pageData.page} totalPages={pageData.totalPages} totalElements={totalItems} onPageChange={(nextPage) => void load(nextPage, search, statusFilter, priorityFilter)} />
+        <Pagination
+          page={pageData.page}
+          totalPages={pageData.totalPages}
+          totalElements={totalItems}
+          onPageChange={(nextPage) => void load(nextPage, search, statusFilter, priorityFilter, relationTypeFilter, relationIdFilter)}
+        />
 
         <ConfirmDialog
           open={Boolean(deleteCandidate)}
