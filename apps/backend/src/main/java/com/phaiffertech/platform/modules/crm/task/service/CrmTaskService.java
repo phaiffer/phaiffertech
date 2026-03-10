@@ -104,6 +104,7 @@ public class CrmTaskService {
                 request.leadId(),
                 request.dealId(),
                 request.relatedType(),
+                request.relatedReferenceType(),
                 request.relatedId()
         );
         task.setTitle(request.title().trim());
@@ -112,7 +113,7 @@ public class CrmTaskService {
         task.setStatus(resolveStatus(request.status()));
         task.setPriority(resolvePriority(request.priority()));
         task.setAssignedUserId(request.assignedUserId());
-        task.setRelatedType(relation.relatedType());
+        task.setRelatedType(relation.relatedReferenceType());
         task.setRelatedId(relation.relatedId());
         task.setCompanyId(relation.companyId());
         task.setContactId(relation.contactId());
@@ -128,6 +129,7 @@ public class CrmTaskService {
                 request.leadId(),
                 request.dealId(),
                 request.relatedType(),
+                request.relatedReferenceType(),
                 request.relatedId()
         );
         task.setTitle(request.title().trim());
@@ -136,7 +138,7 @@ public class CrmTaskService {
         task.setStatus(resolveStatus(request.status()));
         task.setPriority(resolvePriority(request.priority()));
         task.setAssignedUserId(request.assignedUserId());
-        task.setRelatedType(relation.relatedType());
+        task.setRelatedType(relation.relatedReferenceType());
         task.setRelatedId(relation.relatedId());
         task.setCompanyId(relation.companyId());
         task.setContactId(relation.contactId());

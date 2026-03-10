@@ -1,5 +1,6 @@
 package com.phaiffertech.platform.modules.crm.note.mapper;
 
+import com.phaiffertech.platform.modules.crm.shared.service.CrmRelationResolverService;
 import com.phaiffertech.platform.modules.crm.note.domain.CrmNote;
 import com.phaiffertech.platform.modules.crm.note.dto.CrmNoteResponse;
 
@@ -9,6 +10,14 @@ public final class CrmNoteMapper {
     }
 
     public static CrmNoteResponse toResponse(CrmNote note) {
+        var relation = CrmRelationResolverService.fromStored(
+                note.getRelatedType(),
+                note.getRelatedId(),
+                note.getCompanyId(),
+                note.getContactId(),
+                note.getLeadId(),
+                note.getDealId()
+        );
         return new CrmNoteResponse(
                 note.getId(),
                 note.getContent(),
@@ -16,8 +25,11 @@ public final class CrmNoteMapper {
                 note.getContactId(),
                 note.getLeadId(),
                 note.getDealId(),
-                note.getRelatedType(),
-                note.getRelatedId(),
+                relation.relatedType(),
+                relation.relatedReferenceType(),
+                relation.relatedModule(),
+                relation.relatedEntityType(),
+                relation.relatedId(),
                 note.getAuthorUserId(),
                 note.getCreatedBy(),
                 note.getCreatedAt(),

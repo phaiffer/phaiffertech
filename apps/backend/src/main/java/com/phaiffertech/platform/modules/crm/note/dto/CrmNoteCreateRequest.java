@@ -11,6 +11,7 @@ public record CrmNoteCreateRequest(
         UUID leadId,
         UUID dealId,
         String relatedType,
+        String relatedReferenceType,
         UUID relatedId
 ) {
 }

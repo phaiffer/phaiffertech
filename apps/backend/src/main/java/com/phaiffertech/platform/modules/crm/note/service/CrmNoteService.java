@@ -74,7 +74,7 @@ public class CrmNoteService {
         CrmNote note = new CrmNote();
         note.setTenantId(TenantContext.getRequiredTenantId());
         apply(note, request.content(), request.companyId(), request.contactId(), request.leadId(), request.dealId(),
-                request.relatedType(), request.relatedId());
+                request.relatedType(), request.relatedReferenceType(), request.relatedId());
         note.setAuthorUserId(currentUserService.getRequiredUser().userId());
         return CrmNoteMapper.toResponse(repository.save(note));
     }
@@ -86,7 +86,7 @@ public class CrmNoteService {
         CrmNote note = repository.findByIdAndTenantId(id, tenantId)
                 .orElseThrow(() -> new ResourceNotFoundException("Note not found."));
         apply(note, request.content(), request.companyId(), request.contactId(), request.leadId(), request.dealId(),
-                request.relatedType(), request.relatedId());
+                request.relatedType(), request.relatedReferenceType(), request.relatedId());
         return CrmNoteMapper.toResponse(repository.save(note));
     }
 
@@ -108,6 +108,7 @@ public class CrmNoteService {
             UUID leadId,
             UUID dealId,
             String relatedType,
+            String relatedReferenceType,
             UUID relatedId
     ) {
         var relation = relationResolverService.resolveAndValidate(
@@ -117,10 +118,11 @@ public class CrmNoteService {
                 leadId,
                 dealId,
                 relatedType,
+                relatedReferenceType,
                 relatedId
         );
         note.setContent(content.trim());
-        note.setRelatedType(relation.relatedType());
+        note.setRelatedType(relation.relatedReferenceType());
         note.setRelatedId(relation.relatedId());
         note.setCompanyId(relation.companyId());
         note.setContactId(relation.contactId());

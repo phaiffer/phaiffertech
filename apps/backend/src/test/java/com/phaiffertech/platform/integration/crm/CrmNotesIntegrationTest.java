@@ -3,6 +3,7 @@ package com.phaiffertech.platform.integration.crm;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.phaiffertech.platform.support.AbstractIntegrationTest;
 import java.util.Map;
+import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.ResponseEntity;
 
@@ -23,11 +24,16 @@ class CrmNotesIntegrationTest extends AbstractIntegrationTest {
         ), session);
 
         assertEquals(200, createResponse.getStatusCode().value());
+        assertEquals("COMPANY", requireBody(createResponse).path("data").path("relatedType").asText());
+        assertEquals("CRM.COMPANY", requireBody(createResponse).path("data").path("relatedReferenceType").asText());
+        assertEquals("CRM", requireBody(createResponse).path("data").path("relatedModule").asText());
+        assertEquals("COMPANY", requireBody(createResponse).path("data").path("relatedEntityType").asText());
         String noteId = requireBody(createResponse).path("data").path("id").asText();
 
         ResponseEntity<JsonNode> getResponse = get("/crm/notes/" + noteId, session);
         assertEquals(200, getResponse.getStatusCode().value());
         assertEquals("Note " + marker, requireBody(getResponse).path("data").path("content").asText());
+        assertEquals("CRM.COMPANY", requireBody(getResponse).path("data").path("relatedReferenceType").asText());
 
         ResponseEntity<JsonNode> listResponse = get("/crm/notes?page=0&size=20&search=" + marker, session);
         assertEquals(200, listResponse.getStatusCode().value());
@@ -47,6 +53,28 @@ class CrmNotesIntegrationTest extends AbstractIntegrationTest {
         ResponseEntity<JsonNode> afterDelete = get("/crm/notes?page=0&size=20&search=" + marker, session);
         assertEquals(200, afterDelete.getStatusCode().value());
         assertEquals(0, requireBody(afterDelete).path("data").path("items").size());
+    }
+
+    @Test
+    void shouldAllowExternalPlaceholderRelationForNote() {
+        AuthSession session = loginAsDefaultAdmin();
+        String marker = randomSearchMarker();
+        String externalId = UUID.randomUUID().toString();
+
+        ResponseEntity<JsonNode> createResponse = post("/crm/notes", Map.of(
+                "content", "External Note " + marker,
+                "relatedReferenceType", "PET.CLIENT",
+                "relatedId", externalId
+        ), session);
+
+        assertEquals(200, createResponse.getStatusCode().value());
+        assertEquals("PET.CLIENT", requireBody(createResponse).path("data").path("relatedType").asText());
+        assertEquals("PET.CLIENT", requireBody(createResponse).path("data").path("relatedReferenceType").asText());
+        assertEquals("PET", requireBody(createResponse).path("data").path("relatedModule").asText());
+        assertEquals("CLIENT", requireBody(createResponse).path("data").path("relatedEntityType").asText());
+        assertEquals(externalId, requireBody(createResponse).path("data").path("relatedId").asText());
+        JsonNode companyIdNode = requireBody(createResponse).path("data").path("companyId");
+        assertTrue(companyIdNode.isMissingNode() || companyIdNode.isNull() || companyIdNode.asText().isBlank());
     }
 
     private String createCompany(AuthSession session, String marker) {

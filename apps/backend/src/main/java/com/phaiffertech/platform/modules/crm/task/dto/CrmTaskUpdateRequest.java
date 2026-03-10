@@ -17,6 +17,7 @@ public record CrmTaskUpdateRequest(
         UUID leadId,
         UUID dealId,
         String relatedType,
+        String relatedReferenceType,
         UUID relatedId
 ) {
 }

@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.phaiffertech.platform.core.audit.domain.AuditLog;
 import com.phaiffertech.platform.modules.crm.activity.dto.CrmActivityResponse;
 import com.phaiffertech.platform.modules.crm.activity.repository.CrmActivityRepository;
+import com.phaiffertech.platform.modules.crm.shared.service.CrmRelationResolverService;
 import com.phaiffertech.platform.shared.pagination.PageRequestDto;
 import com.phaiffertech.platform.shared.pagination.PageResponseDto;
 import com.phaiffertech.platform.shared.pagination.PaginationUtils;
@@ -36,10 +37,14 @@ public class CrmActivityService {
     }
 
     private CrmActivityResponse toResponse(AuditLog auditLog) {
+        var entitySelection = CrmRelationResolverService.parseActivityEntity(auditLog.getEntity(), auditLog.getEntityId());
         return new CrmActivityResponse(
                 auditLog.getId(),
                 resolveEventType(auditLog),
                 auditLog.getEntity(),
+                entitySelection.entityReferenceType(),
+                entitySelection.entityModule(),
+                entitySelection.entityType(),
                 auditLog.getEntityId(),
                 auditLog.getUserId(),
                 readPayload(auditLog.getPayload()),

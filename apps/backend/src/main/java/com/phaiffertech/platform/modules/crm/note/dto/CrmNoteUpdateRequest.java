@@ -10,6 +10,7 @@ public record CrmNoteUpdateRequest(
         UUID leadId,
         UUID dealId,
         String relatedType,
+        String relatedReferenceType,
         UUID relatedId
 ) {
 }

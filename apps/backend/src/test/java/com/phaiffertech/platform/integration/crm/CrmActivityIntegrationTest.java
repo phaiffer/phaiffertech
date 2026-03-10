@@ -70,8 +70,22 @@ class CrmActivityIntegrationTest extends AbstractIntegrationTest {
         assertEquals(200, response.getStatusCode().value());
 
         Set<String> eventTypes = new HashSet<>();
+        boolean taskEntityFound = false;
+        boolean noteEntityFound = false;
         for (JsonNode item : requireBody(response).path("data").path("items")) {
             eventTypes.add(item.path("eventType").asText());
+            if ("task.created".equals(item.path("eventType").asText())) {
+                assertEquals("CRM.TASK", item.path("entityReferenceType").asText());
+                assertEquals("CRM", item.path("entityModule").asText());
+                assertEquals("TASK", item.path("entityType").asText());
+                taskEntityFound = true;
+            }
+            if ("note.created".equals(item.path("eventType").asText())) {
+                assertEquals("CRM.NOTE", item.path("entityReferenceType").asText());
+                assertEquals("CRM", item.path("entityModule").asText());
+                assertEquals("NOTE", item.path("entityType").asText());
+                noteEntityFound = true;
+            }
         }
 
         assertTrue(eventTypes.contains("contact.created"));
@@ -79,6 +93,8 @@ class CrmActivityIntegrationTest extends AbstractIntegrationTest {
         assertTrue(eventTypes.contains("deal.updated"));
         assertTrue(eventTypes.contains("task.created"));
         assertTrue(eventTypes.contains("note.created"));
+        assertTrue(taskEntityFound);
+        assertTrue(noteEntityFound);
     }
 
     private String createCompany(AuthSession session, String marker) {

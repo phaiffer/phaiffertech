@@ -16,6 +16,9 @@ public record CrmTaskResponse(
         UUID leadId,
         UUID dealId,
         String relatedType,
+        String relatedReferenceType,
+        String relatedModule,
+        String relatedEntityType,
         UUID relatedId,
         Instant createdAt,
         Instant updatedAt
