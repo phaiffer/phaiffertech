@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { crmService } from '@/shared/services/crm-service';
 import { ApiClientError } from '@/shared/lib/http';
+import { resolvePageItems } from '@/shared/lib/pagination';
+import { CrmCompany } from '@/shared/types/crm';
 import { FormInput } from '@/shared/ui/form-input';
 import { FormSelect } from '@/shared/ui/form-select';
 import { PageTitle } from '@/shared/ui/page-title';
@@ -25,40 +27,102 @@ export function ContactFormPage({ contactId }: ContactFormPageProps) {
   const requiredPermission = isEdit ? 'crm.contact.update' : 'crm.contact.create';
 
   const [loading, setLoading] = useState(isEdit);
+  const [loadingCompanies, setLoadingCompanies] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [companies, setCompanies] = useState<CrmCompany[]>([]);
 
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
-  const [company, setCompany] = useState('');
+  const [companyId, setCompanyId] = useState('');
+  const [manualCompany, setManualCompany] = useState('');
   const [status, setStatus] = useState('ACTIVE');
+
+  useEffect(() => {
+    let active = true;
+
+    setLoadingCompanies(true);
+    crmService.listCompanies(0, 100)
+      .then((companiesPage) => {
+        if (!active) {
+          return;
+        }
+        setCompanies(resolvePageItems(companiesPage));
+      })
+      .catch((err) => {
+        if (!active) {
+          return;
+        }
+        const message = err instanceof ApiClientError ? err.message : 'Erro ao carregar companies para vínculo.';
+        setError((current) => current ?? message);
+      })
+      .finally(() => {
+        if (active) {
+          setLoadingCompanies(false);
+        }
+      });
+
+    return () => {
+      active = false;
+    };
+  }, []);
 
   useEffect(() => {
     if (!isEdit || !contactId) {
       return;
     }
 
+    let active = true;
     setLoading(true);
     crmService.getContact(contactId)
       .then((contact) => {
+        if (!active) {
+          return;
+        }
         setFirstName(contact.firstName);
         setLastName(contact.lastName ?? '');
         setEmail(contact.email ?? '');
         setPhone(contact.phone ?? '');
-        setCompany(contact.company ?? '');
+        setCompanyId(contact.companyId ?? '');
+        setManualCompany(contact.companyId ? '' : contact.company ?? '');
         setStatus(contact.status ?? 'ACTIVE');
       })
       .catch((err) => {
+        if (!active) {
+          return;
+        }
         const message = err instanceof ApiClientError ? err.message : 'Erro ao carregar contato.';
         setError(message);
       })
-      .finally(() => setLoading(false));
+      .finally(() => {
+        if (active) {
+          setLoading(false);
+        }
+      });
+
+    return () => {
+      active = false;
+    };
   }, [contactId, isEdit]);
 
   const title = useMemo(() => (isEdit ? 'Editar contato' : 'Novo contato'), [isEdit]);
+  const companyOptions = useMemo(() => [
+    { value: '', label: loadingCompanies ? 'Carregando companies...' : 'Sem vínculo com company' },
+    ...companies.map((company) => ({
+      value: company.id,
+      label: company.name
+    }))
+  ], [companies, loadingCompanies]);
+
+  function handleCompanyChange(nextCompanyId: string) {
+    setCompanyId(nextCompanyId);
+    if (nextCompanyId) {
+      setManualCompany('');
+    }
+  }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -67,12 +131,17 @@ export function ContactFormPage({ contactId }: ContactFormPageProps) {
     setSuccess(null);
 
     try {
+      const normalizedCompanyId = companyId.trim() || undefined;
+      const normalizedManualCompany = normalizedCompanyId
+        ? undefined
+        : manualCompany.trim() || undefined;
       const payload = {
         firstName,
         lastName: lastName || undefined,
         email: email || undefined,
         phone: phone || undefined,
-        company: company || undefined,
+        ...(normalizedCompanyId ? { companyId: normalizedCompanyId } : {}),
+        ...(normalizedManualCompany ? { company: normalizedManualCompany } : {}),
         status
       };
 
@@ -115,8 +184,27 @@ export function ContactFormPage({ contactId }: ContactFormPageProps) {
             <FormInput label="Sobrenome" value={lastName} onChange={setLastName} />
             <FormInput label="Email" value={email} onChange={setEmail} type="email" />
             <FormInput label="Telefone" value={phone} onChange={setPhone} />
-            <FormInput label="Empresa" value={company} onChange={setCompany} />
+            <FormSelect
+              label="Company vinculada"
+              value={companyId}
+              options={companyOptions}
+              onChange={handleCompanyChange}
+              disabled={loadingCompanies}
+            />
             <FormSelect label="Status" value={status} options={statusOptions} onChange={setStatus} />
+
+            {!companyId ? (
+              <div className="md:col-span-2 space-y-2">
+                <FormInput
+                  label="Empresa manual (compatibilidade)"
+                  value={manualCompany}
+                  onChange={setManualCompany}
+                />
+                <p className="text-xs text-slate-500">
+                  Use este campo apenas quando o contato ainda não estiver vinculado a uma company cadastrada.
+                </p>
+              </div>
+            ) : null}
 
             <div className="md:col-span-2 flex gap-2">
               <button

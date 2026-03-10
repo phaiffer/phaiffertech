@@ -5,7 +5,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { crmService } from '@/shared/services/crm-service';
 import { ApiClientError } from '@/shared/lib/http';
 import { resolvePageItems, resolveTotalItems } from '@/shared/lib/pagination';
-import { CrmContact } from '@/shared/types/crm';
+import { CrmCompany, CrmContact } from '@/shared/types/crm';
 import { PageResponse } from '@/shared/types/common';
 import { DataTable, DataTableColumn } from '@/shared/ui/data-table';
 import { FormSelect } from '@/shared/ui/form-select';
@@ -32,20 +32,58 @@ const initialPage: PageResponse<CrmContact> = {
 
 export function CrmContactsPage() {
   const [pageData, setPageData] = useState<PageResponse<CrmContact>>(initialPage);
+  const [companies, setCompanies] = useState<CrmCompany[]>([]);
   const [loading, setLoading] = useState(false);
+  const [loadingCompanies, setLoadingCompanies] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const [searchInput, setSearchInput] = useState('');
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
+  const [companyFilterId, setCompanyFilterId] = useState('');
   const [deleteCandidate, setDeleteCandidate] = useState<CrmContact | null>(null);
 
-  const load = useCallback(async (page: number, currentSearch: string, currentStatus: string) => {
+  useEffect(() => {
+    let active = true;
+
+    setLoadingCompanies(true);
+    crmService.listCompanies(0, 100)
+      .then((companiesPage) => {
+        if (!active) {
+          return;
+        }
+        setCompanies(resolvePageItems(companiesPage));
+      })
+      .catch((err) => {
+        if (!active) {
+          return;
+        }
+        const message = err instanceof ApiClientError ? err.message : 'Erro ao carregar companies para filtro.';
+        setError((current) => current ?? message);
+      })
+      .finally(() => {
+        if (active) {
+          setLoadingCompanies(false);
+        }
+      });
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const load = useCallback(async (
+    page: number,
+    currentSearch: string,
+    currentStatus: string,
+    currentCompanyId: string
+  ) => {
     setLoading(true);
     setError(null);
     try {
       const result = await crmService.listContacts(page, pageSize, currentSearch, {
-        status: currentStatus || undefined
+        status: currentStatus || undefined,
+        companyId: currentCompanyId || undefined
       });
       setPageData(result);
     } catch (err) {
@@ -57,8 +95,8 @@ export function CrmContactsPage() {
   }, []);
 
   useEffect(() => {
-    load(0, search, statusFilter);
-  }, [load, search, statusFilter]);
+    load(0, search, statusFilter, companyFilterId);
+  }, [companyFilterId, load, search, statusFilter]);
 
   async function handleConfirmDelete() {
     if (!deleteCandidate) {
@@ -68,7 +106,7 @@ export function CrmContactsPage() {
     try {
       await crmService.deleteContact(deleteCandidate.id);
       setDeleteCandidate(null);
-      await load(pageData.page, search, statusFilter);
+      await load(pageData.page, search, statusFilter, companyFilterId);
     } catch (err) {
       const message = err instanceof ApiClientError ? err.message : 'Erro ao excluir contato.';
       setError(message);
@@ -77,6 +115,13 @@ export function CrmContactsPage() {
 
   const rows = resolvePageItems(pageData);
   const totalItems = resolveTotalItems(pageData);
+  const companyOptions = [
+    { value: '', label: loadingCompanies ? 'Carregando companies...' : 'Todas as companies' },
+    ...companies.map((company) => ({
+      value: company.id,
+      label: company.name
+    }))
+  ];
 
   const columns: DataTableColumn<CrmContact>[] = [
     {
@@ -138,7 +183,7 @@ export function CrmContactsPage() {
           description="Listagem de contatos com busca, filtros e ações controladas por permissão."
         />
 
-        <div className="grid gap-3 rounded-xl border border-slate-200 bg-white p-4 md:grid-cols-[1fr_180px_auto_auto]">
+        <div className="grid gap-3 rounded-xl border border-slate-200 bg-white p-4 md:grid-cols-[1fr_180px_220px_auto_auto]">
           <SearchBar
             value={searchInput}
             onChange={setSearchInput}
@@ -149,6 +194,13 @@ export function CrmContactsPage() {
             value={statusFilter}
             options={statusOptions}
             onChange={setStatusFilter}
+          />
+          <FormSelect
+            label="Company"
+            value={companyFilterId}
+            options={companyOptions}
+            onChange={setCompanyFilterId}
+            disabled={loadingCompanies}
           />
           <button
             type="button"
@@ -163,6 +215,7 @@ export function CrmContactsPage() {
               setSearchInput('');
               setSearch('');
               setStatusFilter('');
+              setCompanyFilterId('');
             }}
             className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700"
           >
@@ -197,7 +250,7 @@ export function CrmContactsPage() {
           page={pageData.page}
           totalPages={pageData.totalPages}
           totalElements={totalItems}
-          onPageChange={(nextPage) => load(nextPage, search, statusFilter)}
+          onPageChange={(nextPage) => load(nextPage, search, statusFilter, companyFilterId)}
         />
 
         <ConfirmDialog

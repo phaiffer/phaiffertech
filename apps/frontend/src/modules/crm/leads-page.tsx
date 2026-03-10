@@ -5,7 +5,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { crmService } from '@/shared/services/crm-service';
 import { ApiClientError } from '@/shared/lib/http';
 import { resolvePageItems, resolveTotalItems } from '@/shared/lib/pagination';
-import { CrmLead } from '@/shared/types/crm';
+import { CrmCompany, CrmContact, CrmLead } from '@/shared/types/crm';
 import { PageResponse } from '@/shared/types/common';
 import { DataTable, DataTableColumn } from '@/shared/ui/data-table';
 import { FormSelect } from '@/shared/ui/form-select';
@@ -41,22 +41,97 @@ const initialPage: PageResponse<CrmLead> = {
 
 export function CrmLeadsPage() {
   const [pageData, setPageData] = useState<PageResponse<CrmLead>>(initialPage);
+  const [companies, setCompanies] = useState<CrmCompany[]>([]);
+  const [contacts, setContacts] = useState<CrmContact[]>([]);
   const [loading, setLoading] = useState(false);
+  const [loadingCompanies, setLoadingCompanies] = useState(true);
+  const [loadingContacts, setLoadingContacts] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const [searchInput, setSearchInput] = useState('');
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [sourceFilter, setSourceFilter] = useState('');
+  const [companyFilterId, setCompanyFilterId] = useState('');
+  const [contactFilterId, setContactFilterId] = useState('');
   const [deleteCandidate, setDeleteCandidate] = useState<CrmLead | null>(null);
 
-  const load = useCallback(async (page: number, currentSearch: string, currentStatus: string, currentSource: string) => {
+  useEffect(() => {
+    let active = true;
+
+    setLoadingCompanies(true);
+    crmService.listCompanies(0, 100)
+      .then((companiesPage) => {
+        if (!active) {
+          return;
+        }
+        setCompanies(resolvePageItems(companiesPage));
+      })
+      .catch((err) => {
+        if (!active) {
+          return;
+        }
+        const message = err instanceof ApiClientError ? err.message : 'Erro ao carregar companies para filtro.';
+        setError((current) => current ?? message);
+      })
+      .finally(() => {
+        if (active) {
+          setLoadingCompanies(false);
+        }
+      });
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    let active = true;
+
+    setLoadingContacts(true);
+    crmService.listContacts(0, 100, '', {
+      companyId: companyFilterId || undefined
+    })
+      .then((contactsPage) => {
+        if (!active) {
+          return;
+        }
+        setContacts(resolvePageItems(contactsPage));
+      })
+      .catch((err) => {
+        if (!active) {
+          return;
+        }
+        const message = err instanceof ApiClientError ? err.message : 'Erro ao carregar contatos para filtro.';
+        setError((current) => current ?? message);
+      })
+      .finally(() => {
+        if (active) {
+          setLoadingContacts(false);
+        }
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [companyFilterId]);
+
+  const load = useCallback(async (
+    page: number,
+    currentSearch: string,
+    currentStatus: string,
+    currentSource: string,
+    currentCompanyId: string,
+    currentContactId: string
+  ) => {
     setLoading(true);
     setError(null);
     try {
       const result = await crmService.listLeads(page, pageSize, currentSearch, {
         status: currentStatus || undefined,
-        source: currentSource || undefined
+        source: currentSource || undefined,
+        companyId: currentCompanyId || undefined,
+        contactId: currentContactId || undefined
       });
       setPageData(result);
     } catch (err) {
@@ -68,8 +143,8 @@ export function CrmLeadsPage() {
   }, []);
 
   useEffect(() => {
-    load(0, search, statusFilter, sourceFilter);
-  }, [load, search, statusFilter, sourceFilter]);
+    load(0, search, statusFilter, sourceFilter, companyFilterId, contactFilterId);
+  }, [companyFilterId, contactFilterId, load, search, sourceFilter, statusFilter]);
 
   async function handleConfirmDelete() {
     if (!deleteCandidate) {
@@ -79,7 +154,7 @@ export function CrmLeadsPage() {
     try {
       await crmService.deleteLead(deleteCandidate.id);
       setDeleteCandidate(null);
-      await load(pageData.page, search, statusFilter, sourceFilter);
+      await load(pageData.page, search, statusFilter, sourceFilter, companyFilterId, contactFilterId);
     } catch (err) {
       const message = err instanceof ApiClientError ? err.message : 'Erro ao excluir lead.';
       setError(message);
@@ -88,6 +163,25 @@ export function CrmLeadsPage() {
 
   const rows = resolvePageItems(pageData);
   const totalItems = resolveTotalItems(pageData);
+  const companyOptions = [
+    { value: '', label: loadingCompanies ? 'Carregando companies...' : 'Todas as companies' },
+    ...companies.map((company) => ({
+      value: company.id,
+      label: company.name
+    }))
+  ];
+  const contactOptions = [
+    { value: '', label: loadingContacts ? 'Carregando contatos...' : 'Todos os contatos' },
+    ...contacts.map((contact) => ({
+      value: contact.id,
+      label: `${contact.firstName} ${contact.lastName ?? ''}`.trim()
+    }))
+  ];
+  const companyName = (companyId?: string) => companies.find((company) => company.id === companyId)?.name ?? '-';
+  const contactName = (contactId?: string) => {
+    const contact = contacts.find((item) => item.id === contactId);
+    return contact ? `${contact.firstName} ${contact.lastName ?? ''}`.trim() : '-';
+  };
 
   const columns: DataTableColumn<CrmLead>[] = [
     {
@@ -99,6 +193,16 @@ export function CrmLeadsPage() {
       key: 'source',
       header: 'Origem',
       render: (lead) => lead.source ?? '-'
+    },
+    {
+      key: 'company',
+      header: 'Company',
+      render: (lead) => companyName(lead.companyId)
+    },
+    {
+      key: 'contact',
+      header: 'Contato',
+      render: (lead) => contactName(lead.contactId)
     },
     {
       key: 'email',
@@ -149,7 +253,7 @@ export function CrmLeadsPage() {
           description="Listagem de leads com filtros, paginação e controle de permissões."
         />
 
-        <div className="grid gap-3 rounded-xl border border-slate-200 bg-white p-4 md:grid-cols-[1fr_180px_180px_auto_auto]">
+        <div className="grid gap-3 rounded-xl border border-slate-200 bg-white p-4 md:grid-cols-[1fr_180px_180px_220px_220px_auto_auto]">
           <SearchBar
             value={searchInput}
             onChange={setSearchInput}
@@ -167,6 +271,23 @@ export function CrmLeadsPage() {
             options={sourceOptions}
             onChange={setSourceFilter}
           />
+          <FormSelect
+            label="Company"
+            value={companyFilterId}
+            options={companyOptions}
+            onChange={(value) => {
+              setCompanyFilterId(value);
+              setContactFilterId('');
+            }}
+            disabled={loadingCompanies}
+          />
+          <FormSelect
+            label="Contato"
+            value={contactFilterId}
+            options={contactOptions}
+            onChange={setContactFilterId}
+            disabled={loadingContacts}
+          />
           <button
             type="button"
             onClick={() => setSearch(searchInput)}
@@ -181,6 +302,8 @@ export function CrmLeadsPage() {
               setSearch('');
               setStatusFilter('');
               setSourceFilter('');
+              setCompanyFilterId('');
+              setContactFilterId('');
             }}
             className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700"
           >
@@ -215,7 +338,7 @@ export function CrmLeadsPage() {
           page={pageData.page}
           totalPages={pageData.totalPages}
           totalElements={totalItems}
-          onPageChange={(nextPage) => load(nextPage, search, statusFilter, sourceFilter)}
+          onPageChange={(nextPage) => load(nextPage, search, statusFilter, sourceFilter, companyFilterId, contactFilterId)}
         />
 
         <ConfirmDialog

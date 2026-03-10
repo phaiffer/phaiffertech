@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { crmService } from '@/shared/services/crm-service';
 import { ApiClientError } from '@/shared/lib/http';
+import { resolvePageItems } from '@/shared/lib/pagination';
+import { CrmCompany, CrmContact } from '@/shared/types/crm';
 import { FormInput } from '@/shared/ui/form-input';
 import { FormSelect } from '@/shared/ui/form-select';
 import { PageTitle } from '@/shared/ui/page-title';
@@ -27,38 +29,142 @@ export function LeadFormPage({ leadId }: LeadFormPageProps) {
   const requiredPermission = isEdit ? 'crm.lead.update' : 'crm.lead.create';
 
   const [loading, setLoading] = useState(isEdit);
+  const [loadingCompanies, setLoadingCompanies] = useState(true);
+  const [loadingContacts, setLoadingContacts] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [companies, setCompanies] = useState<CrmCompany[]>([]);
+  const [contacts, setContacts] = useState<CrmContact[]>([]);
 
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [source, setSource] = useState('');
+  const [companyId, setCompanyId] = useState('');
+  const [contactId, setContactId] = useState('');
+  const [notes, setNotes] = useState('');
   const [status, setStatus] = useState('NEW');
+
+  useEffect(() => {
+    let active = true;
+
+    setLoadingCompanies(true);
+    crmService.listCompanies(0, 100)
+      .then((companiesPage) => {
+        if (!active) {
+          return;
+        }
+        setCompanies(resolvePageItems(companiesPage));
+      })
+      .catch((err) => {
+        if (!active) {
+          return;
+        }
+        const message = err instanceof ApiClientError ? err.message : 'Erro ao carregar companies para o lead.';
+        setError((current) => current ?? message);
+      })
+      .finally(() => {
+        if (active) {
+          setLoadingCompanies(false);
+        }
+      });
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    let active = true;
+
+    setLoadingContacts(true);
+    crmService.listContacts(0, 100, '', {
+      companyId: companyId || undefined
+    })
+      .then((contactsPage) => {
+        if (!active) {
+          return;
+        }
+        setContacts(resolvePageItems(contactsPage));
+      })
+      .catch((err) => {
+        if (!active) {
+          return;
+        }
+        const message = err instanceof ApiClientError ? err.message : 'Erro ao carregar contatos para vínculo.';
+        setError((current) => current ?? message);
+      })
+      .finally(() => {
+        if (active) {
+          setLoadingContacts(false);
+        }
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [companyId]);
 
   useEffect(() => {
     if (!isEdit || !leadId) {
       return;
     }
 
+    let active = true;
     setLoading(true);
     crmService.getLead(leadId)
       .then((lead) => {
+        if (!active) {
+          return;
+        }
         setName(lead.name);
         setEmail(lead.email ?? '');
         setPhone(lead.phone ?? '');
         setSource(lead.source ?? '');
+        setCompanyId(lead.companyId ?? '');
+        setContactId(lead.contactId ?? '');
+        setNotes(lead.notes ?? '');
         setStatus(lead.status ?? 'NEW');
       })
       .catch((err) => {
+        if (!active) {
+          return;
+        }
         const message = err instanceof ApiClientError ? err.message : 'Erro ao carregar lead.';
         setError(message);
       })
-      .finally(() => setLoading(false));
+      .finally(() => {
+        if (active) {
+          setLoading(false);
+        }
+      });
+
+    return () => {
+      active = false;
+    };
   }, [isEdit, leadId]);
 
   const title = useMemo(() => (isEdit ? 'Editar lead' : 'Novo lead'), [isEdit]);
+  const companyOptions = useMemo(() => [
+    { value: '', label: loadingCompanies ? 'Carregando companies...' : 'Sem company vinculada' },
+    ...companies.map((company) => ({
+      value: company.id,
+      label: company.name
+    }))
+  ], [companies, loadingCompanies]);
+  const contactOptions = useMemo(() => [
+    { value: '', label: loadingContacts ? 'Carregando contatos...' : 'Nenhum contato relacionado' },
+    ...contacts.map((contact) => ({
+      value: contact.id,
+      label: `${contact.firstName} ${contact.lastName ?? ''}`.trim()
+    }))
+  ], [contacts, loadingContacts]);
+
+  function handleCompanyChange(nextCompanyId: string) {
+    setCompanyId(nextCompanyId);
+    setContactId('');
+  }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -72,6 +178,9 @@ export function LeadFormPage({ leadId }: LeadFormPageProps) {
         email: email || undefined,
         phone: phone || undefined,
         source: source || undefined,
+        companyId: companyId || undefined,
+        contactId: contactId || undefined,
+        notes: notes.trim() || undefined,
         status
       };
 
@@ -114,7 +223,30 @@ export function LeadFormPage({ leadId }: LeadFormPageProps) {
             <FormInput label="Email" value={email} onChange={setEmail} type="email" />
             <FormInput label="Telefone" value={phone} onChange={setPhone} />
             <FormInput label="Origem" value={source} onChange={setSource} />
+            <FormSelect
+              label="Company relacionada"
+              value={companyId}
+              options={companyOptions}
+              onChange={handleCompanyChange}
+              disabled={loadingCompanies}
+            />
+            <FormSelect
+              label="Contato relacionado"
+              value={contactId}
+              options={contactOptions}
+              onChange={setContactId}
+              disabled={loadingContacts}
+            />
             <FormSelect label="Status" value={status} options={statusOptions} onChange={setStatus} />
+            <label className="block text-sm md:col-span-2">
+              <span className="mb-1 block font-medium text-slate-700">Observações comerciais</span>
+              <textarea
+                value={notes}
+                onChange={(event) => setNotes(event.target.value)}
+                rows={4}
+                className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-action focus:outline-none"
+              />
+            </label>
 
             <div className="md:col-span-2 flex gap-2">
               <button
