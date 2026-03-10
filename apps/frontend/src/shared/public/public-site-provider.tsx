@@ -61,6 +61,7 @@ export function PublicSiteProvider({ children }: PublicSiteProviderProps) {
   }, [theme]);
 
   useEffect(() => {
+    document.documentElement.lang = locale;
     window.localStorage.setItem(PUBLIC_LOCALE_KEY, locale);
   }, [locale]);
 

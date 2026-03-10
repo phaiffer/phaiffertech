@@ -9,8 +9,9 @@ const spaceGrotesk = Space_Grotesk({
 });
 
 export const metadata: Metadata = {
-  title: 'Phaiffer Platform',
-  description: 'Unified multi-tenant SaaS platform',
+  title: 'PhaifferTech',
+  description:
+    'Modular SaaS platform for operational systems, cloud architecture, data engineering and applied research.',
   icons: {
     icon: '/favicon.ico',
     shortcut: '/favicon.ico'

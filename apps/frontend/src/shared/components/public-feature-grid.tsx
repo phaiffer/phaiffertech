@@ -6,6 +6,7 @@ type PublicFeatureItem = {
 
 type PublicFeatureGridProps = {
   id?: string;
+  eyebrowLabel?: string;
   title: string;
   description: string;
   items: PublicFeatureItem[];
@@ -13,15 +14,24 @@ type PublicFeatureGridProps = {
 
 export function PublicFeatureGrid({
   id,
+  eyebrowLabel,
   title,
   description,
   items
 }: PublicFeatureGridProps) {
   return (
-    <section id={id} className="border-b border-[var(--border)]">
+    <section
+      id={id}
+      className="border-b border-[var(--border)] bg-[linear-gradient(180deg,transparent,rgba(15,23,42,0.02))]"
+    >
       <div className="mx-auto w-full max-w-7xl px-4 py-16 sm:px-6 lg:px-8 lg:py-20">
         <div className="max-w-3xl">
-          <h2 className="text-3xl font-semibold text-[var(--foreground)]">{title}</h2>
+          {eyebrowLabel ? (
+            <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-action">
+              {eyebrowLabel}
+            </p>
+          ) : null}
+          <h2 className="mt-3 text-3xl font-semibold text-[var(--foreground)]">{title}</h2>
           <p className="mt-4 text-base leading-7 text-slate-600">{description}</p>
         </div>
 
@@ -29,7 +39,7 @@ export function PublicFeatureGrid({
           {items.map((item) => (
             <div
               key={`${item.eyebrow}-${item.title}`}
-              className="rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-6 shadow-card"
+              className="rounded-[2rem] border border-[var(--border)] bg-[var(--surface)] p-6 shadow-card transition hover:-translate-y-0.5 hover:border-sky-500/25"
             >
               <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-500">
                 {item.eyebrow}

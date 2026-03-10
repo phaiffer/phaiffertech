@@ -3,176 +3,120 @@ import { PublicLocale } from './public-site-provider';
 export const publicSiteMessages = {
   'pt-BR': {
     shell: {
-      brandEyebrow: 'Phaiffer Platform',
-      brandTitle: 'SaaS Control Plane',
-      navPlatform: 'Plataforma',
-      navModules: 'Módulos',
-      navArchitecture: 'Arquitetura',
-      navLogin: 'Entrar',
+      brandEyebrow: 'PhaifferTech',
+      brandTitle: 'Engineering platforms for real operations',
+      brandSubtitle:
+        'Arquitetura de software, dados, cloud e pesquisa aplicada na mesma base.',
       navHome: 'Início',
+      navAbout: 'Sobre',
+      navPlatform: 'Plataforma',
+      navProducts: 'Produtos',
+      navEngineering: 'Engineering',
+      navResearch: 'Pesquisa',
+      navArticles: 'Insights',
+      navContact: 'Contato',
+      navLogin: 'Acesso à plataforma',
       themeLight: 'Light',
       themeDark: 'Dark',
       localeLabel: 'Idioma',
-      footerText:
-        'PhaifferTech Platform · Institutional shell prepared for bilingual public experience.'
-    },
-    home: {
-      heroEyebrow: 'Plataforma modular para operações reais',
-      heroTitle: 'Software institucional e produto SaaS na mesma base.',
-      heroDescription:
-        'Uma experiência pública mais limpa para apresentação comercial, conectada a uma plataforma multi-tenant com CRM, IoT e PetFlow.',
-      heroPrimaryCta: 'Acessar plataforma',
-      heroSecondaryCta: 'Ver arquitetura',
-      platformCardEyebrow: 'Multi-tenant',
-      platformCardTitle: 'JWT + RBAC + Modules',
-      platformCardText:
-        'Camada pública conectada a uma plataforma operacional com isolamento por tenant, permissões e habilitação modular.',
-      frontendCardEyebrow: 'Frontend',
-      frontendCardTitle: 'Next.js App Router',
-      backendCardEyebrow: 'Backend',
-      backendCardTitle: 'Spring Boot + Multi-tenant',
-      modulesTitle: 'Capacidades da plataforma',
-      modulesDescription:
-        'Apresente apenas o que faz sentido para cada cliente, sem poluição visual e com separação clara entre produto, operação e contexto comercial.',
-      moduleCoreTitle: 'Core Platform',
-      moduleCoreText:
-        'Auth, tenants, IAM, settings, attachments, audit, subscription e governança central.',
-      moduleCrmTitle: 'CRM',
-      moduleCrmText:
-        'Leads, deals, contacts, pipeline, tasks, notes e visão comercial operacional.',
-      moduleIotTitle: 'IoT',
-      moduleIotText:
-        'Devices, telemetry, alarms, maintenance, reports e narrativa executiva para demo.',
-      modulePetTitle: 'PetFlow',
-      modulePetText:
-        'Clientes, pets, agenda, medical workflow, inventory, invoices e operação clínica.',
-      architectureEyebrow: 'Architecture',
-      architectureTitle: 'Base preparada para evolução',
-      architectureText:
-        'Esta camada pública já fica pronta para evoluir com internacionalização completa, dark/light mode e integração visual com a plataforma autenticada.',
-      ctaEyebrow: 'Pronto para apresentar',
-      ctaTitle: 'Uma entrada institucional mais forte para vender melhor o produto.',
-      ctaText:
-        'Ajuste a narrativa pública da PhaifferTech antes de seguir com o refinamento dos módulos internos.',
-      ctaPrimary: 'Acessar plataforma',
-      ctaSecondary: 'Ir para login'
+      footerNarrativeTitle: 'PhaifferTech',
+      footerNarrativeText:
+        'Empresa e plataforma orientadas por arquitetura de software, cloud, data engineering e sistemas operacionais modulares.',
+      footerExploreTitle: 'Explorar',
+      footerProductsTitle: 'Produtos',
+      footerAccessTitle: 'Acesso',
+      footerCopyright:
+        'PhaifferTech · Plataforma SaaS modular multi-tenant para operação, engenharia e pesquisa aplicada.'
     },
     login: {
       eyebrow: 'Acesso à plataforma',
       title: 'Entre na PhaifferTech Platform',
       description:
-        'Acesse a operação multi-tenant com permissões, módulos habilitados por contrato e visão executiva por contexto de negócio.',
+        'Acesse o ambiente protegido da plataforma com isolamento por tenant, permissões granulares, habilitação modular e governança operacional.',
       tenantCodeLabel: 'Tenant Code',
       emailLabel: 'E-mail',
       passwordLabel: 'Senha',
       submitLabel: 'Entrar',
       loadingLabel: 'Entrando...',
-      helperTitle: 'Ambiente institucional + operação SaaS',
+      helperTitle: 'Camada institucional + operação autenticada',
       helperText:
-        'A área pública apresenta a proposta da plataforma. A área autenticada entrega a operação real com CRM, IoT e PetFlow conforme o escopo contratado.',
-      contractTitle: 'Experiência orientada por contrato',
+        'O site público comunica posicionamento, arquitetura e direção técnica. A área autenticada entrega a operação real conforme módulos, permissões e escopo contratado.',
+      contractTitle: 'Escopo orientado por contrato',
       contractText:
-        'Cada cliente visualiza apenas os módulos e permissões compatíveis com o plano contratado.',
+        'Cada cliente enxerga apenas os módulos, recursos e permissões compatíveis com o contrato ativo.',
       governanceTitle: 'Governança central',
       governanceText:
-        'Autenticação, tenants, IAM, settings e trilha operacional integrados na mesma base.',
-      demoTitle: 'Narrativa pronta para demo',
+        'Autenticação, tenancy, IAM, auditoria e políticas de acesso permanecem centralizados na mesma fundação.',
+      demoTitle: 'Ambiente preparado para demonstração',
       demoText:
-        'A apresentação institucional e os dashboards operacionais seguem a mesma identidade visual.',
+        'A mesma base suporta demonstração comercial, desenvolvimento de produto e validação técnica do ecossistema.',
       errorFallback: 'Falha inesperada ao autenticar.',
-      demoEmail: 'Demo e-mail',
-      demoPassword: 'Demo password',
+      demoEmail: 'E-mail de demonstração',
+      demoPassword: 'Senha de demonstração',
       platformContextEyebrow: 'Contexto da plataforma',
       contractScopeEyebrow: 'Escopo contratual',
       governanceEyebrow: 'Governança',
-      demoReadinessEyebrow: 'Pronto para demo'
+      demoReadinessEyebrow: 'Pronto para demo',
+      returnToSite: 'Voltar ao site institucional'
     }
   },
   'en-US': {
     shell: {
-      brandEyebrow: 'Phaiffer Platform',
-      brandTitle: 'SaaS Control Plane',
-      navPlatform: 'Platform',
-      navModules: 'Modules',
-      navArchitecture: 'Architecture',
-      navLogin: 'Login',
+      brandEyebrow: 'PhaifferTech',
+      brandTitle: 'Engineering platforms for real operations',
+      brandSubtitle:
+        'Software architecture, data engineering, cloud systems and applied research on the same foundation.',
       navHome: 'Home',
+      navAbout: 'About',
+      navPlatform: 'Platform',
+      navProducts: 'Products',
+      navEngineering: 'Engineering',
+      navResearch: 'Research',
+      navArticles: 'Insights',
+      navContact: 'Contact',
+      navLogin: 'Platform access',
       themeLight: 'Light',
       themeDark: 'Dark',
       localeLabel: 'Language',
-      footerText:
-        'PhaifferTech Platform · Institutional shell prepared for a bilingual public experience.'
-    },
-    home: {
-      heroEyebrow: 'Modular platform for real operations',
-      heroTitle: 'Institutional software and SaaS product in the same foundation.',
-      heroDescription:
-        'A cleaner public-facing experience for commercial presentations, connected to a multi-tenant platform with CRM, IoT and PetFlow.',
-      heroPrimaryCta: 'Open platform',
-      heroSecondaryCta: 'View architecture',
-      platformCardEyebrow: 'Multi-tenant',
-      platformCardTitle: 'JWT + RBAC + Modules',
-      platformCardText:
-        'Public layer connected to an operational platform with tenant isolation, permissions and modular enablement.',
-      frontendCardEyebrow: 'Frontend',
-      frontendCardTitle: 'Next.js App Router',
-      backendCardEyebrow: 'Backend',
-      backendCardTitle: 'Spring Boot + Multi-tenant',
-      modulesTitle: 'Platform capabilities',
-      modulesDescription:
-        'Present only what matters to each customer, without visual noise and with clear separation between product, operations and commercial context.',
-      moduleCoreTitle: 'Core Platform',
-      moduleCoreText:
-        'Auth, tenants, IAM, settings, attachments, audit, subscription and central governance.',
-      moduleCrmTitle: 'CRM',
-      moduleCrmText:
-        'Leads, deals, contacts, pipeline, tasks, notes and operational commercial visibility.',
-      moduleIotTitle: 'IoT',
-      moduleIotText:
-        'Devices, telemetry, alarms, maintenance, reports and executive demo storytelling.',
-      modulePetTitle: 'PetFlow',
-      modulePetText:
-        'Clients, pets, scheduling, medical workflow, inventory, invoices and clinic operations.',
-      architectureEyebrow: 'Architecture',
-      architectureTitle: 'Foundation ready for evolution',
-      architectureText:
-        'This public layer is ready to evolve with full internationalization, dark/light mode and visual integration with the authenticated platform.',
-      ctaEyebrow: 'Presentation ready',
-      ctaTitle: 'A stronger institutional entry point to sell the product better.',
-      ctaText:
-        'Adjust the public narrative of PhaifferTech before continuing with the refinement of the internal modules.',
-      ctaPrimary: 'Open platform',
-      ctaSecondary: 'Go to login'
+      footerNarrativeTitle: 'PhaifferTech',
+      footerNarrativeText:
+        'A company and platform shaped by software architecture, cloud systems, data engineering and modular operational products.',
+      footerExploreTitle: 'Explore',
+      footerProductsTitle: 'Products',
+      footerAccessTitle: 'Access',
+      footerCopyright:
+        'PhaifferTech · Multi-tenant modular SaaS platform for operations, engineering and applied research.'
     },
     login: {
       eyebrow: 'Platform access',
       title: 'Sign in to PhaifferTech Platform',
       description:
-        'Access a multi-tenant operation with permissions, contract-based modules and executive visibility by business context.',
+        'Enter the protected platform environment with tenant isolation, granular permissions, modular enablement and operational governance.',
       tenantCodeLabel: 'Tenant Code',
       emailLabel: 'Email',
       passwordLabel: 'Password',
       submitLabel: 'Sign in',
       loadingLabel: 'Signing in...',
-      helperTitle: 'Institutional experience + SaaS operation',
+      helperTitle: 'Institutional experience + authenticated operation',
       helperText:
-        'The public area presents the platform narrative. The authenticated area delivers the real operation with CRM, IoT and PetFlow according to the contracted scope.',
-      contractTitle: 'Contract-oriented experience',
+        'The public website communicates positioning, architecture and technical direction. The authenticated area delivers the real operation according to modules, permissions and contracted scope.',
+      contractTitle: 'Contract-oriented scope',
       contractText:
-        'Each customer only sees the modules and permissions that match the contracted plan.',
+        'Each customer only sees the modules, capabilities and permissions that match the active contract.',
       governanceTitle: 'Central governance',
       governanceText:
-        'Authentication, tenants, IAM, settings and operational traceability integrated in the same foundation.',
-      demoTitle: 'Demo-ready narrative',
+        'Authentication, tenancy, IAM, auditing and access policies remain centralized in the same foundation.',
+      demoTitle: 'Demo-ready environment',
       demoText:
-        'The institutional presentation and the operational dashboards follow the same visual identity.',
+        'The same base supports commercial demos, product development and technical validation across the ecosystem.',
       errorFallback: 'Unexpected authentication failure.',
       demoEmail: 'Demo email',
       demoPassword: 'Demo password',
       platformContextEyebrow: 'Platform context',
       contractScopeEyebrow: 'Contract scope',
       governanceEyebrow: 'Governance',
-      demoReadinessEyebrow: 'Demo readiness'
+      demoReadinessEyebrow: 'Demo readiness',
+      returnToSite: 'Back to the institutional site'
     }
   }
 } as const;

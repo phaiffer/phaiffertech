@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import LoginPage from '@/app/(public)/login/page';
 import { AuthProvider } from '@/shared/components/auth-provider';
 import { getSession } from '@/shared/lib/session';
+import { PublicSiteProvider } from '@/shared/public/public-site-provider';
 import { authService } from '@/shared/services/auth-service';
 
 const { pushMock, replaceMock } = vi.hoisted(() => ({
@@ -46,18 +47,21 @@ describe('LoginPage', () => {
   beforeEach(() => {
     pushMock.mockReset();
     replaceMock.mockReset();
+    window.localStorage.setItem('phaiffertech-public-locale', 'en-US');
   });
 
   it('login cria a sessao corretamente', async () => {
     vi.mocked(authService.login).mockResolvedValue(authResponseFixture);
 
     render(
-      <AuthProvider>
-        <LoginPage />
-      </AuthProvider>
+      <PublicSiteProvider>
+        <AuthProvider>
+          <LoginPage />
+        </AuthProvider>
+      </PublicSiteProvider>
     );
 
-    fireEvent.click(screen.getByRole('button', { name: 'Sign in' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Sign in' }));
 
     await waitFor(() => {
       expect(authService.login).toHaveBeenCalledWith({
