@@ -1,12 +1,19 @@
 'use client';
 
 import { FormEvent, useCallback, useEffect, useMemo, useState } from 'react';
+import { usePermissions } from '@/shared/auth/usePermissions';
 import { ApiClientError } from '@/shared/lib/http';
 import { resolvePageItems, resolveTotalItems } from '@/shared/lib/pagination';
 import { petService } from '@/shared/services/pet-service';
 import { PageResponse } from '@/shared/types/common';
 import { PetAppointment, PetClient, PetProfessional, PetProfile, PetServiceCatalog } from '@/shared/types/pet';
 import { PermissionGuard } from '@/shared/auth/PermissionGuard';
+import {
+  PetLookupFeedback,
+  PetLookupIssue,
+  resolvePetLookupIssue,
+  resolvePetLookupLabel
+} from '@/modules/pet/pet-lookup-feedback';
 import { ConfirmDialog } from '@/shared/ui/confirm-dialog';
 import { DataTable, DataTableColumn } from '@/shared/ui/data-table';
 import { DateTimeInput } from '@/shared/ui/datetime-input';
@@ -54,11 +61,13 @@ function toIsoDate(value: string) {
 }
 
 export function PetAppointmentsPage() {
+  const { hasPermission } = usePermissions();
   const [pageData, setPageData] = useState<PageResponse<PetAppointment>>(initialPage);
   const [clients, setClients] = useState<PetClient[]>([]);
   const [profiles, setProfiles] = useState<PetProfile[]>([]);
   const [services, setServices] = useState<PetServiceCatalog[]>([]);
   const [professionals, setProfessionals] = useState<PetProfessional[]>([]);
+  const [lookupIssues, setLookupIssues] = useState<PetLookupIssue[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
@@ -82,6 +91,11 @@ export function PetAppointmentsPage() {
   const [submitting, setSubmitting] = useState(false);
 
   const [deleteCandidate, setDeleteCandidate] = useState<PetAppointment | null>(null);
+
+  const canReadClients = hasPermission('pet.client.read');
+  const canReadProfiles = hasPermission('pet.profile.read');
+  const canReadServices = hasPermission('pet.service.read');
+  const canReadProfessionals = hasPermission('pet.professional.read');
 
   const clientOptions = useMemo(() => {
     return [
@@ -153,25 +167,65 @@ export function PetAppointmentsPage() {
   }, [professionals]);
 
   const loadReferences = useCallback(async () => {
-    try {
-      const [clientPage, profilePage, servicePage, professionalPage] = await Promise.all([
-        petService.listClients(0, 200, ''),
-        petService.listProfiles(0, 200, ''),
-        petService.listServices(0, 200, ''),
-        petService.listProfessionals(0, 200, '')
-      ]);
+    const [clientPage, profilePage, servicePage, professionalPage] = await Promise.allSettled([
+      canReadClients ? petService.listClients(0, 200, '') : Promise.resolve(null),
+      canReadProfiles ? petService.listProfiles(0, 200, '') : Promise.resolve(null),
+      canReadServices ? petService.listServices(0, 200, '') : Promise.resolve(null),
+      canReadProfessionals ? petService.listProfessionals(0, 200, '') : Promise.resolve(null)
+    ]);
 
-      setClients(resolvePageItems(clientPage));
-      setProfiles(resolvePageItems(profilePage));
-      setServices(resolvePageItems(servicePage));
-      setProfessionals(resolvePageItems(professionalPage));
-    } catch {
+    const issues: PetLookupIssue[] = [];
+
+    if (!canReadClients) {
       setClients([]);
-      setProfiles([]);
-      setServices([]);
-      setProfessionals([]);
+      issues.push({ key: 'clients', label: 'Clientes', message: resolvePetLookupIssue(null, 'pet.client.read') });
+    } else if (clientPage.status === 'fulfilled' && clientPage.value) {
+      setClients(resolvePageItems(clientPage.value));
+    } else {
+      setClients([]);
+      issues.push({ key: 'clients', label: 'Clientes', message: resolvePetLookupIssue(clientPage.status === 'rejected' ? clientPage.reason : null) });
     }
-  }, []);
+
+    if (!canReadProfiles) {
+      setProfiles([]);
+      issues.push({ key: 'profiles', label: 'Pets', message: resolvePetLookupIssue(null, 'pet.profile.read') });
+    } else if (profilePage.status === 'fulfilled' && profilePage.value) {
+      setProfiles(resolvePageItems(profilePage.value));
+    } else {
+      setProfiles([]);
+      issues.push({ key: 'profiles', label: 'Pets', message: resolvePetLookupIssue(profilePage.status === 'rejected' ? profilePage.reason : null) });
+    }
+
+    if (!canReadServices) {
+      setServices([]);
+      issues.push({ key: 'services', label: 'Serviços', message: resolvePetLookupIssue(null, 'pet.service.read') });
+    } else if (servicePage.status === 'fulfilled' && servicePage.value) {
+      setServices(resolvePageItems(servicePage.value));
+    } else {
+      setServices([]);
+      issues.push({ key: 'services', label: 'Serviços', message: resolvePetLookupIssue(servicePage.status === 'rejected' ? servicePage.reason : null) });
+    }
+
+    if (!canReadProfessionals) {
+      setProfessionals([]);
+      issues.push({
+        key: 'professionals',
+        label: 'Profissionais',
+        message: resolvePetLookupIssue(null, 'pet.professional.read')
+      });
+    } else if (professionalPage.status === 'fulfilled' && professionalPage.value) {
+      setProfessionals(resolvePageItems(professionalPage.value));
+    } else {
+      setProfessionals([]);
+      issues.push({
+        key: 'professionals',
+        label: 'Profissionais',
+        message: resolvePetLookupIssue(professionalPage.status === 'rejected' ? professionalPage.reason : null)
+      });
+    }
+
+    setLookupIssues(issues);
+  }, [canReadClients, canReadProfessionals, canReadProfiles, canReadServices]);
 
   const load = useCallback(async (
     page: number,
@@ -299,6 +353,11 @@ export function PetAppointmentsPage() {
 
   const rows = resolvePageItems(pageData);
   const totalItems = resolveTotalItems(pageData);
+  const clientsLookupUnavailable = lookupIssues.some((issue) => issue.key === 'clients');
+  const profilesLookupUnavailable = lookupIssues.some((issue) => issue.key === 'profiles');
+  const servicesLookupUnavailable = lookupIssues.some((issue) => issue.key === 'services');
+  const professionalsLookupUnavailable = lookupIssues.some((issue) => issue.key === 'professionals');
+  const appointmentReferencesReady = !clientsLookupUnavailable && !profilesLookupUnavailable && !servicesLookupUnavailable && !professionalsLookupUnavailable;
 
   const columns: DataTableColumn<PetAppointment>[] = [
     {
@@ -320,25 +379,31 @@ export function PetAppointmentsPage() {
       key: 'client',
       header: 'Cliente',
       render: (appointment) => {
-        const client = clients.find((entry) => entry.id === appointment.clientId);
-        return client?.name ?? client?.fullName ?? appointment.clientId;
+        return resolvePetLookupLabel(
+          clients,
+          appointment.clientId,
+          (client) => client.name ?? client.fullName,
+          'Cliente',
+          clientsLookupUnavailable
+        );
       }
     },
     {
       key: 'pet',
       header: 'Pet',
-      render: (appointment) => {
-        const profile = profiles.find((entry) => entry.id === appointment.petId);
-        return profile?.name ?? appointment.petId;
-      }
+      render: (appointment) => resolvePetLookupLabel(profiles, appointment.petId, (profile) => profile.name, 'Pet', profilesLookupUnavailable)
     },
     {
       key: 'professional',
       header: 'Profissional',
-      render: (appointment) => {
-        const professional = professionals.find((entry) => entry.id === appointment.professionalId);
-        return professional?.name ?? appointment.professionalId;
-      }
+      render: (appointment) =>
+        resolvePetLookupLabel(
+          professionals,
+          appointment.professionalId,
+          (professional) => professional.name,
+          'Profissional',
+          professionalsLookupUnavailable
+        )
     },
     {
       key: 'actions',
@@ -380,14 +445,15 @@ export function PetAppointmentsPage() {
         <div className="grid gap-3 rounded-xl border border-slate-200 bg-white p-4 md:grid-cols-[1fr_180px_220px_220px_220px_220px_auto_auto]">
           <SearchBar value={searchInput} onChange={setSearchInput} placeholder="Serviço, status, notas" />
           <FormSelect label="Status" value={statusFilter} options={statusOptions} onChange={setStatusFilter} />
-          <FormSelect label="Cliente" value={clientFilterId} options={clientOptions} onChange={setClientFilterId} />
-          <FormSelect label="Pet" value={petFilterId} options={petOptions} onChange={setPetFilterId} />
-          <FormSelect label="Serviço" value={serviceFilterId} options={serviceOptions} onChange={setServiceFilterId} />
+          <FormSelect label="Cliente" value={clientFilterId} options={clientOptions} onChange={setClientFilterId} disabled={clientsLookupUnavailable} />
+          <FormSelect label="Pet" value={petFilterId} options={petOptions} onChange={setPetFilterId} disabled={profilesLookupUnavailable} />
+          <FormSelect label="Serviço" value={serviceFilterId} options={serviceOptions} onChange={setServiceFilterId} disabled={servicesLookupUnavailable} />
           <FormSelect
             label="Profissional"
             value={professionalFilterId}
             options={professionalOptions}
             onChange={setProfessionalFilterId}
+            disabled={professionalsLookupUnavailable}
           />
           <button
             type="button"
@@ -413,25 +479,33 @@ export function PetAppointmentsPage() {
           </button>
         </div>
 
+        <PetLookupFeedback issues={lookupIssues} />
+
         <PermissionGuard permission={editingId ? 'pet.appointment.update' : 'pet.appointment.create'}>
           <form onSubmit={handleSubmit} className="grid gap-3 rounded-xl border border-slate-200 bg-white p-4 md:grid-cols-3">
-            <FormSelect label="Cliente" value={clientId} options={formClientOptions} onChange={setClientId} />
-            <FormSelect label="Pet" value={petId} options={formPetOptions} onChange={setPetId} />
-            <FormSelect label="Serviço" value={serviceId} options={formServiceOptions} onChange={setServiceId} />
+            <FormSelect label="Cliente" value={clientId} options={formClientOptions} onChange={setClientId} disabled={clientsLookupUnavailable} />
+            <FormSelect label="Pet" value={petId} options={formPetOptions} onChange={setPetId} disabled={profilesLookupUnavailable} />
+            <FormSelect label="Serviço" value={serviceId} options={formServiceOptions} onChange={setServiceId} disabled={servicesLookupUnavailable} />
             <FormSelect
               label="Profissional"
               value={professionalId}
               options={formProfessionalOptions}
               onChange={setProfessionalId}
+              disabled={professionalsLookupUnavailable}
             />
             <DateTimeInput label="Data e hora" value={scheduledAt} onChange={setScheduledAt} required />
             <FormSelect label="Status" value={status} options={formStatusOptions} onChange={setStatus} />
             <FormInput label="Notas" value={notes} onChange={setNotes} />
 
             <div className="md:col-span-3 flex gap-2">
+              {!appointmentReferencesReady ? (
+                <div className="w-full rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">
+                  O formulário depende de clientes, pets, serviços e profissionais carregados para funcionar corretamente.
+                </div>
+              ) : null}
               <button
                 type="submit"
-                disabled={submitting}
+                disabled={submitting || !appointmentReferencesReady}
                 className="rounded-lg bg-action px-4 py-2 text-sm font-medium text-white disabled:opacity-60"
               >
                 {submitting ? 'Salvando...' : editingId ? 'Atualizar atendimento' : 'Criar atendimento'}

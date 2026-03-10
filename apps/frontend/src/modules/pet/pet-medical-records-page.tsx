@@ -1,7 +1,14 @@
 'use client';
 
 import { FormEvent, useCallback, useEffect, useMemo, useState } from 'react';
+import {
+  petMedicalRecordPermissions,
+  petMedicalRoutePermissions,
+  petPrescriptionPermissions,
+  petVaccinationPermissions
+} from '@/modules/pet/pet-medical-permissions';
 import { PermissionGuard } from '@/shared/auth/PermissionGuard';
+import { usePermissions } from '@/shared/auth/usePermissions';
 import { ApiClientError } from '@/shared/lib/http';
 import { resolvePageItems, resolveTotalItems } from '@/shared/lib/pagination';
 import { petService } from '@/shared/services/pet-service';
@@ -13,6 +20,12 @@ import {
   PetProfile,
   PetVaccination
 } from '@/shared/types/pet';
+import {
+  PetLookupFeedback,
+  PetLookupIssue,
+  resolvePetLookupIssue,
+  resolvePetLookupLabel
+} from '@/modules/pet/pet-lookup-feedback';
 import { ConfirmDialog } from '@/shared/ui/confirm-dialog';
 import { DataTable, DataTableColumn } from '@/shared/ui/data-table';
 import { DateTimeInput } from '@/shared/ui/datetime-input';
@@ -88,8 +101,10 @@ function toIsoDate(value: string) {
 }
 
 export function PetMedicalRecordsPage() {
+  const { hasAnyPermission, hasPermission } = usePermissions();
   const [pets, setPets] = useState<PetProfile[]>([]);
   const [professionals, setProfessionals] = useState<PetProfessional[]>([]);
+  const [lookupIssues, setLookupIssues] = useState<PetLookupIssue[]>([]);
 
   const [recordsPageData, setRecordsPageData] = useState<PageResponse<PetMedicalRecord>>(emptyMedicalRecordsPage);
   const [vaccinationsPageData, setVaccinationsPageData] = useState<PageResponse<PetVaccination>>(emptyVaccinationsPage);
@@ -139,6 +154,19 @@ export function PetMedicalRecordsPage() {
   const [deleteVaccinationCandidate, setDeleteVaccinationCandidate] = useState<PetVaccination | null>(null);
   const [deletePrescriptionCandidate, setDeletePrescriptionCandidate] = useState<PetPrescription | null>(null);
 
+  const canReadPets = hasPermission('pet.profile.read');
+  const canReadProfessionals = hasPermission('pet.professional.read');
+  const canReadMedicalRecords = hasPermission('pet.medical-record.read');
+  const canReadVaccinations = hasPermission('pet.vaccination.read');
+  const canReadPrescriptions = hasPermission('pet.prescription.read');
+
+  const canAccessMedicalRecords = hasAnyPermission(petMedicalRecordPermissions);
+  const canAccessVaccinations = hasAnyPermission(petVaccinationPermissions);
+  const canAccessPrescriptions = hasAnyPermission(petPrescriptionPermissions);
+  const canAccessAnyMedical = hasAnyPermission(petMedicalRoutePermissions);
+  const needsProfessionalLookup = canAccessMedicalRecords || canAccessPrescriptions;
+  const showProfessionalFilter = canReadMedicalRecords || canReadPrescriptions;
+
   const petOptions = useMemo(() => {
     return [
       { value: '', label: 'Todos' },
@@ -162,20 +190,55 @@ export function PetMedicalRecordsPage() {
   }, [professionalOptions]);
 
   const loadReferences = useCallback(async () => {
-    try {
-      const [petsPage, professionalsPage] = await Promise.all([
-        petService.listProfiles(0, 200, ''),
-        petService.listProfessionals(0, 200, '')
-      ]);
-      setPets(resolvePageItems(petsPage));
-      setProfessionals(resolvePageItems(professionalsPage));
-    } catch {
+    const [petsPage, professionalsPage] = await Promise.allSettled([
+      canReadPets && canAccessAnyMedical ? petService.listProfiles(0, 200, '') : Promise.resolve(null),
+      canReadProfessionals && needsProfessionalLookup ? petService.listProfessionals(0, 200, '') : Promise.resolve(null)
+    ]);
+
+    const issues: PetLookupIssue[] = [];
+
+    if (!canReadPets && canAccessAnyMedical) {
       setPets([]);
+      issues.push({ key: 'pets', label: 'Pets', message: resolvePetLookupIssue(null, 'pet.profile.read') });
+    } else if (petsPage.status === 'fulfilled' && petsPage.value) {
+      setPets(resolvePageItems(petsPage.value));
+    } else if (canAccessAnyMedical) {
+      setPets([]);
+      issues.push({ key: 'pets', label: 'Pets', message: resolvePetLookupIssue(petsPage.status === 'rejected' ? petsPage.reason : null) });
+    } else {
+      setPets([]);
+    }
+
+    if (!canReadProfessionals && needsProfessionalLookup) {
+      setProfessionals([]);
+      issues.push({
+        key: 'professionals',
+        label: 'Profissionais',
+        message: resolvePetLookupIssue(null, 'pet.professional.read')
+      });
+    } else if (professionalsPage.status === 'fulfilled' && professionalsPage.value) {
+      setProfessionals(resolvePageItems(professionalsPage.value));
+    } else if (needsProfessionalLookup) {
+      setProfessionals([]);
+      issues.push({
+        key: 'professionals',
+        label: 'Profissionais',
+        message: resolvePetLookupIssue(professionalsPage.status === 'rejected' ? professionalsPage.reason : null)
+      });
+    } else {
       setProfessionals([]);
     }
-  }, []);
+
+    setLookupIssues(issues);
+  }, [canAccessAnyMedical, canReadPets, canReadProfessionals, needsProfessionalLookup]);
 
   const loadRecords = useCallback(async (page: number, currentSearch: string, currentPetId: string, currentProfessionalId: string) => {
+    if (!canReadMedicalRecords) {
+      setRecordsPageData(emptyMedicalRecordsPage);
+      setRecordsLoading(false);
+      return;
+    }
+
     setRecordsLoading(true);
     try {
       const result = await petService.listMedicalRecords(page, pageSize, currentSearch, {
@@ -188,9 +251,15 @@ export function PetMedicalRecordsPage() {
     } finally {
       setRecordsLoading(false);
     }
-  }, []);
+  }, [canReadMedicalRecords]);
 
   const loadVaccinations = useCallback(async (page: number, currentSearch: string, currentPetId: string) => {
+    if (!canReadVaccinations) {
+      setVaccinationsPageData(emptyVaccinationsPage);
+      setVaccinationsLoading(false);
+      return;
+    }
+
     setVaccinationsLoading(true);
     try {
       const result = await petService.listVaccinations(page, pageSize, currentSearch, {
@@ -202,9 +271,15 @@ export function PetMedicalRecordsPage() {
     } finally {
       setVaccinationsLoading(false);
     }
-  }, []);
+  }, [canReadVaccinations]);
 
   const loadPrescriptions = useCallback(async (page: number, currentSearch: string, currentPetId: string, currentProfessionalId: string) => {
+    if (!canReadPrescriptions) {
+      setPrescriptionsPageData(emptyPrescriptionsPage);
+      setPrescriptionsLoading(false);
+      return;
+    }
+
     setPrescriptionsLoading(true);
     try {
       const result = await petService.listPrescriptions(page, pageSize, currentSearch, {
@@ -217,7 +292,7 @@ export function PetMedicalRecordsPage() {
     } finally {
       setPrescriptionsLoading(false);
     }
-  }, []);
+  }, [canReadPrescriptions]);
 
   useEffect(() => {
     loadReferences();
@@ -463,12 +538,19 @@ export function PetMedicalRecordsPage() {
     {
       key: 'pet',
       header: 'Pet',
-      render: (item) => pets.find((entry) => entry.id === item.petId)?.name ?? item.petId
+      render: (item) => resolvePetLookupLabel(pets, item.petId, (pet) => pet.name, 'Pet', lookupIssues.some((issue) => issue.key === 'pets'))
     },
     {
       key: 'professional',
       header: 'Profissional',
-      render: (item) => professionals.find((entry) => entry.id === item.professionalId)?.name ?? item.professionalId
+      render: (item) =>
+        resolvePetLookupLabel(
+          professionals,
+          item.professionalId,
+          (professional) => professional.name,
+          'Profissional',
+          lookupIssues.some((issue) => issue.key === 'professionals')
+        )
     },
     { key: 'description', header: 'Descrição', render: (item) => item.description },
     {
@@ -503,7 +585,7 @@ export function PetMedicalRecordsPage() {
     {
       key: 'pet',
       header: 'Pet',
-      render: (item) => pets.find((entry) => entry.id === item.petId)?.name ?? item.petId
+      render: (item) => resolvePetLookupLabel(pets, item.petId, (pet) => pet.name, 'Pet', lookupIssues.some((issue) => issue.key === 'pets'))
     },
     { key: 'vaccineName', header: 'Vacina', render: (item) => item.vaccineName },
     {
@@ -543,13 +625,20 @@ export function PetMedicalRecordsPage() {
     {
       key: 'pet',
       header: 'Pet',
-      render: (item) => pets.find((entry) => entry.id === item.petId)?.name ?? item.petId
+      render: (item) => resolvePetLookupLabel(pets, item.petId, (pet) => pet.name, 'Pet', lookupIssues.some((issue) => issue.key === 'pets'))
     },
     { key: 'medication', header: 'Medicamento', render: (item) => item.medication },
     {
       key: 'professional',
       header: 'Profissional',
-      render: (item) => professionals.find((entry) => entry.id === item.professionalId)?.name ?? item.professionalId
+      render: (item) =>
+        resolvePetLookupLabel(
+          professionals,
+          item.professionalId,
+          (professional) => professional.name,
+          'Profissional',
+          lookupIssues.some((issue) => issue.key === 'professionals')
+        )
     },
     {
       key: 'actions',
@@ -579,18 +668,32 @@ export function PetMedicalRecordsPage() {
     }
   ];
 
+  const petLookupUnavailable = lookupIssues.some((issue) => issue.key === 'pets');
+  const professionalsLookupUnavailable = lookupIssues.some((issue) => issue.key === 'professionals');
+  const medicalRecordFormReady = !petLookupUnavailable && !professionalsLookupUnavailable;
+  const vaccinationFormReady = !petLookupUnavailable;
+  const prescriptionFormReady = !petLookupUnavailable && !professionalsLookupUnavailable;
+
   return (
     <PermissionGuard
-      permission="pet.medical-record.read"
-      fallback={<div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">Você não possui permissão para visualizar prontuários.</div>}
+      anyOf={petMedicalRoutePermissions}
+      fallback={<div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">Você não possui permissão para visualizar workflows médicos do Pet.</div>}
     >
       <div className="space-y-5">
         <PageTitle title="Medical Records" description="Prontuários, vacinações e prescrições do módulo PET." />
 
         <div className="grid gap-3 rounded-xl border border-slate-200 bg-white p-4 md:grid-cols-[1fr_240px_240px_auto_auto]">
           <SearchBar value={searchInput} onChange={setSearchInput} placeholder="Descrição, diagnóstico, medicação ou vacina" />
-          <FormSelect label="Pet" value={petFilterId} options={petOptions} onChange={setPetFilterId} />
-          <FormSelect label="Profissional" value={professionalFilterId} options={professionalOptions} onChange={setProfessionalFilterId} />
+          <FormSelect label="Pet" value={petFilterId} options={petOptions} onChange={setPetFilterId} disabled={petLookupUnavailable} />
+          {showProfessionalFilter ? (
+            <FormSelect
+              label="Profissional"
+              value={professionalFilterId}
+              options={professionalOptions}
+              onChange={setProfessionalFilterId}
+              disabled={professionalsLookupUnavailable}
+            />
+          ) : null}
           <button
             type="button"
             onClick={() => setSearch(searchInput)}
@@ -612,10 +715,13 @@ export function PetMedicalRecordsPage() {
           </button>
         </div>
 
+        <PetLookupFeedback issues={lookupIssues} />
+
         {error ? <div className="rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{error}</div> : null}
         {success ? <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">{success}</div> : null}
 
-        <section className="space-y-4 rounded-xl border border-slate-200 bg-white p-4">
+        {canAccessMedicalRecords ? (
+          <section className="space-y-4 rounded-xl border border-slate-200 bg-white p-4">
           <div>
             <h3 className="text-base font-semibold text-slate-900">Medical Records</h3>
             <p className="text-sm text-slate-600">Histórico clínico e evoluções por pet.</p>
@@ -623,16 +729,27 @@ export function PetMedicalRecordsPage() {
 
           <PermissionGuard permission={editingRecordId ? 'pet.medical-record.update' : 'pet.medical-record.create'}>
             <form onSubmit={handleSubmitRecord} className="grid gap-3 md:grid-cols-2">
-              <FormSelect label="Pet" value={recordPetId} options={formPetOptions} onChange={setRecordPetId} />
-              <FormSelect label="Profissional" value={recordProfessionalId} options={formProfessionalOptions} onChange={setRecordProfessionalId} />
+              <FormSelect label="Pet" value={recordPetId} options={formPetOptions} onChange={setRecordPetId} disabled={petLookupUnavailable} />
+              <FormSelect
+                label="Profissional"
+                value={recordProfessionalId}
+                options={formProfessionalOptions}
+                onChange={setRecordProfessionalId}
+                disabled={professionalsLookupUnavailable}
+              />
               <TextAreaField label="Descrição" value={recordDescription} onChange={setRecordDescription} required />
               <TextAreaField label="Diagnóstico" value={recordDiagnosis} onChange={setRecordDiagnosis} />
               <TextAreaField label="Tratamento" value={recordTreatment} onChange={setRecordTreatment} />
 
               <div className="md:col-span-2 flex gap-2">
+                {!medicalRecordFormReady ? (
+                  <div className="w-full rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">
+                    O formulário de prontuário depende das referências de pets e profissionais.
+                  </div>
+                ) : null}
                 <button
                   type="submit"
-                  disabled={recordSubmitting}
+                  disabled={recordSubmitting || !medicalRecordFormReady}
                   className="rounded-lg bg-action px-4 py-2 text-sm font-medium text-white disabled:opacity-60"
                 >
                   {recordSubmitting ? 'Salvando...' : editingRecordId ? 'Atualizar prontuário' : 'Criar prontuário'}
@@ -650,11 +767,15 @@ export function PetMedicalRecordsPage() {
             </form>
           </PermissionGuard>
 
-          <DataTable columns={medicalRecordColumns} rows={resolvePageItems(recordsPageData)} getRowKey={(row) => row.id} loading={recordsLoading} emptyMessage="Nenhum prontuário encontrado." />
-          <Pagination page={recordsPageData.page} totalPages={recordsPageData.totalPages} totalElements={resolveTotalItems(recordsPageData)} onPageChange={setRecordsPage} />
-        </section>
+          <PermissionGuard permission="pet.medical-record.read">
+            <DataTable columns={medicalRecordColumns} rows={resolvePageItems(recordsPageData)} getRowKey={(row) => row.id} loading={recordsLoading} emptyMessage="Nenhum prontuário encontrado." />
+            <Pagination page={recordsPageData.page} totalPages={recordsPageData.totalPages} totalElements={resolveTotalItems(recordsPageData)} onPageChange={setRecordsPage} />
+          </PermissionGuard>
+          </section>
+        ) : null}
 
-        <section className="space-y-4 rounded-xl border border-slate-200 bg-white p-4">
+        {canAccessVaccinations ? (
+          <section className="space-y-4 rounded-xl border border-slate-200 bg-white p-4">
           <div>
             <h3 className="text-base font-semibold text-slate-900">Vaccinations</h3>
             <p className="text-sm text-slate-600">Controle de aplicações e próximos reforços.</p>
@@ -662,16 +783,21 @@ export function PetMedicalRecordsPage() {
 
           <PermissionGuard permission={editingVaccinationId ? 'pet.vaccination.update' : 'pet.vaccination.create'}>
             <form onSubmit={handleSubmitVaccination} className="grid gap-3 md:grid-cols-2">
-              <FormSelect label="Pet" value={vaccinationPetId} options={formPetOptions} onChange={setVaccinationPetId} />
+              <FormSelect label="Pet" value={vaccinationPetId} options={formPetOptions} onChange={setVaccinationPetId} disabled={petLookupUnavailable} />
               <FormInput label="Vacina" value={vaccineName} onChange={setVaccineName} required />
               <DateTimeInput label="Aplicada em" value={appliedAt} onChange={setAppliedAt} required />
               <DateTimeInput label="Próximo reforço" value={nextDueAt} onChange={setNextDueAt} />
               <TextAreaField label="Notas" value={vaccinationNotes} onChange={setVaccinationNotes} />
 
               <div className="md:col-span-2 flex gap-2">
+                {!vaccinationFormReady ? (
+                  <div className="w-full rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">
+                    O formulário de vacinação depende da referência de pets.
+                  </div>
+                ) : null}
                 <button
                   type="submit"
-                  disabled={vaccinationSubmitting}
+                  disabled={vaccinationSubmitting || !vaccinationFormReady}
                   className="rounded-lg bg-action px-4 py-2 text-sm font-medium text-white disabled:opacity-60"
                 >
                   {vaccinationSubmitting ? 'Salvando...' : editingVaccinationId ? 'Atualizar vacinação' : 'Criar vacinação'}
@@ -693,9 +819,11 @@ export function PetMedicalRecordsPage() {
             <DataTable columns={vaccinationColumns} rows={resolvePageItems(vaccinationsPageData)} getRowKey={(row) => row.id} loading={vaccinationsLoading} emptyMessage="Nenhuma vacinação encontrada." />
             <Pagination page={vaccinationsPageData.page} totalPages={vaccinationsPageData.totalPages} totalElements={resolveTotalItems(vaccinationsPageData)} onPageChange={setVaccinationsPage} />
           </PermissionGuard>
-        </section>
+          </section>
+        ) : null}
 
-        <section className="space-y-4 rounded-xl border border-slate-200 bg-white p-4">
+        {canAccessPrescriptions ? (
+          <section className="space-y-4 rounded-xl border border-slate-200 bg-white p-4">
           <div>
             <h3 className="text-base font-semibold text-slate-900">Prescriptions</h3>
             <p className="text-sm text-slate-600">Prescrições vinculadas ao histórico do atendimento.</p>
@@ -703,8 +831,14 @@ export function PetMedicalRecordsPage() {
 
           <PermissionGuard permission={editingPrescriptionId ? 'pet.prescription.update' : 'pet.prescription.create'}>
             <form onSubmit={handleSubmitPrescription} className="grid gap-3 md:grid-cols-2">
-              <FormSelect label="Pet" value={prescriptionPetId} options={formPetOptions} onChange={setPrescriptionPetId} />
-              <FormSelect label="Profissional" value={prescriptionProfessionalId} options={formProfessionalOptions} onChange={setPrescriptionProfessionalId} />
+              <FormSelect label="Pet" value={prescriptionPetId} options={formPetOptions} onChange={setPrescriptionPetId} disabled={petLookupUnavailable} />
+              <FormSelect
+                label="Profissional"
+                value={prescriptionProfessionalId}
+                options={formProfessionalOptions}
+                onChange={setPrescriptionProfessionalId}
+                disabled={professionalsLookupUnavailable}
+              />
               <FormInput label="Medicamento" value={medication} onChange={setMedication} required />
               <FormInput label="Dosagem" value={dosage} onChange={setDosage} />
               <div className="md:col-span-2">
@@ -712,9 +846,14 @@ export function PetMedicalRecordsPage() {
               </div>
 
               <div className="md:col-span-2 flex gap-2">
+                {!prescriptionFormReady ? (
+                  <div className="w-full rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">
+                    O formulário de prescrição depende das referências de pets e profissionais.
+                  </div>
+                ) : null}
                 <button
                   type="submit"
-                  disabled={prescriptionSubmitting}
+                  disabled={prescriptionSubmitting || !prescriptionFormReady}
                   className="rounded-lg bg-action px-4 py-2 text-sm font-medium text-white disabled:opacity-60"
                 >
                   {prescriptionSubmitting ? 'Salvando...' : editingPrescriptionId ? 'Atualizar prescrição' : 'Criar prescrição'}
@@ -736,7 +875,8 @@ export function PetMedicalRecordsPage() {
             <DataTable columns={prescriptionColumns} rows={resolvePageItems(prescriptionsPageData)} getRowKey={(row) => row.id} loading={prescriptionsLoading} emptyMessage="Nenhuma prescrição encontrada." />
             <Pagination page={prescriptionsPageData.page} totalPages={prescriptionsPageData.totalPages} totalElements={resolveTotalItems(prescriptionsPageData)} onPageChange={setPrescriptionsPage} />
           </PermissionGuard>
-        </section>
+          </section>
+        ) : null}
 
         <ConfirmDialog
           open={deleteRecordCandidate !== null}

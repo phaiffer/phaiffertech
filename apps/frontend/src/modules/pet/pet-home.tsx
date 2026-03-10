@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { petMedicalRoutePermissions } from '@/modules/pet/pet-medical-permissions';
 import { PermissionGuard } from '@/shared/auth/PermissionGuard';
 import { PageTitle } from '@/shared/ui/page-title';
 
@@ -70,7 +71,7 @@ export function PetHome() {
           </Link>
         </PermissionGuard>
 
-        <PermissionGuard permission="pet.medical-record.read">
+        <PermissionGuard anyOf={petMedicalRoutePermissions}>
           <Link
             href="/pet/medical-records"
             className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm transition hover:border-action"

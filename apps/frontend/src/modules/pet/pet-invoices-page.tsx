@@ -2,8 +2,15 @@
 
 import { FormEvent, useCallback, useEffect, useMemo, useState } from 'react';
 import { PermissionGuard } from '@/shared/auth/PermissionGuard';
+import { usePermissions } from '@/shared/auth/usePermissions';
 import { ApiClientError } from '@/shared/lib/http';
 import { resolvePageItems, resolveTotalItems } from '@/shared/lib/pagination';
+import {
+  PetLookupFeedback,
+  PetLookupIssue,
+  resolvePetLookupIssue,
+  resolvePetLookupLabel
+} from '@/modules/pet/pet-lookup-feedback';
 import { petService } from '@/shared/services/pet-service';
 import { PageResponse } from '@/shared/types/common';
 import { PetClient, PetInvoice } from '@/shared/types/pet';
@@ -53,8 +60,10 @@ function toIsoDate(value: string) {
 }
 
 export function PetInvoicesPage() {
+  const { hasPermission } = usePermissions();
   const [pageData, setPageData] = useState<PageResponse<PetInvoice>>(initialPage);
   const [clients, setClients] = useState<PetClient[]>([]);
+  const [lookupIssues, setLookupIssues] = useState<PetLookupIssue[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
@@ -72,6 +81,7 @@ export function PetInvoicesPage() {
   const [submitting, setSubmitting] = useState(false);
 
   const [deleteCandidate, setDeleteCandidate] = useState<PetInvoice | null>(null);
+  const canReadClients = hasPermission('pet.client.read');
 
   const clientOptions = useMemo(() => {
     return [
@@ -88,13 +98,21 @@ export function PetInvoicesPage() {
   }, [clients]);
 
   const loadClients = useCallback(async () => {
+    if (!canReadClients) {
+      setClients([]);
+      setLookupIssues([{ key: 'clients', label: 'Clientes', message: resolvePetLookupIssue(null, 'pet.client.read') }]);
+      return;
+    }
+
     try {
       const result = await petService.listClients(0, 200, '');
       setClients(resolvePageItems(result));
-    } catch {
+      setLookupIssues([]);
+    } catch (err) {
       setClients([]);
+      setLookupIssues([{ key: 'clients', label: 'Clientes', message: resolvePetLookupIssue(err) }]);
     }
-  }, []);
+  }, [canReadClients]);
 
   const load = useCallback(async (page: number, currentSearch: string, currentClientId: string, currentStatus: string) => {
     setLoading(true);
@@ -197,6 +215,7 @@ export function PetInvoicesPage() {
 
   const rows = resolvePageItems(pageData);
   const totalItems = resolveTotalItems(pageData);
+  const clientsLookupUnavailable = lookupIssues.some((issue) => issue.key === 'clients');
 
   const columns: DataTableColumn<PetInvoice>[] = [
     {
@@ -207,7 +226,14 @@ export function PetInvoicesPage() {
     {
       key: 'client',
       header: 'Cliente',
-      render: (item) => clients.find((entry) => entry.id === item.clientId)?.name ?? item.clientId
+      render: (item) =>
+        resolvePetLookupLabel(
+          clients,
+          item.clientId,
+          (client) => client.name ?? client.fullName,
+          'Cliente',
+          clientsLookupUnavailable
+        )
     },
     {
       key: 'totalAmount',
@@ -253,7 +279,7 @@ export function PetInvoicesPage() {
 
         <div className="grid gap-3 rounded-xl border border-slate-200 bg-white p-4 md:grid-cols-[1fr_240px_180px_auto_auto]">
           <SearchBar value={searchInput} onChange={setSearchInput} placeholder="Pesquisar por status" />
-          <FormSelect label="Cliente" value={clientFilterId} options={clientOptions} onChange={setClientFilterId} />
+          <FormSelect label="Cliente" value={clientFilterId} options={clientOptions} onChange={setClientFilterId} disabled={clientsLookupUnavailable} />
           <FormSelect label="Status" value={statusFilter} options={statusOptions} onChange={setStatusFilter} />
           <button
             type="button"
@@ -276,17 +302,24 @@ export function PetInvoicesPage() {
           </button>
         </div>
 
+        <PetLookupFeedback issues={lookupIssues} />
+
         <PermissionGuard permission={editingId ? 'pet.invoice.update' : 'pet.invoice.create'}>
           <form onSubmit={handleSubmit} className="grid gap-3 rounded-xl border border-slate-200 bg-white p-4 md:grid-cols-2">
-            <FormSelect label="Cliente" value={clientId} options={formClientOptions} onChange={setClientId} />
+            <FormSelect label="Cliente" value={clientId} options={formClientOptions} onChange={setClientId} disabled={clientsLookupUnavailable} />
             <FormInput label="Valor total" value={totalAmount} onChange={setTotalAmount} type="number" required />
             <FormSelect label="Status" value={status} options={formStatusOptions} onChange={setStatus} />
             <DateTimeInput label="Emitida em" value={issuedAt} onChange={setIssuedAt} required />
 
             <div className="md:col-span-2 flex gap-2">
+              {clientsLookupUnavailable ? (
+                <div className="w-full rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">
+                  O formulário depende da referência de clientes para emitir ou editar faturas.
+                </div>
+              ) : null}
               <button
                 type="submit"
-                disabled={submitting}
+                disabled={submitting || clientsLookupUnavailable}
                 className="rounded-lg bg-action px-4 py-2 text-sm font-medium text-white disabled:opacity-60"
               >
                 {submitting ? 'Salvando...' : editingId ? 'Atualizar fatura' : 'Criar fatura'}

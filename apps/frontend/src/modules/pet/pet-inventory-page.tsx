@@ -2,8 +2,15 @@
 
 import { FormEvent, useCallback, useEffect, useMemo, useState } from 'react';
 import { PermissionGuard } from '@/shared/auth/PermissionGuard';
+import { usePermissions } from '@/shared/auth/usePermissions';
 import { ApiClientError } from '@/shared/lib/http';
 import { resolvePageItems, resolveTotalItems } from '@/shared/lib/pagination';
+import {
+  PetLookupFeedback,
+  PetLookupIssue,
+  resolvePetLookupIssue,
+  resolvePetLookupLabel
+} from '@/modules/pet/pet-lookup-feedback';
 import { petService } from '@/shared/services/pet-service';
 import { PageResponse } from '@/shared/types/common';
 import { PetInventoryMovement, PetProduct } from '@/shared/types/pet';
@@ -34,8 +41,10 @@ const initialPage: PageResponse<PetInventoryMovement> = {
 };
 
 export function PetInventoryPage() {
+  const { hasPermission } = usePermissions();
   const [pageData, setPageData] = useState<PageResponse<PetInventoryMovement>>(initialPage);
   const [products, setProducts] = useState<PetProduct[]>([]);
+  const [lookupIssues, setLookupIssues] = useState<PetLookupIssue[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
@@ -53,6 +62,7 @@ export function PetInventoryPage() {
   const [submitting, setSubmitting] = useState(false);
 
   const [deleteCandidate, setDeleteCandidate] = useState<PetInventoryMovement | null>(null);
+  const canReadProducts = hasPermission('pet.product.read');
 
   const productOptions = useMemo(() => {
     return [
@@ -69,13 +79,21 @@ export function PetInventoryPage() {
   }, [products]);
 
   const loadProducts = useCallback(async () => {
+    if (!canReadProducts) {
+      setProducts([]);
+      setLookupIssues([{ key: 'products', label: 'Produtos', message: resolvePetLookupIssue(null, 'pet.product.read') }]);
+      return;
+    }
+
     try {
       const result = await petService.listProducts(0, 200, '');
       setProducts(resolvePageItems(result));
-    } catch {
+      setLookupIssues([]);
+    } catch (err) {
       setProducts([]);
+      setLookupIssues([{ key: 'products', label: 'Produtos', message: resolvePetLookupIssue(err) }]);
     }
-  }, []);
+  }, [canReadProducts]);
 
   const load = useCallback(async (page: number, currentSearch: string, currentProductId: string, currentMovementType: string) => {
     setLoading(true);
@@ -180,6 +198,7 @@ export function PetInventoryPage() {
 
   const rows = resolvePageItems(pageData);
   const totalItems = resolveTotalItems(pageData);
+  const productsLookupUnavailable = lookupIssues.some((issue) => issue.key === 'products');
 
   const columns: DataTableColumn<PetInventoryMovement>[] = [
     {
@@ -190,7 +209,8 @@ export function PetInventoryPage() {
     {
       key: 'product',
       header: 'Produto',
-      render: (item) => products.find((entry) => entry.id === item.productId)?.name ?? item.productId
+      render: (item) =>
+        resolvePetLookupLabel(products, item.productId, (product) => product.name, 'Produto', productsLookupUnavailable)
     },
     { key: 'movementType', header: 'Tipo', render: (item) => item.movementType },
     { key: 'quantity', header: 'Quantidade', render: (item) => String(item.quantity) },
@@ -233,7 +253,7 @@ export function PetInventoryPage() {
 
         <div className="grid gap-3 rounded-xl border border-slate-200 bg-white p-4 md:grid-cols-[1fr_240px_160px_auto_auto]">
           <SearchBar value={searchInput} onChange={setSearchInput} placeholder="Tipo ou notas" />
-          <FormSelect label="Produto" value={productFilterId} options={productOptions} onChange={setProductFilterId} />
+          <FormSelect label="Produto" value={productFilterId} options={productOptions} onChange={setProductFilterId} disabled={productsLookupUnavailable} />
           <FormSelect label="Tipo" value={movementTypeFilter} options={movementTypeOptions} onChange={setMovementTypeFilter} />
           <button
             type="button"
@@ -256,17 +276,24 @@ export function PetInventoryPage() {
           </button>
         </div>
 
+        <PetLookupFeedback issues={lookupIssues} />
+
         <PermissionGuard permission={editingId ? 'pet.inventory.update' : 'pet.inventory.create'}>
           <form onSubmit={handleSubmit} className="grid gap-3 rounded-xl border border-slate-200 bg-white p-4 md:grid-cols-2">
-            <FormSelect label="Produto" value={productId} options={formProductOptions} onChange={setProductId} />
+            <FormSelect label="Produto" value={productId} options={formProductOptions} onChange={setProductId} disabled={productsLookupUnavailable} />
             <FormSelect label="Tipo" value={movementType} options={formMovementTypeOptions} onChange={setMovementType} />
             <FormInput label="Quantidade" value={quantity} onChange={setQuantity} type="number" required />
             <FormInput label="Notas" value={notes} onChange={setNotes} />
 
             <div className="md:col-span-2 flex gap-2">
+              {productsLookupUnavailable ? (
+                <div className="w-full rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">
+                  O formulário depende da referência de produtos para selecionar a movimentação corretamente.
+                </div>
+              ) : null}
               <button
                 type="submit"
-                disabled={submitting}
+                disabled={submitting || productsLookupUnavailable}
                 className="rounded-lg bg-action px-4 py-2 text-sm font-medium text-white disabled:opacity-60"
               >
                 {submitting ? 'Salvando...' : editingId ? 'Atualizar movimentação' : 'Criar movimentação'}
