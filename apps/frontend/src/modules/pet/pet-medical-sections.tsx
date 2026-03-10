@@ -6,7 +6,15 @@ import { resolvePetLookupLabel } from '@/modules/pet/pet-lookup-feedback';
 import { PermissionGuard } from '@/shared/auth/PermissionGuard';
 import { resolvePageItems, resolveTotalItems } from '@/shared/lib/pagination';
 import { PageResponse } from '@/shared/types/common';
-import { PetMedicalRecord, PetPrescription, PetProfessional, PetProfile, PetVaccination } from '@/shared/types/pet';
+import {
+  PetClinicalTimeline,
+  PetClinicalTimelineEvent,
+  PetMedicalRecord,
+  PetPrescription,
+  PetProfessional,
+  PetProfile,
+  PetVaccination
+} from '@/shared/types/pet';
 import { DataTable, DataTableColumn } from '@/shared/ui/data-table';
 import { DateTimeInput } from '@/shared/ui/datetime-input';
 import { FormInput } from '@/shared/ui/form-input';
@@ -36,6 +44,160 @@ function renderClinicalAppointmentLabel(
       <div className="font-medium text-slate-800">{appointmentServiceName ?? 'Atendimento vinculado'}</div>
       <div className="text-xs text-slate-500">{appointmentDate}</div>
     </div>
+  );
+}
+
+function resolveClinicalEventLabel(eventType: string) {
+  switch (eventType) {
+    case 'MEDICAL_RECORD':
+      return 'Prontuario';
+    case 'VACCINATION':
+      return 'Vacinacao';
+    case 'PRESCRIPTION':
+      return 'Prescricao';
+    default:
+      return 'Evento clinico';
+  }
+}
+
+function resolveClinicalEventBadgeClass(eventType: string) {
+  switch (eventType) {
+    case 'MEDICAL_RECORD':
+      return 'border-sky-200 bg-sky-50 text-sky-700';
+    case 'VACCINATION':
+      return 'border-emerald-200 bg-emerald-50 text-emerald-700';
+    case 'PRESCRIPTION':
+      return 'border-amber-200 bg-amber-50 text-amber-700';
+    default:
+      return 'border-slate-200 bg-slate-100 text-slate-700';
+  }
+}
+
+function renderClinicalContextSummary(data: PetClinicalTimeline) {
+  if (data.appointmentId) {
+    return (
+      <div className="rounded-lg border border-sky-200 bg-sky-50 px-4 py-3 text-sm text-sky-700">
+        <div className="font-medium">Timeline clinica do atendimento atual.</div>
+        <div>
+          {data.appointmentServiceName ?? 'Atendimento vinculado'}
+          {data.petName ? ` para ${data.petName}` : ''}
+          {data.appointmentScheduledAt ? ` em ${new Date(data.appointmentScheduledAt).toLocaleString('pt-BR')}` : ''}
+          {data.appointmentStatus ? ` (${data.appointmentStatus})` : ''}.
+        </div>
+      </div>
+    );
+  }
+
+  if (data.petName || data.petId) {
+    return (
+      <div className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700">
+        <span className="font-medium">Timeline clinica do pet:</span>{' '}
+        {data.petName ?? data.petId}
+      </div>
+    );
+  }
+
+  return null;
+}
+
+type PetClinicalTimelineSectionProps = {
+  data: PetClinicalTimeline | null;
+  loading: boolean;
+  error?: string | null;
+  ready: boolean;
+};
+
+export function PetClinicalTimelineSection({
+  data,
+  loading,
+  error,
+  ready
+}: PetClinicalTimelineSectionProps) {
+  const events = data?.events ?? [];
+  const hiddenCount = data ? Math.max(data.totalEvents - events.length, 0) : 0;
+
+  return (
+    <section className="space-y-4 rounded-xl border border-slate-200 bg-white p-4">
+      <div>
+        <h3 className="text-base font-semibold text-slate-900">Clinical Timeline</h3>
+        <p className="text-sm text-slate-600">Leitura consolidada do historico recente por pet e atendimento.</p>
+      </div>
+
+      {!ready ? (
+        <div className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700">
+          Selecione um pet ou abra um atendimento para visualizar a timeline clinica consolidada.
+        </div>
+      ) : null}
+
+      {ready && loading ? (
+        <div className="rounded-lg border border-sky-200 bg-sky-50 px-4 py-3 text-sm text-sky-700">
+          Carregando timeline clinica...
+        </div>
+      ) : null}
+
+      {ready && !loading && error ? (
+        <div className="rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+          {error}
+        </div>
+      ) : null}
+
+      {ready && !loading && !error && data ? renderClinicalContextSummary(data) : null}
+
+      {ready && !loading && !error && events.length > 0 ? (
+        <div className="space-y-3">
+          {hiddenCount > 0 ? (
+            <div className="text-xs text-slate-500">
+              Exibindo os {events.length} eventos mais recentes de um total de {data?.totalEvents}.
+            </div>
+          ) : null}
+
+          <div className="space-y-3">
+            {events.map((event) => (
+              <ClinicalTimelineEventCard key={event.eventId} event={event} />
+            ))}
+          </div>
+        </div>
+      ) : null}
+
+      {ready && !loading && !error && data && events.length === 0 ? (
+        <div className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700">
+          Nenhum evento clinico encontrado para o contexto atual.
+        </div>
+      ) : null}
+    </section>
+  );
+}
+
+function ClinicalTimelineEventCard({ event }: { event: PetClinicalTimelineEvent }) {
+  return (
+    <article className="rounded-xl border border-slate-200 p-4">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="space-y-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className={`rounded-full border px-2 py-1 text-xs font-medium ${resolveClinicalEventBadgeClass(event.eventType)}`}>
+              {resolveClinicalEventLabel(event.eventType)}
+            </span>
+            <h4 className="text-sm font-semibold text-slate-900">{event.title}</h4>
+          </div>
+
+          {event.summary ? <p className="text-sm text-slate-700">{event.summary}</p> : null}
+
+          <div className="flex flex-wrap gap-3 text-xs text-slate-500">
+            <span>{new Date(event.occurredAt).toLocaleString('pt-BR')}</span>
+            {event.petName ? <span>Pet: {event.petName}</span> : null}
+            {event.professionalName ? <span>Profissional: {event.professionalName}</span> : null}
+            {event.appointmentServiceName ? (
+              <span>
+                Atendimento: {event.appointmentServiceName}
+                {event.appointmentScheduledAt ? ` (${new Date(event.appointmentScheduledAt).toLocaleString('pt-BR')})` : ''}
+              </span>
+            ) : (
+              <span>Fluxo avulso</span>
+            )}
+          </div>
+        </div>
+      </div>
+    </article>
   );
 }
 

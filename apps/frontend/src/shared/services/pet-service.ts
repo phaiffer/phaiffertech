@@ -2,6 +2,7 @@ import { apiClient } from '@/shared/lib/http';
 import { PageResponse } from '@/shared/types/common';
 import {
   PetAppointment,
+  PetClinicalTimeline,
   PetClient,
   PetDashboardSummary,
   PetInvoice,
@@ -186,6 +187,12 @@ type PetPrescriptionFilters = {
   appointmentId?: string;
 };
 
+type PetClinicalTimelineFilters = {
+  petId?: string;
+  appointmentId?: string;
+  limit?: number;
+};
+
 type PetInventoryFilters = {
   productId?: string;
   movementType?: string;
@@ -211,6 +218,23 @@ function queryString(
   }
 
   Object.entries(filters).forEach(([key, value]) => {
+    if (value && value.trim()) {
+      params.set(key, value.trim());
+    }
+  });
+
+  return params.toString();
+}
+
+function simpleQueryString(filters: Record<string, string | number | undefined> = {}) {
+  const params = new URLSearchParams();
+
+  Object.entries(filters).forEach(([key, value]) => {
+    if (typeof value === 'number') {
+      params.set(key, String(value));
+      return;
+    }
+
     if (value && value.trim()) {
       params.set(key, value.trim());
     }
@@ -368,6 +392,15 @@ export const petService = {
   deletePrescription: (id: string) => apiClient.delete<void>(`/pet/prescriptions/${id}`),
 
   restorePrescription: (id: string) => apiClient.patch<PetPrescription>(`/pet/prescriptions/${id}/restore`),
+
+  getClinicalTimeline: (filters: PetClinicalTimelineFilters) =>
+    apiClient.get<PetClinicalTimeline>(
+      `/pet/medical/timeline?${simpleQueryString({
+        petId: filters.petId,
+        appointmentId: filters.appointmentId,
+        limit: filters.limit
+      })}`
+    ),
 
   listProducts: (page = 0, size = 20, search = '') =>
     apiClient.get<PageResponse<PetProduct>>(`/pet/products?${queryString(page, size, search)}`),

@@ -17,6 +17,10 @@ public interface PetVaccinationRepository
 
     List<PetVaccination> findAllByTenantIdAndAppointmentIdIn(UUID tenantId, Collection<UUID> appointmentIds);
 
+    List<PetVaccination> findAllByTenantIdAndPetIdOrderByAppliedAtDesc(UUID tenantId, UUID petId);
+
+    List<PetVaccination> findAllByTenantIdAndAppointmentIdOrderByAppliedAtDesc(UUID tenantId, UUID appointmentId);
+
     long countByTenantIdAndAppointmentId(UUID tenantId, UUID appointmentId);
 
     boolean existsByTenantIdAndAppointmentId(UUID tenantId, UUID appointmentId);

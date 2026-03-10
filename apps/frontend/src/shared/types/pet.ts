@@ -116,6 +116,32 @@ export type PetPrescription = {
   updatedAt: string;
 };
 
+export type PetClinicalTimelineEvent = {
+  eventType: string;
+  eventId: string;
+  occurredAt: string;
+  petId: string;
+  petName?: string;
+  professionalId?: string;
+  professionalName?: string;
+  appointmentId?: string;
+  appointmentServiceName?: string;
+  appointmentScheduledAt?: string;
+  title: string;
+  summary?: string;
+};
+
+export type PetClinicalTimeline = {
+  petId?: string;
+  petName?: string;
+  appointmentId?: string;
+  appointmentServiceName?: string;
+  appointmentScheduledAt?: string;
+  appointmentStatus?: string;
+  totalEvents: number;
+  events: PetClinicalTimelineEvent[];
+};
+
 export type PetProduct = {
   id: string;
   name: string;

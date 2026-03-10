@@ -19,6 +19,10 @@ public interface PetMedicalRecordRepository
 
     List<PetMedicalRecord> findAllByTenantIdAndAppointmentIdIn(UUID tenantId, Collection<UUID> appointmentIds);
 
+    List<PetMedicalRecord> findAllByTenantIdAndPetIdOrderByCreatedAtDesc(UUID tenantId, UUID petId);
+
+    List<PetMedicalRecord> findAllByTenantIdAndAppointmentIdOrderByCreatedAtDesc(UUID tenantId, UUID appointmentId);
+
     long countByTenantIdAndAppointmentId(UUID tenantId, UUID appointmentId);
 
     boolean existsByTenantIdAndAppointmentId(UUID tenantId, UUID appointmentId);

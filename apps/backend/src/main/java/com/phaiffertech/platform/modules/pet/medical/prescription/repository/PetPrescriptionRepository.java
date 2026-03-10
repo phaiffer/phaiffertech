@@ -17,6 +17,10 @@ public interface PetPrescriptionRepository
 
     List<PetPrescription> findAllByTenantIdAndAppointmentIdIn(UUID tenantId, Collection<UUID> appointmentIds);
 
+    List<PetPrescription> findAllByTenantIdAndPetIdOrderByCreatedAtDesc(UUID tenantId, UUID petId);
+
+    List<PetPrescription> findAllByTenantIdAndAppointmentIdOrderByCreatedAtDesc(UUID tenantId, UUID appointmentId);
+
     long countByTenantIdAndAppointmentId(UUID tenantId, UUID appointmentId);
 
     boolean existsByTenantIdAndAppointmentId(UUID tenantId, UUID appointmentId);

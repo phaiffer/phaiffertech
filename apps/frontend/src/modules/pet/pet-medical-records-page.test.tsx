@@ -8,6 +8,7 @@ const { hasPermissionMock, hasAnyPermissionMock, searchParamGetMock, petServiceM
   searchParamGetMock: vi.fn(),
   petServiceMock: {
     getAppointment: vi.fn(),
+    getClinicalTimeline: vi.fn(),
     listProfiles: vi.fn(),
     listProfessionals: vi.fn(),
     listMedicalRecords: vi.fn(),
@@ -65,6 +66,10 @@ describe('PetMedicalRecordsPage', () => {
     searchParamGetMock.mockReturnValue(null);
 
     petServiceMock.getAppointment.mockResolvedValue(null);
+    petServiceMock.getClinicalTimeline.mockResolvedValue({
+      totalEvents: 0,
+      events: []
+    });
     petServiceMock.listProfiles.mockResolvedValue(createPageResponse([]));
     petServiceMock.listProfessionals.mockResolvedValue(createPageResponse([]));
     petServiceMock.listMedicalRecords.mockResolvedValue(createPageResponse([]));
@@ -117,6 +122,7 @@ describe('PetMedicalRecordsPage', () => {
     expect(screen.queryByText('Prescrições vinculadas ao histórico do atendimento.')).not.toBeInTheDocument();
     expect(petServiceMock.listMedicalRecords).not.toHaveBeenCalled();
     expect(petServiceMock.listPrescriptions).not.toHaveBeenCalled();
+    expect(petServiceMock.getClinicalTimeline).not.toHaveBeenCalled();
   });
 
   it('mostra fallback quando o usuário não possui nenhuma permissão médica', async () => {
@@ -129,7 +135,27 @@ describe('PetMedicalRecordsPage', () => {
       expect(petServiceMock.listMedicalRecords).not.toHaveBeenCalled();
       expect(petServiceMock.listVaccinations).not.toHaveBeenCalled();
       expect(petServiceMock.listPrescriptions).not.toHaveBeenCalled();
+      expect(petServiceMock.getClinicalTimeline).not.toHaveBeenCalled();
     });
+  });
+
+  it('mostra orientacao de timeline quando nao ha pet nem atendimento em contexto', async () => {
+    setGrantedPermissions([
+      'pet.profile.read',
+      'pet.professional.read',
+      'pet.medical-record.read'
+    ]);
+
+    render(<PetMedicalRecordsPage />);
+
+    await waitFor(() => {
+      expect(petServiceMock.listMedicalRecords).toHaveBeenCalledTimes(1);
+    });
+
+    expect(
+      screen.getByText('Selecione um pet ou abra um atendimento para visualizar a timeline clinica consolidada.')
+    ).toBeInTheDocument();
+    expect(petServiceMock.getClinicalTimeline).not.toHaveBeenCalled();
   });
 
   it('usa o atendimento selecionado como contexto clínico do prontuário', async () => {
@@ -192,6 +218,43 @@ describe('PetMedicalRecordsPage', () => {
       createdAt: '2026-03-10T10:05:00Z',
       updatedAt: '2026-03-10T10:05:00Z'
     });
+    petServiceMock.getClinicalTimeline.mockResolvedValue({
+      petId: 'pet-1',
+      petName: 'Nina',
+      appointmentId: 'appointment-1',
+      appointmentServiceName: 'Consulta clínica',
+      appointmentScheduledAt: '2026-03-10T10:00:00Z',
+      appointmentStatus: 'SCHEDULED',
+      totalEvents: 2,
+      events: [
+        {
+          eventType: 'VACCINATION',
+          eventId: 'event-1',
+          occurredAt: '2026-03-10T10:10:00Z',
+          petId: 'pet-1',
+          petName: 'Nina',
+          appointmentId: 'appointment-1',
+          appointmentServiceName: 'Consulta clínica',
+          appointmentScheduledAt: '2026-03-10T10:00:00Z',
+          title: 'Raiva',
+          summary: 'Dose anual'
+        },
+        {
+          eventType: 'MEDICAL_RECORD',
+          eventId: 'event-2',
+          occurredAt: '2026-03-10T10:05:00Z',
+          petId: 'pet-1',
+          petName: 'Nina',
+          professionalId: 'professional-1',
+          professionalName: 'Dr Example',
+          appointmentId: 'appointment-1',
+          appointmentServiceName: 'Consulta clínica',
+          appointmentScheduledAt: '2026-03-10T10:00:00Z',
+          title: 'Otite',
+          summary: 'Observação inicial'
+        }
+      ]
+    });
 
     render(<PetMedicalRecordsPage />);
 
@@ -207,7 +270,18 @@ describe('PetMedicalRecordsPage', () => {
       });
     });
 
+    await waitFor(() => {
+      expect(petServiceMock.getClinicalTimeline).toHaveBeenCalledWith({
+        petId: undefined,
+        appointmentId: 'appointment-1',
+        limit: 20
+      });
+    });
+
     expect(screen.getByText('Atendimento em contexto clínico ativo.')).toBeInTheDocument();
+    expect(screen.getByText('Timeline clinica do atendimento atual.')).toBeInTheDocument();
+    expect(screen.getByText('Raiva')).toBeInTheDocument();
+    expect(screen.getByText('Otite')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Ver histórico completo' })).toHaveAttribute(
       'href',
       '/pet/medical-records'

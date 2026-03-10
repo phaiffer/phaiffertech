@@ -13,6 +13,7 @@ import {
   createPetMedicalRecordColumns,
   createPetPrescriptionColumns,
   createPetVaccinationColumns,
+  PetClinicalTimelineSection,
   PetMedicalFilters,
   PetMedicalPageFallback,
   PetMedicalRecordSection,
@@ -33,6 +34,7 @@ import { petService } from '@/shared/services/pet-service';
 import { PageResponse } from '@/shared/types/common';
 import {
   PetAppointment,
+  PetClinicalTimeline,
   PetMedicalRecord,
   PetPrescription,
   PetProfessional,
@@ -71,12 +73,16 @@ const emptyPrescriptionsPage: PageResponse<PetPrescription> = {
 export function PetMedicalRecordsPage() {
   const searchParams = useSearchParams();
   const { hasAnyPermission, hasPermission } = usePermissions();
+  const appointmentContextId = searchParams.get('appointmentId');
   const [pets, setPets] = useState<PetProfile[]>([]);
   const [professionals, setProfessionals] = useState<PetProfessional[]>([]);
   const [lookupIssues, setLookupIssues] = useState<PetLookupIssue[]>([]);
   const [appointmentContext, setAppointmentContext] = useState<PetAppointment | null>(null);
   const [appointmentContextLoading, setAppointmentContextLoading] = useState(false);
   const [appointmentContextError, setAppointmentContextError] = useState<string | null>(null);
+  const [clinicalTimeline, setClinicalTimeline] = useState<PetClinicalTimeline | null>(null);
+  const [clinicalTimelineLoading, setClinicalTimelineLoading] = useState(false);
+  const [clinicalTimelineError, setClinicalTimelineError] = useState<string | null>(null);
 
   const [recordsPageData, setRecordsPageData] = useState<PageResponse<PetMedicalRecord>>(emptyMedicalRecordsPage);
   const [vaccinationsPageData, setVaccinationsPageData] = useState<PageResponse<PetVaccination>>(emptyVaccinationsPage);
@@ -99,7 +105,7 @@ export function PetMedicalRecordsPage() {
   const [prescriptionsPage, setPrescriptionsPage] = useState(0);
 
   const [editingRecordId, setEditingRecordId] = useState<string | null>(null);
-  const [recordAppointmentId, setRecordAppointmentId] = useState('');
+  const [recordAppointmentId, setRecordAppointmentId] = useState(appointmentContextId ?? '');
   const [recordPetId, setRecordPetId] = useState('');
   const [recordProfessionalId, setRecordProfessionalId] = useState('');
   const [recordDescription, setRecordDescription] = useState('');
@@ -108,7 +114,7 @@ export function PetMedicalRecordsPage() {
   const [recordSubmitting, setRecordSubmitting] = useState(false);
 
   const [editingVaccinationId, setEditingVaccinationId] = useState<string | null>(null);
-  const [vaccinationAppointmentId, setVaccinationAppointmentId] = useState('');
+  const [vaccinationAppointmentId, setVaccinationAppointmentId] = useState(appointmentContextId ?? '');
   const [vaccinationPetId, setVaccinationPetId] = useState('');
   const [vaccineName, setVaccineName] = useState('');
   const [appliedAt, setAppliedAt] = useState('');
@@ -117,7 +123,7 @@ export function PetMedicalRecordsPage() {
   const [vaccinationSubmitting, setVaccinationSubmitting] = useState(false);
 
   const [editingPrescriptionId, setEditingPrescriptionId] = useState<string | null>(null);
-  const [prescriptionAppointmentId, setPrescriptionAppointmentId] = useState('');
+  const [prescriptionAppointmentId, setPrescriptionAppointmentId] = useState(appointmentContextId ?? '');
   const [prescriptionPetId, setPrescriptionPetId] = useState('');
   const [prescriptionProfessionalId, setPrescriptionProfessionalId] = useState('');
   const [medication, setMedication] = useState('');
@@ -129,7 +135,6 @@ export function PetMedicalRecordsPage() {
   const [deleteVaccinationCandidate, setDeleteVaccinationCandidate] = useState<PetVaccination | null>(null);
   const [deletePrescriptionCandidate, setDeletePrescriptionCandidate] = useState<PetPrescription | null>(null);
 
-  const appointmentContextId = searchParams.get('appointmentId');
   const canReadAppointments = hasPermission('pet.appointment.read');
   const canReadPets = hasPermission('pet.profile.read');
   const canReadProfessionals = hasPermission('pet.professional.read');
@@ -143,6 +148,7 @@ export function PetMedicalRecordsPage() {
   const canAccessAnyMedical = hasAnyPermission(petMedicalRoutePermissions);
   const needsProfessionalLookup = canAccessMedicalRecords || canAccessPrescriptions;
   const showProfessionalFilter = canReadMedicalRecords || canReadPrescriptions;
+  const activeAppointmentContextId = appointmentContextId ?? undefined;
 
   const petOptions = useMemo(() => {
     const appointmentPetOption = appointmentContext
@@ -263,6 +269,43 @@ export function PetMedicalRecordsPage() {
     setLookupIssues(issues);
   }, [canAccessAnyMedical, canReadPets, canReadProfessionals, needsProfessionalLookup]);
 
+  const loadClinicalTimeline = useCallback(async (currentPetId: string, currentAppointmentId?: string) => {
+    if (!canReadMedicalRecords) {
+      setClinicalTimeline(null);
+      setClinicalTimelineError(null);
+      setClinicalTimelineLoading(false);
+      return;
+    }
+
+    if (!currentPetId && !currentAppointmentId) {
+      setClinicalTimeline(null);
+      setClinicalTimelineError(null);
+      setClinicalTimelineLoading(false);
+      return;
+    }
+
+    setClinicalTimelineLoading(true);
+    setClinicalTimelineError(null);
+
+    try {
+      const result = await petService.getClinicalTimeline({
+        petId: currentAppointmentId ? undefined : currentPetId || undefined,
+        appointmentId: currentAppointmentId || undefined,
+        limit: 20
+      });
+      setClinicalTimeline(result);
+    } catch (err) {
+      setClinicalTimeline(null);
+      setClinicalTimelineError(
+        err instanceof ApiClientError
+          ? err.message
+          : 'Erro ao carregar a timeline clinica consolidada.'
+      );
+    } finally {
+      setClinicalTimelineLoading(false);
+    }
+  }, [canReadMedicalRecords]);
+
   const loadRecords = useCallback(async (
     page: number,
     currentSearch: string,
@@ -368,26 +411,40 @@ export function PetMedicalRecordsPage() {
   }, [appointmentContext]);
 
   useEffect(() => {
+    if (!activeAppointmentContextId) {
+      return;
+    }
+
+    setRecordAppointmentId((currentValue) => currentValue || activeAppointmentContextId);
+    setVaccinationAppointmentId((currentValue) => currentValue || activeAppointmentContextId);
+    setPrescriptionAppointmentId((currentValue) => currentValue || activeAppointmentContextId);
+  }, [activeAppointmentContextId]);
+
+  useEffect(() => {
     setRecordsPage(0);
     setVaccinationsPage(0);
     setPrescriptionsPage(0);
-  }, [appointmentContext?.id, petFilterId, professionalFilterId, search]);
+  }, [activeAppointmentContextId, petFilterId, professionalFilterId, search]);
 
   useEffect(() => {
-    loadRecords(recordsPage, search, petFilterId, professionalFilterId, appointmentContext?.id);
-  }, [appointmentContext?.id, loadRecords, petFilterId, professionalFilterId, recordsPage, search]);
+    loadRecords(recordsPage, search, petFilterId, professionalFilterId, activeAppointmentContextId);
+  }, [activeAppointmentContextId, loadRecords, petFilterId, professionalFilterId, recordsPage, search]);
 
   useEffect(() => {
-    loadVaccinations(vaccinationsPage, search, petFilterId, appointmentContext?.id);
-  }, [appointmentContext?.id, loadVaccinations, petFilterId, search, vaccinationsPage]);
+    loadVaccinations(vaccinationsPage, search, petFilterId, activeAppointmentContextId);
+  }, [activeAppointmentContextId, loadVaccinations, petFilterId, search, vaccinationsPage]);
 
   useEffect(() => {
-    loadPrescriptions(prescriptionsPage, search, petFilterId, professionalFilterId, appointmentContext?.id);
-  }, [appointmentContext?.id, loadPrescriptions, petFilterId, prescriptionsPage, professionalFilterId, search]);
+    loadPrescriptions(prescriptionsPage, search, petFilterId, professionalFilterId, activeAppointmentContextId);
+  }, [activeAppointmentContextId, loadPrescriptions, petFilterId, prescriptionsPage, professionalFilterId, search]);
+
+  useEffect(() => {
+    loadClinicalTimeline(activeAppointmentContextId ? '' : petFilterId, activeAppointmentContextId);
+  }, [activeAppointmentContextId, loadClinicalTimeline, petFilterId]);
 
   function resetRecordForm() {
     setEditingRecordId(null);
-    setRecordAppointmentId(appointmentContext?.id ?? '');
+    setRecordAppointmentId(activeAppointmentContextId ?? '');
     setRecordPetId(appointmentContext?.petId ?? '');
     setRecordProfessionalId(appointmentContext?.professionalId ?? '');
     setRecordDescription('');
@@ -397,7 +454,7 @@ export function PetMedicalRecordsPage() {
 
   function resetVaccinationForm() {
     setEditingVaccinationId(null);
-    setVaccinationAppointmentId(appointmentContext?.id ?? '');
+    setVaccinationAppointmentId(activeAppointmentContextId ?? '');
     setVaccinationPetId(appointmentContext?.petId ?? '');
     setVaccineName('');
     setAppliedAt('');
@@ -407,7 +464,7 @@ export function PetMedicalRecordsPage() {
 
   function resetPrescriptionForm() {
     setEditingPrescriptionId(null);
-    setPrescriptionAppointmentId(appointmentContext?.id ?? '');
+    setPrescriptionAppointmentId(activeAppointmentContextId ?? '');
     setPrescriptionPetId(appointmentContext?.petId ?? '');
     setPrescriptionProfessionalId(appointmentContext?.professionalId ?? '');
     setMedication('');
@@ -466,7 +523,7 @@ export function PetMedicalRecordsPage() {
       const payload = {
         petId: recordPetId,
         professionalId: recordProfessionalId,
-        appointmentId: appointmentContext?.id || recordAppointmentId || undefined,
+        appointmentId: activeAppointmentContextId || recordAppointmentId || undefined,
         description: recordDescription,
         diagnosis: recordDiagnosis || undefined,
         treatment: recordTreatment || undefined
@@ -481,7 +538,8 @@ export function PetMedicalRecordsPage() {
       }
 
       resetRecordForm();
-      await loadRecords(recordsPage, search, petFilterId, professionalFilterId, appointmentContext?.id);
+      await loadRecords(recordsPage, search, petFilterId, professionalFilterId, activeAppointmentContextId);
+      await loadClinicalTimeline(activeAppointmentContextId ? '' : petFilterId, activeAppointmentContextId);
     } catch (err) {
       setError(err instanceof ApiClientError ? err.message : 'Erro ao salvar prontuário.');
     } finally {
@@ -505,7 +563,7 @@ export function PetMedicalRecordsPage() {
     try {
       const payload = {
         petId: vaccinationPetId,
-        appointmentId: appointmentContext?.id || vaccinationAppointmentId || undefined,
+        appointmentId: activeAppointmentContextId || vaccinationAppointmentId || undefined,
         vaccineName,
         appliedAt: isoAppliedAt,
         nextDueAt: isoNextDueAt,
@@ -521,7 +579,8 @@ export function PetMedicalRecordsPage() {
       }
 
       resetVaccinationForm();
-      await loadVaccinations(vaccinationsPage, search, petFilterId, appointmentContext?.id);
+      await loadVaccinations(vaccinationsPage, search, petFilterId, activeAppointmentContextId);
+      await loadClinicalTimeline(activeAppointmentContextId ? '' : petFilterId, activeAppointmentContextId);
     } catch (err) {
       setError(err instanceof ApiClientError ? err.message : 'Erro ao salvar vacinação.');
     } finally {
@@ -544,7 +603,7 @@ export function PetMedicalRecordsPage() {
       const payload = {
         petId: prescriptionPetId,
         professionalId: prescriptionProfessionalId,
-        appointmentId: appointmentContext?.id || prescriptionAppointmentId || undefined,
+        appointmentId: activeAppointmentContextId || prescriptionAppointmentId || undefined,
         medication,
         dosage: dosage || undefined,
         instructions: instructions || undefined
@@ -564,8 +623,9 @@ export function PetMedicalRecordsPage() {
         search,
         petFilterId,
         professionalFilterId,
-        appointmentContext?.id
+        activeAppointmentContextId
       );
+      await loadClinicalTimeline(activeAppointmentContextId ? '' : petFilterId, activeAppointmentContextId);
     } catch (err) {
       setError(err instanceof ApiClientError ? err.message : 'Erro ao salvar prescrição.');
     } finally {
@@ -582,7 +642,8 @@ export function PetMedicalRecordsPage() {
       await petService.deleteMedicalRecord(deleteRecordCandidate.id);
       setDeleteRecordCandidate(null);
       setSuccess('Prontuário removido com sucesso.');
-      await loadRecords(recordsPage, search, petFilterId, professionalFilterId, appointmentContext?.id);
+      await loadRecords(recordsPage, search, petFilterId, professionalFilterId, activeAppointmentContextId);
+      await loadClinicalTimeline(activeAppointmentContextId ? '' : petFilterId, activeAppointmentContextId);
     } catch (err) {
       setError(err instanceof ApiClientError ? err.message : 'Erro ao excluir prontuário.');
     }
@@ -597,7 +658,8 @@ export function PetMedicalRecordsPage() {
       await petService.deleteVaccination(deleteVaccinationCandidate.id);
       setDeleteVaccinationCandidate(null);
       setSuccess('Vacinação removida com sucesso.');
-      await loadVaccinations(vaccinationsPage, search, petFilterId, appointmentContext?.id);
+      await loadVaccinations(vaccinationsPage, search, petFilterId, activeAppointmentContextId);
+      await loadClinicalTimeline(activeAppointmentContextId ? '' : petFilterId, activeAppointmentContextId);
     } catch (err) {
       setError(err instanceof ApiClientError ? err.message : 'Erro ao excluir vacinação.');
     }
@@ -617,8 +679,9 @@ export function PetMedicalRecordsPage() {
         search,
         petFilterId,
         professionalFilterId,
-        appointmentContext?.id
+        activeAppointmentContextId
       );
+      await loadClinicalTimeline(activeAppointmentContextId ? '' : petFilterId, activeAppointmentContextId);
     } catch (err) {
       setError(err instanceof ApiClientError ? err.message : 'Erro ao excluir prescrição.');
     }
@@ -629,6 +692,7 @@ export function PetMedicalRecordsPage() {
   const medicalRecordFormReady = appointmentContext ? true : !petLookupUnavailable && !professionalsLookupUnavailable;
   const vaccinationFormReady = appointmentContext ? true : !petLookupUnavailable;
   const prescriptionFormReady = appointmentContext ? true : !petLookupUnavailable && !professionalsLookupUnavailable;
+  const clinicalTimelineReady = Boolean(activeAppointmentContextId || petFilterId);
   const appointmentContextDescription = appointmentContext
     ? `Fluxo vinculado ao atendimento ${appointmentContext.serviceName} de ${appointmentContext.petName ?? appointmentContext.petId} com ${appointmentContext.professionalName ?? appointmentContext.professionalId}.`
     : null;
@@ -715,6 +779,15 @@ export function PetMedicalRecordsPage() {
 
         {error ? <div className="rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{error}</div> : null}
         {success ? <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">{success}</div> : null}
+
+        {canReadMedicalRecords ? (
+          <PetClinicalTimelineSection
+            data={clinicalTimeline}
+            loading={clinicalTimelineLoading}
+            error={clinicalTimelineError}
+            ready={clinicalTimelineReady}
+          />
+        ) : null}
 
         {canAccessMedicalRecords ? (
           <PetMedicalRecordSection
