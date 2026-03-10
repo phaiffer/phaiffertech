@@ -11,8 +11,11 @@ import com.phaiffertech.platform.shared.pagination.PageRequestDto;
 import com.phaiffertech.platform.shared.pagination.PageResponseDto;
 import com.phaiffertech.platform.shared.pagination.PaginationUtils;
 import com.phaiffertech.platform.shared.tenancy.TenantContext;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -35,13 +38,64 @@ public class CrmActivityService {
     }
 
     @Transactional(readOnly = true)
-    public PageResponseDto<CrmActivityResponse> list(PageRequestDto pageRequest) {
-        Page<CrmActivityResponse> result = repository.findCrmActivity(
-                        TenantContext.getRequiredTenantId(),
-                        PaginationUtils.toPageable(pageRequest, Sort.by(Sort.Direction.DESC, "createdAt"))
-                )
-                .map(this::toResponse);
-        return PaginationUtils.fromPage(result);
+    public PageResponseDto<CrmActivityResponse> list(
+            PageRequestDto pageRequest,
+            String relatedReferenceType,
+            UUID relatedId
+    ) {
+        UUID tenantId = TenantContext.getRequiredTenantId();
+        String normalizedRelatedReferenceType = relationResolverService.normalizeFilterReferenceType(relatedReferenceType);
+
+        if (normalizedRelatedReferenceType == null && relatedId == null) {
+            Page<CrmActivityResponse> result = repository.findCrmActivity(
+                            tenantId,
+                            PaginationUtils.toPageable(pageRequest, Sort.by(Sort.Direction.DESC, "createdAt"))
+                    )
+                    .map(this::toResponse);
+            return PaginationUtils.fromPage(result);
+        }
+
+        return listFiltered(tenantId, pageRequest, normalizedRelatedReferenceType, relatedId);
+    }
+
+    private PageResponseDto<CrmActivityResponse> listFiltered(
+            UUID tenantId,
+            PageRequestDto pageRequest,
+            String relatedReferenceType,
+            UUID relatedId
+    ) {
+        int requestedPage = pageRequest.resolvedPage();
+        int requestedSize = pageRequest.resolvedSize();
+        int offset = requestedPage * requestedSize;
+        int scanPage = 0;
+        int scanSize = Math.max(requestedSize, 100);
+
+        long totalMatches = 0;
+        List<CrmActivityResponse> items = new ArrayList<>();
+
+        Page<AuditLog> scannedPage;
+        do {
+            scannedPage = repository.findCrmActivity(
+                    tenantId,
+                    PageRequest.of(scanPage, scanSize, Sort.by(Sort.Direction.DESC, "createdAt"))
+            );
+
+            for (AuditLog auditLog : scannedPage.getContent()) {
+                if (!matchesRelatedFilter(auditLog, relatedReferenceType, relatedId)) {
+                    continue;
+                }
+
+                if (totalMatches >= offset && items.size() < requestedSize) {
+                    items.add(toResponse(auditLog));
+                }
+                totalMatches++;
+            }
+
+            scanPage++;
+        } while (scannedPage.hasNext());
+
+        int totalPages = totalMatches == 0 ? 0 : (int) Math.ceil((double) totalMatches / requestedSize);
+        return new PageResponseDto<>(items, requestedPage, requestedSize, totalMatches, totalPages);
     }
 
     private CrmActivityResponse toResponse(AuditLog auditLog) {
@@ -70,6 +124,23 @@ public class CrmActivityService {
                 payload,
                 auditLog.getCreatedAt()
         );
+    }
+
+    private boolean matchesRelatedFilter(AuditLog auditLog, String relatedReferenceType, UUID relatedId) {
+        JsonNode payload = readPayload(auditLog.getPayload());
+        var relatedSelection = extractRelatedSelection(payload);
+
+        if (relatedReferenceType != null) {
+            if (relatedSelection == null || !relatedReferenceType.equals(relatedSelection.relatedReferenceType())) {
+                return false;
+            }
+        }
+
+        if (relatedId != null) {
+            return relatedSelection != null && relatedId.equals(relatedSelection.relatedId());
+        }
+
+        return true;
     }
 
     private String resolveEventType(AuditLog auditLog) {

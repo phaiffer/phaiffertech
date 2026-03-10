@@ -169,6 +169,11 @@ type NoteFilters = {
   dealId?: string;
 };
 
+type ActivityFilters = {
+  relatedReferenceType?: string;
+  relatedId?: string;
+};
+
 function queryString(
   page = 0,
   size = 20,
@@ -324,8 +329,13 @@ export const crmService = {
 
   deleteNote: (id: string) => apiClient.delete<void>(`/crm/notes/${id}`),
 
-  listActivity: (page = 0, size = 20) =>
-    apiClient.get<PageResponse<CrmActivityItem>>(`/crm/activity?${queryString(page, size)}`),
+  listActivity: (page = 0, size = 20, filters: ActivityFilters = {}) =>
+    apiClient.get<PageResponse<CrmActivityItem>>(
+      `/crm/activity?${queryString(page, size, '', {
+        relatedReferenceType: filters.relatedReferenceType,
+        relatedId: filters.relatedId
+      })}`
+    ),
 
   getDashboardSummary: () => apiClient.get<CrmDashboardSummary>('/crm/dashboard/summary')
 };

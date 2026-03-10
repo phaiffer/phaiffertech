@@ -7,9 +7,11 @@ import com.phaiffertech.platform.shared.pagination.PageResponseDto;
 import com.phaiffertech.platform.shared.response.ApiResponse;
 import com.phaiffertech.platform.shared.security.RequirePermission;
 import jakarta.validation.Valid;
+import java.util.UUID;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -24,7 +26,11 @@ public class CrmActivityController {
 
     @GetMapping
     @RequirePermission("crm.activity.read")
-    public ApiResponse<PageResponseDto<CrmActivityResponse>> list(@Valid @ModelAttribute PageRequestDto pageRequest) {
-        return ApiResponse.success(service.list(pageRequest));
+    public ApiResponse<PageResponseDto<CrmActivityResponse>> list(
+            @Valid @ModelAttribute PageRequestDto pageRequest,
+            @RequestParam(required = false) String relatedReferenceType,
+            @RequestParam(required = false) UUID relatedId
+    ) {
+        return ApiResponse.success(service.list(pageRequest, relatedReferenceType, relatedId));
     }
 }
