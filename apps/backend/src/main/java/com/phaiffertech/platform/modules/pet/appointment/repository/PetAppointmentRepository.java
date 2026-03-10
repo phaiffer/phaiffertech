@@ -3,6 +3,7 @@ package com.phaiffertech.platform.modules.pet.appointment.repository;
 import com.phaiffertech.platform.modules.pet.appointment.domain.PetAppointment;
 import com.phaiffertech.platform.shared.crud.BaseTenantCrudRepository;
 import java.time.Instant;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -31,6 +32,8 @@ public interface PetAppointmentRepository extends JpaRepository<PetAppointment, 
             UUID tenantId,
             Instant scheduledFrom
     );
+
+    List<PetAppointment> findAllByTenantIdAndIdIn(UUID tenantId, Collection<UUID> ids);
 
     @Query("""
             SELECT a

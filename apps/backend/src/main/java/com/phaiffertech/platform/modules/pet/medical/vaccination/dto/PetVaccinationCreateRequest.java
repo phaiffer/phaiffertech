@@ -7,6 +7,7 @@ import java.util.UUID;
 
 public record PetVaccinationCreateRequest(
         @NotNull UUID petId,
+        UUID appointmentId,
         @NotBlank String vaccineName,
         @NotNull Instant appliedAt,
         Instant nextDueAt,

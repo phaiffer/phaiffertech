@@ -47,7 +47,7 @@ describe('PetAppointmentsPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
 
-    setGrantedPermissions(['pet.appointment.read', 'pet.appointment.create']);
+    setGrantedPermissions(['pet.appointment.read', 'pet.appointment.create', 'pet.medical-record.read']);
 
     petServiceMock.listClients.mockResolvedValue(createPageResponse([]));
     petServiceMock.listProfiles.mockResolvedValue(createPageResponse([]));
@@ -66,6 +66,9 @@ describe('PetAppointmentsPage', () => {
         professionalName: 'Dr Example',
         scheduledAt: '2026-03-10T10:00:00Z',
         status: 'SCHEDULED',
+        medicalRecordCount: 0,
+        vaccinationCount: 0,
+        prescriptionCount: 0,
         createdAt: '2026-03-10T10:00:00Z',
         updatedAt: '2026-03-10T10:00:00Z'
       }
@@ -85,6 +88,12 @@ describe('PetAppointmentsPage', () => {
     expect(screen.getByText('Pet Example')).toBeInTheDocument();
     expect(screen.getByText('Dr Example')).toBeInTheDocument();
     expect(screen.getByText('Bath')).toBeInTheDocument();
+    expect(screen.getByText('PENDING')).toBeInTheDocument();
+    expect(screen.getByText('Prontuários 0 | Vacinas 0 | Prescrições 0')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Iniciar atendimento' })).toHaveAttribute(
+      'href',
+      '/pet/medical-records?appointmentId=appointment-1'
+    );
     expect(
       screen.getByText('O formulário depende de clientes, pets, serviços e profissionais carregados para funcionar corretamente.')
     ).toBeInTheDocument();

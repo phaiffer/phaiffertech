@@ -9,6 +9,12 @@ import com.phaiffertech.platform.modules.pet.appointment.mapper.PetAppointmentMa
 import com.phaiffertech.platform.modules.pet.appointment.repository.PetAppointmentRepository;
 import com.phaiffertech.platform.modules.pet.client.domain.PetClient;
 import com.phaiffertech.platform.modules.pet.client.repository.PetClientRepository;
+import com.phaiffertech.platform.modules.pet.medical.prescription.domain.PetPrescription;
+import com.phaiffertech.platform.modules.pet.medical.prescription.repository.PetPrescriptionRepository;
+import com.phaiffertech.platform.modules.pet.medical.record.domain.PetMedicalRecord;
+import com.phaiffertech.platform.modules.pet.medical.record.repository.PetMedicalRecordRepository;
+import com.phaiffertech.platform.modules.pet.medical.vaccination.domain.PetVaccination;
+import com.phaiffertech.platform.modules.pet.medical.vaccination.repository.PetVaccinationRepository;
 import com.phaiffertech.platform.modules.pet.petprofile.domain.PetProfile;
 import com.phaiffertech.platform.modules.pet.petprofile.repository.PetProfileRepository;
 import com.phaiffertech.platform.modules.pet.professional.domain.PetProfessional;
@@ -48,6 +54,9 @@ public class PetAppointmentService extends BaseTenantCrudService<
     private final PetProfileRepository petProfileRepository;
     private final PetServiceCatalogRepository petServiceCatalogRepository;
     private final PetProfessionalRepository petProfessionalRepository;
+    private final PetMedicalRecordRepository petMedicalRecordRepository;
+    private final PetVaccinationRepository petVaccinationRepository;
+    private final PetPrescriptionRepository petPrescriptionRepository;
     private final PlatformMetricsService platformMetricsService;
 
     public PetAppointmentService(
@@ -56,6 +65,9 @@ public class PetAppointmentService extends BaseTenantCrudService<
             PetProfileRepository petProfileRepository,
             PetServiceCatalogRepository petServiceCatalogRepository,
             PetProfessionalRepository petProfessionalRepository,
+            PetMedicalRecordRepository petMedicalRecordRepository,
+            PetVaccinationRepository petVaccinationRepository,
+            PetPrescriptionRepository petPrescriptionRepository,
             PlatformMetricsService platformMetricsService
     ) {
         super(repository, repository, PetAppointmentMapper.INSTANCE, "Pet appointment not found.");
@@ -64,6 +76,9 @@ public class PetAppointmentService extends BaseTenantCrudService<
         this.petProfileRepository = petProfileRepository;
         this.petServiceCatalogRepository = petServiceCatalogRepository;
         this.petProfessionalRepository = petProfessionalRepository;
+        this.petMedicalRecordRepository = petMedicalRecordRepository;
+        this.petVaccinationRepository = petVaccinationRepository;
+        this.petPrescriptionRepository = petPrescriptionRepository;
         this.platformMetricsService = platformMetricsService;
     }
 
@@ -119,8 +134,19 @@ public class PetAppointmentService extends BaseTenantCrudService<
         Map<UUID, String> professionalNames = loadProfessionalNames(tenantId, appointments.getContent().stream()
                 .map(PetAppointment::getProfessionalId)
                 .collect(Collectors.toSet()));
+        Map<UUID, Integer> medicalRecordCounts = loadMedicalRecordCounts(tenantId, appointments.getContent());
+        Map<UUID, Integer> vaccinationCounts = loadVaccinationCounts(tenantId, appointments.getContent());
+        Map<UUID, Integer> prescriptionCounts = loadPrescriptionCounts(tenantId, appointments.getContent());
         Page<PetAppointmentResponse> mapped = appointments.map(appointment ->
-                toValidatedResponse(appointment, clientNames, petNames, professionalNames));
+                toValidatedResponse(
+                        appointment,
+                        clientNames,
+                        petNames,
+                        professionalNames,
+                        medicalRecordCounts,
+                        vaccinationCounts,
+                        prescriptionCounts
+                ));
 
         return PaginationUtils.fromPage(mapped);
     }
@@ -134,8 +160,15 @@ public class PetAppointmentService extends BaseTenantCrudService<
     @Transactional
     @AuditableAction(action = AuditActionType.UPDATE, entity = "pet_appointment")
     public PetAppointmentResponse update(UUID id, PetAppointmentUpdateRequest request) {
-        PetAppointmentResponse response = doUpdate(id, request);
-        return getById(response.id());
+        UUID tenantId = currentTenantId();
+        PetAppointment entity = getOrThrow(id, tenantId);
+
+        ensureLinkedClinicalEntriesAllowUpdate(tenantId, entity, request);
+
+        PetAppointmentMapper.INSTANCE.updateEntity(entity, request);
+        hydrateAndValidateRelations(tenantId, request.clientId(), request.petId(), request.serviceId(), request.professionalId(), entity);
+
+        return toValidatedResponse(repository.save(entity), tenantId);
     }
 
     @Transactional
@@ -159,6 +192,15 @@ public class PetAppointmentService extends BaseTenantCrudService<
     @Override
     public void beforeRestore(UUID tenantId, PetAppointment entity) {
         validateContractIntegrity(entity);
+    }
+
+    @Override
+    public void beforeDelete(UUID tenantId, PetAppointment entity) {
+        if (hasLinkedClinicalEntries(tenantId, entity.getId())) {
+            throw new ConflictOperationException(
+                    "Pet appointment has linked clinical workflow entries and cannot be removed."
+            );
+        }
     }
 
     private void hydrateAndValidateRelations(
@@ -196,7 +238,10 @@ public class PetAppointmentService extends BaseTenantCrudService<
                 appointment,
                 resolveClientName(petClientRepository.findByIdAndTenantId(appointment.getClientId(), tenantId).orElse(null)),
                 resolvePetName(petProfileRepository.findByIdAndTenantId(appointment.getPetId(), tenantId).orElse(null)),
-                resolveProfessionalName(petProfessionalRepository.findByIdAndTenantId(appointment.getProfessionalId(), tenantId).orElse(null))
+                resolveProfessionalName(petProfessionalRepository.findByIdAndTenantId(appointment.getProfessionalId(), tenantId).orElse(null)),
+                Math.toIntExact(petMedicalRecordRepository.countByTenantIdAndAppointmentId(tenantId, appointment.getId())),
+                Math.toIntExact(petVaccinationRepository.countByTenantIdAndAppointmentId(tenantId, appointment.getId())),
+                Math.toIntExact(petPrescriptionRepository.countByTenantIdAndAppointmentId(tenantId, appointment.getId()))
         );
     }
 
@@ -204,14 +249,20 @@ public class PetAppointmentService extends BaseTenantCrudService<
             PetAppointment appointment,
             Map<UUID, String> clientNames,
             Map<UUID, String> petNames,
-            Map<UUID, String> professionalNames
+            Map<UUID, String> professionalNames,
+            Map<UUID, Integer> medicalRecordCounts,
+            Map<UUID, Integer> vaccinationCounts,
+            Map<UUID, Integer> prescriptionCounts
     ) {
         validateContractIntegrity(appointment);
         return PetAppointmentMapper.INSTANCE.toResponse(
                 appointment,
                 clientNames.get(appointment.getClientId()),
                 petNames.get(appointment.getPetId()),
-                professionalNames.get(appointment.getProfessionalId())
+                professionalNames.get(appointment.getProfessionalId()),
+                medicalRecordCounts.getOrDefault(appointment.getId(), 0),
+                vaccinationCounts.getOrDefault(appointment.getId(), 0),
+                prescriptionCounts.getOrDefault(appointment.getId(), 0)
         );
     }
 
@@ -254,6 +305,80 @@ public class PetAppointmentService extends BaseTenantCrudService<
                 PetProfessional::getId,
                 PetProfessional::getName
         );
+    }
+
+    private Map<UUID, Integer> loadMedicalRecordCounts(UUID tenantId, Collection<PetAppointment> appointments) {
+        if (appointments.isEmpty()) {
+            return Map.of();
+        }
+        return countByAppointmentId(
+                petMedicalRecordRepository.findAllByTenantIdAndAppointmentIdIn(
+                        tenantId,
+                        appointments.stream().map(PetAppointment::getId).collect(Collectors.toSet())
+                ),
+                PetMedicalRecord::getAppointmentId
+        );
+    }
+
+    private Map<UUID, Integer> loadVaccinationCounts(UUID tenantId, Collection<PetAppointment> appointments) {
+        if (appointments.isEmpty()) {
+            return Map.of();
+        }
+        return countByAppointmentId(
+                petVaccinationRepository.findAllByTenantIdAndAppointmentIdIn(
+                        tenantId,
+                        appointments.stream().map(PetAppointment::getId).collect(Collectors.toSet())
+                ),
+                PetVaccination::getAppointmentId
+        );
+    }
+
+    private Map<UUID, Integer> loadPrescriptionCounts(UUID tenantId, Collection<PetAppointment> appointments) {
+        if (appointments.isEmpty()) {
+            return Map.of();
+        }
+        return countByAppointmentId(
+                petPrescriptionRepository.findAllByTenantIdAndAppointmentIdIn(
+                        tenantId,
+                        appointments.stream().map(PetAppointment::getId).collect(Collectors.toSet())
+                ),
+                PetPrescription::getAppointmentId
+        );
+    }
+
+    private <E> Map<UUID, Integer> countByAppointmentId(Collection<E> entities, Function<E, UUID> appointmentIdResolver) {
+        return entities.stream().collect(Collectors.toMap(
+                appointmentIdResolver,
+                entity -> 1,
+                Integer::sum
+        ));
+    }
+
+    private boolean hasLinkedClinicalEntries(UUID tenantId, UUID appointmentId) {
+        return petMedicalRecordRepository.existsByTenantIdAndAppointmentId(tenantId, appointmentId)
+                || petVaccinationRepository.existsByTenantIdAndAppointmentId(tenantId, appointmentId)
+                || petPrescriptionRepository.existsByTenantIdAndAppointmentId(tenantId, appointmentId);
+    }
+
+    private void ensureLinkedClinicalEntriesAllowUpdate(
+            UUID tenantId,
+            PetAppointment currentAppointment,
+            PetAppointmentUpdateRequest request
+    ) {
+        if (!hasLinkedClinicalEntries(tenantId, currentAppointment.getId())) {
+            return;
+        }
+
+        boolean relationshipsChanged = !currentAppointment.getClientId().equals(request.clientId())
+                || !currentAppointment.getPetId().equals(request.petId())
+                || !java.util.Objects.equals(currentAppointment.getServiceId(), request.serviceId())
+                || !java.util.Objects.equals(currentAppointment.getProfessionalId(), request.professionalId());
+
+        if (relationshipsChanged) {
+            throw new ConflictOperationException(
+                    "Pet appointment already has linked clinical workflow entries and cannot change client, pet, service or professional."
+            );
+        }
     }
 
     private <E> Map<UUID, String> toMap(

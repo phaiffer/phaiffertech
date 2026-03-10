@@ -1,6 +1,8 @@
 package com.phaiffertech.platform.modules.pet.medical.prescription.service;
 
 import com.phaiffertech.platform.core.audit.service.AuditableAction;
+import com.phaiffertech.platform.modules.pet.appointment.domain.PetAppointment;
+import com.phaiffertech.platform.modules.pet.appointment.repository.PetAppointmentRepository;
 import com.phaiffertech.platform.modules.pet.medical.prescription.domain.PetPrescription;
 import com.phaiffertech.platform.modules.pet.medical.prescription.dto.PetPrescriptionCreateRequest;
 import com.phaiffertech.platform.modules.pet.medical.prescription.dto.PetPrescriptionResponse;
@@ -14,6 +16,7 @@ import com.phaiffertech.platform.modules.pet.professional.repository.PetProfessi
 import com.phaiffertech.platform.shared.crud.BasePageQuery;
 import com.phaiffertech.platform.shared.crud.BaseTenantCrudService;
 import com.phaiffertech.platform.shared.domain.enums.AuditActionType;
+import com.phaiffertech.platform.shared.exception.ConflictOperationException;
 import com.phaiffertech.platform.shared.exception.ResourceNotFoundException;
 import com.phaiffertech.platform.shared.pagination.PageRequestDto;
 import com.phaiffertech.platform.shared.pagination.PageResponseDto;
@@ -36,28 +39,31 @@ public class PetPrescriptionService extends BaseTenantCrudService<
         PetPrescriptionResponse> {
 
     private final PetPrescriptionRepository repository;
+    private final PetAppointmentRepository petAppointmentRepository;
     private final PetProfileRepository petProfileRepository;
     private final PetProfessionalRepository petProfessionalRepository;
 
     public PetPrescriptionService(
             PetPrescriptionRepository repository,
+            PetAppointmentRepository petAppointmentRepository,
             PetProfileRepository petProfileRepository,
             PetProfessionalRepository petProfessionalRepository
     ) {
         super(repository, repository, PetPrescriptionMapper.INSTANCE, "Pet prescription not found.");
         this.repository = repository;
+        this.petAppointmentRepository = petAppointmentRepository;
         this.petProfileRepository = petProfileRepository;
         this.petProfessionalRepository = petProfessionalRepository;
     }
 
     @Override
     public void beforeCreate(UUID tenantId, PetPrescriptionCreateRequest request, PetPrescription entity) {
-        validateReferences(tenantId, request.petId(), request.professionalId());
+        validateReferences(tenantId, request.petId(), request.professionalId(), request.appointmentId());
     }
 
     @Override
     public void beforeUpdate(UUID tenantId, PetPrescriptionUpdateRequest request, PetPrescription entity) {
-        validateReferences(tenantId, request.petId(), request.professionalId());
+        validateReferences(tenantId, request.petId(), request.professionalId(), request.appointmentId());
     }
 
     @Transactional
@@ -71,7 +77,8 @@ public class PetPrescriptionService extends BaseTenantCrudService<
     public PageResponseDto<PetPrescriptionResponse> list(
             PageRequestDto pageRequest,
             UUID petId,
-            UUID professionalId
+            UUID professionalId,
+            UUID appointmentId
     ) {
         UUID tenantId = currentTenantId();
         BasePageQuery query = BasePageQuery.of(pageRequest, Sort.by(Sort.Direction.DESC, "createdAt"));
@@ -79,6 +86,7 @@ public class PetPrescriptionService extends BaseTenantCrudService<
                 tenantId,
                 petId,
                 professionalId,
+                appointmentId,
                 query.search(),
                 query.pageable()
         );
@@ -88,7 +96,11 @@ public class PetPrescriptionService extends BaseTenantCrudService<
         Map<UUID, String> professionalNames = loadProfessionalNames(tenantId, prescriptions.getContent().stream()
                 .map(PetPrescription::getProfessionalId)
                 .collect(Collectors.toSet()));
-        return PaginationUtils.fromPage(prescriptions.map(prescription -> toResponse(prescription, petNames, professionalNames)));
+        Map<UUID, PetAppointment> appointments = loadAppointments(tenantId, prescriptions.getContent().stream()
+                .map(PetPrescription::getAppointmentId)
+                .filter(java.util.Objects::nonNull)
+                .collect(Collectors.toSet()));
+        return PaginationUtils.fromPage(prescriptions.map(prescription -> toResponse(prescription, petNames, professionalNames, appointments)));
     }
 
     @Transactional(readOnly = true)
@@ -117,30 +129,41 @@ public class PetPrescriptionService extends BaseTenantCrudService<
         return getById(response.id());
     }
 
-    private void validateReferences(UUID tenantId, UUID petId, UUID professionalId) {
+    private void validateReferences(UUID tenantId, UUID petId, UUID professionalId, UUID appointmentId) {
         petProfileRepository.findByIdAndTenantId(petId, tenantId)
                 .orElseThrow(() -> new ResourceNotFoundException("Pet profile not found for tenant."));
         petProfessionalRepository.findByIdAndTenantId(professionalId, tenantId)
                 .orElseThrow(() -> new ResourceNotFoundException("Pet professional not found for tenant."));
+
+        if (appointmentId != null) {
+            validateAppointmentContext(tenantId, appointmentId, petId, professionalId);
+        }
     }
 
     private PetPrescriptionResponse toResponse(PetPrescription prescription, UUID tenantId) {
+        PetAppointment appointment = resolveAppointment(tenantId, prescription.getAppointmentId());
         return PetPrescriptionMapper.INSTANCE.toResponse(
                 prescription,
                 petProfileRepository.findByIdAndTenantId(prescription.getPetId(), tenantId).map(PetProfile::getName).orElse(null),
-                petProfessionalRepository.findByIdAndTenantId(prescription.getProfessionalId(), tenantId).map(PetProfessional::getName).orElse(null)
+                petProfessionalRepository.findByIdAndTenantId(prescription.getProfessionalId(), tenantId).map(PetProfessional::getName).orElse(null),
+                appointment == null ? null : appointment.getServiceName(),
+                appointment == null ? null : appointment.getScheduledAt()
         );
     }
 
     private PetPrescriptionResponse toResponse(
             PetPrescription prescription,
             Map<UUID, String> petNames,
-            Map<UUID, String> professionalNames
+            Map<UUID, String> professionalNames,
+            Map<UUID, PetAppointment> appointments
     ) {
+        PetAppointment appointment = appointments.get(prescription.getAppointmentId());
         return PetPrescriptionMapper.INSTANCE.toResponse(
                 prescription,
                 petNames.get(prescription.getPetId()),
-                professionalNames.get(prescription.getProfessionalId())
+                professionalNames.get(prescription.getProfessionalId()),
+                appointment == null ? null : appointment.getServiceName(),
+                appointment == null ? null : appointment.getScheduledAt()
         );
     }
 
@@ -156,6 +179,45 @@ public class PetPrescriptionService extends BaseTenantCrudService<
             return Map.of();
         }
         return toMap(petProfessionalRepository.findAllByTenantIdAndIdIn(tenantId, ids), PetProfessional::getId, PetProfessional::getName);
+    }
+
+    private Map<UUID, PetAppointment> loadAppointments(UUID tenantId, Collection<UUID> ids) {
+        if (ids.isEmpty()) {
+            return Map.of();
+        }
+        return petAppointmentRepository.findAllByTenantIdAndIdIn(tenantId, ids).stream()
+                .collect(Collectors.toMap(PetAppointment::getId, Function.identity()));
+    }
+
+    private PetAppointment resolveAppointment(UUID tenantId, UUID appointmentId) {
+        if (appointmentId == null) {
+            return null;
+        }
+        return petAppointmentRepository.findByIdAndTenantId(appointmentId, tenantId).orElse(null);
+    }
+
+    private void validateAppointmentContext(UUID tenantId, UUID appointmentId, UUID petId, UUID professionalId) {
+        PetAppointment appointment = petAppointmentRepository.findByIdAndTenantId(appointmentId, tenantId)
+                .orElseThrow(() -> new ResourceNotFoundException("Pet appointment not found for tenant."));
+
+        if (appointment.getServiceId() == null || appointment.getProfessionalId() == null) {
+            throw new ConflictOperationException(
+                    "Pet appointment data is inconsistent with the current contract and cannot anchor clinical workflow."
+            );
+        }
+
+        if (!appointment.getPetId().equals(petId)) {
+            throw new ResourceNotFoundException("Pet appointment does not belong to the informed pet.");
+        }
+
+        if (!appointment.getProfessionalId().equals(professionalId)) {
+            throw new ResourceNotFoundException("Pet appointment does not belong to the informed professional.");
+        }
+
+        String normalizedStatus = appointment.getStatus() == null ? "" : appointment.getStatus().trim().toUpperCase();
+        if ("CANCELED".equals(normalizedStatus) || "NO_SHOW".equals(normalizedStatus)) {
+            throw new ConflictOperationException("Canceled or missed pet appointments cannot receive prescriptions.");
+        }
     }
 
     private <E> Map<UUID, String> toMap(

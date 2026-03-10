@@ -36,9 +36,10 @@ public class PetVaccinationController {
     @RequirePermission("pet.vaccination.read")
     public ApiResponse<PageResponseDto<PetVaccinationResponse>> list(
             @Valid @ModelAttribute PageRequestDto pageRequest,
-            @RequestParam(required = false) UUID petId
+            @RequestParam(required = false) UUID petId,
+            @RequestParam(required = false) UUID appointmentId
     ) {
-        return ApiResponse.success(service.list(pageRequest, petId));
+        return ApiResponse.success(service.list(pageRequest, petId, appointmentId));
     }
 
     @GetMapping("/{id}")

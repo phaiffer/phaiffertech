@@ -19,6 +19,26 @@ export type PetSelectOption = {
   label: string;
 };
 
+function renderClinicalAppointmentLabel(
+  appointmentServiceName?: string,
+  appointmentScheduledAt?: string
+) {
+  if (!appointmentServiceName && !appointmentScheduledAt) {
+    return 'Fluxo avulso';
+  }
+
+  const appointmentDate = appointmentScheduledAt
+    ? new Date(appointmentScheduledAt).toLocaleString('pt-BR')
+    : 'Data não informada';
+
+  return (
+    <div>
+      <div className="font-medium text-slate-800">{appointmentServiceName ?? 'Atendimento vinculado'}</div>
+      <div className="text-xs text-slate-500">{appointmentDate}</div>
+    </div>
+  );
+}
+
 type TextAreaFieldProps = {
   label: string;
   value: string;
@@ -140,6 +160,11 @@ export function createPetMedicalRecordColumns({
           professionalsLookupUnavailable
         )
     },
+    {
+      key: 'appointment',
+      header: 'Atendimento',
+      render: (item) => renderClinicalAppointmentLabel(item.appointmentServiceName, item.appointmentScheduledAt)
+    },
     { key: 'description', header: 'Descrição', render: (item) => item.description },
     {
       key: 'actions',
@@ -189,6 +214,11 @@ export function createPetVaccinationColumns({
       header: 'Pet',
       render: (item) =>
         item.petName ?? resolvePetLookupLabel(pets, item.petId, (pet) => pet.name, 'Pet', petLookupUnavailable)
+    },
+    {
+      key: 'appointment',
+      header: 'Atendimento',
+      render: (item) => renderClinicalAppointmentLabel(item.appointmentServiceName, item.appointmentScheduledAt)
     },
     { key: 'vaccineName', header: 'Vacina', render: (item) => item.vaccineName },
     {
@@ -264,6 +294,11 @@ export function createPetPrescriptionColumns({
         )
     },
     {
+      key: 'appointment',
+      header: 'Atendimento',
+      render: (item) => renderClinicalAppointmentLabel(item.appointmentServiceName, item.appointmentScheduledAt)
+    },
+    {
       key: 'actions',
       header: 'Ações',
       render: (item) => (
@@ -309,6 +344,9 @@ type PetMedicalRecordSectionProps = {
   formProfessionalOptions: PetSelectOption[];
   petLookupUnavailable: boolean;
   professionalsLookupUnavailable: boolean;
+  lockPetSelection: boolean;
+  lockProfessionalSelection: boolean;
+  appointmentContextDescription?: string | null;
   formReady: boolean;
   submitting: boolean;
   onCancelEdit: () => void;
@@ -335,6 +373,9 @@ export function PetMedicalRecordSection({
   formProfessionalOptions,
   petLookupUnavailable,
   professionalsLookupUnavailable,
+  lockPetSelection,
+  lockProfessionalSelection,
+  appointmentContextDescription,
   formReady,
   submitting,
   onCancelEdit,
@@ -352,19 +393,30 @@ export function PetMedicalRecordSection({
 
       <PermissionGuard permission={editingId ? 'pet.medical-record.update' : 'pet.medical-record.create'}>
         <form onSubmit={onSubmit} className="grid gap-3 md:grid-cols-2">
-          <FormSelect label="Pet" value={petId} options={formPetOptions} onChange={onPetIdChange} disabled={petLookupUnavailable} />
+          <FormSelect
+            label="Pet"
+            value={petId}
+            options={formPetOptions}
+            onChange={onPetIdChange}
+            disabled={petLookupUnavailable || lockPetSelection}
+          />
           <FormSelect
             label="Profissional"
             value={professionalId}
             options={formProfessionalOptions}
             onChange={onProfessionalIdChange}
-            disabled={professionalsLookupUnavailable}
+            disabled={professionalsLookupUnavailable || lockProfessionalSelection}
           />
           <TextAreaField label="Descrição" value={description} onChange={onDescriptionChange} required />
           <TextAreaField label="Diagnóstico" value={diagnosis} onChange={onDiagnosisChange} />
           <TextAreaField label="Tratamento" value={treatment} onChange={onTreatmentChange} />
 
           <div className="md:col-span-2 flex gap-2">
+            {appointmentContextDescription ? (
+              <div className="w-full rounded-lg border border-sky-200 bg-sky-50 px-4 py-3 text-sm text-sky-700">
+                {appointmentContextDescription}
+              </div>
+            ) : null}
             {!formReady ? (
               <div className="w-full rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">
                 O formulário de prontuário depende das referências de pets e profissionais.
@@ -413,6 +465,8 @@ type PetVaccinationSectionProps = {
   onNotesChange: (value: string) => void;
   formPetOptions: PetSelectOption[];
   petLookupUnavailable: boolean;
+  lockPetSelection: boolean;
+  appointmentContextDescription?: string | null;
   formReady: boolean;
   submitting: boolean;
   onCancelEdit: () => void;
@@ -437,6 +491,8 @@ export function PetVaccinationSection({
   onNotesChange,
   formPetOptions,
   petLookupUnavailable,
+  lockPetSelection,
+  appointmentContextDescription,
   formReady,
   submitting,
   onCancelEdit,
@@ -454,13 +510,24 @@ export function PetVaccinationSection({
 
       <PermissionGuard permission={editingId ? 'pet.vaccination.update' : 'pet.vaccination.create'}>
         <form onSubmit={onSubmit} className="grid gap-3 md:grid-cols-2">
-          <FormSelect label="Pet" value={petId} options={formPetOptions} onChange={onPetIdChange} disabled={petLookupUnavailable} />
+          <FormSelect
+            label="Pet"
+            value={petId}
+            options={formPetOptions}
+            onChange={onPetIdChange}
+            disabled={petLookupUnavailable || lockPetSelection}
+          />
           <FormInput label="Vacina" value={vaccineName} onChange={onVaccineNameChange} required />
           <DateTimeInput label="Aplicada em" value={appliedAt} onChange={onAppliedAtChange} required />
           <DateTimeInput label="Próximo reforço" value={nextDueAt} onChange={onNextDueAtChange} />
           <TextAreaField label="Notas" value={notes} onChange={onNotesChange} />
 
           <div className="md:col-span-2 flex gap-2">
+            {appointmentContextDescription ? (
+              <div className="w-full rounded-lg border border-sky-200 bg-sky-50 px-4 py-3 text-sm text-sky-700">
+                {appointmentContextDescription}
+              </div>
+            ) : null}
             {!formReady ? (
               <div className="w-full rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">
                 O formulário de vacinação depende da referência de pets.
@@ -511,6 +578,9 @@ type PetPrescriptionSectionProps = {
   formProfessionalOptions: PetSelectOption[];
   petLookupUnavailable: boolean;
   professionalsLookupUnavailable: boolean;
+  lockPetSelection: boolean;
+  lockProfessionalSelection: boolean;
+  appointmentContextDescription?: string | null;
   formReady: boolean;
   submitting: boolean;
   onCancelEdit: () => void;
@@ -537,6 +607,9 @@ export function PetPrescriptionSection({
   formProfessionalOptions,
   petLookupUnavailable,
   professionalsLookupUnavailable,
+  lockPetSelection,
+  lockProfessionalSelection,
+  appointmentContextDescription,
   formReady,
   submitting,
   onCancelEdit,
@@ -554,13 +627,19 @@ export function PetPrescriptionSection({
 
       <PermissionGuard permission={editingId ? 'pet.prescription.update' : 'pet.prescription.create'}>
         <form onSubmit={onSubmit} className="grid gap-3 md:grid-cols-2">
-          <FormSelect label="Pet" value={petId} options={formPetOptions} onChange={onPetIdChange} disabled={petLookupUnavailable} />
+          <FormSelect
+            label="Pet"
+            value={petId}
+            options={formPetOptions}
+            onChange={onPetIdChange}
+            disabled={petLookupUnavailable || lockPetSelection}
+          />
           <FormSelect
             label="Profissional"
             value={professionalId}
             options={formProfessionalOptions}
             onChange={onProfessionalIdChange}
-            disabled={professionalsLookupUnavailable}
+            disabled={professionalsLookupUnavailable || lockProfessionalSelection}
           />
           <FormInput label="Medicamento" value={medication} onChange={onMedicationChange} required />
           <FormInput label="Dosagem" value={dosage} onChange={onDosageChange} />
@@ -569,6 +648,11 @@ export function PetPrescriptionSection({
           </div>
 
           <div className="md:col-span-2 flex gap-2">
+            {appointmentContextDescription ? (
+              <div className="w-full rounded-lg border border-sky-200 bg-sky-50 px-4 py-3 text-sm text-sky-700">
+                {appointmentContextDescription}
+              </div>
+            ) : null}
             {!formReady ? (
               <div className="w-full rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">
                 O formulário de prescrição depende das referências de pets e profissionais.

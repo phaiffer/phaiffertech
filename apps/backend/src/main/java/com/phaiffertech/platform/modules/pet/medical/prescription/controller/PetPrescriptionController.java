@@ -37,9 +37,10 @@ public class PetPrescriptionController {
     public ApiResponse<PageResponseDto<PetPrescriptionResponse>> list(
             @Valid @ModelAttribute PageRequestDto pageRequest,
             @RequestParam(required = false) UUID petId,
-            @RequestParam(required = false) UUID professionalId
+            @RequestParam(required = false) UUID professionalId,
+            @RequestParam(required = false) UUID appointmentId
     ) {
-        return ApiResponse.success(service.list(pageRequest, petId, professionalId));
+        return ApiResponse.success(service.list(pageRequest, petId, professionalId, appointmentId));
     }
 
     @GetMapping("/{id}")

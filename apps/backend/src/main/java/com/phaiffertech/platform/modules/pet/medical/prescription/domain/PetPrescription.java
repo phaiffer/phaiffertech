@@ -20,6 +20,9 @@ public class PetPrescription extends BaseTenantEntity {
     @Column(name = "professional_id", nullable = false, columnDefinition = "char(36)")
     private UUID professionalId;
 
+    @Column(name = "appointment_id", columnDefinition = "char(36)")
+    private UUID appointmentId;
+
     @Column(name = "medication", nullable = false, length = 180)
     private String medication;
 
@@ -43,6 +46,14 @@ public class PetPrescription extends BaseTenantEntity {
 
     public void setProfessionalId(UUID professionalId) {
         this.professionalId = professionalId;
+    }
+
+    public UUID getAppointmentId() {
+        return appointmentId;
+    }
+
+    public void setAppointmentId(UUID appointmentId) {
+        this.appointmentId = appointmentId;
     }
 
     public String getMedication() {

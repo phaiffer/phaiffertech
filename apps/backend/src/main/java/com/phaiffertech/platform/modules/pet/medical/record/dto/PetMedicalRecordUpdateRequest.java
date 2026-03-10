@@ -7,6 +7,7 @@ import java.util.UUID;
 public record PetMedicalRecordUpdateRequest(
         @NotNull UUID petId,
         @NotNull UUID professionalId,
+        UUID appointmentId,
         @NotBlank String description,
         String diagnosis,
         String treatment

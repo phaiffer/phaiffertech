@@ -1,5 +1,7 @@
 'use client';
 
+import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import { FormEvent, useCallback, useEffect, useMemo, useState } from 'react';
 import {
   petMedicalRecordPermissions,
@@ -30,6 +32,7 @@ import { resolvePageItems } from '@/shared/lib/pagination';
 import { petService } from '@/shared/services/pet-service';
 import { PageResponse } from '@/shared/types/common';
 import {
+  PetAppointment,
   PetMedicalRecord,
   PetPrescription,
   PetProfessional,
@@ -66,10 +69,14 @@ const emptyPrescriptionsPage: PageResponse<PetPrescription> = {
 };
 
 export function PetMedicalRecordsPage() {
+  const searchParams = useSearchParams();
   const { hasAnyPermission, hasPermission } = usePermissions();
   const [pets, setPets] = useState<PetProfile[]>([]);
   const [professionals, setProfessionals] = useState<PetProfessional[]>([]);
   const [lookupIssues, setLookupIssues] = useState<PetLookupIssue[]>([]);
+  const [appointmentContext, setAppointmentContext] = useState<PetAppointment | null>(null);
+  const [appointmentContextLoading, setAppointmentContextLoading] = useState(false);
+  const [appointmentContextError, setAppointmentContextError] = useState<string | null>(null);
 
   const [recordsPageData, setRecordsPageData] = useState<PageResponse<PetMedicalRecord>>(emptyMedicalRecordsPage);
   const [vaccinationsPageData, setVaccinationsPageData] = useState<PageResponse<PetVaccination>>(emptyVaccinationsPage);
@@ -92,6 +99,7 @@ export function PetMedicalRecordsPage() {
   const [prescriptionsPage, setPrescriptionsPage] = useState(0);
 
   const [editingRecordId, setEditingRecordId] = useState<string | null>(null);
+  const [recordAppointmentId, setRecordAppointmentId] = useState('');
   const [recordPetId, setRecordPetId] = useState('');
   const [recordProfessionalId, setRecordProfessionalId] = useState('');
   const [recordDescription, setRecordDescription] = useState('');
@@ -100,6 +108,7 @@ export function PetMedicalRecordsPage() {
   const [recordSubmitting, setRecordSubmitting] = useState(false);
 
   const [editingVaccinationId, setEditingVaccinationId] = useState<string | null>(null);
+  const [vaccinationAppointmentId, setVaccinationAppointmentId] = useState('');
   const [vaccinationPetId, setVaccinationPetId] = useState('');
   const [vaccineName, setVaccineName] = useState('');
   const [appliedAt, setAppliedAt] = useState('');
@@ -108,6 +117,7 @@ export function PetMedicalRecordsPage() {
   const [vaccinationSubmitting, setVaccinationSubmitting] = useState(false);
 
   const [editingPrescriptionId, setEditingPrescriptionId] = useState<string | null>(null);
+  const [prescriptionAppointmentId, setPrescriptionAppointmentId] = useState('');
   const [prescriptionPetId, setPrescriptionPetId] = useState('');
   const [prescriptionProfessionalId, setPrescriptionProfessionalId] = useState('');
   const [medication, setMedication] = useState('');
@@ -119,6 +129,8 @@ export function PetMedicalRecordsPage() {
   const [deleteVaccinationCandidate, setDeleteVaccinationCandidate] = useState<PetVaccination | null>(null);
   const [deletePrescriptionCandidate, setDeletePrescriptionCandidate] = useState<PetPrescription | null>(null);
 
+  const appointmentContextId = searchParams.get('appointmentId');
+  const canReadAppointments = hasPermission('pet.appointment.read');
   const canReadPets = hasPermission('pet.profile.read');
   const canReadProfessionals = hasPermission('pet.professional.read');
   const canReadMedicalRecords = hasPermission('pet.medical-record.read');
@@ -133,18 +145,42 @@ export function PetMedicalRecordsPage() {
   const showProfessionalFilter = canReadMedicalRecords || canReadPrescriptions;
 
   const petOptions = useMemo(() => {
+    const appointmentPetOption = appointmentContext
+      ? { value: appointmentContext.petId, label: appointmentContext.petName ?? appointmentContext.petId }
+      : null;
+    const options = pets.map((pet) => ({ value: pet.id, label: pet.name }));
+
+    if (appointmentPetOption && !options.some((option) => option.value === appointmentPetOption.value)) {
+      options.push(appointmentPetOption);
+    }
+
     return [
       { value: '', label: 'Todos' },
-      ...pets.map((pet) => ({ value: pet.id, label: pet.name }))
+      ...options
     ];
-  }, [pets]);
+  }, [appointmentContext, pets]);
 
   const professionalOptions = useMemo(() => {
+    const appointmentProfessionalOption = appointmentContext
+      ? {
+          value: appointmentContext.professionalId,
+          label: appointmentContext.professionalName ?? appointmentContext.professionalId
+        }
+      : null;
+    const options = professionals.map((professional) => ({ value: professional.id, label: professional.name }));
+
+    if (
+      appointmentProfessionalOption &&
+      !options.some((option) => option.value === appointmentProfessionalOption.value)
+    ) {
+      options.push(appointmentProfessionalOption);
+    }
+
     return [
       { value: '', label: 'Todos' },
-      ...professionals.map((professional) => ({ value: professional.id, label: professional.name }))
+      ...options
     ];
-  }, [professionals]);
+  }, [appointmentContext, professionals]);
 
   const formPetOptions = useMemo(() => {
     return [{ value: '', label: 'Selecione um pet' }, ...petOptions.filter((item) => item.value)];
@@ -153,6 +189,32 @@ export function PetMedicalRecordsPage() {
   const formProfessionalOptions = useMemo(() => {
     return [{ value: '', label: 'Selecione um profissional' }, ...professionalOptions.filter((item) => item.value)];
   }, [professionalOptions]);
+
+  const loadAppointmentContext = useCallback(async () => {
+    if (!appointmentContextId || !canReadAppointments) {
+      setAppointmentContext(null);
+      setAppointmentContextError(null);
+      setAppointmentContextLoading(false);
+      return;
+    }
+
+    setAppointmentContextLoading(true);
+    setAppointmentContextError(null);
+
+    try {
+      const result = await petService.getAppointment(appointmentContextId);
+      setAppointmentContext(result);
+    } catch (err) {
+      setAppointmentContext(null);
+      setAppointmentContextError(
+        err instanceof ApiClientError
+          ? err.message
+          : 'Erro ao carregar o atendimento selecionado para o fluxo clínico.'
+      );
+    } finally {
+      setAppointmentContextLoading(false);
+    }
+  }, [appointmentContextId, canReadAppointments]);
 
   const loadReferences = useCallback(async () => {
     const [petsPage, professionalsPage] = await Promise.allSettled([
@@ -201,7 +263,13 @@ export function PetMedicalRecordsPage() {
     setLookupIssues(issues);
   }, [canAccessAnyMedical, canReadPets, canReadProfessionals, needsProfessionalLookup]);
 
-  const loadRecords = useCallback(async (page: number, currentSearch: string, currentPetId: string, currentProfessionalId: string) => {
+  const loadRecords = useCallback(async (
+    page: number,
+    currentSearch: string,
+    currentPetId: string,
+    currentProfessionalId: string,
+    currentAppointmentId?: string | null
+  ) => {
     if (!canReadMedicalRecords) {
       setRecordsPageData(emptyMedicalRecordsPage);
       setRecordsLoading(false);
@@ -212,7 +280,8 @@ export function PetMedicalRecordsPage() {
     try {
       const result = await petService.listMedicalRecords(page, pageSize, currentSearch, {
         petId: currentPetId || undefined,
-        professionalId: currentProfessionalId || undefined
+        professionalId: currentProfessionalId || undefined,
+        appointmentId: currentAppointmentId || undefined
       });
       setRecordsPageData(result);
     } catch (err) {
@@ -222,7 +291,12 @@ export function PetMedicalRecordsPage() {
     }
   }, [canReadMedicalRecords]);
 
-  const loadVaccinations = useCallback(async (page: number, currentSearch: string, currentPetId: string) => {
+  const loadVaccinations = useCallback(async (
+    page: number,
+    currentSearch: string,
+    currentPetId: string,
+    currentAppointmentId?: string | null
+  ) => {
     if (!canReadVaccinations) {
       setVaccinationsPageData(emptyVaccinationsPage);
       setVaccinationsLoading(false);
@@ -232,7 +306,8 @@ export function PetMedicalRecordsPage() {
     setVaccinationsLoading(true);
     try {
       const result = await petService.listVaccinations(page, pageSize, currentSearch, {
-        petId: currentPetId || undefined
+        petId: currentPetId || undefined,
+        appointmentId: currentAppointmentId || undefined
       });
       setVaccinationsPageData(result);
     } catch (err) {
@@ -242,7 +317,13 @@ export function PetMedicalRecordsPage() {
     }
   }, [canReadVaccinations]);
 
-  const loadPrescriptions = useCallback(async (page: number, currentSearch: string, currentPetId: string, currentProfessionalId: string) => {
+  const loadPrescriptions = useCallback(async (
+    page: number,
+    currentSearch: string,
+    currentPetId: string,
+    currentProfessionalId: string,
+    currentAppointmentId?: string | null
+  ) => {
     if (!canReadPrescriptions) {
       setPrescriptionsPageData(emptyPrescriptionsPage);
       setPrescriptionsLoading(false);
@@ -253,7 +334,8 @@ export function PetMedicalRecordsPage() {
     try {
       const result = await petService.listPrescriptions(page, pageSize, currentSearch, {
         petId: currentPetId || undefined,
-        professionalId: currentProfessionalId || undefined
+        professionalId: currentProfessionalId || undefined,
+        appointmentId: currentAppointmentId || undefined
       });
       setPrescriptionsPageData(result);
     } catch (err) {
@@ -268,27 +350,46 @@ export function PetMedicalRecordsPage() {
   }, [loadReferences]);
 
   useEffect(() => {
+    loadAppointmentContext();
+  }, [loadAppointmentContext]);
+
+  useEffect(() => {
+    if (!appointmentContext) {
+      return;
+    }
+
+    setPetFilterId((currentValue) => currentValue || appointmentContext.petId);
+    setProfessionalFilterId((currentValue) => currentValue || appointmentContext.professionalId);
+    setRecordPetId((currentValue) => currentValue || appointmentContext.petId);
+    setRecordProfessionalId((currentValue) => currentValue || appointmentContext.professionalId);
+    setVaccinationPetId((currentValue) => currentValue || appointmentContext.petId);
+    setPrescriptionPetId((currentValue) => currentValue || appointmentContext.petId);
+    setPrescriptionProfessionalId((currentValue) => currentValue || appointmentContext.professionalId);
+  }, [appointmentContext]);
+
+  useEffect(() => {
     setRecordsPage(0);
     setVaccinationsPage(0);
     setPrescriptionsPage(0);
-  }, [petFilterId, professionalFilterId, search]);
+  }, [appointmentContext?.id, petFilterId, professionalFilterId, search]);
 
   useEffect(() => {
-    loadRecords(recordsPage, search, petFilterId, professionalFilterId);
-  }, [loadRecords, petFilterId, professionalFilterId, recordsPage, search]);
+    loadRecords(recordsPage, search, petFilterId, professionalFilterId, appointmentContext?.id);
+  }, [appointmentContext?.id, loadRecords, petFilterId, professionalFilterId, recordsPage, search]);
 
   useEffect(() => {
-    loadVaccinations(vaccinationsPage, search, petFilterId);
-  }, [loadVaccinations, petFilterId, search, vaccinationsPage]);
+    loadVaccinations(vaccinationsPage, search, petFilterId, appointmentContext?.id);
+  }, [appointmentContext?.id, loadVaccinations, petFilterId, search, vaccinationsPage]);
 
   useEffect(() => {
-    loadPrescriptions(prescriptionsPage, search, petFilterId, professionalFilterId);
-  }, [loadPrescriptions, petFilterId, prescriptionsPage, professionalFilterId, search]);
+    loadPrescriptions(prescriptionsPage, search, petFilterId, professionalFilterId, appointmentContext?.id);
+  }, [appointmentContext?.id, loadPrescriptions, petFilterId, prescriptionsPage, professionalFilterId, search]);
 
   function resetRecordForm() {
     setEditingRecordId(null);
-    setRecordPetId('');
-    setRecordProfessionalId('');
+    setRecordAppointmentId(appointmentContext?.id ?? '');
+    setRecordPetId(appointmentContext?.petId ?? '');
+    setRecordProfessionalId(appointmentContext?.professionalId ?? '');
     setRecordDescription('');
     setRecordDiagnosis('');
     setRecordTreatment('');
@@ -296,7 +397,8 @@ export function PetMedicalRecordsPage() {
 
   function resetVaccinationForm() {
     setEditingVaccinationId(null);
-    setVaccinationPetId('');
+    setVaccinationAppointmentId(appointmentContext?.id ?? '');
+    setVaccinationPetId(appointmentContext?.petId ?? '');
     setVaccineName('');
     setAppliedAt('');
     setNextDueAt('');
@@ -305,8 +407,9 @@ export function PetMedicalRecordsPage() {
 
   function resetPrescriptionForm() {
     setEditingPrescriptionId(null);
-    setPrescriptionPetId('');
-    setPrescriptionProfessionalId('');
+    setPrescriptionAppointmentId(appointmentContext?.id ?? '');
+    setPrescriptionPetId(appointmentContext?.petId ?? '');
+    setPrescriptionProfessionalId(appointmentContext?.professionalId ?? '');
     setMedication('');
     setDosage('');
     setInstructions('');
@@ -314,6 +417,7 @@ export function PetMedicalRecordsPage() {
 
   function beginEditRecord(item: PetMedicalRecord) {
     setEditingRecordId(item.id);
+    setRecordAppointmentId(item.appointmentId ?? '');
     setRecordPetId(item.petId);
     setRecordProfessionalId(item.professionalId);
     setRecordDescription(item.description);
@@ -325,6 +429,7 @@ export function PetMedicalRecordsPage() {
 
   function beginEditVaccination(item: PetVaccination) {
     setEditingVaccinationId(item.id);
+    setVaccinationAppointmentId(item.appointmentId ?? '');
     setVaccinationPetId(item.petId);
     setVaccineName(item.vaccineName);
     setAppliedAt(toDateTimeLocal(item.appliedAt));
@@ -336,6 +441,7 @@ export function PetMedicalRecordsPage() {
 
   function beginEditPrescription(item: PetPrescription) {
     setEditingPrescriptionId(item.id);
+    setPrescriptionAppointmentId(item.appointmentId ?? '');
     setPrescriptionPetId(item.petId);
     setPrescriptionProfessionalId(item.professionalId);
     setMedication(item.medication);
@@ -360,6 +466,7 @@ export function PetMedicalRecordsPage() {
       const payload = {
         petId: recordPetId,
         professionalId: recordProfessionalId,
+        appointmentId: appointmentContext?.id || recordAppointmentId || undefined,
         description: recordDescription,
         diagnosis: recordDiagnosis || undefined,
         treatment: recordTreatment || undefined
@@ -374,7 +481,7 @@ export function PetMedicalRecordsPage() {
       }
 
       resetRecordForm();
-      await loadRecords(recordsPage, search, petFilterId, professionalFilterId);
+      await loadRecords(recordsPage, search, petFilterId, professionalFilterId, appointmentContext?.id);
     } catch (err) {
       setError(err instanceof ApiClientError ? err.message : 'Erro ao salvar prontuário.');
     } finally {
@@ -398,6 +505,7 @@ export function PetMedicalRecordsPage() {
     try {
       const payload = {
         petId: vaccinationPetId,
+        appointmentId: appointmentContext?.id || vaccinationAppointmentId || undefined,
         vaccineName,
         appliedAt: isoAppliedAt,
         nextDueAt: isoNextDueAt,
@@ -413,7 +521,7 @@ export function PetMedicalRecordsPage() {
       }
 
       resetVaccinationForm();
-      await loadVaccinations(vaccinationsPage, search, petFilterId);
+      await loadVaccinations(vaccinationsPage, search, petFilterId, appointmentContext?.id);
     } catch (err) {
       setError(err instanceof ApiClientError ? err.message : 'Erro ao salvar vacinação.');
     } finally {
@@ -436,6 +544,7 @@ export function PetMedicalRecordsPage() {
       const payload = {
         petId: prescriptionPetId,
         professionalId: prescriptionProfessionalId,
+        appointmentId: appointmentContext?.id || prescriptionAppointmentId || undefined,
         medication,
         dosage: dosage || undefined,
         instructions: instructions || undefined
@@ -450,7 +559,13 @@ export function PetMedicalRecordsPage() {
       }
 
       resetPrescriptionForm();
-      await loadPrescriptions(prescriptionsPage, search, petFilterId, professionalFilterId);
+      await loadPrescriptions(
+        prescriptionsPage,
+        search,
+        petFilterId,
+        professionalFilterId,
+        appointmentContext?.id
+      );
     } catch (err) {
       setError(err instanceof ApiClientError ? err.message : 'Erro ao salvar prescrição.');
     } finally {
@@ -467,7 +582,7 @@ export function PetMedicalRecordsPage() {
       await petService.deleteMedicalRecord(deleteRecordCandidate.id);
       setDeleteRecordCandidate(null);
       setSuccess('Prontuário removido com sucesso.');
-      await loadRecords(recordsPage, search, petFilterId, professionalFilterId);
+      await loadRecords(recordsPage, search, petFilterId, professionalFilterId, appointmentContext?.id);
     } catch (err) {
       setError(err instanceof ApiClientError ? err.message : 'Erro ao excluir prontuário.');
     }
@@ -482,7 +597,7 @@ export function PetMedicalRecordsPage() {
       await petService.deleteVaccination(deleteVaccinationCandidate.id);
       setDeleteVaccinationCandidate(null);
       setSuccess('Vacinação removida com sucesso.');
-      await loadVaccinations(vaccinationsPage, search, petFilterId);
+      await loadVaccinations(vaccinationsPage, search, petFilterId, appointmentContext?.id);
     } catch (err) {
       setError(err instanceof ApiClientError ? err.message : 'Erro ao excluir vacinação.');
     }
@@ -497,7 +612,13 @@ export function PetMedicalRecordsPage() {
       await petService.deletePrescription(deletePrescriptionCandidate.id);
       setDeletePrescriptionCandidate(null);
       setSuccess('Prescrição removida com sucesso.');
-      await loadPrescriptions(prescriptionsPage, search, petFilterId, professionalFilterId);
+      await loadPrescriptions(
+        prescriptionsPage,
+        search,
+        petFilterId,
+        professionalFilterId,
+        appointmentContext?.id
+      );
     } catch (err) {
       setError(err instanceof ApiClientError ? err.message : 'Erro ao excluir prescrição.');
     }
@@ -505,9 +626,12 @@ export function PetMedicalRecordsPage() {
 
   const petLookupUnavailable = lookupIssues.some((issue) => issue.key === 'pets');
   const professionalsLookupUnavailable = lookupIssues.some((issue) => issue.key === 'professionals');
-  const medicalRecordFormReady = !petLookupUnavailable && !professionalsLookupUnavailable;
-  const vaccinationFormReady = !petLookupUnavailable;
-  const prescriptionFormReady = !petLookupUnavailable && !professionalsLookupUnavailable;
+  const medicalRecordFormReady = appointmentContext ? true : !petLookupUnavailable && !professionalsLookupUnavailable;
+  const vaccinationFormReady = appointmentContext ? true : !petLookupUnavailable;
+  const prescriptionFormReady = appointmentContext ? true : !petLookupUnavailable && !professionalsLookupUnavailable;
+  const appointmentContextDescription = appointmentContext
+    ? `Fluxo vinculado ao atendimento ${appointmentContext.serviceName} de ${appointmentContext.petName ?? appointmentContext.petId} com ${appointmentContext.professionalName ?? appointmentContext.professionalId}.`
+    : null;
 
   const medicalRecordColumns = useMemo(() => createPetMedicalRecordColumns({
     pets,
@@ -555,10 +679,37 @@ export function PetMedicalRecordsPage() {
           onClear={() => {
             setSearchInput('');
             setSearch('');
-            setPetFilterId('');
-            setProfessionalFilterId('');
+            setPetFilterId(appointmentContext?.petId ?? '');
+            setProfessionalFilterId(appointmentContext?.professionalId ?? '');
           }}
         />
+
+        {appointmentContextLoading ? (
+          <div className="rounded-lg border border-sky-200 bg-sky-50 px-4 py-3 text-sm text-sky-700">
+            Carregando contexto clínico do atendimento selecionado...
+          </div>
+        ) : null}
+
+        {appointmentContext ? (
+          <div className="rounded-lg border border-sky-200 bg-sky-50 px-4 py-3 text-sm text-sky-700">
+            <div className="font-medium">Atendimento em contexto clínico ativo.</div>
+            <div>
+              {appointmentContext.serviceName} para {appointmentContext.petName ?? appointmentContext.petId}
+              {appointmentContext.clientName ? ` (${appointmentContext.clientName})` : ''}
+              {' '}com {appointmentContext.professionalName ?? appointmentContext.professionalId} em{' '}
+              {new Date(appointmentContext.scheduledAt).toLocaleString('pt-BR')}.
+            </div>
+            <Link href="/pet/medical-records" className="mt-2 inline-flex text-sm font-medium text-action">
+              Ver histórico completo
+            </Link>
+          </div>
+        ) : null}
+
+        {appointmentContextError ? (
+          <div className="rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+            {appointmentContextError}
+          </div>
+        ) : null}
 
         <PetLookupFeedback issues={lookupIssues} />
 
@@ -583,6 +734,9 @@ export function PetMedicalRecordsPage() {
             formProfessionalOptions={formProfessionalOptions}
             petLookupUnavailable={petLookupUnavailable}
             professionalsLookupUnavailable={professionalsLookupUnavailable}
+            lockPetSelection={Boolean(appointmentContext)}
+            lockProfessionalSelection={Boolean(appointmentContext)}
+            appointmentContextDescription={appointmentContextDescription}
             formReady={medicalRecordFormReady}
             submitting={recordSubmitting}
             onCancelEdit={resetRecordForm}
@@ -609,6 +763,8 @@ export function PetMedicalRecordsPage() {
             onNotesChange={setVaccinationNotes}
             formPetOptions={formPetOptions}
             petLookupUnavailable={petLookupUnavailable}
+            lockPetSelection={Boolean(appointmentContext)}
+            appointmentContextDescription={appointmentContextDescription}
             formReady={vaccinationFormReady}
             submitting={vaccinationSubmitting}
             onCancelEdit={resetVaccinationForm}
@@ -637,6 +793,9 @@ export function PetMedicalRecordsPage() {
             formProfessionalOptions={formProfessionalOptions}
             petLookupUnavailable={petLookupUnavailable}
             professionalsLookupUnavailable={professionalsLookupUnavailable}
+            lockPetSelection={Boolean(appointmentContext)}
+            lockProfessionalSelection={Boolean(appointmentContext)}
+            appointmentContextDescription={appointmentContextDescription}
             formReady={prescriptionFormReady}
             submitting={prescriptionSubmitting}
             onCancelEdit={resetPrescriptionForm}

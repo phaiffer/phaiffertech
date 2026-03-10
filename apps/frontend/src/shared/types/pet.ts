@@ -41,6 +41,9 @@ export type PetAppointment = {
   serviceName: string;
   status: string;
   notes?: string;
+  medicalRecordCount?: number;
+  vaccinationCount?: number;
+  prescriptionCount?: number;
   createdAt: string;
   updatedAt: string;
 };
@@ -72,6 +75,9 @@ export type PetMedicalRecord = {
   petName?: string;
   professionalId: string;
   professionalName?: string;
+  appointmentId?: string;
+  appointmentServiceName?: string;
+  appointmentScheduledAt?: string;
   description: string;
   diagnosis?: string;
   treatment?: string;
@@ -83,6 +89,9 @@ export type PetVaccination = {
   id: string;
   petId: string;
   petName?: string;
+  appointmentId?: string;
+  appointmentServiceName?: string;
+  appointmentScheduledAt?: string;
   vaccineName: string;
   appliedAt: string;
   nextDueAt?: string;
@@ -97,6 +106,9 @@ export type PetPrescription = {
   petName?: string;
   professionalId: string;
   professionalName?: string;
+  appointmentId?: string;
+  appointmentServiceName?: string;
+  appointmentScheduledAt?: string;
   medication: string;
   dosage?: string;
   instructions?: string;

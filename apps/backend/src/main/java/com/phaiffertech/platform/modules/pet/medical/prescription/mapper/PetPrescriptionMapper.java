@@ -22,6 +22,7 @@ public final class PetPrescriptionMapper implements BaseCrudMapper<
         PetPrescription entity = new PetPrescription();
         entity.setPetId(request.petId());
         entity.setProfessionalId(request.professionalId());
+        entity.setAppointmentId(request.appointmentId());
         entity.setMedication(request.medication().trim());
         entity.setDosage(trimToNull(request.dosage()));
         entity.setInstructions(trimToNull(request.instructions()));
@@ -32,6 +33,7 @@ public final class PetPrescriptionMapper implements BaseCrudMapper<
     public void updateEntity(PetPrescription entity, PetPrescriptionUpdateRequest request) {
         entity.setPetId(request.petId());
         entity.setProfessionalId(request.professionalId());
+        entity.setAppointmentId(request.appointmentId());
         entity.setMedication(request.medication().trim());
         entity.setDosage(trimToNull(request.dosage()));
         entity.setInstructions(trimToNull(request.instructions()));
@@ -39,13 +41,15 @@ public final class PetPrescriptionMapper implements BaseCrudMapper<
 
     @Override
     public PetPrescriptionResponse toResponse(PetPrescription entity) {
-        return toResponse(entity, null, null);
+        return toResponse(entity, null, null, null, null);
     }
 
     public PetPrescriptionResponse toResponse(
             PetPrescription entity,
             String petName,
-            String professionalName
+            String professionalName,
+            String appointmentServiceName,
+            java.time.Instant appointmentScheduledAt
     ) {
         return new PetPrescriptionResponse(
                 entity.getId(),
@@ -53,6 +57,9 @@ public final class PetPrescriptionMapper implements BaseCrudMapper<
                 petName,
                 entity.getProfessionalId(),
                 professionalName,
+                entity.getAppointmentId(),
+                appointmentServiceName,
+                appointmentScheduledAt,
                 entity.getMedication(),
                 entity.getDosage(),
                 entity.getInstructions(),

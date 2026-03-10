@@ -2,6 +2,7 @@ package com.phaiffertech.platform.modules.pet.medical.record.repository;
 
 import com.phaiffertech.platform.modules.pet.medical.record.domain.PetMedicalRecord;
 import com.phaiffertech.platform.shared.crud.BaseTenantCrudRepository;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -16,12 +17,19 @@ public interface PetMedicalRecordRepository
 
     List<PetMedicalRecord> findTop5ByTenantIdOrderByCreatedAtDesc(UUID tenantId);
 
+    List<PetMedicalRecord> findAllByTenantIdAndAppointmentIdIn(UUID tenantId, Collection<UUID> appointmentIds);
+
+    long countByTenantIdAndAppointmentId(UUID tenantId, UUID appointmentId);
+
+    boolean existsByTenantIdAndAppointmentId(UUID tenantId, UUID appointmentId);
+
     @Query("""
             SELECT r
             FROM PetMedicalRecord r
             WHERE r.tenantId = :tenantId
               AND (:petId IS NULL OR r.petId = :petId)
               AND (:professionalId IS NULL OR r.professionalId = :professionalId)
+              AND (:appointmentId IS NULL OR r.appointmentId = :appointmentId)
               AND (:search IS NULL OR
                    LOWER(r.description) LIKE LOWER(CONCAT('%', :search, '%')) OR
                    LOWER(COALESCE(r.diagnosis, '')) LIKE LOWER(CONCAT('%', :search, '%')) OR
@@ -31,6 +39,7 @@ public interface PetMedicalRecordRepository
             @Param("tenantId") UUID tenantId,
             @Param("petId") UUID petId,
             @Param("professionalId") UUID professionalId,
+            @Param("appointmentId") UUID appointmentId,
             @Param("search") String search,
             Pageable pageable
     );

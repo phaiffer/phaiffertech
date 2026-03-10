@@ -89,6 +89,7 @@ export type UpdatePetAppointmentInput = {
 export type CreatePetMedicalRecordInput = {
   petId: string;
   professionalId: string;
+  appointmentId?: string;
   description: string;
   diagnosis?: string;
   treatment?: string;
@@ -98,6 +99,7 @@ export type UpdatePetMedicalRecordInput = CreatePetMedicalRecordInput;
 
 export type CreatePetVaccinationInput = {
   petId: string;
+  appointmentId?: string;
   vaccineName: string;
   appliedAt: string;
   nextDueAt?: string;
@@ -109,6 +111,7 @@ export type UpdatePetVaccinationInput = CreatePetVaccinationInput;
 export type CreatePetPrescriptionInput = {
   petId: string;
   professionalId: string;
+  appointmentId?: string;
   medication: string;
   dosage?: string;
   instructions?: string;
@@ -169,15 +172,18 @@ type PetAppointmentFilters = {
 type PetMedicalRecordFilters = {
   petId?: string;
   professionalId?: string;
+  appointmentId?: string;
 };
 
 type PetVaccinationFilters = {
   petId?: string;
+  appointmentId?: string;
 };
 
 type PetPrescriptionFilters = {
   petId?: string;
   professionalId?: string;
+  appointmentId?: string;
 };
 
 type PetInventoryFilters = {
@@ -305,7 +311,8 @@ export const petService = {
     apiClient.get<PageResponse<PetMedicalRecord>>(
       `/pet/medical-records?${queryString(page, size, search, {
         petId: filters.petId,
-        professionalId: filters.professionalId
+        professionalId: filters.professionalId,
+        appointmentId: filters.appointmentId
       })}`
     ),
 
@@ -323,7 +330,10 @@ export const petService = {
 
   listVaccinations: (page = 0, size = 20, search = '', filters: PetVaccinationFilters = {}) =>
     apiClient.get<PageResponse<PetVaccination>>(
-      `/pet/vaccinations?${queryString(page, size, search, { petId: filters.petId })}`
+      `/pet/vaccinations?${queryString(page, size, search, {
+        petId: filters.petId,
+        appointmentId: filters.appointmentId
+      })}`
     ),
 
   getVaccination: (id: string) => apiClient.get<PetVaccination>(`/pet/vaccinations/${id}`),
@@ -342,7 +352,8 @@ export const petService = {
     apiClient.get<PageResponse<PetPrescription>>(
       `/pet/prescriptions?${queryString(page, size, search, {
         petId: filters.petId,
-        professionalId: filters.professionalId
+        professionalId: filters.professionalId,
+        appointmentId: filters.appointmentId
       })}`
     ),
 

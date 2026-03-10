@@ -1,11 +1,13 @@
-import { render, screen, waitFor, within } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { PetMedicalRecordsPage } from '@/modules/pet/pet-medical-records-page';
 
-const { hasPermissionMock, hasAnyPermissionMock, petServiceMock } = vi.hoisted(() => ({
+const { hasPermissionMock, hasAnyPermissionMock, searchParamGetMock, petServiceMock } = vi.hoisted(() => ({
   hasPermissionMock: vi.fn(),
   hasAnyPermissionMock: vi.fn(),
+  searchParamGetMock: vi.fn(),
   petServiceMock: {
+    getAppointment: vi.fn(),
     listProfiles: vi.fn(),
     listProfessionals: vi.fn(),
     listMedicalRecords: vi.fn(),
@@ -27,6 +29,12 @@ vi.mock('@/shared/auth/usePermissions', () => ({
   usePermissions: () => ({
     hasPermission: hasPermissionMock,
     hasAnyPermission: hasAnyPermissionMock
+  })
+}));
+
+vi.mock('next/navigation', () => ({
+  useSearchParams: () => ({
+    get: searchParamGetMock
   })
 }));
 
@@ -54,7 +62,9 @@ describe('PetMedicalRecordsPage', () => {
     vi.clearAllMocks();
 
     setGrantedPermissions([]);
+    searchParamGetMock.mockReturnValue(null);
 
+    petServiceMock.getAppointment.mockResolvedValue(null);
     petServiceMock.listProfiles.mockResolvedValue(createPageResponse([]));
     petServiceMock.listProfessionals.mockResolvedValue(createPageResponse([]));
     petServiceMock.listMedicalRecords.mockResolvedValue(createPageResponse([]));
@@ -119,6 +129,103 @@ describe('PetMedicalRecordsPage', () => {
       expect(petServiceMock.listMedicalRecords).not.toHaveBeenCalled();
       expect(petServiceMock.listVaccinations).not.toHaveBeenCalled();
       expect(petServiceMock.listPrescriptions).not.toHaveBeenCalled();
+    });
+  });
+
+  it('usa o atendimento selecionado como contexto clínico do prontuário', async () => {
+    setGrantedPermissions([
+      'pet.appointment.read',
+      'pet.profile.read',
+      'pet.professional.read',
+      'pet.medical-record.read',
+      'pet.medical-record.create'
+    ]);
+    searchParamGetMock.mockImplementation((key: string) => (key === 'appointmentId' ? 'appointment-1' : null));
+
+    petServiceMock.getAppointment.mockResolvedValue({
+      id: 'appointment-1',
+      clientId: 'client-1',
+      clientName: 'Owner Example',
+      petId: 'pet-1',
+      petName: 'Nina',
+      serviceId: 'service-1',
+      serviceName: 'Consulta clínica',
+      professionalId: 'professional-1',
+      professionalName: 'Dr Example',
+      scheduledAt: '2026-03-10T10:00:00Z',
+      status: 'SCHEDULED',
+      medicalRecordCount: 0,
+      vaccinationCount: 0,
+      prescriptionCount: 0,
+      createdAt: '2026-03-10T10:00:00Z',
+      updatedAt: '2026-03-10T10:00:00Z'
+    });
+
+    petServiceMock.listProfiles.mockResolvedValue(createPageResponse([
+      {
+        id: 'pet-1',
+        clientId: 'client-1',
+        name: 'Nina',
+        species: 'DOG',
+        createdAt: '2026-03-10T09:00:00Z',
+        updatedAt: '2026-03-10T09:00:00Z'
+      }
+    ]));
+    petServiceMock.listProfessionals.mockResolvedValue(createPageResponse([
+      {
+        id: 'professional-1',
+        name: 'Dr Example',
+        createdAt: '2026-03-10T09:00:00Z',
+        updatedAt: '2026-03-10T09:00:00Z'
+      }
+    ]));
+    petServiceMock.createMedicalRecord.mockResolvedValue({
+      id: 'record-1',
+      petId: 'pet-1',
+      petName: 'Nina',
+      professionalId: 'professional-1',
+      professionalName: 'Dr Example',
+      appointmentId: 'appointment-1',
+      appointmentServiceName: 'Consulta clínica',
+      appointmentScheduledAt: '2026-03-10T10:00:00Z',
+      description: 'Observação inicial',
+      createdAt: '2026-03-10T10:05:00Z',
+      updatedAt: '2026-03-10T10:05:00Z'
+    });
+
+    render(<PetMedicalRecordsPage />);
+
+    await waitFor(() => {
+      expect(petServiceMock.getAppointment).toHaveBeenCalledWith('appointment-1');
+    });
+
+    await waitFor(() => {
+      expect(petServiceMock.listMedicalRecords).toHaveBeenCalledWith(0, 5, '', {
+        petId: 'pet-1',
+        professionalId: 'professional-1',
+        appointmentId: 'appointment-1'
+      });
+    });
+
+    expect(screen.getByText('Atendimento em contexto clínico ativo.')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Ver histórico completo' })).toHaveAttribute(
+      'href',
+      '/pet/medical-records'
+    );
+    expect(screen.getByText(/Fluxo vinculado ao atendimento Consulta clínica de Nina com Dr Example\./)).toBeInTheDocument();
+
+    fireEvent.change(screen.getByLabelText('Descrição'), { target: { value: 'Observação inicial' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Criar prontuário' }));
+
+    await waitFor(() => {
+      expect(petServiceMock.createMedicalRecord).toHaveBeenCalledWith({
+        petId: 'pet-1',
+        professionalId: 'professional-1',
+        appointmentId: 'appointment-1',
+        description: 'Observação inicial',
+        diagnosis: undefined,
+        treatment: undefined
+      });
     });
   });
 });

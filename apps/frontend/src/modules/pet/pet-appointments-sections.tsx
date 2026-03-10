@@ -1,6 +1,8 @@
 'use client';
 
 import { FormEventHandler } from 'react';
+import Link from 'next/link';
+import { petMedicalRoutePermissions } from '@/modules/pet/pet-medical-permissions';
 import { PermissionGuard } from '@/shared/auth/PermissionGuard';
 import { DataTableColumn } from '@/shared/ui/data-table';
 import { DateTimeInput } from '@/shared/ui/datetime-input';
@@ -19,11 +21,35 @@ export const petAppointmentStatusOptions: PetSelectOption[] = [
   { value: '', label: 'Todos' },
   { value: 'SCHEDULED', label: 'SCHEDULED' },
   { value: 'CONFIRMED', label: 'CONFIRMED' },
+  { value: 'IN_PROGRESS', label: 'IN_PROGRESS' },
   { value: 'COMPLETED', label: 'COMPLETED' },
-  { value: 'CANCELED', label: 'CANCELED' }
+  { value: 'CANCELED', label: 'CANCELED' },
+  { value: 'NO_SHOW', label: 'NO_SHOW' }
 ];
 
 export const petAppointmentFormStatusOptions = petAppointmentStatusOptions.filter((option) => option.value);
+
+function resolveAppointmentCareState(appointment: PetAppointment) {
+  const medicalRecordCount = appointment.medicalRecordCount ?? 0;
+  const vaccinationCount = appointment.vaccinationCount ?? 0;
+  const prescriptionCount = appointment.prescriptionCount ?? 0;
+
+  if (medicalRecordCount > 0) {
+    return 'DOCUMENTED';
+  }
+
+  if (vaccinationCount > 0 || prescriptionCount > 0) {
+    return 'IN_PROGRESS';
+  }
+
+  return 'PENDING';
+}
+
+function resolveAppointmentCareActionLabel(appointment: PetAppointment) {
+  return resolveAppointmentCareState(appointment) === 'PENDING'
+    ? 'Iniciar atendimento'
+    : 'Continuar atendimento';
+}
 
 type PetAppointmentsFiltersProps = {
   searchInput: string;
@@ -248,6 +274,24 @@ export function createPetAppointmentColumns({
       render: (appointment) => appointment.status
     },
     {
+      key: 'careState',
+      header: 'Fluxo clínico',
+      render: (appointment) => {
+        const medicalRecordCount = appointment.medicalRecordCount ?? 0;
+        const vaccinationCount = appointment.vaccinationCount ?? 0;
+        const prescriptionCount = appointment.prescriptionCount ?? 0;
+
+        return (
+          <div>
+            <div className="font-medium text-slate-800">{resolveAppointmentCareState(appointment)}</div>
+            <div className="text-xs text-slate-500">
+              Prontuários {medicalRecordCount} | Vacinas {vaccinationCount} | Prescrições {prescriptionCount}
+            </div>
+          </div>
+        );
+      }
+    },
+    {
       key: 'client',
       header: 'Cliente',
       render: (appointment) => {
@@ -308,6 +352,17 @@ export function createPetAppointmentColumns({
               Excluir
             </button>
           </PermissionGuard>
+
+          {appointment.status.toUpperCase() !== 'CANCELED' ? (
+            <PermissionGuard anyOf={petMedicalRoutePermissions}>
+              <Link
+                href={`/pet/medical-records?appointmentId=${appointment.id}`}
+                className="rounded-lg border border-emerald-300 px-2 py-1 text-xs font-medium text-emerald-700"
+              >
+                {resolveAppointmentCareActionLabel(appointment)}
+              </Link>
+            </PermissionGuard>
+          ) : null}
         </div>
       )
     }

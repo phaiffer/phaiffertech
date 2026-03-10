@@ -159,11 +159,24 @@ class PetIntegrationTest extends AbstractIntegrationTest {
 
         String clientId = createClient(session, marker);
         String petId = createPet(session, clientId, marker);
+        String serviceId = createService(session, marker);
         String professionalId = createProfessional(session, marker);
+        ResponseEntity<JsonNode> createAppointment = post("/pet/appointments", Map.of(
+                "clientId", clientId,
+                "petId", petId,
+                "serviceId", serviceId,
+                "professionalId", professionalId,
+                "scheduledAt", Instant.now().plusSeconds(1800).toString(),
+                "status", "SCHEDULED",
+                "notes", "Clinical workflow " + marker
+        ), session);
+        assertEquals(200, createAppointment.getStatusCode().value());
+        String appointmentId = requireBody(createAppointment).path("data").path("id").asText();
 
         ResponseEntity<JsonNode> createMedicalRecord = post("/pet/medical-records", Map.of(
                 "petId", petId,
                 "professionalId", professionalId,
+                "appointmentId", appointmentId,
                 "description", "Consultation " + marker,
                 "diagnosis", "Diagnosis " + marker,
                 "treatment", "Treatment " + marker
@@ -171,9 +184,12 @@ class PetIntegrationTest extends AbstractIntegrationTest {
         assertEquals(200, createMedicalRecord.getStatusCode().value());
         assertEquals("Pet " + marker, requireBody(createMedicalRecord).path("data").path("petName").asText());
         assertEquals("Professional " + marker, requireBody(createMedicalRecord).path("data").path("professionalName").asText());
+        assertEquals(appointmentId, requireBody(createMedicalRecord).path("data").path("appointmentId").asText());
+        assertEquals("Service " + marker, requireBody(createMedicalRecord).path("data").path("appointmentServiceName").asText());
 
         ResponseEntity<JsonNode> createVaccination = post("/pet/vaccinations", Map.of(
                 "petId", petId,
+                "appointmentId", appointmentId,
                 "vaccineName", "Vaccine " + marker,
                 "appliedAt", Instant.now().toString(),
                 "nextDueAt", Instant.now().plusSeconds(86400L * 30).toString(),
@@ -181,10 +197,13 @@ class PetIntegrationTest extends AbstractIntegrationTest {
         ), session);
         assertEquals(200, createVaccination.getStatusCode().value());
         assertEquals("Pet " + marker, requireBody(createVaccination).path("data").path("petName").asText());
+        assertEquals(appointmentId, requireBody(createVaccination).path("data").path("appointmentId").asText());
+        assertEquals("Service " + marker, requireBody(createVaccination).path("data").path("appointmentServiceName").asText());
 
         ResponseEntity<JsonNode> createPrescription = post("/pet/prescriptions", Map.of(
                 "petId", petId,
                 "professionalId", professionalId,
+                "appointmentId", appointmentId,
                 "medication", "Medication " + marker,
                 "dosage", "2x daily",
                 "instructions", "After meals"
@@ -192,32 +211,126 @@ class PetIntegrationTest extends AbstractIntegrationTest {
         assertEquals(200, createPrescription.getStatusCode().value());
         assertEquals("Pet " + marker, requireBody(createPrescription).path("data").path("petName").asText());
         assertEquals("Professional " + marker, requireBody(createPrescription).path("data").path("professionalName").asText());
+        assertEquals(appointmentId, requireBody(createPrescription).path("data").path("appointmentId").asText());
+        assertEquals("Service " + marker, requireBody(createPrescription).path("data").path("appointmentServiceName").asText());
 
         ResponseEntity<JsonNode> listMedicalRecords = get(
-                "/pet/medical-records?page=0&size=20&petId=" + petId + "&search=" + marker,
+                "/pet/medical-records?page=0&size=20&petId=" + petId + "&appointmentId=" + appointmentId + "&search=" + marker,
                 session
         );
         assertEquals(200, listMedicalRecords.getStatusCode().value());
         assertEquals(1, requireBody(listMedicalRecords).path("data").path("items").size());
         assertEquals("Pet " + marker, requireBody(listMedicalRecords).path("data").path("items").get(0).path("petName").asText());
         assertEquals("Professional " + marker, requireBody(listMedicalRecords).path("data").path("items").get(0).path("professionalName").asText());
+        assertEquals(appointmentId, requireBody(listMedicalRecords).path("data").path("items").get(0).path("appointmentId").asText());
 
         ResponseEntity<JsonNode> listVaccinations = get(
-                "/pet/vaccinations?page=0&size=20&petId=" + petId + "&search=" + marker,
+                "/pet/vaccinations?page=0&size=20&petId=" + petId + "&appointmentId=" + appointmentId + "&search=" + marker,
                 session
         );
         assertEquals(200, listVaccinations.getStatusCode().value());
         assertEquals(1, requireBody(listVaccinations).path("data").path("items").size());
         assertEquals("Pet " + marker, requireBody(listVaccinations).path("data").path("items").get(0).path("petName").asText());
+        assertEquals(appointmentId, requireBody(listVaccinations).path("data").path("items").get(0).path("appointmentId").asText());
 
         ResponseEntity<JsonNode> listPrescriptions = get(
-                "/pet/prescriptions?page=0&size=20&petId=" + petId + "&search=" + marker,
+                "/pet/prescriptions?page=0&size=20&petId=" + petId + "&appointmentId=" + appointmentId + "&search=" + marker,
                 session
         );
         assertEquals(200, listPrescriptions.getStatusCode().value());
         assertEquals(1, requireBody(listPrescriptions).path("data").path("items").size());
         assertEquals("Pet " + marker, requireBody(listPrescriptions).path("data").path("items").get(0).path("petName").asText());
         assertEquals("Professional " + marker, requireBody(listPrescriptions).path("data").path("items").get(0).path("professionalName").asText());
+        assertEquals(appointmentId, requireBody(listPrescriptions).path("data").path("items").get(0).path("appointmentId").asText());
+
+        ResponseEntity<JsonNode> getAppointment = get("/pet/appointments/" + appointmentId, session);
+        assertEquals(200, getAppointment.getStatusCode().value());
+        assertEquals(1, requireBody(getAppointment).path("data").path("medicalRecordCount").asInt());
+        assertEquals(1, requireBody(getAppointment).path("data").path("vaccinationCount").asInt());
+        assertEquals(1, requireBody(getAppointment).path("data").path("prescriptionCount").asInt());
+    }
+
+    @Test
+    void shouldRejectClinicalWorkflowForCanceledAppointment() {
+        AuthSession session = loginAsDefaultAdmin();
+        String marker = randomSearchMarker();
+
+        String clientId = createClient(session, marker);
+        String petId = createPet(session, clientId, marker);
+        String serviceId = createService(session, marker);
+        String professionalId = createProfessional(session, marker);
+
+        ResponseEntity<JsonNode> createAppointment = post("/pet/appointments", Map.of(
+                "clientId", clientId,
+                "petId", petId,
+                "serviceId", serviceId,
+                "professionalId", professionalId,
+                "scheduledAt", Instant.now().plusSeconds(2400).toString(),
+                "status", "CANCELED",
+                "notes", "Canceled clinical workflow " + marker
+        ), session);
+        assertEquals(200, createAppointment.getStatusCode().value());
+        String appointmentId = requireBody(createAppointment).path("data").path("id").asText();
+
+        ResponseEntity<JsonNode> createMedicalRecord = post("/pet/medical-records", Map.of(
+                "petId", petId,
+                "professionalId", professionalId,
+                "appointmentId", appointmentId,
+                "description", "Canceled consultation " + marker
+        ), session);
+        assertEquals(409, createMedicalRecord.getStatusCode().value());
+        assertEquals("CONFLICT", requireBody(createMedicalRecord).path("code").asText());
+    }
+
+    @Test
+    void shouldProtectAppointmentRelationshipsOnceClinicalWorkflowStarts() {
+        AuthSession session = loginAsDefaultAdmin();
+        String marker = randomSearchMarker();
+
+        String clientId = createClient(session, marker);
+        String petId = createPet(session, clientId, marker);
+        String otherClientId = createClient(session, marker + "-other");
+        String otherPetId = createPet(session, otherClientId, marker + "-other");
+        String serviceId = createService(session, marker);
+        String otherServiceId = createService(session, marker + "-other");
+        String professionalId = createProfessional(session, marker);
+        String otherProfessionalId = createProfessional(session, marker + "-other");
+
+        ResponseEntity<JsonNode> createAppointment = post("/pet/appointments", Map.of(
+                "clientId", clientId,
+                "petId", petId,
+                "serviceId", serviceId,
+                "professionalId", professionalId,
+                "scheduledAt", Instant.now().plusSeconds(3000).toString(),
+                "status", "SCHEDULED",
+                "notes", "Protected workflow " + marker
+        ), session);
+        assertEquals(200, createAppointment.getStatusCode().value());
+        String appointmentId = requireBody(createAppointment).path("data").path("id").asText();
+
+        ResponseEntity<JsonNode> createPrescription = post("/pet/prescriptions", Map.of(
+                "petId", petId,
+                "professionalId", professionalId,
+                "appointmentId", appointmentId,
+                "medication", "Medication " + marker
+        ), session);
+        assertEquals(200, createPrescription.getStatusCode().value());
+
+        ResponseEntity<JsonNode> updateAppointment = put("/pet/appointments/" + appointmentId, Map.of(
+                "clientId", otherClientId,
+                "petId", otherPetId,
+                "serviceId", otherServiceId,
+                "professionalId", otherProfessionalId,
+                "scheduledAt", Instant.now().plusSeconds(3600).toString(),
+                "status", "CONFIRMED",
+                "notes", "Attempted relation change " + marker
+        ), session);
+        assertEquals(409, updateAppointment.getStatusCode().value());
+        assertEquals("CONFLICT", requireBody(updateAppointment).path("code").asText());
+
+        ResponseEntity<JsonNode> deleteAppointment = delete("/pet/appointments/" + appointmentId, session);
+        assertEquals(409, deleteAppointment.getStatusCode().value());
+        assertEquals("CONFLICT", requireBody(deleteAppointment).path("code").asText());
     }
 
     @Test

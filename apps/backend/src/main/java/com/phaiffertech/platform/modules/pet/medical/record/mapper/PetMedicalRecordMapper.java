@@ -22,6 +22,7 @@ public final class PetMedicalRecordMapper implements BaseCrudMapper<
         PetMedicalRecord entity = new PetMedicalRecord();
         entity.setPetId(request.petId());
         entity.setProfessionalId(request.professionalId());
+        entity.setAppointmentId(request.appointmentId());
         entity.setDescription(request.description().trim());
         entity.setDiagnosis(trimToNull(request.diagnosis()));
         entity.setTreatment(trimToNull(request.treatment()));
@@ -32,6 +33,7 @@ public final class PetMedicalRecordMapper implements BaseCrudMapper<
     public void updateEntity(PetMedicalRecord entity, PetMedicalRecordUpdateRequest request) {
         entity.setPetId(request.petId());
         entity.setProfessionalId(request.professionalId());
+        entity.setAppointmentId(request.appointmentId());
         entity.setDescription(request.description().trim());
         entity.setDiagnosis(trimToNull(request.diagnosis()));
         entity.setTreatment(trimToNull(request.treatment()));
@@ -39,13 +41,15 @@ public final class PetMedicalRecordMapper implements BaseCrudMapper<
 
     @Override
     public PetMedicalRecordResponse toResponse(PetMedicalRecord entity) {
-        return toResponse(entity, null, null);
+        return toResponse(entity, null, null, null, null);
     }
 
     public PetMedicalRecordResponse toResponse(
             PetMedicalRecord entity,
             String petName,
-            String professionalName
+            String professionalName,
+            String appointmentServiceName,
+            java.time.Instant appointmentScheduledAt
     ) {
         return new PetMedicalRecordResponse(
                 entity.getId(),
@@ -53,6 +57,9 @@ public final class PetMedicalRecordMapper implements BaseCrudMapper<
                 petName,
                 entity.getProfessionalId(),
                 professionalName,
+                entity.getAppointmentId(),
+                appointmentServiceName,
+                appointmentScheduledAt,
                 entity.getDescription(),
                 entity.getDiagnosis(),
                 entity.getTreatment(),

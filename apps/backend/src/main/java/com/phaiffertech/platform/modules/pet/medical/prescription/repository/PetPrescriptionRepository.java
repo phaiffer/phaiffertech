@@ -2,6 +2,8 @@ package com.phaiffertech.platform.modules.pet.medical.prescription.repository;
 
 import com.phaiffertech.platform.modules.pet.medical.prescription.domain.PetPrescription;
 import com.phaiffertech.platform.shared.crud.BaseTenantCrudRepository;
+import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import org.springframework.data.domain.Page;
@@ -13,12 +15,19 @@ import org.springframework.data.repository.query.Param;
 public interface PetPrescriptionRepository
         extends JpaRepository<PetPrescription, UUID>, BaseTenantCrudRepository<PetPrescription> {
 
+    List<PetPrescription> findAllByTenantIdAndAppointmentIdIn(UUID tenantId, Collection<UUID> appointmentIds);
+
+    long countByTenantIdAndAppointmentId(UUID tenantId, UUID appointmentId);
+
+    boolean existsByTenantIdAndAppointmentId(UUID tenantId, UUID appointmentId);
+
     @Query("""
             SELECT p
             FROM PetPrescription p
             WHERE p.tenantId = :tenantId
               AND (:petId IS NULL OR p.petId = :petId)
               AND (:professionalId IS NULL OR p.professionalId = :professionalId)
+              AND (:appointmentId IS NULL OR p.appointmentId = :appointmentId)
               AND (:search IS NULL OR
                    LOWER(p.medication) LIKE LOWER(CONCAT('%', :search, '%')) OR
                    LOWER(COALESCE(p.dosage, '')) LIKE LOWER(CONCAT('%', :search, '%')) OR
@@ -28,6 +37,7 @@ public interface PetPrescriptionRepository
             @Param("tenantId") UUID tenantId,
             @Param("petId") UUID petId,
             @Param("professionalId") UUID professionalId,
+            @Param("appointmentId") UUID appointmentId,
             @Param("search") String search,
             Pageable pageable
     );

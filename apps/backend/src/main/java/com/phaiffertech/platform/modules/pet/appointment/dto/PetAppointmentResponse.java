@@ -16,6 +16,9 @@ public record PetAppointmentResponse(
         Instant scheduledAt,
         String status,
         String notes,
+        int medicalRecordCount,
+        int vaccinationCount,
+        int prescriptionCount,
         Instant createdAt,
         Instant updatedAt
 ) {

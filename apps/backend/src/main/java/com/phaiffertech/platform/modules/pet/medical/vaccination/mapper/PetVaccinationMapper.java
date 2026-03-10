@@ -21,6 +21,7 @@ public final class PetVaccinationMapper implements BaseCrudMapper<
     public PetVaccination toNewEntity(PetVaccinationCreateRequest request) {
         PetVaccination entity = new PetVaccination();
         entity.setPetId(request.petId());
+        entity.setAppointmentId(request.appointmentId());
         entity.setVaccineName(request.vaccineName().trim());
         entity.setAppliedAt(request.appliedAt());
         entity.setNextDueAt(request.nextDueAt());
@@ -31,6 +32,7 @@ public final class PetVaccinationMapper implements BaseCrudMapper<
     @Override
     public void updateEntity(PetVaccination entity, PetVaccinationUpdateRequest request) {
         entity.setPetId(request.petId());
+        entity.setAppointmentId(request.appointmentId());
         entity.setVaccineName(request.vaccineName().trim());
         entity.setAppliedAt(request.appliedAt());
         entity.setNextDueAt(request.nextDueAt());
@@ -39,14 +41,22 @@ public final class PetVaccinationMapper implements BaseCrudMapper<
 
     @Override
     public PetVaccinationResponse toResponse(PetVaccination entity) {
-        return toResponse(entity, null);
+        return toResponse(entity, null, null, null);
     }
 
-    public PetVaccinationResponse toResponse(PetVaccination entity, String petName) {
+    public PetVaccinationResponse toResponse(
+            PetVaccination entity,
+            String petName,
+            String appointmentServiceName,
+            java.time.Instant appointmentScheduledAt
+    ) {
         return new PetVaccinationResponse(
                 entity.getId(),
                 entity.getPetId(),
                 petName,
+                entity.getAppointmentId(),
+                appointmentServiceName,
+                appointmentScheduledAt,
                 entity.getVaccineName(),
                 entity.getAppliedAt(),
                 entity.getNextDueAt(),
