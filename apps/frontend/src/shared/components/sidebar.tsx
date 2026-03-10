@@ -6,10 +6,8 @@ import { ReactNode, useMemo } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/shared/auth/use-auth';
-import { usePermissions } from '@/shared/auth/usePermissions';
-import { useModuleCatalog } from '@/shared/modules/use-module-catalog';
-
-type SidebarGroup = 'core' | 'iot' | 'crm' | 'pet';
+import { useFrontendPlatform } from '@/shared/platform/frontend-platform-provider';
+import { groupSidebarItems, SidebarGroup, filterSidebarItems } from '@/shared/platform/sidebar-navigation';
 
 type SidebarItem = {
   href: string;
@@ -385,8 +383,6 @@ const items: SidebarItem[] = [
   }
 ];
 
-const groupOrder: SidebarGroup[] = ['core', 'crm', 'pet', 'iot'];
-
 function isItemActive(pathname: string, href: string) {
   return pathname === href || pathname.startsWith(`${href}/`);
 }
@@ -405,62 +401,21 @@ function monogram(name?: string) {
 
 export function Sidebar() {
   const pathname = usePathname();
-  const { session, signOut } = useAuth();
-  const { hasAnyPermission } = usePermissions();
-  const { modules, loading } = useModuleCatalog();
-  const user = session?.user;
-
-  const availableModules = useMemo(
-    () => new Set(modules.filter((moduleItem) => moduleItem.available).map((moduleItem) => moduleItem.code)),
-    [modules]
-  );
+  const { signOut } = useAuth();
+  const { branding, modules, user, workspace } = useFrontendPlatform();
 
   const visibleItems = useMemo(() => {
-    return items.filter((item) => {
-      if (item.platformOnly && !user?.platformAdmin) {
-        return false;
-      }
-
-      if (item.moduleCode && loading) {
-        return false;
-      }
-
-      if (item.moduleCode && !availableModules.has(item.moduleCode)) {
-        return false;
-      }
-
-      if (!item.anyOf || item.anyOf.length === 0) {
-        return true;
-      }
-
-      return hasAnyPermission(item.anyOf);
+    return filterSidebarItems(items, {
+      availableModuleCodes: modules.availableCodes,
+      loading: modules.loading,
+      user,
+      canManagePlatformAdministration: workspace.canManagePlatformAdministration
     });
-  }, [availableModules, hasAnyPermission, loading, user?.platformAdmin]);
+  }, [modules.availableCodes, modules.loading, user, workspace.canManagePlatformAdministration]);
 
   const groupedItems = useMemo(
-    () =>
-      groupOrder
-        .map((group) => {
-          const title = group === 'core'
-            ? (user?.platformAdmin ? 'Platform' : 'Workspace')
-            : group === 'crm'
-              ? 'CRM'
-              : group === 'pet'
-                ? 'PetFlow'
-                : 'IoT System';
-
-          return {
-            key: group,
-            title,
-            items: visibleItems.filter((item) => item.group === group)
-          };
-        })
-        .filter((group) => group.items.length > 0),
-    [user?.platformAdmin, visibleItems]
-  );
-
-  const contractedProducts = modules.filter(
-    (moduleItem) => moduleItem.available && moduleItem.code !== 'CORE_PLATFORM'
+    () => groupSidebarItems(visibleItems, workspace.canManagePlatformAdministration),
+    [visibleItems, workspace.canManagePlatformAdministration]
   );
 
   return (
@@ -480,9 +435,9 @@ export function Sidebar() {
         }}
       >
         <div className="flex items-start gap-3">
-          {user?.tenantLogoUrl ? (
+          {branding.logoUrl ? (
             <span className="flex h-11 w-11 items-center justify-center overflow-hidden rounded-2xl border border-[color:var(--app-shell-border)] bg-white/80">
-              <img src={user.tenantLogoUrl} alt={`${user.tenantName} logo`} className="h-full w-full object-contain" />
+              <img src={branding.logoUrl} alt={`${branding.scopeName} logo`} className="h-full w-full object-contain" />
             </span>
           ) : (
             <span
@@ -493,16 +448,16 @@ export function Sidebar() {
                 color: 'var(--app-shell-heading)'
               }}
             >
-              {monogram(user?.tenantName)}
+              {monogram(branding.scopeName)}
             </span>
           )}
           <div className="min-w-0">
-            <p className="truncate text-lg font-semibold text-[color:var(--app-shell-heading)]">{user?.tenantName ?? 'PhaifferTech Platform'}</p>
+            <p className="truncate text-lg font-semibold text-[color:var(--app-shell-heading)]">{branding.scopeName}</p>
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--tenant-accent)]">
-              {user?.platformAdmin ? 'Platform owner tenant' : 'Contracted SaaS workspace'}
+              {workspace.accessLabel}
             </p>
-            {user?.tenantCode ? (
-              <p className="mt-1 text-xs text-[color:var(--app-shell-muted)]">Tenant code: {user.tenantCode}</p>
+            {branding.tenantCode ? (
+              <p className="mt-1 text-xs text-[color:var(--app-shell-muted)]">Tenant code: {branding.tenantCode}</p>
             ) : null}
           </div>
         </div>
@@ -515,9 +470,9 @@ export function Sidebar() {
           }}
         >
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--app-shell-muted)]">Contracted products</p>
-          {contractedProducts.length > 0 ? (
+          {modules.contractedProducts.length > 0 ? (
             <div className="mt-3 flex flex-wrap gap-2">
-              {contractedProducts.map((moduleItem) => (
+              {modules.contractedProducts.map((moduleItem) => (
                 <span
                   key={moduleItem.code}
                   className="inline-flex items-center rounded-full border px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em]"
@@ -584,7 +539,7 @@ export function Sidebar() {
         <p className="truncate text-sm font-semibold text-[color:var(--app-shell-heading)]">{user?.fullName}</p>
         <p className="mt-1 truncate text-sm text-[color:var(--app-shell-muted)]">{user?.email}</p>
         <p className="mt-2 text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--tenant-accent)]">
-          {user?.platformAdmin ? 'PLATFORM_ADMIN' : user?.role}
+          {workspace.canManagePlatformAdministration ? 'PLATFORM_ADMIN' : user?.role}
         </p>
 
         <button

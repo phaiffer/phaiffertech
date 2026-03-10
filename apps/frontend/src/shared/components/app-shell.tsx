@@ -1,16 +1,13 @@
 'use client';
 
-import { ReactNode, useEffect, useMemo, useState } from 'react';
+import { ReactNode } from 'react';
 import { usePathname } from 'next/navigation';
 import { Sidebar } from '@/shared/components/sidebar';
-import { useAuth } from '@/shared/auth/use-auth';
 import {
-  AppThemeMode,
-  buildTenantBrandingStyle,
-  getTenantScopeName,
-  getTenantWorkspaceLabel,
-  toAppThemeMode
+  APP_THEME_OPTIONS,
+  getAppThemeModeLabel
 } from '@/shared/lib/tenant-branding';
+import { useFrontendPlatform } from '@/shared/platform/frontend-platform-provider';
 
 function ShellToggle({
   label,
@@ -88,78 +85,14 @@ function resolveHeaderMeta(pathname: string, platformAdmin?: boolean) {
   };
 }
 
-function themeLabel(mode: AppThemeMode) {
-  if (mode === 'light') {
-    return 'Light';
-  }
-
-  if (mode === 'dark') {
-    return 'Dark';
-  }
-
-  return 'System';
-}
-
 export function AppShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
-  const { session } = useAuth();
-  const user = session?.user;
-  const [themeMode, setThemeMode] = useState<AppThemeMode>('system');
+  const { branding, theme, workspace } = useFrontendPlatform();
 
-  const brandingStyle = useMemo(() => buildTenantBrandingStyle(user), [user]);
-  const tenantDefaultTheme = toAppThemeMode(user?.tenantDefaultThemeMode);
-  const canOverrideTheme = user?.tenantAllowUserThemeOverride ?? true;
-
-  useEffect(() => {
-    if (!user) {
-      return;
-    }
-
-    const savedTheme = window.localStorage.getItem('app-shell-theme');
-    const hasSavedOverride = savedTheme === 'dark' || savedTheme === 'light' || savedTheme === 'system';
-
-    if (canOverrideTheme && hasSavedOverride) {
-      setThemeMode(savedTheme);
-      return;
-    }
-
-    setThemeMode(tenantDefaultTheme);
-  }, [canOverrideTheme, tenantDefaultTheme, user]);
-
-  useEffect(() => {
-    const root = document.documentElement;
-    const media = typeof window.matchMedia === 'function'
-      ? window.matchMedia('(prefers-color-scheme: dark)')
-      : {
-          matches: false,
-          addEventListener: () => undefined,
-          removeEventListener: () => undefined
-        };
-
-    const applyTheme = () => {
-      root.dataset.theme = themeMode === 'system' ? (media.matches ? 'dark' : 'light') : themeMode;
-    };
-
-    applyTheme();
-
-    if (canOverrideTheme) {
-      window.localStorage.setItem('app-shell-theme', themeMode);
-    } else {
-      window.localStorage.removeItem('app-shell-theme');
-    }
-
-    if (themeMode !== 'system') {
-      return undefined;
-    }
-
-    media.addEventListener('change', applyTheme);
-    return () => media.removeEventListener('change', applyTheme);
-  }, [canOverrideTheme, themeMode]);
-
-  const headerMeta = resolveHeaderMeta(pathname, user?.platformAdmin);
+  const headerMeta = resolveHeaderMeta(pathname, workspace.canManagePlatformAdministration);
 
   return (
-    <div className="min-h-screen text-[color:var(--app-shell-text)]" style={brandingStyle}>
+    <div className="min-h-screen text-[color:var(--app-shell-text)]" style={branding.style}>
       <div
         className="flex min-h-screen"
         style={{
@@ -181,7 +114,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
               <div>
                 <p className="text-xs font-semibold uppercase tracking-[0.3em] text-[color:var(--tenant-accent)]">
-                  {getTenantScopeName(user)}
+                  {branding.scopeName}
                 </p>
                 <div className="mt-2 flex flex-col gap-2 lg:flex-row lg:items-end lg:gap-4">
                   <p className="text-2xl font-semibold uppercase tracking-[0.08em] text-[color:var(--app-shell-heading)]">
@@ -198,9 +131,9 @@ export function AppShell({ children }: { children: ReactNode }) {
                       color: 'var(--app-shell-heading)'
                     }}
                   >
-                    {getTenantWorkspaceLabel(user)}
+                    {workspace.workspaceLabel}
                   </span>
-                  {user?.tenantCode ? (
+                  {branding.tenantCode ? (
                     <span
                       className="inline-flex items-center rounded-full border px-3 py-1"
                       style={{
@@ -209,14 +142,14 @@ export function AppShell({ children }: { children: ReactNode }) {
                         color: 'var(--app-shell-muted)'
                       }}
                     >
-                      {user.tenantCode}
+                      {branding.tenantCode}
                     </span>
                   ) : null}
                 </div>
               </div>
 
               <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
-                {canOverrideTheme ? (
+                {theme.canOverride ? (
                   <div
                     className="inline-flex rounded-full border p-1"
                     style={{
@@ -224,12 +157,12 @@ export function AppShell({ children }: { children: ReactNode }) {
                       backgroundColor: 'var(--app-shell-panel-muted)'
                     }}
                   >
-                    {(['dark', 'light', 'system'] as AppThemeMode[]).map((option) => (
+                    {APP_THEME_OPTIONS.map((option) => (
                       <ShellToggle
                         key={option}
-                        label={option === 'dark' ? 'Dark' : option === 'light' ? 'Light' : 'System'}
-                        active={themeMode === option}
-                        onClick={() => setThemeMode(option)}
+                        label={getAppThemeModeLabel(option)}
+                        active={theme.mode === option}
+                        onClick={() => theme.setMode(option)}
                       />
                     ))}
                   </div>
@@ -242,7 +175,10 @@ export function AppShell({ children }: { children: ReactNode }) {
                       color: 'var(--app-shell-muted)'
                     }}
                   >
-                    Theme managed by tenant: <span className="font-semibold text-[color:var(--app-shell-heading)]">{themeLabel(tenantDefaultTheme)}</span>
+                    Theme managed by tenant:{' '}
+                    <span className="font-semibold text-[color:var(--app-shell-heading)]">
+                      {getAppThemeModeLabel(theme.tenantDefaultMode)}
+                    </span>
                   </div>
                 )}
               </div>

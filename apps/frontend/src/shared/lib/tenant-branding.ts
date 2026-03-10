@@ -3,6 +3,9 @@ import { AuthenticatedUser, TenantThemeMode } from '@/shared/types/auth';
 
 export type AppThemeMode = 'light' | 'dark' | 'system';
 
+export const APP_THEME_STORAGE_KEY = 'app-shell-theme';
+export const APP_THEME_OPTIONS: AppThemeMode[] = ['dark', 'light', 'system'];
+
 const FALLBACK_PRIMARY = '#0f172a';
 const FALLBACK_ACCENT = '#2563eb';
 
@@ -29,6 +32,18 @@ export function buildTenantBrandingStyle(user?: AuthenticatedUser | null): CSSPr
     '--tenant-accent': accent,
     '--tenant-accent-soft': withAlpha(accent, 0.18)
   } as CSSProperties;
+}
+
+export function getAppThemeModeLabel(mode: AppThemeMode) {
+  if (mode === 'light') {
+    return 'Light';
+  }
+
+  if (mode === 'dark') {
+    return 'Dark';
+  }
+
+  return 'System';
 }
 
 export function getTenantWorkspaceLabel(user?: AuthenticatedUser | null) {

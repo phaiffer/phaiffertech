@@ -1,0 +1,72 @@
+import { hasAnyPermission } from '@/shared/permissions/has-permission';
+import { AuthenticatedUser } from '@/shared/types/auth';
+
+export type SidebarGroup = 'core' | 'iot' | 'crm' | 'pet';
+
+type SidebarItemBase = {
+  href: string;
+  label: string;
+  anyOf?: string[];
+  moduleCode?: 'CRM' | 'IOT' | 'PET';
+  group: SidebarGroup;
+  platformOnly?: boolean;
+};
+
+type SidebarNavigationContext = {
+  availableModuleCodes: string[];
+  loading: boolean;
+  user: AuthenticatedUser | null;
+  canManagePlatformAdministration: boolean;
+};
+
+export function filterSidebarItems<T extends SidebarItemBase>(
+  items: T[],
+  context: SidebarNavigationContext
+) {
+  const availableModuleCodes = new Set(context.availableModuleCodes);
+
+  return items.filter((item) => {
+    if (item.platformOnly && !context.canManagePlatformAdministration) {
+      return false;
+    }
+
+    if (item.moduleCode && context.loading) {
+      return false;
+    }
+
+    if (item.moduleCode && !availableModuleCodes.has(item.moduleCode)) {
+      return false;
+    }
+
+    if (!item.anyOf || item.anyOf.length === 0) {
+      return true;
+    }
+
+    return hasAnyPermission(context.user, item.anyOf);
+  });
+}
+
+export function groupSidebarItems<T extends SidebarItemBase>(
+  items: T[],
+  canManagePlatformAdministration: boolean
+) {
+  const groupOrder: SidebarGroup[] = ['core', 'crm', 'pet', 'iot'];
+
+  return groupOrder
+    .map((group) => {
+      const title = group === 'core'
+        ? (canManagePlatformAdministration ? 'Platform' : 'Workspace')
+        : group === 'crm'
+          ? 'CRM'
+          : group === 'pet'
+            ? 'PetFlow'
+            : 'IoT System';
+
+      return {
+        key: group,
+        title,
+        items: items.filter((item) => item.group === group)
+      };
+    })
+    .filter((group) => group.items.length > 0);
+}

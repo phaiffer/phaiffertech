@@ -1,11 +1,12 @@
 import { render } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { Sidebar } from '@/shared/components/sidebar';
+import { AuthenticatedUser } from '@/shared/types/auth';
 
-const { signOutMock, hasAnyPermissionMock, currentUser } = vi.hoisted(() => ({
+const { signOutMock, currentUser } = vi.hoisted(() => ({
   signOutMock: vi.fn(),
-  hasAnyPermissionMock: vi.fn(),
   currentUser: {
+    userId: 'user-1',
     fullName: 'Jane Operator',
     email: 'jane@phaiffer.test',
     role: 'PLATFORM_ADMIN',
@@ -20,7 +21,7 @@ const { signOutMock, hasAnyPermissionMock, currentUser } = vi.hoisted(() => ({
     platformOwner: true,
     platformAdmin: true,
     permissions: []
-  }
+  } as AuthenticatedUser
 }));
 
 vi.mock('next/navigation', () => ({
@@ -29,40 +30,59 @@ vi.mock('next/navigation', () => ({
 
 vi.mock('@/shared/auth/use-auth', () => ({
   useAuth: () => ({
-    session: {
-      user: currentUser
-    },
     signOut: signOutMock
   })
 }));
 
-vi.mock('@/shared/auth/usePermissions', () => ({
-  usePermissions: () => ({
-    hasPermission: vi.fn().mockReturnValue(true),
-    hasAnyPermission: hasAnyPermissionMock
-  })
-}));
-
-vi.mock('@/shared/modules/use-module-catalog', () => ({
-  useModuleCatalog: () => ({
-    modules: [
-      { code: 'CORE_PLATFORM', name: 'Core Platform', available: true },
-      { code: 'IOT', name: 'IoT System', available: true },
-      { code: 'CRM', name: 'CRM', available: true },
-      { code: 'PET', name: 'PetFlow', available: true }
-    ],
-    loading: false,
-    error: null
+vi.mock('@/shared/platform/frontend-platform-provider', () => ({
+  useFrontendPlatform: () => ({
+    user: currentUser,
+    theme: {
+      mode: 'system',
+      setMode: vi.fn(),
+      tenantDefaultMode: 'system',
+      canOverride: true
+    },
+    branding: {
+      logoUrl: null,
+      scopeName: currentUser.tenantName,
+      tenantCode: currentUser.tenantCode,
+      style: {}
+    },
+    workspace: {
+      workspaceLabel: currentUser.platformAdmin ? 'Platform control plane' : 'Tenant workspace',
+      accessLabel: currentUser.platformAdmin ? 'Platform owner tenant' : 'Contracted SaaS workspace',
+      isPlatformOwnerTenant: currentUser.platformOwner,
+      hasSystemAdminRole: false,
+      hasFullPlatformVisibility: currentUser.platformAdmin || currentUser.platformOwner,
+      canManagePlatformAdministration: currentUser.platformAdmin
+    },
+    modules: {
+      items: [
+        { code: 'CORE_PLATFORM', name: 'Core Platform', description: 'Core', enabled: true, moduleEnabled: true, featureFlagEnabled: true, available: true },
+        { code: 'IOT', name: 'IoT System', description: 'IoT', enabled: true, moduleEnabled: true, featureFlagEnabled: true, available: true },
+        { code: 'CRM', name: 'CRM', description: 'CRM', enabled: true, moduleEnabled: true, featureFlagEnabled: true, available: true },
+        { code: 'PET', name: 'PetFlow', description: 'Pet', enabled: true, moduleEnabled: true, featureFlagEnabled: true, available: true }
+      ],
+      loading: false,
+      error: null,
+      availableCodes: ['CORE_PLATFORM', 'IOT', 'CRM', 'PET'],
+      contractedProducts: [
+        { code: 'IOT', name: 'IoT System', description: 'IoT', enabled: true, moduleEnabled: true, featureFlagEnabled: true, available: true },
+        { code: 'CRM', name: 'CRM', description: 'CRM', enabled: true, moduleEnabled: true, featureFlagEnabled: true, available: true },
+        { code: 'PET', name: 'PetFlow', description: 'Pet', enabled: true, moduleEnabled: true, featureFlagEnabled: true, available: true }
+      ]
+    }
   })
 }));
 
 describe('Sidebar', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    hasAnyPermissionMock.mockReturnValue(true);
     currentUser.role = 'PLATFORM_ADMIN';
     currentUser.platformAdmin = true;
     currentUser.platformOwner = true;
+    currentUser.permissions = ['TENANT_READ', 'USER_READ', 'crm.task.read', 'pet.appointment.read', 'crm.dashboard.read', 'pet.dashboard.read'];
   });
 
   it('renders contextual CRM and Pet navigation and keeps tenant admin visible only for platform admins', () => {
