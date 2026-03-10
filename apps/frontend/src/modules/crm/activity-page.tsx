@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { buildReferenceDetail, buildReferenceSummary, resolveCanonicalReference } from '@/modules/crm/crm-reference-utils';
 import { PermissionGuard } from '@/shared/auth/PermissionGuard';
 import { ApiClientError } from '@/shared/lib/http';
 import { resolvePageItems, resolveTotalItems } from '@/shared/lib/pagination';
@@ -48,7 +49,25 @@ export function CrmActivityPage() {
   const totalItems = resolveTotalItems(pageData);
   const columns: DataTableColumn<CrmActivityItem>[] = [
     { key: 'eventType', header: 'Evento', render: (row) => row.eventType },
-    { key: 'entity', header: 'Entidade', render: (row) => `${row.entity} ${row.entityId.slice(0, 8)}` },
+    {
+      key: 'entity',
+      header: 'Entidade',
+      render: (row) => {
+        const entity = resolveCanonicalReference({
+          referenceType: row.entityReferenceType,
+          moduleCode: row.entityModule,
+          entityType: row.entityType,
+          fallbackReferenceType: row.entity.replace('_', '.')
+        });
+
+        return (
+          <div>
+            <p className="font-medium text-slate-900">{buildReferenceSummary(entity)}</p>
+            <p className="text-xs text-slate-500">{buildReferenceDetail(entity, row.entityId)}</p>
+          </div>
+        );
+      }
+    },
     { key: 'user', header: 'Usuário', render: (row) => row.userId ?? '-' },
     { key: 'payload', header: 'Payload', render: (row) => payloadSummary(row.payload) },
     { key: 'createdAt', header: 'Data', render: (row) => new Date(row.createdAt).toLocaleString('pt-BR') }
@@ -60,7 +79,7 @@ export function CrmActivityPage() {
       fallback={<div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">Você não possui permissão para visualizar a atividade do CRM.</div>}
     >
       <div className="space-y-5">
-        <PageTitle title="CRM Activity" description="Feed de eventos auditáveis para contatos, leads, negócios, tarefas e notas." />
+        <PageTitle title="CRM Activity" description="Feed auditável com contexto canônico de entidade para leitura comercial e preparação futura cross-module." />
 
         {error ? <div className="rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{error}</div> : null}
 

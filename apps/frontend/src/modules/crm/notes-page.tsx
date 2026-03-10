@@ -1,6 +1,12 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import {
+  buildReferenceDetail,
+  buildReferenceSummary,
+  isCrmEditableReference,
+  resolveCanonicalReference
+} from '@/modules/crm/crm-reference-utils';
 import { PermissionGuard } from '@/shared/auth/PermissionGuard';
 import { ApiClientError } from '@/shared/lib/http';
 import { resolvePageItems, resolveTotalItems } from '@/shared/lib/pagination';
@@ -152,39 +158,73 @@ export function CrmNotesPage() {
   const totalItems = resolveTotalItems(pageData);
   const columns: DataTableColumn<CrmNote>[] = [
     { key: 'content', header: 'Conteúdo', render: (row) => row.content },
-    { key: 'relation', header: 'Vínculo', render: (row) => `${row.relatedType} ${row.relatedId.slice(0, 8)}` },
+    {
+      key: 'relation',
+      header: 'Vínculo',
+      render: (row) => {
+        const relation = resolveCanonicalReference({
+          compatibilityType: row.relatedType,
+          referenceType: row.relatedReferenceType,
+          moduleCode: row.relatedModule,
+          entityType: row.relatedEntityType
+        });
+
+        return (
+          <div>
+            <p className="font-medium text-slate-900">{buildReferenceSummary(relation)}</p>
+            <p className="text-xs text-slate-500">{buildReferenceDetail(relation, row.relatedId)}</p>
+          </div>
+        );
+      }
+    },
     { key: 'author', header: 'Autor', render: (row) => row.createdBy ?? row.authorUserId ?? '-' },
     { key: 'createdAt', header: 'Criada em', render: (row) => new Date(row.createdAt).toLocaleString('pt-BR') },
     {
       key: 'actions',
       header: 'Ações',
-      render: (row) => (
-        <div className="flex gap-2">
-          <PermissionGuard permission="crm.note.update">
-            <button
-              type="button"
-              onClick={() => {
-                setEditingId(row.id);
-                setContent(row.content);
-                setRelationType(row.relatedType);
-                setRelationId(row.relatedId);
-              }}
-              className="rounded-lg border border-slate-300 px-2 py-1 text-xs font-medium text-slate-700"
-            >
-              Editar
-            </button>
-          </PermissionGuard>
-          <PermissionGuard permission="crm.note.delete">
-            <button
-              type="button"
-              onClick={() => setDeleteCandidate(row)}
-              className="rounded-lg border border-rose-300 px-2 py-1 text-xs font-medium text-rose-700"
-            >
-              Excluir
-            </button>
-          </PermissionGuard>
-        </div>
-      )
+      render: (row) => {
+        const relation = resolveCanonicalReference({
+          compatibilityType: row.relatedType,
+          referenceType: row.relatedReferenceType,
+          moduleCode: row.relatedModule,
+          entityType: row.relatedEntityType
+        });
+        const editableRelation = isCrmEditableReference(relation) ? relation.entityType : null;
+
+        return (
+          <div className="flex gap-2">
+            <PermissionGuard permission="crm.note.update">
+              {editableRelation ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEditingId(row.id);
+                    setContent(row.content);
+                    setRelationType(editableRelation);
+                    setRelationId(row.relatedId);
+                  }}
+                  className="rounded-lg border border-slate-300 px-2 py-1 text-xs font-medium text-slate-700"
+                >
+                  Editar
+                </button>
+              ) : (
+                <span className="inline-flex items-center rounded-lg border border-slate-200 px-2 py-1 text-xs font-medium text-slate-500">
+                  Somente leitura
+                </span>
+              )}
+            </PermissionGuard>
+            <PermissionGuard permission="crm.note.delete">
+              <button
+                type="button"
+                onClick={() => setDeleteCandidate(row)}
+                className="rounded-lg border border-rose-300 px-2 py-1 text-xs font-medium text-rose-700"
+              >
+                Excluir
+              </button>
+            </PermissionGuard>
+          </div>
+        );
+      }
     }
   ];
 
@@ -211,6 +251,9 @@ export function CrmNotesPage() {
             <FormInput label="Conteúdo" value={content} onChange={setContent} required />
             <FormSelect label="Tipo de vínculo" value={relationType} options={relationTypeOptions} onChange={(value) => { setRelationType(value); setRelationId(''); }} />
             <FormSelect label="Registro vinculado" value={relationId} options={[{ value: '', label: 'Selecione' }, ...relationOptions()]} onChange={setRelationId} />
+            <p className="text-xs text-slate-500 md:col-span-2">
+              O formulário continua restrito a vínculos internos do CRM. Referências canônicas externas aparecem na tabela para leitura, sem edição local nesta etapa.
+            </p>
             <div className="flex gap-2 md:col-span-2">
               <button
                 type="button"

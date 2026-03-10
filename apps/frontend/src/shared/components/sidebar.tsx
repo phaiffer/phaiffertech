@@ -186,6 +186,83 @@ const SettingsNavIcon = ({ active }: { active: boolean }) => (
   />
 );
 
+const ClipboardNavIcon = ({ active }: { active: boolean }) => (
+  <NavIcon
+    active={active}
+    path={
+      <>
+        <path d="M9 4h6" />
+        <path d="M9 7h6" />
+        <path d="M8 4H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-2" />
+        <path d="M9 3h6v3H9z" />
+      </>
+    }
+  />
+);
+
+const NoteNavIcon = ({ active }: { active: boolean }) => (
+  <NavIcon
+    active={active}
+    path={
+      <>
+        <path d="M7 4h7l3 3v13H7z" />
+        <path d="M14 4v4h4" />
+        <path d="M10 12h4M10 16h4" />
+      </>
+    }
+  />
+);
+
+const CalendarNavIcon = ({ active }: { active: boolean }) => (
+  <NavIcon
+    active={active}
+    path={
+      <>
+        <rect x="4" y="6" width="16" height="14" rx="2" />
+        <path d="M8 3v6M16 3v6M4 10h16" />
+      </>
+    }
+  />
+);
+
+const HeartbeatNavIcon = ({ active }: { active: boolean }) => (
+  <NavIcon
+    active={active}
+    path={
+      <>
+        <path d="M3 12h4l2-3 3 6 2-3h7" />
+      </>
+    }
+  />
+);
+
+const crmOverviewPermissions = [
+  'crm.dashboard.read',
+  'crm.company.read',
+  'crm.contact.read',
+  'crm.lead.read',
+  'crm.deal.read',
+  'crm.pipeline.read',
+  'crm.task.read',
+  'crm.note.read',
+  'crm.activity.read'
+];
+
+const petOverviewPermissions = [
+  'pet.dashboard.read',
+  'pet.client.read',
+  'pet.profile.read',
+  'pet.appointment.read',
+  'pet.service.read',
+  'pet.professional.read',
+  'pet.medical-record.read',
+  'pet.vaccination.read',
+  'pet.prescription.read',
+  'pet.product.read',
+  'pet.inventory.read',
+  'pet.invoice.read'
+];
+
 const items: SidebarItem[] = [
   {
     href: '/iot/dashboard',
@@ -276,6 +353,86 @@ const items: SidebarItem[] = [
     label: 'Settings',
     group: 'core',
     icon: SettingsNavIcon
+  },
+  {
+    href: '/crm',
+    label: 'Central CRM',
+    anyOf: crmOverviewPermissions,
+    moduleCode: 'CRM',
+    group: 'crm',
+    icon: DashboardNavIcon
+  },
+  {
+    href: '/crm/dashboard',
+    label: 'Dashboard',
+    anyOf: ['crm.dashboard.read'],
+    moduleCode: 'CRM',
+    group: 'crm',
+    icon: AnalysisNavIcon
+  },
+  {
+    href: '/crm/tasks',
+    label: 'Tasks',
+    anyOf: ['crm.task.read'],
+    moduleCode: 'CRM',
+    group: 'crm',
+    icon: ClipboardNavIcon
+  },
+  {
+    href: '/crm/notes',
+    label: 'Notes',
+    anyOf: ['crm.note.read'],
+    moduleCode: 'CRM',
+    group: 'crm',
+    icon: NoteNavIcon
+  },
+  {
+    href: '/crm/activity',
+    label: 'Activity',
+    anyOf: ['crm.activity.read'],
+    moduleCode: 'CRM',
+    group: 'crm',
+    icon: WaveNavIcon
+  },
+  {
+    href: '/pet',
+    label: 'Central Pet',
+    anyOf: petOverviewPermissions,
+    moduleCode: 'PET',
+    group: 'pet',
+    icon: DashboardNavIcon
+  },
+  {
+    href: '/pet/dashboard',
+    label: 'Dashboard',
+    anyOf: ['pet.dashboard.read'],
+    moduleCode: 'PET',
+    group: 'pet',
+    icon: AnalysisNavIcon
+  },
+  {
+    href: '/pet/clients',
+    label: 'Clients',
+    anyOf: ['pet.client.read'],
+    moduleCode: 'PET',
+    group: 'pet',
+    icon: UserNavIcon
+  },
+  {
+    href: '/pet/appointments',
+    label: 'Appointments',
+    anyOf: ['pet.appointment.read'],
+    moduleCode: 'PET',
+    group: 'pet',
+    icon: CalendarNavIcon
+  },
+  {
+    href: '/pet/medical-records',
+    label: 'Medical',
+    anyOf: ['pet.medical-record.read', 'pet.vaccination.read', 'pet.prescription.read'],
+    moduleCode: 'PET',
+    group: 'pet',
+    icon: HeartbeatNavIcon
   }
 ];
 
