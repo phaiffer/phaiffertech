@@ -33,63 +33,81 @@ const iotWorkspaceActions: ModuleWorkspaceAction[] = [
     eyebrow: 'Overview',
     title: 'Open dashboard',
     description: 'Review availability, alarm pressure, telemetry rhythm, and maintenance backlog.',
-    permission: 'iot.dashboard.read'
+    permission: 'iot.dashboard.read',
+    restrictionTitle: 'Dashboard access required',
+    restrictionDescription: 'The operational pulse becomes available when your workspace role includes IoT dashboard access.'
   },
   {
     href: '/iot/devices',
     eyebrow: 'Fleet',
     title: 'Inspect devices',
     description: 'Open the connected asset inventory with communication and operational context.',
-    permission: 'iot.device.read'
+    permission: 'iot.device.read',
+    restrictionTitle: 'Device access required',
+    restrictionDescription: 'Fleet visibility appears here when your workspace role can read IoT devices.'
   },
   {
     href: '/iot/add-device',
     eyebrow: 'Onboarding',
     title: 'Register device',
     description: 'Launch the guided Modbus onboarding flow for a new asset.',
-    permission: 'iot.device.create'
+    permission: 'iot.device.create',
+    restrictionTitle: 'Device creation required',
+    restrictionDescription: 'Guided onboarding becomes available when your workspace role can create IoT devices.'
   },
   {
     href: '/iot/registers',
     eyebrow: 'Mapping',
     title: 'Review registers',
     description: 'Inspect Modbus functions, addresses, data types, and thresholds.',
-    permission: 'iot.register.read'
+    permission: 'iot.register.read',
+    restrictionTitle: 'Register access required',
+    restrictionDescription: 'Register mapping appears here when your workspace role can read IoT registers.'
   },
   {
     href: '/iot/telemetry',
     eyebrow: 'Stream',
     title: 'Open telemetry',
     description: 'Follow live records tied to devices, registers, and collection quality.',
-    permission: 'iot.telemetry.read'
+    permission: 'iot.telemetry.read',
+    restrictionTitle: 'Telemetry access required',
+    restrictionDescription: 'Live telemetry becomes available when your workspace role can read IoT telemetry.'
   },
   {
     href: '/iot/alarms',
     eyebrow: 'Incidents',
     title: 'Review alarms',
     description: 'Handle severity, acknowledgement flow, and active operational incidents.',
-    permission: 'iot.alarm.read'
+    permission: 'iot.alarm.read',
+    restrictionTitle: 'Alarm access required',
+    restrictionDescription: 'Incident review appears here when your workspace role can read IoT alarms.'
   },
   {
     href: '/iot/maintenance',
     eyebrow: 'Field work',
     title: 'Track maintenance',
     description: 'Review the intervention backlog tied to assets and alarm context.',
-    permission: 'iot.maintenance.read'
+    permission: 'iot.maintenance.read',
+    restrictionTitle: 'Maintenance access required',
+    restrictionDescription: 'Field intervention flow becomes available when your workspace role can read IoT maintenance.'
   },
   {
     href: '/iot/reports',
     eyebrow: 'Reporting',
     title: 'Open reports',
     description: 'Inspect the current operational summary exported by the IoT workspace.',
-    permission: 'iot.report.read'
+    permission: 'iot.report.read',
+    restrictionTitle: 'Reporting access required',
+    restrictionDescription: 'Operational reports appear here when your workspace role can read IoT reports.'
   },
   {
     href: '/iot/observability',
     eyebrow: 'Observability',
     title: 'Review observability',
     description: 'Cross-check dashboard signals with telemetry, incidents, and maintenance flows.',
-    permission: 'iot.report.read'
+    permission: 'iot.report.read',
+    restrictionTitle: 'Reporting access required',
+    restrictionDescription: 'Observability surfaces stay hidden until your workspace role can read IoT reports.'
   }
 ];
 
@@ -154,26 +172,67 @@ function IotWorkspaceActionLink({
   href,
   eyebrow,
   title,
-  description
+  description,
+  available = true,
+  restrictionTitle,
+  restrictionDescription
 }: {
   href: string;
   eyebrow: string;
   title: string;
   description: string;
+  available?: boolean;
+  restrictionTitle?: string;
+  restrictionDescription?: string;
 }) {
-  return (
-    <Link
-      href={href}
-      className="group rounded-[28px] border border-slate-800 bg-slate-950/35 p-5 transition hover:-translate-y-0.5 hover:border-cyan-400/35 hover:bg-slate-950/65"
-    >
+  const content = (
+    <>
       <p className="text-xs font-semibold uppercase tracking-[0.18em] text-cyan-300/80">{eyebrow}</p>
       <h3 className="mt-3 text-xl font-semibold text-white">{title}</h3>
       <p className="mt-2 text-sm leading-6 text-slate-400">{description}</p>
+      {!available && (restrictionTitle || restrictionDescription) ? (
+        <div className="mt-4 rounded-[22px] border border-dashed border-slate-700 bg-slate-950/45 px-4 py-3">
+          {restrictionTitle ? <p className="text-sm font-semibold text-white">{restrictionTitle}</p> : null}
+          {restrictionDescription ? <p className="mt-1 text-sm text-slate-400">{restrictionDescription}</p> : null}
+        </div>
+      ) : null}
       <span className="mt-5 inline-flex text-sm font-semibold text-cyan-200 transition group-hover:translate-x-1">
-        Open workspace flow
+        {available ? 'Open workspace flow' : 'Unavailable in current workspace role'}
       </span>
-    </Link>
+    </>
   );
+
+  if (available) {
+    return (
+      <Link
+        href={href}
+        className="group rounded-[28px] border border-slate-800 bg-slate-950/35 p-5 transition hover:-translate-y-0.5 hover:border-cyan-400/35 hover:bg-slate-950/65"
+      >
+        {content}
+      </Link>
+    );
+  }
+
+  return (
+    <div className="rounded-[28px] border border-dashed border-slate-700 bg-slate-950/35 p-5 opacity-90">
+      {content}
+    </div>
+  );
+}
+
+function buildIotGuidanceSteps(actions: ModuleWorkspaceAction[], keys: string[]) {
+  return keys
+    .map((key) => actions.find((action) => action.href === key))
+    .filter((action): action is ModuleWorkspaceAction => Boolean(action));
+}
+
+function isIotFirstUse(summary: IotDashboardSummary) {
+  return summary.totalDevices === 0
+    && summary.activeDevices === 0
+    && summary.offlineDevices === 0
+    && summary.totalAlarmsOpen === 0
+    && summary.telemetryPointsLast24h === 0
+    && summary.pendingMaintenance === 0;
 }
 
 export function IotHome() {
@@ -184,12 +243,24 @@ export function IotHome() {
   const [error, setError] = useState<string | null>(null);
 
   const canReadDashboard = hasPermission('iot.dashboard.read');
-  const visibleActions = iotWorkspaceActions.filter((action) => !action.permission || hasPermission(action.permission));
-  const primaryAction = visibleActions.find((action) => action.href === '/iot/dashboard') ?? visibleActions[0] ?? null;
+  const actionStates = iotWorkspaceActions.map((action) => {
+    const available = !action.permission || hasPermission(action.permission);
+
+    return {
+      ...action,
+      available,
+      status: available ? action.status : 'restricted'
+    };
+  });
+  const availableActions = actionStates.filter((action) => action.available !== false);
+  const primaryAction = availableActions.find((action) => action.href === '/iot/dashboard') ?? availableActions[0] ?? null;
   const themePolicy = platform.theme.canOverride
     ? `${getAppThemeModeLabel(platform.theme.tenantDefaultMode)} with user override`
     : `${getAppThemeModeLabel(platform.theme.tenantDefaultMode)} tenant-managed`;
   const activitySection = summary?.sections.find((section) => section.items.length > 0) ?? null;
+  const firstUse = summary ? isIotFirstUse(summary) : false;
+  const setupGuidance = buildIotGuidanceSteps(actionStates, ['/iot/add-device', '/iot/devices', '/iot/registers']);
+  const restrictedGuidance = buildIotGuidanceSteps(actionStates, ['/iot/devices', '/iot/alarms', '/iot/telemetry']);
 
   useEffect(() => {
     let active = true;
@@ -247,7 +318,7 @@ export function IotHome() {
             <Chip label="Workspace" value={platform.workspace.workspaceLabel} tone="cyan" icon={<DashboardIcon />} />
             <Chip label="Tenant" value={platform.branding.tenantCode ?? platform.branding.scopeName} tone="amber" icon={<FactoryIcon />} />
             <Chip label="Theme" value={getAppThemeModeLabel(platform.theme.tenantDefaultMode)} tone="green" icon={<WaveIcon />} />
-            <Chip label="Actions" value={visibleActions.length} tone="neutral" icon={<PlugIcon />} />
+            <Chip label="Actions" value={availableActions.length} tone="neutral" icon={<PlugIcon />} />
           </>
         }
         action={primaryAction ? <IotActionButton href={primaryAction.href}>{primaryAction.title}</IotActionButton> : null}
@@ -327,7 +398,7 @@ export function IotHome() {
         title="Workspace Actions"
         description="Open the IoT surfaces currently contracted for the tenant and allowed for the active user."
       >
-        {visibleActions.length === 0 ? (
+        {actionStates.length === 0 ? (
           <IotEmptyState
             title="No IoT actions available"
             description="The IoT module is enabled for this tenant, but the current user does not have IoT read permissions yet."
@@ -335,13 +406,16 @@ export function IotHome() {
           />
         ) : (
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-            {visibleActions.map((action) => (
+            {actionStates.map((action) => (
               <IotWorkspaceActionLink
                 key={action.href}
                 href={action.href}
                 eyebrow={action.eyebrow}
                 title={action.title}
                 description={action.description}
+                available={action.available}
+                restrictionTitle={action.restrictionTitle}
+                restrictionDescription={action.restrictionDescription}
               />
             ))}
           </div>
@@ -353,11 +427,27 @@ export function IotHome() {
         description="Keep a small live slice of alarms, telemetry, and recent operational items visible before moving deeper into the module."
       >
         {!canReadDashboard ? (
-          <IotEmptyState
-            title="Dashboard snapshot unavailable"
-            description="The IoT workspace is available, but the operational pulse requires `iot.dashboard.read`."
-            tone="amber"
-          />
+          <div className="space-y-4">
+            <IotNotice
+              title="Operational pulse restricted"
+              description="The IoT workspace is available, but the operational pulse requires `iot.dashboard.read`. Continue through the permitted fleet and incident flows below."
+              tone="amber"
+            />
+            <div className="grid gap-4 md:grid-cols-3">
+              {restrictedGuidance.map((action) => (
+                <IotWorkspaceActionLink
+                  key={action.href}
+                  href={action.href}
+                  eyebrow={action.eyebrow}
+                  title={action.title}
+                  description={action.available === false ? action.restrictionDescription ?? action.description : action.description}
+                  available={action.available}
+                  restrictionTitle={action.restrictionTitle}
+                  restrictionDescription={action.restrictionDescription}
+                />
+              ))}
+            </div>
+          </div>
         ) : loadingSummary ? (
           <IotNotice
             title="Loading IoT summary"
@@ -365,11 +455,49 @@ export function IotHome() {
             tone="cyan"
           />
         ) : error ? (
-          <IotNotice
-            title="IoT summary unavailable"
-            description={error}
-            tone="amber"
-          />
+          <div className="space-y-4">
+            <IotNotice
+              title="IoT summary unavailable"
+              description={error}
+              tone="amber"
+            />
+            <div className="grid gap-4 md:grid-cols-3">
+              {restrictedGuidance.map((action) => (
+                <IotWorkspaceActionLink
+                  key={action.href}
+                  href={action.href}
+                  eyebrow={action.eyebrow}
+                  title={action.title}
+                  description={action.available === false ? action.restrictionDescription ?? action.description : action.description}
+                  available={action.available}
+                  restrictionTitle={action.restrictionTitle}
+                  restrictionDescription={action.restrictionDescription}
+                />
+              ))}
+            </div>
+          </div>
+        ) : summary && firstUse ? (
+          <div className="space-y-4">
+            <IotEmptyState
+              title="Set up the IoT workspace"
+              description="This tenant does not have connected assets or live telemetry yet. Start with the first onboarding and fleet actions so the operational pulse can begin surfacing real signals."
+              tone="cyan"
+            />
+            <div className="grid gap-4 md:grid-cols-3">
+              {setupGuidance.map((action) => (
+                <IotWorkspaceActionLink
+                  key={action.href}
+                  href={action.href}
+                  eyebrow={action.eyebrow}
+                  title={action.title}
+                  description={action.available === false ? action.restrictionDescription ?? action.description : action.description}
+                  available={action.available}
+                  restrictionTitle={action.restrictionTitle}
+                  restrictionDescription={action.restrictionDescription}
+                />
+              ))}
+            </div>
+          </div>
         ) : summary ? (
           <div className="space-y-6">
             <div className="grid gap-4 md:grid-cols-3">
@@ -422,11 +550,27 @@ export function IotHome() {
                 ))}
               </div>
             ) : (
-              <IotEmptyState
-                title="No recent operational items"
-                description="The current IoT dashboard summary returned no recent-item activity block for this tenant."
-                tone="neutral"
-              />
+              <div className="space-y-4">
+                <IotEmptyState
+                  title="No recent operational items"
+                  description="The current IoT dashboard summary returned no recent-item activity block for this tenant. Continue through the permitted workspace flows below."
+                  tone="neutral"
+                />
+                <div className="grid gap-4 md:grid-cols-3">
+                  {restrictedGuidance.map((action) => (
+                    <IotWorkspaceActionLink
+                      key={action.href}
+                      href={action.href}
+                      eyebrow={action.eyebrow}
+                      title={action.title}
+                      description={action.available === false ? action.restrictionDescription ?? action.description : action.description}
+                      available={action.available}
+                      restrictionTitle={action.restrictionTitle}
+                      restrictionDescription={action.restrictionDescription}
+                    />
+                  ))}
+                </div>
+              </div>
             )}
           </div>
         ) : (

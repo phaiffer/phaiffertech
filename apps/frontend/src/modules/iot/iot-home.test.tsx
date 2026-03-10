@@ -82,9 +82,10 @@ describe('IotHome', () => {
     render(<IotHome />);
 
     expect(iotService.getDashboardSummary).not.toHaveBeenCalled();
-    expect(screen.getAllByText('Inspect devices')).toHaveLength(2);
-    expect(screen.getAllByText('Review alarms')).toHaveLength(1);
-    expect(screen.queryByText('Open dashboard')).not.toBeInTheDocument();
+    expect(screen.getAllByText('Inspect devices').length).toBeGreaterThan(1);
+    expect(screen.getAllByText('Review alarms').length).toBeGreaterThan(0);
+    expect(screen.getByText('Open dashboard')).toBeInTheDocument();
+    expect(screen.getByText('Dashboard access required')).toBeInTheDocument();
     expect(screen.getByText(/operational pulse requires `iot.dashboard.read`/i)).toBeInTheDocument();
   });
 
@@ -137,5 +138,30 @@ describe('IotHome', () => {
     expect(screen.getByText('Telemetry in 24h')).toBeInTheDocument();
     expect(screen.getByText('Recent Incidents')).toBeInTheDocument();
     expect(screen.getByText('Boiler Line 4')).toBeInTheDocument();
+  });
+
+  it('shows guided first-use messaging when the IoT workspace has no connected assets yet', async () => {
+    currentPermissions.splice(0, currentPermissions.length, 'iot.dashboard.read', 'iot.device.create', 'iot.device.read');
+    vi.mocked(iotService.getDashboardSummary).mockResolvedValue({
+      totalDevices: 0,
+      activeDevices: 0,
+      offlineDevices: 0,
+      totalAlarmsOpen: 0,
+      alarmsBySeverity: {},
+      telemetryPointsLast24h: 0,
+      pendingMaintenance: 0,
+      devicesLastSeenSummary: {},
+      summaryCards: [],
+      sections: []
+    });
+
+    render(<IotHome />);
+
+    await waitFor(() => {
+      expect(iotService.getDashboardSummary).toHaveBeenCalledTimes(1);
+    });
+
+    expect(screen.getByText('Set up the IoT workspace')).toBeInTheDocument();
+    expect(screen.getAllByText('Register device').length).toBeGreaterThan(0);
   });
 });

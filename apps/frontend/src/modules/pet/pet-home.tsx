@@ -11,6 +11,8 @@ import { getAppThemeModeLabel } from '@/shared/lib/tenant-branding';
 import {
   ModuleWorkspaceAction,
   ModuleWorkspaceFactList,
+  ModuleWorkspaceGuidance,
+  ModuleWorkspaceGuidanceStep,
   ModuleWorkspaceHero,
   ModuleWorkspaceOverviewGrid,
   ModuleWorkspaceQuickActionGrid,
@@ -27,70 +29,90 @@ const petWorkspaceActions: ModuleWorkspaceAction[] = [
     eyebrow: 'Overview',
     title: 'Open dashboard',
     description: 'Review clinic throughput, today appointments, and the current commercial backlog.',
-    permission: 'pet.dashboard.read'
+    permission: 'pet.dashboard.read',
+    restrictionTitle: 'Dashboard permission required',
+    restrictionDescription: 'This workspace pulse becomes available when your role includes PetFlow dashboard access.'
   },
   {
     href: '/pet/clients',
     eyebrow: 'Front desk',
     title: 'Manage clients',
     description: 'Work through the client base attached to the current tenant workspace.',
-    permission: 'pet.client.read'
+    permission: 'pet.client.read',
+    restrictionTitle: 'Client access required',
+    restrictionDescription: 'Client management appears here when your workspace role can read PetFlow clients.'
   },
   {
     href: '/pet/pets',
     eyebrow: 'Clinical',
     title: 'Review pet profiles',
     description: 'Inspect patient identity, species, breed, and linked customer context.',
-    permission: 'pet.profile.read'
+    permission: 'pet.profile.read',
+    restrictionTitle: 'Pet profile access required',
+    restrictionDescription: 'Patient profiles stay unavailable until your workspace role can read PetFlow pet records.'
   },
   {
     href: '/pet/appointments',
     eyebrow: 'Clinical',
     title: 'Open appointments',
     description: 'Handle scheduling, service assignment, and clinical attendance flow.',
-    permission: 'pet.appointment.read'
+    permission: 'pet.appointment.read',
+    restrictionTitle: 'Appointment access required',
+    restrictionDescription: 'Appointment flow becomes available when your workspace role can read PetFlow appointments.'
   },
   {
     href: '/pet/services',
     eyebrow: 'Commercial',
     title: 'Inspect services',
     description: 'Review the service catalog currently sold through this workspace.',
-    permission: 'pet.service.read'
+    permission: 'pet.service.read',
+    restrictionTitle: 'Service access required',
+    restrictionDescription: 'Service catalog access appears here when your workspace role can read PetFlow services.'
   },
   {
     href: '/pet/professionals',
     eyebrow: 'Clinical',
     title: 'Review professionals',
     description: 'Keep the medical and operational team context visible for the current tenant.',
-    permission: 'pet.professional.read'
+    permission: 'pet.professional.read',
+    restrictionTitle: 'Professional access required',
+    restrictionDescription: 'Team management stays hidden until your workspace role can read PetFlow professionals.'
   },
   {
     href: '/pet/medical-records',
     eyebrow: 'Medical',
     title: 'Open medical records',
     description: 'Access patient records, vaccinations, prescriptions, and clinical timeline context.',
-    anyOf: petMedicalRoutePermissions
+    anyOf: petMedicalRoutePermissions,
+    restrictionTitle: 'Medical access required',
+    restrictionDescription: 'Medical records, vaccinations, and prescriptions appear here when your workspace role includes at least one medical read permission.'
   },
   {
     href: '/pet/products',
     eyebrow: 'Commercial',
     title: 'Review products',
     description: 'Inspect SKUs, pricing, and items linked to the PetFlow commercial workspace.',
-    permission: 'pet.product.read'
+    permission: 'pet.product.read',
+    restrictionTitle: 'Product access required',
+    restrictionDescription: 'Product management appears here when your workspace role can read PetFlow products.'
   },
   {
     href: '/pet/inventory',
     eyebrow: 'Inventory',
     title: 'Track inventory',
     description: 'Follow stock movement and operational traceability for tenant inventory.',
-    permission: 'pet.inventory.read'
+    permission: 'pet.inventory.read',
+    restrictionTitle: 'Inventory access required',
+    restrictionDescription: 'Inventory flow becomes available when your workspace role can read PetFlow inventory.'
   },
   {
     href: '/pet/invoices',
     eyebrow: 'Billing',
     title: 'Open invoices',
     description: 'Review invoice issuance and pending payment signals for current clients.',
-    permission: 'pet.invoice.read'
+    permission: 'pet.invoice.read',
+    restrictionTitle: 'Invoice access required',
+    restrictionDescription: 'Billing signals appear here when your workspace role can read PetFlow invoices.'
   }
 ];
 
@@ -110,6 +132,32 @@ function resolveOverviewValue(value?: number) {
   return value === undefined ? 'Loading...' : value.toString();
 }
 
+function isPetFirstUse(summary: PetDashboardSummary) {
+  return summary.totalClients === 0
+    && summary.totalPets === 0
+    && summary.appointmentsToday === 0
+    && summary.upcomingAppointments === 0
+    && summary.totalServices === 0
+    && summary.lowStockProducts === 0
+    && summary.pendingInvoices === 0;
+}
+
+function buildPetGuidanceSteps(actions: ModuleWorkspaceAction[], keys: string[]): ModuleWorkspaceGuidanceStep[] {
+  return keys
+    .map((key) => actions.find((action) => action.href === key))
+    .filter((action): action is ModuleWorkspaceAction => Boolean(action))
+    .map((action) => ({
+      key: action.href,
+      eyebrow: action.eyebrow,
+      title: action.title,
+      description: action.available === false
+        ? action.restrictionDescription ?? action.description
+        : action.description,
+      href: action.available === false ? undefined : action.href,
+      status: action.available === false ? 'restricted' : 'active'
+    }));
+}
+
 export function PetHome() {
   const platform = useFrontendPlatform();
   const { hasPermission, hasAnyPermission } = usePermissions();
@@ -118,16 +166,18 @@ export function PetHome() {
   const [error, setError] = useState<string | null>(null);
 
   const canReadDashboard = hasPermission('pet.dashboard.read');
-  const visibleActions = petWorkspaceActions.filter((action) => {
-    if (action.permission) {
-      return hasPermission(action.permission);
-    }
+  const actionStates = petWorkspaceActions.map((action) => {
+    const available = action.permission
+      ? hasPermission(action.permission)
+      : action.anyOf
+        ? hasAnyPermission(action.anyOf)
+        : true;
 
-    if (action.anyOf) {
-      return hasAnyPermission(action.anyOf);
-    }
-
-    return true;
+    return {
+      ...action,
+      available,
+      status: available ? action.status : 'restricted'
+    };
   });
   const featuredSection = summary?.sections.find((section) => (
     section.cards.length > 0
@@ -135,9 +185,12 @@ export function PetHome() {
     || section.items.length > 0
     || section.timeSeries.length > 0
   )) ?? null;
+  const firstUse = summary ? isPetFirstUse(summary) : false;
   const themePolicy = platform.theme.canOverride
     ? `${getAppThemeModeLabel(platform.theme.tenantDefaultMode)} with user override`
     : `${getAppThemeModeLabel(platform.theme.tenantDefaultMode)} tenant-managed`;
+  const setupGuidance = buildPetGuidanceSteps(actionStates, ['/pet/clients', '/pet/pets', '/pet/appointments']);
+  const restrictedGuidance = buildPetGuidanceSteps(actionStates, ['/pet/appointments', '/pet/medical-records', '/pet/invoices']);
 
   useEffect(() => {
     let active = true;
@@ -251,8 +304,8 @@ export function PetHome() {
 
       <ModuleWorkspaceQuickActionGrid
         title="Workspace Actions"
-        description="Open the PetFlow surfaces currently exposed to the tenant contract and current user permissions."
-        actions={visibleActions}
+        description="Open the PetFlow surfaces currently permitted in the tenant role and keep restricted clinical or billing flows explicit."
+        actions={actionStates}
         emptyTitle="No PetFlow actions available"
         emptyDescription="This tenant has the PetFlow module enabled, but the current user does not have PetFlow read permissions yet."
       />
@@ -262,10 +315,18 @@ export function PetHome() {
         description="Keep a compact view of clinical throughput and commercial pressure before navigating into the deeper PetFlow surfaces."
       >
         {!canReadDashboard ? (
-          <EmptyStateCard
-            title="Dashboard summary unavailable"
-            description="The PetFlow workspace is available, but the summary snapshot requires `pet.dashboard.read`."
-          />
+          <div className="space-y-4">
+            <ModuleWorkspaceState
+              tone="neutral"
+              title="Clinic summary restricted"
+              description="This PetFlow workspace is available, but the clinic snapshot requires `pet.dashboard.read`. Continue through the permitted client, appointment, and medical flows below."
+            />
+            <ModuleWorkspaceGuidance
+              title="Continue with the PetFlow workspace"
+              description="These next steps stay available even while dashboard visibility is restricted."
+              steps={restrictedGuidance}
+            />
+          </div>
         ) : loadingSummary ? (
           <ModuleWorkspaceState
             tone="neutral"
@@ -273,16 +334,30 @@ export function PetHome() {
             description="Collecting the latest clinic and commercial overview for this tenant workspace."
           />
         ) : error ? (
-          <ModuleWorkspaceState tone="error" title="PetFlow summary unavailable" description={error} />
+          <div className="space-y-4">
+            <ModuleWorkspaceState tone="error" title="PetFlow summary unavailable" description={error} />
+            <ModuleWorkspaceGuidance
+              title="Keep the clinic workspace moving"
+              description="Use the permitted PetFlow flows below while the summary feed recovers."
+              steps={restrictedGuidance}
+            />
+          </div>
+        ) : summary && firstUse ? (
+          <ModuleWorkspaceGuidance
+            title="Set up the PetFlow workspace"
+            description="This tenant does not have PetFlow activity yet. Start with the client base, patient records, and appointment flow so the workspace can surface clinical context."
+            steps={setupGuidance}
+          />
         ) : summary ? (
           <div className="space-y-4">
             <MetricGrid cards={summary.summaryCards.slice(0, 4)} columns="md:grid-cols-2 xl:grid-cols-4" />
             {featuredSection ? (
               <DashboardSection section={featuredSection} />
             ) : (
-              <EmptyStateCard
-                title="No PetFlow activity snapshot"
-                description="The dashboard summary returned no compact clinical or commercial activity section for the current tenant."
+              <ModuleWorkspaceGuidance
+                title="No recent PetFlow activity yet"
+                description="The workspace has records, but the summary returned no compact recent activity block. Continue with the core PetFlow flows below."
+                steps={restrictedGuidance}
               />
             )}
           </div>

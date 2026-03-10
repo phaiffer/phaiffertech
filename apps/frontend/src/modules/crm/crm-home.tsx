@@ -9,6 +9,8 @@ import { getAppThemeModeLabel } from '@/shared/lib/tenant-branding';
 import {
   ModuleWorkspaceAction,
   ModuleWorkspaceFactList,
+  ModuleWorkspaceGuidance,
+  ModuleWorkspaceGuidanceStep,
   ModuleWorkspaceHero,
   ModuleWorkspaceOverviewGrid,
   ModuleWorkspaceQuickActionGrid,
@@ -26,63 +28,81 @@ const crmWorkspaceActions: ModuleWorkspaceAction[] = [
     eyebrow: 'Overview',
     title: 'Open dashboard',
     description: 'Review pipeline health, conversion signals, and recent commercial activity.',
-    permission: 'crm.dashboard.read'
+    permission: 'crm.dashboard.read',
+    restrictionTitle: 'Dashboard permission required',
+    restrictionDescription: 'This summary becomes available when your workspace role includes CRM dashboard access.'
   },
   {
     href: '/crm/companies',
     eyebrow: 'Records',
     title: 'Manage companies',
     description: 'Work through account records tied to contacts, leads, and active deals.',
-    permission: 'crm.company.read'
+    permission: 'crm.company.read',
+    restrictionTitle: 'Company access required',
+    restrictionDescription: 'Company records appear here when your workspace role can read CRM companies.'
   },
   {
     href: '/crm/contacts',
     eyebrow: 'Records',
     title: 'Review contacts',
     description: 'Inspect the people currently linked to the tenant commercial workspace.',
-    permission: 'crm.contact.read'
+    permission: 'crm.contact.read',
+    restrictionTitle: 'Contact access required',
+    restrictionDescription: 'Contact records stay hidden until your workspace role includes CRM contact access.'
   },
   {
     href: '/crm/leads',
     eyebrow: 'Pipeline',
     title: 'Qualify leads',
     description: 'Handle intake, source attribution, and early qualification inside this workspace.',
-    permission: 'crm.lead.read'
+    permission: 'crm.lead.read',
+    restrictionTitle: 'Lead access required',
+    restrictionDescription: 'Lead qualification becomes available when your workspace role can read CRM leads.'
   },
   {
     href: '/crm/deals',
     eyebrow: 'Pipeline',
     title: 'Track deals',
     description: 'Follow open opportunities, commercial value, and closing expectations.',
-    permission: 'crm.deal.read'
+    permission: 'crm.deal.read',
+    restrictionTitle: 'Deal access required',
+    restrictionDescription: 'Deal tracking appears here when your workspace role can read CRM deals.'
   },
   {
     href: '/crm/pipeline',
     eyebrow: 'Pipeline',
     title: 'Inspect stages',
     description: 'Keep stage order, defaults, and commercial flow visible for the tenant.',
-    permission: 'crm.pipeline.read'
+    permission: 'crm.pipeline.read',
+    restrictionTitle: 'Pipeline access required',
+    restrictionDescription: 'Pipeline stages remain unavailable until your workspace role can read CRM pipeline stages.'
   },
   {
     href: '/crm/tasks',
     eyebrow: 'Execution',
     title: 'Handle tasks',
     description: 'Work through follow-up commitments linked to companies, leads, contacts, and deals.',
-    permission: 'crm.task.read'
+    permission: 'crm.task.read',
+    restrictionTitle: 'Task access required',
+    restrictionDescription: 'Task execution stays hidden until your workspace role can read CRM tasks.'
   },
   {
     href: '/crm/notes',
     eyebrow: 'Signals',
     title: 'Review notes',
     description: 'Read and capture operational context tied to the CRM records in this workspace.',
-    permission: 'crm.note.read'
+    permission: 'crm.note.read',
+    restrictionTitle: 'Notes access required',
+    restrictionDescription: 'Commercial notes appear here when your workspace role can read CRM notes.'
   },
   {
     href: '/crm/activity',
     eyebrow: 'Signals',
     title: 'Check activity',
     description: 'Read the recent audit trail for commercial work happening in the current tenant.',
-    permission: 'crm.activity.read'
+    permission: 'crm.activity.read',
+    restrictionTitle: 'Activity access required',
+    restrictionDescription: 'The activity feed becomes available when your workspace role can read CRM activity.'
   }
 ];
 
@@ -102,6 +122,30 @@ function resolveOverviewValue(value?: number) {
   return value === undefined ? 'Loading...' : value.toString();
 }
 
+function isCrmFirstUse(summary: CrmDashboardSummary) {
+  return summary.totalContacts === 0
+    && summary.totalLeads === 0
+    && summary.totalCompanies === 0
+    && summary.totalDeals === 0
+    && summary.tasksPendentes === 0;
+}
+
+function buildCrmGuidanceSteps(actions: ModuleWorkspaceAction[], keys: string[]): ModuleWorkspaceGuidanceStep[] {
+  return keys
+    .map((key) => actions.find((action) => action.href === key))
+    .filter((action): action is ModuleWorkspaceAction => Boolean(action))
+    .map((action) => ({
+      key: action.href,
+      eyebrow: action.eyebrow,
+      title: action.title,
+      description: action.available === false
+        ? action.restrictionDescription ?? action.description
+        : action.description,
+      href: action.available === false ? undefined : action.href,
+      status: action.available === false ? 'restricted' : 'active'
+    }));
+}
+
 export function CrmHome() {
   const platform = useFrontendPlatform();
   const { hasPermission } = usePermissions();
@@ -110,16 +154,27 @@ export function CrmHome() {
   const [error, setError] = useState<string | null>(null);
 
   const canReadDashboard = hasPermission('crm.dashboard.read');
-  const visibleActions = crmWorkspaceActions.filter((action) => !action.permission || hasPermission(action.permission));
+  const actionStates = crmWorkspaceActions.map((action) => {
+    const available = !action.permission || hasPermission(action.permission);
+
+    return {
+      ...action,
+      available,
+      status: available ? action.status : 'restricted'
+    };
+  });
   const featuredSection = summary?.sections.find((section) => (
     section.cards.length > 0
     || section.metrics.length > 0
     || section.items.length > 0
     || section.timeSeries.length > 0
   )) ?? null;
+  const firstUse = summary ? isCrmFirstUse(summary) : false;
   const themePolicy = platform.theme.canOverride
     ? `${getAppThemeModeLabel(platform.theme.tenantDefaultMode)} with user override`
     : `${getAppThemeModeLabel(platform.theme.tenantDefaultMode)} tenant-managed`;
+  const fallbackGuidance = buildCrmGuidanceSteps(actionStates, ['/crm/companies', '/crm/contacts', '/crm/leads']);
+  const restrictedGuidance = buildCrmGuidanceSteps(actionStates, ['/crm/companies', '/crm/tasks', '/crm/notes']);
 
   useEffect(() => {
     let active = true;
@@ -231,8 +286,8 @@ export function CrmHome() {
 
       <ModuleWorkspaceQuickActionGrid
         title="Workspace Actions"
-        description="Open the CRM surfaces that are both contracted for this tenant and permitted for the current user."
-        actions={visibleActions}
+        description="Open the CRM surfaces permitted in the current role and keep restricted flows explicit when access boundaries apply."
+        actions={actionStates}
         emptyTitle="No CRM actions available"
         emptyDescription="This tenant has the CRM module enabled, but the current user does not have CRM read permissions yet."
       />
@@ -242,10 +297,18 @@ export function CrmHome() {
         description="Keep a compact operational slice visible before navigating into the deeper CRM dashboards and record lists."
       >
         {!canReadDashboard ? (
-          <EmptyStateCard
-            title="Dashboard summary unavailable"
-            description="The CRM workspace is available, but the dashboard snapshot requires `crm.dashboard.read`."
-          />
+          <div className="space-y-4">
+            <ModuleWorkspaceState
+              tone="neutral"
+              title="Dashboard summary restricted"
+              description="This CRM workspace is available, but the commercial pulse requires `crm.dashboard.read`. Continue through the permitted record and execution flows below."
+            />
+            <ModuleWorkspaceGuidance
+              title="Continue with the CRM workspace"
+              description="These next steps stay available even while dashboard visibility is restricted."
+              steps={restrictedGuidance}
+            />
+          </div>
         ) : loadingSummary ? (
           <ModuleWorkspaceState
             tone="neutral"
@@ -253,16 +316,30 @@ export function CrmHome() {
             description="Collecting the latest commercial overview for this tenant workspace."
           />
         ) : error ? (
-          <ModuleWorkspaceState tone="error" title="CRM summary unavailable" description={error} />
+          <div className="space-y-4">
+            <ModuleWorkspaceState tone="error" title="CRM summary unavailable" description={error} />
+            <ModuleWorkspaceGuidance
+              title="Keep the workspace moving"
+              description="Use the permitted CRM flows below while the summary feed recovers."
+              steps={restrictedGuidance}
+            />
+          </div>
+        ) : summary && firstUse ? (
+          <ModuleWorkspaceGuidance
+            title="Set up the CRM workspace"
+            description="This tenant does not have CRM records yet. Start with the first operational entities so the commercial pulse can begin surfacing real activity."
+            steps={fallbackGuidance}
+          />
         ) : summary ? (
           <div className="space-y-4">
             <MetricGrid cards={summary.summaryCards.slice(0, 4)} columns="md:grid-cols-2 xl:grid-cols-4" />
             {featuredSection ? (
               <DashboardSection section={featuredSection} />
             ) : (
-              <EmptyStateCard
-                title="No CRM activity snapshot"
-                description="The dashboard summary returned no compact activity section for the current tenant."
+              <ModuleWorkspaceGuidance
+                title="No recent CRM activity yet"
+                description="The workspace has records, but the summary returned no compact recent-activity block. Continue through the core CRM flows below."
+                steps={restrictedGuidance}
               />
             )}
           </div>

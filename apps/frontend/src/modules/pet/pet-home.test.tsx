@@ -123,8 +123,34 @@ describe('PetHome', () => {
     expect(screen.getByRole('heading', { name: 'Clinic North · PetFlow' })).toBeInTheDocument();
     expect(screen.getByText('Open appointments')).toBeInTheDocument();
     expect(screen.getByText('Open medical records')).toBeInTheDocument();
-    expect(screen.queryByText('Review products')).not.toBeInTheDocument();
+    expect(screen.getByText('Review products')).toBeInTheDocument();
+    expect(screen.getByText('Product access required')).toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: /review products/i })).not.toBeInTheDocument();
     expect(screen.getByText('Clinic Snapshot')).toBeInTheDocument();
     expect(screen.getByText('Clinical Feed')).toBeInTheDocument();
+  });
+
+  it('shows guided first-use messaging when the PetFlow workspace has no records yet', async () => {
+    vi.mocked(petService.getDashboardSummary).mockResolvedValue({
+      totalClients: 0,
+      totalPets: 0,
+      appointmentsToday: 0,
+      upcomingAppointments: 0,
+      totalServices: 0,
+      lowStockProducts: 0,
+      pendingInvoices: 0,
+      summaryCards: [],
+      sections: []
+    });
+
+    render(<PetHome />);
+
+    await waitFor(() => {
+      expect(petService.getDashboardSummary).toHaveBeenCalledTimes(1);
+    });
+
+    expect(screen.getByText('Set up the PetFlow workspace')).toBeInTheDocument();
+    expect(screen.getByText(/This tenant does not have PetFlow activity yet/i)).toBeInTheDocument();
+    expect(screen.getAllByText('Open appointments').length).toBeGreaterThan(0);
   });
 });

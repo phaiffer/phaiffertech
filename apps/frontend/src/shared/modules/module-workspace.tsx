@@ -34,6 +34,18 @@ export type ModuleWorkspaceAction = {
   description: string;
   permission?: string;
   anyOf?: string[];
+  available?: boolean;
+  restrictionTitle?: string;
+  restrictionDescription?: string;
+  status?: string | null;
+};
+
+export type ModuleWorkspaceGuidanceStep = {
+  key: string;
+  eyebrow: string;
+  title: string;
+  description: string;
+  href?: string;
   status?: string | null;
 };
 
@@ -197,32 +209,130 @@ export function ModuleWorkspaceQuickActionGrid({
         <EmptyStateCard title={emptyTitle} description={emptyDescription} />
       ) : (
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {actions.map((action) => (
-            <Link
-              key={action.href}
-              href={action.href}
-              className="rounded-3xl border border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-panel-muted)] p-5 transition hover:border-[color:var(--tenant-accent)] hover:shadow-card"
-            >
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--tenant-accent)]">
-                    {action.eyebrow}
-                  </p>
-                  <h3 className="mt-3 text-lg font-semibold text-[color:var(--app-shell-heading)]">
-                    {action.title}
-                  </h3>
+          {actions.map((action) => {
+            const available = action.available ?? true;
+            const content = (
+              <>
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--tenant-accent)]">
+                      {action.eyebrow}
+                    </p>
+                    <h3 className="mt-3 text-lg font-semibold text-[color:var(--app-shell-heading)]">
+                      {action.title}
+                    </h3>
+                  </div>
+                  <StatusBadge status={action.status ?? (available ? null : 'restricted')} />
                 </div>
-                {action.status ? <StatusBadge status={action.status} /> : null}
+                <p className="mt-3 text-sm leading-6 text-[color:var(--app-shell-muted)]">{action.description}</p>
+                {!available && (action.restrictionTitle || action.restrictionDescription) ? (
+                  <div className="mt-4 rounded-2xl border border-dashed border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-panel)] px-4 py-3">
+                    {action.restrictionTitle ? (
+                      <p className="text-sm font-semibold text-[color:var(--app-shell-heading)]">{action.restrictionTitle}</p>
+                    ) : null}
+                    {action.restrictionDescription ? (
+                      <p className="mt-1 text-sm text-[color:var(--app-shell-muted)]">{action.restrictionDescription}</p>
+                    ) : null}
+                  </div>
+                ) : null}
+                <span className="mt-5 inline-flex text-sm font-semibold text-[color:var(--tenant-accent)]">
+                  {available ? 'Open workspace flow' : 'Unavailable in current workspace role'}
+                </span>
+              </>
+            );
+
+            if (available) {
+              return (
+                <Link
+                  key={action.href}
+                  href={action.href}
+                  className="rounded-3xl border border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-panel-muted)] p-5 transition hover:border-[color:var(--tenant-accent)] hover:shadow-card"
+                >
+                  {content}
+                </Link>
+              );
+            }
+
+            return (
+              <div
+                key={action.href}
+                className="rounded-3xl border border-dashed border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-panel-muted)] p-5 opacity-90"
+              >
+                {content}
               </div>
-              <p className="mt-3 text-sm leading-6 text-[color:var(--app-shell-muted)]">{action.description}</p>
-              <span className="mt-5 inline-flex text-sm font-semibold text-[color:var(--tenant-accent)]">
-                Open workspace flow
-              </span>
-            </Link>
-          ))}
+            );
+          })}
         </div>
       )}
     </ModuleWorkspaceSection>
+  );
+}
+
+export function ModuleWorkspaceGuidance({
+  title,
+  description,
+  steps
+}: {
+  title: string;
+  description: string;
+  steps: ModuleWorkspaceGuidanceStep[];
+}) {
+  if (steps.length === 0) {
+    return <EmptyStateCard title={title} description={description} />;
+  }
+
+  return (
+    <div className="space-y-4">
+      <div>
+        <p className="text-sm font-semibold text-[color:var(--app-shell-heading)]">{title}</p>
+        <p className="mt-1 text-sm text-[color:var(--app-shell-muted)]">{description}</p>
+      </div>
+
+      <div className="grid gap-4 md:grid-cols-3">
+        {steps.map((step) => {
+          const content = (
+            <>
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--tenant-accent)]">
+                    {step.eyebrow}
+                  </p>
+                  <h3 className="mt-3 text-lg font-semibold text-[color:var(--app-shell-heading)]">
+                    {step.title}
+                  </h3>
+                </div>
+                {step.status ? <StatusBadge status={step.status} /> : null}
+              </div>
+              <p className="mt-3 text-sm leading-6 text-[color:var(--app-shell-muted)]">{step.description}</p>
+              <span className="mt-5 inline-flex text-sm font-semibold text-[color:var(--tenant-accent)]">
+                {step.href ? 'Open next step' : 'Guided workspace step'}
+              </span>
+            </>
+          );
+
+          if (step.href) {
+            return (
+              <Link
+                key={step.key}
+                href={step.href}
+                className="rounded-3xl border border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-panel-muted)] p-5 transition hover:border-[color:var(--tenant-accent)] hover:shadow-card"
+              >
+                {content}
+              </Link>
+            );
+          }
+
+          return (
+            <div
+              key={step.key}
+              className="rounded-3xl border border-dashed border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-panel-muted)] p-5"
+            >
+              {content}
+            </div>
+          );
+        })}
+      </div>
+    </div>
   );
 }
 

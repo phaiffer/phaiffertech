@@ -130,8 +130,34 @@ describe('CrmHome', () => {
     expect(screen.getByText('Tenant workspace')).toBeInTheDocument();
     expect(screen.getByText('Manage companies')).toBeInTheDocument();
     expect(screen.getByText('Handle tasks')).toBeInTheDocument();
-    expect(screen.queryByText('Check activity')).not.toBeInTheDocument();
+    expect(screen.getByText('Check activity')).toBeInTheDocument();
+    expect(screen.getByText('Activity access required')).toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: /check activity/i })).not.toBeInTheDocument();
     expect(screen.getByText('Commercial Pulse')).toBeInTheDocument();
     expect(screen.getByText('Pipeline Watch')).toBeInTheDocument();
+  });
+
+  it('shows guided first-use messaging when the CRM workspace has no records yet', async () => {
+    vi.mocked(crmService.getDashboardSummary).mockResolvedValue({
+      totalContacts: 0,
+      totalLeads: 0,
+      totalCompanies: 0,
+      totalDeals: 0,
+      dealsPorStatus: {},
+      tasksPendentes: 0,
+      leadsPorStatus: {},
+      summaryCards: [],
+      sections: []
+    });
+
+    render(<CrmHome />);
+
+    await waitFor(() => {
+      expect(crmService.getDashboardSummary).toHaveBeenCalledTimes(1);
+    });
+
+    expect(screen.getByText('Set up the CRM workspace')).toBeInTheDocument();
+    expect(screen.getByText(/This tenant does not have CRM records yet/i)).toBeInTheDocument();
+    expect(screen.getAllByText('Manage companies').length).toBeGreaterThan(0);
   });
 });
