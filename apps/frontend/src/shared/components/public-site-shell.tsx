@@ -1,6 +1,7 @@
 'use client';
 
 import { ReactNode } from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { usePublicSite } from '@/shared/public/public-site-provider';
@@ -64,8 +65,15 @@ export function PublicSiteShell({ children }: PublicSiteShellProps) {
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div className="min-w-0">
               <Link href="/" className="inline-flex items-center gap-3 text-inherit no-underline">
-                <span className="flex h-12 w-12 items-center justify-center rounded-2xl border border-sky-500/30 bg-[radial-gradient(circle_at_30%_20%,rgba(56,189,248,0.45),transparent_55%),linear-gradient(135deg,rgba(15,23,42,1),rgba(30,64,175,0.95))] shadow-[0_18px_45px_rgba(15,23,42,0.22)]">
-                  <span className="h-5 w-5 rounded-md border border-white/20 bg-[linear-gradient(135deg,rgba(226,232,240,0.95),rgba(14,165,233,0.45))]" />
+                <span className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-sky-500/20 bg-[var(--surface)] shadow-[0_18px_45px_rgba(15,23,42,0.16)]">
+                  <Image
+                    src="/logo.png"
+                    alt="PhaifferTech logo"
+                    width={56}
+                    height={56}
+                    priority
+                    className="h-full w-full object-cover"
+                  />
                 </span>
 
                 <span className="min-w-0">

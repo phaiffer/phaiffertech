@@ -1,6 +1,7 @@
 'use client';
 
 import { FormEvent, useEffect, useState } from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { authService } from '@/shared/services/auth-service';
@@ -148,11 +149,22 @@ export default function LoginPage() {
 
         <aside className="grid gap-5">
           <section className="rounded-[2rem] border border-sky-500/20 bg-[linear-gradient(180deg,rgba(255,255,255,0.95),rgba(238,242,255,0.92))] p-8 shadow-[0_24px_60px_rgba(15,23,42,0.12)] dark:bg-[linear-gradient(180deg,rgba(17,26,46,0.98),rgba(23,35,61,0.92))]">
+            <div className="flex h-24 w-24 items-center justify-center overflow-hidden rounded-[1.75rem] border border-sky-500/20 bg-[var(--surface)] shadow-[0_18px_45px_rgba(15,23,42,0.16)]">
+              <Image
+                src="/logo.png"
+                alt="PhaifferTech logo"
+                width={96}
+                height={96}
+                priority
+                className="h-full w-full object-cover"
+              />
+            </div>
+
             <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-slate-500">
               {t.platformContextEyebrow}
             </p>
 
-            <h2 className="mt-3 text-2xl font-semibold text-[var(--foreground)]">
+            <h2 className="mt-5 text-2xl font-semibold text-[var(--foreground)]">
               {t.helperTitle}
             </h2>
 
