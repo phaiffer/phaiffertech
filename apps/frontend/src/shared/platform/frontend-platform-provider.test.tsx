@@ -1,9 +1,7 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import {
-  FrontendPlatformProvider,
-  useFrontendPlatform
-} from '@/shared/platform/frontend-platform-provider';
+import { FrontendPlatformProvider } from '@/shared/platform/frontend-platform-provider';
+import { useFrontendPlatform } from '@/shared/platform/use-frontend-platform';
 import { AuthenticatedUser, TenantThemeMode } from '@/shared/types/auth';
 
 const { currentUser, moduleCatalog } = vi.hoisted(() => ({

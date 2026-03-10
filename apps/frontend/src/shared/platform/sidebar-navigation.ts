@@ -1,5 +1,9 @@
 import { hasAnyPermission } from '@/shared/permissions/has-permission';
-import { AuthenticatedUser } from '@/shared/types/auth';
+import type {
+  FrontendPlatformModules,
+  FrontendPlatformState,
+  FrontendPlatformWorkspace
+} from '@/shared/platform/frontend-platform.types';
 
 export type SidebarGroup = 'core' | 'iot' | 'crm' | 'pet';
 
@@ -12,25 +16,23 @@ type SidebarItemBase = {
   platformOnly?: boolean;
 };
 
-type SidebarNavigationContext = {
-  availableModuleCodes: string[];
-  loading: boolean;
-  user: AuthenticatedUser | null;
-  canManagePlatformAdministration: boolean;
+export type SidebarNavigationContext = Pick<FrontendPlatformState, 'user'> & {
+  modules: Pick<FrontendPlatformModules, 'availableCodes' | 'loading'>;
+  workspace: Pick<FrontendPlatformWorkspace, 'canManagePlatformAdministration'>;
 };
 
 export function filterSidebarItems<T extends SidebarItemBase>(
   items: T[],
   context: SidebarNavigationContext
 ) {
-  const availableModuleCodes = new Set(context.availableModuleCodes);
+  const availableModuleCodes = new Set(context.modules.availableCodes);
 
   return items.filter((item) => {
-    if (item.platformOnly && !context.canManagePlatformAdministration) {
+    if (item.platformOnly && !context.workspace.canManagePlatformAdministration) {
       return false;
     }
 
-    if (item.moduleCode && context.loading) {
+    if (item.moduleCode && context.modules.loading) {
       return false;
     }
 

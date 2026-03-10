@@ -6,7 +6,7 @@ import { ReactNode, useMemo } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/shared/auth/use-auth';
-import { useFrontendPlatform } from '@/shared/platform/frontend-platform-provider';
+import { useFrontendPlatform } from '@/shared/platform/use-frontend-platform';
 import { groupSidebarItems, SidebarGroup, filterSidebarItems } from '@/shared/platform/sidebar-navigation';
 
 type SidebarItem = {
@@ -406,10 +406,14 @@ export function Sidebar() {
 
   const visibleItems = useMemo(() => {
     return filterSidebarItems(items, {
-      availableModuleCodes: modules.availableCodes,
-      loading: modules.loading,
       user,
-      canManagePlatformAdministration: workspace.canManagePlatformAdministration
+      modules: {
+        availableCodes: modules.availableCodes,
+        loading: modules.loading
+      },
+      workspace: {
+        canManagePlatformAdministration: workspace.canManagePlatformAdministration
+      }
     });
   }, [modules.availableCodes, modules.loading, user, workspace.canManagePlatformAdministration]);
 

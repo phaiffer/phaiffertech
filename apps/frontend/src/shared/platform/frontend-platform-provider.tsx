@@ -1,9 +1,7 @@
 'use client';
 
-import type { CSSProperties, ReactNode } from 'react';
+import type { ReactNode } from 'react';
 import {
-  createContext,
-  useContext,
   useEffect,
   useMemo,
   useState
@@ -18,49 +16,9 @@ import {
   toAppThemeMode
 } from '@/shared/lib/tenant-branding';
 import { useModuleCatalog } from '@/shared/modules/use-module-catalog';
-import { AuthenticatedUser } from '@/shared/types/auth';
-import { ModuleItem } from '@/shared/types/module';
-
-type FrontendPlatformTheme = {
-  mode: AppThemeMode;
-  setMode: (mode: AppThemeMode) => void;
-  tenantDefaultMode: AppThemeMode;
-  canOverride: boolean;
-};
-
-type FrontendPlatformBranding = {
-  logoUrl: string | null;
-  scopeName: string;
-  tenantCode: string | null;
-  style: CSSProperties;
-};
-
-type FrontendPlatformWorkspace = {
-  workspaceLabel: string;
-  accessLabel: string;
-  isPlatformOwnerTenant: boolean;
-  hasSystemAdminRole: boolean;
-  hasFullPlatformVisibility: boolean;
-  canManagePlatformAdministration: boolean;
-};
-
-type FrontendPlatformModules = {
-  items: ModuleItem[];
-  loading: boolean;
-  error: string | null;
-  availableCodes: string[];
-  contractedProducts: ModuleItem[];
-};
-
-export type FrontendPlatformContextValue = {
-  user: AuthenticatedUser | null;
-  theme: FrontendPlatformTheme;
-  branding: FrontendPlatformBranding;
-  workspace: FrontendPlatformWorkspace;
-  modules: FrontendPlatformModules;
-};
-
-const FrontendPlatformContext = createContext<FrontendPlatformContextValue | null>(null);
+import type { AuthenticatedUser } from '@/shared/types/auth';
+import { FrontendPlatformContext } from '@/shared/platform/frontend-platform.context';
+import type { FrontendPlatformState } from '@/shared/platform/frontend-platform.types';
 
 function readStoredThemeMode(): AppThemeMode | null {
   if (typeof window === 'undefined') {
@@ -152,7 +110,7 @@ export function FrontendPlatformProvider({ children }: { children: ReactNode }) 
     [modules]
   );
 
-  const value = useMemo<FrontendPlatformContextValue>(() => {
+  const value = useMemo<FrontendPlatformState>(() => {
     const isPlatformOwnerTenant = Boolean(user?.platformOwner);
     const hasSystemAdminRole = hasRole(user, 'SYS_ADMIN');
     const canManagePlatformAdministration = Boolean(user?.platformAdmin);
@@ -190,14 +148,4 @@ export function FrontendPlatformProvider({ children }: { children: ReactNode }) 
   }, [availableCodes, canOverrideTheme, contractedProducts, error, loading, modules, tenantDefaultMode, themeMode, user]);
 
   return <FrontendPlatformContext.Provider value={value}>{children}</FrontendPlatformContext.Provider>;
-}
-
-export function useFrontendPlatform() {
-  const context = useContext(FrontendPlatformContext);
-
-  if (!context) {
-    throw new Error('useFrontendPlatform must be used within FrontendPlatformProvider.');
-  }
-
-  return context;
 }

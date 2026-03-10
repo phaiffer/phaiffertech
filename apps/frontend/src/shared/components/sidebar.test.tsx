@@ -34,7 +34,7 @@ vi.mock('@/shared/auth/use-auth', () => ({
   })
 }));
 
-vi.mock('@/shared/platform/frontend-platform-provider', () => ({
+vi.mock('@/shared/platform/use-frontend-platform', () => ({
   useFrontendPlatform: () => ({
     user: currentUser,
     theme: {

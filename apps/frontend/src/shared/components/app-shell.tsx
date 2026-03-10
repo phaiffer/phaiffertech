@@ -7,7 +7,7 @@ import {
   APP_THEME_OPTIONS,
   getAppThemeModeLabel
 } from '@/shared/lib/tenant-branding';
-import { useFrontendPlatform } from '@/shared/platform/frontend-platform-provider';
+import { useFrontendPlatform } from '@/shared/platform/use-frontend-platform';
 
 function ShellToggle({
   label,

@@ -10,7 +10,7 @@ vi.mock('@/shared/components/sidebar', () => ({
   Sidebar: () => <aside data-testid="sidebar" />
 }));
 
-vi.mock('@/shared/platform/frontend-platform-provider', () => ({
+vi.mock('@/shared/platform/use-frontend-platform', () => ({
   useFrontendPlatform: () => ({
     user: {
       userId: 'user-1',
