@@ -7,10 +7,26 @@ import {
   petPrescriptionPermissions,
   petVaccinationPermissions
 } from '@/modules/pet/pet-medical-permissions';
+import {
+  createPetMedicalRecordColumns,
+  createPetPrescriptionColumns,
+  createPetVaccinationColumns,
+  PetMedicalFilters,
+  PetMedicalPageFallback,
+  PetMedicalRecordSection,
+  PetPrescriptionSection,
+  PetVaccinationSection
+} from '@/modules/pet/pet-medical-sections';
+import { toDateTimeLocal, toIsoDate } from '@/modules/pet/pet-date-time';
+import {
+  PetLookupFeedback,
+  PetLookupIssue,
+  resolvePetLookupIssue
+} from '@/modules/pet/pet-lookup-feedback';
 import { PermissionGuard } from '@/shared/auth/PermissionGuard';
 import { usePermissions } from '@/shared/auth/usePermissions';
 import { ApiClientError } from '@/shared/lib/http';
-import { resolvePageItems, resolveTotalItems } from '@/shared/lib/pagination';
+import { resolvePageItems } from '@/shared/lib/pagination';
 import { petService } from '@/shared/services/pet-service';
 import { PageResponse } from '@/shared/types/common';
 import {
@@ -20,20 +36,8 @@ import {
   PetProfile,
   PetVaccination
 } from '@/shared/types/pet';
-import {
-  PetLookupFeedback,
-  PetLookupIssue,
-  resolvePetLookupIssue,
-  resolvePetLookupLabel
-} from '@/modules/pet/pet-lookup-feedback';
 import { ConfirmDialog } from '@/shared/ui/confirm-dialog';
-import { DataTable, DataTableColumn } from '@/shared/ui/data-table';
-import { DateTimeInput } from '@/shared/ui/datetime-input';
-import { FormInput } from '@/shared/ui/form-input';
-import { FormSelect } from '@/shared/ui/form-select';
 import { PageTitle } from '@/shared/ui/page-title';
-import { Pagination } from '@/shared/ui/pagination';
-import { SearchBar } from '@/shared/ui/search-bar';
 
 const pageSize = 5;
 
@@ -60,45 +64,6 @@ const emptyPrescriptionsPage: PageResponse<PetPrescription> = {
   page: 0,
   size: pageSize
 };
-
-type TextAreaFieldProps = {
-  label: string;
-  value: string;
-  onChange: (value: string) => void;
-  required?: boolean;
-};
-
-function TextAreaField({ label, value, onChange, required = false }: TextAreaFieldProps) {
-  return (
-    <label className="block text-sm">
-      <span className="mb-1 block font-medium text-slate-700">{label}</span>
-      <textarea
-        value={value}
-        onChange={(event) => onChange(event.target.value)}
-        required={required}
-        rows={3}
-        className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-action focus:outline-none"
-      />
-    </label>
-  );
-}
-
-function toDateTimeLocal(isoValue?: string) {
-  if (!isoValue) {
-    return '';
-  }
-
-  const date = new Date(isoValue);
-  const timezoneOffset = date.getTimezoneOffset() * 60_000;
-  return new Date(date.getTime() - timezoneOffset).toISOString().slice(0, 16);
-}
-
-function toIsoDate(value: string) {
-  if (!value) {
-    return undefined;
-  }
-  return new Date(value).toISOString();
-}
 
 export function PetMedicalRecordsPage() {
   const { hasAnyPermission, hasPermission } = usePermissions();
@@ -204,7 +169,11 @@ export function PetMedicalRecordsPage() {
       setPets(resolvePageItems(petsPage.value));
     } else if (canAccessAnyMedical) {
       setPets([]);
-      issues.push({ key: 'pets', label: 'Pets', message: resolvePetLookupIssue(petsPage.status === 'rejected' ? petsPage.reason : null) });
+      issues.push({
+        key: 'pets',
+        label: 'Pets',
+        message: resolvePetLookupIssue(petsPage.status === 'rejected' ? petsPage.reason : null)
+      });
     } else {
       setPets([]);
     }
@@ -302,19 +271,19 @@ export function PetMedicalRecordsPage() {
     setRecordsPage(0);
     setVaccinationsPage(0);
     setPrescriptionsPage(0);
-  }, [search, petFilterId, professionalFilterId]);
+  }, [petFilterId, professionalFilterId, search]);
 
   useEffect(() => {
     loadRecords(recordsPage, search, petFilterId, professionalFilterId);
-  }, [loadRecords, recordsPage, search, petFilterId, professionalFilterId]);
+  }, [loadRecords, petFilterId, professionalFilterId, recordsPage, search]);
 
   useEffect(() => {
     loadVaccinations(vaccinationsPage, search, petFilterId);
-  }, [loadVaccinations, vaccinationsPage, search, petFilterId]);
+  }, [loadVaccinations, petFilterId, search, vaccinationsPage]);
 
   useEffect(() => {
     loadPrescriptions(prescriptionsPage, search, petFilterId, professionalFilterId);
-  }, [loadPrescriptions, prescriptionsPage, search, petFilterId, professionalFilterId]);
+  }, [loadPrescriptions, petFilterId, prescriptionsPage, professionalFilterId, search]);
 
   function resetRecordForm() {
     setEditingRecordId(null);
@@ -534,191 +503,62 @@ export function PetMedicalRecordsPage() {
     }
   }
 
-  const medicalRecordColumns: DataTableColumn<PetMedicalRecord>[] = [
-    {
-      key: 'pet',
-      header: 'Pet',
-      render: (item) =>
-        item.petName ?? resolvePetLookupLabel(pets, item.petId, (pet) => pet.name, 'Pet', lookupIssues.some((issue) => issue.key === 'pets'))
-    },
-    {
-      key: 'professional',
-      header: 'Profissional',
-      render: (item) =>
-        item.professionalName ??
-        resolvePetLookupLabel(
-          professionals,
-          item.professionalId,
-          (professional) => professional.name,
-          'Profissional',
-          lookupIssues.some((issue) => issue.key === 'professionals')
-        )
-    },
-    { key: 'description', header: 'Descrição', render: (item) => item.description },
-    {
-      key: 'actions',
-      header: 'Ações',
-      render: (item) => (
-        <div className="flex gap-2">
-          <PermissionGuard permission="pet.medical-record.update">
-            <button
-              type="button"
-              onClick={() => beginEditRecord(item)}
-              className="rounded-lg border border-slate-300 px-2 py-1 text-xs font-medium text-slate-700"
-            >
-              Editar
-            </button>
-          </PermissionGuard>
-          <PermissionGuard permission="pet.medical-record.delete">
-            <button
-              type="button"
-              onClick={() => setDeleteRecordCandidate(item)}
-              className="rounded-lg border border-rose-300 px-2 py-1 text-xs font-medium text-rose-700"
-            >
-              Excluir
-            </button>
-          </PermissionGuard>
-        </div>
-      )
-    }
-  ];
-
-  const vaccinationColumns: DataTableColumn<PetVaccination>[] = [
-    {
-      key: 'pet',
-      header: 'Pet',
-      render: (item) =>
-        item.petName ?? resolvePetLookupLabel(pets, item.petId, (pet) => pet.name, 'Pet', lookupIssues.some((issue) => issue.key === 'pets'))
-    },
-    { key: 'vaccineName', header: 'Vacina', render: (item) => item.vaccineName },
-    {
-      key: 'appliedAt',
-      header: 'Aplicada em',
-      render: (item) => new Date(item.appliedAt).toLocaleString('pt-BR')
-    },
-    {
-      key: 'actions',
-      header: 'Ações',
-      render: (item) => (
-        <div className="flex gap-2">
-          <PermissionGuard permission="pet.vaccination.update">
-            <button
-              type="button"
-              onClick={() => beginEditVaccination(item)}
-              className="rounded-lg border border-slate-300 px-2 py-1 text-xs font-medium text-slate-700"
-            >
-              Editar
-            </button>
-          </PermissionGuard>
-          <PermissionGuard permission="pet.vaccination.delete">
-            <button
-              type="button"
-              onClick={() => setDeleteVaccinationCandidate(item)}
-              className="rounded-lg border border-rose-300 px-2 py-1 text-xs font-medium text-rose-700"
-            >
-              Excluir
-            </button>
-          </PermissionGuard>
-        </div>
-      )
-    }
-  ];
-
-  const prescriptionColumns: DataTableColumn<PetPrescription>[] = [
-    {
-      key: 'pet',
-      header: 'Pet',
-      render: (item) =>
-        item.petName ?? resolvePetLookupLabel(pets, item.petId, (pet) => pet.name, 'Pet', lookupIssues.some((issue) => issue.key === 'pets'))
-    },
-    { key: 'medication', header: 'Medicamento', render: (item) => item.medication },
-    {
-      key: 'professional',
-      header: 'Profissional',
-      render: (item) =>
-        item.professionalName ??
-        resolvePetLookupLabel(
-          professionals,
-          item.professionalId,
-          (professional) => professional.name,
-          'Profissional',
-          lookupIssues.some((issue) => issue.key === 'professionals')
-        )
-    },
-    {
-      key: 'actions',
-      header: 'Ações',
-      render: (item) => (
-        <div className="flex gap-2">
-          <PermissionGuard permission="pet.prescription.update">
-            <button
-              type="button"
-              onClick={() => beginEditPrescription(item)}
-              className="rounded-lg border border-slate-300 px-2 py-1 text-xs font-medium text-slate-700"
-            >
-              Editar
-            </button>
-          </PermissionGuard>
-          <PermissionGuard permission="pet.prescription.delete">
-            <button
-              type="button"
-              onClick={() => setDeletePrescriptionCandidate(item)}
-              className="rounded-lg border border-rose-300 px-2 py-1 text-xs font-medium text-rose-700"
-            >
-              Excluir
-            </button>
-          </PermissionGuard>
-        </div>
-      )
-    }
-  ];
-
   const petLookupUnavailable = lookupIssues.some((issue) => issue.key === 'pets');
   const professionalsLookupUnavailable = lookupIssues.some((issue) => issue.key === 'professionals');
   const medicalRecordFormReady = !petLookupUnavailable && !professionalsLookupUnavailable;
   const vaccinationFormReady = !petLookupUnavailable;
   const prescriptionFormReady = !petLookupUnavailable && !professionalsLookupUnavailable;
 
+  const medicalRecordColumns = useMemo(() => createPetMedicalRecordColumns({
+    pets,
+    professionals,
+    petLookupUnavailable,
+    professionalsLookupUnavailable,
+    onEdit: beginEditRecord,
+    onDelete: setDeleteRecordCandidate
+  }), [petLookupUnavailable, pets, professionals, professionalsLookupUnavailable]);
+
+  const vaccinationColumns = useMemo(() => createPetVaccinationColumns({
+    pets,
+    petLookupUnavailable,
+    onEdit: beginEditVaccination,
+    onDelete: setDeleteVaccinationCandidate
+  }), [petLookupUnavailable, pets]);
+
+  const prescriptionColumns = useMemo(() => createPetPrescriptionColumns({
+    pets,
+    professionals,
+    petLookupUnavailable,
+    professionalsLookupUnavailable,
+    onEdit: beginEditPrescription,
+    onDelete: setDeletePrescriptionCandidate
+  }), [petLookupUnavailable, pets, professionals, professionalsLookupUnavailable]);
+
   return (
-    <PermissionGuard
-      anyOf={petMedicalRoutePermissions}
-      fallback={<div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">Você não possui permissão para visualizar workflows médicos do Pet.</div>}
-    >
+    <PermissionGuard anyOf={petMedicalRoutePermissions} fallback={<PetMedicalPageFallback />}>
       <div className="space-y-5">
         <PageTitle title="Medical Records" description="Prontuários, vacinações e prescrições do módulo PET." />
 
-        <div className="grid gap-3 rounded-xl border border-slate-200 bg-white p-4 md:grid-cols-[1fr_240px_240px_auto_auto]">
-          <SearchBar value={searchInput} onChange={setSearchInput} placeholder="Descrição, diagnóstico, medicação ou vacina" />
-          <FormSelect label="Pet" value={petFilterId} options={petOptions} onChange={setPetFilterId} disabled={petLookupUnavailable} />
-          {showProfessionalFilter ? (
-            <FormSelect
-              label="Profissional"
-              value={professionalFilterId}
-              options={professionalOptions}
-              onChange={setProfessionalFilterId}
-              disabled={professionalsLookupUnavailable}
-            />
-          ) : null}
-          <button
-            type="button"
-            onClick={() => setSearch(searchInput)}
-            className="rounded-lg bg-action px-4 py-2 text-sm font-medium text-white"
-          >
-            Buscar
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              setSearchInput('');
-              setSearch('');
-              setPetFilterId('');
-              setProfessionalFilterId('');
-            }}
-            className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700"
-          >
-            Limpar
-          </button>
-        </div>
+        <PetMedicalFilters
+          searchInput={searchInput}
+          onSearchInputChange={setSearchInput}
+          petFilterId={petFilterId}
+          onPetFilterIdChange={setPetFilterId}
+          petOptions={petOptions}
+          petLookupUnavailable={petLookupUnavailable}
+          showProfessionalFilter={showProfessionalFilter}
+          professionalFilterId={professionalFilterId}
+          onProfessionalFilterIdChange={setProfessionalFilterId}
+          professionalOptions={professionalOptions}
+          professionalsLookupUnavailable={professionalsLookupUnavailable}
+          onSearch={() => setSearch(searchInput)}
+          onClear={() => {
+            setSearchInput('');
+            setSearch('');
+            setPetFilterId('');
+            setProfessionalFilterId('');
+          }}
+        />
 
         <PetLookupFeedback issues={lookupIssues} />
 
@@ -726,161 +566,85 @@ export function PetMedicalRecordsPage() {
         {success ? <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">{success}</div> : null}
 
         {canAccessMedicalRecords ? (
-          <section className="space-y-4 rounded-xl border border-slate-200 bg-white p-4">
-          <div>
-            <h3 className="text-base font-semibold text-slate-900">Medical Records</h3>
-            <p className="text-sm text-slate-600">Histórico clínico e evoluções por pet.</p>
-          </div>
-
-          <PermissionGuard permission={editingRecordId ? 'pet.medical-record.update' : 'pet.medical-record.create'}>
-            <form onSubmit={handleSubmitRecord} className="grid gap-3 md:grid-cols-2">
-              <FormSelect label="Pet" value={recordPetId} options={formPetOptions} onChange={setRecordPetId} disabled={petLookupUnavailable} />
-              <FormSelect
-                label="Profissional"
-                value={recordProfessionalId}
-                options={formProfessionalOptions}
-                onChange={setRecordProfessionalId}
-                disabled={professionalsLookupUnavailable}
-              />
-              <TextAreaField label="Descrição" value={recordDescription} onChange={setRecordDescription} required />
-              <TextAreaField label="Diagnóstico" value={recordDiagnosis} onChange={setRecordDiagnosis} />
-              <TextAreaField label="Tratamento" value={recordTreatment} onChange={setRecordTreatment} />
-
-              <div className="md:col-span-2 flex gap-2">
-                {!medicalRecordFormReady ? (
-                  <div className="w-full rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">
-                    O formulário de prontuário depende das referências de pets e profissionais.
-                  </div>
-                ) : null}
-                <button
-                  type="submit"
-                  disabled={recordSubmitting || !medicalRecordFormReady}
-                  className="rounded-lg bg-action px-4 py-2 text-sm font-medium text-white disabled:opacity-60"
-                >
-                  {recordSubmitting ? 'Salvando...' : editingRecordId ? 'Atualizar prontuário' : 'Criar prontuário'}
-                </button>
-                {editingRecordId ? (
-                  <button
-                    type="button"
-                    onClick={resetRecordForm}
-                    className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700"
-                  >
-                    Cancelar edição
-                  </button>
-                ) : null}
-              </div>
-            </form>
-          </PermissionGuard>
-
-          <PermissionGuard permission="pet.medical-record.read">
-            <DataTable columns={medicalRecordColumns} rows={resolvePageItems(recordsPageData)} getRowKey={(row) => row.id} loading={recordsLoading} emptyMessage="Nenhum prontuário encontrado." />
-            <Pagination page={recordsPageData.page} totalPages={recordsPageData.totalPages} totalElements={resolveTotalItems(recordsPageData)} onPageChange={setRecordsPage} />
-          </PermissionGuard>
-          </section>
+          <PetMedicalRecordSection
+            editingId={editingRecordId}
+            onSubmit={handleSubmitRecord}
+            petId={recordPetId}
+            onPetIdChange={setRecordPetId}
+            professionalId={recordProfessionalId}
+            onProfessionalIdChange={setRecordProfessionalId}
+            description={recordDescription}
+            onDescriptionChange={setRecordDescription}
+            diagnosis={recordDiagnosis}
+            onDiagnosisChange={setRecordDiagnosis}
+            treatment={recordTreatment}
+            onTreatmentChange={setRecordTreatment}
+            formPetOptions={formPetOptions}
+            formProfessionalOptions={formProfessionalOptions}
+            petLookupUnavailable={petLookupUnavailable}
+            professionalsLookupUnavailable={professionalsLookupUnavailable}
+            formReady={medicalRecordFormReady}
+            submitting={recordSubmitting}
+            onCancelEdit={resetRecordForm}
+            columns={medicalRecordColumns}
+            pageData={recordsPageData}
+            loading={recordsLoading}
+            onPageChange={setRecordsPage}
+          />
         ) : null}
 
         {canAccessVaccinations ? (
-          <section className="space-y-4 rounded-xl border border-slate-200 bg-white p-4">
-          <div>
-            <h3 className="text-base font-semibold text-slate-900">Vaccinations</h3>
-            <p className="text-sm text-slate-600">Controle de aplicações e próximos reforços.</p>
-          </div>
-
-          <PermissionGuard permission={editingVaccinationId ? 'pet.vaccination.update' : 'pet.vaccination.create'}>
-            <form onSubmit={handleSubmitVaccination} className="grid gap-3 md:grid-cols-2">
-              <FormSelect label="Pet" value={vaccinationPetId} options={formPetOptions} onChange={setVaccinationPetId} disabled={petLookupUnavailable} />
-              <FormInput label="Vacina" value={vaccineName} onChange={setVaccineName} required />
-              <DateTimeInput label="Aplicada em" value={appliedAt} onChange={setAppliedAt} required />
-              <DateTimeInput label="Próximo reforço" value={nextDueAt} onChange={setNextDueAt} />
-              <TextAreaField label="Notas" value={vaccinationNotes} onChange={setVaccinationNotes} />
-
-              <div className="md:col-span-2 flex gap-2">
-                {!vaccinationFormReady ? (
-                  <div className="w-full rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">
-                    O formulário de vacinação depende da referência de pets.
-                  </div>
-                ) : null}
-                <button
-                  type="submit"
-                  disabled={vaccinationSubmitting || !vaccinationFormReady}
-                  className="rounded-lg bg-action px-4 py-2 text-sm font-medium text-white disabled:opacity-60"
-                >
-                  {vaccinationSubmitting ? 'Salvando...' : editingVaccinationId ? 'Atualizar vacinação' : 'Criar vacinação'}
-                </button>
-                {editingVaccinationId ? (
-                  <button
-                    type="button"
-                    onClick={resetVaccinationForm}
-                    className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700"
-                  >
-                    Cancelar edição
-                  </button>
-                ) : null}
-              </div>
-            </form>
-          </PermissionGuard>
-
-          <PermissionGuard permission="pet.vaccination.read">
-            <DataTable columns={vaccinationColumns} rows={resolvePageItems(vaccinationsPageData)} getRowKey={(row) => row.id} loading={vaccinationsLoading} emptyMessage="Nenhuma vacinação encontrada." />
-            <Pagination page={vaccinationsPageData.page} totalPages={vaccinationsPageData.totalPages} totalElements={resolveTotalItems(vaccinationsPageData)} onPageChange={setVaccinationsPage} />
-          </PermissionGuard>
-          </section>
+          <PetVaccinationSection
+            editingId={editingVaccinationId}
+            onSubmit={handleSubmitVaccination}
+            petId={vaccinationPetId}
+            onPetIdChange={setVaccinationPetId}
+            vaccineName={vaccineName}
+            onVaccineNameChange={setVaccineName}
+            appliedAt={appliedAt}
+            onAppliedAtChange={setAppliedAt}
+            nextDueAt={nextDueAt}
+            onNextDueAtChange={setNextDueAt}
+            notes={vaccinationNotes}
+            onNotesChange={setVaccinationNotes}
+            formPetOptions={formPetOptions}
+            petLookupUnavailable={petLookupUnavailable}
+            formReady={vaccinationFormReady}
+            submitting={vaccinationSubmitting}
+            onCancelEdit={resetVaccinationForm}
+            columns={vaccinationColumns}
+            pageData={vaccinationsPageData}
+            loading={vaccinationsLoading}
+            onPageChange={setVaccinationsPage}
+          />
         ) : null}
 
         {canAccessPrescriptions ? (
-          <section className="space-y-4 rounded-xl border border-slate-200 bg-white p-4">
-          <div>
-            <h3 className="text-base font-semibold text-slate-900">Prescriptions</h3>
-            <p className="text-sm text-slate-600">Prescrições vinculadas ao histórico do atendimento.</p>
-          </div>
-
-          <PermissionGuard permission={editingPrescriptionId ? 'pet.prescription.update' : 'pet.prescription.create'}>
-            <form onSubmit={handleSubmitPrescription} className="grid gap-3 md:grid-cols-2">
-              <FormSelect label="Pet" value={prescriptionPetId} options={formPetOptions} onChange={setPrescriptionPetId} disabled={petLookupUnavailable} />
-              <FormSelect
-                label="Profissional"
-                value={prescriptionProfessionalId}
-                options={formProfessionalOptions}
-                onChange={setPrescriptionProfessionalId}
-                disabled={professionalsLookupUnavailable}
-              />
-              <FormInput label="Medicamento" value={medication} onChange={setMedication} required />
-              <FormInput label="Dosagem" value={dosage} onChange={setDosage} />
-              <div className="md:col-span-2">
-                <TextAreaField label="Instruções" value={instructions} onChange={setInstructions} />
-              </div>
-
-              <div className="md:col-span-2 flex gap-2">
-                {!prescriptionFormReady ? (
-                  <div className="w-full rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">
-                    O formulário de prescrição depende das referências de pets e profissionais.
-                  </div>
-                ) : null}
-                <button
-                  type="submit"
-                  disabled={prescriptionSubmitting || !prescriptionFormReady}
-                  className="rounded-lg bg-action px-4 py-2 text-sm font-medium text-white disabled:opacity-60"
-                >
-                  {prescriptionSubmitting ? 'Salvando...' : editingPrescriptionId ? 'Atualizar prescrição' : 'Criar prescrição'}
-                </button>
-                {editingPrescriptionId ? (
-                  <button
-                    type="button"
-                    onClick={resetPrescriptionForm}
-                    className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700"
-                  >
-                    Cancelar edição
-                  </button>
-                ) : null}
-              </div>
-            </form>
-          </PermissionGuard>
-
-          <PermissionGuard permission="pet.prescription.read">
-            <DataTable columns={prescriptionColumns} rows={resolvePageItems(prescriptionsPageData)} getRowKey={(row) => row.id} loading={prescriptionsLoading} emptyMessage="Nenhuma prescrição encontrada." />
-            <Pagination page={prescriptionsPageData.page} totalPages={prescriptionsPageData.totalPages} totalElements={resolveTotalItems(prescriptionsPageData)} onPageChange={setPrescriptionsPage} />
-          </PermissionGuard>
-          </section>
+          <PetPrescriptionSection
+            editingId={editingPrescriptionId}
+            onSubmit={handleSubmitPrescription}
+            petId={prescriptionPetId}
+            onPetIdChange={setPrescriptionPetId}
+            professionalId={prescriptionProfessionalId}
+            onProfessionalIdChange={setPrescriptionProfessionalId}
+            medication={medication}
+            onMedicationChange={setMedication}
+            dosage={dosage}
+            onDosageChange={setDosage}
+            instructions={instructions}
+            onInstructionsChange={setInstructions}
+            formPetOptions={formPetOptions}
+            formProfessionalOptions={formProfessionalOptions}
+            petLookupUnavailable={petLookupUnavailable}
+            professionalsLookupUnavailable={professionalsLookupUnavailable}
+            formReady={prescriptionFormReady}
+            submitting={prescriptionSubmitting}
+            onCancelEdit={resetPrescriptionForm}
+            columns={prescriptionColumns}
+            pageData={prescriptionsPageData}
+            loading={prescriptionsLoading}
+            onPageChange={setPrescriptionsPage}
+          />
         ) : null}
 
         <ConfirmDialog

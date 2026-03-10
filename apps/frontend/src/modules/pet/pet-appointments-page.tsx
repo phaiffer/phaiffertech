@@ -1,39 +1,36 @@
 'use client';
 
 import { FormEvent, useCallback, useEffect, useMemo, useState } from 'react';
+import {
+  PetAppointmentForm,
+  PetAppointmentsFilters,
+  createPetAppointmentColumns
+} from '@/modules/pet/pet-appointments-sections';
+import { toDateTimeLocal, toIsoDate } from '@/modules/pet/pet-date-time';
+import {
+  PetLookupFeedback,
+  PetLookupIssue,
+  resolvePetLookupIssue
+} from '@/modules/pet/pet-lookup-feedback';
+import { PermissionGuard } from '@/shared/auth/PermissionGuard';
 import { usePermissions } from '@/shared/auth/usePermissions';
 import { ApiClientError } from '@/shared/lib/http';
 import { resolvePageItems, resolveTotalItems } from '@/shared/lib/pagination';
 import { petService } from '@/shared/services/pet-service';
 import { PageResponse } from '@/shared/types/common';
-import { PetAppointment, PetClient, PetProfessional, PetProfile, PetServiceCatalog } from '@/shared/types/pet';
-import { PermissionGuard } from '@/shared/auth/PermissionGuard';
 import {
-  PetLookupFeedback,
-  PetLookupIssue,
-  resolvePetLookupIssue,
-  resolvePetLookupLabel
-} from '@/modules/pet/pet-lookup-feedback';
+  PetAppointment,
+  PetClient,
+  PetProfessional,
+  PetProfile,
+  PetServiceCatalog
+} from '@/shared/types/pet';
 import { ConfirmDialog } from '@/shared/ui/confirm-dialog';
-import { DataTable, DataTableColumn } from '@/shared/ui/data-table';
-import { DateTimeInput } from '@/shared/ui/datetime-input';
-import { FormInput } from '@/shared/ui/form-input';
-import { FormSelect } from '@/shared/ui/form-select';
+import { DataTable } from '@/shared/ui/data-table';
 import { PageTitle } from '@/shared/ui/page-title';
 import { Pagination } from '@/shared/ui/pagination';
-import { SearchBar } from '@/shared/ui/search-bar';
 
 const pageSize = 10;
-
-const statusOptions = [
-  { value: '', label: 'Todos' },
-  { value: 'SCHEDULED', label: 'SCHEDULED' },
-  { value: 'CONFIRMED', label: 'CONFIRMED' },
-  { value: 'COMPLETED', label: 'COMPLETED' },
-  { value: 'CANCELED', label: 'CANCELED' }
-];
-
-const formStatusOptions = statusOptions.filter((option) => option.value);
 
 const initialPage: PageResponse<PetAppointment> = {
   items: [],
@@ -42,23 +39,6 @@ const initialPage: PageResponse<PetAppointment> = {
   page: 0,
   size: pageSize
 };
-
-function toDateTimeLocal(isoValue?: string) {
-  if (!isoValue) {
-    return '';
-  }
-
-  const date = new Date(isoValue);
-  const timezoneOffset = date.getTimezoneOffset() * 60_000;
-  return new Date(date.getTime() - timezoneOffset).toISOString().slice(0, 16);
-}
-
-function toIsoDate(value: string) {
-  if (!value) {
-    return undefined;
-  }
-  return new Date(value).toISOString();
-}
 
 export function PetAppointmentsPage() {
   const { hasPermission } = usePermissions();
@@ -121,6 +101,7 @@ export function PetAppointmentsPage() {
     if (!clientId) {
       return profiles;
     }
+
     return profiles.filter((profile) => profile.clientId === clientId);
   }, [clientId, profiles]);
 
@@ -183,7 +164,11 @@ export function PetAppointmentsPage() {
       setClients(resolvePageItems(clientPage.value));
     } else {
       setClients([]);
-      issues.push({ key: 'clients', label: 'Clientes', message: resolvePetLookupIssue(clientPage.status === 'rejected' ? clientPage.reason : null) });
+      issues.push({
+        key: 'clients',
+        label: 'Clientes',
+        message: resolvePetLookupIssue(clientPage.status === 'rejected' ? clientPage.reason : null)
+      });
     }
 
     if (!canReadProfiles) {
@@ -193,7 +178,11 @@ export function PetAppointmentsPage() {
       setProfiles(resolvePageItems(profilePage.value));
     } else {
       setProfiles([]);
-      issues.push({ key: 'profiles', label: 'Pets', message: resolvePetLookupIssue(profilePage.status === 'rejected' ? profilePage.reason : null) });
+      issues.push({
+        key: 'profiles',
+        label: 'Pets',
+        message: resolvePetLookupIssue(profilePage.status === 'rejected' ? profilePage.reason : null)
+      });
     }
 
     if (!canReadServices) {
@@ -203,7 +192,11 @@ export function PetAppointmentsPage() {
       setServices(resolvePageItems(servicePage.value));
     } else {
       setServices([]);
-      issues.push({ key: 'services', label: 'Serviços', message: resolvePetLookupIssue(servicePage.status === 'rejected' ? servicePage.reason : null) });
+      issues.push({
+        key: 'services',
+        label: 'Serviços',
+        message: resolvePetLookupIssue(servicePage.status === 'rejected' ? servicePage.reason : null)
+      });
     }
 
     if (!canReadProfessionals) {
@@ -249,8 +242,7 @@ export function PetAppointmentsPage() {
       });
       setPageData(result);
     } catch (err) {
-      const message = err instanceof ApiClientError ? err.message : 'Erro ao carregar atendimentos.';
-      setError(message);
+      setError(err instanceof ApiClientError ? err.message : 'Erro ao carregar atendimentos.');
     } finally {
       setLoading(false);
     }
@@ -262,7 +254,7 @@ export function PetAppointmentsPage() {
 
   useEffect(() => {
     load(0, search, statusFilter, clientFilterId, petFilterId, serviceFilterId, professionalFilterId);
-  }, [load, search, statusFilter, clientFilterId, petFilterId, serviceFilterId, professionalFilterId]);
+  }, [clientFilterId, load, petFilterId, professionalFilterId, search, serviceFilterId, statusFilter]);
 
   function resetForm() {
     setEditingId(null);
@@ -328,8 +320,7 @@ export function PetAppointmentsPage() {
       resetForm();
       await load(pageData.page, search, statusFilter, clientFilterId, petFilterId, serviceFilterId, professionalFilterId);
     } catch (err) {
-      const message = err instanceof ApiClientError ? err.message : 'Erro ao salvar atendimento.';
-      setError(message);
+      setError(err instanceof ApiClientError ? err.message : 'Erro ao salvar atendimento.');
     } finally {
       setSubmitting(false);
     }
@@ -346,8 +337,7 @@ export function PetAppointmentsPage() {
       setSuccess('Atendimento removido com sucesso.');
       await load(pageData.page, search, statusFilter, clientFilterId, petFilterId, serviceFilterId, professionalFilterId);
     } catch (err) {
-      const message = err instanceof ApiClientError ? err.message : 'Erro ao excluir atendimento.';
-      setError(message);
+      setError(err instanceof ApiClientError ? err.message : 'Erro ao excluir atendimento.');
     }
   }
 
@@ -359,86 +349,23 @@ export function PetAppointmentsPage() {
   const professionalsLookupUnavailable = lookupIssues.some((issue) => issue.key === 'professionals');
   const appointmentReferencesReady = !clientsLookupUnavailable && !profilesLookupUnavailable && !servicesLookupUnavailable && !professionalsLookupUnavailable;
 
-  const columns: DataTableColumn<PetAppointment>[] = [
-    {
-      key: 'serviceName',
-      header: 'Serviço',
-      render: (appointment) => appointment.serviceName
-    },
-    {
-      key: 'scheduledAt',
-      header: 'Agendado para',
-      render: (appointment) => new Date(appointment.scheduledAt).toLocaleString('pt-BR')
-    },
-    {
-      key: 'status',
-      header: 'Status',
-      render: (appointment) => appointment.status
-    },
-    {
-      key: 'client',
-      header: 'Cliente',
-      render: (appointment) => {
-        if (appointment.clientName) {
-          return appointment.clientName;
-        }
-        return resolvePetLookupLabel(
-          clients,
-          appointment.clientId,
-          (client) => client.name ?? client.fullName,
-          'Cliente',
-          clientsLookupUnavailable
-        );
-      }
-    },
-    {
-      key: 'pet',
-      header: 'Pet',
-      render: (appointment) =>
-        appointment.petName ??
-        resolvePetLookupLabel(profiles, appointment.petId, (profile) => profile.name, 'Pet', profilesLookupUnavailable)
-    },
-    {
-      key: 'professional',
-      header: 'Profissional',
-      render: (appointment) =>
-        appointment.professionalName ??
-        resolvePetLookupLabel(
-          professionals,
-          appointment.professionalId,
-          (professional) => professional.name,
-          'Profissional',
-          professionalsLookupUnavailable
-        )
-    },
-    {
-      key: 'actions',
-      header: 'Ações',
-      render: (appointment) => (
-        <div className="flex gap-2">
-          <PermissionGuard permission="pet.appointment.update">
-            <button
-              type="button"
-              onClick={() => beginEdit(appointment)}
-              className="rounded-lg border border-slate-300 px-2 py-1 text-xs font-medium text-slate-700"
-            >
-              Editar
-            </button>
-          </PermissionGuard>
-
-          <PermissionGuard permission="pet.appointment.delete">
-            <button
-              type="button"
-              onClick={() => setDeleteCandidate(appointment)}
-              className="rounded-lg border border-rose-300 px-2 py-1 text-xs font-medium text-rose-700"
-            >
-              Excluir
-            </button>
-          </PermissionGuard>
-        </div>
-      )
-    }
-  ];
+  const columns = useMemo(() => createPetAppointmentColumns({
+    clients,
+    professionals,
+    profiles,
+    clientsLookupUnavailable,
+    professionalsLookupUnavailable,
+    profilesLookupUnavailable,
+    onEdit: beginEdit,
+    onDelete: setDeleteCandidate
+  }), [
+    clients,
+    clientsLookupUnavailable,
+    professionals,
+    professionalsLookupUnavailable,
+    profiles,
+    profilesLookupUnavailable
+  ]);
 
   return (
     <PermissionGuard
@@ -448,86 +375,70 @@ export function PetAppointmentsPage() {
       <div className="space-y-5">
         <PageTitle title="Pet Appointments" description="Agenda de atendimentos com filtros e gerenciamento completo." />
 
-        <div className="grid gap-3 rounded-xl border border-slate-200 bg-white p-4 md:grid-cols-[1fr_180px_220px_220px_220px_220px_auto_auto]">
-          <SearchBar value={searchInput} onChange={setSearchInput} placeholder="Serviço, status, notas" />
-          <FormSelect label="Status" value={statusFilter} options={statusOptions} onChange={setStatusFilter} />
-          <FormSelect label="Cliente" value={clientFilterId} options={clientOptions} onChange={setClientFilterId} disabled={clientsLookupUnavailable} />
-          <FormSelect label="Pet" value={petFilterId} options={petOptions} onChange={setPetFilterId} disabled={profilesLookupUnavailable} />
-          <FormSelect label="Serviço" value={serviceFilterId} options={serviceOptions} onChange={setServiceFilterId} disabled={servicesLookupUnavailable} />
-          <FormSelect
-            label="Profissional"
-            value={professionalFilterId}
-            options={professionalOptions}
-            onChange={setProfessionalFilterId}
-            disabled={professionalsLookupUnavailable}
-          />
-          <button
-            type="button"
-            onClick={() => setSearch(searchInput)}
-            className="rounded-lg bg-action px-4 py-2 text-sm font-medium text-white"
-          >
-            Buscar
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              setSearchInput('');
-              setSearch('');
-              setStatusFilter('');
-              setClientFilterId('');
-              setPetFilterId('');
-              setServiceFilterId('');
-              setProfessionalFilterId('');
-            }}
-            className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700"
-          >
-            Limpar
-          </button>
-        </div>
+        <PetAppointmentsFilters
+          searchInput={searchInput}
+          onSearchInputChange={setSearchInput}
+          statusFilter={statusFilter}
+          onStatusFilterChange={setStatusFilter}
+          clientFilterId={clientFilterId}
+          onClientFilterIdChange={setClientFilterId}
+          clientOptions={clientOptions}
+          clientsLookupUnavailable={clientsLookupUnavailable}
+          petFilterId={petFilterId}
+          onPetFilterIdChange={setPetFilterId}
+          petOptions={petOptions}
+          profilesLookupUnavailable={profilesLookupUnavailable}
+          serviceFilterId={serviceFilterId}
+          onServiceFilterIdChange={setServiceFilterId}
+          serviceOptions={serviceOptions}
+          servicesLookupUnavailable={servicesLookupUnavailable}
+          professionalFilterId={professionalFilterId}
+          onProfessionalFilterIdChange={setProfessionalFilterId}
+          professionalOptions={professionalOptions}
+          professionalsLookupUnavailable={professionalsLookupUnavailable}
+          onSearch={() => setSearch(searchInput)}
+          onClear={() => {
+            setSearchInput('');
+            setSearch('');
+            setStatusFilter('');
+            setClientFilterId('');
+            setPetFilterId('');
+            setServiceFilterId('');
+            setProfessionalFilterId('');
+          }}
+        />
 
         <PetLookupFeedback issues={lookupIssues} />
 
-        <PermissionGuard permission={editingId ? 'pet.appointment.update' : 'pet.appointment.create'}>
-          <form onSubmit={handleSubmit} className="grid gap-3 rounded-xl border border-slate-200 bg-white p-4 md:grid-cols-3">
-            <FormSelect label="Cliente" value={clientId} options={formClientOptions} onChange={setClientId} disabled={clientsLookupUnavailable} />
-            <FormSelect label="Pet" value={petId} options={formPetOptions} onChange={setPetId} disabled={profilesLookupUnavailable} />
-            <FormSelect label="Serviço" value={serviceId} options={formServiceOptions} onChange={setServiceId} disabled={servicesLookupUnavailable} />
-            <FormSelect
-              label="Profissional"
-              value={professionalId}
-              options={formProfessionalOptions}
-              onChange={setProfessionalId}
-              disabled={professionalsLookupUnavailable}
-            />
-            <DateTimeInput label="Data e hora" value={scheduledAt} onChange={setScheduledAt} required />
-            <FormSelect label="Status" value={status} options={formStatusOptions} onChange={setStatus} />
-            <FormInput label="Notas" value={notes} onChange={setNotes} />
-
-            <div className="md:col-span-3 flex gap-2">
-              {!appointmentReferencesReady ? (
-                <div className="w-full rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">
-                  O formulário depende de clientes, pets, serviços e profissionais carregados para funcionar corretamente.
-                </div>
-              ) : null}
-              <button
-                type="submit"
-                disabled={submitting || !appointmentReferencesReady}
-                className="rounded-lg bg-action px-4 py-2 text-sm font-medium text-white disabled:opacity-60"
-              >
-                {submitting ? 'Salvando...' : editingId ? 'Atualizar atendimento' : 'Criar atendimento'}
-              </button>
-              {editingId ? (
-                <button
-                  type="button"
-                  onClick={resetForm}
-                  className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700"
-                >
-                  Cancelar edição
-                </button>
-              ) : null}
-            </div>
-          </form>
-        </PermissionGuard>
+        <PetAppointmentForm
+          editingId={editingId}
+          onSubmit={handleSubmit}
+          clientId={clientId}
+          onClientIdChange={setClientId}
+          formClientOptions={formClientOptions}
+          clientsLookupUnavailable={clientsLookupUnavailable}
+          petId={petId}
+          onPetIdChange={setPetId}
+          formPetOptions={formPetOptions}
+          profilesLookupUnavailable={profilesLookupUnavailable}
+          serviceId={serviceId}
+          onServiceIdChange={setServiceId}
+          formServiceOptions={formServiceOptions}
+          servicesLookupUnavailable={servicesLookupUnavailable}
+          professionalId={professionalId}
+          onProfessionalIdChange={setProfessionalId}
+          formProfessionalOptions={formProfessionalOptions}
+          professionalsLookupUnavailable={professionalsLookupUnavailable}
+          scheduledAt={scheduledAt}
+          onScheduledAtChange={setScheduledAt}
+          status={status}
+          onStatusChange={setStatus}
+          notes={notes}
+          onNotesChange={setNotes}
+          submitting={submitting}
+          appointmentReferencesReady={appointmentReferencesReady}
+          onCancelEdit={resetForm}
+        />
 
         {error ? <div className="rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{error}</div> : null}
         {success ? <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">{success}</div> : null}
