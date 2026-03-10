@@ -5,7 +5,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import java.util.List;
 
-public record TenantCreateRequest(
+public record TenantUpdateRequest(
         @NotBlank String name,
         @NotBlank String code,
         String logoUrl,

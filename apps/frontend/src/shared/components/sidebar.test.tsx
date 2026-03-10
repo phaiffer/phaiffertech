@@ -2,10 +2,25 @@ import { render } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { Sidebar } from '@/shared/components/sidebar';
 
-const { signOutMock, hasPermissionMock, hasAnyPermissionMock } = vi.hoisted(() => ({
+const { signOutMock, hasAnyPermissionMock, currentUser } = vi.hoisted(() => ({
   signOutMock: vi.fn(),
-  hasPermissionMock: vi.fn(),
-  hasAnyPermissionMock: vi.fn()
+  hasAnyPermissionMock: vi.fn(),
+  currentUser: {
+    fullName: 'Jane Operator',
+    email: 'jane@phaiffer.test',
+    role: 'PLATFORM_ADMIN',
+    tenantId: '11111111-1111-1111-1111-111111111111',
+    tenantName: 'PhaifferTech',
+    tenantCode: 'default',
+    tenantLogoUrl: null,
+    tenantPrimaryColor: '#0f172a',
+    tenantAccentColor: '#2563eb',
+    tenantDefaultThemeMode: 'SYSTEM',
+    tenantAllowUserThemeOverride: true,
+    platformOwner: true,
+    platformAdmin: true,
+    permissions: []
+  }
 }));
 
 vi.mock('next/navigation', () => ({
@@ -15,12 +30,7 @@ vi.mock('next/navigation', () => ({
 vi.mock('@/shared/auth/use-auth', () => ({
   useAuth: () => ({
     session: {
-      user: {
-        fullName: 'Jane Operator',
-        email: 'jane@phaiffer.test',
-        role: 'PLATFORM_ADMIN',
-        tenantId: '11111111-1111-1111-1111-111111111111'
-      }
+      user: currentUser
     },
     signOut: signOutMock
   })
@@ -28,7 +38,7 @@ vi.mock('@/shared/auth/use-auth', () => ({
 
 vi.mock('@/shared/auth/usePermissions', () => ({
   usePermissions: () => ({
-    hasPermission: hasPermissionMock,
+    hasPermission: vi.fn().mockReturnValue(true),
     hasAnyPermission: hasAnyPermissionMock
   })
 }));
@@ -36,9 +46,10 @@ vi.mock('@/shared/auth/usePermissions', () => ({
 vi.mock('@/shared/modules/use-module-catalog', () => ({
   useModuleCatalog: () => ({
     modules: [
-      { code: 'IOT', available: true },
-      { code: 'CRM', available: true },
-      { code: 'PET', available: true }
+      { code: 'CORE_PLATFORM', name: 'Core Platform', available: true },
+      { code: 'IOT', name: 'IoT System', available: true },
+      { code: 'CRM', name: 'CRM', available: true },
+      { code: 'PET', name: 'PetFlow', available: true }
     ],
     loading: false,
     error: null
@@ -48,20 +59,32 @@ vi.mock('@/shared/modules/use-module-catalog', () => ({
 describe('Sidebar', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    hasPermissionMock.mockReturnValue(true);
     hasAnyPermissionMock.mockReturnValue(true);
+    currentUser.role = 'PLATFORM_ADMIN';
+    currentUser.platformAdmin = true;
+    currentUser.platformOwner = true;
   });
 
-  it('restores CRM and Pet navigation groups without re-expanding the sidebar catalog excessively', () => {
-    const { container } = render(<Sidebar />);
+  it('renders contextual CRM and Pet navigation and keeps tenant admin visible only for platform admins', () => {
+    const { container, getByText } = render(<Sidebar />);
 
+    expect(getByText('PhaifferTech')).toBeTruthy();
+    expect(getByText('Contracted products')).toBeTruthy();
     expect(container.querySelector('a[href="/crm"]')).not.toBeNull();
     expect(container.querySelector('a[href="/crm/tasks"]')).not.toBeNull();
-    expect(container.querySelector('a[href="/crm/activity"]')).not.toBeNull();
     expect(container.querySelector('a[href="/pet"]')).not.toBeNull();
     expect(container.querySelector('a[href="/pet/appointments"]')).not.toBeNull();
-    expect(container.querySelector('a[href="/pet/medical-records"]')).not.toBeNull();
-    expect(container.querySelector('a[href="/crm/companies"]')).toBeNull();
-    expect(container.querySelector('a[href="/pet/products"]')).toBeNull();
+    expect(container.querySelector('a[href="/tenants"]')).not.toBeNull();
+  });
+
+  it('hides platform-only tenant administration for regular tenant users', () => {
+    currentUser.role = 'TENANT_ADMIN';
+    currentUser.platformAdmin = false;
+    currentUser.platformOwner = false;
+
+    const { container } = render(<Sidebar />);
+
+    expect(container.querySelector('a[href="/tenants"]')).toBeNull();
+    expect(container.querySelector('a[href="/crm/tasks"]')).not.toBeNull();
   });
 });

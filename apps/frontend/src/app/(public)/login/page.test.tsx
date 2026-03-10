@@ -6,6 +6,7 @@ import { AuthProvider } from '@/shared/components/auth-provider';
 import { getSession } from '@/shared/lib/session';
 import { PublicSiteProvider } from '@/shared/public/public-site-provider';
 import { authService } from '@/shared/services/auth-service';
+import { AuthTokenResponse } from '@/shared/types/auth';
 
 const { pushMock, replaceMock } = vi.hoisted(() => ({
   pushMock: vi.fn(),
@@ -28,7 +29,7 @@ vi.mock('@/shared/services/auth-service', () => ({
   }
 }));
 
-const authResponseFixture = {
+const authResponseFixture: AuthTokenResponse = {
   accessToken: 'access-token',
   refreshToken: 'refresh-token',
   expiresInSeconds: 300,
@@ -37,6 +38,15 @@ const authResponseFixture = {
     email: 'admin@local.test',
     fullName: 'Admin Local',
     tenantId: 'tenant-1',
+    tenantName: 'Default Tenant',
+    tenantCode: 'default',
+    tenantLogoUrl: null,
+    tenantPrimaryColor: '#0f172a',
+    tenantAccentColor: '#2563eb',
+    tenantDefaultThemeMode: 'SYSTEM',
+    tenantAllowUserThemeOverride: true,
+    platformOwner: true,
+    platformAdmin: true,
     role: 'ADMIN',
     roles: ['ADMIN'],
     permissions: ['tenant.read']

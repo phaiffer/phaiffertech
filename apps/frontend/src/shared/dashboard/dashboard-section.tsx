@@ -16,10 +16,12 @@ export function DashboardSection({ section }: DashboardSectionProps) {
     || section.timeSeries.length > 0;
 
   return (
-    <section className="rounded-3xl border border-slate-200 bg-panel p-5 shadow-card">
+    <section className="rounded-3xl border border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-panel)] p-5 shadow-card">
       <div className="mb-5">
-        <h2 className="text-base font-semibold text-ink">{section.title}</h2>
-        {section.description ? <p className="mt-1 text-sm text-slate-500">{section.description}</p> : null}
+        <h2 className="text-base font-semibold text-[color:var(--app-shell-heading)]">{section.title}</h2>
+        {section.description ? (
+          <p className="mt-1 text-sm text-[color:var(--app-shell-muted)]">{section.description}</p>
+        ) : null}
       </div>
 
       {!hasContent ? (

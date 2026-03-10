@@ -8,6 +8,18 @@
   --surface: #ffffff;
   --surface-muted: #eef2ff;
   --border: #d8e1f0;
+  --app-shell-bg: #eef3fb;
+  --app-shell-panel: rgba(255, 255, 255, 0.92);
+  --app-shell-panel-strong: #ffffff;
+  --app-shell-panel-muted: #edf3ff;
+  --app-shell-border: rgba(15, 23, 42, 0.12);
+  --app-shell-text: #13213d;
+  --app-shell-heading: #081224;
+  --app-shell-muted: #52637f;
+  --tenant-primary: #0f172a;
+  --tenant-primary-soft: rgba(15, 23, 42, 0.16);
+  --tenant-accent: #2563eb;
+  --tenant-accent-soft: rgba(37, 99, 235, 0.18);
 }
 
 html[data-theme='dark'] {
@@ -16,6 +28,14 @@ html[data-theme='dark'] {
   --surface: #111a2e;
   --surface-muted: #17233d;
   --border: #243250;
+  --app-shell-bg: #020816;
+  --app-shell-panel: rgba(3, 16, 31, 0.82);
+  --app-shell-panel-strong: rgba(3, 16, 31, 0.96);
+  --app-shell-panel-muted: rgba(7, 20, 38, 0.94);
+  --app-shell-border: rgba(56, 189, 248, 0.16);
+  --app-shell-text: #e5eefc;
+  --app-shell-heading: #f8fbff;
+  --app-shell-muted: #9fb1cc;
 }
 
 * {

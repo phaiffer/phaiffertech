@@ -2,6 +2,7 @@
 
 import { FormEvent, useEffect, useState } from 'react';
 import { PermissionGuard } from '@/shared/auth/PermissionGuard';
+import { useAuth } from '@/shared/auth/use-auth';
 import { usePermissions } from '@/shared/auth/usePermissions';
 import { resolvePageItems } from '@/shared/lib/pagination';
 import { userService } from '@/shared/services/user-service';
@@ -9,12 +10,14 @@ import { PlatformUser } from '@/shared/types/user';
 import { PageTitle } from '@/shared/ui/page-title';
 import { Table } from '@/shared/ui/table';
 
-const roles = ['TENANT_ADMIN', 'MANAGER', 'OPERATOR', 'VIEWER', 'CUSTOMER_PORTAL_USER'];
-
 export default function UsersPage() {
+  const { session } = useAuth();
   const { hasPermission } = usePermissions();
   const canReadUsers = hasPermission('USER_READ');
   const canWriteUsers = hasPermission('USER_WRITE');
+  const availableRoles = session?.user.platformAdmin
+    ? ['PLATFORM_ADMIN', 'TENANT_OWNER', 'TENANT_ADMIN', 'MANAGER', 'OPERATOR', 'VIEWER', 'CUSTOMER_PORTAL_USER']
+    : ['TENANT_OWNER', 'TENANT_ADMIN', 'MANAGER', 'OPERATOR', 'VIEWER', 'CUSTOMER_PORTAL_USER'];
   const [users, setUsers] = useState<PlatformUser[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -72,11 +75,14 @@ export default function UsersPage() {
         <PageTitle title="Users" description="Gestão inicial de usuários por tenant com RBAC." />
 
         <PermissionGuard permission="USER_WRITE">
-          <form onSubmit={handleCreate} className="grid gap-3 rounded-xl border border-slate-200 bg-white p-4 shadow-card md:grid-cols-5">
+          <form
+            onSubmit={handleCreate}
+            className="grid gap-3 rounded-xl border border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-panel)] p-4 shadow-card md:grid-cols-5"
+          >
             <input
               value={fullName}
               onChange={(event) => setFullName(event.target.value)}
-              className="rounded-lg border border-slate-300 px-3 py-2 text-sm"
+              className="rounded-lg border border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-panel-muted)] px-3 py-2 text-sm text-[color:var(--app-shell-text)]"
               placeholder="Nome completo"
               required
             />
@@ -84,23 +90,23 @@ export default function UsersPage() {
               type="email"
               value={email}
               onChange={(event) => setEmail(event.target.value)}
-              className="rounded-lg border border-slate-300 px-3 py-2 text-sm"
+              className="rounded-lg border border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-panel-muted)] px-3 py-2 text-sm text-[color:var(--app-shell-text)]"
               placeholder="E-mail"
               required
             />
             <input
               value={password}
               onChange={(event) => setPassword(event.target.value)}
-              className="rounded-lg border border-slate-300 px-3 py-2 text-sm"
+              className="rounded-lg border border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-panel-muted)] px-3 py-2 text-sm text-[color:var(--app-shell-text)]"
               placeholder="Senha"
               required
             />
             <select
               value={roleCode}
               onChange={(event) => setRoleCode(event.target.value)}
-              className="rounded-lg border border-slate-300 px-3 py-2 text-sm"
+              className="rounded-lg border border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-panel-muted)] px-3 py-2 text-sm text-[color:var(--app-shell-text)]"
             >
-              {roles.map((role) => (
+              {availableRoles.map((role) => (
                 <option key={role} value={role}>
                   {role}
                 </option>
@@ -109,7 +115,8 @@ export default function UsersPage() {
             <button
               type="submit"
               disabled={submitting}
-              className="rounded-lg bg-action px-4 py-2 text-sm font-medium text-white disabled:bg-blue-300"
+              className="rounded-lg px-4 py-2 text-sm font-medium text-white disabled:opacity-60"
+              style={{ backgroundColor: 'var(--tenant-accent)' }}
             >
               {submitting ? 'Salvando...' : 'Criar usuário'}
             </button>

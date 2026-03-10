@@ -3,6 +3,8 @@ package com.phaiffertech.platform.core.tenant.domain;
 import com.phaiffertech.platform.shared.domain.base.BaseEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.Table;
 
 @Entity
@@ -17,6 +19,25 @@ public class Tenant extends BaseEntity {
 
     @Column(name = "status", nullable = false, length = 30)
     private String status;
+
+    @Column(name = "logo_url", length = 512)
+    private String logoUrl;
+
+    @Column(name = "primary_color", length = 7)
+    private String primaryColor;
+
+    @Column(name = "accent_color", length = 7)
+    private String accentColor;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "default_theme_mode", nullable = false, length = 20)
+    private TenantThemeMode defaultThemeMode = TenantThemeMode.SYSTEM;
+
+    @Column(name = "allow_user_theme_override", nullable = false)
+    private boolean allowUserThemeOverride = true;
+
+    @Column(name = "platform_owner", nullable = false)
+    private boolean platformOwner;
 
     public String getName() {
         return name;
@@ -40,5 +61,53 @@ public class Tenant extends BaseEntity {
 
     public void setStatus(String status) {
         this.status = status;
+    }
+
+    public String getLogoUrl() {
+        return logoUrl;
+    }
+
+    public void setLogoUrl(String logoUrl) {
+        this.logoUrl = logoUrl;
+    }
+
+    public String getPrimaryColor() {
+        return primaryColor;
+    }
+
+    public void setPrimaryColor(String primaryColor) {
+        this.primaryColor = primaryColor;
+    }
+
+    public String getAccentColor() {
+        return accentColor;
+    }
+
+    public void setAccentColor(String accentColor) {
+        this.accentColor = accentColor;
+    }
+
+    public TenantThemeMode getDefaultThemeMode() {
+        return defaultThemeMode;
+    }
+
+    public void setDefaultThemeMode(TenantThemeMode defaultThemeMode) {
+        this.defaultThemeMode = defaultThemeMode;
+    }
+
+    public boolean isAllowUserThemeOverride() {
+        return allowUserThemeOverride;
+    }
+
+    public void setAllowUserThemeOverride(boolean allowUserThemeOverride) {
+        this.allowUserThemeOverride = allowUserThemeOverride;
+    }
+
+    public boolean isPlatformOwner() {
+        return platformOwner;
+    }
+
+    public void setPlatformOwner(boolean platformOwner) {
+        this.platformOwner = platformOwner;
     }
 }

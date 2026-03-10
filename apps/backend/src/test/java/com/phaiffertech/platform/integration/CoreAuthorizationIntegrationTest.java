@@ -12,7 +12,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 class CoreAuthorizationIntegrationTest extends AbstractIntegrationTest {
 
     @Test
-    void shouldAllowTenantListWithTenantReadPermission() {
+    void shouldRestrictTenantListToPlatformOwnerAdministrators() {
         AuthSession session = createTenantSessionWithPermissions(
                 "tenant-read-core",
                 "tenant-read-core@example.test",
@@ -22,7 +22,11 @@ class CoreAuthorizationIntegrationTest extends AbstractIntegrationTest {
 
         ResponseEntity<JsonNode> response = get("/tenants?page=0&size=20", session);
 
-        assertEquals(200, response.getStatusCode().value());
+        assertEquals(403, response.getStatusCode().value());
+
+        AuthSession platformSession = loginAsDefaultAdmin();
+        ResponseEntity<JsonNode> platformResponse = get("/tenants?page=0&size=20", platformSession);
+        assertEquals(200, platformResponse.getStatusCode().value());
     }
 
     @Test
@@ -64,5 +68,24 @@ class CoreAuthorizationIntegrationTest extends AbstractIntegrationTest {
         ), session);
 
         assertEquals(200, createResponse.getStatusCode().value());
+    }
+
+    @Test
+    void shouldBlockPlatformAdminRoleAssignmentOutsidePlatformOwnerTenant() {
+        AuthSession session = createTenantSessionWithPermissions(
+                "tenant-platform-admin-block",
+                "tenant-platform-admin-block@example.test",
+                List.of("USER_WRITE"),
+                "CORE_PLATFORM"
+        );
+
+        ResponseEntity<JsonNode> createResponse = post("/users", Map.of(
+                "email", "blocked-platform-admin@example.test",
+                "fullName", "Blocked Platform Admin",
+                "password", "Admin@123",
+                "roleCode", "PLATFORM_ADMIN"
+        ), session);
+
+        assertEquals(403, createResponse.getStatusCode().value());
     }
 }

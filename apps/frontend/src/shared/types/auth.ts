@@ -1,8 +1,19 @@
+export type TenantThemeMode = 'LIGHT' | 'DARK' | 'SYSTEM';
+
 export type AuthenticatedUser = {
   userId: string;
   email: string;
   fullName: string;
   tenantId: string;
+  tenantName: string;
+  tenantCode: string;
+  tenantLogoUrl?: string | null;
+  tenantPrimaryColor?: string | null;
+  tenantAccentColor?: string | null;
+  tenantDefaultThemeMode: TenantThemeMode;
+  tenantAllowUserThemeOverride: boolean;
+  platformOwner: boolean;
+  platformAdmin: boolean;
   role: string;
   roles?: string[];
   permissions: string[];

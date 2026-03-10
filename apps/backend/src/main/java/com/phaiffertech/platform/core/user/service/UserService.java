@@ -9,6 +9,7 @@ import com.phaiffertech.platform.core.iam.domain.UserTenantRole;
 import com.phaiffertech.platform.core.iam.repository.UserTenantRepository;
 import com.phaiffertech.platform.core.iam.repository.UserTenantRoleRepository;
 import com.phaiffertech.platform.core.iam.service.TenantAuthorizationResolver;
+import com.phaiffertech.platform.core.tenant.service.PlatformAccessService;
 import com.phaiffertech.platform.core.user.domain.User;
 import com.phaiffertech.platform.core.user.repository.UserRepository;
 import com.phaiffertech.platform.core.user.dto.UserCreateRequest;
@@ -16,6 +17,7 @@ import com.phaiffertech.platform.core.user.dto.UserResponse;
 import com.phaiffertech.platform.core.user.mapper.UserMapper;
 import com.phaiffertech.platform.shared.exception.ResourceNotFoundException;
 import com.phaiffertech.platform.shared.domain.enums.AuditActionType;
+import com.phaiffertech.platform.shared.exception.ForbiddenOperationException;
 import com.phaiffertech.platform.shared.pagination.PageRequestDto;
 import com.phaiffertech.platform.shared.pagination.PageResponseDto;
 import com.phaiffertech.platform.shared.pagination.PaginationUtils;
@@ -39,6 +41,7 @@ public class UserService {
     private final TenantAuthorizationResolver tenantAuthorizationResolver;
     private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
+    private final PlatformAccessService platformAccessService;
 
     public UserService(
             UserRepository userRepository,
@@ -46,7 +49,8 @@ public class UserService {
             UserTenantRoleRepository userTenantRoleRepository,
             TenantAuthorizationResolver tenantAuthorizationResolver,
             RoleRepository roleRepository,
-            PasswordEncoder passwordEncoder
+            PasswordEncoder passwordEncoder,
+            PlatformAccessService platformAccessService
     ) {
         this.userRepository = userRepository;
         this.userTenantRepository = userTenantRepository;
@@ -54,6 +58,7 @@ public class UserService {
         this.tenantAuthorizationResolver = tenantAuthorizationResolver;
         this.roleRepository = roleRepository;
         this.passwordEncoder = passwordEncoder;
+        this.platformAccessService = platformAccessService;
     }
 
     @Transactional
@@ -68,6 +73,10 @@ public class UserService {
         String roleCode = request.roleCode() == null || request.roleCode().isBlank()
                 ? RoleCode.OPERATOR.name()
                 : request.roleCode();
+
+        if (RoleCode.PLATFORM_ADMIN.name().equals(roleCode) && !platformAccessService.isPlatformAdministrator()) {
+            throw new ForbiddenOperationException("PLATFORM_ADMIN can only be assigned by platform owner administrators.");
+        }
 
         Role role = roleRepository.findByCode(roleCode)
                 .orElseThrow(() -> new ResourceNotFoundException("Role not found: " + roleCode));

@@ -109,7 +109,7 @@ public class AuthService {
                 resolved.permissions()
         );
 
-        AuthTokenResponse response = createTokenResponse(principal, user.getFullName());
+        AuthTokenResponse response = createTokenResponse(principal, user.getFullName(), tenant);
         platformMetricsService.recordAuthenticationAttempt(true);
 
         auditLogService.logEvent(
@@ -139,6 +139,8 @@ public class AuthService {
 
         User user = userRepository.findById(storedToken.getUserId())
                 .orElseThrow(() -> new ResourceNotFoundException("User not found."));
+        Tenant tenant = tenantRepository.findById(storedToken.getTenantId())
+                .orElseThrow(() -> new ResourceNotFoundException("Tenant not found."));
 
         UserTenant userTenant = userTenantRepository.findByTenantIdAndUserIdAndActiveTrue(
                         storedToken.getTenantId(),
@@ -158,7 +160,7 @@ public class AuthService {
                 resolved.permissions()
         );
 
-        AuthTokenResponse response = createTokenResponse(principal, user.getFullName());
+        AuthTokenResponse response = createTokenResponse(principal, user.getFullName(), tenant);
 
         auditLogService.logEvent(
                 storedToken.getTenantId(),
@@ -197,11 +199,13 @@ public class AuthService {
         AuthenticatedUser authenticatedUser = currentUserService.getRequiredUser();
         User user = userRepository.findById(authenticatedUser.userId())
                 .orElseThrow(() -> new ResourceNotFoundException("Authenticated user not found."));
+        Tenant tenant = tenantRepository.findById(authenticatedUser.tenantId())
+                .orElseThrow(() -> new ResourceNotFoundException("Authenticated tenant not found."));
 
-        return AuthMapper.toAuthenticatedUserResponse(user, authenticatedUser);
+        return AuthMapper.toAuthenticatedUserResponse(user, authenticatedUser, tenant);
     }
 
-    private AuthTokenResponse createTokenResponse(AuthenticatedUser principal, String fullName) {
+    private AuthTokenResponse createTokenResponse(AuthenticatedUser principal, String fullName, Tenant tenant) {
         revokeActiveRefreshTokens(principal.tenantId(), principal.userId());
 
         String accessToken = jwtService.generateAccessToken(principal);
@@ -214,7 +218,7 @@ public class AuthService {
         refreshTokenEntity.setExpiresAt(jwtService.getRefreshExpiration());
         refreshTokenRepository.save(refreshTokenEntity);
 
-        AuthenticatedUserResponse userResponse = AuthMapper.toAuthenticatedUserResponse(principal, fullName);
+        AuthenticatedUserResponse userResponse = AuthMapper.toAuthenticatedUserResponse(principal, fullName, tenant);
 
         return new AuthTokenResponse(
                 accessToken,

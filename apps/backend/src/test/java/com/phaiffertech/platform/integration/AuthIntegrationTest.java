@@ -28,6 +28,10 @@ class AuthIntegrationTest extends AbstractIntegrationTest {
         assertTrue(data.path("refreshToken").asText().length() > 20);
         assertTrue(data.path("user").path("permissions").isArray());
         assertTrue(data.path("user").path("permissions").toString().contains("crm.contact.read"));
+        assertEquals("default", data.path("user").path("tenantCode").asText());
+        assertEquals("Default Tenant", data.path("user").path("tenantName").asText());
+        assertTrue(data.path("user").path("platformOwner").asBoolean());
+        assertTrue(data.path("user").path("platformAdmin").asBoolean());
     }
 
     @Test
@@ -60,5 +64,7 @@ class AuthIntegrationTest extends AbstractIntegrationTest {
 
         assertEquals(session.userId(), user.path("userId").asText());
         assertEquals("admin@local.test", user.path("email").asText());
+        assertEquals("default", user.path("tenantCode").asText());
+        assertEquals("SYSTEM", user.path("tenantDefaultThemeMode").asText());
     }
 }

@@ -12,6 +12,16 @@ vi.mock('@/shared/auth/usePermissions', () => ({
   })
 }));
 
+vi.mock('@/shared/auth/use-auth', () => ({
+  useAuth: () => ({
+    session: {
+      user: {
+        platformAdmin: false
+      }
+    }
+  })
+}));
+
 vi.mock('@/shared/services/user-service', () => ({
   userService: {
     list: vi.fn(),
