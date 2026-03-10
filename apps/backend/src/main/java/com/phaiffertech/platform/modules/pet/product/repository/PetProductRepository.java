@@ -2,6 +2,8 @@ package com.phaiffertech.platform.modules.pet.product.repository;
 
 import com.phaiffertech.platform.modules.pet.product.domain.PetProduct;
 import com.phaiffertech.platform.shared.crud.BaseTenantCrudRepository;
+import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import org.springframework.data.domain.Page;
@@ -33,6 +35,8 @@ public interface PetProductRepository extends JpaRepository<PetProduct, UUID>, B
     boolean existsBySkuAndTenantIdAndIdNot(String sku, UUID tenantId, UUID id);
 
     Optional<PetProduct> findByIdAndTenantId(UUID id, UUID tenantId);
+
+    List<PetProduct> findAllByTenantIdAndIdIn(UUID tenantId, Collection<UUID> ids);
 
     @Query(value = """
             SELECT *

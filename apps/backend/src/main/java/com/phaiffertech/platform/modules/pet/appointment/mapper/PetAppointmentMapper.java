@@ -43,13 +43,25 @@ public final class PetAppointmentMapper implements BaseCrudMapper<
 
     @Override
     public PetAppointmentResponse toResponse(PetAppointment appointment) {
+        return toResponse(appointment, null, null, null);
+    }
+
+    public PetAppointmentResponse toResponse(
+            PetAppointment appointment,
+            String clientName,
+            String petName,
+            String professionalName
+    ) {
         return new PetAppointmentResponse(
                 appointment.getId(),
                 appointment.getClientId(),
+                clientName,
                 appointment.getPetId(),
+                petName,
                 appointment.getServiceId(),
                 appointment.getServiceName(),
                 appointment.getProfessionalId(),
+                professionalName,
                 appointment.getScheduledAt(),
                 appointment.getStatus(),
                 appointment.getNotes(),

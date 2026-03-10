@@ -6,7 +6,9 @@ import java.util.UUID;
 public record PetMedicalRecordResponse(
         UUID id,
         UUID petId,
+        String petName,
         UUID professionalId,
+        String professionalName,
         String description,
         String diagnosis,
         String treatment,

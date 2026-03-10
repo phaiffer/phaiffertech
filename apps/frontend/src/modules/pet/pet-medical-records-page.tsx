@@ -538,12 +538,14 @@ export function PetMedicalRecordsPage() {
     {
       key: 'pet',
       header: 'Pet',
-      render: (item) => resolvePetLookupLabel(pets, item.petId, (pet) => pet.name, 'Pet', lookupIssues.some((issue) => issue.key === 'pets'))
+      render: (item) =>
+        item.petName ?? resolvePetLookupLabel(pets, item.petId, (pet) => pet.name, 'Pet', lookupIssues.some((issue) => issue.key === 'pets'))
     },
     {
       key: 'professional',
       header: 'Profissional',
       render: (item) =>
+        item.professionalName ??
         resolvePetLookupLabel(
           professionals,
           item.professionalId,
@@ -585,7 +587,8 @@ export function PetMedicalRecordsPage() {
     {
       key: 'pet',
       header: 'Pet',
-      render: (item) => resolvePetLookupLabel(pets, item.petId, (pet) => pet.name, 'Pet', lookupIssues.some((issue) => issue.key === 'pets'))
+      render: (item) =>
+        item.petName ?? resolvePetLookupLabel(pets, item.petId, (pet) => pet.name, 'Pet', lookupIssues.some((issue) => issue.key === 'pets'))
     },
     { key: 'vaccineName', header: 'Vacina', render: (item) => item.vaccineName },
     {
@@ -625,13 +628,15 @@ export function PetMedicalRecordsPage() {
     {
       key: 'pet',
       header: 'Pet',
-      render: (item) => resolvePetLookupLabel(pets, item.petId, (pet) => pet.name, 'Pet', lookupIssues.some((issue) => issue.key === 'pets'))
+      render: (item) =>
+        item.petName ?? resolvePetLookupLabel(pets, item.petId, (pet) => pet.name, 'Pet', lookupIssues.some((issue) => issue.key === 'pets'))
     },
     { key: 'medication', header: 'Medicamento', render: (item) => item.medication },
     {
       key: 'professional',
       header: 'Profissional',
       render: (item) =>
+        item.professionalName ??
         resolvePetLookupLabel(
           professionals,
           item.professionalId,

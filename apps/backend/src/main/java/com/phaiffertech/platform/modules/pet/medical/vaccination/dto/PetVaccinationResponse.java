@@ -6,6 +6,7 @@ import java.util.UUID;
 public record PetVaccinationResponse(
         UUID id,
         UUID petId,
+        String petName,
         String vaccineName,
         Instant appliedAt,
         Instant nextDueAt,

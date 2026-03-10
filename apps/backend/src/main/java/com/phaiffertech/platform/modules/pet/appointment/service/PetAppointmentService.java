@@ -7,6 +7,7 @@ import com.phaiffertech.platform.modules.pet.appointment.dto.PetAppointmentRespo
 import com.phaiffertech.platform.modules.pet.appointment.dto.PetAppointmentUpdateRequest;
 import com.phaiffertech.platform.modules.pet.appointment.mapper.PetAppointmentMapper;
 import com.phaiffertech.platform.modules.pet.appointment.repository.PetAppointmentRepository;
+import com.phaiffertech.platform.modules.pet.client.domain.PetClient;
 import com.phaiffertech.platform.modules.pet.client.repository.PetClientRepository;
 import com.phaiffertech.platform.modules.pet.petprofile.domain.PetProfile;
 import com.phaiffertech.platform.modules.pet.petprofile.repository.PetProfileRepository;
@@ -25,7 +26,11 @@ import com.phaiffertech.platform.shared.pagination.PageRequestDto;
 import com.phaiffertech.platform.shared.pagination.PageResponseDto;
 import com.phaiffertech.platform.shared.pagination.PaginationUtils;
 import java.time.Instant;
+import java.util.Collection;
+import java.util.Map;
 import java.util.UUID;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
@@ -77,7 +82,7 @@ public class PetAppointmentService extends BaseTenantCrudService<
     public PetAppointmentResponse create(PetAppointmentCreateRequest request) {
         PetAppointmentResponse response = doCreate(request);
         platformMetricsService.incrementPetAppointmentsCreated();
-        return response;
+        return getById(response.id());
     }
 
     @Transactional(readOnly = true)
@@ -91,9 +96,10 @@ public class PetAppointmentService extends BaseTenantCrudService<
             UUID petId,
             UUID serviceId
     ) {
+        UUID tenantId = currentTenantId();
         BasePageQuery query = BasePageQuery.of(pageRequest, Sort.by(Sort.Direction.DESC, "scheduledAt"));
-        Page<PetAppointmentResponse> mapped = repository.findAllByTenantIdAndSearch(
-                currentTenantId(),
+        Page<PetAppointment> appointments = repository.findAllByTenantIdAndSearch(
+                tenantId,
                 BaseSearchSpecificationBuilder.normalizeUpper(status),
                 professionalId,
                 clientId,
@@ -103,20 +109,33 @@ public class PetAppointmentService extends BaseTenantCrudService<
                 scheduledTo,
                 query.search(),
                 query.pageable()
-        ).map(this::toValidatedResponse);
+        );
+        Map<UUID, String> clientNames = loadClientNames(tenantId, appointments.getContent().stream()
+                .map(PetAppointment::getClientId)
+                .collect(Collectors.toSet()));
+        Map<UUID, String> petNames = loadPetNames(tenantId, appointments.getContent().stream()
+                .map(PetAppointment::getPetId)
+                .collect(Collectors.toSet()));
+        Map<UUID, String> professionalNames = loadProfessionalNames(tenantId, appointments.getContent().stream()
+                .map(PetAppointment::getProfessionalId)
+                .collect(Collectors.toSet()));
+        Page<PetAppointmentResponse> mapped = appointments.map(appointment ->
+                toValidatedResponse(appointment, clientNames, petNames, professionalNames));
 
         return PaginationUtils.fromPage(mapped);
     }
 
     @Transactional(readOnly = true)
     public PetAppointmentResponse getById(UUID id) {
-        return toValidatedResponse(getOrThrow(id, currentTenantId()));
+        UUID tenantId = currentTenantId();
+        return toValidatedResponse(getOrThrow(id, tenantId), tenantId);
     }
 
     @Transactional
     @AuditableAction(action = AuditActionType.UPDATE, entity = "pet_appointment")
     public PetAppointmentResponse update(UUID id, PetAppointmentUpdateRequest request) {
-        return doUpdate(id, request);
+        PetAppointmentResponse response = doUpdate(id, request);
+        return getById(response.id());
     }
 
     @Transactional
@@ -134,7 +153,7 @@ public class PetAppointmentService extends BaseTenantCrudService<
         beforeRestore(tenantId, entity);
         entity.setDeletedAt(null);
 
-        return toValidatedResponse(repository.save(entity));
+        return toValidatedResponse(repository.save(entity), tenantId);
     }
 
     @Override
@@ -171,9 +190,29 @@ public class PetAppointmentService extends BaseTenantCrudService<
         entity.setProfessionalId(professional.getId());
     }
 
-    private PetAppointmentResponse toValidatedResponse(PetAppointment appointment) {
+    private PetAppointmentResponse toValidatedResponse(PetAppointment appointment, UUID tenantId) {
         validateContractIntegrity(appointment);
-        return PetAppointmentMapper.INSTANCE.toResponse(appointment);
+        return PetAppointmentMapper.INSTANCE.toResponse(
+                appointment,
+                resolveClientName(petClientRepository.findByIdAndTenantId(appointment.getClientId(), tenantId).orElse(null)),
+                resolvePetName(petProfileRepository.findByIdAndTenantId(appointment.getPetId(), tenantId).orElse(null)),
+                resolveProfessionalName(petProfessionalRepository.findByIdAndTenantId(appointment.getProfessionalId(), tenantId).orElse(null))
+        );
+    }
+
+    private PetAppointmentResponse toValidatedResponse(
+            PetAppointment appointment,
+            Map<UUID, String> clientNames,
+            Map<UUID, String> petNames,
+            Map<UUID, String> professionalNames
+    ) {
+        validateContractIntegrity(appointment);
+        return PetAppointmentMapper.INSTANCE.toResponse(
+                appointment,
+                clientNames.get(appointment.getClientId()),
+                petNames.get(appointment.getPetId()),
+                professionalNames.get(appointment.getProfessionalId())
+        );
     }
 
     private void validateContractIntegrity(PetAppointment appointment) {
@@ -182,5 +221,64 @@ public class PetAppointmentService extends BaseTenantCrudService<
                     "Pet appointment data is inconsistent with the current contract and requires remediation."
             );
         }
+    }
+
+    private Map<UUID, String> loadClientNames(UUID tenantId, Collection<UUID> ids) {
+        if (ids.isEmpty()) {
+            return Map.of();
+        }
+        return toMap(
+                petClientRepository.findAllByTenantIdAndIdIn(tenantId, ids),
+                PetClient::getId,
+                this::resolveClientName
+        );
+    }
+
+    private Map<UUID, String> loadPetNames(UUID tenantId, Collection<UUID> ids) {
+        if (ids.isEmpty()) {
+            return Map.of();
+        }
+        return toMap(
+                petProfileRepository.findAllByTenantIdAndIdIn(tenantId, ids),
+                PetProfile::getId,
+                PetProfile::getName
+        );
+    }
+
+    private Map<UUID, String> loadProfessionalNames(UUID tenantId, Collection<UUID> ids) {
+        if (ids.isEmpty()) {
+            return Map.of();
+        }
+        return toMap(
+                petProfessionalRepository.findAllByTenantIdAndIdIn(tenantId, ids),
+                PetProfessional::getId,
+                PetProfessional::getName
+        );
+    }
+
+    private <E> Map<UUID, String> toMap(
+            Collection<E> entities,
+            Function<E, UUID> idResolver,
+            Function<E, String> valueResolver
+    ) {
+        return entities.stream().collect(Collectors.toMap(idResolver, valueResolver));
+    }
+
+    private String resolveClientName(PetClient client) {
+        if (client == null) {
+            return null;
+        }
+        if (client.getName() != null && !client.getName().isBlank()) {
+            return client.getName();
+        }
+        return client.getFullName();
+    }
+
+    private String resolvePetName(PetProfile profile) {
+        return profile == null ? null : profile.getName();
+    }
+
+    private String resolveProfessionalName(PetProfessional professional) {
+        return professional == null ? null : professional.getName();
     }
 }

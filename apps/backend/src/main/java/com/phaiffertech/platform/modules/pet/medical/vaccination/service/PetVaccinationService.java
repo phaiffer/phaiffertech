@@ -7,6 +7,7 @@ import com.phaiffertech.platform.modules.pet.medical.vaccination.dto.PetVaccinat
 import com.phaiffertech.platform.modules.pet.medical.vaccination.dto.PetVaccinationUpdateRequest;
 import com.phaiffertech.platform.modules.pet.medical.vaccination.mapper.PetVaccinationMapper;
 import com.phaiffertech.platform.modules.pet.medical.vaccination.repository.PetVaccinationRepository;
+import com.phaiffertech.platform.modules.pet.petprofile.domain.PetProfile;
 import com.phaiffertech.platform.modules.pet.petprofile.repository.PetProfileRepository;
 import com.phaiffertech.platform.shared.crud.BasePageQuery;
 import com.phaiffertech.platform.shared.crud.BaseTenantCrudService;
@@ -14,7 +15,13 @@ import com.phaiffertech.platform.shared.domain.enums.AuditActionType;
 import com.phaiffertech.platform.shared.exception.ResourceNotFoundException;
 import com.phaiffertech.platform.shared.pagination.PageRequestDto;
 import com.phaiffertech.platform.shared.pagination.PageResponseDto;
+import com.phaiffertech.platform.shared.pagination.PaginationUtils;
+import java.util.Collection;
+import java.util.Map;
 import java.util.UUID;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -51,32 +58,37 @@ public class PetVaccinationService extends BaseTenantCrudService<
     @Transactional
     @AuditableAction(action = AuditActionType.CREATE, entity = "pet_vaccination")
     public PetVaccinationResponse create(PetVaccinationCreateRequest request) {
-        return doCreate(request);
+        PetVaccinationResponse response = doCreate(request);
+        return getById(response.id());
     }
 
     @Transactional(readOnly = true)
     public PageResponseDto<PetVaccinationResponse> list(PageRequestDto pageRequest, UUID petId) {
-        return doList(
-                pageRequest,
-                Sort.by(Sort.Direction.DESC, "appliedAt"),
-                (BasePageQuery query) -> repository.findAllByTenantIdAndSearch(
-                        currentTenantId(),
-                        petId,
-                        query.search(),
-                        query.pageable()
-                )
+        UUID tenantId = currentTenantId();
+        BasePageQuery query = BasePageQuery.of(pageRequest, Sort.by(Sort.Direction.DESC, "appliedAt"));
+        Page<PetVaccination> vaccinations = repository.findAllByTenantIdAndSearch(
+                tenantId,
+                petId,
+                query.search(),
+                query.pageable()
         );
+        Map<UUID, String> petNames = loadPetNames(tenantId, vaccinations.getContent().stream()
+                .map(PetVaccination::getPetId)
+                .collect(Collectors.toSet()));
+        return PaginationUtils.fromPage(vaccinations.map(vaccination -> toResponse(vaccination, petNames)));
     }
 
     @Transactional(readOnly = true)
     public PetVaccinationResponse getById(UUID id) {
-        return doGetById(id);
+        UUID tenantId = currentTenantId();
+        return toResponse(getOrThrow(id, tenantId), tenantId);
     }
 
     @Transactional
     @AuditableAction(action = AuditActionType.UPDATE, entity = "pet_vaccination")
     public PetVaccinationResponse update(UUID id, PetVaccinationUpdateRequest request) {
-        return doUpdate(id, request);
+        PetVaccinationResponse response = doUpdate(id, request);
+        return getById(response.id());
     }
 
     @Transactional
@@ -88,11 +100,38 @@ public class PetVaccinationService extends BaseTenantCrudService<
     @Transactional
     @AuditableAction(action = AuditActionType.RESTORE, entity = "pet_vaccination")
     public PetVaccinationResponse restore(UUID id) {
-        return doRestore(id);
+        PetVaccinationResponse response = doRestore(id);
+        return getById(response.id());
     }
 
     private void validatePet(UUID tenantId, UUID petId) {
         petProfileRepository.findByIdAndTenantId(petId, tenantId)
                 .orElseThrow(() -> new ResourceNotFoundException("Pet profile not found for tenant."));
+    }
+
+    private PetVaccinationResponse toResponse(PetVaccination vaccination, UUID tenantId) {
+        return PetVaccinationMapper.INSTANCE.toResponse(
+                vaccination,
+                petProfileRepository.findByIdAndTenantId(vaccination.getPetId(), tenantId).map(PetProfile::getName).orElse(null)
+        );
+    }
+
+    private PetVaccinationResponse toResponse(PetVaccination vaccination, Map<UUID, String> petNames) {
+        return PetVaccinationMapper.INSTANCE.toResponse(vaccination, petNames.get(vaccination.getPetId()));
+    }
+
+    private Map<UUID, String> loadPetNames(UUID tenantId, Collection<UUID> ids) {
+        if (ids.isEmpty()) {
+            return Map.of();
+        }
+        return toMap(petProfileRepository.findAllByTenantIdAndIdIn(tenantId, ids), PetProfile::getId, PetProfile::getName);
+    }
+
+    private <E> Map<UUID, String> toMap(
+            Collection<E> entities,
+            Function<E, UUID> idResolver,
+            Function<E, String> valueResolver
+    ) {
+        return entities.stream().collect(Collectors.toMap(idResolver, valueResolver));
     }
 }

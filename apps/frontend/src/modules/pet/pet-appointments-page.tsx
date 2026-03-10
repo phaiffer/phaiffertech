@@ -379,6 +379,9 @@ export function PetAppointmentsPage() {
       key: 'client',
       header: 'Cliente',
       render: (appointment) => {
+        if (appointment.clientName) {
+          return appointment.clientName;
+        }
         return resolvePetLookupLabel(
           clients,
           appointment.clientId,
@@ -391,12 +394,15 @@ export function PetAppointmentsPage() {
     {
       key: 'pet',
       header: 'Pet',
-      render: (appointment) => resolvePetLookupLabel(profiles, appointment.petId, (profile) => profile.name, 'Pet', profilesLookupUnavailable)
+      render: (appointment) =>
+        appointment.petName ??
+        resolvePetLookupLabel(profiles, appointment.petId, (profile) => profile.name, 'Pet', profilesLookupUnavailable)
     },
     {
       key: 'professional',
       header: 'Profissional',
       render: (appointment) =>
+        appointment.professionalName ??
         resolvePetLookupLabel(
           professionals,
           appointment.professionalId,

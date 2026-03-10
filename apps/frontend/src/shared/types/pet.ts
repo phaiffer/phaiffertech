@@ -31,9 +31,12 @@ export type PetProfile = {
 export type PetAppointment = {
   id: string;
   clientId: string;
+  clientName?: string;
   petId: string;
+  petName?: string;
   serviceId: string;
   professionalId: string;
+  professionalName?: string;
   scheduledAt: string;
   serviceName: string;
   status: string;
@@ -66,7 +69,9 @@ export type PetProfessional = {
 export type PetMedicalRecord = {
   id: string;
   petId: string;
+  petName?: string;
   professionalId: string;
+  professionalName?: string;
   description: string;
   diagnosis?: string;
   treatment?: string;
@@ -77,6 +82,7 @@ export type PetMedicalRecord = {
 export type PetVaccination = {
   id: string;
   petId: string;
+  petName?: string;
   vaccineName: string;
   appliedAt: string;
   nextDueAt?: string;
@@ -88,7 +94,9 @@ export type PetVaccination = {
 export type PetPrescription = {
   id: string;
   petId: string;
+  petName?: string;
   professionalId: string;
+  professionalName?: string;
   medication: string;
   dosage?: string;
   instructions?: string;
@@ -109,6 +117,8 @@ export type PetProduct = {
 export type PetInventoryMovement = {
   id: string;
   productId: string;
+  productName?: string;
+  productSku?: string;
   movementType: string;
   quantity: number;
   notes?: string;
@@ -119,6 +129,7 @@ export type PetInventoryMovement = {
 export type PetInvoice = {
   id: string;
   clientId: string;
+  clientName?: string;
   totalAmount: number;
   status: string;
   issuedAt: string;

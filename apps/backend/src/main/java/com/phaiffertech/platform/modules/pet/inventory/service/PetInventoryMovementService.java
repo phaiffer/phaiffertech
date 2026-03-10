@@ -18,7 +18,11 @@ import com.phaiffertech.platform.shared.pagination.PageResponseDto;
 import com.phaiffertech.platform.shared.pagination.PaginationUtils;
 import com.phaiffertech.platform.shared.tenancy.TenantContext;
 import java.time.Instant;
+import java.util.Collection;
+import java.util.Map;
 import java.util.UUID;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
@@ -52,7 +56,8 @@ public class PetInventoryMovementService {
         adjustStock(product, entity.getMovementType(), entity.getQuantity(), false);
 
         productRepository.save(product);
-        return PetInventoryMovementMapper.INSTANCE.toResponse(repository.save(entity));
+        PetInventoryMovement saved = repository.save(entity);
+        return PetInventoryMovementMapper.INSTANCE.toResponse(saved, product.getName(), product.getSku());
     }
 
     @Transactional(readOnly = true)
@@ -61,21 +66,28 @@ public class PetInventoryMovementService {
             UUID productId,
             String movementType
     ) {
+        UUID tenantId = currentTenantId();
         BasePageQuery query = BasePageQuery.of(pageRequest, Sort.by(Sort.Direction.DESC, "createdAt"));
-        Page<PetInventoryMovementResponse> mapped = repository.findAllByTenantIdAndSearch(
-                currentTenantId(),
+        Page<PetInventoryMovement> movements = repository.findAllByTenantIdAndSearch(
+                tenantId,
                 productId,
                 normalizeType(movementType),
                 query.search(),
                 query.pageable()
-        ).map(PetInventoryMovementMapper.INSTANCE::toResponse);
+        );
+        Map<UUID, PetProduct> productsById = loadProducts(tenantId, movements.getContent().stream()
+                .map(PetInventoryMovement::getProductId)
+                .collect(Collectors.toSet()));
+        Page<PetInventoryMovementResponse> mapped = movements.map(movement -> toResponse(movement, productsById));
 
         return PaginationUtils.fromPage(mapped);
     }
 
     @Transactional(readOnly = true)
     public PetInventoryMovementResponse getById(UUID id) {
-        return PetInventoryMovementMapper.INSTANCE.toResponse(getOrThrow(id, currentTenantId()));
+        UUID tenantId = currentTenantId();
+        PetInventoryMovement movement = getOrThrow(id, tenantId);
+        return toResponse(movement, getProductOrThrow(movement.getProductId(), tenantId));
     }
 
     @Transactional
@@ -98,7 +110,8 @@ public class PetInventoryMovementService {
             productRepository.save(newProduct);
         }
 
-        return PetInventoryMovementMapper.INSTANCE.toResponse(repository.save(entity));
+        PetInventoryMovement saved = repository.save(entity);
+        return PetInventoryMovementMapper.INSTANCE.toResponse(saved, newProduct.getName(), newProduct.getSku());
     }
 
     @Transactional
@@ -132,7 +145,8 @@ public class PetInventoryMovementService {
         entity.setDeletedAt(null);
 
         productRepository.save(product);
-        return PetInventoryMovementMapper.INSTANCE.toResponse(repository.save(entity));
+        PetInventoryMovement saved = repository.save(entity);
+        return PetInventoryMovementMapper.INSTANCE.toResponse(saved, product.getName(), product.getSku());
     }
 
     private PetInventoryMovement getOrThrow(UUID id, UUID tenantId) {
@@ -143,6 +157,34 @@ public class PetInventoryMovementService {
     private PetProduct getProductOrThrow(UUID productId, UUID tenantId) {
         return productRepository.findByIdAndTenantId(productId, tenantId)
                 .orElseThrow(() -> new ResourceNotFoundException("Pet product not found for tenant."));
+    }
+
+    private PetInventoryMovementResponse toResponse(PetInventoryMovement movement, PetProduct product) {
+        return PetInventoryMovementMapper.INSTANCE.toResponse(movement, product.getName(), product.getSku());
+    }
+
+    private PetInventoryMovementResponse toResponse(PetInventoryMovement movement, Map<UUID, PetProduct> productsById) {
+        PetProduct product = productsById.get(movement.getProductId());
+        return PetInventoryMovementMapper.INSTANCE.toResponse(
+                movement,
+                product == null ? null : product.getName(),
+                product == null ? null : product.getSku()
+        );
+    }
+
+    private Map<UUID, PetProduct> loadProducts(UUID tenantId, Collection<UUID> ids) {
+        if (ids.isEmpty()) {
+            return Map.of();
+        }
+        return toMap(productRepository.findAllByTenantIdAndIdIn(tenantId, ids), PetProduct::getId, Function.identity());
+    }
+
+    private <E, V> Map<UUID, V> toMap(
+            Collection<E> entities,
+            Function<E, UUID> idResolver,
+            Function<E, V> valueResolver
+    ) {
+        return entities.stream().collect(Collectors.toMap(idResolver, valueResolver));
     }
 
     private void adjustStock(PetProduct product, String movementType, Integer quantity, boolean revert) {

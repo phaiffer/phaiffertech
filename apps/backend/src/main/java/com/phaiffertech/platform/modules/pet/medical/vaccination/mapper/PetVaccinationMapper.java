@@ -39,9 +39,14 @@ public final class PetVaccinationMapper implements BaseCrudMapper<
 
     @Override
     public PetVaccinationResponse toResponse(PetVaccination entity) {
+        return toResponse(entity, null);
+    }
+
+    public PetVaccinationResponse toResponse(PetVaccination entity, String petName) {
         return new PetVaccinationResponse(
                 entity.getId(),
                 entity.getPetId(),
+                petName,
                 entity.getVaccineName(),
                 entity.getAppliedAt(),
                 entity.getNextDueAt(),

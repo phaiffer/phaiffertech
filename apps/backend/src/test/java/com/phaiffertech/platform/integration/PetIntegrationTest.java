@@ -82,6 +82,9 @@ class PetIntegrationTest extends AbstractIntegrationTest {
                 "notes", "Initial appointment"
         ), session);
         assertEquals(200, createAppointment.getStatusCode().value());
+        assertEquals("Owner " + marker, requireBody(createAppointment).path("data").path("clientName").asText());
+        assertEquals("Pet " + marker, requireBody(createAppointment).path("data").path("petName").asText());
+        assertEquals("Professional " + marker, requireBody(createAppointment).path("data").path("professionalName").asText());
         String appointmentId = requireBody(createAppointment).path("data").path("id").asText();
 
         ResponseEntity<JsonNode> getPetResponse = get("/pet/pets/" + petId, session);
@@ -96,6 +99,9 @@ class PetIntegrationTest extends AbstractIntegrationTest {
         );
         assertEquals(200, listAppointments.getStatusCode().value());
         assertTrue(requireBody(listAppointments).path("data").path("items").size() >= 1);
+        assertEquals("Owner " + marker, requireBody(listAppointments).path("data").path("items").get(0).path("clientName").asText());
+        assertEquals("Pet " + marker, requireBody(listAppointments).path("data").path("items").get(0).path("petName").asText());
+        assertEquals("Professional " + marker, requireBody(listAppointments).path("data").path("items").get(0).path("professionalName").asText());
 
         ResponseEntity<JsonNode> updateAppointment = put("/pet/appointments/" + appointmentId, Map.of(
                 "clientId", clientId,
@@ -109,6 +115,9 @@ class PetIntegrationTest extends AbstractIntegrationTest {
         assertEquals(200, updateAppointment.getStatusCode().value());
         assertEquals("COMPLETED", requireBody(updateAppointment).path("data").path("status").asText());
         assertEquals(serviceId, requireBody(updateAppointment).path("data").path("serviceId").asText());
+        assertEquals("Owner " + marker, requireBody(updateAppointment).path("data").path("clientName").asText());
+        assertEquals("Pet " + marker, requireBody(updateAppointment).path("data").path("petName").asText());
+        assertEquals("Professional " + marker, requireBody(updateAppointment).path("data").path("professionalName").asText());
     }
 
     @Test
@@ -160,6 +169,8 @@ class PetIntegrationTest extends AbstractIntegrationTest {
                 "treatment", "Treatment " + marker
         ), session);
         assertEquals(200, createMedicalRecord.getStatusCode().value());
+        assertEquals("Pet " + marker, requireBody(createMedicalRecord).path("data").path("petName").asText());
+        assertEquals("Professional " + marker, requireBody(createMedicalRecord).path("data").path("professionalName").asText());
 
         ResponseEntity<JsonNode> createVaccination = post("/pet/vaccinations", Map.of(
                 "petId", petId,
@@ -169,6 +180,7 @@ class PetIntegrationTest extends AbstractIntegrationTest {
                 "notes", "Dose 1"
         ), session);
         assertEquals(200, createVaccination.getStatusCode().value());
+        assertEquals("Pet " + marker, requireBody(createVaccination).path("data").path("petName").asText());
 
         ResponseEntity<JsonNode> createPrescription = post("/pet/prescriptions", Map.of(
                 "petId", petId,
@@ -178,6 +190,8 @@ class PetIntegrationTest extends AbstractIntegrationTest {
                 "instructions", "After meals"
         ), session);
         assertEquals(200, createPrescription.getStatusCode().value());
+        assertEquals("Pet " + marker, requireBody(createPrescription).path("data").path("petName").asText());
+        assertEquals("Professional " + marker, requireBody(createPrescription).path("data").path("professionalName").asText());
 
         ResponseEntity<JsonNode> listMedicalRecords = get(
                 "/pet/medical-records?page=0&size=20&petId=" + petId + "&search=" + marker,
@@ -185,6 +199,8 @@ class PetIntegrationTest extends AbstractIntegrationTest {
         );
         assertEquals(200, listMedicalRecords.getStatusCode().value());
         assertEquals(1, requireBody(listMedicalRecords).path("data").path("items").size());
+        assertEquals("Pet " + marker, requireBody(listMedicalRecords).path("data").path("items").get(0).path("petName").asText());
+        assertEquals("Professional " + marker, requireBody(listMedicalRecords).path("data").path("items").get(0).path("professionalName").asText());
 
         ResponseEntity<JsonNode> listVaccinations = get(
                 "/pet/vaccinations?page=0&size=20&petId=" + petId + "&search=" + marker,
@@ -192,6 +208,7 @@ class PetIntegrationTest extends AbstractIntegrationTest {
         );
         assertEquals(200, listVaccinations.getStatusCode().value());
         assertEquals(1, requireBody(listVaccinations).path("data").path("items").size());
+        assertEquals("Pet " + marker, requireBody(listVaccinations).path("data").path("items").get(0).path("petName").asText());
 
         ResponseEntity<JsonNode> listPrescriptions = get(
                 "/pet/prescriptions?page=0&size=20&petId=" + petId + "&search=" + marker,
@@ -199,6 +216,8 @@ class PetIntegrationTest extends AbstractIntegrationTest {
         );
         assertEquals(200, listPrescriptions.getStatusCode().value());
         assertEquals(1, requireBody(listPrescriptions).path("data").path("items").size());
+        assertEquals("Pet " + marker, requireBody(listPrescriptions).path("data").path("items").get(0).path("petName").asText());
+        assertEquals("Professional " + marker, requireBody(listPrescriptions).path("data").path("items").get(0).path("professionalName").asText());
     }
 
     @Test
@@ -224,6 +243,8 @@ class PetIntegrationTest extends AbstractIntegrationTest {
                 "notes", "Restock " + marker
         ), session);
         assertEquals(200, createInventory.getStatusCode().value());
+        assertEquals("Product " + marker, requireBody(createInventory).path("data").path("productName").asText());
+        assertEquals(("SKU-" + marker).toUpperCase(), requireBody(createInventory).path("data").path("productSku").asText());
         String inventoryId = requireBody(createInventory).path("data").path("id").asText();
 
         ResponseEntity<JsonNode> productAfterMovement = get("/pet/products/" + productId, session);
@@ -237,17 +258,12 @@ class PetIntegrationTest extends AbstractIntegrationTest {
                 "notes", "Usage " + marker
         ), session);
         assertEquals(200, updateInventory.getStatusCode().value());
+        assertEquals("Product " + marker, requireBody(updateInventory).path("data").path("productName").asText());
+        assertEquals(("SKU-" + marker).toUpperCase(), requireBody(updateInventory).path("data").path("productSku").asText());
 
         ResponseEntity<JsonNode> productAfterUpdate = get("/pet/products/" + productId, session);
         assertEquals(200, productAfterUpdate.getStatusCode().value());
         assertEquals(8, requireBody(productAfterUpdate).path("data").path("stockQuantity").asInt());
-
-        ResponseEntity<JsonNode> deleteInventory = delete("/pet/inventory/" + inventoryId, session);
-        assertEquals(200, deleteInventory.getStatusCode().value());
-
-        ResponseEntity<JsonNode> productAfterDelete = get("/pet/products/" + productId, session);
-        assertEquals(200, productAfterDelete.getStatusCode().value());
-        assertEquals(10, requireBody(productAfterDelete).path("data").path("stockQuantity").asInt());
 
         ResponseEntity<JsonNode> createInvoice = post("/pet/invoices", Map.of(
                 "clientId", clientId,
@@ -256,11 +272,28 @@ class PetIntegrationTest extends AbstractIntegrationTest {
                 "issuedAt", Instant.now().toString()
         ), session);
         assertEquals(200, createInvoice.getStatusCode().value());
+        assertEquals("Owner " + marker, requireBody(createInvoice).path("data").path("clientName").asText());
         String invoiceId = requireBody(createInvoice).path("data").path("id").asText();
 
         ResponseEntity<JsonNode> listProducts = get("/pet/products?page=0&size=20&search=" + marker, session);
         assertEquals(200, listProducts.getStatusCode().value());
         assertTrue(requireBody(listProducts).path("data").path("items").size() >= 1);
+
+        ResponseEntity<JsonNode> listInventoryBeforeDelete = get(
+                "/pet/inventory?page=0&size=20&productId=" + productId + "&search=" + marker,
+                session
+        );
+        assertEquals(200, listInventoryBeforeDelete.getStatusCode().value());
+        assertEquals(1, requireBody(listInventoryBeforeDelete).path("data").path("items").size());
+        assertEquals("Product " + marker, requireBody(listInventoryBeforeDelete).path("data").path("items").get(0).path("productName").asText());
+        assertEquals(("SKU-" + marker).toUpperCase(), requireBody(listInventoryBeforeDelete).path("data").path("items").get(0).path("productSku").asText());
+
+        ResponseEntity<JsonNode> deleteInventory = delete("/pet/inventory/" + inventoryId, session);
+        assertEquals(200, deleteInventory.getStatusCode().value());
+
+        ResponseEntity<JsonNode> productAfterDelete = get("/pet/products/" + productId, session);
+        assertEquals(200, productAfterDelete.getStatusCode().value());
+        assertEquals(10, requireBody(productAfterDelete).path("data").path("stockQuantity").asInt());
 
         ResponseEntity<JsonNode> listInventory = get(
                 "/pet/inventory?page=0&size=20&productId=" + productId + "&search=" + marker,
@@ -275,10 +308,12 @@ class PetIntegrationTest extends AbstractIntegrationTest {
         );
         assertEquals(200, listInvoices.getStatusCode().value());
         assertEquals(1, requireBody(listInvoices).path("data").path("items").size());
+        assertEquals("Owner " + marker, requireBody(listInvoices).path("data").path("items").get(0).path("clientName").asText());
 
         ResponseEntity<JsonNode> getInvoice = get("/pet/invoices/" + invoiceId, session);
         assertEquals(200, getInvoice.getStatusCode().value());
         assertEquals("PAID", requireBody(getInvoice).path("data").path("status").asText());
+        assertEquals("Owner " + marker, requireBody(getInvoice).path("data").path("clientName").asText());
     }
 
     @Test

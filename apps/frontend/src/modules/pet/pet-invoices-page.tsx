@@ -227,6 +227,7 @@ export function PetInvoicesPage() {
       key: 'client',
       header: 'Cliente',
       render: (item) =>
+        item.clientName ??
         resolvePetLookupLabel(
           clients,
           item.clientId,

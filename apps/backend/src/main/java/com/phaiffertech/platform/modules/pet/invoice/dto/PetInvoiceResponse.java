@@ -7,6 +7,7 @@ import java.util.UUID;
 public record PetInvoiceResponse(
         UUID id,
         UUID clientId,
+        String clientName,
         BigDecimal totalAmount,
         String status,
         Instant issuedAt,

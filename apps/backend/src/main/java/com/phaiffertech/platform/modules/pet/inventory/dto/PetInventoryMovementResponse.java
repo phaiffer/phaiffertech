@@ -6,6 +6,8 @@ import java.util.UUID;
 public record PetInventoryMovementResponse(
         UUID id,
         UUID productId,
+        String productName,
+        String productSku,
         String movementType,
         Integer quantity,
         String notes,

@@ -39,10 +39,20 @@ public final class PetPrescriptionMapper implements BaseCrudMapper<
 
     @Override
     public PetPrescriptionResponse toResponse(PetPrescription entity) {
+        return toResponse(entity, null, null);
+    }
+
+    public PetPrescriptionResponse toResponse(
+            PetPrescription entity,
+            String petName,
+            String professionalName
+    ) {
         return new PetPrescriptionResponse(
                 entity.getId(),
                 entity.getPetId(),
+                petName,
                 entity.getProfessionalId(),
+                professionalName,
                 entity.getMedication(),
                 entity.getDosage(),
                 entity.getInstructions(),

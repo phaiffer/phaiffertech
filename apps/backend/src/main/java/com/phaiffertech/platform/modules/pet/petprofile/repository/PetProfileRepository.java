@@ -2,6 +2,8 @@ package com.phaiffertech.platform.modules.pet.petprofile.repository;
 
 import com.phaiffertech.platform.modules.pet.petprofile.domain.PetProfile;
 import com.phaiffertech.platform.shared.crud.BaseTenantCrudRepository;
+import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import org.springframework.data.domain.Page;
@@ -33,6 +35,8 @@ public interface PetProfileRepository extends JpaRepository<PetProfile, UUID>, B
     );
 
     Optional<PetProfile> findByIdAndTenantId(UUID id, UUID tenantId);
+
+    List<PetProfile> findAllByTenantIdAndIdIn(UUID tenantId, Collection<UUID> ids);
 
     @Query(value = """
             SELECT *

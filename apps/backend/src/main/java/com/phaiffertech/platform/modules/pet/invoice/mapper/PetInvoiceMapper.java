@@ -38,9 +38,14 @@ public final class PetInvoiceMapper implements BaseCrudMapper<
 
     @Override
     public PetInvoiceResponse toResponse(PetInvoice entity) {
+        return toResponse(entity, null);
+    }
+
+    public PetInvoiceResponse toResponse(PetInvoice entity, String clientName) {
         return new PetInvoiceResponse(
                 entity.getId(),
                 entity.getClientId(),
+                clientName,
                 entity.getTotalAmount(),
                 entity.getStatus(),
                 entity.getIssuedAt(),

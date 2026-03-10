@@ -39,10 +39,20 @@ public final class PetMedicalRecordMapper implements BaseCrudMapper<
 
     @Override
     public PetMedicalRecordResponse toResponse(PetMedicalRecord entity) {
+        return toResponse(entity, null, null);
+    }
+
+    public PetMedicalRecordResponse toResponse(
+            PetMedicalRecord entity,
+            String petName,
+            String professionalName
+    ) {
         return new PetMedicalRecordResponse(
                 entity.getId(),
                 entity.getPetId(),
+                petName,
                 entity.getProfessionalId(),
+                professionalName,
                 entity.getDescription(),
                 entity.getDiagnosis(),
                 entity.getTreatment(),

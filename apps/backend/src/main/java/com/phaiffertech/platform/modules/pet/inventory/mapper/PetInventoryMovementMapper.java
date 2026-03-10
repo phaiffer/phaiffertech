@@ -37,9 +37,19 @@ public final class PetInventoryMovementMapper implements BaseCrudMapper<
 
     @Override
     public PetInventoryMovementResponse toResponse(PetInventoryMovement entity) {
+        return toResponse(entity, null, null);
+    }
+
+    public PetInventoryMovementResponse toResponse(
+            PetInventoryMovement entity,
+            String productName,
+            String productSku
+    ) {
         return new PetInventoryMovementResponse(
                 entity.getId(),
                 entity.getProductId(),
+                productName,
+                productSku,
                 entity.getMovementType(),
                 entity.getQuantity(),
                 entity.getNotes(),

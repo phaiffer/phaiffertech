@@ -209,8 +209,12 @@ export function PetInventoryPage() {
     {
       key: 'product',
       header: 'Produto',
-      render: (item) =>
-        resolvePetLookupLabel(products, item.productId, (product) => product.name, 'Produto', productsLookupUnavailable)
+      render: (item) => {
+        if (item.productName) {
+          return item.productSku ? `${item.productName} (${item.productSku})` : item.productName;
+        }
+        return resolvePetLookupLabel(products, item.productId, (product) => product.name, 'Produto', productsLookupUnavailable);
+      }
     },
     { key: 'movementType', header: 'Tipo', render: (item) => item.movementType },
     { key: 'quantity', header: 'Quantidade', render: (item) => String(item.quantity) },
