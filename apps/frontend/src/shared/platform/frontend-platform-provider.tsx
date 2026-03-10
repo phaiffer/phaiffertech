@@ -134,7 +134,7 @@ export function FrontendPlatformProvider({ children }: { children: ReactNode }) 
         accessLabel: canManagePlatformAdministration ? 'Platform owner tenant' : 'Contracted SaaS workspace',
         isPlatformOwnerTenant,
         hasSystemAdminRole,
-        hasFullPlatformVisibility: isPlatformOwnerTenant || hasSystemAdminRole || canManagePlatformAdministration,
+        hasFullPlatformVisibility: isPlatformOwnerTenant,
         canManagePlatformAdministration
       },
       modules: {

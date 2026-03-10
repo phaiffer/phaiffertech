@@ -142,4 +142,24 @@ describe('FrontendPlatformProvider', () => {
     fireEvent.click(screen.getByRole('button', { name: 'set-dark' }));
     expect(screen.getByTestId('theme-mode').textContent).toBe('dark');
   });
+
+  it('keeps full platform visibility restricted to the platform-owner tenant', async () => {
+    currentUser.role = 'SYS_ADMIN';
+    currentUser.roles = ['SYS_ADMIN'];
+    currentUser.platformOwner = false;
+    currentUser.platformAdmin = false;
+
+    render(
+      <FrontendPlatformProvider>
+        <PlatformConsumer />
+      </FrontendPlatformProvider>
+    );
+
+    await waitFor(() => {
+      expect(document.documentElement.dataset.theme).toBe('light');
+    });
+
+    expect(screen.getByTestId('workspace-label').textContent).toBe('Tenant workspace');
+    expect(screen.getByTestId('full-visibility').textContent).toBe('no');
+  });
 });
