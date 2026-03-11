@@ -13,7 +13,7 @@ INSERT INTO pet_services (
     updated_by
 )
 SELECT
-    UUID(),
+    gen_random_uuid(),
     a.tenant_id,
     COALESCE(NULLIF(TRIM(a.service_name), ''), 'General Service'),
     'Recovered from legacy appointment integrity hardening',
@@ -32,11 +32,11 @@ WHERE a.service_id IS NULL
 GROUP BY a.tenant_id, COALESCE(NULLIF(TRIM(a.service_name), ''), 'General Service');
 
 UPDATE pet_appointments a
-JOIN pet_services s
-    ON s.tenant_id = a.tenant_id
-   AND s.name = COALESCE(NULLIF(TRIM(a.service_name), ''), 'General Service')
-SET a.service_id = s.id
-WHERE a.service_id IS NULL;
+SET service_id = s.id
+FROM pet_services s
+WHERE s.tenant_id = a.tenant_id
+  AND s.name = COALESCE(NULLIF(TRIM(a.service_name), ''), 'General Service')
+  AND a.service_id IS NULL;
 
 ALTER TABLE pet_appointments
-    MODIFY COLUMN service_id CHAR(36) NOT NULL;
+    ALTER COLUMN service_id SET NOT NULL;

@@ -16,7 +16,7 @@ import org.hibernate.annotations.Where;
 @Where(clause = "deleted_at IS NULL")
 public class PetInvoice extends BaseTenantEntity {
 
-    @Column(name = "client_id", nullable = false, columnDefinition = "char(36)")
+    @Column(name = "client_id", nullable = false)
     private UUID clientId;
 
     @Column(name = "total_amount", nullable = false, precision = 10, scale = 2)

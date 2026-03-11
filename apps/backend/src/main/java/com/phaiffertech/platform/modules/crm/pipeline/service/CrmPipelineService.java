@@ -37,7 +37,7 @@ public class CrmPipelineService {
         UUID tenantId = TenantContext.getRequiredTenantId();
         Page<CrmPipelineStageResponse> result = stageRepository.findAllByTenantIdAndSearch(
                         tenantId,
-                        pageRequest.normalizedSearch(),
+                        pageRequest.normalizedSearchPattern(),
                         PaginationUtils.toPageable(pageRequest, Sort.by(Sort.Direction.ASC, "position"))
                 )
                 .map(CrmPipelineMapper::toStageResponse);

@@ -1,5 +1,6 @@
 package com.phaiffertech.platform.modules.iot.monitoring.repository;
 
+import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -70,7 +71,7 @@ public class IotMonitoringRepository {
                 ORDER BY total DESC, bucket ASC
                 """,
                 tenantId,
-                from
+                Timestamp.from(from)
         );
     }
 
@@ -89,13 +90,13 @@ public class IotMonitoringRepository {
     }
 
     private long count(String sql, UUID tenantId) {
-        Long value = jdbcTemplate.queryForObject(sql, Long.class, tenantId.toString());
+        Long value = jdbcTemplate.queryForObject(sql, Long.class, tenantId);
         return value == null ? 0L : value;
     }
 
     private Map<String, Long> groupBy(String sql, UUID tenantId, Object... additionalArgs) {
         Object[] args = new Object[additionalArgs.length + 1];
-        args[0] = tenantId.toString();
+        args[0] = tenantId;
         System.arraycopy(additionalArgs, 0, args, 1, additionalArgs.length);
 
         return jdbcTemplate.query(

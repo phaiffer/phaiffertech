@@ -10,7 +10,7 @@ import java.util.UUID;
 @Table(name = "tenant_modules")
 public class TenantModule extends BaseTenantEntity {
 
-    @Column(name = "module_definition_id", nullable = false, columnDefinition = "char(36)")
+    @Column(name = "module_definition_id", nullable = false)
     private UUID moduleDefinitionId;
 
     @Column(name = "enabled", nullable = false)

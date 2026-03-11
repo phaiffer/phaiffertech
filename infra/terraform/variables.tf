@@ -79,14 +79,62 @@ variable "ssh_public_key" {
   description = "SSH public key for compute access"
 }
 
-variable "mysql_admin_username" {
+variable "postgresql_db_version" {
   type        = string
-  description = "MySQL admin username"
+  description = "OCI PostgreSQL database version"
+  default     = "14"
+}
+
+variable "postgresql_display_name" {
+  type        = string
+  description = "OCI PostgreSQL display name"
+  default     = "platform-postgresql"
+}
+
+variable "postgresql_shape" {
+  type        = string
+  description = "OCI PostgreSQL compute shape"
+  default     = "PostgreSQL.VM.Standard.E4.2.32GB"
+}
+
+variable "postgresql_instance_count" {
+  type        = number
+  description = "OCI PostgreSQL instance count"
+  default     = 1
+}
+
+variable "postgresql_instance_ocpu_count" {
+  type        = number
+  description = "OCI PostgreSQL instance OCPU count"
+  default     = 2
+}
+
+variable "postgresql_instance_memory_gb" {
+  type        = number
+  description = "OCI PostgreSQL instance memory in GB"
+  default     = 32
+}
+
+variable "postgresql_storage_regionally_durable" {
+  type        = bool
+  description = "OCI PostgreSQL storage durability mode"
+  default     = false
+}
+
+variable "postgresql_storage_system_type" {
+  type        = string
+  description = "OCI PostgreSQL storage system type"
+  default     = "OCI_OPTIMIZED_STORAGE"
+}
+
+variable "postgresql_admin_username" {
+  type        = string
+  description = "PostgreSQL admin username"
   default     = "platform_admin"
 }
 
-variable "mysql_admin_password" {
+variable "postgresql_admin_password" {
   type        = string
-  description = "MySQL admin password"
+  description = "PostgreSQL admin password"
   sensitive   = true
 }

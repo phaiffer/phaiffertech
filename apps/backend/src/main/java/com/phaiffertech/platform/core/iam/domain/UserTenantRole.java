@@ -13,13 +13,13 @@ import java.util.UUID;
 public class UserTenantRole {
 
     @Id
-    @Column(name = "id", nullable = false, updatable = false, columnDefinition = "char(36)")
+    @Column(name = "id", nullable = false, updatable = false)
     private UUID id;
 
-    @Column(name = "user_tenant_id", nullable = false, columnDefinition = "char(36)")
+    @Column(name = "user_tenant_id", nullable = false)
     private UUID userTenantId;
 
-    @Column(name = "role_id", nullable = false, columnDefinition = "char(36)")
+    @Column(name = "role_id", nullable = false)
     private UUID roleId;
 
     @Column(name = "created_at", nullable = false, updatable = false)

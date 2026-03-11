@@ -34,10 +34,10 @@ public interface PetMedicalRecordRepository
               AND (:petId IS NULL OR r.petId = :petId)
               AND (:professionalId IS NULL OR r.professionalId = :professionalId)
               AND (:appointmentId IS NULL OR r.appointmentId = :appointmentId)
-              AND (:search IS NULL OR
-                   LOWER(r.description) LIKE LOWER(CONCAT('%', :search, '%')) OR
-                   LOWER(COALESCE(r.diagnosis, '')) LIKE LOWER(CONCAT('%', :search, '%')) OR
-                   LOWER(COALESCE(r.treatment, '')) LIKE LOWER(CONCAT('%', :search, '%')))
+              AND (:search = '%' OR
+                   LOWER(r.description) LIKE :search OR
+                   LOWER(COALESCE(r.diagnosis, '')) LIKE :search OR
+                   LOWER(COALESCE(r.treatment, '')) LIKE :search)
             """)
     Page<PetMedicalRecord> findAllByTenantIdAndSearch(
             @Param("tenantId") UUID tenantId,

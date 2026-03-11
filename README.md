@@ -12,7 +12,7 @@ Unified multi-tenant SaaS platform (CRM, Pet and IoT) built as a modular monolit
 - Micrometer + Prometheus + OpenTelemetry tracing bridge
 - Spring Data JPA
 - Flyway
-- MySQL 8
+- PostgreSQL 16
 - Springdoc OpenAPI
 - Testcontainers (integration tests)
 
@@ -483,7 +483,7 @@ Main targets:
 
 ## Docker Profiles
 
-- default (sem profile): mysql + backend + frontend
+- default (sem profile): postgres + backend + frontend
 - `tools`: adminer
 - `observability`: prometheus + grafana + loki
 
@@ -519,7 +519,7 @@ make test-integration
 ```
 
 Notes:
-- Testcontainers + MySQL are mandatory for integration tests.
+- Testcontainers + PostgreSQL are mandatory for integration tests.
 - Integration test bootstrap sets Docker `api.version=1.44` by default (can be overridden with `DOCKER_API_VERSION`).
 
 ## CI/CD
@@ -537,7 +537,7 @@ Initial IaC base is available at `infra/terraform`:
 - `variables.tf`
 - `network.tf`
 - `compute.tf`
-- `mysql.tf`
+- `postgresql.tf`
 - `outputs.tf`
 
 ## Dev Credentials
@@ -548,7 +548,12 @@ Initial IaC base is available at `infra/terraform`:
 
 ## Default Ports
 
-- MySQL: `3306`
+- PostgreSQL: `5432`
 - Backend: `8080`
 - Frontend: `3000`
 - Adminer: `8081`
+
+## PostgreSQL Runbook
+
+Operational runbook:
+- [docs/platform/postgresql-migration-runbook.pt-BR.md](/home/willian/IdeaProjects/phaiffertech/docs/platform/postgresql-migration-runbook.pt-BR.md)

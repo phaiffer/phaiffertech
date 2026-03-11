@@ -1,39 +1,40 @@
 -- PET v1 schema evolution.
 
 ALTER TABLE pet_clients
-    ADD COLUMN name VARCHAR(150) NULL AFTER tenant_id,
-    ADD COLUMN document VARCHAR(60) NULL AFTER phone,
-    ADD COLUMN status VARCHAR(40) NOT NULL DEFAULT 'ACTIVE' AFTER document;
+    ADD COLUMN name VARCHAR(150) NULL,
+    ADD COLUMN document VARCHAR(60) NULL,
+    ADD COLUMN status VARCHAR(40) NOT NULL DEFAULT 'ACTIVE';
 
 UPDATE pet_clients
 SET name = full_name
 WHERE name IS NULL;
 
 ALTER TABLE pet_clients
-    MODIFY COLUMN name VARCHAR(150) NOT NULL;
+    ALTER COLUMN name SET NOT NULL;
 
 CREATE INDEX idx_pet_clients_name_status ON pet_clients (tenant_id, name, status);
 CREATE INDEX idx_pet_clients_document ON pet_clients (tenant_id, document);
 
 ALTER TABLE pet_profiles
-    ADD COLUMN gender VARCHAR(30) NULL AFTER birth_date,
-    ADD COLUMN weight DECIMAL(10,2) NULL AFTER gender,
-    ADD COLUMN notes TEXT NULL AFTER weight;
+    ADD COLUMN gender VARCHAR(30) NULL,
+    ADD COLUMN weight DECIMAL(10,2) NULL,
+    ADD COLUMN notes TEXT NULL;
 
 CREATE INDEX idx_pet_profiles_species_breed ON pet_profiles (tenant_id, species, breed);
 
 ALTER TABLE pet_appointments
-    ADD COLUMN client_id CHAR(36) NULL AFTER tenant_id,
-    ADD COLUMN service_name VARCHAR(120) NOT NULL DEFAULT 'GENERAL' AFTER scheduled_at,
-    ADD COLUMN assigned_user_id CHAR(36) NULL AFTER notes;
+    ADD COLUMN client_id UUID NULL,
+    ADD COLUMN service_name VARCHAR(120) NOT NULL DEFAULT 'GENERAL',
+    ADD COLUMN assigned_user_id UUID NULL;
 
 UPDATE pet_appointments a
-JOIN pet_profiles p ON p.id = a.pet_id
-SET a.client_id = p.client_id
-WHERE a.client_id IS NULL;
+SET client_id = p.client_id
+FROM pet_profiles p
+WHERE p.id = a.pet_id
+  AND a.client_id IS NULL;
 
 ALTER TABLE pet_appointments
-    MODIFY COLUMN client_id CHAR(36) NOT NULL;
+    ALTER COLUMN client_id SET NOT NULL;
 
 ALTER TABLE pet_appointments
     ADD CONSTRAINT fk_pet_appointments_client FOREIGN KEY (client_id) REFERENCES pet_clients (id),

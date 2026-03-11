@@ -47,7 +47,7 @@ public class CrmDashboardRepository {
     }
 
     private long count(String sql, UUID tenantId) {
-        Long value = jdbcTemplate.queryForObject(sql, Long.class, tenantId.toString());
+        Long value = jdbcTemplate.queryForObject(sql, Long.class, tenantId);
         return value == null ? 0L : value;
     }
 
@@ -62,7 +62,7 @@ public class CrmDashboardRepository {
                     }
                     return result;
                 },
-                tenantId.toString()
+                tenantId
         );
     }
 }

@@ -21,14 +21,14 @@ public interface IotDeviceRepository extends JpaRepository<IotDevice, UUID>, Bas
             SELECT d
             FROM IotDevice d
             WHERE d.tenantId = :tenantId
-              AND (:type IS NULL OR UPPER(COALESCE(d.type, '')) = UPPER(:type))
-              AND (:status IS NULL OR UPPER(d.status) = UPPER(:status))
-              AND (:search IS NULL OR
-                   LOWER(d.name) LIKE LOWER(CONCAT('%', :search, '%')) OR
-                   LOWER(d.identifier) LIKE LOWER(CONCAT('%', :search, '%')) OR
-                   LOWER(COALESCE(d.location, '')) LIKE LOWER(CONCAT('%', :search, '%')) OR
-                   LOWER(COALESCE(d.description, '')) LIKE LOWER(CONCAT('%', :search, '%')) OR
-                   LOWER(COALESCE(d.status, '')) LIKE LOWER(CONCAT('%', :search, '%')))
+              AND (:type IS NULL OR COALESCE(d.type, '') = :type)
+              AND (:status IS NULL OR d.status = :status)
+              AND (:search = '%' OR
+                   LOWER(d.name) LIKE :search OR
+                   LOWER(d.identifier) LIKE :search OR
+                   LOWER(COALESCE(d.location, '')) LIKE :search OR
+                   LOWER(COALESCE(d.description, '')) LIKE :search OR
+                   LOWER(COALESCE(d.status, '')) LIKE :search)
             """)
     Page<IotDevice> findAllByTenantIdAndSearch(
             @Param("tenantId") UUID tenantId,

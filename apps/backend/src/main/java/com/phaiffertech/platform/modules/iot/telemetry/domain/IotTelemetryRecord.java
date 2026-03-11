@@ -16,10 +16,10 @@ import org.hibernate.annotations.Where;
 @Where(clause = "deleted_at IS NULL")
 public class IotTelemetryRecord extends BaseTenantEntity {
 
-    @Column(name = "device_id", nullable = false, columnDefinition = "char(36)")
+    @Column(name = "device_id", nullable = false)
     private UUID deviceId;
 
-    @Column(name = "register_id", columnDefinition = "char(36)")
+    @Column(name = "register_id")
     private UUID registerId;
 
     @Column(name = "metric_name", nullable = false, length = 80)

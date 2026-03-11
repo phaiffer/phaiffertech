@@ -29,13 +29,13 @@ public class CrmLead extends BaseTenantEntity {
     @Column(name = "status", nullable = false, length = 40)
     private String status = "NEW";
 
-    @Column(name = "assigned_user_id", columnDefinition = "char(36)")
+    @Column(name = "assigned_user_id")
     private UUID assignedUserId;
 
-    @Column(name = "company_id", columnDefinition = "char(36)")
+    @Column(name = "company_id")
     private UUID companyId;
 
-    @Column(name = "contact_id", columnDefinition = "char(36)")
+    @Column(name = "contact_id")
     private UUID contactId;
 
     @Column(name = "notes")

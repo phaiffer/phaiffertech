@@ -2,6 +2,7 @@ package com.phaiffertech.platform.shared.pagination;
 
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
+import java.util.Locale;
 
 public record PageRequestDto(
         @Min(0) Integer page,
@@ -25,6 +26,11 @@ public record PageRequestDto(
 
         String value = search.trim();
         return value.isEmpty() ? null : value;
+    }
+
+    public String normalizedSearchPattern() {
+        String normalized = normalizedSearch();
+        return normalized == null ? "%" : "%" + normalized.toLowerCase(Locale.ROOT) + "%";
     }
 
     public String normalizedSort() {

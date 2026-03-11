@@ -34,7 +34,7 @@ public class CrmCompanyService {
                         tenantId,
                         normalizeUpper(status),
                         ownerUserId,
-                        pageRequest.normalizedSearch(),
+                        pageRequest.normalizedSearchPattern(),
                         PaginationUtils.toPageable(pageRequest, Sort.by(Sort.Direction.DESC, "updatedAt"))
                 )
                 .map(CrmCompanyMapper::toResponse);

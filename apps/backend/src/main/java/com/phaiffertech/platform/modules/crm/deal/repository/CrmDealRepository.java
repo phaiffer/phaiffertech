@@ -14,15 +14,15 @@ public interface CrmDealRepository extends JpaRepository<CrmDeal, UUID> {
             SELECT d
             FROM CrmDeal d
             WHERE d.tenantId = :tenantId
-              AND (:status IS NULL OR UPPER(d.status) = UPPER(:status))
+              AND (:status IS NULL OR d.status = :status)
               AND (:companyId IS NULL OR d.companyId = :companyId)
               AND (:pipelineStageId IS NULL OR d.pipelineStageId = :pipelineStageId)
               AND (:ownerUserId IS NULL OR d.ownerUserId = :ownerUserId)
-              AND (:search IS NULL OR
-                   LOWER(d.title) LIKE LOWER(CONCAT('%', :search, '%')) OR
-                   LOWER(COALESCE(d.description, '')) LIKE LOWER(CONCAT('%', :search, '%')) OR
-                   LOWER(COALESCE(d.currency, '')) LIKE LOWER(CONCAT('%', :search, '%')) OR
-                   LOWER(COALESCE(d.status, '')) LIKE LOWER(CONCAT('%', :search, '%')))
+              AND (:search = '%' OR
+                   LOWER(d.title) LIKE :search OR
+                   LOWER(COALESCE(d.description, '')) LIKE :search OR
+                   LOWER(COALESCE(d.currency, '')) LIKE :search OR
+                   LOWER(COALESCE(d.status, '')) LIKE :search)
             """)
     Page<CrmDeal> findAllByTenantIdAndSearch(
             @Param("tenantId") UUID tenantId,

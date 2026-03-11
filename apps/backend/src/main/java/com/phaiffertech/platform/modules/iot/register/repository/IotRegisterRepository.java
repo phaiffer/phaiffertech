@@ -18,14 +18,14 @@ public interface IotRegisterRepository extends JpaRepository<IotRegister, UUID>,
             FROM IotRegister r
             WHERE r.tenantId = :tenantId
               AND (:deviceId IS NULL OR r.deviceId = :deviceId)
-              AND (:metricName IS NULL OR LOWER(r.metricName) = LOWER(:metricName))
-              AND (:status IS NULL OR UPPER(r.status) = UPPER(:status))
-              AND (:search IS NULL OR
-                   LOWER(r.name) LIKE LOWER(CONCAT('%', :search, '%')) OR
-                   LOWER(r.code) LIKE LOWER(CONCAT('%', :search, '%')) OR
-                   LOWER(r.metricName) LIKE LOWER(CONCAT('%', :search, '%')) OR
-                   LOWER(COALESCE(r.unit, '')) LIKE LOWER(CONCAT('%', :search, '%')) OR
-                   LOWER(COALESCE(r.status, '')) LIKE LOWER(CONCAT('%', :search, '%')))
+              AND (:metricName IS NULL OR r.metricName = :metricName)
+              AND (:status IS NULL OR r.status = :status)
+              AND (:search = '%' OR
+                   LOWER(r.name) LIKE :search OR
+                   LOWER(r.code) LIKE :search OR
+                   LOWER(r.metricName) LIKE :search OR
+                   LOWER(COALESCE(r.unit, '')) LIKE :search OR
+                   LOWER(COALESCE(r.status, '')) LIKE :search)
             """)
     Page<IotRegister> findAllByTenantIdAndSearch(
             @Param("tenantId") UUID tenantId,

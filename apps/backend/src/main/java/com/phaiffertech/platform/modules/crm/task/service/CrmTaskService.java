@@ -57,7 +57,7 @@ public class CrmTaskService {
                         contactId,
                         leadId,
                         dealId,
-                        pageRequest.normalizedSearch(),
+                        pageRequest.normalizedSearchPattern(),
                         PaginationUtils.toPageable(pageRequest, Sort.by(Sort.Direction.DESC, "dueDate"))
                 )
                 .map(task -> toResponse(tenantId, task));

@@ -15,9 +15,9 @@ public interface CrmPipelineStageRepository extends JpaRepository<CrmPipelineSta
             SELECT s
             FROM CrmPipelineStage s
             WHERE s.tenantId = :tenantId
-              AND (:search IS NULL OR
-                   LOWER(s.name) LIKE LOWER(CONCAT('%', :search, '%')) OR
-                   LOWER(COALESCE(s.code, '')) LIKE LOWER(CONCAT('%', :search, '%')))
+              AND (:search = '%' OR
+                   LOWER(s.name) LIKE :search OR
+                   LOWER(COALESCE(s.code, '')) LIKE :search)
             """)
     Page<CrmPipelineStage> findAllByTenantIdAndSearch(
             @Param("tenantId") UUID tenantId,

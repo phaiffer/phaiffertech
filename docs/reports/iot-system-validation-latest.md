@@ -1,9 +1,9 @@
 # IoT System Validation Report
 
-- Execution started: `2026-03-09T19:21:12Z`
-- Execution finished: `2026-03-09T19:22:56Z`
+- Execution started: `2026-03-09T19:28:54Z`
+- Execution finished: `2026-03-09T19:30:42Z`
 - Final status: `PASS`
-- Live API smoke mode: `false`
+- Live API smoke mode: `true`
 
 ## Commands executed
 - `cd "/home/willian/IdeaProjects/phaiffertech/apps/frontend" && npm run lint`
@@ -21,27 +21,27 @@
 
 ### Frontend tests
 - Status: `PASS`
-- Duration: `6s`
+- Duration: `5s`
 - Command: `cd "/home/willian/IdeaProjects/phaiffertech/apps/frontend" && npm run test`
 - Notes: Runs Vitest, including the IoT smoke helper test and the existing frontend suite.
 
 ### Frontend build
 - Status: `PASS`
-- Duration: `30s`
+- Duration: `27s`
 - Command: `cd "/home/willian/IdeaProjects/phaiffertech/apps/frontend" && npm run build`
 - Notes: Confirms IoT routes compile inside the production frontend build.
 
 ### Backend IoT integration suite
 - Status: `PASS`
-- Duration: `65s`
+- Duration: `72s`
 - Command: `cd "/home/willian/IdeaProjects/phaiffertech/apps/backend" && mvn -Dtest=IotIntegrationTest,IotTelemetryIntegrationTest,IotRegistersMaintenanceIntegrationTest,IotDashboardReportsIntegrationTest,IotDemoScenarioIntegrationTest test`
 - Notes: Covers devices, registers, telemetry, alarms, maintenance, dashboard, reports and demo generator flow.
 
 ### Live IoT API smoke
-- Status: `SKIPPED`
-- Duration: `0s`
+- Status: `PASS`
+- Duration: `2s`
 - Command: `cd "/home/willian/IdeaProjects/phaiffertech" && API_BASE_URL="http://localhost:8080/api/v1" TENANT_CODE="default" EMAIL="admin@local.test" PASSWORD="Admin@123" ./scripts/validation/iot_operational_validation.sh`
-- Notes: Skipped by default. Set RUN_LIVE_SMOKE=true to validate a running backend stack via HTTP.
+- Notes: Runs the live IoT API validation flow against an already running backend environment.
 
 ## Tests executed
 - Backend IoT integration tests:
@@ -63,7 +63,7 @@
 - No mandatory failures were detected.
 
 ## Pending or skipped checks
-- `Live IoT API smoke` skipped. Skipped by default. Set RUN_LIVE_SMOKE=true to validate a running backend stack via HTTP.
+- No steps were skipped.
 
 ## Limitations known
 - Frontend IoT coverage remains lightweight and focused on smoke-level helper validation plus global frontend tests.
@@ -71,4 +71,4 @@
 - The suite validates IoT readiness pragmatically; it does not create a full browser E2E framework.
 
 ## Demo readiness conclusion
-- IoT System passed code-level demo validation. Optional live API smoke was not executed in this run.
+- IoT System passed the automated validation suite and is ready for demo at the current code baseline.

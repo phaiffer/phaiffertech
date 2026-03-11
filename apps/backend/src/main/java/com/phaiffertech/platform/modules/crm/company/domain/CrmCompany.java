@@ -38,7 +38,7 @@ public class CrmCompany extends BaseTenantEntity {
     @Column(name = "status", nullable = false, length = 40)
     private String status = "ACTIVE";
 
-    @Column(name = "owner_user_id", columnDefinition = "char(36)")
+    @Column(name = "owner_user_id")
     private UUID ownerUserId;
 
     public String getName() {

@@ -15,10 +15,10 @@ import org.hibernate.annotations.Where;
 @Where(clause = "deleted_at IS NULL")
 public class IotAlarm extends BaseTenantEntity {
 
-    @Column(name = "device_id", nullable = false, columnDefinition = "char(36)")
+    @Column(name = "device_id", nullable = false)
     private UUID deviceId;
 
-    @Column(name = "register_id", columnDefinition = "char(36)")
+    @Column(name = "register_id")
     private UUID registerId;
 
     @Column(name = "code", nullable = false, length = 80)
@@ -39,7 +39,7 @@ public class IotAlarm extends BaseTenantEntity {
     @Column(name = "acknowledged_at")
     private Instant acknowledgedAt;
 
-    @Column(name = "acknowledged_by", columnDefinition = "char(36)")
+    @Column(name = "acknowledged_by")
     private UUID acknowledgedBy;
 
     public UUID getDeviceId() {

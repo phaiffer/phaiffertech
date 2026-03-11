@@ -62,7 +62,7 @@ public class CrmDealService {
                         companyId,
                         pipelineStageId,
                         ownerUserId,
-                        pageRequest.normalizedSearch(),
+                        pageRequest.normalizedSearchPattern(),
                         PaginationUtils.toPageable(pageRequest, Sort.by(Sort.Direction.DESC, "createdAt"))
                 )
                 .map(CrmDealMapper::toResponse);

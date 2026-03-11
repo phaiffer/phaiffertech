@@ -1,41 +1,42 @@
 -- IoT V1 maintenance schema, dashboard/report permissions, and role bindings.
 
 CREATE TABLE iot_maintenance (
-    id CHAR(36) PRIMARY KEY,
-    tenant_id CHAR(36) NOT NULL,
-    device_id CHAR(36) NOT NULL,
+    id UUID PRIMARY KEY,
+    tenant_id UUID NOT NULL,
+    device_id UUID NOT NULL,
     title VARCHAR(150) NOT NULL,
     description VARCHAR(255) NULL,
     status VARCHAR(40) NOT NULL DEFAULT 'PENDING',
     priority VARCHAR(40) NOT NULL DEFAULT 'MEDIUM',
-    scheduled_at TIMESTAMP NULL,
-    completed_at TIMESTAMP NULL,
-    assigned_user_id CHAR(36) NULL,
-    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    scheduled_at TIMESTAMPTZ NULL,
+    completed_at TIMESTAMPTZ NULL,
+    assigned_user_id UUID NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     created_by VARCHAR(64) NOT NULL DEFAULT 'system',
     updated_by VARCHAR(64) NOT NULL DEFAULT 'system',
-    deleted_at TIMESTAMP NULL,
+    deleted_at TIMESTAMPTZ NULL,
     CONSTRAINT fk_iot_maintenance_tenant FOREIGN KEY (tenant_id) REFERENCES tenants (id),
-    CONSTRAINT fk_iot_maintenance_device FOREIGN KEY (device_id) REFERENCES iot_devices (id),
-    INDEX idx_iot_maintenance_device_status (tenant_id, device_id, status),
-    INDEX idx_iot_maintenance_status_priority (tenant_id, status, priority),
-    INDEX idx_iot_maintenance_schedule (tenant_id, scheduled_at)
+    CONSTRAINT fk_iot_maintenance_device FOREIGN KEY (device_id) REFERENCES iot_devices (id)
 );
+
+CREATE INDEX idx_iot_maintenance_device_status ON iot_maintenance (tenant_id, device_id, status);
+CREATE INDEX idx_iot_maintenance_status_priority ON iot_maintenance (tenant_id, status, priority);
+CREATE INDEX idx_iot_maintenance_schedule ON iot_maintenance (tenant_id, scheduled_at);
 
 INSERT INTO permissions (id, code, description)
 SELECT seed.id, seed.code, seed.description
 FROM (
-    SELECT '00000000-0000-0000-0000-000000001301' AS id, 'iot.register.read' AS code, 'Read IoT registers' AS description
-    UNION ALL SELECT '00000000-0000-0000-0000-000000001302', 'iot.register.create', 'Create IoT registers'
-    UNION ALL SELECT '00000000-0000-0000-0000-000000001303', 'iot.register.update', 'Update IoT registers'
-    UNION ALL SELECT '00000000-0000-0000-0000-000000001304', 'iot.register.delete', 'Delete IoT registers'
-    UNION ALL SELECT '00000000-0000-0000-0000-000000001305', 'iot.maintenance.read', 'Read IoT maintenance orders'
-    UNION ALL SELECT '00000000-0000-0000-0000-000000001306', 'iot.maintenance.create', 'Create IoT maintenance orders'
-    UNION ALL SELECT '00000000-0000-0000-0000-000000001307', 'iot.maintenance.update', 'Update IoT maintenance orders'
-    UNION ALL SELECT '00000000-0000-0000-0000-000000001308', 'iot.maintenance.delete', 'Delete IoT maintenance orders'
-    UNION ALL SELECT '00000000-0000-0000-0000-000000001309', 'iot.dashboard.read', 'Read IoT dashboard summary'
-    UNION ALL SELECT '00000000-0000-0000-0000-000000001310', 'iot.report.read', 'Read IoT reports summary'
+    SELECT '00000000-0000-0000-0000-000000001301'::uuid AS id, 'iot.register.read' AS code, 'Read IoT registers' AS description
+    UNION ALL SELECT '00000000-0000-0000-0000-000000001302'::uuid, 'iot.register.create', 'Create IoT registers'
+    UNION ALL SELECT '00000000-0000-0000-0000-000000001303'::uuid, 'iot.register.update', 'Update IoT registers'
+    UNION ALL SELECT '00000000-0000-0000-0000-000000001304'::uuid, 'iot.register.delete', 'Delete IoT registers'
+    UNION ALL SELECT '00000000-0000-0000-0000-000000001305'::uuid, 'iot.maintenance.read', 'Read IoT maintenance orders'
+    UNION ALL SELECT '00000000-0000-0000-0000-000000001306'::uuid, 'iot.maintenance.create', 'Create IoT maintenance orders'
+    UNION ALL SELECT '00000000-0000-0000-0000-000000001307'::uuid, 'iot.maintenance.update', 'Update IoT maintenance orders'
+    UNION ALL SELECT '00000000-0000-0000-0000-000000001308'::uuid, 'iot.maintenance.delete', 'Delete IoT maintenance orders'
+    UNION ALL SELECT '00000000-0000-0000-0000-000000001309'::uuid, 'iot.dashboard.read', 'Read IoT dashboard summary'
+    UNION ALL SELECT '00000000-0000-0000-0000-000000001310'::uuid, 'iot.report.read', 'Read IoT reports summary'
 ) AS seed
 WHERE NOT EXISTS (
     SELECT 1

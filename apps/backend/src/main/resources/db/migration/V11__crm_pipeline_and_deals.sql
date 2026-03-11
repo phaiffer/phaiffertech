@@ -1,80 +1,83 @@
 -- CRM pipeline and deals base schema.
 
 CREATE TABLE crm_pipelines (
-    id CHAR(36) PRIMARY KEY,
-    tenant_id CHAR(36) NOT NULL,
+    id UUID PRIMARY KEY,
+    tenant_id UUID NOT NULL,
     name VARCHAR(120) NOT NULL,
-    is_default BIT(1) NOT NULL DEFAULT b'0',
-    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    is_default BOOLEAN NOT NULL DEFAULT FALSE,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     created_by VARCHAR(64) NOT NULL DEFAULT 'system',
     updated_by VARCHAR(64) NOT NULL DEFAULT 'system',
-    deleted_at TIMESTAMP NULL,
+    deleted_at TIMESTAMPTZ NULL,
     CONSTRAINT fk_crm_pipelines_tenant FOREIGN KEY (tenant_id) REFERENCES tenants (id),
-    CONSTRAINT uq_crm_pipelines_tenant_name UNIQUE (tenant_id, name),
-    INDEX idx_crm_pipelines_tenant (tenant_id),
-    INDEX idx_crm_pipelines_default (tenant_id, is_default)
+    CONSTRAINT uq_crm_pipelines_tenant_name UNIQUE (tenant_id, name)
 );
 
+CREATE INDEX idx_crm_pipelines_tenant ON crm_pipelines (tenant_id);
+CREATE INDEX idx_crm_pipelines_default ON crm_pipelines (tenant_id, is_default);
+
 CREATE TABLE crm_pipeline_stages (
-    id CHAR(36) PRIMARY KEY,
-    tenant_id CHAR(36) NOT NULL,
-    pipeline_id CHAR(36) NOT NULL,
+    id UUID PRIMARY KEY,
+    tenant_id UUID NOT NULL,
+    pipeline_id UUID NOT NULL,
     name VARCHAR(120) NOT NULL,
     sort_order INT NOT NULL,
-    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     created_by VARCHAR(64) NOT NULL DEFAULT 'system',
     updated_by VARCHAR(64) NOT NULL DEFAULT 'system',
-    deleted_at TIMESTAMP NULL,
+    deleted_at TIMESTAMPTZ NULL,
     CONSTRAINT fk_crm_pipeline_stages_tenant FOREIGN KEY (tenant_id) REFERENCES tenants (id),
     CONSTRAINT fk_crm_pipeline_stages_pipeline FOREIGN KEY (pipeline_id) REFERENCES crm_pipelines (id),
     CONSTRAINT uq_crm_pipeline_stages_order UNIQUE (pipeline_id, sort_order),
-    CONSTRAINT uq_crm_pipeline_stages_name UNIQUE (pipeline_id, name),
-    INDEX idx_crm_pipeline_stages_tenant (tenant_id),
-    INDEX idx_crm_pipeline_stages_pipeline (pipeline_id)
+    CONSTRAINT uq_crm_pipeline_stages_name UNIQUE (pipeline_id, name)
 );
 
+CREATE INDEX idx_crm_pipeline_stages_tenant ON crm_pipeline_stages (tenant_id);
+CREATE INDEX idx_crm_pipeline_stages_pipeline ON crm_pipeline_stages (pipeline_id);
+
 CREATE TABLE crm_deals (
-    id CHAR(36) PRIMARY KEY,
-    tenant_id CHAR(36) NOT NULL,
+    id UUID PRIMARY KEY,
+    tenant_id UUID NOT NULL,
     title VARCHAR(160) NOT NULL,
     description TEXT NULL,
     amount DECIMAL(15,2) NULL,
     status VARCHAR(40) NOT NULL,
-    pipeline_id CHAR(36) NOT NULL,
-    stage_id CHAR(36) NULL,
-    contact_id CHAR(36) NULL,
-    lead_id CHAR(36) NULL,
-    owner_user_id CHAR(36) NULL,
+    pipeline_id UUID NOT NULL,
+    stage_id UUID NULL,
+    contact_id UUID NULL,
+    lead_id UUID NULL,
+    owner_user_id UUID NULL,
     expected_close_date DATE NULL,
-    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     created_by VARCHAR(64) NOT NULL DEFAULT 'system',
     updated_by VARCHAR(64) NOT NULL DEFAULT 'system',
-    deleted_at TIMESTAMP NULL,
+    deleted_at TIMESTAMPTZ NULL,
     CONSTRAINT fk_crm_deals_tenant FOREIGN KEY (tenant_id) REFERENCES tenants (id),
     CONSTRAINT fk_crm_deals_pipeline FOREIGN KEY (pipeline_id) REFERENCES crm_pipelines (id),
     CONSTRAINT fk_crm_deals_stage FOREIGN KEY (stage_id) REFERENCES crm_pipeline_stages (id),
     CONSTRAINT fk_crm_deals_contact FOREIGN KEY (contact_id) REFERENCES crm_contacts (id),
     CONSTRAINT fk_crm_deals_lead FOREIGN KEY (lead_id) REFERENCES crm_leads (id),
-    CONSTRAINT fk_crm_deals_owner_user FOREIGN KEY (owner_user_id) REFERENCES users (id),
-    INDEX idx_crm_deals_tenant_status (tenant_id, status),
-    INDEX idx_crm_deals_pipeline_stage (tenant_id, pipeline_id, stage_id),
-    INDEX idx_crm_deals_owner (tenant_id, owner_user_id),
-    INDEX idx_crm_deals_contact (tenant_id, contact_id),
-    INDEX idx_crm_deals_lead (tenant_id, lead_id)
+    CONSTRAINT fk_crm_deals_owner_user FOREIGN KEY (owner_user_id) REFERENCES users (id)
 );
 
+CREATE INDEX idx_crm_deals_tenant_status ON crm_deals (tenant_id, status);
+CREATE INDEX idx_crm_deals_pipeline_stage ON crm_deals (tenant_id, pipeline_id, stage_id);
+CREATE INDEX idx_crm_deals_owner ON crm_deals (tenant_id, owner_user_id);
+CREATE INDEX idx_crm_deals_contact ON crm_deals (tenant_id, contact_id);
+CREATE INDEX idx_crm_deals_lead ON crm_deals (tenant_id, lead_id);
+
 INSERT INTO crm_pipelines (id, tenant_id, name, is_default)
-SELECT '55555555-5555-5555-5555-555555555001', t.id, 'Default Pipeline', b'1'
+SELECT '55555555-5555-5555-5555-555555555001', t.id, 'Default Pipeline', TRUE
 FROM tenants t
 WHERE t.code = 'default'
   AND NOT EXISTS (
       SELECT 1
       FROM crm_pipelines p
       WHERE p.tenant_id = t.id
-        AND p.is_default = b'1'
+        AND p.is_default = TRUE
   );
 
 INSERT INTO crm_pipeline_stages (id, tenant_id, pipeline_id, name, sort_order)

@@ -10,7 +10,7 @@ Spring Boot backend for the modular multi-tenant platform.
 - Spring Security (JWT + RBAC + granular permissions)
 - Spring Data JPA
 - Flyway
-- MySQL 8
+- PostgreSQL 16
 - Springdoc OpenAPI
 - Testcontainers
 - Micrometer + Prometheus + OpenTelemetry tracing bridge
@@ -113,7 +113,7 @@ Legacy-guided decisions:
 
 - `../iotsystem` was used only as a reference for business scope, not copied into the monorepo.
 - `registers` were modeled as logical telemetry channels instead of importing legacy protocol-specific details directly.
-- telemetry remains on MySQL for this stage, but access goes through data-plane abstractions to keep TSDB evolution open.
+- telemetry now runs on PostgreSQL, and access still goes through data-plane abstractions to keep TSDB evolution open.
 
 Current IoT V1 permissions:
 

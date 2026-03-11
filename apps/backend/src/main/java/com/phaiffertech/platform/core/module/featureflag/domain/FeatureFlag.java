@@ -16,7 +16,7 @@ public class FeatureFlag extends BaseEntity {
     @Column(name = "enabled", nullable = false)
     private boolean enabled;
 
-    @Column(name = "tenant_id", columnDefinition = "char(36)")
+    @Column(name = "tenant_id")
     private UUID tenantId;
 
     public String getFlagKey() {

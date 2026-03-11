@@ -11,7 +11,7 @@ import java.util.UUID;
 @Table(name = "refresh_tokens")
 public class RefreshToken extends BaseTenantEntity {
 
-    @Column(name = "user_id", nullable = false, columnDefinition = "char(36)")
+    @Column(name = "user_id", nullable = false)
     private UUID userId;
 
     @Column(name = "token_hash", nullable = false, unique = true, length = 64)

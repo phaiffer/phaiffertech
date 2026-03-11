@@ -21,11 +21,11 @@ public interface PetProfileRepository extends JpaRepository<PetProfile, UUID>, B
             FROM PetProfile p
             WHERE p.tenantId = :tenantId
               AND (:clientId IS NULL OR p.clientId = :clientId)
-              AND (:search IS NULL OR
-                   LOWER(p.name) LIKE LOWER(CONCAT('%', :search, '%')) OR
-                   LOWER(COALESCE(p.species, '')) LIKE LOWER(CONCAT('%', :search, '%')) OR
-                   LOWER(COALESCE(p.breed, '')) LIKE LOWER(CONCAT('%', :search, '%')) OR
-                   LOWER(COALESCE(p.color, '')) LIKE LOWER(CONCAT('%', :search, '%')))
+              AND (:search = '%' OR
+                   LOWER(p.name) LIKE :search OR
+                   LOWER(COALESCE(p.species, '')) LIKE :search OR
+                   LOWER(COALESCE(p.breed, '')) LIKE :search OR
+                   LOWER(COALESCE(p.color, '')) LIKE :search)
             """)
     Page<PetProfile> findAllByTenantIdAndSearch(
             @Param("tenantId") UUID tenantId,

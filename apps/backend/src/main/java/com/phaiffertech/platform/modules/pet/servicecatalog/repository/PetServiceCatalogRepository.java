@@ -19,9 +19,9 @@ public interface PetServiceCatalogRepository
             SELECT s
             FROM PetServiceCatalog s
             WHERE s.tenantId = :tenantId
-              AND (:search IS NULL OR
-                   LOWER(s.name) LIKE LOWER(CONCAT('%', :search, '%')) OR
-                   LOWER(COALESCE(s.description, '')) LIKE LOWER(CONCAT('%', :search, '%')))
+              AND (:search = '%' OR
+                   LOWER(s.name) LIKE :search OR
+                   LOWER(COALESCE(s.description, '')) LIKE :search)
             """)
     Page<PetServiceCatalog> findAllByTenantIdAndSearch(
             @Param("tenantId") UUID tenantId,

@@ -21,15 +21,15 @@ public interface IotAlarmRepository extends JpaRepository<IotAlarm, UUID>, BaseT
             WHERE a.tenantId = :tenantId
               AND (:deviceId IS NULL OR a.deviceId = :deviceId)
               AND (:registerId IS NULL OR a.registerId = :registerId)
-              AND (:severity IS NULL OR UPPER(a.severity) = UPPER(:severity))
-              AND (:status IS NULL OR UPPER(a.status) = UPPER(:status))
-              AND (:triggeredFrom IS NULL OR a.triggeredAt >= :triggeredFrom)
-              AND (:triggeredTo IS NULL OR a.triggeredAt <= :triggeredTo)
-              AND (:search IS NULL OR
-                   LOWER(COALESCE(a.code, '')) LIKE LOWER(CONCAT('%', :search, '%')) OR
-                   LOWER(COALESCE(a.message, '')) LIKE LOWER(CONCAT('%', :search, '%')) OR
-                   LOWER(COALESCE(a.severity, '')) LIKE LOWER(CONCAT('%', :search, '%')) OR
-                   LOWER(COALESCE(a.status, '')) LIKE LOWER(CONCAT('%', :search, '%')))
+              AND (:severity IS NULL OR a.severity = :severity)
+              AND (:status IS NULL OR a.status = :status)
+              AND (COALESCE(:triggeredFrom, a.triggeredAt) IS NULL OR a.triggeredAt >= COALESCE(:triggeredFrom, a.triggeredAt))
+              AND (COALESCE(:triggeredTo, a.triggeredAt) IS NULL OR a.triggeredAt <= COALESCE(:triggeredTo, a.triggeredAt))
+              AND (:search = '%' OR
+                   LOWER(COALESCE(a.code, '')) LIKE :search OR
+                   LOWER(COALESCE(a.message, '')) LIKE :search OR
+                   LOWER(COALESCE(a.severity, '')) LIKE :search OR
+                   LOWER(COALESCE(a.status, '')) LIKE :search)
             """)
     Page<IotAlarm> findAllByTenantIdAndSearch(
             @Param("tenantId") UUID tenantId,
@@ -79,8 +79,8 @@ public interface IotAlarmRepository extends JpaRepository<IotAlarm, UUID>, BaseT
             WHERE a.tenantId = :tenantId
               AND a.deviceId = :deviceId
               AND ((:registerId IS NULL AND a.registerId IS NULL) OR a.registerId = :registerId)
-              AND UPPER(a.code) = UPPER(:code)
-              AND UPPER(a.status) IN :statuses
+              AND a.code = :code
+              AND a.status IN :statuses
             """)
     boolean existsOpenAlarm(
             @Param("tenantId") UUID tenantId,
@@ -96,8 +96,8 @@ public interface IotAlarmRepository extends JpaRepository<IotAlarm, UUID>, BaseT
             WHERE a.tenantId = :tenantId
               AND a.deviceId = :deviceId
               AND ((:registerId IS NULL AND a.registerId IS NULL) OR a.registerId = :registerId)
-              AND UPPER(a.code) IN :codes
-              AND UPPER(a.status) IN :statuses
+              AND a.code IN :codes
+              AND a.status IN :statuses
             ORDER BY a.triggeredAt DESC
             """)
     List<IotAlarm> findOpenAlarmsByCodes(

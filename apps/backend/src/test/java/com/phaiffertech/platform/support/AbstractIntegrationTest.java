@@ -1,6 +1,8 @@
 package com.phaiffertech.platform.support;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import java.sql.Timestamp;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -59,7 +61,7 @@ public abstract class AbstractIntegrationTest extends IntegrationTestContainersC
                 tenantCode
         );
         executeSql(
-                "INSERT INTO users (id, email, password_hash, full_name, active) VALUES (?, ?, ?, ?, b'1')",
+                "INSERT INTO users (id, email, password_hash, full_name, active) VALUES (?, ?, ?, ?, TRUE)",
                 userId,
                 email,
                 DEFAULT_PASSWORD_HASH,
@@ -68,7 +70,7 @@ public abstract class AbstractIntegrationTest extends IntegrationTestContainersC
         executeSql(
                 """
                 INSERT INTO user_tenants (id, tenant_id, user_id, role_id, active)
-                SELECT ?, ?, ?, r.id, b'1'
+                SELECT ?, ?, ?, r.id, TRUE
                 FROM roles r
                 WHERE r.code = 'TENANT_ADMIN'
                 """,
@@ -102,14 +104,14 @@ public abstract class AbstractIntegrationTest extends IntegrationTestContainersC
                 tenantCode
         );
         executeSql(
-                "INSERT INTO users (id, email, password_hash, full_name, active) VALUES (?, ?, ?, ?, b'1')",
+                "INSERT INTO users (id, email, password_hash, full_name, active) VALUES (?, ?, ?, ?, TRUE)",
                 userId,
                 email,
                 DEFAULT_PASSWORD_HASH,
                 "Custom Role " + tenantCode
         );
         executeSql(
-                "INSERT INTO roles (id, code, name, description, system_role) VALUES (?, ?, ?, ?, b'0')",
+                "INSERT INTO roles (id, code, name, description, system_role) VALUES (?, ?, ?, ?, FALSE)",
                 roleId,
                 roleCode,
                 "Test Role " + tenantCode,
@@ -129,7 +131,7 @@ public abstract class AbstractIntegrationTest extends IntegrationTestContainersC
         }
 
         executeSql(
-                "INSERT INTO user_tenants (id, tenant_id, user_id, role_id, active) VALUES (?, ?, ?, ?, b'1')",
+                "INSERT INTO user_tenants (id, tenant_id, user_id, role_id, active) VALUES (?, ?, ?, ?, TRUE)",
                 userTenantId,
                 tenantId,
                 userId,
@@ -159,8 +161,8 @@ public abstract class AbstractIntegrationTest extends IntegrationTestContainersC
                 """
                 INSERT INTO feature_flags (id, flag_key, enabled, tenant_id, created_by, updated_by)
                 VALUES (?, ?, ?, ?, 'test', 'test')
-                ON DUPLICATE KEY UPDATE
-                    enabled = VALUES(enabled),
+                ON CONFLICT (flag_key, tenant_id) DO UPDATE
+                SET enabled = EXCLUDED.enabled,
                     deleted_at = NULL,
                     updated_by = 'test'
                 """,
@@ -213,11 +215,11 @@ public abstract class AbstractIntegrationTest extends IntegrationTestContainersC
     }
 
     protected void executeSql(String sql, Object... args) {
-        jdbcTemplate.update(sql, args);
+        jdbcTemplate.update(sql, coerceArgs(args));
     }
 
     protected int countRows(String sql, Object... args) {
-        Integer count = jdbcTemplate.queryForObject(sql, Integer.class, args);
+        Integer count = jdbcTemplate.queryForObject(sql, Integer.class, coerceArgs(args));
         return count == null ? 0 : count;
     }
 
@@ -265,7 +267,7 @@ public abstract class AbstractIntegrationTest extends IntegrationTestContainersC
         executeSql(
                 """
                 INSERT INTO tenant_modules (id, tenant_id, module_definition_id, enabled)
-                SELECT ?, ?, m.id, b'1'
+                SELECT ?, ?, m.id, TRUE
                 FROM module_definitions m
                 WHERE m.code = ?
                 """,
@@ -273,5 +275,25 @@ public abstract class AbstractIntegrationTest extends IntegrationTestContainersC
                 tenantId,
                 moduleCode
         );
+    }
+
+    private Object[] coerceArgs(Object... args) {
+        return java.util.Arrays.stream(args)
+                .map(this::coerceArg)
+                .toArray();
+    }
+
+    private Object coerceArg(Object arg) {
+        if (arg instanceof Instant instant) {
+            return Timestamp.from(instant);
+        }
+        if (!(arg instanceof String text)) {
+            return arg;
+        }
+        try {
+            return UUID.fromString(text);
+        } catch (IllegalArgumentException ignored) {
+            return text;
+        }
     }
 }

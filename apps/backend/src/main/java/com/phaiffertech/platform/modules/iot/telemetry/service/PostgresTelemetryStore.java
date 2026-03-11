@@ -36,7 +36,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
-public class MySqlTelemetryStore implements TelemetryWriter, TelemetryReader {
+public class PostgresTelemetryStore implements TelemetryWriter, TelemetryReader {
 
     private static final Duration MAX_FUTURE_CLOCK_SKEW = Duration.ofMinutes(5);
 
@@ -48,7 +48,7 @@ public class MySqlTelemetryStore implements TelemetryWriter, TelemetryReader {
     private final ObjectMapper objectMapper;
     private final PlatformMetricsService platformMetricsService;
 
-    public MySqlTelemetryStore(
+    public PostgresTelemetryStore(
             IotTelemetryRecordRepository telemetryRecordRepository,
             IotDeviceRepository deviceRepository,
             IotRegisterRepository registerRepository,
@@ -114,7 +114,7 @@ public class MySqlTelemetryStore implements TelemetryWriter, TelemetryReader {
                         normalizeMetric(metricName),
                         recordedFrom,
                         recordedTo,
-                        pageRequest.normalizedSearch(),
+                        pageRequest.normalizedSearchPattern(),
                         PaginationUtils.toPageable(pageRequest, Sort.by(Sort.Direction.DESC, "recordedAt"))
                 )
                 .map(IotTelemetryMapper::toResponse);

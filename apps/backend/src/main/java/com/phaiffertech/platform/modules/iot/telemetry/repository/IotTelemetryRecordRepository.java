@@ -18,12 +18,12 @@ public interface IotTelemetryRecordRepository extends JpaRepository<IotTelemetry
             WHERE t.tenantId = :tenantId
               AND (:deviceId IS NULL OR t.deviceId = :deviceId)
               AND (:registerId IS NULL OR t.registerId = :registerId)
-              AND (:metricName IS NULL OR LOWER(t.metricName) = LOWER(:metricName))
-              AND (:recordedFrom IS NULL OR t.recordedAt >= :recordedFrom)
-              AND (:recordedTo IS NULL OR t.recordedAt <= :recordedTo)
-              AND (:search IS NULL OR
-                   LOWER(t.metricName) LIKE LOWER(CONCAT('%', :search, '%')) OR
-                   LOWER(COALESCE(t.unit, '')) LIKE LOWER(CONCAT('%', :search, '%')))
+              AND (:metricName IS NULL OR t.metricName = :metricName)
+              AND (COALESCE(:recordedFrom, t.recordedAt) IS NULL OR t.recordedAt >= COALESCE(:recordedFrom, t.recordedAt))
+              AND (COALESCE(:recordedTo, t.recordedAt) IS NULL OR t.recordedAt <= COALESCE(:recordedTo, t.recordedAt))
+              AND (:search = '%' OR
+                   LOWER(t.metricName) LIKE :search OR
+                   LOWER(COALESCE(t.unit, '')) LIKE :search)
             """)
     Page<IotTelemetryRecord> findAllByTenantIdAndSearch(
             @Param("tenantId") UUID tenantId,

@@ -18,10 +18,10 @@ public interface PetInventoryMovementRepository
             FROM PetInventoryMovement i
             WHERE i.tenantId = :tenantId
               AND (:productId IS NULL OR i.productId = :productId)
-              AND (:movementType IS NULL OR UPPER(i.movementType) = UPPER(:movementType))
-              AND (:search IS NULL OR
-                   LOWER(i.movementType) LIKE LOWER(CONCAT('%', :search, '%')) OR
-                   LOWER(COALESCE(i.notes, '')) LIKE LOWER(CONCAT('%', :search, '%')))
+              AND (:movementType IS NULL OR i.movementType = :movementType)
+              AND (:search = '%' OR
+                   LOWER(i.movementType) LIKE :search OR
+                   LOWER(COALESCE(i.notes, '')) LIKE :search)
             """)
     Page<PetInventoryMovement> findAllByTenantIdAndSearch(
             @Param("tenantId") UUID tenantId,

@@ -32,10 +32,10 @@ public interface PetPrescriptionRepository
               AND (:petId IS NULL OR p.petId = :petId)
               AND (:professionalId IS NULL OR p.professionalId = :professionalId)
               AND (:appointmentId IS NULL OR p.appointmentId = :appointmentId)
-              AND (:search IS NULL OR
-                   LOWER(p.medication) LIKE LOWER(CONCAT('%', :search, '%')) OR
-                   LOWER(COALESCE(p.dosage, '')) LIKE LOWER(CONCAT('%', :search, '%')) OR
-                   LOWER(COALESCE(p.instructions, '')) LIKE LOWER(CONCAT('%', :search, '%')))
+              AND (:search = '%' OR
+                   LOWER(p.medication) LIKE :search OR
+                   LOWER(COALESCE(p.dosage, '')) LIKE :search OR
+                   LOWER(COALESCE(p.instructions, '')) LIKE :search)
             """)
     Page<PetPrescription> findAllByTenantIdAndSearch(
             @Param("tenantId") UUID tenantId,

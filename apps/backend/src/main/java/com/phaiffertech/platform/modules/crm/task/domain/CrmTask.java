@@ -30,25 +30,25 @@ public class CrmTask extends BaseTenantEntity {
     @Column(name = "priority", nullable = false, length = 40)
     private String priority = "MEDIUM";
 
-    @Column(name = "assigned_user_id", columnDefinition = "char(36)")
+    @Column(name = "assigned_user_id")
     private UUID assignedUserId;
 
-    @Column(name = "company_id", columnDefinition = "char(36)")
+    @Column(name = "company_id")
     private UUID companyId;
 
-    @Column(name = "contact_id", columnDefinition = "char(36)")
+    @Column(name = "contact_id")
     private UUID contactId;
 
-    @Column(name = "lead_id", columnDefinition = "char(36)")
+    @Column(name = "lead_id")
     private UUID leadId;
 
-    @Column(name = "deal_id", columnDefinition = "char(36)")
+    @Column(name = "deal_id")
     private UUID dealId;
 
     @Column(name = "related_type", nullable = false, length = 60)
     private String relatedType;
 
-    @Column(name = "related_id", nullable = false, columnDefinition = "char(36)")
+    @Column(name = "related_id", nullable = false)
     private UUID relatedId;
 
     public String getTitle() {

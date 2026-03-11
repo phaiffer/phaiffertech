@@ -19,12 +19,12 @@ public interface PetProfessionalRepository
             SELECT p
             FROM PetProfessional p
             WHERE p.tenantId = :tenantId
-              AND (:search IS NULL OR
-                   LOWER(p.name) LIKE LOWER(CONCAT('%', :search, '%')) OR
-                   LOWER(COALESCE(p.specialty, '')) LIKE LOWER(CONCAT('%', :search, '%')) OR
-                   LOWER(COALESCE(p.licenseNumber, '')) LIKE LOWER(CONCAT('%', :search, '%')) OR
-                   LOWER(COALESCE(p.email, '')) LIKE LOWER(CONCAT('%', :search, '%')) OR
-                   LOWER(COALESCE(p.phone, '')) LIKE LOWER(CONCAT('%', :search, '%')))
+              AND (:search = '%' OR
+                   LOWER(p.name) LIKE :search OR
+                   LOWER(COALESCE(p.specialty, '')) LIKE :search OR
+                   LOWER(COALESCE(p.licenseNumber, '')) LIKE :search OR
+                   LOWER(COALESCE(p.email, '')) LIKE :search OR
+                   LOWER(COALESCE(p.phone, '')) LIKE :search)
             """)
     Page<PetProfessional> findAllByTenantIdAndSearch(
             @Param("tenantId") UUID tenantId,

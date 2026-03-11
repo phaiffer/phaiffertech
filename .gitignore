@@ -28,4 +28,5 @@ out/
 
 # Misc
 coverage/
+.terraform/
 docs/reports/iot-system-validation-latest.*

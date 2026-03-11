@@ -10,10 +10,10 @@ import java.util.UUID;
 @Table(name = "user_tenants")
 public class UserTenant extends BaseTenantEntity {
 
-    @Column(name = "user_id", nullable = false, columnDefinition = "char(36)")
+    @Column(name = "user_id", nullable = false)
     private UUID userId;
 
-    @Column(name = "role_id", nullable = false, columnDefinition = "char(36)")
+    @Column(name = "role_id", nullable = false)
     private UUID roleId;
 
     @Column(name = "active", nullable = false)

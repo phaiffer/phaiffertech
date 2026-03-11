@@ -3,7 +3,7 @@
 INSERT INTO permissions (id, code, description)
 SELECT seed.id, seed.code, seed.description
 FROM (
-    SELECT '00000000-0000-0000-0000-000000001343' AS id, 'pet.dashboard.read' AS code, 'Read pet dashboard summary' AS description
+    SELECT '00000000-0000-0000-0000-000000001343'::uuid AS id, 'pet.dashboard.read' AS code, 'Read pet dashboard summary' AS description
 ) AS seed
 WHERE NOT EXISTS (
     SELECT 1

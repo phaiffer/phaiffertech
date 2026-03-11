@@ -31,9 +31,9 @@ public interface PetVaccinationRepository
             WHERE v.tenantId = :tenantId
               AND (:petId IS NULL OR v.petId = :petId)
               AND (:appointmentId IS NULL OR v.appointmentId = :appointmentId)
-              AND (:search IS NULL OR
-                   LOWER(v.vaccineName) LIKE LOWER(CONCAT('%', :search, '%')) OR
-                   LOWER(COALESCE(v.notes, '')) LIKE LOWER(CONCAT('%', :search, '%')))
+              AND (:search = '%' OR
+                   LOWER(v.vaccineName) LIKE :search OR
+                   LOWER(COALESCE(v.notes, '')) LIKE :search)
             """)
     Page<PetVaccination> findAllByTenantIdAndSearch(
             @Param("tenantId") UUID tenantId,

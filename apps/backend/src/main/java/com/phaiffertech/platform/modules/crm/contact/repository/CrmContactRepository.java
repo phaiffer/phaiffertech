@@ -17,16 +17,16 @@ public interface CrmContactRepository extends JpaRepository<CrmContact, UUID>, B
             SELECT c
             FROM CrmContact c
             WHERE c.tenantId = :tenantId
-              AND (:status IS NULL OR UPPER(c.status) = UPPER(:status))
+              AND (:status IS NULL OR c.status = :status)
               AND (:companyId IS NULL OR c.companyId = :companyId)
               AND (:ownerUserId IS NULL OR c.ownerUserId = :ownerUserId)
-              AND (:search IS NULL OR
-                   LOWER(c.firstName) LIKE LOWER(CONCAT('%', :search, '%')) OR
-                   LOWER(COALESCE(c.lastName, '')) LIKE LOWER(CONCAT('%', :search, '%')) OR
-                   LOWER(COALESCE(c.email, '')) LIKE LOWER(CONCAT('%', :search, '%')) OR
-                   LOWER(COALESCE(c.phone, '')) LIKE LOWER(CONCAT('%', :search, '%')) OR
-                   LOWER(COALESCE(c.company, '')) LIKE LOWER(CONCAT('%', :search, '%')) OR
-                   LOWER(COALESCE(c.status, '')) LIKE LOWER(CONCAT('%', :search, '%')))
+              AND (:search = '%' OR
+                   LOWER(c.firstName) LIKE :search OR
+                   LOWER(COALESCE(c.lastName, '')) LIKE :search OR
+                   LOWER(COALESCE(c.email, '')) LIKE :search OR
+                   LOWER(COALESCE(c.phone, '')) LIKE :search OR
+                   LOWER(COALESCE(c.company, '')) LIKE :search OR
+                   LOWER(COALESCE(c.status, '')) LIKE :search)
             """)
     Page<CrmContact> findAllByTenantIdAndSearch(
             @Param("tenantId") UUID tenantId,

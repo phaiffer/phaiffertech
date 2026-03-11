@@ -9,7 +9,7 @@ import java.util.UUID;
 @MappedSuperclass
 public abstract class BaseTenantEntity extends BaseEntity {
 
-    @Column(name = "tenant_id", nullable = false, columnDefinition = "char(36)")
+    @Column(name = "tenant_id", nullable = false)
     private UUID tenantId;
 
     @PrePersist

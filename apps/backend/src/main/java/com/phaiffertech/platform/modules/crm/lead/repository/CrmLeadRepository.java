@@ -16,17 +16,17 @@ public interface CrmLeadRepository extends JpaRepository<CrmLead, UUID>, BaseTen
             SELECT l
             FROM CrmLead l
             WHERE l.tenantId = :tenantId
-              AND (:status IS NULL OR UPPER(l.status) = UPPER(:status))
-              AND (:source IS NULL OR UPPER(COALESCE(l.source, '')) = UPPER(:source))
+              AND (:status IS NULL OR l.status = :status)
+              AND (:source IS NULL OR COALESCE(l.source, '') = :source)
               AND (:companyId IS NULL OR l.companyId = :companyId)
               AND (:contactId IS NULL OR l.contactId = :contactId)
               AND (:assignedUserId IS NULL OR l.assignedUserId = :assignedUserId)
-              AND (:search IS NULL OR
-                   LOWER(l.name) LIKE LOWER(CONCAT('%', :search, '%')) OR
-                   LOWER(COALESCE(l.email, '')) LIKE LOWER(CONCAT('%', :search, '%')) OR
-                   LOWER(COALESCE(l.phone, '')) LIKE LOWER(CONCAT('%', :search, '%')) OR
-                   LOWER(COALESCE(l.source, '')) LIKE LOWER(CONCAT('%', :search, '%')) OR
-                   LOWER(COALESCE(l.status, '')) LIKE LOWER(CONCAT('%', :search, '%')))
+              AND (:search = '%' OR
+                   LOWER(l.name) LIKE :search OR
+                   LOWER(COALESCE(l.email, '')) LIKE :search OR
+                   LOWER(COALESCE(l.phone, '')) LIKE :search OR
+                   LOWER(COALESCE(l.source, '')) LIKE :search OR
+                   LOWER(COALESCE(l.status, '')) LIKE :search)
             """)
     Page<CrmLead> findAllByTenantIdAndSearch(
             @Param("tenantId") UUID tenantId,

@@ -19,18 +19,18 @@ public interface IotMaintenanceRepository extends JpaRepository<IotMaintenance, 
             FROM IotMaintenance m
             WHERE m.tenantId = :tenantId
               AND (:deviceId IS NULL OR m.deviceId = :deviceId)
-              AND (:status IS NULL OR UPPER(m.status) = UPPER(:status))
-              AND (:priority IS NULL OR UPPER(m.priority) = UPPER(:priority))
-              AND (:scheduledFrom IS NULL OR m.scheduledAt >= :scheduledFrom)
-              AND (:scheduledTo IS NULL OR m.scheduledAt <= :scheduledTo)
-              AND (:search IS NULL OR
-                   LOWER(m.title) LIKE LOWER(CONCAT('%', :search, '%')) OR
-                   LOWER(COALESCE(m.description, '')) LIKE LOWER(CONCAT('%', :search, '%')) OR
-                   LOWER(COALESCE(m.origin, '')) LIKE LOWER(CONCAT('%', :search, '%')) OR
-                   LOWER(COALESCE(m.trigger, '')) LIKE LOWER(CONCAT('%', :search, '%')) OR
-                   LOWER(COALESCE(m.assignedUserLabel, '')) LIKE LOWER(CONCAT('%', :search, '%')) OR
-                   LOWER(COALESCE(m.status, '')) LIKE LOWER(CONCAT('%', :search, '%')) OR
-                   LOWER(COALESCE(m.priority, '')) LIKE LOWER(CONCAT('%', :search, '%')))
+              AND (:status IS NULL OR m.status = :status)
+              AND (:priority IS NULL OR m.priority = :priority)
+              AND (COALESCE(:scheduledFrom, m.scheduledAt) IS NULL OR m.scheduledAt >= COALESCE(:scheduledFrom, m.scheduledAt))
+              AND (COALESCE(:scheduledTo, m.scheduledAt) IS NULL OR m.scheduledAt <= COALESCE(:scheduledTo, m.scheduledAt))
+              AND (:search = '%' OR
+                   LOWER(m.title) LIKE :search OR
+                   LOWER(COALESCE(m.description, '')) LIKE :search OR
+                   LOWER(COALESCE(m.origin, '')) LIKE :search OR
+                   LOWER(COALESCE(m.trigger, '')) LIKE :search OR
+                   LOWER(COALESCE(m.assignedUserLabel, '')) LIKE :search OR
+                   LOWER(COALESCE(m.status, '')) LIKE :search OR
+                   LOWER(COALESCE(m.priority, '')) LIKE :search)
             """)
     Page<IotMaintenance> findAllByTenantIdAndSearch(
             @Param("tenantId") UUID tenantId,

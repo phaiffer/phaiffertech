@@ -17,25 +17,25 @@ public class CrmNote extends BaseTenantEntity {
     @Column(name = "content", nullable = false)
     private String content;
 
-    @Column(name = "company_id", columnDefinition = "char(36)")
+    @Column(name = "company_id")
     private UUID companyId;
 
-    @Column(name = "contact_id", columnDefinition = "char(36)")
+    @Column(name = "contact_id")
     private UUID contactId;
 
-    @Column(name = "lead_id", columnDefinition = "char(36)")
+    @Column(name = "lead_id")
     private UUID leadId;
 
-    @Column(name = "deal_id", columnDefinition = "char(36)")
+    @Column(name = "deal_id")
     private UUID dealId;
 
     @Column(name = "related_type", nullable = false, length = 60)
     private String relatedType;
 
-    @Column(name = "related_id", nullable = false, columnDefinition = "char(36)")
+    @Column(name = "related_id", nullable = false)
     private UUID relatedId;
 
-    @Column(name = "author_user_id", columnDefinition = "char(36)")
+    @Column(name = "author_user_id")
     private UUID authorUserId;
 
     public String getContent() {

@@ -21,8 +21,8 @@ public interface PetInvoiceRepository extends JpaRepository<PetInvoice, UUID>, B
             FROM PetInvoice i
             WHERE i.tenantId = :tenantId
               AND (:clientId IS NULL OR i.clientId = :clientId)
-              AND (:status IS NULL OR UPPER(i.status) = UPPER(:status))
-              AND (:search IS NULL OR LOWER(i.status) LIKE LOWER(CONCAT('%', :search, '%')))
+              AND (:status IS NULL OR i.status = :status)
+              AND (:search = '%' OR LOWER(i.status) LIKE :search)
             """)
     Page<PetInvoice> findAllByTenantIdAndSearch(
             @Param("tenantId") UUID tenantId,

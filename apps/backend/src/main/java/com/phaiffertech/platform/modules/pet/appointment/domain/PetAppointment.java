@@ -15,16 +15,16 @@ import org.hibernate.annotations.Where;
 @Where(clause = "deleted_at IS NULL")
 public class PetAppointment extends BaseTenantEntity {
 
-    @Column(name = "client_id", nullable = false, columnDefinition = "char(36)")
+    @Column(name = "client_id", nullable = false)
     private UUID clientId;
 
-    @Column(name = "pet_id", nullable = false, columnDefinition = "char(36)")
+    @Column(name = "pet_id", nullable = false)
     private UUID petId;
 
-    @Column(name = "service_id", nullable = false, columnDefinition = "char(36)")
+    @Column(name = "service_id", nullable = false)
     private UUID serviceId;
 
-    @Column(name = "professional_id", columnDefinition = "char(36)")
+    @Column(name = "professional_id")
     private UUID professionalId;
 
     @Column(name = "scheduled_at", nullable = false)

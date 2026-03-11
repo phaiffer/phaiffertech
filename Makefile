@@ -18,14 +18,14 @@ IOT_SEED_SQL := infra/docker/sql/iot-seed.sql
 help: ## List available commands
 	@awk 'BEGIN {FS = ":.*##"; printf "\nAvailable targets:\n"} /^[a-zA-Z0-9_.-]+:.*##/ { printf "  %-20s %s\n", $$1, $$2 }' $(MAKEFILE_LIST)
 
-up: ## Start mysql, backend and frontend via Docker Compose
+up: ## Start postgres, backend and frontend via Docker Compose
 	$(COMPOSE) up -d --build
 
 down: ## Stop and remove containers
 	$(COMPOSE_RAW) down
 
 restart: ## Restart all services
-	$(COMPOSE_RAW) restart mysql backend frontend
+	$(COMPOSE_RAW) restart postgres backend frontend
 
 rebuild: ## Rebuild and recreate all services
 	$(COMPOSE_RAW) down
@@ -46,8 +46,8 @@ logs-backend: ## Tail backend logs
 logs-frontend: ## Tail frontend logs
 	$(COMPOSE_RAW) logs -f --tail=200 frontend
 
-logs-db: ## Tail mysql logs
-	$(COMPOSE_RAW) logs -f --tail=200 mysql
+logs-db: ## Tail postgres logs
+	$(COMPOSE_RAW) logs -f --tail=200 postgres
 
 logs-json: ## Tail backend JSON structured logs
 	$(COMPOSE_RAW) logs -f --tail=200 backend
@@ -57,7 +57,7 @@ docker-build: ## Build docker images without starting containers
 
 docker-reset-db: ## Reset database volume and restart stack
 	$(COMPOSE_RAW) down -v
-	$(COMPOSE) up -d mysql backend frontend
+	$(COMPOSE) up -d --build postgres backend frontend
 
 build: package-backend package-frontend ## Build backend and frontend artifacts locally
 
@@ -73,7 +73,7 @@ package-backend: ## Package backend with Maven
 package-frontend: ## Build frontend for production
 	cd $(FRONTEND_DIR) && npm run build
 
-backend: ## Run backend locally (requires local MySQL)
+backend: ## Run backend locally (requires local PostgreSQL)
 	cd $(BACKEND_DIR) && mvn spring-boot:run
 
 frontend: ## Run frontend locally
@@ -104,26 +104,26 @@ clean: ## Clean local build artifacts
 	cd $(BACKEND_DIR) && mvn -q clean
 	rm -rf $(FRONTEND_DIR)/.next
 
-db-shell: ## Open MySQL shell inside the mysql container
-	$(COMPOSE_RAW) exec mysql sh -c 'mysql -u"$${MYSQL_USER:-platform_user}" -p"$${MYSQL_PASSWORD:-platform_pass}" "$${MYSQL_DATABASE:-platform_db}"'
+db-shell: ## Open psql shell inside the postgres container
+	$(COMPOSE_RAW) exec postgres sh -c 'PGPASSWORD="$${POSTGRES_PASSWORD:-platform_pass}" psql -h 127.0.0.1 -U "$${POSTGRES_USER:-platform_user}" -d "$${POSTGRES_DB:-platform_db}"'
 
-migrate: ## Trigger Flyway migrations by starting backend against mysql
-	$(COMPOSE) up -d mysql backend
+migrate: ## Trigger Flyway migrations by starting backend against postgres
+	$(COMPOSE) up -d --build postgres backend
 
 seed: ## Re-run development seed by restarting backend (dev profile)
 	$(COMPOSE_RAW) restart backend
 
 crm-seed: ## Seed sample CRM contacts and leads for local development
 	@test -f $(CRM_SEED_SQL) || (echo "Missing $(CRM_SEED_SQL)" && exit 1)
-	$(COMPOSE_RAW) exec -T mysql sh -c 'mysql -u"$${MYSQL_USER:-platform_user}" -p"$${MYSQL_PASSWORD:-platform_pass}" "$${MYSQL_DATABASE:-platform_db}"' < $(CRM_SEED_SQL)
+	$(COMPOSE_RAW) exec -T postgres sh -c 'PGPASSWORD="$${POSTGRES_PASSWORD:-platform_pass}" psql -v ON_ERROR_STOP=1 -h 127.0.0.1 -U "$${POSTGRES_USER:-platform_user}" -d "$${POSTGRES_DB:-platform_db}"' < $(CRM_SEED_SQL)
 
 pet-seed: ## Seed sample PET data for local development
 	@test -f $(PET_SEED_SQL) || (echo "Missing $(PET_SEED_SQL)" && exit 1)
-	$(COMPOSE_RAW) exec -T mysql sh -c 'mysql -u"$${MYSQL_USER:-platform_user}" -p"$${MYSQL_PASSWORD:-platform_pass}" "$${MYSQL_DATABASE:-platform_db}"' < $(PET_SEED_SQL)
+	$(COMPOSE_RAW) exec -T postgres sh -c 'PGPASSWORD="$${POSTGRES_PASSWORD:-platform_pass}" psql -v ON_ERROR_STOP=1 -h 127.0.0.1 -U "$${POSTGRES_USER:-platform_user}" -d "$${POSTGRES_DB:-platform_db}"' < $(PET_SEED_SQL)
 
 iot-seed: ## Seed sample IoT data for local development
 	@test -f $(IOT_SEED_SQL) || (echo "Missing $(IOT_SEED_SQL)" && exit 1)
-	$(COMPOSE_RAW) exec -T mysql sh -c 'mysql -u"$${MYSQL_USER:-platform_user}" -p"$${MYSQL_PASSWORD:-platform_pass}" "$${MYSQL_DATABASE:-platform_db}"' < $(IOT_SEED_SQL)
+	$(COMPOSE_RAW) exec -T postgres sh -c 'PGPASSWORD="$${POSTGRES_PASSWORD:-platform_pass}" psql -v ON_ERROR_STOP=1 -h 127.0.0.1 -U "$${POSTGRES_USER:-platform_user}" -d "$${POSTGRES_DB:-platform_db}"' < $(IOT_SEED_SQL)
 
 swagger: ## Print Swagger URL
 	@echo "Swagger UI: http://localhost:$${BACKEND_PORT:-8080}/swagger-ui.html"
@@ -135,7 +135,7 @@ metrics: ## Show backend metrics and prometheus scrape output
 	@curl -fsS http://localhost:$${BACKEND_PORT:-8080}/actuator/prometheus | sed -n '1,30p'
 
 observability-up: ## Start application stack plus observability profile
-	$(COMPOSE_RAW) --profile observability up -d mysql backend frontend prometheus grafana loki
+	$(COMPOSE_RAW) --profile observability up -d --build postgres backend frontend prometheus grafana loki
 
 observability-down: ## Stop observability services
 	-$(COMPOSE_RAW) stop prometheus grafana loki

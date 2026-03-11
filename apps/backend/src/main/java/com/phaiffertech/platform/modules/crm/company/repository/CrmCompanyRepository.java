@@ -16,16 +16,16 @@ public interface CrmCompanyRepository extends JpaRepository<CrmCompany, UUID>, B
             SELECT c
             FROM CrmCompany c
             WHERE c.tenantId = :tenantId
-              AND (:status IS NULL OR UPPER(c.status) = UPPER(:status))
+              AND (:status IS NULL OR c.status = :status)
               AND (:ownerUserId IS NULL OR c.ownerUserId = :ownerUserId)
-              AND (:search IS NULL OR
-                   LOWER(c.name) LIKE LOWER(CONCAT('%', :search, '%')) OR
-                   LOWER(COALESCE(c.legalName, '')) LIKE LOWER(CONCAT('%', :search, '%')) OR
-                   LOWER(COALESCE(c.document, '')) LIKE LOWER(CONCAT('%', :search, '%')) OR
-                   LOWER(COALESCE(c.email, '')) LIKE LOWER(CONCAT('%', :search, '%')) OR
-                   LOWER(COALESCE(c.phone, '')) LIKE LOWER(CONCAT('%', :search, '%')) OR
-                   LOWER(COALESCE(c.website, '')) LIKE LOWER(CONCAT('%', :search, '%')) OR
-                   LOWER(COALESCE(c.industry, '')) LIKE LOWER(CONCAT('%', :search, '%')))
+              AND (:search = '%' OR
+                   LOWER(c.name) LIKE :search OR
+                   LOWER(COALESCE(c.legalName, '')) LIKE :search OR
+                   LOWER(COALESCE(c.document, '')) LIKE :search OR
+                   LOWER(COALESCE(c.email, '')) LIKE :search OR
+                   LOWER(COALESCE(c.phone, '')) LIKE :search OR
+                   LOWER(COALESCE(c.website, '')) LIKE :search OR
+                   LOWER(COALESCE(c.industry, '')) LIKE :search)
             """)
     Page<CrmCompany> findAllByTenantIdAndSearch(
             @Param("tenantId") UUID tenantId,

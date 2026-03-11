@@ -158,7 +158,7 @@ SELECT
     t.id,
     c.id,
     p.id,
-    DATE_ADD(NOW(), INTERVAL 1 DAY),
+    NOW() + INTERVAL '1 day',
     'Vaccination',
     'SCHEDULED',
     'First dose reminder',

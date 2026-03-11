@@ -1,9 +1,9 @@
 ALTER TABLE iot_maintenance
-    ADD COLUMN linked_alarm_id CHAR(36) NULL AFTER device_id,
-    ADD COLUMN linked_register_id CHAR(36) NULL AFTER linked_alarm_id,
-    ADD COLUMN origin VARCHAR(40) NULL AFTER priority,
-    ADD COLUMN trigger_message VARCHAR(255) NULL AFTER origin,
-    ADD COLUMN assigned_user_label VARCHAR(120) NULL AFTER assigned_user_id;
+    ADD COLUMN linked_alarm_id UUID NULL,
+    ADD COLUMN linked_register_id UUID NULL,
+    ADD COLUMN origin VARCHAR(40) NULL,
+    ADD COLUMN trigger_message VARCHAR(255) NULL,
+    ADD COLUMN assigned_user_label VARCHAR(120) NULL;
 
 ALTER TABLE iot_maintenance
     ADD CONSTRAINT fk_iot_maintenance_linked_alarm

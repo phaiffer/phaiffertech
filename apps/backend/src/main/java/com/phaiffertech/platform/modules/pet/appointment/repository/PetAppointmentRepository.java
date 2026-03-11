@@ -39,17 +39,17 @@ public interface PetAppointmentRepository extends JpaRepository<PetAppointment, 
             SELECT a
             FROM PetAppointment a
             WHERE a.tenantId = :tenantId
-              AND (:status IS NULL OR UPPER(a.status) = UPPER(:status))
+              AND (:status IS NULL OR a.status = :status)
               AND (:professionalId IS NULL OR a.professionalId = :professionalId)
               AND (:clientId IS NULL OR a.clientId = :clientId)
               AND (:petId IS NULL OR a.petId = :petId)
               AND (:serviceId IS NULL OR a.serviceId = :serviceId)
-              AND (:scheduledFrom IS NULL OR a.scheduledAt >= :scheduledFrom)
-              AND (:scheduledTo IS NULL OR a.scheduledAt <= :scheduledTo)
-              AND (:search IS NULL OR
-                   LOWER(a.serviceName) LIKE LOWER(CONCAT('%', :search, '%')) OR
-                   LOWER(COALESCE(a.status, '')) LIKE LOWER(CONCAT('%', :search, '%')) OR
-                   LOWER(COALESCE(a.notes, '')) LIKE LOWER(CONCAT('%', :search, '%')))
+              AND (COALESCE(:scheduledFrom, a.scheduledAt) IS NULL OR a.scheduledAt >= COALESCE(:scheduledFrom, a.scheduledAt))
+              AND (COALESCE(:scheduledTo, a.scheduledAt) IS NULL OR a.scheduledAt <= COALESCE(:scheduledTo, a.scheduledAt))
+              AND (:search = '%' OR
+                   LOWER(a.serviceName) LIKE :search OR
+                   LOWER(COALESCE(a.status, '')) LIKE :search OR
+                   LOWER(COALESCE(a.notes, '')) LIKE :search)
             """)
     Page<PetAppointment> findAllByTenantIdAndSearch(
             @Param("tenantId") UUID tenantId,

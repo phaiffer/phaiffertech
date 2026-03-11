@@ -85,7 +85,7 @@ SELECT
     'HIGH',
     'Temperature exceeded expected threshold',
     'OPEN',
-    DATE_SUB(NOW(), INTERVAL 15 MINUTE),
+    NOW() - INTERVAL '15 minutes',
     NULL,
     'seed',
     'seed'
@@ -120,7 +120,7 @@ SELECT
     82.10,
     'c',
     '{"source":"seed"}',
-    DATE_SUB(NOW(), INTERVAL 10 MINUTE),
+    NOW() - INTERVAL '10 minutes',
     'seed',
     'seed'
 FROM tenants t

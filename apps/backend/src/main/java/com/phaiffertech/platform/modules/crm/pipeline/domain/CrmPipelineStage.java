@@ -14,7 +14,7 @@ import org.hibernate.annotations.Where;
 @Where(clause = "deleted_at IS NULL")
 public class CrmPipelineStage extends BaseTenantEntity {
 
-    @Column(name = "pipeline_id", nullable = false, columnDefinition = "char(36)")
+    @Column(name = "pipeline_id", nullable = false)
     private UUID pipelineId;
 
     @Column(name = "name", nullable = false, length = 120)

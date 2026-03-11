@@ -5,7 +5,7 @@
 The platform is implemented as a **modular monolith** with multi-tenancy from the beginning.
 
 Principles:
-- single MySQL database, shared schema
+- single PostgreSQL database, shared schema
 - tenant isolation by `tenant_id`
 - domain boundaries by package/module
 - incremental evolution through Flyway migrations
@@ -480,7 +480,7 @@ Current backend abstractions that preserve this split:
 - `DeviceStatusService`
 - `MonitoringSummaryService`
 
-This keeps MySQL practical for the current stage without treating it as the permanent final architecture for telemetry.
+This keeps PostgreSQL practical for the current stage without treating it as the permanent final architecture for telemetry.
 
 ## IoT V1 Implementation Notes
 
@@ -735,7 +735,7 @@ Abstractions:
 - `TelemetryReader`
 - `AlarmEvaluator`
 
-Current implementation uses MySQL (`MySqlTelemetryStore`) but keeps interface boundaries ready for future storage extraction.
+Current implementation uses PostgreSQL (`PostgresTelemetryStore`) but keeps interface boundaries ready for future storage extraction.
 
 ## Migration Strategy
 
@@ -782,7 +782,7 @@ Folders:
 - `src/test/java/com/phaiffertech/platform/integration/crm`
 
 Base classes:
-- `IntegrationTestContainersConfig` (singleton MySQL Testcontainer + dynamic datasource properties)
+- `IntegrationTestContainersConfig` (singleton PostgreSQL Testcontainer + dynamic datasource properties)
 - `AbstractIntegrationTest` (HTTP and SQL helpers)
 
 Coverage includes:
@@ -812,7 +812,7 @@ Docker compatibility note:
 - Runs backend build/tests, frontend lint/build and docker image build
 
 ### Docker Compose Profiles
-- default (sem profile): mysql + backend + frontend
+- default (sem profile): postgres + backend + frontend
 - `tools`: adminer
 - `observability`: prometheus + grafana + loki
 
@@ -821,4 +821,4 @@ Base IaC scaffolding at `infra/terraform`:
 - provider and variables
 - network (VCN, subnets, route/security primitives)
 - compute and load balancer
-- managed MySQL service blueprint
+- managed PostgreSQL service blueprint

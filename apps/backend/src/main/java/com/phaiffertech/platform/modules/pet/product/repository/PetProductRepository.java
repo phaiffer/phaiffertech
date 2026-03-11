@@ -20,9 +20,9 @@ public interface PetProductRepository extends JpaRepository<PetProduct, UUID>, B
             SELECT p
             FROM PetProduct p
             WHERE p.tenantId = :tenantId
-              AND (:search IS NULL OR
-                   LOWER(p.name) LIKE LOWER(CONCAT('%', :search, '%')) OR
-                   LOWER(p.sku) LIKE LOWER(CONCAT('%', :search, '%')))
+              AND (:search = '%' OR
+                   LOWER(p.name) LIKE :search OR
+                   LOWER(p.sku) LIKE :search)
             """)
     Page<PetProduct> findAllByTenantIdAndSearch(
             @Param("tenantId") UUID tenantId,

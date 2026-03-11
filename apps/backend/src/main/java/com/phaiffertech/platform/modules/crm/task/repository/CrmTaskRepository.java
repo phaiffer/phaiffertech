@@ -15,20 +15,20 @@ public interface CrmTaskRepository extends JpaRepository<CrmTask, UUID> {
             SELECT t
             FROM CrmTask t
             WHERE t.tenantId = :tenantId
-              AND (:status IS NULL OR UPPER(t.status) = UPPER(:status))
-              AND (:priority IS NULL OR UPPER(t.priority) = UPPER(:priority))
+              AND (:status IS NULL OR t.status = :status)
+              AND (:priority IS NULL OR t.priority = :priority)
               AND (:assignedUserId IS NULL OR t.assignedUserId = :assignedUserId)
-              AND (:relatedReferenceType IS NULL OR UPPER(t.relatedType) = UPPER(:relatedReferenceType))
+              AND (:relatedReferenceType IS NULL OR t.relatedType = :relatedReferenceType)
               AND (:relatedId IS NULL OR t.relatedId = :relatedId)
               AND (:companyId IS NULL OR t.companyId = :companyId)
               AND (:contactId IS NULL OR t.contactId = :contactId)
               AND (:leadId IS NULL OR t.leadId = :leadId)
               AND (:dealId IS NULL OR t.dealId = :dealId)
-              AND (:search IS NULL OR
-                   LOWER(t.title) LIKE LOWER(CONCAT('%', :search, '%')) OR
-                   LOWER(COALESCE(t.description, '')) LIKE LOWER(CONCAT('%', :search, '%')) OR
-                   LOWER(COALESCE(t.priority, '')) LIKE LOWER(CONCAT('%', :search, '%')) OR
-                   LOWER(COALESCE(t.status, '')) LIKE LOWER(CONCAT('%', :search, '%')))
+              AND (:search = '%' OR
+                   LOWER(t.title) LIKE :search OR
+                   LOWER(COALESCE(t.description, '')) LIKE :search OR
+                   LOWER(COALESCE(t.priority, '')) LIKE :search OR
+                   LOWER(COALESCE(t.status, '')) LIKE :search)
             """)
     Page<CrmTask> findAllByTenantAndSearch(
             @Param("tenantId") UUID tenantId,

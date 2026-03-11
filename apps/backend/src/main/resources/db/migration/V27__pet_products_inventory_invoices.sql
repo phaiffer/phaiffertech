@@ -1,93 +1,96 @@
 -- PET V1 commercial entities and permissions.
 
 CREATE TABLE pet_products (
-    id CHAR(36) PRIMARY KEY,
-    tenant_id CHAR(36) NOT NULL,
+    id UUID PRIMARY KEY,
+    tenant_id UUID NOT NULL,
     name VARCHAR(150) NOT NULL,
     sku VARCHAR(80) NOT NULL,
     price DECIMAL(10, 2) NOT NULL DEFAULT 0.00,
     stock_quantity INT NOT NULL DEFAULT 0,
-    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     created_by VARCHAR(64) NOT NULL DEFAULT 'system',
     updated_by VARCHAR(64) NOT NULL DEFAULT 'system',
-    deleted_at TIMESTAMP NULL,
+    deleted_at TIMESTAMPTZ NULL,
     CONSTRAINT fk_pet_products_tenant FOREIGN KEY (tenant_id) REFERENCES tenants (id),
-    CONSTRAINT uq_pet_products_tenant_sku UNIQUE (tenant_id, sku),
-    INDEX idx_pet_products_name (tenant_id, name)
+    CONSTRAINT uq_pet_products_tenant_sku UNIQUE (tenant_id, sku)
 );
 
+CREATE INDEX idx_pet_products_name ON pet_products (tenant_id, name);
+
 CREATE TABLE pet_inventory_movements (
-    id CHAR(36) PRIMARY KEY,
-    tenant_id CHAR(36) NOT NULL,
-    product_id CHAR(36) NOT NULL,
+    id UUID PRIMARY KEY,
+    tenant_id UUID NOT NULL,
+    product_id UUID NOT NULL,
     movement_type VARCHAR(20) NOT NULL,
     quantity INT NOT NULL,
     notes TEXT NULL,
-    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     created_by VARCHAR(64) NOT NULL DEFAULT 'system',
     updated_by VARCHAR(64) NOT NULL DEFAULT 'system',
-    deleted_at TIMESTAMP NULL,
+    deleted_at TIMESTAMPTZ NULL,
     CONSTRAINT fk_pet_inventory_movements_tenant FOREIGN KEY (tenant_id) REFERENCES tenants (id),
-    CONSTRAINT fk_pet_inventory_movements_product FOREIGN KEY (product_id) REFERENCES pet_products (id),
-    INDEX idx_pet_inventory_movements_product (tenant_id, product_id, created_at),
-    INDEX idx_pet_inventory_movements_type (tenant_id, movement_type)
+    CONSTRAINT fk_pet_inventory_movements_product FOREIGN KEY (product_id) REFERENCES pet_products (id)
 );
 
+CREATE INDEX idx_pet_inventory_movements_product ON pet_inventory_movements (tenant_id, product_id, created_at);
+CREATE INDEX idx_pet_inventory_movements_type ON pet_inventory_movements (tenant_id, movement_type);
+
 CREATE TABLE pet_invoices (
-    id CHAR(36) PRIMARY KEY,
-    tenant_id CHAR(36) NOT NULL,
-    client_id CHAR(36) NOT NULL,
+    id UUID PRIMARY KEY,
+    tenant_id UUID NOT NULL,
+    client_id UUID NOT NULL,
     total_amount DECIMAL(10, 2) NOT NULL DEFAULT 0.00,
     status VARCHAR(40) NOT NULL DEFAULT 'ISSUED',
-    issued_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    issued_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     created_by VARCHAR(64) NOT NULL DEFAULT 'system',
     updated_by VARCHAR(64) NOT NULL DEFAULT 'system',
-    deleted_at TIMESTAMP NULL,
+    deleted_at TIMESTAMPTZ NULL,
     CONSTRAINT fk_pet_invoices_tenant FOREIGN KEY (tenant_id) REFERENCES tenants (id),
-    CONSTRAINT fk_pet_invoices_client FOREIGN KEY (client_id) REFERENCES pet_clients (id),
-    INDEX idx_pet_invoices_client (tenant_id, client_id, issued_at),
-    INDEX idx_pet_invoices_status (tenant_id, status, issued_at)
+    CONSTRAINT fk_pet_invoices_client FOREIGN KEY (client_id) REFERENCES pet_clients (id)
 );
+
+CREATE INDEX idx_pet_invoices_client ON pet_invoices (tenant_id, client_id, issued_at);
+CREATE INDEX idx_pet_invoices_status ON pet_invoices (tenant_id, status, issued_at);
 
 INSERT INTO permissions (id, code, description)
 SELECT seed.id, seed.code, seed.description
 FROM (
-    SELECT '00000000-0000-0000-0000-000000001311' AS id, 'pet.service.read' AS code, 'Read pet services' AS description
-    UNION ALL SELECT '00000000-0000-0000-0000-000000001312', 'pet.service.create', 'Create pet services'
-    UNION ALL SELECT '00000000-0000-0000-0000-000000001313', 'pet.service.update', 'Update pet services'
-    UNION ALL SELECT '00000000-0000-0000-0000-000000001314', 'pet.service.delete', 'Delete pet services'
-    UNION ALL SELECT '00000000-0000-0000-0000-000000001315', 'pet.professional.read', 'Read pet professionals'
-    UNION ALL SELECT '00000000-0000-0000-0000-000000001316', 'pet.professional.create', 'Create pet professionals'
-    UNION ALL SELECT '00000000-0000-0000-0000-000000001317', 'pet.professional.update', 'Update pet professionals'
-    UNION ALL SELECT '00000000-0000-0000-0000-000000001318', 'pet.professional.delete', 'Delete pet professionals'
-    UNION ALL SELECT '00000000-0000-0000-0000-000000001319', 'pet.medical-record.read', 'Read pet medical records'
-    UNION ALL SELECT '00000000-0000-0000-0000-000000001320', 'pet.medical-record.create', 'Create pet medical records'
-    UNION ALL SELECT '00000000-0000-0000-0000-000000001321', 'pet.medical-record.update', 'Update pet medical records'
-    UNION ALL SELECT '00000000-0000-0000-0000-000000001322', 'pet.medical-record.delete', 'Delete pet medical records'
-    UNION ALL SELECT '00000000-0000-0000-0000-000000001323', 'pet.vaccination.read', 'Read pet vaccinations'
-    UNION ALL SELECT '00000000-0000-0000-0000-000000001324', 'pet.vaccination.create', 'Create pet vaccinations'
-    UNION ALL SELECT '00000000-0000-0000-0000-000000001325', 'pet.vaccination.update', 'Update pet vaccinations'
-    UNION ALL SELECT '00000000-0000-0000-0000-000000001326', 'pet.vaccination.delete', 'Delete pet vaccinations'
-    UNION ALL SELECT '00000000-0000-0000-0000-000000001327', 'pet.prescription.read', 'Read pet prescriptions'
-    UNION ALL SELECT '00000000-0000-0000-0000-000000001328', 'pet.prescription.create', 'Create pet prescriptions'
-    UNION ALL SELECT '00000000-0000-0000-0000-000000001329', 'pet.prescription.update', 'Update pet prescriptions'
-    UNION ALL SELECT '00000000-0000-0000-0000-000000001330', 'pet.prescription.delete', 'Delete pet prescriptions'
-    UNION ALL SELECT '00000000-0000-0000-0000-000000001331', 'pet.product.read', 'Read pet products'
-    UNION ALL SELECT '00000000-0000-0000-0000-000000001332', 'pet.product.create', 'Create pet products'
-    UNION ALL SELECT '00000000-0000-0000-0000-000000001333', 'pet.product.update', 'Update pet products'
-    UNION ALL SELECT '00000000-0000-0000-0000-000000001334', 'pet.product.delete', 'Delete pet products'
-    UNION ALL SELECT '00000000-0000-0000-0000-000000001335', 'pet.inventory.read', 'Read pet inventory movements'
-    UNION ALL SELECT '00000000-0000-0000-0000-000000001336', 'pet.inventory.create', 'Create pet inventory movements'
-    UNION ALL SELECT '00000000-0000-0000-0000-000000001337', 'pet.inventory.update', 'Update pet inventory movements'
-    UNION ALL SELECT '00000000-0000-0000-0000-000000001338', 'pet.inventory.delete', 'Delete pet inventory movements'
-    UNION ALL SELECT '00000000-0000-0000-0000-000000001339', 'pet.invoice.read', 'Read pet invoices'
-    UNION ALL SELECT '00000000-0000-0000-0000-000000001340', 'pet.invoice.create', 'Create pet invoices'
-    UNION ALL SELECT '00000000-0000-0000-0000-000000001341', 'pet.invoice.update', 'Update pet invoices'
-    UNION ALL SELECT '00000000-0000-0000-0000-000000001342', 'pet.invoice.delete', 'Delete pet invoices'
+    SELECT '00000000-0000-0000-0000-000000001311'::uuid AS id, 'pet.service.read' AS code, 'Read pet services' AS description
+    UNION ALL SELECT '00000000-0000-0000-0000-000000001312'::uuid, 'pet.service.create', 'Create pet services'
+    UNION ALL SELECT '00000000-0000-0000-0000-000000001313'::uuid, 'pet.service.update', 'Update pet services'
+    UNION ALL SELECT '00000000-0000-0000-0000-000000001314'::uuid, 'pet.service.delete', 'Delete pet services'
+    UNION ALL SELECT '00000000-0000-0000-0000-000000001315'::uuid, 'pet.professional.read', 'Read pet professionals'
+    UNION ALL SELECT '00000000-0000-0000-0000-000000001316'::uuid, 'pet.professional.create', 'Create pet professionals'
+    UNION ALL SELECT '00000000-0000-0000-0000-000000001317'::uuid, 'pet.professional.update', 'Update pet professionals'
+    UNION ALL SELECT '00000000-0000-0000-0000-000000001318'::uuid, 'pet.professional.delete', 'Delete pet professionals'
+    UNION ALL SELECT '00000000-0000-0000-0000-000000001319'::uuid, 'pet.medical-record.read', 'Read pet medical records'
+    UNION ALL SELECT '00000000-0000-0000-0000-000000001320'::uuid, 'pet.medical-record.create', 'Create pet medical records'
+    UNION ALL SELECT '00000000-0000-0000-0000-000000001321'::uuid, 'pet.medical-record.update', 'Update pet medical records'
+    UNION ALL SELECT '00000000-0000-0000-0000-000000001322'::uuid, 'pet.medical-record.delete', 'Delete pet medical records'
+    UNION ALL SELECT '00000000-0000-0000-0000-000000001323'::uuid, 'pet.vaccination.read', 'Read pet vaccinations'
+    UNION ALL SELECT '00000000-0000-0000-0000-000000001324'::uuid, 'pet.vaccination.create', 'Create pet vaccinations'
+    UNION ALL SELECT '00000000-0000-0000-0000-000000001325'::uuid, 'pet.vaccination.update', 'Update pet vaccinations'
+    UNION ALL SELECT '00000000-0000-0000-0000-000000001326'::uuid, 'pet.vaccination.delete', 'Delete pet vaccinations'
+    UNION ALL SELECT '00000000-0000-0000-0000-000000001327'::uuid, 'pet.prescription.read', 'Read pet prescriptions'
+    UNION ALL SELECT '00000000-0000-0000-0000-000000001328'::uuid, 'pet.prescription.create', 'Create pet prescriptions'
+    UNION ALL SELECT '00000000-0000-0000-0000-000000001329'::uuid, 'pet.prescription.update', 'Update pet prescriptions'
+    UNION ALL SELECT '00000000-0000-0000-0000-000000001330'::uuid, 'pet.prescription.delete', 'Delete pet prescriptions'
+    UNION ALL SELECT '00000000-0000-0000-0000-000000001331'::uuid, 'pet.product.read', 'Read pet products'
+    UNION ALL SELECT '00000000-0000-0000-0000-000000001332'::uuid, 'pet.product.create', 'Create pet products'
+    UNION ALL SELECT '00000000-0000-0000-0000-000000001333'::uuid, 'pet.product.update', 'Update pet products'
+    UNION ALL SELECT '00000000-0000-0000-0000-000000001334'::uuid, 'pet.product.delete', 'Delete pet products'
+    UNION ALL SELECT '00000000-0000-0000-0000-000000001335'::uuid, 'pet.inventory.read', 'Read pet inventory movements'
+    UNION ALL SELECT '00000000-0000-0000-0000-000000001336'::uuid, 'pet.inventory.create', 'Create pet inventory movements'
+    UNION ALL SELECT '00000000-0000-0000-0000-000000001337'::uuid, 'pet.inventory.update', 'Update pet inventory movements'
+    UNION ALL SELECT '00000000-0000-0000-0000-000000001338'::uuid, 'pet.inventory.delete', 'Delete pet inventory movements'
+    UNION ALL SELECT '00000000-0000-0000-0000-000000001339'::uuid, 'pet.invoice.read', 'Read pet invoices'
+    UNION ALL SELECT '00000000-0000-0000-0000-000000001340'::uuid, 'pet.invoice.create', 'Create pet invoices'
+    UNION ALL SELECT '00000000-0000-0000-0000-000000001341'::uuid, 'pet.invoice.update', 'Update pet invoices'
+    UNION ALL SELECT '00000000-0000-0000-0000-000000001342'::uuid, 'pet.invoice.delete', 'Delete pet invoices'
 ) AS seed
 WHERE NOT EXISTS (
     SELECT 1

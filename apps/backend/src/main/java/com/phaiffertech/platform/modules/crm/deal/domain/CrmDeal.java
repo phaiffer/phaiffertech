@@ -31,22 +31,22 @@ public class CrmDeal extends BaseTenantEntity {
     @Column(name = "status", nullable = false, length = 40)
     private String status = "OPEN";
 
-    @Column(name = "pipeline_id", nullable = false, columnDefinition = "char(36)")
+    @Column(name = "pipeline_id", nullable = false)
     private UUID pipelineId;
 
-    @Column(name = "pipeline_stage_id", columnDefinition = "char(36)")
+    @Column(name = "pipeline_stage_id")
     private UUID pipelineStageId;
 
-    @Column(name = "company_id", columnDefinition = "char(36)")
+    @Column(name = "company_id")
     private UUID companyId;
 
-    @Column(name = "contact_id", columnDefinition = "char(36)")
+    @Column(name = "contact_id")
     private UUID contactId;
 
-    @Column(name = "lead_id", columnDefinition = "char(36)")
+    @Column(name = "lead_id")
     private UUID leadId;
 
-    @Column(name = "owner_user_id", columnDefinition = "char(36)")
+    @Column(name = "owner_user_id")
     private UUID ownerUserId;
 
     @Column(name = "expected_close_date")

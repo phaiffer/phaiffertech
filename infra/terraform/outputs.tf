@@ -23,7 +23,7 @@ output "load_balancer_id" {
   value       = oci_load_balancer_load_balancer.platform_lb.id
 }
 
-output "mysql_db_system_id" {
-  description = "MySQL managed DB system ID"
-  value       = oci_mysql_mysql_db_system.platform_mysql.id
+output "postgresql_db_system_id" {
+  description = "PostgreSQL managed DB system ID"
+  value       = oci_psql_db_system.platform_postgresql.id
 }
