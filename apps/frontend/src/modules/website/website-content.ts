@@ -163,7 +163,7 @@ const websiteContent: Record<PublicLocale, WebsiteContent> = {
       hero: {
         eyebrow: 'Data engineering · cloud architecture · operational platforms',
         title:
-          'PhaifferTech builds modular software platforms for operational environments, technical authority and applied research.',
+          'PhaifferTech.',
         description:
           'The company combines product execution, platform engineering and research-oriented thinking to design scalable SaaS foundations, industrial and clinical operational systems, and data-intensive architectures without losing architectural discipline.',
         primaryCta: { label: 'Explore the platform', href: '/platform' },
