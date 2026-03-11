@@ -26,23 +26,23 @@ export function ConfirmDialog({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 px-4">
-      <div className="w-full max-w-md rounded-xl bg-white p-5 shadow-2xl">
-        <h3 className="text-base font-semibold text-slate-900">{title}</h3>
-        {description ? <div className="mt-2 text-sm text-slate-600">{description}</div> : null}
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[color:var(--tenant-primary-soft)] px-[var(--space-4)]">
+      <div className="w-full max-w-md rounded-[var(--radius-xl)] bg-[color:var(--surface-1)] p-[var(--space-5)] shadow-card">
+        <h3 className="text-[length:var(--font-size-md)] font-semibold text-[color:var(--app-shell-heading)]">{title}</h3>
+        {description ? <div className="mt-[var(--space-2)] text-[length:var(--font-size-sm)] text-[color:var(--app-shell-muted)]">{description}</div> : null}
 
-        <div className="mt-5 flex justify-end gap-2">
+        <div className="mt-[var(--space-5)] flex justify-end gap-[var(--space-2)]">
           <button
             type="button"
             onClick={onCancel}
-            className="rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700"
+            className="rounded-[var(--radius-md)] border border-[color:var(--app-shell-border)] bg-[color:var(--surface-1)] px-[var(--space-3)] py-[var(--space-2)] text-[length:var(--font-size-sm)] font-medium text-[color:var(--app-shell-text)] transition duration-200 hover:shadow-card"
           >
             {cancelLabel}
           </button>
           <button
             type="button"
             onClick={onConfirm}
-            className="rounded-lg border border-rose-300 bg-rose-600 px-3 py-2 text-sm font-medium text-white"
+            className="rounded-[var(--radius-md)] border border-[color:var(--color-danger)] bg-[color:var(--color-danger)] px-[var(--space-3)] py-[var(--space-2)] text-[length:var(--font-size-sm)] font-medium text-[color:var(--surface-1)] transition duration-200 hover:shadow-card"
           >
             {confirmLabel}
           </button>

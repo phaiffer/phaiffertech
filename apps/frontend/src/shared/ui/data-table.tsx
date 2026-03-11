@@ -23,30 +23,36 @@ export function DataTable<T>({
   emptyMessage = 'Nenhum registro encontrado.'
 }: DataTableProps<T>) {
   return (
-    <div className="overflow-hidden rounded-xl border border-slate-200 bg-white">
-      <table className="min-w-full divide-y divide-slate-200">
-        <thead className="bg-slate-50">
+    <div className="overflow-hidden rounded-[var(--radius-lg)] border border-[color:var(--app-shell-border)] bg-[color:var(--surface-1)]">
+      <table className="min-w-full divide-y divide-[color:var(--app-shell-border)]">
+        <thead className="bg-[color:var(--surface-2)]">
           <tr>
             {columns.map((column) => (
               <th
                 key={column.key}
-                className={`px-4 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 ${column.className ?? ''}`}
+                className={`px-4 py-2 text-left text-[length:var(--font-size-xs)] font-semibold uppercase tracking-wide text-[color:var(--app-shell-muted)] ${column.className ?? ''}`}
               >
                 {column.header}
               </th>
             ))}
           </tr>
         </thead>
-        <tbody className="divide-y divide-slate-100 text-sm text-slate-700">
+        <tbody className="divide-y divide-[color:var(--app-shell-border)] text-[length:var(--font-size-sm)] text-[color:var(--app-shell-text)]">
           {loading ? (
             <tr>
-              <td colSpan={columns.length} className="px-4 py-6 text-center text-sm text-slate-500">
+              <td
+                colSpan={columns.length}
+                className="px-4 py-6 text-center text-[length:var(--font-size-sm)] text-[color:var(--app-shell-muted)]"
+              >
                 Carregando...
               </td>
             </tr>
           ) : rows.length === 0 ? (
             <tr>
-              <td colSpan={columns.length} className="px-4 py-6 text-center text-sm text-slate-500">
+              <td
+                colSpan={columns.length}
+                className="px-4 py-6 text-center text-[length:var(--font-size-sm)] text-[color:var(--app-shell-muted)]"
+              >
                 {emptyMessage}
               </td>
             </tr>

@@ -4,28 +4,28 @@ export const publicSectionLayoutClass = 'grid gap-12 lg:grid-cols-[0.8fr_1.2fr] 
 
 export const publicHeadingColumnClass = 'lg:sticky lg:top-28';
 
-export const publicEyebrowClass = 'text-[10px] font-bold uppercase tracking-[0.3em] text-sky-400';
+export const publicEyebrowClass = 'text-[length:var(--font-size-xs)] font-bold uppercase tracking-[0.3em] text-[color:var(--tenant-accent)]';
 
 export const publicSectionTitleClass =
-  'mt-4 text-4xl font-extrabold tracking-tight text-white md:text-5xl';
+  'mt-[var(--space-4)] text-4xl font-extrabold tracking-tight text-[color:var(--foreground)] md:text-5xl';
 
 export const publicSectionSupportingTextClass =
-  'mt-6 max-w-2xl text-base leading-relaxed text-[#b6bec5]';
+  'mt-[var(--space-6)] max-w-2xl text-[length:var(--font-size-md)] leading-relaxed text-[color:var(--app-shell-muted)]';
 
 export const publicCardSurfaceClass =
-  'rounded-[14px] border border-white/10 bg-white/[0.02] shadow-[0_18px_40px_rgba(2,8,24,0.28)]';
+  'rounded-[var(--radius-xl)] border border-[color:var(--app-shell-border)] bg-[color:var(--surface-1)] shadow-card';
 
 export const publicInteractiveCardSurfaceClass =
-  `${publicCardSurfaceClass} transition-all duration-200 hover:bg-white/[0.05] hover:shadow-[0_0_0_1px_rgba(14,165,233,0.16),0_22px_44px_rgba(2,8,24,0.34)]`;
+  `${publicCardSurfaceClass} transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_18px_40px_var(--tenant-accent-soft)]`;
 
 export const publicHighlightSurfaceClass =
-  'rounded-[14px] border border-sky-400/28 bg-sky-400/10 shadow-[0_0_0_1px_rgba(14,165,233,0.16),0_22px_48px_rgba(14,165,233,0.16)]';
+  'rounded-[var(--radius-xl)] border border-[color:var(--tenant-accent)] bg-[color:var(--tenant-accent-soft)] shadow-[0_18px_40px_var(--tenant-accent-soft)]';
 
 export const publicChromeSurfaceClass =
-  'border border-white/10 bg-[#020617]/80 shadow-[0_18px_42px_rgba(2,8,24,0.32)] backdrop-blur-xl';
+  'border border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-panel)] shadow-card backdrop-blur-xl';
 
 export const publicPrimaryButtonClass =
-  'inline-flex items-center justify-center rounded-[14px] border border-sky-400/30 bg-sky-500 px-5 py-3 text-sm font-semibold uppercase tracking-[0.18em] text-[#020617] transition-colors hover:bg-sky-400';
+  'inline-flex items-center justify-center rounded-[var(--radius-lg)] border border-[color:var(--tenant-accent)] bg-[color:var(--tenant-accent)] px-[var(--space-5)] py-[var(--space-3)] text-[length:var(--font-size-sm)] font-semibold uppercase tracking-[0.18em] text-[color:var(--foreground)] transition duration-200 hover:shadow-[0_18px_40px_var(--tenant-accent-soft)] active:scale-[0.98]';
 
 export const publicSecondaryButtonClass =
-  'inline-flex items-center justify-center rounded-[14px] border border-white/10 bg-white/[0.03] px-5 py-3 text-sm font-semibold uppercase tracking-[0.18em] text-white transition-colors hover:border-sky-400/40 hover:text-sky-300';
+  'inline-flex items-center justify-center rounded-[var(--radius-lg)] border border-[color:var(--app-shell-border)] bg-[color:var(--surface-1)] px-[var(--space-5)] py-[var(--space-3)] text-[length:var(--font-size-sm)] font-semibold uppercase tracking-[0.18em] text-[color:var(--foreground)] transition duration-200 hover:border-[color:var(--tenant-accent)] hover:shadow-card';

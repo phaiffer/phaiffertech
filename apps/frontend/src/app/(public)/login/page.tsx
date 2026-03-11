@@ -10,6 +10,18 @@ import { useAuth } from '@/shared/hooks/use-auth';
 import { usePublicSite } from '@/shared/public/public-site-provider';
 import { getPublicSiteMessages } from '@/shared/public/public-site-messages';
 
+const fieldLabelClass =
+  'mb-[var(--space-2)] block text-[length:var(--font-size-sm)] font-semibold tracking-[0.01em] text-[color:var(--app-shell-muted)]';
+
+const fieldInputClass =
+  'mt-[var(--space-2)] w-full rounded-[var(--radius-lg)] border border-[color:var(--app-shell-border)] bg-[color:var(--surface-1)] px-[var(--space-4)] py-[var(--space-3)] text-[length:var(--font-size-sm)] text-[color:var(--app-shell-text)] outline-none transition duration-200 placeholder:text-[color:var(--app-shell-muted)] focus:border-[color:var(--tenant-accent)] focus:ring-2 focus:ring-[color:var(--tenant-accent-soft)]';
+
+const eyebrowClass =
+  'text-[length:var(--font-size-xs)] font-semibold uppercase tracking-[0.22em] text-[color:var(--app-shell-muted)]';
+
+const helperSectionClass =
+  'rounded-[var(--radius-xl)] border border-[color:var(--app-shell-border)] bg-[color:var(--surface-1)] p-[var(--space-6)] shadow-card';
+
 export default function LoginPage() {
   const router = useRouter();
   const { locale } = usePublicSite();
@@ -59,58 +71,75 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="border-b border-[var(--border)] bg-[linear-gradient(180deg,rgba(15,23,42,0.04),transparent_70%)]">
-      <div className="mx-auto grid w-full max-w-7xl gap-10 px-4 py-16 sm:px-6 lg:grid-cols-[0.95fr_1.05fr] lg:px-8 lg:py-20">
-        <section className="rounded-[2rem] border border-[var(--border)] bg-[var(--surface)] p-8 shadow-[0_24px_60px_rgba(15,23,42,0.12)]">
-          <Link href="/" className="text-sm font-medium text-action">
+    <div
+      className="border-b border-[color:var(--border)]"
+      style={{ backgroundImage: 'linear-gradient(180deg, var(--tenant-primary-soft), transparent 70%)' }}
+    >
+      <div className="mx-auto grid w-full max-w-7xl gap-[var(--space-10)] px-[var(--space-4)] py-[var(--space-16)] sm:px-[var(--space-6)] lg:grid-cols-[0.95fr_1.05fr] lg:px-[var(--space-8)] lg:py-[var(--space-16)]">
+        <section className="rounded-[var(--radius-xl)] border border-[color:var(--app-shell-border)] bg-[color:var(--surface-1)] p-[var(--space-8)] shadow-card">
+          <Link
+            href="/"
+            className="text-[length:var(--font-size-sm)] font-medium text-[color:var(--tenant-accent)]"
+          >
             {t.returnToSite}
           </Link>
 
-          <p className="mt-6 text-[11px] font-semibold uppercase tracking-[0.25em] text-action">
+          <p className="mt-[var(--space-6)] text-[length:var(--font-size-xs)] font-semibold uppercase tracking-[0.25em] text-[color:var(--tenant-accent)]">
             {t.eyebrow}
           </p>
 
-          <h1 className="mt-4 text-3xl font-semibold text-[var(--foreground)]">
+          <h1 className="mt-[var(--space-4)] text-3xl font-semibold text-[color:var(--foreground)]">
             {t.title}
           </h1>
 
-          <p className="mt-3 text-sm leading-6 text-slate-600">{t.description}</p>
+          <p className="mt-[var(--space-3)] max-w-2xl text-[length:var(--font-size-sm)] leading-6 text-[color:var(--app-shell-muted)]">
+            {t.description}
+          </p>
 
-          <form onSubmit={handleSubmit} className="mt-8 space-y-5">
+          <form onSubmit={handleSubmit} className="mt-[var(--space-8)] space-y-[var(--space-5)]">
             <div>
-              <label className="text-sm font-medium">{t.tenantCodeLabel}</label>
+              <label htmlFor="tenant-code" className={fieldLabelClass}>
+                {t.tenantCodeLabel}
+              </label>
               <input
+                id="tenant-code"
                 value={tenantCode}
                 onChange={(e) => setTenantCode(e.target.value)}
-                className="mt-2 w-full rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-3 text-sm outline-none transition focus:border-action"
+                className={fieldInputClass}
                 required
               />
             </div>
 
             <div>
-              <label className="text-sm font-medium">{t.emailLabel}</label>
+              <label htmlFor="email" className={fieldLabelClass}>
+                {t.emailLabel}
+              </label>
               <input
+                id="email"
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="mt-2 w-full rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-3 text-sm outline-none transition focus:border-action"
+                className={fieldInputClass}
                 required
               />
             </div>
 
             <div>
-              <label className="text-sm font-medium">{t.passwordLabel}</label>
+              <label htmlFor="password" className={fieldLabelClass}>
+                {t.passwordLabel}
+              </label>
               <input
+                id="password"
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="mt-2 w-full rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-3 text-sm outline-none transition focus:border-action"
+                className={fieldInputClass}
                 required
               />
             </div>
 
             {error ? (
-              <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
+              <div className="rounded-[var(--radius-lg)] border border-[color:var(--color-danger)] bg-[color:var(--color-danger-soft)] px-[var(--space-4)] py-[var(--space-3)] text-[length:var(--font-size-sm)] text-[color:var(--color-danger)]">
                 {error}
               </div>
             ) : null}
@@ -118,28 +147,32 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={submitting}
-              className="w-full rounded-xl bg-action px-5 py-3 text-sm font-semibold text-white shadow-[0_16px_30px_rgba(31,111,235,0.24)] transition hover:bg-blue-700 disabled:opacity-70"
+              className="w-full rounded-[var(--radius-lg)] border border-[color:var(--tenant-accent)] bg-[color:var(--tenant-accent)] px-[var(--space-5)] py-[var(--space-3)] text-[length:var(--font-size-sm)] font-semibold text-[color:var(--foreground)] shadow-card transition duration-200 hover:shadow-[0_18px_40px_var(--tenant-accent-soft)] focus:outline-none focus:ring-2 focus:ring-[color:var(--tenant-accent-soft)] active:scale-[0.98] disabled:opacity-70"
             >
               {submitting ? t.loadingLabel : t.submitLabel}
             </button>
           </form>
 
-          <div className="mt-8 rounded-2xl border border-[var(--border)] bg-[var(--surface-muted)] px-5 py-4">
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+          <div className="mt-[var(--space-8)] rounded-[var(--radius-xl)] border border-[color:var(--app-shell-border)] bg-[color:var(--surface-2)] px-[var(--space-5)] py-[var(--space-4)]">
+            <p className={eyebrowClass}>
               {t.demoReadinessEyebrow}
             </p>
 
-            <div className="mt-4 grid gap-3 sm:grid-cols-2">
+            <div className="mt-[var(--space-4)] grid gap-[var(--space-3)] sm:grid-cols-2">
               <div>
-                <p className="text-xs text-slate-500">{t.demoEmail}</p>
-                <p className="text-sm font-medium text-[var(--foreground)]">
+                <p className="text-[length:var(--font-size-xs)] text-[color:var(--app-shell-muted)]">
+                  {t.demoEmail}
+                </p>
+                <p className="text-[length:var(--font-size-sm)] font-medium text-[color:var(--foreground)]">
                   admin@local.test
                 </p>
               </div>
 
               <div>
-                <p className="text-xs text-slate-500">{t.demoPassword}</p>
-                <p className="text-sm font-medium text-[var(--foreground)]">
+                <p className="text-[length:var(--font-size-xs)] text-[color:var(--app-shell-muted)]">
+                  {t.demoPassword}
+                </p>
+                <p className="text-[length:var(--font-size-sm)] font-medium text-[color:var(--foreground)]">
                   Admin@123
                 </p>
               </div>
@@ -147,9 +180,9 @@ export default function LoginPage() {
           </div>
         </section>
 
-        <aside className="grid gap-5">
-          <section className="rounded-[2rem] border border-sky-500/20 bg-[linear-gradient(180deg,rgba(255,255,255,0.95),rgba(238,242,255,0.92))] p-8 shadow-[0_24px_60px_rgba(15,23,42,0.12)] dark:bg-[linear-gradient(180deg,rgba(17,26,46,0.98),rgba(23,35,61,0.92))]">
-            <div className="flex h-24 w-24 items-center justify-center overflow-hidden rounded-[1.75rem] border border-sky-500/20 bg-[var(--surface)] shadow-[0_18px_45px_rgba(15,23,42,0.16)]">
+        <aside className="grid gap-[var(--space-5)]">
+          <section className={`${helperSectionClass} bg-[color:var(--surface-2)]`}>
+            <div className="flex h-24 w-24 items-center justify-center overflow-hidden rounded-[var(--radius-xl)] border border-[color:var(--app-shell-border)] bg-[color:var(--surface-1)] shadow-card">
               <Image
                 src="/logo.png"
                 alt="PhaifferTech logo"
@@ -160,47 +193,55 @@ export default function LoginPage() {
               />
             </div>
 
-            <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-slate-500">
+            <p className={`mt-[var(--space-5)] ${eyebrowClass}`}>
               {t.platformContextEyebrow}
             </p>
 
-            <h2 className="mt-5 text-2xl font-semibold text-[var(--foreground)]">
+            <h2 className="mt-[var(--space-5)] text-2xl font-semibold text-[color:var(--foreground)]">
               {t.helperTitle}
             </h2>
 
-            <p className="mt-4 text-sm leading-7 text-slate-600">{t.helperText}</p>
+            <p className="mt-[var(--space-4)] text-[length:var(--font-size-sm)] leading-7 text-[color:var(--app-shell-muted)]">
+              {t.helperText}
+            </p>
           </section>
 
-          <div className="grid gap-4 sm:grid-cols-2">
-            <section className="rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-6 shadow-card">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-slate-500">
+          <div className="grid gap-[var(--space-4)] sm:grid-cols-2">
+            <section className={helperSectionClass}>
+              <p className={eyebrowClass}>
                 {t.contractScopeEyebrow}
               </p>
-              <h3 className="mt-3 text-lg font-semibold text-[var(--foreground)]">
+              <h3 className="mt-[var(--space-3)] text-[length:var(--font-size-lg)] font-semibold text-[color:var(--foreground)]">
                 {t.contractTitle}
               </h3>
-              <p className="mt-3 text-sm leading-6 text-slate-600">{t.contractText}</p>
+              <p className="mt-[var(--space-3)] text-[length:var(--font-size-sm)] leading-6 text-[color:var(--app-shell-muted)]">
+                {t.contractText}
+              </p>
             </section>
 
-            <section className="rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-6 shadow-card">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-slate-500">
+            <section className={helperSectionClass}>
+              <p className={eyebrowClass}>
                 {t.governanceEyebrow}
               </p>
-              <h3 className="mt-3 text-lg font-semibold text-[var(--foreground)]">
+              <h3 className="mt-[var(--space-3)] text-[length:var(--font-size-lg)] font-semibold text-[color:var(--foreground)]">
                 {t.governanceTitle}
               </h3>
-              <p className="mt-3 text-sm leading-6 text-slate-600">{t.governanceText}</p>
+              <p className="mt-[var(--space-3)] text-[length:var(--font-size-sm)] leading-6 text-[color:var(--app-shell-muted)]">
+                {t.governanceText}
+              </p>
             </section>
           </div>
 
-          <section className="rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-6 shadow-card">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-slate-500">
+          <section className={helperSectionClass}>
+            <p className={eyebrowClass}>
               {t.demoReadinessEyebrow}
             </p>
-            <h3 className="mt-3 text-lg font-semibold text-[var(--foreground)]">
+            <h3 className="mt-[var(--space-3)] text-[length:var(--font-size-lg)] font-semibold text-[color:var(--foreground)]">
               {t.demoTitle}
             </h3>
-            <p className="mt-3 text-sm leading-6 text-slate-600">{t.demoText}</p>
+            <p className="mt-[var(--space-3)] text-[length:var(--font-size-sm)] leading-6 text-[color:var(--app-shell-muted)]">
+              {t.demoText}
+            </p>
           </section>
         </aside>
       </div>

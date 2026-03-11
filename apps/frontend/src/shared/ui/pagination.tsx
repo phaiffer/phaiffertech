@@ -10,25 +10,25 @@ export function Pagination({ page, totalPages, totalElements, onPageChange }: Pa
   const canNext = page + 1 < totalPages;
 
   return (
-    <div className="flex items-center justify-between rounded-xl border border-slate-200 bg-white px-4 py-3">
-      <p className="text-xs text-slate-500">Total: {totalElements}</p>
-      <div className="flex items-center gap-2">
+    <div className="flex items-center justify-between rounded-[var(--radius-lg)] border border-[color:var(--app-shell-border)] bg-[color:var(--surface-1)] px-[var(--space-4)] py-[var(--space-3)]">
+      <p className="text-[length:var(--font-size-xs)] text-[color:var(--app-shell-muted)]">Total: {totalElements}</p>
+      <div className="flex items-center gap-[var(--space-2)]">
         <button
           type="button"
           disabled={!canPrevious}
           onClick={() => onPageChange(page - 1)}
-          className="rounded-lg border border-slate-300 px-3 py-1 text-xs font-medium text-slate-700 disabled:cursor-not-allowed disabled:opacity-40"
+          className="rounded-[var(--radius-md)] border border-[color:var(--app-shell-border)] bg-[color:var(--surface-1)] px-[var(--space-3)] py-[var(--space-1)] text-[length:var(--font-size-xs)] font-medium text-[color:var(--app-shell-text)] transition duration-200 hover:shadow-card disabled:cursor-not-allowed disabled:opacity-40"
         >
           Anterior
         </button>
-        <span className="text-xs text-slate-600">
+        <span className="text-[length:var(--font-size-xs)] text-[color:var(--app-shell-muted)]">
           Página {totalPages === 0 ? 0 : page + 1} de {totalPages}
         </span>
         <button
           type="button"
           disabled={!canNext}
           onClick={() => onPageChange(page + 1)}
-          className="rounded-lg border border-slate-300 px-3 py-1 text-xs font-medium text-slate-700 disabled:cursor-not-allowed disabled:opacity-40"
+          className="rounded-[var(--radius-md)] border border-[color:var(--app-shell-border)] bg-[color:var(--surface-1)] px-[var(--space-3)] py-[var(--space-1)] text-[length:var(--font-size-xs)] font-medium text-[color:var(--app-shell-text)] transition duration-200 hover:shadow-card disabled:cursor-not-allowed disabled:opacity-40"
         >
           Próxima
         </button>

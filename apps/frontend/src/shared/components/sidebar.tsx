@@ -431,7 +431,7 @@ export function Sidebar() {
       }}
     >
       <div
-        className="rounded-[28px] border p-4 shadow-[0_18px_60px_rgba(15,23,42,0.18)]"
+        className="rounded-[28px] border p-4 shadow-card"
         style={{
           borderColor: 'var(--app-shell-border)',
           background:
@@ -440,7 +440,7 @@ export function Sidebar() {
       >
         <div className="flex items-start gap-3">
           {branding.logoUrl ? (
-            <span className="flex h-11 w-11 items-center justify-center overflow-hidden rounded-2xl border border-[color:var(--app-shell-border)] bg-white/80">
+            <span className="flex h-11 w-11 items-center justify-center overflow-hidden rounded-2xl border border-[color:var(--app-shell-border)] bg-[color:var(--surface-1)]">
               <img src={branding.logoUrl} alt={`${branding.scopeName} logo`} className="h-full w-full object-contain" />
             </span>
           ) : (
@@ -500,9 +500,13 @@ export function Sidebar() {
 
       <nav className="mt-6 flex-1 overflow-y-auto pr-1">
         <div className="space-y-6">
-          {groupedItems.map((group) => (
-            <section key={group.key}>
-              <p className="px-3 text-[11px] font-semibold uppercase tracking-[0.24em] text-[color:var(--app-shell-muted)]">
+          {groupedItems.map((group, index) => (
+            <section
+              key={group.key}
+              className={index > 0 ? 'border-t pt-6' : ''}
+              style={index > 0 ? { borderColor: 'var(--app-shell-border)' } : undefined}
+            >
+              <p className="px-3 text-[length:var(--font-size-xs)] font-semibold uppercase tracking-[0.24em] text-[color:var(--app-shell-muted)]">
                 {group.title}
               </p>
               <div className="mt-3 space-y-1.5">
@@ -553,9 +557,9 @@ export function Sidebar() {
           }}
           className="mt-4 w-full rounded-2xl border px-4 py-3 text-sm font-semibold transition"
           style={{
-            borderColor: 'rgba(225, 29, 72, 0.32)',
-            backgroundColor: 'rgba(225, 29, 72, 0.08)',
-            color: '#be123c'
+            borderColor: 'var(--color-danger)',
+            backgroundColor: 'var(--color-danger-soft)',
+            color: 'var(--color-danger)'
           }}
         >
           Sign out
