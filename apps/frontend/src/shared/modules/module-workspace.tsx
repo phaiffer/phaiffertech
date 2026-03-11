@@ -10,6 +10,7 @@ import {
   unavailableCapability,
   type ModuleCapability
 } from '@/shared/modules/module-capability';
+import type { GettingStartedStep } from '@/shared/onboarding/getting-started';
 
 export type ModuleWorkspaceChipTone = 'accent' | 'neutral';
 
@@ -48,13 +49,7 @@ export type ModuleWorkspaceAction = {
   capability?: ModuleCapability;
 };
 
-export type ModuleWorkspaceGuidanceStep = {
-  key: string;
-  eyebrow: string;
-  title: string;
-  description: string;
-  href?: string;
-  status?: string | null;
+export type ModuleWorkspaceGuidanceStep = GettingStartedStep & {
   capability?: ModuleCapability;
 };
 

@@ -30,6 +30,7 @@ import {
   readyCapability,
   type ModuleCapability
 } from '@/shared/modules/module-capability';
+import { GettingStartedChecklist } from '@/shared/onboarding/getting-started';
 import type { ModuleWorkspaceAction } from '@/shared/modules/module-workspace';
 import { useFrontendPlatform } from '@/shared/platform/use-frontend-platform';
 import { iotService } from '@/shared/services/iot-service';
@@ -551,25 +552,21 @@ export function IotHome() {
             </div>
           </div>
         ) : summary && firstUse ? (
-          <div className="space-y-4">
-            <IotEmptyState
-              title="Set up the IoT workspace"
-              description="This tenant does not have connected assets or live telemetry yet. Start with the first onboarding and fleet actions so the operational pulse can begin surfacing real signals."
-              tone="cyan"
-            />
-            <div className="grid gap-4 md:grid-cols-3">
-              {setupGuidance.map((action) => (
-                <IotWorkspaceActionLink
-                  key={action.href}
-                  href={action.href}
-                  eyebrow={action.eyebrow}
-                  title={action.title}
-                  description={action.capability?.kind === 'ready' ? action.description : action.capability?.description ?? action.description}
-                  capability={action.capability}
-                />
-              ))}
-            </div>
-          </div>
+          <GettingStartedChecklist
+            eyebrow="IoT Onboarding"
+            title="Set up the IoT workspace"
+            description="This tenant does not have connected assets or live telemetry yet. Work through the checklist below to onboard devices, mappings, and the first operational signals."
+            steps={setupGuidance.map((action) => ({
+              key: action.href,
+              eyebrow: action.eyebrow,
+              title: action.title,
+              description: action.capability?.kind === 'ready' ? action.description : action.capability?.description ?? action.description,
+              href: action.capability?.interactive === false ? undefined : action.href,
+              status: action.capability?.status ?? action.status ?? null,
+              actionLabel: action.capability?.actionLabel
+            }))}
+            variant="dark"
+          />
         ) : summary ? (
           <div className="space-y-6">
             <div className="grid gap-4 md:grid-cols-3">

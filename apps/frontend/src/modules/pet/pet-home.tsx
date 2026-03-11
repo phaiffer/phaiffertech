@@ -25,6 +25,7 @@ import {
   permissionCapability,
   readyCapability
 } from '@/shared/modules/module-capability';
+import { GettingStartedChecklist } from '@/shared/onboarding/getting-started';
 import { useFrontendPlatform } from '@/shared/platform/use-frontend-platform';
 import { petService } from '@/shared/services/pet-service';
 import { PetDashboardSummary } from '@/shared/types/pet';
@@ -441,18 +442,12 @@ export function PetHome() {
             />
           </div>
         ) : summary && firstUse ? (
-          <div className="space-y-4">
-            <ModuleWorkspaceState
-              tone="neutral"
-              title="PetFlow workspace not configured yet"
-              description="This tenant does not have the first clinic entities in place yet. Start with clients, patient records, and appointments so the workspace can surface clinical context."
-            />
-            <ModuleWorkspaceGuidance
-              title="Set up the PetFlow workspace"
-              description="These guided steps establish the first clinic workflow without leaving the tenant workspace context."
-              steps={setupGuidance}
-            />
-          </div>
+          <GettingStartedChecklist
+            eyebrow="PetFlow Onboarding"
+            title="Set up the PetFlow workspace"
+            description="This tenant does not have the first clinic entities in place yet. Work through the checklist below to establish clients, patient records, and appointment flow."
+            steps={setupGuidance}
+          />
         ) : summary ? (
           <div className="space-y-4">
             <MetricGrid cards={summary.summaryCards.slice(0, 4)} columns="md:grid-cols-2 xl:grid-cols-4" />

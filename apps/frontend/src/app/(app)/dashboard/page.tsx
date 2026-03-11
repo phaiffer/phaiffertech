@@ -8,6 +8,7 @@ import { DashboardSection } from '@/shared/dashboard/dashboard-section';
 import {
   buildDashboardContextCards,
   buildDashboardExperienceCopy,
+  buildDashboardGettingStartedSteps,
   buildDashboardQuickActions,
   getAccessibleWorkspaceModules,
   getContractedWorkspaceModules,
@@ -18,6 +19,7 @@ import { EmptyStateCard } from '@/shared/dashboard/empty-state-card';
 import { MetricGrid } from '@/shared/dashboard/metric-grid';
 import { StatusBadge } from '@/shared/dashboard/status-badge';
 import { ApiClientError } from '@/shared/lib/http';
+import { GettingStartedChecklist } from '@/shared/onboarding/getting-started';
 import { useFrontendPlatform } from '@/shared/platform/use-frontend-platform';
 import { moduleService } from '@/shared/services/module-service';
 import { PlatformDashboardSummary } from '@/shared/types/module';
@@ -74,6 +76,7 @@ export default function DashboardPage() {
   const experience = useMemo(() => buildDashboardExperienceCopy(platform), [platform]);
   const contextCards = useMemo(() => buildDashboardContextCards(platform), [platform]);
   const quickActions = useMemo(() => buildDashboardQuickActions(platform), [platform]);
+  const gettingStartedSteps = useMemo(() => buildDashboardGettingStartedSteps(platform), [platform]);
   const contractedModules = useMemo(() => getContractedWorkspaceModules(platform), [platform]);
   const accessibleModules = useMemo(() => getAccessibleWorkspaceModules(platform), [platform]);
 
@@ -285,6 +288,13 @@ export default function DashboardPage() {
               </section>
             ))}
           </div>
+        ) : variant === 'workspace' && gettingStartedSteps.length > 0 ? (
+          <GettingStartedChecklist
+            eyebrow="Workspace Onboarding"
+            title={`Get ${platform.branding.scopeName} ready`}
+            description="No module snapshot is available yet for this tenant workspace. Start with the guided setup flow below so the dashboard can begin surfacing real operational signals."
+            steps={gettingStartedSteps}
+          />
         ) : (
           <EmptyStateCard
             title="No summaries available"

@@ -23,6 +23,7 @@ import {
   permissionCapability,
   readyCapability
 } from '@/shared/modules/module-capability';
+import { GettingStartedChecklist } from '@/shared/onboarding/getting-started';
 import { useFrontendPlatform } from '@/shared/platform/use-frontend-platform';
 import { crmService } from '@/shared/services/crm-service';
 import { usePermissions } from '@/shared/auth/usePermissions';
@@ -421,18 +422,12 @@ export function CrmHome() {
             />
           </div>
         ) : summary && firstUse ? (
-          <div className="space-y-4">
-            <ModuleWorkspaceState
-              tone="neutral"
-              title="CRM workspace not configured yet"
-              description="This tenant does not have the first CRM records in place yet. Start with companies, contacts, and leads so the commercial pulse can begin surfacing real activity."
-            />
-            <ModuleWorkspaceGuidance
-              title="Set up the CRM workspace"
-              description="These guided steps establish the first commercial entities without leaving the tenant workspace context."
-              steps={fallbackGuidance}
-            />
-          </div>
+          <GettingStartedChecklist
+            eyebrow="CRM Onboarding"
+            title="Set up the CRM workspace"
+            description="This tenant does not have the first CRM records in place yet. Work through the checklist below to establish companies, contacts, and the first pipeline signals."
+            steps={fallbackGuidance}
+          />
         ) : summary ? (
           <div className="space-y-4">
             <MetricGrid cards={summary.summaryCards.slice(0, 4)} columns="md:grid-cols-2 xl:grid-cols-4" />

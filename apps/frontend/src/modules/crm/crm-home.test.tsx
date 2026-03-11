@@ -156,8 +156,8 @@ describe('CrmHome', () => {
       expect(crmService.getDashboardSummary).toHaveBeenCalledTimes(1);
     });
 
+    expect(screen.getByText('CRM Onboarding')).toBeInTheDocument();
     expect(screen.getByText('Set up the CRM workspace')).toBeInTheDocument();
-    expect(screen.getByText('CRM workspace not configured yet')).toBeInTheDocument();
     expect(screen.getByText(/does not have the first CRM records in place yet/i)).toBeInTheDocument();
     expect(screen.getAllByText('Manage companies').length).toBeGreaterThan(0);
   });

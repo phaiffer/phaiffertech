@@ -163,6 +163,7 @@ describe('IotHome', () => {
       expect(iotService.getDashboardSummary).toHaveBeenCalledTimes(1);
     });
 
+    expect(screen.getByText('IoT Onboarding')).toBeInTheDocument();
     expect(screen.getByText('Set up the IoT workspace')).toBeInTheDocument();
     expect(screen.getByText('Telemetry is not configured yet')).toBeInTheDocument();
     expect(screen.getAllByText('Register device').length).toBeGreaterThan(0);

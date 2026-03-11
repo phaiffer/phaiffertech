@@ -149,8 +149,8 @@ describe('PetHome', () => {
       expect(petService.getDashboardSummary).toHaveBeenCalledTimes(1);
     });
 
+    expect(screen.getByText('PetFlow Onboarding')).toBeInTheDocument();
     expect(screen.getByText('Set up the PetFlow workspace')).toBeInTheDocument();
-    expect(screen.getByText('PetFlow workspace not configured yet')).toBeInTheDocument();
     expect(screen.getByText(/does not have the first clinic entities in place yet/i)).toBeInTheDocument();
     expect(screen.getAllByText('Open appointments').length).toBeGreaterThan(0);
   });

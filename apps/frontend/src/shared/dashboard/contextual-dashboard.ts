@@ -1,4 +1,5 @@
 import { getAppThemeModeLabel } from '@/shared/lib/tenant-branding';
+import type { GettingStartedStep } from '@/shared/onboarding/getting-started';
 import { hasPermission } from '@/shared/permissions/has-permission';
 import type { FrontendPlatformState } from '@/shared/platform/frontend-platform.types';
 import type { ModuleItem } from '@/shared/types/module';
@@ -120,6 +121,22 @@ export function buildDashboardExperienceCopy(platform: FrontendPlatformState): D
     summariesDescription:
       'Only summaries returned for the current tenant workspace are shown here.'
   };
+}
+
+function buildModuleSetupDescription(moduleCode: string) {
+  if (moduleCode === 'CRM') {
+    return 'Open CRM and create the first commercial records so the workspace can begin surfacing contacts, leads, deals, and activity.';
+  }
+
+  if (moduleCode === 'PET') {
+    return 'Open PetFlow and establish the first clients, pet profiles, and appointments so clinical context can start building.';
+  }
+
+  if (moduleCode === 'IOT') {
+    return 'Open IoT and onboard the first devices, mappings, and telemetry flows so operational signals can start surfacing.';
+  }
+
+  return 'Open the contracted module workspace and establish the first operational records for this tenant.';
 }
 
 export function buildDashboardContextCards(platform: FrontendPlatformState): DashboardContextCard[] {
@@ -256,4 +273,66 @@ export function buildDashboardQuickActions(platform: FrontendPlatformState): Das
   });
 
   return actions;
+}
+
+export function buildDashboardGettingStartedSteps(platform: FrontendPlatformState): GettingStartedStep[] {
+  if (resolveDashboardWorkspaceVariant(platform) !== 'workspace') {
+    return [];
+  }
+
+  const steps: GettingStartedStep[] = [];
+
+  getAccessibleWorkspaceModules(platform).forEach((moduleItem) => {
+    if (steps.length >= 3) {
+      return;
+    }
+
+    const meta = moduleWorkspaceMeta[moduleItem.code];
+
+    if (!meta) {
+      return;
+    }
+
+    steps.push({
+      key: `setup-${moduleItem.code.toLowerCase()}`,
+      eyebrow: moduleItem.code,
+      title: meta.actionTitle,
+      description: buildModuleSetupDescription(moduleItem.code),
+      href: meta.href,
+      status: 'setup required',
+      actionLabel: 'Open setup flow'
+    });
+  });
+
+  if (steps.length === 0) {
+    return [];
+  }
+
+  steps.unshift({
+    key: 'workspace-settings',
+    eyebrow: 'Workspace',
+    title: 'Confirm workspace settings',
+    description: 'Review workspace identity, contracted modules, theme policy, and branding before broader tenant rollout.',
+    href: '/settings',
+    status: 'active',
+    actionLabel: 'Open workspace settings'
+  });
+
+  if (steps.length > 3) {
+    steps.pop();
+  }
+
+  if (steps.length < 3 && hasPermission(platform.user, 'USER_READ')) {
+    steps.push({
+      key: 'workspace-users',
+      eyebrow: 'Access',
+      title: 'Review workspace access',
+      description: 'Confirm which tenant users and roles are ready to join the first operational workflows.',
+      href: '/users',
+      status: 'active',
+      actionLabel: 'Review workspace users'
+    });
+  }
+
+  return steps;
 }

@@ -352,4 +352,88 @@ describe('DashboardPage workspace context', () => {
     expect(screen.queryByText('Module Access Matrix')).not.toBeInTheDocument();
     expect(screen.queryByText('Pet Snapshot')).not.toBeInTheDocument();
   });
+
+  it('shows customer workspace onboarding when no module snapshot is available yet', async () => {
+    currentPlatformState.branding.scopeName = 'Clinic North';
+    currentPlatformState.branding.tenantCode = 'clinic-north';
+    currentPlatformState.user = buildUser({
+      tenantName: 'Clinic North',
+      tenantCode: 'clinic-north',
+      platformOwner: false,
+      platformAdmin: false,
+      role: 'TENANT_ADMIN',
+      roles: ['TENANT_ADMIN'],
+      permissions: ['USER_READ']
+    });
+    currentPlatformState.workspace = {
+      ...currentPlatformState.workspace,
+      workspaceLabel: 'Tenant workspace',
+      accessLabel: 'Contracted SaaS workspace',
+      isPlatformOwnerTenant: false,
+      hasSystemAdminRole: false,
+      hasFullPlatformVisibility: false,
+      canManagePlatformAdministration: false
+    };
+    currentPlatformState.modules = {
+      ...currentPlatformState.modules,
+      items: [
+        {
+          code: 'CORE_PLATFORM',
+          name: 'Core Platform',
+          description: 'Core workspace services',
+          enabled: true,
+          moduleEnabled: true,
+          featureFlagEnabled: true,
+          available: true
+        },
+        {
+          code: 'CRM',
+          name: 'CRM',
+          description: 'Commercial workspace',
+          enabled: true,
+          moduleEnabled: true,
+          featureFlagEnabled: true,
+          available: true
+        }
+      ],
+      loading: false,
+      error: null,
+      availableCodes: ['CORE_PLATFORM', 'CRM'],
+      contractedProducts: [
+        {
+          code: 'CRM',
+          name: 'CRM',
+          description: 'Commercial workspace',
+          enabled: true,
+          moduleEnabled: true,
+          featureFlagEnabled: true,
+          available: true
+        }
+      ]
+    };
+
+    vi.mocked(moduleService.getDashboardSummary).mockResolvedValue({
+      coreSummary: {
+        key: 'core',
+        title: 'Workspace Overview',
+        description: 'Workspace summary',
+        cards: [],
+        metrics: [],
+        items: [],
+        timeSeries: []
+      },
+      modules: []
+    });
+
+    render(<DashboardPage />);
+
+    await waitFor(() => {
+      expect(moduleService.getDashboardSummary).toHaveBeenCalledTimes(1);
+    });
+
+    expect(screen.getByText('Workspace Onboarding')).toBeInTheDocument();
+    expect(screen.getByText('Get Clinic North ready')).toBeInTheDocument();
+    expect(screen.getByText('Confirm workspace settings')).toBeInTheDocument();
+    expect(screen.getAllByText('Open CRM workspace').length).toBeGreaterThan(0);
+  });
 });
