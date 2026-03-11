@@ -14,11 +14,7 @@ describe('WebsiteHomePage', () => {
       </PublicSiteProvider>
     );
 
-    expect(
-      await screen.findByText(
-        /PhaifferTech builds modular software platforms for operational environments/i
-      )
-    ).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: /PhaifferTech\./i })).toBeInTheDocument();
     expect(screen.getByText('IoT System')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Explore the platform' })).toHaveAttribute(
       'href',

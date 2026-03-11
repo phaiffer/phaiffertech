@@ -85,15 +85,15 @@ export function PublicSiteShell({ children }: PublicSiteShellProps) {
 
       <header className="sticky top-0 z-40 border-b border-white/10 bg-[#020617]/80 backdrop-blur-xl">
         <div className={`${publicSiteContainerClass} flex items-center justify-between py-4`}>
-          <Link href="/" className="group inline-flex items-center gap-5 text-inherit no-underline">
-            <span className="relative flex h-[4.75rem] w-[4.75rem] shrink-0 items-center justify-center overflow-hidden rounded-[18px] border border-sky-400/20 bg-[radial-gradient(circle_at_30%_30%,rgba(14,165,233,0.16),rgba(255,255,255,0.02)_62%)] shadow-[0_0_0_1px_rgba(14,165,233,0.14),0_0_36px_rgba(14,165,233,0.18)] md:h-24 md:w-24">
+          <Link href="/" className="group inline-flex items-center gap-4 text-inherit no-underline">
+            <span className="relative block h-16 w-16 shrink-0 md:h-[4.5rem] md:w-[4.5rem]">
               <Image
                 src="/logo.png"
                 alt="PhaifferTech logo"
                 width={96}
                 height={96}
                 priority
-                className="h-full w-full scale-[1.24] object-contain transition-transform duration-200 group-hover:scale-[1.3]"
+                className="h-full w-full scale-[1.46] object-contain transition-transform duration-200 group-hover:scale-[1.52]"
               />
             </span>
 
