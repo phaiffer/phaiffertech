@@ -846,7 +846,7 @@ const websiteContent: Record<PublicLocale, WebsiteContent> = {
       hero: {
         eyebrow: 'Data engineering · cloud architecture · operational platforms',
         title:
-          'A PhaifferTech constrói plataformas modulares para operação real, autoridade técnica e pesquisa aplicada.',
+          'PhaifferTech',
         description:
           'A empresa combina execução de produto, platform engineering e raciocínio orientado à pesquisa para desenhar fundações SaaS escaláveis, sistemas operacionais industriais e clínicos, e arquiteturas intensivas em dados sem perder disciplina arquitetural.',
         primaryCta: { label: 'Explorar a plataforma', href: '/platform' },

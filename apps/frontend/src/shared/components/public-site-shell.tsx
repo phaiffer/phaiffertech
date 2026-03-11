@@ -85,23 +85,23 @@ export function PublicSiteShell({ children }: PublicSiteShellProps) {
 
       <header className="sticky top-0 z-40 border-b border-white/10 bg-[#020617]/80 backdrop-blur-xl">
         <div className={`${publicSiteContainerClass} flex items-center justify-between py-4`}>
-          <Link href="/" className="group inline-flex items-center gap-4 text-inherit no-underline">
-            <span className="relative flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-[14px] border border-white/10 bg-white/[0.03] shadow-[0_0_24px_rgba(14,165,233,0.12)]">
+          <Link href="/" className="group inline-flex items-center gap-5 text-inherit no-underline">
+            <span className="relative flex h-[4.75rem] w-[4.75rem] shrink-0 items-center justify-center overflow-hidden rounded-[18px] border border-sky-400/20 bg-[radial-gradient(circle_at_30%_30%,rgba(14,165,233,0.16),rgba(255,255,255,0.02)_62%)] shadow-[0_0_0_1px_rgba(14,165,233,0.14),0_0_36px_rgba(14,165,233,0.18)] md:h-24 md:w-24">
               <Image
                 src="/logo.png"
                 alt="PhaifferTech logo"
-                width={64}
-                height={64}
+                width={96}
+                height={96}
                 priority
-                className="h-full w-full object-contain"
+                className="h-full w-full scale-[1.24] object-contain transition-transform duration-200 group-hover:scale-[1.3]"
               />
             </span>
 
             <span className="min-w-0 leading-tight">
-              <span className="block text-3xl font-black tracking-tight text-white md:text-4xl">
+              <span className="block text-4xl font-black leading-none tracking-[-0.05em] text-white md:text-[3.4rem]">
                 PHAIFFER <span className="text-sky-400">TECH</span>
               </span>
-              <span className="block text-[11px] font-bold uppercase tracking-[0.4em] text-[#b6bec5]">
+              <span className="mt-1.5 block text-[11px] font-bold uppercase tracking-[0.42em] text-[#b6bec5] md:text-[12px]">
                 SOFTWARE &amp; DATA
               </span>
             </span>
