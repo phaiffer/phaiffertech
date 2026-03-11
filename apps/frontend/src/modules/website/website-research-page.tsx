@@ -2,9 +2,9 @@
 
 import { usePublicSite } from '@/shared/public/public-site-provider';
 import { getWebsiteContent } from './website-content';
+import { WebsiteHero } from './website-hero';
 import {
   WebsiteCardGrid,
-  WebsitePageIntro,
   WebsiteSection,
   WebsiteSectionHeading,
   WebsiteStatStrip
@@ -32,7 +32,9 @@ export function WebsiteResearchPage() {
 
   return (
     <>
-      <WebsitePageIntro
+      <WebsiteHero
+        locale={locale}
+        variant="research"
         eyebrow={content.eyebrow}
         title={content.title}
         description={content.description}

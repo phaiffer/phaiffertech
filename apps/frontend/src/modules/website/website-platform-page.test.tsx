@@ -1,0 +1,24 @@
+import React from 'react';
+import { render, screen } from '@testing-library/react';
+import { describe, expect, it } from 'vitest';
+import { WebsitePlatformPage } from '@/modules/website/website-platform-page';
+import { PublicSiteProvider } from '@/shared/public/public-site-provider';
+
+describe('WebsitePlatformPage', () => {
+  it('reuses the canonical website hero layout', async () => {
+    window.localStorage.setItem('phaiffertech-public-locale', 'en-US');
+
+    render(
+      <PublicSiteProvider>
+        <WebsitePlatformPage />
+      </PublicSiteProvider>
+    );
+
+    expect(
+      await screen.findByText(/Shared tenancy, contracts, and capability boundaries stay visible/i)
+    ).toBeInTheDocument();
+    expect(screen.getByText('Canonical public navigation and modular page composition')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Products' })).toHaveAttribute('href', '/products');
+    expect(screen.getByRole('link', { name: 'Engineering' })).toHaveAttribute('href', '/engineering');
+  });
+});

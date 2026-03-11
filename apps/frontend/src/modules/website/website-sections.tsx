@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { WebsiteAction, WebsiteArticle, WebsiteCard, WebsiteStat } from './website-content';
+import { WebsiteArticle, WebsiteCard, WebsiteStat } from './website-content';
 
 type WebsiteSectionProps = {
   id?: string;
@@ -11,14 +11,6 @@ type WebsiteSectionHeadingProps = {
   eyebrow?: string;
   title: string;
   description: string;
-};
-
-type WebsitePageIntroProps = {
-  eyebrow: string;
-  title: string;
-  description: string;
-  primaryCta?: WebsiteAction;
-  secondaryCta?: WebsiteAction;
 };
 
 type WebsiteStatStripProps = {
@@ -51,54 +43,6 @@ export function WebsiteSection({
     >
       <div className="mx-auto w-full max-w-7xl px-4 py-16 sm:px-6 lg:px-8 lg:py-20">
         {children}
-      </div>
-    </section>
-  );
-}
-
-export function WebsitePageIntro({
-  eyebrow,
-  title,
-  description,
-  primaryCta,
-  secondaryCta
-}: WebsitePageIntroProps) {
-  return (
-    <section className="border-b border-[var(--border)] bg-[linear-gradient(180deg,rgba(15,23,42,0.04),transparent_70%)]">
-      <div className="mx-auto w-full max-w-7xl px-4 py-16 sm:px-6 lg:px-8 lg:py-24">
-        <div className="max-w-4xl">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-action">
-            {eyebrow}
-          </p>
-          <h1 className="mt-4 text-4xl font-semibold leading-tight text-[var(--foreground)] sm:text-5xl">
-            {title}
-          </h1>
-          <p className="mt-6 max-w-3xl text-base leading-7 text-slate-600 sm:text-lg">
-            {description}
-          </p>
-
-          {primaryCta || secondaryCta ? (
-            <div className="mt-8 flex flex-wrap gap-3">
-              {primaryCta ? (
-                <Link
-                  href={primaryCta.href}
-                  className="rounded-xl bg-action px-5 py-3 text-sm font-medium text-white shadow-[0_16px_30px_rgba(31,111,235,0.24)] transition hover:bg-blue-700"
-                >
-                  {primaryCta.label}
-                </Link>
-              ) : null}
-
-              {secondaryCta ? (
-                <Link
-                  href={secondaryCta.href}
-                  className="rounded-xl border border-[var(--border)] bg-[var(--surface)] px-5 py-3 text-sm font-medium text-[var(--foreground)] transition hover:bg-[var(--surface-muted)]"
-                >
-                  {secondaryCta.label}
-                </Link>
-              ) : null}
-            </div>
-          ) : null}
-        </div>
       </div>
     </section>
   );

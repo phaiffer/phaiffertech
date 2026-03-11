@@ -3,7 +3,8 @@
 import Link from 'next/link';
 import { usePublicSite } from '@/shared/public/public-site-provider';
 import { getWebsiteArticle, getWebsiteContent } from './website-content';
-import { WebsiteArticleGrid, WebsitePageIntro, WebsiteSection } from './website-sections';
+import { WebsiteHero } from './website-hero';
+import { WebsiteArticleGrid, WebsiteSection } from './website-sections';
 
 type WebsiteArticlePageProps = {
   slug: string;
@@ -46,7 +47,9 @@ export function WebsiteArticlePage({ slug }: WebsiteArticlePageProps) {
 
   return (
     <>
-      <WebsitePageIntro
+      <WebsiteHero
+        locale={locale}
+        variant="article"
         eyebrow={article.category}
         title={article.title}
         description={article.description}

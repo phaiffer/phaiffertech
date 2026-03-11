@@ -2,9 +2,9 @@
 
 import { usePublicSite } from '@/shared/public/public-site-provider';
 import { getWebsiteContent } from './website-content';
+import { WebsiteHero } from './website-hero';
 import {
   WebsiteArticleGrid,
-  WebsitePageIntro,
   WebsiteSection,
   WebsiteSectionHeading
 } from './website-sections';
@@ -29,7 +29,9 @@ export function WebsiteArticlesPage() {
 
   return (
     <>
-      <WebsitePageIntro
+      <WebsiteHero
+        locale={locale}
+        variant="articles"
         eyebrow={content.eyebrow}
         title={content.title}
         description={content.description}

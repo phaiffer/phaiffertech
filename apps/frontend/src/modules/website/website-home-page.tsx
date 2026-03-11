@@ -2,9 +2,9 @@
 
 import { PublicCtaSection } from '@/shared/components/public-cta-section';
 import { PublicFeatureGrid } from '@/shared/components/public-feature-grid';
-import { PublicHeroSection } from '@/shared/components/public-hero-section';
 import { usePublicSite } from '@/shared/public/public-site-provider';
 import { getWebsiteContent } from './website-content';
+import { WebsiteHero } from './website-hero';
 import {
   WebsiteCardGrid,
   WebsiteSection,
@@ -32,22 +32,23 @@ export function WebsiteHomePage() {
 
   return (
     <>
-      <PublicHeroSection
+      <WebsiteHero
         id="overview"
+        locale={locale}
         eyebrow={content.hero.eyebrow}
         title={content.hero.title}
         description={content.hero.description}
-        primaryCtaLabel={content.hero.primaryCta.label}
-        primaryCtaHref={content.hero.primaryCta.href}
-        secondaryCtaLabel={content.hero.secondaryCta.label}
-        secondaryCtaHref={content.hero.secondaryCta.href}
-        platformCardEyebrow={content.hero.platformCardEyebrow}
-        platformCardTitle={content.hero.platformCardTitle}
-        platformCardText={content.hero.platformCardText}
-        frontendCardEyebrow={content.hero.frontendCardEyebrow}
-        frontendCardTitle={content.hero.frontendCardTitle}
-        backendCardEyebrow={content.hero.backendCardEyebrow}
-        backendCardTitle={content.hero.backendCardTitle}
+        primaryCta={content.hero.primaryCta}
+        secondaryCta={content.hero.secondaryCta}
+        cards={{
+          platformCardEyebrow: content.hero.platformCardEyebrow,
+          platformCardTitle: content.hero.platformCardTitle,
+          platformCardText: content.hero.platformCardText,
+          frontendCardEyebrow: content.hero.frontendCardEyebrow,
+          frontendCardTitle: content.hero.frontendCardTitle,
+          backendCardEyebrow: content.hero.backendCardEyebrow,
+          backendCardTitle: content.hero.backendCardTitle
+        }}
       />
 
       <WebsiteSection tone="muted">
