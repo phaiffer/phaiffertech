@@ -5,9 +5,9 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
-  publicChromeSurfaceClass,
   publicPrimaryButtonClass,
-  publicSecondaryButtonClass
+  publicSecondaryButtonClass,
+  publicSiteContainerClass
 } from '@/shared/components/public-visual-system';
 import { usePublicSite } from '@/shared/public/public-site-provider';
 import { getPublicSiteMessages } from '@/shared/public/public-site-messages';
@@ -18,7 +18,7 @@ type PublicSiteShellProps = {
 
 export function PublicSiteShell({ children }: PublicSiteShellProps) {
   const pathname = usePathname();
-  const { locale, theme, setLocale, setTheme } = usePublicSite();
+  const { locale, setLocale } = usePublicSite();
   const t = getPublicSiteMessages(locale).shell;
 
   const navigationItems = [
@@ -63,144 +63,129 @@ export function PublicSiteShell({ children }: PublicSiteShellProps) {
     { href: '/research', label: t.navResearch }
   ];
 
-  const controlGroupClass = `rounded-xl p-1 ${publicChromeSurfaceClass}`;
+  const nextLocale = locale === 'pt-BR' ? 'en-US' : 'pt-BR';
+  const localeSwitchLabel = nextLocale.toUpperCase();
+
+  const navLinkClass = (active: boolean) =>
+    [
+      'text-[11px] font-bold uppercase tracking-[0.22em] transition-colors',
+      active ? 'text-sky-400' : 'text-[#b6bec5] hover:text-sky-400'
+    ].join(' ');
+
+  const localeButtonClass = [
+    'rounded-[14px] border border-white/10 px-4 py-2 text-[11px] font-bold uppercase tracking-[0.22em] transition-colors',
+    'text-[#b6bec5] hover:border-sky-400/50 hover:text-sky-400'
+  ].join(' ');
 
   return (
-    <div className="min-h-screen bg-[var(--background)] text-[var(--foreground)] transition-colors">
-      <header className="sticky top-0 z-40 border-b border-sky-500/10 bg-[color:var(--background)]/74 shadow-[0_18px_42px_rgba(2,6,23,0.16)] backdrop-blur-xl">
-        <div className="mx-auto w-full max-w-7xl px-4 py-3 sm:px-6 lg:px-8">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-            <div className="min-w-0">
-              <Link href="/" className="inline-flex items-center gap-3 text-inherit no-underline">
-                <span className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-sky-500/22 bg-[linear-gradient(180deg,var(--surface),var(--surface-muted))] shadow-[0_18px_45px_rgba(15,23,42,0.16),0_0_28px_rgba(56,189,248,0.12)]">
-                  <Image
-                    src="/logo.png"
-                    alt="PhaifferTech logo"
-                    width={56}
-                    height={56}
-                    priority
-                    className="h-full w-full object-cover"
-                  />
-                </span>
+    <div className="relative min-h-screen overflow-hidden bg-[#020617] text-white">
+      <div className="pointer-events-none absolute inset-0">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_12%_8%,rgba(14,165,233,0.12),transparent_34%),radial-gradient(circle_at_88%_78%,rgba(14,165,233,0.08),transparent_30%)]" />
+      </div>
 
-                <span className="min-w-0">
-                  <span className="block text-[10px] font-semibold uppercase tracking-[0.24em] text-slate-500 dark:text-slate-400">
-                    {t.brandEyebrow}
-                  </span>
-                  <span className="block truncate text-lg font-semibold text-[var(--foreground)]">
-                    {t.brandTitle}
-                  </span>
-                  <span className="mt-1 block max-w-xl text-xs text-slate-500 dark:text-slate-400 sm:text-sm">
-                    {t.brandSubtitle}
-                  </span>
-                </span>
-              </Link>
-            </div>
+      <header className="sticky top-0 z-40 border-b border-white/10 bg-[#020617]/80 backdrop-blur-xl">
+        <div className={`${publicSiteContainerClass} flex items-center justify-between py-4`}>
+          <Link href="/" className="group inline-flex items-center gap-4 text-inherit no-underline">
+            <span className="relative flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-[14px] border border-white/10 bg-white/[0.03] shadow-[0_0_24px_rgba(14,165,233,0.12)]">
+              <Image
+                src="/logo.png"
+                alt="PhaifferTech logo"
+                width={64}
+                height={64}
+                priority
+                className="h-full w-full object-contain"
+              />
+            </span>
 
-            <div className="flex flex-wrap items-center gap-2 sm:gap-3 lg:justify-end">
-              <div className={`hidden items-center gap-1 sm:flex ${controlGroupClass}`}>
-                <span className="px-2 text-[11px] font-medium text-slate-500">{t.localeLabel}</span>
-                <button
-                  type="button"
-                  onClick={() => setLocale('pt-BR')}
-                  className={[
-                    'rounded-lg px-2.5 py-1.5 text-xs font-semibold transition',
-                    locale === 'pt-BR'
-                      ? 'bg-[var(--surface)] text-[var(--foreground)] shadow-[0_10px_24px_rgba(56,189,248,0.12)]'
-                      : 'text-slate-500 dark:text-slate-400 hover:text-[var(--foreground)]'
-                  ].join(' ')}
-                >
-                  PT
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setLocale('en-US')}
-                  className={[
-                    'rounded-lg px-2.5 py-1.5 text-xs font-semibold transition',
-                    locale === 'en-US'
-                      ? 'bg-[var(--surface)] text-[var(--foreground)] shadow-[0_10px_24px_rgba(56,189,248,0.12)]'
-                      : 'text-slate-500 dark:text-slate-400 hover:text-[var(--foreground)]'
-                  ].join(' ')}
-                >
-                  EN
-                </button>
-              </div>
+            <span className="min-w-0 leading-tight">
+              <span className="block text-3xl font-black tracking-tight text-white md:text-4xl">
+                PHAIFFER <span className="text-sky-400">TECH</span>
+              </span>
+              <span className="block text-[11px] font-bold uppercase tracking-[0.4em] text-[#b6bec5]">
+                SOFTWARE &amp; DATA
+              </span>
+            </span>
+          </Link>
 
-              <div className={`flex items-center gap-1 ${controlGroupClass}`}>
-                <button
-                  type="button"
-                  onClick={() => setTheme('light')}
-                  className={[
-                    'rounded-lg px-2.5 py-1.5 text-xs font-semibold transition',
-                    theme === 'light'
-                      ? 'bg-[var(--surface)] text-[var(--foreground)] shadow-[0_10px_24px_rgba(56,189,248,0.12)]'
-                      : 'text-slate-500 dark:text-slate-400 hover:text-[var(--foreground)]'
-                  ].join(' ')}
-                >
-                  {t.themeLight}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setTheme('dark')}
-                  className={[
-                    'rounded-lg px-2.5 py-1.5 text-xs font-semibold transition',
-                    theme === 'dark'
-                      ? 'bg-[var(--surface)] text-[var(--foreground)] shadow-[0_10px_24px_rgba(56,189,248,0.12)]'
-                      : 'text-slate-500 dark:text-slate-400 hover:text-[var(--foreground)]'
-                  ].join(' ')}
-                >
-                  {t.themeDark}
-                </button>
-              </div>
+          <div className="hidden items-center gap-8 xl:flex">
+            <nav className="flex items-center gap-8">
+              {navigationItems.map((item) => (
+                <Link key={item.href} href={item.href} className={navLinkClass(item.active)}>
+                  {item.label}
+                </Link>
+              ))}
+            </nav>
 
-              <Link
-                href="/login"
-                className={[
-                  pathname === '/login'
-                    ? publicSecondaryButtonClass
-                    : publicPrimaryButtonClass
-                ].join(' ')}
-              >
-                {t.navLogin}
-              </Link>
-            </div>
+            <button
+              type="button"
+              onClick={() => setLocale(nextLocale)}
+              aria-label={t.localeLabel}
+              className={localeButtonClass}
+            >
+              {localeSwitchLabel}
+            </button>
+
+            <Link
+              href="/login"
+              className={pathname === '/login' ? publicSecondaryButtonClass : publicPrimaryButtonClass}
+            >
+              {t.navLogin}
+            </Link>
           </div>
+        </div>
 
-          <nav className="-mx-1 mt-4 flex gap-2 overflow-x-auto px-1 pb-1">
+        <div className={`${publicSiteContainerClass} pb-4 xl:hidden`}>
+          <nav className="flex gap-6 overflow-x-auto whitespace-nowrap">
             {navigationItems.map((item) => (
               <Link
                 key={item.href}
                 href={item.href}
-                className={[
-                  'whitespace-nowrap rounded-full border px-3.5 py-2 text-sm transition duration-200',
-                  item.active
-                    ? 'border-sky-500/28 bg-sky-500/10 text-[var(--foreground)] shadow-[0_12px_28px_rgba(56,189,248,0.12)]'
-                    : 'border-sky-500/10 bg-[var(--surface)] text-slate-600 dark:text-slate-300 shadow-[0_10px_24px_rgba(15,23,42,0.06)] hover:border-sky-500/18 hover:text-[var(--foreground)]'
-                ].join(' ')}
+                className={navLinkClass(item.active)}
               >
                 {item.label}
               </Link>
             ))}
           </nav>
+
+          <div className="mt-4 flex items-center gap-3">
+            <button
+              type="button"
+              onClick={() => setLocale(nextLocale)}
+              aria-label={t.localeLabel}
+              className={localeButtonClass}
+            >
+              {localeSwitchLabel}
+            </button>
+
+            <Link
+              href="/login"
+              className={pathname === '/login' ? publicSecondaryButtonClass : publicPrimaryButtonClass}
+            >
+              {t.navLogin}
+            </Link>
+          </div>
         </div>
       </header>
 
-      <main>{children}</main>
+      <main className="relative z-10">{children}</main>
 
-      <footer className="border-t border-sky-500/10 bg-[linear-gradient(180deg,var(--surface),var(--surface-muted))]">
-        <div className="mx-auto grid w-full max-w-7xl gap-10 px-4 py-12 sm:px-6 lg:grid-cols-[1.2fr_0.8fr_0.8fr_0.8fr] lg:px-8">
+      <footer className="relative z-10 border-t border-white/10 bg-[#020617]">
+        <div className={`${publicSiteContainerClass} grid gap-10 py-16 lg:grid-cols-[1.2fr_0.8fr_0.8fr_0.8fr]`}>
           <div className="max-w-md">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-action">
-              {t.footerNarrativeTitle}
+            <p className="text-3xl font-black tracking-tight text-white">
+              PHAIFFER <span className="text-sky-400">TECH</span>
             </p>
-            <p className="mt-4 text-sm leading-7 text-slate-600 dark:text-slate-300">{t.footerNarrativeText}</p>
+            <p className="mt-2 text-[11px] font-bold uppercase tracking-[0.36em] text-[#b6bec5]">
+              SOFTWARE &amp; DATA
+            </p>
+            <p className="mt-5 text-sm leading-7 text-[#b6bec5]">{t.footerNarrativeText}</p>
           </div>
 
           <div>
-            <p className="text-sm font-semibold text-[var(--foreground)]">{t.footerExploreTitle}</p>
-            <div className="mt-4 flex flex-col gap-3 text-sm text-slate-600 dark:text-slate-300">
+            <p className="text-sm font-semibold text-white">{t.footerExploreTitle}</p>
+            <div className="mt-4 flex flex-col gap-3 text-sm text-[#b6bec5]">
               {footerLinks.map((item) => (
-                <Link key={item.href} href={item.href} className="transition hover:text-[var(--foreground)]">
+                <Link key={item.href} href={item.href} className="transition hover:text-sky-400">
                   {item.label}
                 </Link>
               ))}
@@ -208,13 +193,13 @@ export function PublicSiteShell({ children }: PublicSiteShellProps) {
           </div>
 
           <div>
-            <p className="text-sm font-semibold text-[var(--foreground)]">{t.footerProductsTitle}</p>
-            <div className="mt-4 flex flex-col gap-3 text-sm text-slate-600 dark:text-slate-300">
+            <p className="text-sm font-semibold text-white">{t.footerProductsTitle}</p>
+            <div className="mt-4 flex flex-col gap-3 text-sm text-[#b6bec5]">
               {productLinks.map((item) => (
                 <Link
                   key={`${item.href}-${item.label}`}
                   href={item.href}
-                  className="transition hover:text-[var(--foreground)]"
+                  className="transition hover:text-sky-400"
                 >
                   {item.label}
                 </Link>
@@ -223,10 +208,10 @@ export function PublicSiteShell({ children }: PublicSiteShellProps) {
           </div>
 
           <div>
-            <p className="text-sm font-semibold text-[var(--foreground)]">{t.footerAccessTitle}</p>
-            <div className="mt-4 flex flex-col gap-3 text-sm text-slate-600 dark:text-slate-300">
+            <p className="text-sm font-semibold text-white">{t.footerAccessTitle}</p>
+            <div className="mt-4 flex flex-col gap-3 text-sm text-[#b6bec5]">
               {accessLinks.map((item) => (
-                <Link key={item.href} href={item.href} className="transition hover:text-[var(--foreground)]">
+                <Link key={item.href} href={item.href} className="transition hover:text-sky-400">
                   {item.label}
                 </Link>
               ))}
@@ -234,8 +219,8 @@ export function PublicSiteShell({ children }: PublicSiteShellProps) {
           </div>
         </div>
 
-        <div className="border-t border-[var(--border)]">
-          <div className="mx-auto w-full max-w-7xl px-4 py-5 text-sm text-slate-500 dark:text-slate-400 sm:px-6 lg:px-8">
+        <div className="border-t border-white/10">
+          <div className={`${publicSiteContainerClass} py-5 text-sm text-[#7e8a9a]`}>
             {t.footerCopyright}
           </div>
         </div>

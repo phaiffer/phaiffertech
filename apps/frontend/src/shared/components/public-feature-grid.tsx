@@ -1,8 +1,11 @@
 import {
+  publicHeadingColumnClass,
   publicEyebrowClass,
   publicInteractiveCardSurfaceClass,
+  publicSectionLayoutClass,
   publicSectionSupportingTextClass,
-  publicSectionTitleClass
+  publicSectionTitleClass,
+  publicSiteContainerClass
 } from '@/shared/components/public-visual-system';
 
 type PublicFeatureItem = {
@@ -29,34 +32,37 @@ export function PublicFeatureGrid({
   return (
     <section
       id={id}
-      className="border-b border-[var(--border)] bg-[linear-gradient(180deg,transparent,rgba(15,23,42,0.05))]"
+      className="border-t border-white/5 bg-[linear-gradient(180deg,rgba(255,255,255,0.02),transparent)]"
     >
-      <div className="mx-auto w-full max-w-7xl px-4 py-16 sm:px-6 lg:px-8 lg:py-24">
-        <div className="max-w-3xl">
-          {eyebrowLabel ? (
-            <p className={publicEyebrowClass}>
-              {eyebrowLabel}
-            </p>
-          ) : null}
-          <h2 className={publicSectionTitleClass}>{title}</h2>
-          <p className={publicSectionSupportingTextClass}>{description}</p>
-        </div>
-
-        <div className="mt-10 grid gap-5 lg:grid-cols-2">
-          {items.map((item) => (
-            <div
-              key={`${item.eyebrow}-${item.title}`}
-              className={`${publicInteractiveCardSurfaceClass} p-6`}
-            >
+      <div className={`${publicSiteContainerClass} py-20 lg:py-28`}>
+        <div className={publicSectionLayoutClass}>
+          <div className={publicHeadingColumnClass}>
+            {eyebrowLabel ? (
               <p className={publicEyebrowClass}>
-                {item.eyebrow}
+                {eyebrowLabel}
               </p>
-              <h3 className="mt-3 text-xl font-semibold tracking-tight text-[var(--foreground)]">
-                {item.title}
-              </h3>
-              <p className="mt-4 text-sm leading-6 text-slate-600 dark:text-slate-300">{item.description}</p>
-            </div>
-          ))}
+            ) : null}
+            <h2 className={publicSectionTitleClass}>{title}</h2>
+            <p className={publicSectionSupportingTextClass}>{description}</p>
+          </div>
+
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            {items.map((item) => (
+              <div
+                key={`${item.eyebrow}-${item.title}`}
+                className={`${publicInteractiveCardSurfaceClass} group p-6`}
+              >
+                <div className="mb-5 h-1 w-8 rounded-full bg-white/10 transition-all group-hover:bg-sky-400" />
+                <p className={publicEyebrowClass}>
+                  {item.eyebrow}
+                </p>
+                <h3 className="mt-3 text-2xl font-bold tracking-tight text-white">
+                  {item.title}
+                </h3>
+                <p className="mt-4 text-sm leading-relaxed text-[#b6bec5]">{item.description}</p>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </section>

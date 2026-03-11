@@ -3,13 +3,12 @@
 import Link from 'next/link';
 import {
   publicCardSurfaceClass,
-  publicEyebrowClass,
-  publicSectionTitleClass
+  publicEyebrowClass
 } from '@/shared/components/public-visual-system';
 import { usePublicSite } from '@/shared/public/public-site-provider';
 import { getWebsiteArticle, getWebsiteContent } from './website-content';
 import { WebsiteHero } from './website-hero';
-import { WebsiteArticleGrid, WebsiteSection } from './website-sections';
+import { WebsiteArticleGrid, WebsiteSection, WebsiteSplitSection } from './website-sections';
 
 type WebsiteArticlePageProps = {
   slug: string;
@@ -53,8 +52,6 @@ export function WebsiteArticlePage({ slug }: WebsiteArticlePageProps) {
   return (
     <>
       <WebsiteHero
-        locale={locale}
-        variant="article"
         eyebrow={article.category}
         title={article.title}
         description={article.description}
@@ -65,18 +62,18 @@ export function WebsiteArticlePage({ slug }: WebsiteArticlePageProps) {
       <WebsiteSection tone="muted">
         <div className="grid gap-10 lg:grid-cols-[0.72fr_0.28fr] lg:items-start">
           <article className={`${publicCardSurfaceClass} p-8`}>
-            <p className="text-lg font-medium leading-8 text-[var(--foreground)]">
+            <p className="text-lg font-medium leading-8 text-white">
               {article.highlight}
             </p>
 
             <div className="mt-10 space-y-10">
               {article.sections.map((section) => (
                 <section key={section.title}>
-                  <h2 className="text-2xl font-semibold tracking-tight text-[var(--foreground)]">
+                  <h2 className="text-2xl font-semibold tracking-tight text-white">
                     {section.title}
                   </h2>
 
-                  <div className="mt-4 space-y-4 text-base leading-8 text-slate-600 dark:text-slate-300">
+                  <div className="mt-4 space-y-4 text-base leading-8 text-[#b6bec5]">
                     {section.paragraphs.map((paragraph) => (
                       <p key={paragraph}>{paragraph}</p>
                     ))}
@@ -85,7 +82,7 @@ export function WebsiteArticlePage({ slug }: WebsiteArticlePageProps) {
               ))}
             </div>
 
-            <div className="mt-10 border-t border-sky-500/12 pt-6 text-base leading-8 text-slate-600 dark:text-slate-300">
+            <div className="mt-10 border-t border-white/10 pt-6 text-base leading-8 text-[#b6bec5]">
               {article.closing}
             </div>
           </article>
@@ -95,8 +92,8 @@ export function WebsiteArticlePage({ slug }: WebsiteArticlePageProps) {
               <p className={publicEyebrowClass}>
                 {labels.context}
               </p>
-              <p className="mt-4 text-sm leading-6 text-slate-600 dark:text-slate-300">{article.category}</p>
-              <p className="mt-2 text-sm leading-6 text-slate-600 dark:text-slate-300">{article.readTime}</p>
+              <p className="mt-4 text-sm leading-6 text-[#b6bec5]">{article.category}</p>
+              <p className="mt-2 text-sm leading-6 text-[#b6bec5]">{article.readTime}</p>
             </div>
 
             <div className={`${publicCardSurfaceClass} p-6`}>
@@ -104,13 +101,13 @@ export function WebsiteArticlePage({ slug }: WebsiteArticlePageProps) {
                 {labels.explore}
               </p>
               <div className="mt-4 flex flex-col gap-3 text-sm">
-                <Link href="/platform" className="text-action transition hover:text-sky-500">
+                <Link href="/platform" className="font-semibold uppercase tracking-[0.16em] text-sky-400 transition hover:text-white">
                   {labels.platform}
                 </Link>
-                <Link href="/engineering" className="text-action transition hover:text-sky-500">
+                <Link href="/engineering" className="font-semibold uppercase tracking-[0.16em] text-sky-400 transition hover:text-white">
                   {labels.engineering}
                 </Link>
-                <Link href="/research" className="text-action transition hover:text-sky-500">
+                <Link href="/research" className="font-semibold uppercase tracking-[0.16em] text-sky-400 transition hover:text-white">
                   {labels.research}
                 </Link>
               </div>
@@ -119,17 +116,13 @@ export function WebsiteArticlePage({ slug }: WebsiteArticlePageProps) {
         </div>
       </WebsiteSection>
 
-      <WebsiteSection>
-        <div className="max-w-3xl">
-          <p className={publicEyebrowClass}>
-            {labels.related}
-          </p>
-          <h2 className={publicSectionTitleClass}>
-            {labels.relatedTitle}
-          </h2>
-        </div>
+      <WebsiteSplitSection
+        eyebrow={labels.related}
+        title={labels.relatedTitle}
+        description={article.description}
+      >
         <WebsiteArticleGrid items={relatedArticles} ctaLabel={labels.readInsight} />
-      </WebsiteSection>
+      </WebsiteSplitSection>
     </>
   );
 }

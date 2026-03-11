@@ -43,13 +43,6 @@ type WebsiteContent = {
       description: string;
       primaryCta: WebsiteAction;
       secondaryCta: WebsiteAction;
-      platformCardEyebrow: string;
-      platformCardTitle: string;
-      platformCardText: string;
-      frontendCardEyebrow: string;
-      frontendCardTitle: string;
-      backendCardEyebrow: string;
-      backendCardTitle: string;
     };
     signalTitle: string;
     signalDescription: string;
@@ -174,15 +167,7 @@ const websiteContent: Record<PublicLocale, WebsiteContent> = {
         description:
           'The company combines product execution, platform engineering and research-oriented thinking to design scalable SaaS foundations, industrial and clinical operational systems, and data-intensive architectures without losing architectural discipline.',
         primaryCta: { label: 'Explore the platform', href: '/platform' },
-        secondaryCta: { label: 'See engineering direction', href: '/engineering' },
-        platformCardEyebrow: 'Platform posture',
-        platformCardTitle: 'Modular SaaS with product and research continuity.',
-        platformCardText:
-          'CRM, PetFlow and IoT System share tenancy, IAM, feature gating, permissions, dashboards and explicit cross-module capabilities on the same foundation.',
-        frontendCardEyebrow: 'Frontend',
-        frontendCardTitle: 'Next.js 14 · App Router · Modular composition',
-        backendCardEyebrow: 'Backend',
-        backendCardTitle: 'Java 21 · Spring Boot · Multi-tenant modular monolith'
+        secondaryCta: { label: 'See engineering direction', href: '/engineering' }
       },
       signalTitle: 'A platform narrative that matches the real codebase',
       signalDescription:
@@ -865,15 +850,7 @@ const websiteContent: Record<PublicLocale, WebsiteContent> = {
         description:
           'A empresa combina execução de produto, platform engineering e raciocínio orientado à pesquisa para desenhar fundações SaaS escaláveis, sistemas operacionais industriais e clínicos, e arquiteturas intensivas em dados sem perder disciplina arquitetural.',
         primaryCta: { label: 'Explorar a plataforma', href: '/platform' },
-        secondaryCta: { label: 'Ver direção de engineering', href: '/engineering' },
-        platformCardEyebrow: 'Postura de plataforma',
-        platformCardTitle: 'SaaS modular com continuidade de produto e pesquisa.',
-        platformCardText:
-          'CRM, PetFlow e IoT System compartilham tenancy, IAM, feature gating, permissões, dashboards e capabilities explícitas de integração na mesma base.',
-        frontendCardEyebrow: 'Frontend',
-        frontendCardTitle: 'Next.js 14 · App Router · Composição modular',
-        backendCardEyebrow: 'Backend',
-        backendCardTitle: 'Java 21 · Spring Boot · Modular monolith multi-tenant'
+        secondaryCta: { label: 'Ver direção de engineering', href: '/engineering' }
       },
       signalTitle: 'Uma narrativa pública compatível com o código real',
       signalDescription:

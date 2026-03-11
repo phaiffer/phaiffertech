@@ -7,8 +7,7 @@ import { getWebsiteContent } from './website-content';
 import { WebsiteHero } from './website-hero';
 import {
   WebsiteCardGrid,
-  WebsiteSection,
-  WebsiteSectionHeading,
+  WebsiteSplitSection,
   WebsiteStatStrip
 } from './website-sections';
 
@@ -34,31 +33,21 @@ export function WebsiteHomePage() {
     <>
       <WebsiteHero
         id="overview"
-        locale={locale}
         eyebrow={content.hero.eyebrow}
         title={content.hero.title}
         description={content.hero.description}
         primaryCta={content.hero.primaryCta}
         secondaryCta={content.hero.secondaryCta}
-        cards={{
-          platformCardEyebrow: content.hero.platformCardEyebrow,
-          platformCardTitle: content.hero.platformCardTitle,
-          platformCardText: content.hero.platformCardText,
-          frontendCardEyebrow: content.hero.frontendCardEyebrow,
-          frontendCardTitle: content.hero.frontendCardTitle,
-          backendCardEyebrow: content.hero.backendCardEyebrow,
-          backendCardTitle: content.hero.backendCardTitle
-        }}
       />
 
-      <WebsiteSection tone="muted">
-        <WebsiteSectionHeading
-          eyebrow={labels.signals}
-          title={content.signalTitle}
-          description={content.signalDescription}
-        />
+      <WebsiteSplitSection
+        tone="muted"
+        eyebrow={labels.signals}
+        title={content.signalTitle}
+        description={content.signalDescription}
+      >
         <WebsiteStatStrip items={content.signals} />
-      </WebsiteSection>
+      </WebsiteSplitSection>
 
       <PublicFeatureGrid
         id="products"
@@ -68,23 +57,22 @@ export function WebsiteHomePage() {
         items={content.products}
       />
 
-      <WebsiteSection>
-        <WebsiteSectionHeading
-          eyebrow={labels.authority}
-          title={content.expertiseTitle}
-          description={content.expertiseDescription}
-        />
+      <WebsiteSplitSection
+        eyebrow={labels.authority}
+        title={content.expertiseTitle}
+        description={content.expertiseDescription}
+      >
         <WebsiteCardGrid items={content.expertise} />
-      </WebsiteSection>
+      </WebsiteSplitSection>
 
-      <WebsiteSection tone="muted">
-        <WebsiteSectionHeading
-          eyebrow={labels.architecture}
-          title={content.architectureTitle}
-          description={content.architectureDescription}
-        />
+      <WebsiteSplitSection
+        tone="muted"
+        eyebrow={labels.architecture}
+        title={content.architectureTitle}
+        description={content.architectureDescription}
+      >
         <WebsiteCardGrid items={content.architecture} />
-      </WebsiteSection>
+      </WebsiteSplitSection>
 
       <PublicCtaSection
         eyebrow={content.cta.eyebrow}

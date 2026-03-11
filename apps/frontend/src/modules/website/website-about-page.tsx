@@ -5,8 +5,7 @@ import { getWebsiteContent } from './website-content';
 import { WebsiteHero } from './website-hero';
 import {
   WebsiteCardGrid,
-  WebsiteSection,
-  WebsiteSectionHeading,
+  WebsiteSplitSection,
   WebsiteStatStrip
 } from './website-sections';
 
@@ -33,8 +32,6 @@ export function WebsiteAboutPage() {
   return (
     <>
       <WebsiteHero
-        locale={locale}
-        variant="about"
         eyebrow={content.eyebrow}
         title={content.title}
         description={content.description}
@@ -42,32 +39,30 @@ export function WebsiteAboutPage() {
         secondaryCta={{ label: labels.research, href: '/research' }}
       />
 
-      <WebsiteSection>
-        <WebsiteSectionHeading
-          eyebrow={labels.identity}
-          title={content.identityTitle}
-          description={content.identityDescription}
-        />
+      <WebsiteSplitSection
+        eyebrow={labels.identity}
+        title={content.identityTitle}
+        description={content.identityDescription}
+      >
         <WebsiteStatStrip items={content.identity} />
-      </WebsiteSection>
+      </WebsiteSplitSection>
 
-      <WebsiteSection tone="muted">
-        <WebsiteSectionHeading
-          eyebrow={labels.principles}
-          title={content.principlesTitle}
-          description={content.principlesDescription}
-        />
+      <WebsiteSplitSection
+        tone="muted"
+        eyebrow={labels.principles}
+        title={content.principlesTitle}
+        description={content.principlesDescription}
+      >
         <WebsiteCardGrid items={content.principles} />
-      </WebsiteSection>
+      </WebsiteSplitSection>
 
-      <WebsiteSection>
-        <WebsiteSectionHeading
-          eyebrow={labels.direction}
-          title={content.directionTitle}
-          description={content.directionDescription}
-        />
+      <WebsiteSplitSection
+        eyebrow={labels.direction}
+        title={content.directionTitle}
+        description={content.directionDescription}
+      >
         <WebsiteCardGrid items={content.direction} />
-      </WebsiteSection>
+      </WebsiteSplitSection>
     </>
   );
 }

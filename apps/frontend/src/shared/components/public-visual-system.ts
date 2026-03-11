@@ -1,23 +1,31 @@
-export const publicEyebrowClass = 'text-[10px] font-semibold uppercase tracking-[0.24em] text-action';
+export const publicSiteContainerClass = 'mx-auto w-full px-6 lg:px-10';
 
-export const publicSectionTitleClass = 'mt-3 text-3xl font-semibold tracking-tight text-[var(--foreground)] sm:text-[2.15rem]';
+export const publicSectionLayoutClass = 'grid gap-12 lg:grid-cols-[0.8fr_1.2fr] lg:items-start';
 
-export const publicSectionSupportingTextClass = 'mt-4 max-w-3xl text-[15px] leading-7 text-slate-600 dark:text-slate-300';
+export const publicHeadingColumnClass = 'lg:sticky lg:top-28';
+
+export const publicEyebrowClass = 'text-[10px] font-bold uppercase tracking-[0.3em] text-sky-400';
+
+export const publicSectionTitleClass =
+  'mt-4 text-4xl font-extrabold tracking-tight text-white md:text-5xl';
+
+export const publicSectionSupportingTextClass =
+  'mt-6 max-w-2xl text-base leading-relaxed text-[#b6bec5]';
 
 export const publicCardSurfaceClass =
-  'rounded-[2rem] border border-sky-500/14 bg-[linear-gradient(180deg,var(--surface),var(--surface-muted))] shadow-[0_18px_44px_rgba(15,23,42,0.14)]';
+  'rounded-[14px] border border-white/10 bg-white/[0.02] shadow-[0_18px_40px_rgba(2,8,24,0.28)]';
 
 export const publicInteractiveCardSurfaceClass =
-  `${publicCardSurfaceClass} transition duration-200 hover:-translate-y-0.5 hover:border-sky-400/24 hover:shadow-[0_24px_56px_rgba(56,189,248,0.14)]`;
+  `${publicCardSurfaceClass} transition-all duration-200 hover:bg-white/[0.05] hover:shadow-[0_0_0_1px_rgba(14,165,233,0.16),0_22px_44px_rgba(2,8,24,0.34)]`;
 
 export const publicHighlightSurfaceClass =
-  'rounded-[2rem] border border-sky-500/20 bg-[linear-gradient(180deg,rgba(255,255,255,0.96),rgba(239,246,255,0.92))] shadow-[0_24px_60px_rgba(15,23,42,0.14),0_0_40px_rgba(56,189,248,0.12)] dark:bg-[linear-gradient(180deg,rgba(12,21,39,0.98),rgba(16,29,49,0.94))]';
+  'rounded-[14px] border border-sky-400/28 bg-sky-400/10 shadow-[0_0_0_1px_rgba(14,165,233,0.16),0_22px_48px_rgba(14,165,233,0.16)]';
 
 export const publicChromeSurfaceClass =
-  'border border-sky-500/12 bg-[color:var(--surface)]/86 shadow-[0_18px_42px_rgba(2,6,23,0.16)] backdrop-blur-xl';
+  'border border-white/10 bg-[#020617]/80 shadow-[0_18px_42px_rgba(2,8,24,0.32)] backdrop-blur-xl';
 
 export const publicPrimaryButtonClass =
-  'rounded-xl border border-sky-400/18 bg-action px-5 py-3 text-sm font-medium text-white shadow-[0_16px_32px_rgba(31,111,235,0.24)] transition duration-200 hover:-translate-y-0.5 hover:border-cyan-300/30 hover:bg-blue-700 hover:shadow-[0_22px_44px_rgba(56,189,248,0.2)]';
+  'inline-flex items-center justify-center rounded-[14px] border border-sky-400/30 bg-sky-500 px-5 py-3 text-sm font-semibold uppercase tracking-[0.18em] text-[#020617] transition-colors hover:bg-sky-400';
 
 export const publicSecondaryButtonClass =
-  'rounded-xl border border-sky-500/14 bg-[var(--surface)] px-5 py-3 text-sm font-medium text-[var(--foreground)] shadow-[0_12px_28px_rgba(15,23,42,0.08)] transition duration-200 hover:-translate-y-0.5 hover:border-sky-400/24 hover:bg-[var(--surface-muted)] hover:shadow-[0_18px_38px_rgba(15,23,42,0.12)]';
+  'inline-flex items-center justify-center rounded-[14px] border border-white/10 bg-white/[0.03] px-5 py-3 text-sm font-semibold uppercase tracking-[0.18em] text-white transition-colors hover:border-sky-400/40 hover:text-sky-300';

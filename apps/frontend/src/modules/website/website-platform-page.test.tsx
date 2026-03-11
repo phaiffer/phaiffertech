@@ -15,9 +15,10 @@ describe('WebsitePlatformPage', () => {
     );
 
     expect(
-      await screen.findByText(/Shared tenancy, contracts, and capability boundaries stay visible/i)
+      await screen.findByText(/One modular SaaS platform designed to host different operational products/i)
     ).toBeInTheDocument();
-    expect(screen.getByText('Canonical public navigation and modular page composition')).toBeInTheDocument();
+    expect(screen.getByAltText('PhaifferTech logo')).toBeInTheDocument();
+    expect(screen.getByText('Shared foundation')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Products' })).toHaveAttribute('href', '/products');
     expect(screen.getByRole('link', { name: 'Engineering' })).toHaveAttribute('href', '/engineering');
   });

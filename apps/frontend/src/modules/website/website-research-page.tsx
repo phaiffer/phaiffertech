@@ -5,8 +5,7 @@ import { getWebsiteContent } from './website-content';
 import { WebsiteHero } from './website-hero';
 import {
   WebsiteCardGrid,
-  WebsiteSection,
-  WebsiteSectionHeading,
+  WebsiteSplitSection,
   WebsiteStatStrip
 } from './website-sections';
 
@@ -33,8 +32,6 @@ export function WebsiteResearchPage() {
   return (
     <>
       <WebsiteHero
-        locale={locale}
-        variant="research"
         eyebrow={content.eyebrow}
         title={content.title}
         description={content.description}
@@ -42,32 +39,31 @@ export function WebsiteResearchPage() {
         secondaryCta={{ label: labels.engineering, href: '/engineering' }}
       />
 
-      <WebsiteSection tone="muted">
-        <WebsiteSectionHeading
-          eyebrow={labels.tracks}
-          title={content.tracksTitle}
-          description={content.tracksDescription}
-        />
+      <WebsiteSplitSection
+        tone="muted"
+        eyebrow={labels.tracks}
+        title={content.tracksTitle}
+        description={content.tracksDescription}
+      >
         <WebsiteCardGrid items={content.tracks} />
-      </WebsiteSection>
+      </WebsiteSplitSection>
 
-      <WebsiteSection>
-        <WebsiteSectionHeading
-          eyebrow={labels.outputs}
-          title={content.outputsTitle}
-          description={content.outputsDescription}
-        />
+      <WebsiteSplitSection
+        eyebrow={labels.outputs}
+        title={content.outputsTitle}
+        description={content.outputsDescription}
+      >
         <WebsiteCardGrid items={content.outputs} />
-      </WebsiteSection>
+      </WebsiteSplitSection>
 
-      <WebsiteSection tone="muted">
-        <WebsiteSectionHeading
-          eyebrow={labels.bridge}
-          title={content.bridgeTitle}
-          description={content.bridgeDescription}
-        />
+      <WebsiteSplitSection
+        tone="muted"
+        eyebrow={labels.bridge}
+        title={content.bridgeTitle}
+        description={content.bridgeDescription}
+      >
         <WebsiteStatStrip items={content.bridge} />
-      </WebsiteSection>
+      </WebsiteSplitSection>
     </>
   );
 }

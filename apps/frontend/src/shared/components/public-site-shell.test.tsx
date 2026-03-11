@@ -34,5 +34,6 @@ describe('PublicSiteShell', () => {
     expect(aboutLinks[0]).toHaveAttribute('href', '/about');
     expect(accessLinks[0]).toHaveAttribute('href', '/login');
     expect(screen.getAllByText('PetFlow').length).toBeGreaterThan(0);
+    expect(screen.queryByRole('button', { name: 'Light' })).not.toBeInTheDocument();
   });
 });

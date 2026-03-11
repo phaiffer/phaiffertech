@@ -1,10 +1,10 @@
+import Image from 'next/image';
 import Link from 'next/link';
 import {
-  publicCardSurfaceClass,
   publicEyebrowClass,
-  publicHighlightSurfaceClass,
   publicPrimaryButtonClass,
-  publicSecondaryButtonClass
+  publicSecondaryButtonClass,
+  publicSiteContainerClass
 } from '@/shared/components/public-visual-system';
 
 type PublicHeroSectionProps = {
@@ -16,13 +16,6 @@ type PublicHeroSectionProps = {
   primaryCtaHref: string;
   secondaryCtaLabel: string;
   secondaryCtaHref: string;
-  platformCardEyebrow: string;
-  platformCardTitle: string;
-  platformCardText: string;
-  frontendCardEyebrow: string;
-  frontendCardTitle: string;
-  backendCardEyebrow: string;
-  backendCardTitle: string;
 };
 
 export function PublicHeroSection({
@@ -33,38 +26,34 @@ export function PublicHeroSection({
   primaryCtaLabel,
   primaryCtaHref,
   secondaryCtaLabel,
-  secondaryCtaHref,
-  platformCardEyebrow,
-  platformCardTitle,
-  platformCardText,
-  frontendCardEyebrow,
-  frontendCardTitle,
-  backendCardEyebrow,
-  backendCardTitle
+  secondaryCtaHref
 }: PublicHeroSectionProps) {
   return (
     <section
       id={id}
-      className="relative overflow-hidden border-b border-[var(--border)] bg-[linear-gradient(180deg,rgba(15,23,42,0.07),transparent_68%)]"
+      className="relative flex min-h-[88vh] items-center overflow-hidden"
     >
-      <div className="absolute inset-x-0 top-0 h-48 bg-[radial-gradient(circle_at_top,rgba(56,189,248,0.2),transparent_58%)]" />
-      <div className="absolute right-0 top-16 h-64 w-64 bg-[radial-gradient(circle,rgba(56,189,248,0.12),transparent_68%)]" />
+      <div className="pointer-events-none absolute inset-0">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_14%_8%,rgba(14,165,233,0.14),transparent_36%),radial-gradient(circle_at_82%_50%,rgba(14,165,233,0.14),transparent_28%)]" />
+      </div>
 
-      <div className="relative mx-auto grid w-full max-w-7xl items-center gap-12 px-4 py-24 sm:px-6 lg:grid-cols-[minmax(0,1fr)_minmax(320px,0.96fr)] lg:px-8 lg:py-32">
-        <div className="relative max-w-[42rem]">
-          <p className={publicEyebrowClass}>
+      <div
+        className={`${publicSiteContainerClass} relative grid items-center gap-10 py-24 lg:grid-cols-[1.25fr_0.75fr] lg:py-32`}
+      >
+        <div className="relative z-10 max-w-[52rem]">
+          <p className={`${publicEyebrowClass} inline-flex border-l-4 border-sky-400 pl-6`}>
             {eyebrow}
           </p>
 
-          <h1 className="mt-5 max-w-3xl text-4xl font-semibold leading-[1.02] tracking-tight text-[var(--foreground)] sm:text-5xl lg:text-[3.85rem]">
+          <h1 className="mt-8 max-w-[14ch] text-5xl font-black leading-[0.88] tracking-[-0.04em] text-white sm:text-6xl lg:text-[5.75rem]">
             {title}
           </h1>
 
-          <p className="mt-7 max-w-xl text-[15px] leading-7 text-slate-600 dark:text-slate-300 sm:text-lg">
+          <p className="mt-8 max-w-3xl text-lg leading-relaxed text-[#b6bec5] lg:max-w-2xl">
             {description}
           </p>
 
-          <div className="mt-10 flex flex-wrap gap-3">
+          <div className="mt-12 flex flex-wrap gap-4">
             <Link
               href={primaryCtaHref}
               className={publicPrimaryButtonClass}
@@ -81,35 +70,17 @@ export function PublicHeroSection({
           </div>
         </div>
 
-        <div className="grid gap-5 lg:max-w-[34rem] lg:justify-self-end">
-          <div className={`${publicHighlightSurfaceClass} p-7`}>
-            <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-500">
-              {platformCardEyebrow}
-            </p>
-            <p className="mt-3 text-2xl font-semibold text-[var(--foreground)] sm:text-3xl">
-              {platformCardTitle}
-            </p>
-            <p className="mt-3 text-sm leading-6 text-slate-600 dark:text-slate-300">{platformCardText}</p>
-          </div>
+        <div className="relative hidden justify-end lg:flex">
+          <div className="absolute left-1/2 top-1/2 h-[26rem] w-[26rem] -translate-x-1/2 -translate-y-1/2 rounded-full bg-sky-400/18 blur-[110px]" />
 
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div className={`${publicCardSurfaceClass} rounded-3xl p-5`}>
-              <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-500">
-                {frontendCardEyebrow}
-              </p>
-              <p className="mt-2 text-lg font-semibold text-[var(--foreground)]">
-                {frontendCardTitle}
-              </p>
-            </div>
-
-            <div className={`${publicCardSurfaceClass} rounded-3xl p-5`}>
-              <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-500">
-                {backendCardEyebrow}
-              </p>
-              <p className="mt-2 text-lg font-semibold text-[var(--foreground)]">
-                {backendCardTitle}
-              </p>
-            </div>
+          <div className="relative h-[30rem] w-[30rem] drop-shadow-[0_0_30px_rgba(14,165,233,0.3)]">
+            <Image
+              src="/logo.png"
+              alt="PhaifferTech logo"
+              fill
+              priority
+              className="object-contain"
+            />
           </div>
         </div>
       </div>

@@ -5,8 +5,7 @@ import { getWebsiteContent } from './website-content';
 import { WebsiteHero } from './website-hero';
 import {
   WebsiteCardGrid,
-  WebsiteSection,
-  WebsiteSectionHeading,
+  WebsiteSplitSection,
   WebsiteStatStrip
 } from './website-sections';
 
@@ -33,8 +32,6 @@ export function WebsiteEngineeringPage() {
   return (
     <>
       <WebsiteHero
-        locale={locale}
-        variant="engineering"
         eyebrow={content.eyebrow}
         title={content.title}
         description={content.description}
@@ -42,32 +39,31 @@ export function WebsiteEngineeringPage() {
         secondaryCta={{ label: labels.insights, href: '/articles' }}
       />
 
-      <WebsiteSection tone="muted">
-        <WebsiteSectionHeading
-          eyebrow={labels.expertise}
-          title={content.expertiseTitle}
-          description={content.expertiseDescription}
-        />
+      <WebsiteSplitSection
+        tone="muted"
+        eyebrow={labels.expertise}
+        title={content.expertiseTitle}
+        description={content.expertiseDescription}
+      >
         <WebsiteCardGrid items={content.expertise} />
-      </WebsiteSection>
+      </WebsiteSplitSection>
 
-      <WebsiteSection>
-        <WebsiteSectionHeading
-          eyebrow={labels.delivery}
-          title={content.deliveryTitle}
-          description={content.deliveryDescription}
-        />
+      <WebsiteSplitSection
+        eyebrow={labels.delivery}
+        title={content.deliveryTitle}
+        description={content.deliveryDescription}
+      >
         <WebsiteCardGrid items={content.delivery} />
-      </WebsiteSection>
+      </WebsiteSplitSection>
 
-      <WebsiteSection tone="muted">
-        <WebsiteSectionHeading
-          eyebrow={labels.principles}
-          title={content.principlesTitle}
-          description={content.principlesDescription}
-        />
+      <WebsiteSplitSection
+        tone="muted"
+        eyebrow={labels.principles}
+        title={content.principlesTitle}
+        description={content.principlesDescription}
+      >
         <WebsiteStatStrip items={content.principles} />
-      </WebsiteSection>
+      </WebsiteSplitSection>
     </>
   );
 }

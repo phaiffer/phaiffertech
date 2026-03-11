@@ -1,11 +1,13 @@
 import Link from 'next/link';
 import {
+  publicHeadingColumnClass,
   publicEyebrowClass,
   publicHighlightSurfaceClass,
   publicPrimaryButtonClass,
   publicSecondaryButtonClass,
-  publicSectionSupportingTextClass,
-  publicSectionTitleClass
+  publicSectionLayoutClass,
+  publicSectionTitleClass,
+  publicSiteContainerClass
 } from '@/shared/components/public-visual-system';
 
 type PublicCtaSectionProps = {
@@ -28,35 +30,37 @@ export function PublicCtaSection({
   secondaryCtaHref
 }: PublicCtaSectionProps) {
   return (
-    <section className="py-[4.5rem] sm:py-24">
-      <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className={`${publicHighlightSurfaceClass} p-8 lg:p-10`}>
-          <p className={publicEyebrowClass}>
-            {eyebrow}
-          </p>
+    <section className="border-t border-white/5 py-20 lg:py-28">
+      <div className={publicSiteContainerClass}>
+        <div className={publicSectionLayoutClass}>
+          <div className={publicHeadingColumnClass}>
+            <p className={publicEyebrowClass}>
+              {eyebrow}
+            </p>
 
-          <h2 className={`${publicSectionTitleClass} max-w-3xl lg:text-4xl`}>
-            {title}
-          </h2>
+            <h2 className={publicSectionTitleClass}>
+              {title}
+            </h2>
+          </div>
 
-          <p className={`${publicSectionSupportingTextClass} max-w-2xl`}>
-            {description}
-          </p>
+          <div className={`${publicHighlightSurfaceClass} p-8 lg:p-10`}>
+            <p className="text-base leading-relaxed text-white/85">{description}</p>
 
-          <div className="mt-8 flex flex-wrap gap-3">
-            <Link
-              href={primaryCtaHref}
-              className={publicPrimaryButtonClass}
-            >
-              {primaryCtaLabel}
-            </Link>
+            <div className="mt-8 flex flex-wrap gap-4">
+              <Link
+                href={primaryCtaHref}
+                className={publicPrimaryButtonClass}
+              >
+                {primaryCtaLabel}
+              </Link>
 
-            <Link
-              href={secondaryCtaHref}
-              className={publicSecondaryButtonClass}
-            >
-              {secondaryCtaLabel}
-            </Link>
+              <Link
+                href={secondaryCtaHref}
+                className={publicSecondaryButtonClass}
+              >
+                {secondaryCtaLabel}
+              </Link>
+            </div>
           </div>
         </div>
       </div>

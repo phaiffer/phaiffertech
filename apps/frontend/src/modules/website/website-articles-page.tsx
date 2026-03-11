@@ -5,8 +5,7 @@ import { getWebsiteContent } from './website-content';
 import { WebsiteHero } from './website-hero';
 import {
   WebsiteArticleGrid,
-  WebsiteSection,
-  WebsiteSectionHeading
+  WebsiteSplitSection
 } from './website-sections';
 
 export function WebsiteArticlesPage() {
@@ -30,8 +29,6 @@ export function WebsiteArticlesPage() {
   return (
     <>
       <WebsiteHero
-        locale={locale}
-        variant="articles"
         eyebrow={content.eyebrow}
         title={content.title}
         description={content.description}
@@ -39,14 +36,14 @@ export function WebsiteArticlesPage() {
         secondaryCta={{ label: labels.platform, href: '/platform' }}
       />
 
-      <WebsiteSection tone="muted">
-        <WebsiteSectionHeading
-          eyebrow={labels.publishing}
-          title={content.featuredTitle}
-          description={content.featuredDescription}
-        />
+      <WebsiteSplitSection
+        tone="muted"
+        eyebrow={labels.publishing}
+        title={content.featuredTitle}
+        description={content.featuredDescription}
+      >
         <WebsiteArticleGrid items={content.items} ctaLabel={labels.readInsight} />
-      </WebsiteSection>
+      </WebsiteSplitSection>
     </>
   );
 }

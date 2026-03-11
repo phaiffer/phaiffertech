@@ -6,8 +6,7 @@ import { getWebsiteContent } from './website-content';
 import { WebsiteHero } from './website-hero';
 import {
   WebsiteCardGrid,
-  WebsiteSection,
-  WebsiteSectionHeading
+  WebsiteSplitSection
 } from './website-sections';
 
 export function WebsiteContactPage() {
@@ -31,8 +30,6 @@ export function WebsiteContactPage() {
   return (
     <>
       <WebsiteHero
-        locale={locale}
-        variant="contact"
         eyebrow={content.eyebrow}
         title={content.title}
         description={content.description}
@@ -40,23 +37,22 @@ export function WebsiteContactPage() {
         secondaryCta={{ label: labels.reviewPlatform, href: '/platform' }}
       />
 
-      <WebsiteSection tone="muted">
-        <WebsiteSectionHeading
-          eyebrow={labels.lanes}
-          title={content.lanesTitle}
-          description={content.lanesDescription}
-        />
+      <WebsiteSplitSection
+        tone="muted"
+        eyebrow={labels.lanes}
+        title={content.lanesTitle}
+        description={content.lanesDescription}
+      >
         <WebsiteCardGrid items={content.lanes} />
-      </WebsiteSection>
+      </WebsiteSplitSection>
 
-      <WebsiteSection>
-        <WebsiteSectionHeading
-          eyebrow={labels.readiness}
-          title={content.readinessTitle}
-          description={content.readinessDescription}
-        />
+      <WebsiteSplitSection
+        eyebrow={labels.readiness}
+        title={content.readinessTitle}
+        description={content.readinessDescription}
+      >
         <WebsiteCardGrid items={content.readiness} />
-      </WebsiteSection>
+      </WebsiteSplitSection>
 
       <PublicCtaSection
         eyebrow={content.cta.eyebrow}

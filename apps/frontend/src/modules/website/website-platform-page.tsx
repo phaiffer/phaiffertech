@@ -5,8 +5,7 @@ import { getWebsiteContent } from './website-content';
 import { WebsiteHero } from './website-hero';
 import {
   WebsiteCardGrid,
-  WebsiteSection,
-  WebsiteSectionHeading
+  WebsiteSplitSection
 } from './website-sections';
 
 export function WebsitePlatformPage() {
@@ -32,8 +31,6 @@ export function WebsitePlatformPage() {
   return (
     <>
       <WebsiteHero
-        locale={locale}
-        variant="platform"
         eyebrow={content.eyebrow}
         title={content.title}
         description={content.description}
@@ -41,32 +38,31 @@ export function WebsitePlatformPage() {
         secondaryCta={{ label: labels.engineering, href: '/engineering' }}
       />
 
-      <WebsiteSection tone="muted">
-        <WebsiteSectionHeading
-          eyebrow={labels.foundation}
-          title={content.foundationTitle}
-          description={content.foundationDescription}
-        />
+      <WebsiteSplitSection
+        tone="muted"
+        eyebrow={labels.foundation}
+        title={content.foundationTitle}
+        description={content.foundationDescription}
+      >
         <WebsiteCardGrid items={content.foundation} />
-      </WebsiteSection>
+      </WebsiteSplitSection>
 
-      <WebsiteSection>
-        <WebsiteSectionHeading
-          eyebrow={labels.layers}
-          title={content.layersTitle}
-          description={content.layersDescription}
-        />
+      <WebsiteSplitSection
+        eyebrow={labels.layers}
+        title={content.layersTitle}
+        description={content.layersDescription}
+      >
         <WebsiteCardGrid items={content.layers} />
-      </WebsiteSection>
+      </WebsiteSplitSection>
 
-      <WebsiteSection tone="muted">
-        <WebsiteSectionHeading
-          eyebrow={labels.modules}
-          title={content.modulesTitle}
-          description={content.modulesDescription}
-        />
+      <WebsiteSplitSection
+        tone="muted"
+        eyebrow={labels.modules}
+        title={content.modulesTitle}
+        description={content.modulesDescription}
+      >
         <WebsiteCardGrid items={content.modules} />
-      </WebsiteSection>
+      </WebsiteSplitSection>
     </>
   );
 }
