@@ -157,7 +157,19 @@ describe('CrmHome', () => {
     });
 
     expect(screen.getByText('Set up the CRM workspace')).toBeInTheDocument();
-    expect(screen.getByText(/This tenant does not have CRM records yet/i)).toBeInTheDocument();
+    expect(screen.getByText('CRM workspace not configured yet')).toBeInTheDocument();
+    expect(screen.getByText(/does not have the first CRM records in place yet/i)).toBeInTheDocument();
     expect(screen.getAllByText('Manage companies').length).toBeGreaterThan(0);
+  });
+
+  it('keeps CRM metrics capability-aware when dashboard permission is missing', () => {
+    currentPermissions.splice(0, currentPermissions.length, 'crm.company.read', 'crm.task.read');
+
+    render(<CrmHome />);
+
+    expect(crmService.getDashboardSummary).not.toHaveBeenCalled();
+    expect(screen.getAllByText('Dashboard visibility required').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('No Permission').length).toBeGreaterThan(0);
+    expect(screen.getByText(/commercial pulse requires `crm.dashboard.read`/i)).toBeInTheDocument();
   });
 });

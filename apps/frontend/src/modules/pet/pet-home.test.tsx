@@ -150,7 +150,19 @@ describe('PetHome', () => {
     });
 
     expect(screen.getByText('Set up the PetFlow workspace')).toBeInTheDocument();
-    expect(screen.getByText(/This tenant does not have PetFlow activity yet/i)).toBeInTheDocument();
+    expect(screen.getByText('PetFlow workspace not configured yet')).toBeInTheDocument();
+    expect(screen.getByText(/does not have the first clinic entities in place yet/i)).toBeInTheDocument();
     expect(screen.getAllByText('Open appointments').length).toBeGreaterThan(0);
+  });
+
+  it('keeps PetFlow metrics capability-aware when dashboard permission is missing', () => {
+    currentPermissions.splice(0, currentPermissions.length, 'pet.appointment.read', 'pet.medical-record.read');
+
+    render(<PetHome />);
+
+    expect(petService.getDashboardSummary).not.toHaveBeenCalled();
+    expect(screen.getAllByText('Dashboard visibility required').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('No Permission').length).toBeGreaterThan(0);
+    expect(screen.getByText(/clinic snapshot requires `pet.dashboard.read`/i)).toBeInTheDocument();
   });
 });

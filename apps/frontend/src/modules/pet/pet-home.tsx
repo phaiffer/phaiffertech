@@ -19,6 +19,12 @@ import {
   ModuleWorkspaceSection,
   ModuleWorkspaceState
 } from '@/shared/modules/module-workspace';
+import {
+  noDataCapability,
+  notConfiguredCapability,
+  permissionCapability,
+  readyCapability
+} from '@/shared/modules/module-capability';
 import { useFrontendPlatform } from '@/shared/platform/use-frontend-platform';
 import { petService } from '@/shared/services/pet-service';
 import { PetDashboardSummary } from '@/shared/types/pet';
@@ -146,16 +152,21 @@ function buildPetGuidanceSteps(actions: ModuleWorkspaceAction[], keys: string[])
   return keys
     .map((key) => actions.find((action) => action.href === key))
     .filter((action): action is ModuleWorkspaceAction => Boolean(action))
-    .map((action) => ({
-      key: action.href,
-      eyebrow: action.eyebrow,
-      title: action.title,
-      description: action.available === false
-        ? action.restrictionDescription ?? action.description
-        : action.description,
-      href: action.available === false ? undefined : action.href,
-      status: action.available === false ? 'restricted' : 'active'
-    }));
+    .map((action) => {
+      const capability = action.capability ?? readyCapability(action.status);
+
+      return {
+        key: action.href,
+        eyebrow: action.eyebrow,
+        title: action.title,
+        description: capability.kind === 'ready'
+          ? action.description
+          : capability.description ?? action.description,
+        href: capability.interactive ? action.href : undefined,
+        status: capability.status ?? action.status ?? null,
+        capability
+      };
+    });
 }
 
 export function PetHome() {
@@ -166,19 +177,6 @@ export function PetHome() {
   const [error, setError] = useState<string | null>(null);
 
   const canReadDashboard = hasPermission('pet.dashboard.read');
-  const actionStates = petWorkspaceActions.map((action) => {
-    const available = action.permission
-      ? hasPermission(action.permission)
-      : action.anyOf
-        ? hasAnyPermission(action.anyOf)
-        : true;
-
-    return {
-      ...action,
-      available,
-      status: available ? action.status : 'restricted'
-    };
-  });
   const featuredSection = summary?.sections.find((section) => (
     section.cards.length > 0
     || section.metrics.length > 0
@@ -186,6 +184,61 @@ export function PetHome() {
     || section.timeSeries.length > 0
   )) ?? null;
   const firstUse = summary ? isPetFirstUse(summary) : false;
+  const actionStates = petWorkspaceActions
+    .map((action) => {
+      const allowed = action.permission
+        ? hasPermission(action.permission)
+        : action.anyOf
+          ? hasAnyPermission(action.anyOf)
+          : true;
+      const capability = allowed
+        ? readyCapability(action.status)
+        : permissionCapability({
+            title: action.restrictionTitle ?? 'Permission required',
+            description: action.restrictionDescription ?? action.description
+          });
+
+      return {
+        ...action,
+        available: capability.interactive,
+        status: capability.status ?? action.status ?? null,
+        capability
+      };
+    })
+    .map((action) => {
+      if (action.capability?.kind !== 'ready' || !summary) {
+        return action;
+      }
+
+      if (firstUse && action.href === '/pet/appointments') {
+        const capability = notConfiguredCapability({
+          title: 'Appointment flow not configured yet',
+          description: 'Create the first clients and pet profiles before appointment scheduling can surface live clinic workload.'
+        });
+
+        return { ...action, capability, status: capability.status };
+      }
+
+      if (firstUse && action.href === '/pet/medical-records') {
+        const capability = notConfiguredCapability({
+          title: 'Medical records not configured yet',
+          description: 'Clinical records start after the first patients and appointments exist in this PetFlow workspace.'
+        });
+
+        return { ...action, capability, status: capability.status };
+      }
+
+      if (!firstUse && !featuredSection && action.href === '/pet/appointments') {
+        const capability = noDataCapability({
+          title: 'No recent appointment activity yet',
+          description: 'The workspace has PetFlow records, but no compact recent clinic activity block is available right now.'
+        });
+
+        return { ...action, capability, status: capability.status };
+      }
+
+      return action;
+    });
   const themePolicy = platform.theme.canOverride
     ? `${getAppThemeModeLabel(platform.theme.tenantDefaultMode)} with user override`
     : `${getAppThemeModeLabel(platform.theme.tenantDefaultMode)} tenant-managed`;
@@ -283,21 +336,66 @@ export function PetHome() {
           },
           {
             label: 'Appointments today',
-            value: resolveOverviewValue(summary?.appointmentsToday),
-            description: 'Scheduled attendances expected during the current operating day.'
+            value: canReadDashboard ? resolveOverviewValue(summary?.appointmentsToday) : '--',
+            description: 'Scheduled attendances expected during the current operating day.',
+            status: !canReadDashboard ? 'no permission' : summary && firstUse ? 'setup required' : null,
+            capability: !canReadDashboard
+              ? permissionCapability({
+                  title: 'Dashboard visibility required',
+                  description: 'Grant `pet.dashboard.read` to surface clinic appointment counts on this workspace landing page.'
+                })
+              : summary && firstUse
+                ? notConfiguredCapability({
+                    title: 'Appointments not configured yet',
+                    description: 'Create the first clients and pet profiles before this workspace can schedule and surface clinic throughput.'
+                  })
+                : undefined
           },
           {
             label: 'Upcoming care',
-            value: resolveOverviewValue(summary?.upcomingAppointments),
-            description: 'Near-term appointments already queued for the current tenant.'
+            value: canReadDashboard ? resolveOverviewValue(summary?.upcomingAppointments) : '--',
+            description: 'Near-term appointments already queued for the current tenant.',
+            status: !canReadDashboard ? 'no permission' : summary && firstUse ? 'setup required' : null,
+            capability: !canReadDashboard
+              ? permissionCapability({
+                  title: 'Clinic forecast requires dashboard access',
+                  description: 'Grant `pet.dashboard.read` to surface upcoming appointment load from the workspace overview.'
+                })
+              : summary && firstUse
+                ? notConfiguredCapability({
+                    title: 'Upcoming care not configured yet',
+                    description: 'Near-term care appears after the first appointments are booked inside this tenant workspace.'
+                  })
+                : undefined
           },
           {
             label: 'Attention queue',
-            value: summary
-              ? `${summary.lowStockProducts} low-stock / ${summary.pendingInvoices} invoices`
-              : 'Loading...',
+            value: canReadDashboard
+              ? summary
+                ? `${summary.lowStockProducts} low-stock / ${summary.pendingInvoices} invoices`
+                : 'Loading...'
+              : '--',
             description: 'Commercial and inventory signals that still need action in this workspace.',
-            status: summary && (summary.lowStockProducts > 0 || summary.pendingInvoices > 0) ? 'pending' : summary ? 'active' : null
+            status: !canReadDashboard
+              ? 'no permission'
+              : summary && firstUse
+                ? 'setup required'
+                : summary && (summary.lowStockProducts > 0 || summary.pendingInvoices > 0)
+                  ? 'pending'
+                  : summary
+                    ? 'active'
+                    : null,
+            capability: !canReadDashboard
+              ? permissionCapability({
+                  title: 'Operational queue requires dashboard access',
+                  description: 'Grant `pet.dashboard.read` to surface low-stock and billing attention signals from this landing page.'
+                })
+              : summary && firstUse
+                ? notConfiguredCapability({
+                    title: 'Operational queue not configured yet',
+                    description: 'Inventory and billing attention signals appear after services, products, and invoices begin moving through the workspace.'
+                  })
+                : undefined
           }
         ]}
       />
@@ -343,22 +441,36 @@ export function PetHome() {
             />
           </div>
         ) : summary && firstUse ? (
-          <ModuleWorkspaceGuidance
-            title="Set up the PetFlow workspace"
-            description="This tenant does not have PetFlow activity yet. Start with the client base, patient records, and appointment flow so the workspace can surface clinical context."
-            steps={setupGuidance}
-          />
+          <div className="space-y-4">
+            <ModuleWorkspaceState
+              tone="neutral"
+              title="PetFlow workspace not configured yet"
+              description="This tenant does not have the first clinic entities in place yet. Start with clients, patient records, and appointments so the workspace can surface clinical context."
+            />
+            <ModuleWorkspaceGuidance
+              title="Set up the PetFlow workspace"
+              description="These guided steps establish the first clinic workflow without leaving the tenant workspace context."
+              steps={setupGuidance}
+            />
+          </div>
         ) : summary ? (
           <div className="space-y-4">
             <MetricGrid cards={summary.summaryCards.slice(0, 4)} columns="md:grid-cols-2 xl:grid-cols-4" />
             {featuredSection ? (
               <DashboardSection section={featuredSection} />
             ) : (
-              <ModuleWorkspaceGuidance
-                title="No recent PetFlow activity yet"
-                description="The workspace has records, but the summary returned no compact recent activity block. Continue with the core PetFlow flows below."
-                steps={restrictedGuidance}
-              />
+              <div className="space-y-4">
+                <ModuleWorkspaceState
+                  tone="neutral"
+                  title="No recent PetFlow activity yet"
+                  description="The workspace already has PetFlow records, but the summary returned no compact recent clinic activity block right now."
+                />
+                <ModuleWorkspaceGuidance
+                  title="Keep working the PetFlow workspace"
+                  description="Continue through the core PetFlow flows below while the next clinic signal is still building."
+                  steps={restrictedGuidance}
+                />
+              </div>
             )}
           </div>
         ) : (

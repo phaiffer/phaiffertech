@@ -22,6 +22,14 @@ import {
 import { usePermissions } from '@/shared/auth/usePermissions';
 import { ApiClientError } from '@/shared/lib/http';
 import { getAppThemeModeLabel } from '@/shared/lib/tenant-branding';
+import {
+  isCapabilityReady,
+  noDataCapability,
+  notConfiguredCapability,
+  permissionCapability,
+  readyCapability,
+  type ModuleCapability
+} from '@/shared/modules/module-capability';
 import type { ModuleWorkspaceAction } from '@/shared/modules/module-workspace';
 import { useFrontendPlatform } from '@/shared/platform/use-frontend-platform';
 import { iotService } from '@/shared/services/iot-service';
@@ -173,36 +181,33 @@ function IotWorkspaceActionLink({
   eyebrow,
   title,
   description,
-  available = true,
-  restrictionTitle,
-  restrictionDescription
+  capability = readyCapability()
 }: {
   href: string;
   eyebrow: string;
   title: string;
   description: string;
-  available?: boolean;
-  restrictionTitle?: string;
-  restrictionDescription?: string;
+  capability?: ModuleCapability;
 }) {
+  const interactive = capability.interactive;
   const content = (
     <>
       <p className="text-xs font-semibold uppercase tracking-[0.18em] text-cyan-300/80">{eyebrow}</p>
       <h3 className="mt-3 text-xl font-semibold text-white">{title}</h3>
       <p className="mt-2 text-sm leading-6 text-slate-400">{description}</p>
-      {!available && (restrictionTitle || restrictionDescription) ? (
+      {!isCapabilityReady(capability) && (capability.title || capability.description) ? (
         <div className="mt-4 rounded-[22px] border border-dashed border-slate-700 bg-slate-950/45 px-4 py-3">
-          {restrictionTitle ? <p className="text-sm font-semibold text-white">{restrictionTitle}</p> : null}
-          {restrictionDescription ? <p className="mt-1 text-sm text-slate-400">{restrictionDescription}</p> : null}
+          {capability.title ? <p className="text-sm font-semibold text-white">{capability.title}</p> : null}
+          {capability.description ? <p className="mt-1 text-sm text-slate-400">{capability.description}</p> : null}
         </div>
       ) : null}
       <span className="mt-5 inline-flex text-sm font-semibold text-cyan-200 transition group-hover:translate-x-1">
-        {available ? 'Open workspace flow' : 'Unavailable in current workspace role'}
+        {capability.actionLabel}
       </span>
     </>
   );
 
-  if (available) {
+  if (interactive) {
     return (
       <Link
         href={href}
@@ -243,22 +248,64 @@ export function IotHome() {
   const [error, setError] = useState<string | null>(null);
 
   const canReadDashboard = hasPermission('iot.dashboard.read');
-  const actionStates = iotWorkspaceActions.map((action) => {
-    const available = !action.permission || hasPermission(action.permission);
+  const activitySection = summary?.sections.find((section) => section.items.length > 0) ?? null;
+  const firstUse = summary ? isIotFirstUse(summary) : false;
+  const actionStates = iotWorkspaceActions
+    .map((action) => {
+      const allowed = !action.permission || hasPermission(action.permission);
+      const capability = allowed
+        ? readyCapability(action.status)
+        : permissionCapability({
+            title: action.restrictionTitle ?? 'Permission required',
+            description: action.restrictionDescription ?? action.description
+          });
 
-    return {
-      ...action,
-      available,
-      status: available ? action.status : 'restricted'
-    };
-  });
-  const availableActions = actionStates.filter((action) => action.available !== false);
+      return {
+        ...action,
+        available: capability.interactive,
+        status: capability.status ?? action.status ?? null,
+        capability
+      };
+    })
+    .map((action) => {
+      if (action.capability?.kind !== 'ready' || !summary) {
+        return action;
+      }
+
+      if (firstUse && action.href === '/iot/telemetry') {
+        const capability = notConfiguredCapability({
+          title: 'Telemetry is not configured yet',
+          description: 'Onboard devices and register mappings before live telemetry can start surfacing inside this workspace.'
+        });
+
+        return { ...action, capability, status: capability.status };
+      }
+
+      if (firstUse && action.href === '/iot/alarms') {
+        const capability = notConfiguredCapability({
+          title: 'Alarm flow is not configured yet',
+          description: 'Alarm visibility begins after the first connected assets and thresholded register mappings are in place.'
+        });
+
+        return { ...action, capability, status: capability.status };
+      }
+
+      if (!firstUse && summary.telemetryPointsLast24h === 0 && action.href === '/iot/telemetry') {
+        const capability = noDataCapability({
+          title: 'No telemetry collected yet',
+          description: 'The workspace has connected assets, but no telemetry points were collected during the latest 24-hour window.'
+        });
+
+        return { ...action, capability, status: capability.status };
+      }
+
+      return action;
+    });
+  const availableActions = actionStates.filter((action) => action.capability?.interactive !== false);
   const primaryAction = availableActions.find((action) => action.href === '/iot/dashboard') ?? availableActions[0] ?? null;
   const themePolicy = platform.theme.canOverride
     ? `${getAppThemeModeLabel(platform.theme.tenantDefaultMode)} with user override`
     : `${getAppThemeModeLabel(platform.theme.tenantDefaultMode)} tenant-managed`;
-  const activitySection = summary?.sections.find((section) => section.items.length > 0) ?? null;
-  const firstUse = summary ? isIotFirstUse(summary) : false;
   const setupGuidance = buildIotGuidanceSteps(actionStates, ['/iot/add-device', '/iot/devices', '/iot/registers']);
   const restrictedGuidance = buildIotGuidanceSteps(actionStates, ['/iot/devices', '/iot/alarms', '/iot/telemetry']);
 
@@ -375,6 +422,17 @@ export function IotHome() {
           label="Active devices"
           value={canReadDashboard && summary ? summary.activeDevices : '--'}
           footnote={canReadDashboard ? 'Online assets currently reporting into this workspace.' : 'Requires dashboard visibility.'}
+          status={!canReadDashboard ? 'No permission' : summary && firstUse ? 'Setup required' : undefined}
+          detailTitle={!canReadDashboard
+            ? 'Dashboard visibility required'
+            : summary && firstUse
+              ? 'Fleet not configured yet'
+              : undefined}
+          detailDescription={!canReadDashboard
+            ? 'Grant `iot.dashboard.read` to surface live fleet counts from this workspace landing page.'
+            : summary && firstUse
+              ? 'Onboard the first connected assets before active device health can surface here.'
+              : undefined}
           tone="green"
           icon={<DeviceIcon />}
         />
@@ -382,6 +440,17 @@ export function IotHome() {
           label="Open alarms"
           value={canReadDashboard && summary ? summary.totalAlarmsOpen : '--'}
           footnote={canReadDashboard ? 'Operational incidents still open in the current IoT workspace.' : 'Requires dashboard visibility.'}
+          status={!canReadDashboard ? 'No permission' : summary && firstUse ? 'Setup required' : undefined}
+          detailTitle={!canReadDashboard
+            ? 'Dashboard visibility required'
+            : summary && firstUse
+              ? 'Alarm flow not configured yet'
+              : undefined}
+          detailDescription={!canReadDashboard
+            ? 'Grant `iot.dashboard.read` to surface open incident counts from this workspace landing page.'
+            : summary && firstUse
+              ? 'Alarm volume appears after the first assets and threshold-driven monitoring signals are established.'
+              : undefined}
           tone={summary && summary.totalAlarmsOpen > 0 ? 'amber' : 'cyan'}
           icon={<AlarmIcon />}
         />
@@ -389,6 +458,17 @@ export function IotHome() {
           label="Pending maintenance"
           value={canReadDashboard && summary ? summary.pendingMaintenance : '--'}
           footnote={canReadDashboard ? 'Interventions still pending for connected assets.' : 'Requires dashboard visibility.'}
+          status={!canReadDashboard ? 'No permission' : summary && firstUse ? 'Setup required' : undefined}
+          detailTitle={!canReadDashboard
+            ? 'Dashboard visibility required'
+            : summary && firstUse
+              ? 'Maintenance flow not configured yet'
+              : undefined}
+          detailDescription={!canReadDashboard
+            ? 'Grant `iot.dashboard.read` to surface pending maintenance counts from this workspace landing page.'
+            : summary && firstUse
+              ? 'Maintenance backlog appears after devices, alarms, and intervention work begin moving through the workspace.'
+              : undefined}
           tone={summary && summary.pendingMaintenance > 0 ? 'amber' : 'cyan'}
           icon={<PlugIcon />}
         />
@@ -413,9 +493,7 @@ export function IotHome() {
                 eyebrow={action.eyebrow}
                 title={action.title}
                 description={action.description}
-                available={action.available}
-                restrictionTitle={action.restrictionTitle}
-                restrictionDescription={action.restrictionDescription}
+                capability={action.capability}
               />
             ))}
           </div>
@@ -440,10 +518,8 @@ export function IotHome() {
                   href={action.href}
                   eyebrow={action.eyebrow}
                   title={action.title}
-                  description={action.available === false ? action.restrictionDescription ?? action.description : action.description}
-                  available={action.available}
-                  restrictionTitle={action.restrictionTitle}
-                  restrictionDescription={action.restrictionDescription}
+                  description={action.capability?.kind === 'ready' ? action.description : action.capability?.description ?? action.description}
+                  capability={action.capability}
                 />
               ))}
             </div>
@@ -468,10 +544,8 @@ export function IotHome() {
                   href={action.href}
                   eyebrow={action.eyebrow}
                   title={action.title}
-                  description={action.available === false ? action.restrictionDescription ?? action.description : action.description}
-                  available={action.available}
-                  restrictionTitle={action.restrictionTitle}
-                  restrictionDescription={action.restrictionDescription}
+                  description={action.capability?.kind === 'ready' ? action.description : action.capability?.description ?? action.description}
+                  capability={action.capability}
                 />
               ))}
             </div>
@@ -490,10 +564,8 @@ export function IotHome() {
                   href={action.href}
                   eyebrow={action.eyebrow}
                   title={action.title}
-                  description={action.available === false ? action.restrictionDescription ?? action.description : action.description}
-                  available={action.available}
-                  restrictionTitle={action.restrictionTitle}
-                  restrictionDescription={action.restrictionDescription}
+                  description={action.capability?.kind === 'ready' ? action.description : action.capability?.description ?? action.description}
+                  capability={action.capability}
                 />
               ))}
             </div>
@@ -505,6 +577,11 @@ export function IotHome() {
                 label="Telemetry in 24h"
                 value={summary.telemetryPointsLast24h}
                 footnote="Collected points over the last 24 hours for this workspace."
+                status={summary.telemetryPointsLast24h === 0 ? 'No data' : undefined}
+                detailTitle={summary.telemetryPointsLast24h === 0 ? 'No telemetry collected yet' : undefined}
+                detailDescription={summary.telemetryPointsLast24h === 0
+                  ? 'Connected assets are present, but the latest 24-hour window returned no telemetry points for this workspace.'
+                  : undefined}
                 tone="cyan"
                 icon={<WaveIcon />}
               />
@@ -563,10 +640,8 @@ export function IotHome() {
                       href={action.href}
                       eyebrow={action.eyebrow}
                       title={action.title}
-                      description={action.available === false ? action.restrictionDescription ?? action.description : action.description}
-                      available={action.available}
-                      restrictionTitle={action.restrictionTitle}
-                      restrictionDescription={action.restrictionDescription}
+                      description={action.capability?.kind === 'ready' ? action.description : action.capability?.description ?? action.description}
+                      capability={action.capability}
                     />
                   ))}
                 </div>

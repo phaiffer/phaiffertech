@@ -4,6 +4,12 @@ import Link from 'next/link';
 import type { ReactNode } from 'react';
 import { EmptyStateCard } from '@/shared/dashboard/empty-state-card';
 import { StatusBadge } from '@/shared/dashboard/status-badge';
+import {
+  isCapabilityReady,
+  readyCapability,
+  unavailableCapability,
+  type ModuleCapability
+} from '@/shared/modules/module-capability';
 
 export type ModuleWorkspaceChipTone = 'accent' | 'neutral';
 
@@ -18,6 +24,7 @@ export type ModuleWorkspaceOverviewCard = {
   value: string | number;
   description: string;
   status?: string | null;
+  capability?: ModuleCapability;
 };
 
 export type ModuleWorkspaceFact = {
@@ -38,6 +45,7 @@ export type ModuleWorkspaceAction = {
   restrictionTitle?: string;
   restrictionDescription?: string;
   status?: string | null;
+  capability?: ModuleCapability;
 };
 
 export type ModuleWorkspaceGuidanceStep = {
@@ -47,7 +55,25 @@ export type ModuleWorkspaceGuidanceStep = {
   description: string;
   href?: string;
   status?: string | null;
+  capability?: ModuleCapability;
 };
+
+function resolveActionCapability(action: ModuleWorkspaceAction) {
+  if (action.capability) {
+    return action.capability;
+  }
+
+  if (action.available === false) {
+    return unavailableCapability({
+      title: action.restrictionTitle ?? 'Unavailable in the current workspace',
+      description: action.restrictionDescription ?? action.description,
+      status: action.status ?? 'restricted',
+      actionLabel: 'Unavailable in current workspace role'
+    });
+  }
+
+  return readyCapability(action.status);
+}
 
 function chipClasses(tone: ModuleWorkspaceChipTone) {
   if (tone === 'neutral') {
@@ -159,6 +185,16 @@ export function ModuleWorkspaceOverviewGrid({ cards }: { cards: ModuleWorkspaceO
             {card.status ? <StatusBadge status={card.status} /> : null}
           </div>
           <p className="mt-3 text-sm text-[color:var(--app-shell-muted)]">{card.description}</p>
+          {!isCapabilityReady(card.capability) && (card.capability?.title || card.capability?.description) ? (
+            <div className="mt-4 rounded-2xl border border-dashed border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-panel-muted)] px-4 py-3">
+              {card.capability?.title ? (
+                <p className="text-sm font-semibold text-[color:var(--app-shell-heading)]">{card.capability.title}</p>
+              ) : null}
+              {card.capability?.description ? (
+                <p className="mt-1 text-sm text-[color:var(--app-shell-muted)]">{card.capability.description}</p>
+              ) : null}
+            </div>
+          ) : null}
         </div>
       ))}
     </div>
@@ -210,7 +246,8 @@ export function ModuleWorkspaceQuickActionGrid({
       ) : (
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           {actions.map((action) => {
-            const available = action.available ?? true;
+            const capability = resolveActionCapability(action);
+            const interactive = capability.interactive;
             const content = (
               <>
                 <div className="flex items-start justify-between gap-3">
@@ -222,26 +259,26 @@ export function ModuleWorkspaceQuickActionGrid({
                       {action.title}
                     </h3>
                   </div>
-                  <StatusBadge status={action.status ?? (available ? null : 'restricted')} />
+                  <StatusBadge status={capability.status ?? action.status ?? null} />
                 </div>
                 <p className="mt-3 text-sm leading-6 text-[color:var(--app-shell-muted)]">{action.description}</p>
-                {!available && (action.restrictionTitle || action.restrictionDescription) ? (
+                {!isCapabilityReady(capability) && (capability.title || capability.description) ? (
                   <div className="mt-4 rounded-2xl border border-dashed border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-panel)] px-4 py-3">
-                    {action.restrictionTitle ? (
-                      <p className="text-sm font-semibold text-[color:var(--app-shell-heading)]">{action.restrictionTitle}</p>
+                    {capability.title ? (
+                      <p className="text-sm font-semibold text-[color:var(--app-shell-heading)]">{capability.title}</p>
                     ) : null}
-                    {action.restrictionDescription ? (
-                      <p className="mt-1 text-sm text-[color:var(--app-shell-muted)]">{action.restrictionDescription}</p>
+                    {capability.description ? (
+                      <p className="mt-1 text-sm text-[color:var(--app-shell-muted)]">{capability.description}</p>
                     ) : null}
                   </div>
                 ) : null}
                 <span className="mt-5 inline-flex text-sm font-semibold text-[color:var(--tenant-accent)]">
-                  {available ? 'Open workspace flow' : 'Unavailable in current workspace role'}
+                  {capability.actionLabel}
                 </span>
               </>
             );
 
-            if (available) {
+            if (interactive) {
               return (
                 <Link
                   key={action.href}
@@ -290,6 +327,7 @@ export function ModuleWorkspaceGuidance({
 
       <div className="grid gap-4 md:grid-cols-3">
         {steps.map((step) => {
+          const href = step.href;
           const content = (
             <>
               <div className="flex items-start justify-between gap-3">
@@ -305,16 +343,16 @@ export function ModuleWorkspaceGuidance({
               </div>
               <p className="mt-3 text-sm leading-6 text-[color:var(--app-shell-muted)]">{step.description}</p>
               <span className="mt-5 inline-flex text-sm font-semibold text-[color:var(--tenant-accent)]">
-                {step.href ? 'Open next step' : 'Guided workspace step'}
+                {href ? step.capability?.actionLabel ?? 'Open next step' : 'Guided workspace step'}
               </span>
             </>
           );
 
-          if (step.href) {
+          if (href) {
             return (
               <Link
                 key={step.key}
-                href={step.href}
+                href={href}
                 className="rounded-3xl border border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-panel-muted)] p-5 transition hover:border-[color:var(--tenant-accent)] hover:shadow-card"
               >
                 {content}

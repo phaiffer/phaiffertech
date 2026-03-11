@@ -84,7 +84,30 @@ describe('ModuleGuard', () => {
       </ModuleGuard>
     );
 
-    expect(screen.getByText('CRM is unavailable in the current context')).toBeInTheDocument();
-    expect(screen.getByText(/feature exposure is still disabled/i)).toBeInTheDocument();
+    expect(screen.getByText('CRM is disabled in the current workspace')).toBeInTheDocument();
+    expect(screen.getByText(/feature exposure is currently disabled/i)).toBeInTheDocument();
+  });
+
+  it('keeps route access blocked when the module is contracted but not available in the workspace', () => {
+    moduleCatalog.modules = [
+      {
+        code: 'CRM',
+        name: 'CRM',
+        description: 'Commercial workspace',
+        enabled: true,
+        moduleEnabled: true,
+        featureFlagEnabled: true,
+        available: false
+      }
+    ];
+
+    render(
+      <ModuleGuard moduleCode="CRM">
+        <div>CRM workspace</div>
+      </ModuleGuard>
+    );
+
+    expect(screen.getByText('CRM is unavailable in the current workspace')).toBeInTheDocument();
+    expect(screen.getByText(/workspace context is not ready to open it yet/i)).toBeInTheDocument();
   });
 });

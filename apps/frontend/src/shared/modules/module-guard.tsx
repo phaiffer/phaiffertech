@@ -1,6 +1,7 @@
 'use client';
 
 import { ReactNode } from 'react';
+import { resolveModuleBoundaryCapability } from '@/shared/modules/module-capability';
 import { findModule, useModuleCatalog } from '@/shared/modules/use-module-catalog';
 
 type ModuleGuardProps = {
@@ -34,6 +35,7 @@ function ModuleGuardNotice({
 export function ModuleGuard({ moduleCode, children }: ModuleGuardProps) {
   const { modules, loading, error } = useModuleCatalog();
   const moduleItem = findModule(modules, moduleCode);
+  const boundary = resolveModuleBoundaryCapability(moduleCode, moduleItem);
 
   if (loading) {
     return (
@@ -55,21 +57,11 @@ export function ModuleGuard({ moduleCode, children }: ModuleGuardProps) {
     );
   }
 
-  if (!moduleItem || !moduleItem.moduleEnabled) {
+  if (!boundary.interactive) {
     return (
       <ModuleGuardNotice
-        title={`${moduleCode} is not contracted for this workspace`}
-        description={`This tenant does not currently expose the ${moduleCode} module. Ask your tenant administrator to add it to the workspace contract before trying again.`}
-        tone="warn"
-      />
-    );
-  }
-
-  if (!moduleItem.featureFlagEnabled) {
-    return (
-      <ModuleGuardNotice
-        title={`${moduleCode} is unavailable in the current context`}
-        description="The module is contracted, but feature exposure is still disabled for this workspace. Navigation stays blocked until the feature is re-enabled."
+        title={boundary.title ?? `${moduleCode} is unavailable in the current workspace`}
+        description={boundary.description ?? 'The module cannot be opened from the current workspace context.'}
         tone="warn"
       />
     );

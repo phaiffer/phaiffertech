@@ -86,6 +86,8 @@ describe('IotHome', () => {
     expect(screen.getAllByText('Review alarms').length).toBeGreaterThan(0);
     expect(screen.getByText('Open dashboard')).toBeInTheDocument();
     expect(screen.getByText('Dashboard access required')).toBeInTheDocument();
+    expect(screen.getAllByText('Dashboard visibility required').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('No permission').length).toBeGreaterThan(0);
     expect(screen.getByText(/operational pulse requires `iot.dashboard.read`/i)).toBeInTheDocument();
   });
 
@@ -141,7 +143,7 @@ describe('IotHome', () => {
   });
 
   it('shows guided first-use messaging when the IoT workspace has no connected assets yet', async () => {
-    currentPermissions.splice(0, currentPermissions.length, 'iot.dashboard.read', 'iot.device.create', 'iot.device.read');
+    currentPermissions.splice(0, currentPermissions.length, 'iot.dashboard.read', 'iot.device.create', 'iot.device.read', 'iot.telemetry.read');
     vi.mocked(iotService.getDashboardSummary).mockResolvedValue({
       totalDevices: 0,
       activeDevices: 0,
@@ -162,6 +164,7 @@ describe('IotHome', () => {
     });
 
     expect(screen.getByText('Set up the IoT workspace')).toBeInTheDocument();
+    expect(screen.getByText('Telemetry is not configured yet')).toBeInTheDocument();
     expect(screen.getAllByText('Register device').length).toBeGreaterThan(0);
   });
 });

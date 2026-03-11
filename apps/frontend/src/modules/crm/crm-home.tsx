@@ -17,6 +17,12 @@ import {
   ModuleWorkspaceSection,
   ModuleWorkspaceState
 } from '@/shared/modules/module-workspace';
+import {
+  noDataCapability,
+  notConfiguredCapability,
+  permissionCapability,
+  readyCapability
+} from '@/shared/modules/module-capability';
 import { useFrontendPlatform } from '@/shared/platform/use-frontend-platform';
 import { crmService } from '@/shared/services/crm-service';
 import { usePermissions } from '@/shared/auth/usePermissions';
@@ -134,16 +140,21 @@ function buildCrmGuidanceSteps(actions: ModuleWorkspaceAction[], keys: string[])
   return keys
     .map((key) => actions.find((action) => action.href === key))
     .filter((action): action is ModuleWorkspaceAction => Boolean(action))
-    .map((action) => ({
-      key: action.href,
-      eyebrow: action.eyebrow,
-      title: action.title,
-      description: action.available === false
-        ? action.restrictionDescription ?? action.description
-        : action.description,
-      href: action.available === false ? undefined : action.href,
-      status: action.available === false ? 'restricted' : 'active'
-    }));
+    .map((action) => {
+      const capability = action.capability ?? readyCapability(action.status);
+
+      return {
+        key: action.href,
+        eyebrow: action.eyebrow,
+        title: action.title,
+        description: capability.kind === 'ready'
+          ? action.description
+          : capability.description ?? action.description,
+        href: capability.interactive ? action.href : undefined,
+        status: capability.status ?? action.status ?? null,
+        capability
+      };
+    });
 }
 
 export function CrmHome() {
@@ -154,15 +165,6 @@ export function CrmHome() {
   const [error, setError] = useState<string | null>(null);
 
   const canReadDashboard = hasPermission('crm.dashboard.read');
-  const actionStates = crmWorkspaceActions.map((action) => {
-    const available = !action.permission || hasPermission(action.permission);
-
-    return {
-      ...action,
-      available,
-      status: available ? action.status : 'restricted'
-    };
-  });
   const featuredSection = summary?.sections.find((section) => (
     section.cards.length > 0
     || section.metrics.length > 0
@@ -170,6 +172,57 @@ export function CrmHome() {
     || section.timeSeries.length > 0
   )) ?? null;
   const firstUse = summary ? isCrmFirstUse(summary) : false;
+  const actionStates = crmWorkspaceActions
+    .map((action) => {
+      const allowed = !action.permission || hasPermission(action.permission);
+      const capability = allowed
+        ? readyCapability(action.status)
+        : permissionCapability({
+            title: action.restrictionTitle ?? 'Permission required',
+            description: action.restrictionDescription ?? action.description
+          });
+
+      return {
+        ...action,
+        available: capability.interactive,
+        status: capability.status ?? action.status ?? null,
+        capability
+      };
+    })
+    .map((action) => {
+      if (action.capability?.kind !== 'ready' || !summary) {
+        return action;
+      }
+
+      if (firstUse && action.href === '/crm/deals') {
+        const capability = notConfiguredCapability({
+          title: 'Deal flow not configured yet',
+          description: 'Create the first companies, contacts, and leads before active deals appear in this CRM workspace.'
+        });
+
+        return { ...action, capability, status: capability.status };
+      }
+
+      if (firstUse && action.href === '/crm/activity') {
+        const capability = notConfiguredCapability({
+          title: 'Activity feed not configured yet',
+          description: 'Commercial activity appears after the first CRM records and follow-up tasks are created.'
+        });
+
+        return { ...action, capability, status: capability.status };
+      }
+
+      if (!firstUse && !featuredSection && action.href === '/crm/activity') {
+        const capability = noDataCapability({
+          title: 'No recent CRM activity yet',
+          description: 'The workspace has CRM records, but no compact recent-activity feed is available right now.'
+        });
+
+        return { ...action, capability, status: capability.status };
+      }
+
+      return action;
+    });
   const themePolicy = platform.theme.canOverride
     ? `${getAppThemeModeLabel(platform.theme.tenantDefaultMode)} with user override`
     : `${getAppThemeModeLabel(platform.theme.tenantDefaultMode)} tenant-managed`;
@@ -267,19 +320,62 @@ export function CrmHome() {
           },
           {
             label: 'Total contacts',
-            value: resolveOverviewValue(summary?.totalContacts),
-            description: 'Contacts currently tracked inside this CRM tenant surface.'
+            value: canReadDashboard ? resolveOverviewValue(summary?.totalContacts) : '--',
+            description: 'Contacts currently tracked inside this CRM tenant surface.',
+            status: !canReadDashboard ? 'no permission' : summary && firstUse ? 'setup required' : null,
+            capability: !canReadDashboard
+              ? permissionCapability({
+                  title: 'Dashboard visibility required',
+                  description: 'Grant `crm.dashboard.read` to surface CRM contact totals on this workspace landing page.'
+                })
+              : summary && firstUse
+                ? notConfiguredCapability({
+                    title: 'Contact base not configured yet',
+                    description: 'Add the first companies and contacts so this CRM workspace can start surfacing commercial volume.'
+                  })
+                : undefined
           },
           {
             label: 'Pipeline load',
-            value: summary ? `${summary.totalLeads} leads / ${summary.totalDeals} deals` : 'Loading...',
-            description: 'Lead intake and active deal flow visible in the current workspace.'
+            value: canReadDashboard ? (summary ? `${summary.totalLeads} leads / ${summary.totalDeals} deals` : 'Loading...') : '--',
+            description: 'Lead intake and active deal flow visible in the current workspace.',
+            status: !canReadDashboard ? 'no permission' : summary && firstUse ? 'setup required' : null,
+            capability: !canReadDashboard
+              ? permissionCapability({
+                  title: 'Pipeline metrics require dashboard access',
+                  description: 'Grant `crm.dashboard.read` to surface lead and deal volume on this workspace overview.'
+                })
+              : summary && firstUse
+                ? notConfiguredCapability({
+                    title: 'Pipeline not configured yet',
+                    description: 'Lead and deal flow start after the first commercial records are created in this tenant workspace.'
+                  })
+                : undefined
           },
           {
             label: 'Pending follow-up',
-            value: resolveOverviewValue(summary?.tasksPendentes),
+            value: canReadDashboard ? resolveOverviewValue(summary?.tasksPendentes) : '--',
             description: 'Tasks still waiting for execution in the commercial workflow.',
-            status: summary && summary.tasksPendentes > 0 ? 'pending' : summary ? 'active' : null
+            status: !canReadDashboard
+              ? 'no permission'
+              : summary && firstUse
+                ? 'setup required'
+                : summary && summary.tasksPendentes > 0
+                  ? 'pending'
+                  : summary
+                    ? 'active'
+                    : null,
+            capability: !canReadDashboard
+              ? permissionCapability({
+                  title: 'Follow-up visibility requires dashboard access',
+                  description: 'Grant `crm.dashboard.read` to surface pending CRM tasks from this landing page.'
+                })
+              : summary && firstUse
+                ? notConfiguredCapability({
+                    title: 'Follow-up queue not configured yet',
+                    description: 'CRM tasks appear after the first companies, contacts, leads, and deals create operational follow-up.'
+                  })
+                : undefined
           }
         ]}
       />
@@ -325,22 +421,36 @@ export function CrmHome() {
             />
           </div>
         ) : summary && firstUse ? (
-          <ModuleWorkspaceGuidance
-            title="Set up the CRM workspace"
-            description="This tenant does not have CRM records yet. Start with the first operational entities so the commercial pulse can begin surfacing real activity."
-            steps={fallbackGuidance}
-          />
+          <div className="space-y-4">
+            <ModuleWorkspaceState
+              tone="neutral"
+              title="CRM workspace not configured yet"
+              description="This tenant does not have the first CRM records in place yet. Start with companies, contacts, and leads so the commercial pulse can begin surfacing real activity."
+            />
+            <ModuleWorkspaceGuidance
+              title="Set up the CRM workspace"
+              description="These guided steps establish the first commercial entities without leaving the tenant workspace context."
+              steps={fallbackGuidance}
+            />
+          </div>
         ) : summary ? (
           <div className="space-y-4">
             <MetricGrid cards={summary.summaryCards.slice(0, 4)} columns="md:grid-cols-2 xl:grid-cols-4" />
             {featuredSection ? (
               <DashboardSection section={featuredSection} />
             ) : (
-              <ModuleWorkspaceGuidance
-                title="No recent CRM activity yet"
-                description="The workspace has records, but the summary returned no compact recent-activity block. Continue through the core CRM flows below."
-                steps={restrictedGuidance}
-              />
+              <div className="space-y-4">
+                <ModuleWorkspaceState
+                  tone="neutral"
+                  title="No recent CRM activity yet"
+                  description="The workspace already has CRM records, but the summary returned no compact recent-activity block right now."
+                />
+                <ModuleWorkspaceGuidance
+                  title="Keep working the CRM workspace"
+                  description="Continue through the core CRM flows below while the next activity signal is still building."
+                  steps={restrictedGuidance}
+                />
+              </div>
             )}
           </div>
         ) : (

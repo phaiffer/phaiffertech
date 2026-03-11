@@ -206,12 +206,18 @@ export function IotMetricCard({
   label,
   value,
   footnote,
+  status,
+  detailTitle,
+  detailDescription,
   tone = 'neutral',
   icon
 }: {
   label: string;
   value: string | number;
   footnote?: string;
+  status?: string;
+  detailTitle?: string;
+  detailDescription?: string;
   tone?: Tone;
   icon?: ReactNode;
 }) {
@@ -225,6 +231,17 @@ export function IotMetricCard({
         {icon ? <IconFrame tone={tone}>{icon}</IconFrame> : null}
       </div>
       {footnote ? <p className="mt-4 text-sm text-slate-400">{footnote}</p> : null}
+      {status ? (
+        <div className="mt-4">
+          <IotStatusPill label={status} tone={tone} />
+        </div>
+      ) : null}
+      {detailTitle || detailDescription ? (
+        <div className="mt-4 rounded-[22px] border border-slate-800 bg-slate-950/45 px-4 py-3">
+          {detailTitle ? <p className="text-sm font-semibold text-white">{detailTitle}</p> : null}
+          {detailDescription ? <p className="mt-1 text-sm text-slate-400">{detailDescription}</p> : null}
+        </div>
+      ) : null}
     </div>
   );
 }
