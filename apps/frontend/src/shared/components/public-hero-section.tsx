@@ -1,4 +1,11 @@
 import Link from 'next/link';
+import {
+  publicCardSurfaceClass,
+  publicEyebrowClass,
+  publicHighlightSurfaceClass,
+  publicPrimaryButtonClass,
+  publicSecondaryButtonClass
+} from '@/shared/components/public-visual-system';
 
 type PublicHeroSectionProps = {
   id?: string;
@@ -38,54 +45,55 @@ export function PublicHeroSection({
   return (
     <section
       id={id}
-      className="relative overflow-hidden border-b border-[var(--border)] bg-[linear-gradient(180deg,rgba(15,23,42,0.03),transparent_65%)]"
+      className="relative overflow-hidden border-b border-[var(--border)] bg-[linear-gradient(180deg,rgba(15,23,42,0.07),transparent_68%)]"
     >
-      <div className="absolute inset-x-0 top-0 h-40 bg-[radial-gradient(circle_at_top,rgba(56,189,248,0.18),transparent_55%)]" />
+      <div className="absolute inset-x-0 top-0 h-48 bg-[radial-gradient(circle_at_top,rgba(56,189,248,0.2),transparent_58%)]" />
+      <div className="absolute right-0 top-16 h-64 w-64 bg-[radial-gradient(circle,rgba(56,189,248,0.12),transparent_68%)]" />
 
-      <div className="relative mx-auto grid w-full max-w-7xl gap-10 px-4 py-20 sm:px-6 lg:grid-cols-[1.15fr_0.85fr] lg:px-8 lg:py-24">
-        <div className="relative">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-action">
+      <div className="relative mx-auto grid w-full max-w-7xl items-center gap-12 px-4 py-24 sm:px-6 lg:grid-cols-[minmax(0,1fr)_minmax(320px,0.96fr)] lg:px-8 lg:py-32">
+        <div className="relative max-w-[42rem]">
+          <p className={publicEyebrowClass}>
             {eyebrow}
           </p>
 
-          <h1 className="mt-4 max-w-4xl text-4xl font-semibold leading-tight text-[var(--foreground)] sm:text-5xl lg:text-6xl">
+          <h1 className="mt-5 max-w-3xl text-4xl font-semibold leading-[1.02] tracking-tight text-[var(--foreground)] sm:text-5xl lg:text-[3.85rem]">
             {title}
           </h1>
 
-          <p className="mt-6 max-w-2xl text-base leading-7 text-slate-600 sm:text-lg">
+          <p className="mt-7 max-w-xl text-[15px] leading-7 text-slate-600 dark:text-slate-300 sm:text-lg">
             {description}
           </p>
 
-          <div className="mt-8 flex flex-wrap gap-3">
+          <div className="mt-10 flex flex-wrap gap-3">
             <Link
               href={primaryCtaHref}
-              className="rounded-xl bg-action px-5 py-3 text-sm font-medium text-white shadow-[0_16px_30px_rgba(31,111,235,0.24)] transition hover:bg-blue-700"
+              className={publicPrimaryButtonClass}
             >
               {primaryCtaLabel}
             </Link>
 
             <Link
               href={secondaryCtaHref}
-              className="rounded-xl border border-[var(--border)] bg-[var(--surface)] px-5 py-3 text-sm font-medium text-[var(--foreground)] transition hover:bg-[var(--surface-muted)]"
+              className={publicSecondaryButtonClass}
             >
               {secondaryCtaLabel}
             </Link>
           </div>
         </div>
 
-        <div className="grid gap-4">
-          <div className="rounded-[2rem] border border-sky-500/20 bg-[linear-gradient(180deg,rgba(255,255,255,0.92),rgba(238,242,255,0.9))] p-6 shadow-[0_24px_60px_rgba(15,23,42,0.12)] dark:bg-[linear-gradient(180deg,rgba(17,26,46,0.96),rgba(23,35,61,0.9))]">
+        <div className="grid gap-5 lg:max-w-[34rem] lg:justify-self-end">
+          <div className={`${publicHighlightSurfaceClass} p-7`}>
             <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-500">
               {platformCardEyebrow}
             </p>
             <p className="mt-3 text-2xl font-semibold text-[var(--foreground)] sm:text-3xl">
               {platformCardTitle}
             </p>
-            <p className="mt-3 text-sm leading-6 text-slate-600">{platformCardText}</p>
+            <p className="mt-3 text-sm leading-6 text-slate-600 dark:text-slate-300">{platformCardText}</p>
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2">
-            <div className="rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-card">
+            <div className={`${publicCardSurfaceClass} rounded-3xl p-5`}>
               <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-500">
                 {frontendCardEyebrow}
               </p>
@@ -94,7 +102,7 @@ export function PublicHeroSection({
               </p>
             </div>
 
-            <div className="rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-card">
+            <div className={`${publicCardSurfaceClass} rounded-3xl p-5`}>
               <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-500">
                 {backendCardEyebrow}
               </p>
