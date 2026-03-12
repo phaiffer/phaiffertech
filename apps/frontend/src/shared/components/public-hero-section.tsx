@@ -31,51 +31,42 @@ export function PublicHeroSection({
   secondaryCtaHref,
 }: PublicHeroSectionProps) {
   return (
-    <section id={id} className="relative flex min-h-[60vh] items-center overflow-hidden">
-      {/* Subtle background gradient */}
-      <div className="pointer-events-none absolute inset-0">
-        <div className="absolute -left-40 -top-40 h-96 w-96 rounded-full bg-accent/10 blur-3xl" />
-        <div className="absolute -bottom-40 -right-40 h-96 w-96 rounded-full bg-accent/5 blur-3xl" />
+    <section id={id} className="relative flex min-h-[70vh] items-center overflow-hidden">
+      {/* Background Cover */}
+      <div className="absolute inset-0 z-0">
+        <Image
+          src="/PhaifferTech.png"
+          alt="PhaifferTech Background"
+          fill
+          priority
+          className="object-cover"
+        />
+        <div className="absolute inset-0 bg-black/60" />
       </div>
 
       <div
-        className={`${publicSiteContainerClass} relative grid items-center gap-12 py-16 lg:grid-cols-2 lg:gap-16 lg:py-24`}
+        className={`${publicSiteContainerClass} relative z-10 grid items-center gap-12 py-16 lg:grid-cols-2 lg:gap-16 lg:py-24`}
       >
         {/* Content */}
-        <div className="relative z-10 max-w-xl">
-          <p className={`${publicEyebrowClass} inline-flex border-l-2 border-accent pl-4`}>
+        <div className="relative max-w-xl text-white">
+          <p className={`${publicEyebrowClass} inline-flex border-l-2 border-accent pl-4 text-accent drop-shadow-[0_0_8px_#00b4d8]`}>
             {eyebrow}
           </p>
 
           <h1 className="mt-6 max-w-4xl">
-            <span className={publicHeroTitleClass}>{title}</span>
+            <span className={`${publicHeroTitleClass} text-white`}>{title}</span>
           </h1>
 
-          <p className={publicHeroSupportingTextClass}>{description}</p>
+          <p className={`${publicHeroSupportingTextClass} text-gray-300`}>{description}</p>
 
           <div className="mt-8 flex flex-wrap gap-4">
-            <Link href={primaryCtaHref} className={publicPrimaryButtonClass}>
+            <Link href={primaryCtaHref} className={`${publicPrimaryButtonClass} border border-accent bg-accent/10 hover:bg-accent hover:text-white shadow-[0_0_15px_rgba(0,180,216,0.3)] hover:shadow-[0_0_20px_rgba(0,180,216,0.6)] backdrop-blur-md`}>
               {primaryCtaLabel}
             </Link>
 
-            <Link href={secondaryCtaHref} className={publicSecondaryButtonClass}>
+            <Link href={secondaryCtaHref} className={`${publicSecondaryButtonClass} border-white/20 text-white bg-white/5 hover:bg-white/10 backdrop-blur-md`}>
               {secondaryCtaLabel}
             </Link>
-          </div>
-        </div>
-
-        {/* Logo */}
-        <div className="relative hidden justify-center lg:flex">
-          <div className="absolute left-1/2 top-1/2 h-72 w-72 -translate-x-1/2 -translate-y-1/2 rounded-full bg-accent/10 blur-3xl" />
-
-          <div className="relative h-72 w-72 drop-shadow-lg xl:h-80 xl:w-80">
-            <Image
-              src="/PhaifferTech_logo.png"
-              alt="PhaifferTech logo"
-              fill
-              priority
-              className="object-contain"
-            />
           </div>
         </div>
       </div>
