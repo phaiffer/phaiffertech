@@ -9,6 +9,7 @@ import { MetricGrid } from '@/shared/dashboard/metric-grid';
 import { RecentItemsList } from '@/shared/dashboard/recent-items-list';
 import { SimpleBarChart } from '@/shared/dashboard/simple-bar-chart';
 import { SimpleLineChart } from '@/shared/dashboard/simple-line-chart';
+import { workspacePanelSurfaceStyle } from '@/shared/modules/module-workspace-visual';
 
 type DashboardSectionProps = {
   section: DashboardSectionType;
@@ -22,7 +23,7 @@ export function DashboardSection({ section }: DashboardSectionProps) {
     section.timeSeries.length > 0;
 
   return (
-    <section className={`${sharedPanelSurfaceClass} p-5`}>
+    <section className={`${sharedPanelSurfaceClass} p-5`} style={workspacePanelSurfaceStyle}>
       <div className="mb-4">
         <h2 className={sharedSectionHeadingClass}>{section.title}</h2>
         {section.description && (

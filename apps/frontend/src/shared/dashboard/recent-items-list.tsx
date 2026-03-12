@@ -3,7 +3,6 @@
 import Link from 'next/link';
 import {
   sharedCompactTextClass,
-  sharedDashedSurfaceClass,
   sharedMutedSurfaceClass,
   sharedPanelSurfaceClass,
   sharedSectionHeadingClass
@@ -11,6 +10,10 @@ import {
 import { DashboardListItem } from '@/shared/types/dashboard';
 import { EmptyStateCard } from '@/shared/dashboard/empty-state-card';
 import { StatusBadge } from '@/shared/dashboard/status-badge';
+import {
+  workspaceMutedSurfaceStyle,
+  workspacePanelSurfaceStyle
+} from '@/shared/modules/module-workspace-visual';
 
 type RecentItemsListProps = {
   title: string;
@@ -35,12 +38,15 @@ export function RecentItemsList({ title, items, emptyMessage }: RecentItemsListP
   }
 
   return (
-    <div className={`${sharedPanelSurfaceClass} p-5`}>
+    <div className={`${sharedPanelSurfaceClass} p-5`} style={workspacePanelSurfaceStyle}>
       <h3 className={sharedSectionHeadingClass}>{title}</h3>
       <div className="mt-4 space-y-3">
         {items.map((item) => {
           const content = (
-            <div className={`${sharedMutedSurfaceClass} px-4 py-3 transition-all duration-200 hover:border-accent hover:shadow-sm`}>
+            <div
+              className={`${sharedMutedSurfaceClass} px-4 py-3 transition-all duration-200 hover:border-accent hover:shadow-sm`}
+              style={workspaceMutedSurfaceStyle}
+            >
               <div className="flex items-start justify-between gap-3">
                 <div>
                   <p className="text-sm font-medium text-foreground">{item.label}</p>

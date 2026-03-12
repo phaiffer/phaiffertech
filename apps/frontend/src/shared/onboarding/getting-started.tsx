@@ -1,6 +1,11 @@
 'use client';
 
 import Link from 'next/link';
+import {
+  workspaceDashedSurfaceStyle,
+  workspaceMutedSurfaceStyle,
+  workspacePanelSurfaceStyle
+} from '@/shared/modules/module-workspace-visual';
 import { StatusBadge } from '@/shared/dashboard/status-badge';
 
 export type GettingStartedStep = {
@@ -97,7 +102,10 @@ export function GettingStartedChecklist({
   const blockedSteps = guidedSteps - actionableSteps;
 
   return (
-    <section className={`rounded-3xl border p-5 shadow-card ${surfaceClasses(variant)}`}>
+    <section
+      className={`rounded-3xl border p-5 shadow-card ${surfaceClasses(variant)}`}
+      style={variant === 'dark' ? undefined : workspacePanelSurfaceStyle}
+    >
       <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div>
           <p className={`text-xs font-semibold uppercase tracking-[0.22em] ${eyebrowClasses(variant)}`}>
@@ -153,6 +161,7 @@ export function GettingStartedChecklist({
                 key={step.key}
                 href={step.href}
                 className={`rounded-3xl border p-5 ${stepSurfaceClasses(variant, true)}`}
+                style={variant === 'dark' ? undefined : workspaceMutedSurfaceStyle}
               >
                 {content}
               </Link>
@@ -163,6 +172,7 @@ export function GettingStartedChecklist({
             <div
               key={step.key}
               className={`rounded-3xl border p-5 ${stepSurfaceClasses(variant, false)}`}
+              style={variant === 'dark' ? undefined : workspaceDashedSurfaceStyle}
             >
               {content}
             </div>

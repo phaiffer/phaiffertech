@@ -7,6 +7,7 @@ import {
 } from '@/shared/components/public-visual-system';
 import { DashboardSummaryCard as DashboardSummaryCardType } from '@/shared/types/dashboard';
 import { StatusBadge } from '@/shared/dashboard/status-badge';
+import { workspaceMutedSurfaceStyle } from '@/shared/modules/module-workspace-visual';
 
 type SummaryCardProps = {
   card: DashboardSummaryCardType;
@@ -38,14 +39,14 @@ export function SummaryCard({ card }: SummaryCardProps) {
 
   if (card.href) {
     return (
-      <Link href={card.href} className={className}>
+      <Link href={card.href} className={className} style={workspaceMutedSurfaceStyle}>
         <SummaryCardBody card={card} />
       </Link>
     );
   }
 
   return (
-    <div className={className}>
+    <div className={className} style={workspaceMutedSurfaceStyle}>
       <SummaryCardBody card={card} />
     </div>
   );

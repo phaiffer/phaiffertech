@@ -1,11 +1,14 @@
 import {
-  sharedCompactTextClass,
   sharedMutedSurfaceClass,
   sharedPanelSurfaceClass,
   sharedSectionHeadingClass
 } from '@/shared/components/public-visual-system';
 import { DashboardTimeSeriesPoint } from '@/shared/types/dashboard';
 import { EmptyStateCard } from '@/shared/dashboard/empty-state-card';
+import {
+  workspaceMutedSurfaceStyle,
+  workspacePanelSurfaceStyle
+} from '@/shared/modules/module-workspace-visual';
 
 type SimpleLineChartProps = {
   title: string;
@@ -32,7 +35,7 @@ export function SimpleLineChart({ title, points, emptyMessage }: SimpleLineChart
   const polyline = buildPoints(points);
 
   return (
-    <div className={`${sharedPanelSurfaceClass} p-5`}>
+    <div className={`${sharedPanelSurfaceClass} p-5`} style={workspacePanelSurfaceStyle}>
       <h3 className={sharedSectionHeadingClass}>{title}</h3>
       <div className="mt-4">
         <svg viewBox="0 0 100 100" className="h-40 w-full overflow-visible">
@@ -47,7 +50,7 @@ export function SimpleLineChart({ title, points, emptyMessage }: SimpleLineChart
         </svg>
         <div className="mt-3 grid gap-2 text-xs uppercase tracking-[0.16em] text-muted md:grid-cols-4">
           {points.map((point) => (
-            <div key={point.label} className={`${sharedMutedSurfaceClass} px-3 py-2`}>
+            <div key={point.label} className={`${sharedMutedSurfaceClass} px-3 py-2`} style={workspaceMutedSurfaceStyle}>
               <span className="block text-[11px]">{point.label}</span>
               <span className="mt-1 block text-sm font-semibold text-foreground">{point.value}</span>
             </div>

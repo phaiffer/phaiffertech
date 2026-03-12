@@ -3,6 +3,7 @@ import {
   sharedCompactTextClass,
   sharedMutedSurfaceClass
 } from '@/shared/components/public-visual-system';
+import { workspaceMutedSurfaceStyle } from '@/shared/modules/module-workspace-visual';
 
 type DashboardContextCardGridProps = {
   cards: DashboardContextCard[];
@@ -25,6 +26,7 @@ export function DashboardContextCardGrid({ cards }: DashboardContextCardGridProp
         <div
           key={card.key}
           className={`${sharedMutedSurfaceClass} p-5`}
+          style={workspaceMutedSurfaceStyle}
         >
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--app-shell-muted)]">
             {card.label}

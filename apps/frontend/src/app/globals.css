@@ -90,6 +90,13 @@
   --app-shell-muted: var(--muted);
   --app-shell-heading: var(--foreground);
   --color-danger: var(--destructive);
+  --workspace-panel-border: var(--border);
+  --workspace-panel-tint: transparent;
+  --workspace-panel-support: transparent;
+  --workspace-panel-muted-tint: transparent;
+  --workspace-panel-muted-support: transparent;
+  --workspace-panel-shadow: var(--shadow-sm);
+  --workspace-muted-shadow: var(--shadow-xs);
 
   /* ─── Charts ───────────────────────────────────────────────────────────── */
   --chart-grid: rgba(0, 0, 0, 0.06);

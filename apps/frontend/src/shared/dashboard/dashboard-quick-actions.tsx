@@ -1,5 +1,15 @@
 import Link from 'next/link';
+import {
+  sharedCompactTextClass,
+  sharedMutedSurfaceClass,
+  sharedPanelSurfaceClass,
+  sharedSectionHeadingClass
+} from '@/shared/components/public-visual-system';
 import { EmptyStateCard } from '@/shared/dashboard/empty-state-card';
+import {
+  workspaceMutedSurfaceStyle,
+  workspacePanelSurfaceStyle
+} from '@/shared/modules/module-workspace-visual';
 import type { DashboardQuickAction } from '@/shared/dashboard/contextual-dashboard';
 
 type DashboardQuickActionsProps = {
@@ -14,10 +24,10 @@ export function DashboardQuickActions({
   actions
 }: DashboardQuickActionsProps) {
   return (
-    <section className="rounded-3xl border border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-panel)] p-5 shadow-card">
+    <section className={`${sharedPanelSurfaceClass} p-5`} style={workspacePanelSurfaceStyle}>
       <div className="mb-5">
-        <h2 className="text-base font-semibold text-[color:var(--app-shell-heading)]">{title}</h2>
-        <p className="mt-1 text-sm text-[color:var(--app-shell-muted)]">{description}</p>
+        <h2 className={sharedSectionHeadingClass}>{title}</h2>
+        <p className={`mt-1 ${sharedCompactTextClass}`}>{description}</p>
       </div>
 
       {actions.length === 0 ? (
@@ -31,7 +41,8 @@ export function DashboardQuickActions({
             <Link
               key={action.key}
               href={action.href}
-              className="rounded-2xl border border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-panel-muted)] p-5 shadow-sm transition hover:border-[color:var(--tenant-accent)]"
+              className={`${sharedMutedSurfaceClass} p-5 transition hover:border-[color:var(--tenant-accent)]`}
+              style={workspaceMutedSurfaceStyle}
             >
               <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--tenant-accent)]">
                 {action.eyebrow}

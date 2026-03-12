@@ -35,20 +35,20 @@ const { currentPlatformState, currentPermissions } = vi.hoisted(() => ({
       style: {}
     },
     visualProfile: {
-      key: 'pet-clinic',
-      label: 'Pet Clinic',
-      accentFallback: '#0f766e',
-      primaryFallback: '#164e63',
+      key: 'crm-corporate',
+      label: 'CRM Corporate',
+      accentFallback: '#4f46e5',
+      primaryFallback: '#111827',
       accentColor: '#2563eb',
       primaryColor: '#0f172a',
-      accentTone: { emphasis: 'clinical', softAlpha: 0.18, highlightAlpha: 0.14 },
-      backgroundMood: { softness: 'soft', accentOpacity: 0.11, supportOpacity: 0.09, accentAnchor: 'top left', supportAnchor: 'bottom center' },
-      surfaceNuance: { tintOpacity: 0.15, borderOpacity: 0.17, elevation: 'quiet' },
+      accentTone: { emphasis: 'corporate', softAlpha: 0.16, highlightAlpha: 0.16 },
+      backgroundMood: { softness: 'soft', accentOpacity: 0.1, supportOpacity: 0.08, accentAnchor: 'top center', supportAnchor: 'bottom right' },
+      surfaceNuance: { tintOpacity: 0.14, borderOpacity: 0.16, elevation: 'quiet' },
       iconTone: { emphasisOpacity: 0.16, mutedOpacity: 0.08 },
-      chartHighlightTone: { accentOpacity: 0.22, supportOpacity: 0.12 },
-      dashboardHighlightTone: { accentOpacity: 0.12, supportOpacity: 0.09 },
-      loginVisualContext: { accentOpacity: 0.11, supportOpacity: 0.1, cardTintOpacity: 0.05, cardBorderOpacity: 0.16, brandMarkOpacity: 0.15 },
-      illustrationPreset: 'clinical-care'
+      chartHighlightTone: { accentOpacity: 0.24, supportOpacity: 0.12 },
+      dashboardHighlightTone: { accentOpacity: 0.12, supportOpacity: 0.08 },
+      loginVisualContext: { accentOpacity: 0.1, supportOpacity: 0.1, cardTintOpacity: 0.04, cardBorderOpacity: 0.16, brandMarkOpacity: 0.14 },
+      illustrationPreset: 'corporate-flow'
     },
     workspace: {
       workspaceLabel: 'Tenant workspace',
@@ -144,11 +144,13 @@ describe('CrmHome', () => {
 
     expect(screen.getByRole('heading', { name: 'Clinic North · CRM' })).toBeInTheDocument();
     expect(screen.getByText('Tenant workspace')).toBeInTheDocument();
+    expect(screen.getByText('CRM Corporate')).toBeInTheDocument();
     expect(screen.getByText('Manage companies')).toBeInTheDocument();
     expect(screen.getByText('Handle tasks')).toBeInTheDocument();
     expect(screen.getByText('Check activity')).toBeInTheDocument();
     expect(screen.getByText('Activity access required')).toBeInTheDocument();
     expect(screen.queryByRole('link', { name: /check activity/i })).not.toBeInTheDocument();
+    expect(screen.getByText('Commercial Operating Context')).toBeInTheDocument();
     expect(screen.getByText('Commercial Pulse')).toBeInTheDocument();
     expect(screen.getByText('Pipeline Watch')).toBeInTheDocument();
   });
@@ -172,7 +174,7 @@ describe('CrmHome', () => {
       expect(crmService.getDashboardSummary).toHaveBeenCalledTimes(1);
     });
 
-    expect(screen.getByText('CRM Onboarding')).toBeInTheDocument();
+    expect(await screen.findByText('CRM Onboarding')).toBeInTheDocument();
     expect(screen.getByText('Set up the CRM workspace')).toBeInTheDocument();
     expect(screen.getByText(/does not have the first CRM records in place yet/i)).toBeInTheDocument();
     expect(screen.getAllByText('Manage companies').length).toBeGreaterThan(0);

@@ -137,11 +137,13 @@ describe('PetHome', () => {
     });
 
     expect(screen.getByRole('heading', { name: 'Clinic North · PetFlow' })).toBeInTheDocument();
+    expect(screen.getByText('Pet Clinic')).toBeInTheDocument();
     expect(screen.getByText('Open appointments')).toBeInTheDocument();
     expect(screen.getByText('Open medical records')).toBeInTheDocument();
     expect(screen.getByText('Review products')).toBeInTheDocument();
     expect(screen.getByText('Product access required')).toBeInTheDocument();
     expect(screen.queryByRole('link', { name: /review products/i })).not.toBeInTheDocument();
+    expect(screen.getByText('Clinical Operating Context')).toBeInTheDocument();
     expect(screen.getByText('Clinic Snapshot')).toBeInTheDocument();
     expect(screen.getByText('Clinical Feed')).toBeInTheDocument();
   });
@@ -180,5 +182,66 @@ describe('PetHome', () => {
     expect(screen.getAllByText('Dashboard visibility required').length).toBeGreaterThan(0);
     expect(screen.getAllByText('No Permission').length).toBeGreaterThan(0);
     expect(screen.getByText(/clinic snapshot requires `pet.dashboard.read`/i)).toBeInTheDocument();
+  });
+
+  it('adapts the workspace copy when the resolved profile is pet grooming', async () => {
+    currentPlatformState.visualProfile = {
+      key: 'pet-grooming',
+      label: 'Pet Grooming',
+      accentFallback: '#d97706',
+      primaryFallback: '#7c2d12',
+      accentColor: '#d97706',
+      primaryColor: '#7c2d12',
+      accentTone: { emphasis: 'care', softAlpha: 0.2, highlightAlpha: 0.16 },
+      backgroundMood: { softness: 'soft', accentOpacity: 0.12, supportOpacity: 0.08, accentAnchor: 'top center', supportAnchor: 'bottom left' },
+      surfaceNuance: { tintOpacity: 0.16, borderOpacity: 0.18, elevation: 'quiet' },
+      iconTone: { emphasisOpacity: 0.18, mutedOpacity: 0.08 },
+      chartHighlightTone: { accentOpacity: 0.24, supportOpacity: 0.1 },
+      dashboardHighlightTone: { accentOpacity: 0.14, supportOpacity: 0.08 },
+      loginVisualContext: { accentOpacity: 0.12, supportOpacity: 0.08, cardTintOpacity: 0.05, cardBorderOpacity: 0.18, brandMarkOpacity: 0.16 },
+      illustrationPreset: 'grooming-rhythm'
+    };
+
+    vi.mocked(petService.getDashboardSummary).mockResolvedValue({
+      totalClients: 10,
+      totalPets: 16,
+      appointmentsToday: 5,
+      upcomingAppointments: 7,
+      totalServices: 8,
+      lowStockProducts: 1,
+      pendingInvoices: 2,
+      summaryCards: [
+        { key: 'clients', label: 'Clients', value: 10, status: 'ok' }
+      ],
+      sections: []
+    });
+
+    render(<PetHome />);
+
+    await waitFor(() => {
+      expect(petService.getDashboardSummary).toHaveBeenCalledTimes(1);
+    });
+
+    expect(screen.getByText('Pet Grooming')).toBeInTheDocument();
+    expect(screen.getByText('PetFlow Grooming Workspace')).toBeInTheDocument();
+    expect(screen.getByText('Service Operating Context')).toBeInTheDocument();
+    expect(screen.getByText('Service Snapshot')).toBeInTheDocument();
+
+    currentPlatformState.visualProfile = {
+      key: 'pet-clinic',
+      label: 'Pet Clinic',
+      accentFallback: '#0f766e',
+      primaryFallback: '#164e63',
+      accentColor: '#2563eb',
+      primaryColor: '#0f172a',
+      accentTone: { emphasis: 'clinical', softAlpha: 0.18, highlightAlpha: 0.14 },
+      backgroundMood: { softness: 'soft', accentOpacity: 0.11, supportOpacity: 0.09, accentAnchor: 'top left', supportAnchor: 'bottom center' },
+      surfaceNuance: { tintOpacity: 0.15, borderOpacity: 0.17, elevation: 'quiet' },
+      iconTone: { emphasisOpacity: 0.16, mutedOpacity: 0.08 },
+      chartHighlightTone: { accentOpacity: 0.22, supportOpacity: 0.12 },
+      dashboardHighlightTone: { accentOpacity: 0.12, supportOpacity: 0.09 },
+      loginVisualContext: { accentOpacity: 0.11, supportOpacity: 0.1, cardTintOpacity: 0.05, cardBorderOpacity: 0.16, brandMarkOpacity: 0.15 },
+      illustrationPreset: 'clinical-care'
+    };
   });
 });

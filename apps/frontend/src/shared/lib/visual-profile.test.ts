@@ -2,12 +2,12 @@ import { describe, expect, it } from 'vitest';
 import { resolveVisualProfile, resolveVisualProfileKey } from '@/shared/lib/visual-profile';
 
 describe('visual-profile', () => {
-  it('prioritizes tenant hints over module context', () => {
+  it('prioritizes module context for crm and iot modules', () => {
     expect(resolveVisualProfileKey({
       tenantCode: 'pet-spa-north',
       moduleContext: 'iot',
       defaultProfile: 'core-institutional'
-    })).toBe('pet-grooming');
+    })).toBe('iot-industrial');
   });
 
   it('uses module context when the tenant is generic', () => {
@@ -23,6 +23,14 @@ describe('visual-profile', () => {
       tenantCode: 'workspace-default',
       defaultProfile: 'iot-industrial'
     })).toBe('iot-industrial');
+  });
+
+  it('keeps the pet module sensitive to grooming hints', () => {
+    expect(resolveVisualProfileKey({
+      tenantCode: 'pet-spa-north',
+      moduleContext: 'pet',
+      defaultProfile: 'pet-clinic'
+    })).toBe('pet-grooming');
   });
 
   it('keeps tenant colors while applying the resolved visual profile', () => {

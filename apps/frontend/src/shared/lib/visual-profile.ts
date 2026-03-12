@@ -318,6 +318,26 @@ export function resolveVisualProfileKey(
   const tenantCode = input.tenantCode?.trim().toLowerCase() ?? '';
   const tenantTokens = tokenizeTenantCode(tenantCode);
 
+  if (input.moduleContext === 'crm') {
+    return 'crm-corporate';
+  }
+
+  if (input.moduleContext === 'iot') {
+    return 'iot-industrial';
+  }
+
+  if (input.moduleContext === 'pet') {
+    if (hasTenantKeyword(tenantTokens, ['groom', 'banho', 'tosa', 'spa'])) {
+      return 'pet-grooming';
+    }
+
+    if (input.defaultProfile === 'pet-grooming') {
+      return 'pet-grooming';
+    }
+
+    return 'pet-clinic';
+  }
+
   if (hasTenantKeyword(tenantTokens, ['groom', 'banho', 'tosa', 'spa'])) {
     return 'pet-grooming';
   }
@@ -332,22 +352,6 @@ export function resolveVisualProfileKey(
 
   if (hasTenantKeyword(tenantTokens, ['crm', 'corp', 'sales', 'commercial'])) {
     return 'crm-corporate';
-  }
-
-  if (input.moduleContext === 'crm') {
-    return 'crm-corporate';
-  }
-
-  if (input.moduleContext === 'iot') {
-    return 'iot-industrial';
-  }
-
-  if (input.moduleContext === 'pet') {
-    if (input.defaultProfile === 'pet-grooming') {
-      return 'pet-grooming';
-    }
-
-    return 'pet-clinic';
   }
 
   return input.defaultProfile ?? 'core-institutional';

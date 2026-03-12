@@ -1,6 +1,8 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { DashboardContextCardGrid } from '@/shared/dashboard/dashboard-context-card-grid';
+import type { DashboardContextCard } from '@/shared/dashboard/contextual-dashboard';
 import { DashboardSection } from '@/shared/dashboard/dashboard-section';
 import { EmptyStateCard } from '@/shared/dashboard/empty-state-card';
 import { MetricGrid } from '@/shared/dashboard/metric-grid';
@@ -23,6 +25,7 @@ import {
   permissionCapability,
   readyCapability
 } from '@/shared/modules/module-capability';
+import { resolveModuleWorkspaceVisualState } from '@/shared/modules/module-workspace-visual';
 import { GettingStartedChecklist } from '@/shared/onboarding/getting-started';
 import { useFrontendPlatform } from '@/shared/platform/use-frontend-platform';
 import { crmService } from '@/shared/services/crm-service';
@@ -158,6 +161,54 @@ function buildCrmGuidanceSteps(actions: ModuleWorkspaceAction[], keys: string[])
     });
 }
 
+function buildCrmContextCards({
+  canReadDashboard,
+  summary,
+  firstUse,
+  scopeName,
+  accessLabel
+}: {
+  canReadDashboard: boolean;
+  summary: CrmDashboardSummary | null;
+  firstUse: boolean;
+  scopeName: string;
+  accessLabel: string;
+}): DashboardContextCard[] {
+  return [
+    {
+      key: 'crm-pipeline-posture',
+      label: 'Pipeline posture',
+      value: !canReadDashboard
+        ? 'Restricted'
+        : summary
+          ? `${summary.totalLeads} leads / ${summary.totalDeals} deals`
+          : 'Loading...',
+      description: firstUse
+        ? 'The commercial workspace is still being seeded with the first companies, contacts, leads, and deals.'
+        : 'Lead intake and deal pressure stay explicit before drilling into dashboards, pipeline stages, or record lists.',
+      tone: 'accent'
+    },
+    {
+      key: 'crm-follow-up-rhythm',
+      label: 'Follow-up rhythm',
+      value: !canReadDashboard
+        ? 'Permission-bound'
+        : summary
+          ? `${summary.tasksPendentes} pending`
+          : 'Loading...',
+      description: 'Pending tasks keep the next commercial moves visible so execution does not disappear behind record volume.',
+      tone: 'primary'
+    },
+    {
+      key: 'crm-governance',
+      label: 'Workspace governance',
+      value: accessLabel,
+      description: `Commercial operations remain scoped to ${scopeName} and the permissions exposed in this authenticated CRM workspace.`,
+      tone: 'neutral'
+    }
+  ];
+}
+
 export function CrmHome() {
   const platform = useFrontendPlatform();
   const { hasPermission } = usePermissions();
@@ -166,6 +217,13 @@ export function CrmHome() {
   const [error, setError] = useState<string | null>(null);
 
   const canReadDashboard = hasPermission('crm.dashboard.read');
+  const crmVisual = useMemo(
+    () => resolveModuleWorkspaceVisualState(platform, {
+      moduleContext: 'crm',
+      defaultProfile: 'crm-corporate'
+    }),
+    [platform]
+  );
   const featuredSection = summary?.sections.find((section) => (
     section.cards.length > 0
     || section.metrics.length > 0
@@ -229,6 +287,16 @@ export function CrmHome() {
     : `${getAppThemeModeLabel(platform.theme.tenantDefaultMode)} tenant-managed`;
   const fallbackGuidance = buildCrmGuidanceSteps(actionStates, ['/crm/companies', '/crm/contacts', '/crm/leads']);
   const restrictedGuidance = buildCrmGuidanceSteps(actionStates, ['/crm/companies', '/crm/tasks', '/crm/notes']);
+  const contextCards = useMemo(
+    () => buildCrmContextCards({
+      canReadDashboard,
+      summary,
+      firstUse,
+      scopeName: platform.branding.scopeName,
+      accessLabel: platform.workspace.accessLabel
+    }),
+    [canReadDashboard, firstUse, platform.branding.scopeName, platform.workspace.accessLabel, summary]
+  );
 
   useEffect(() => {
     let active = true;
@@ -271,7 +339,11 @@ export function CrmHome() {
   }, [canReadDashboard]);
 
   return (
-    <div className="space-y-6">
+    <div
+      className="space-y-6"
+      style={crmVisual.style}
+      data-crm-profile={crmVisual.visualProfile.key}
+    >
       <ModuleWorkspaceHero
         eyebrow="CRM Workspace"
         title={`${platform.branding.scopeName} · CRM`}
@@ -284,6 +356,7 @@ export function CrmHome() {
         chips={[
           { label: 'Workspace', value: platform.workspace.workspaceLabel },
           { label: 'Access', value: platform.workspace.accessLabel, tone: 'neutral' },
+          { label: 'Profile', value: crmVisual.visualProfile.label, tone: 'neutral' },
           { label: 'Theme', value: themePolicy, tone: 'neutral' }
         ]}
         aside={(
@@ -388,6 +461,13 @@ export function CrmHome() {
         emptyTitle="No CRM actions available"
         emptyDescription="This tenant has the CRM module enabled, but the current user does not have CRM read permissions yet."
       />
+
+      <ModuleWorkspaceSection
+        title="Commercial Operating Context"
+        description="Keep the current pipeline stance, follow-up pressure, and tenant boundary readable before entering deeper CRM screens."
+      >
+        <DashboardContextCardGrid cards={contextCards} />
+      </ModuleWorkspaceSection>
 
       <ModuleWorkspaceSection
         title="Commercial Pulse"

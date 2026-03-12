@@ -15,6 +15,11 @@ import {
 import { EmptyStateCard } from '@/shared/dashboard/empty-state-card';
 import { StatusBadge } from '@/shared/dashboard/status-badge';
 import {
+  workspaceDashedSurfaceStyle,
+  workspaceMutedSurfaceStyle,
+  workspacePanelSurfaceStyle
+} from '@/shared/modules/module-workspace-visual';
+import {
   isCapabilityReady,
   readyCapability,
   unavailableCapability,
@@ -111,9 +116,12 @@ export function ModuleWorkspaceHero({
       <div
         className={`${sharedPanelSurfaceClass} p-6 sm:p-7`}
         style={{
+          ...workspacePanelSurfaceStyle,
           backgroundImage:
-            'radial-gradient(circle at top left, var(--tenant-accent-soft), transparent 36%), '
-            + 'radial-gradient(circle at bottom right, var(--tenant-primary-soft), transparent 32%)'
+            'linear-gradient(180deg, var(--workspace-panel-tint) 0%, transparent 180px), '
+            + 'radial-gradient(circle at top left, var(--tenant-accent-soft), transparent 36%), '
+            + 'radial-gradient(circle at bottom right, var(--tenant-primary-soft), transparent 32%), '
+            + 'radial-gradient(circle at top right, var(--workspace-panel-support), transparent 48%)'
         }}
       >
         <p className={sharedEyebrowClass}>{eyebrow}</p>
@@ -135,7 +143,7 @@ export function ModuleWorkspaceHero({
       </div>
 
       {aside ? (
-        <div className={`${sharedPanelSurfaceClass} p-5`}>
+        <div className={`${sharedPanelSurfaceClass} p-5`} style={workspacePanelSurfaceStyle}>
           {aside}
         </div>
       ) : null}
@@ -150,6 +158,7 @@ export function ModuleWorkspaceFactList({ facts }: { facts: ModuleWorkspaceFact[
         <div
           key={`${fact.label}-${fact.value}`}
           className={`${sharedMutedSurfaceClass} p-4`}
+          style={workspaceMutedSurfaceStyle}
         >
           <div className="flex items-start justify-between gap-3">
             <div>
@@ -176,6 +185,7 @@ export function ModuleWorkspaceOverviewGrid({ cards }: { cards: ModuleWorkspaceO
         <div
           key={`${card.label}-${card.value}`}
           className={`${sharedPanelSurfaceClass} p-5`}
+          style={workspacePanelSurfaceStyle}
         >
           <div className="flex items-start justify-between gap-3">
             <div>
@@ -190,7 +200,7 @@ export function ModuleWorkspaceOverviewGrid({ cards }: { cards: ModuleWorkspaceO
           </div>
           <p className={`mt-3 ${sharedCompactTextClass}`}>{card.description}</p>
           {!isCapabilityReady(card.capability) && (card.capability?.title || card.capability?.description) ? (
-            <div className={`mt-4 ${sharedDashedSurfaceClass} px-4 py-3`}>
+            <div className={`mt-4 ${sharedDashedSurfaceClass} px-4 py-3`} style={workspaceDashedSurfaceStyle}>
               {card.capability?.title ? (
                 <p className={sharedSectionHeadingClass}>{card.capability.title}</p>
               ) : null}
@@ -217,7 +227,7 @@ export function ModuleWorkspaceSection({
   children: ReactNode;
 }) {
   return (
-    <section className={`${sharedPanelSurfaceClass} p-5`}>
+    <section className={`${sharedPanelSurfaceClass} p-5`} style={workspacePanelSurfaceStyle}>
       <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
         <div>
           <h2 className={sharedSectionHeadingClass}>{title}</h2>
@@ -267,7 +277,10 @@ export function ModuleWorkspaceQuickActionGrid({
                 </div>
                 <p className="mt-3 text-sm leading-6 text-[color:var(--app-shell-muted)]">{action.description}</p>
                 {!isCapabilityReady(capability) && (capability.title || capability.description) ? (
-                  <div className="mt-4 rounded-2xl border border-dashed border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-panel)] px-4 py-3">
+                  <div
+                    className="mt-4 rounded-2xl border border-dashed border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-panel)] px-4 py-3"
+                    style={workspaceDashedSurfaceStyle}
+                  >
                     {capability.title ? (
                       <p className="text-sm font-semibold text-[color:var(--app-shell-heading)]">{capability.title}</p>
                     ) : null}
@@ -288,6 +301,7 @@ export function ModuleWorkspaceQuickActionGrid({
                   key={action.href}
                   href={action.href}
                   className={interactiveWorkspaceCardClass}
+                  style={workspaceMutedSurfaceStyle}
                 >
                   {content}
                 </Link>
@@ -298,6 +312,7 @@ export function ModuleWorkspaceQuickActionGrid({
               <div
                 key={action.href}
                 className={disabledWorkspaceCardClass}
+                style={workspaceDashedSurfaceStyle}
               >
                 {content}
               </div>
@@ -358,6 +373,7 @@ export function ModuleWorkspaceGuidance({
                 key={step.key}
                 href={href}
                 className={interactiveWorkspaceCardClass}
+                style={workspaceMutedSurfaceStyle}
               >
                 {content}
               </Link>
@@ -368,6 +384,7 @@ export function ModuleWorkspaceGuidance({
             <div
               key={step.key}
               className={disabledWorkspaceCardClass}
+              style={workspaceDashedSurfaceStyle}
             >
               {content}
             </div>
@@ -394,6 +411,7 @@ export function ModuleWorkspaceState({
           ? 'rounded-2xl border border-destructive/30 bg-destructive-muted px-4 py-3 text-sm text-destructive'
           : `${sharedMutedSurfaceClass} px-4 py-3 text-sm text-[color:var(--app-shell-muted)]`
       }
+      style={tone === 'error' ? undefined : workspaceMutedSurfaceStyle}
     >
       <p className="font-semibold">{title}</p>
       <p className="mt-1">{description}</p>

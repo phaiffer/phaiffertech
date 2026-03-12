@@ -5,6 +5,7 @@ import {
 } from '@/shared/components/public-visual-system';
 import { DashboardCountMetric } from '@/shared/types/dashboard';
 import { EmptyStateCard } from '@/shared/dashboard/empty-state-card';
+import { workspacePanelSurfaceStyle } from '@/shared/modules/module-workspace-visual';
 
 type SimpleBarChartProps = {
   title: string;
@@ -24,7 +25,7 @@ export function SimpleBarChart({ title, metrics, emptyMessage }: SimpleBarChartP
   const maxValue = Math.max(...metrics.map((metric) => metric.value), 1);
 
   return (
-    <div className={`${sharedPanelSurfaceClass} p-5`}>
+    <div className={`${sharedPanelSurfaceClass} p-5`} style={workspacePanelSurfaceStyle}>
       <h3 className={sharedSectionHeadingClass}>{title}</h3>
       <div className="mt-4 space-y-3">
         {metrics.map((metric) => (
