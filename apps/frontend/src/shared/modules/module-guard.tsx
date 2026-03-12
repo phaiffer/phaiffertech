@@ -19,13 +19,13 @@ function ModuleGuardNotice({
   tone: 'neutral' | 'warn' | 'error';
 }) {
   const classes = tone === 'error'
-    ? 'border-rose-200 bg-rose-50 text-rose-700'
+    ? 'ui-notice-error'
     : tone === 'warn'
-      ? 'border-amber-200 bg-amber-50 text-amber-700'
-      : 'border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-panel)] text-[color:var(--app-shell-text)]';
+      ? 'ui-notice-warning'
+      : 'ui-surface-panel text-[color:var(--app-shell-text)]';
 
   return (
-    <div className={`rounded-3xl border px-5 py-5 shadow-card ${classes}`}>
+    <div className={`${classes} px-5 py-5`}>
       <p className="text-sm font-semibold">{title}</p>
       <p className="mt-2 text-sm">{description}</p>
     </div>

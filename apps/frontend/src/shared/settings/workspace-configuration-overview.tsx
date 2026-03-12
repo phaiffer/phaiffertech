@@ -8,7 +8,7 @@ import { PageTitle } from '@/shared/ui/page-title';
 
 function FieldCard({ field }: { field: WorkspaceConfigurationField }) {
   return (
-    <div className="rounded-2xl border border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-panel-muted)] p-4">
+    <div className="ui-surface-muted p-4">
       <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--app-shell-muted)]">
         {field.label}
       </p>
@@ -31,7 +31,7 @@ function SectionCard({
   children: ReactNode;
 }) {
   return (
-    <section className="rounded-3xl border border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-panel)] p-5 shadow-card">
+    <section className="ui-surface-panel p-5">
       <div className="mb-5">
         <h2 className="text-base font-semibold text-[color:var(--app-shell-heading)]">{title}</h2>
         <p className="mt-1 text-sm text-[color:var(--app-shell-muted)]">{description}</p>
@@ -57,7 +57,7 @@ export function WorkspaceConfigurationOverview() {
 
       <div className="grid gap-4 xl:grid-cols-[1.2fr,0.8fr]">
         <section
-          className="rounded-3xl border border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-panel)] p-5 shadow-card"
+          className="ui-surface-panel p-5"
           style={platform.branding.style}
         >
           <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[color:var(--tenant-accent)]">
@@ -95,7 +95,7 @@ export function WorkspaceConfigurationOverview() {
       <div className="grid gap-4 xl:grid-cols-[1.1fr,0.9fr]">
         <SectionCard title="Branding Preview" description={overview.brandingDescription}>
           <div className="grid gap-4 xl:grid-cols-[1.2fr,0.8fr]" style={platform.branding.style}>
-            <div className="rounded-2xl border border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-panel-muted)] p-5">
+            <div className="ui-surface-muted p-5">
               <div className="flex items-center gap-4">
                 <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-2xl border border-[color:var(--tenant-accent)] bg-[color:var(--tenant-accent-soft)] text-lg font-semibold text-[color:var(--tenant-accent)]">
                   {platform.branding.logoUrl ? (
@@ -127,8 +127,7 @@ export function WorkspaceConfigurationOverview() {
                 </span>
                 <button
                   type="button"
-                  className="rounded-full px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-white"
-                  style={{ backgroundColor: 'var(--tenant-accent)' }}
+                  className="ui-primary-button"
                 >
                   Sample action
                 </button>
@@ -154,15 +153,13 @@ export function WorkspaceConfigurationOverview() {
 
       <SectionCard title="Contracted Modules" description={overview.modulesDescription}>
         {platform.modules.error ? (
-          <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
-            {platform.modules.error}
-          </div>
+          <div className="ui-notice-error">{platform.modules.error}</div>
         ) : platform.modules.loading ? (
-          <div className="rounded-2xl border border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-panel-muted)] px-4 py-3 text-sm text-[color:var(--app-shell-muted)]">
+          <div className="ui-notice-neutral">
             Loading workspace contract data...
           </div>
         ) : overview.contractedModules.length === 0 ? (
-          <div className="rounded-2xl border border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-panel-muted)] px-4 py-5 text-sm text-[color:var(--app-shell-muted)]">
+          <div className="ui-notice-neutral px-4 py-5">
             {overview.modulesEmptyDescription}
           </div>
         ) : (
@@ -170,7 +167,7 @@ export function WorkspaceConfigurationOverview() {
             {overview.contractedModules.map((moduleItem) => (
               <article
                 key={moduleItem.code}
-                className="rounded-2xl border border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-panel-muted)] p-5"
+                className="ui-surface-muted p-5"
               >
                 <div className="flex items-start justify-between gap-3">
                   <div>
@@ -184,7 +181,7 @@ export function WorkspaceConfigurationOverview() {
                 </div>
 
                 <div className="mt-5 grid gap-3">
-                  <div className="rounded-2xl border border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-panel)] p-4">
+                  <div className="ui-surface-panel p-4">
                     <div className="flex items-center justify-between gap-3">
                       <p className="text-sm font-semibold text-[color:var(--app-shell-heading)]">{moduleItem.availabilityLabel}</p>
                       <StatusBadge status={moduleItem.availabilityStatus} />
@@ -192,7 +189,7 @@ export function WorkspaceConfigurationOverview() {
                     <p className="mt-2 text-sm text-[color:var(--app-shell-muted)]">{moduleItem.availabilityDescription}</p>
                   </div>
 
-                  <div className="rounded-2xl border border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-panel)] p-4">
+                  <div className="ui-surface-panel p-4">
                     <div className="flex items-center justify-between gap-3">
                       <p className="text-sm font-semibold text-[color:var(--app-shell-heading)]">{moduleItem.exposureLabel}</p>
                       <StatusBadge status={moduleItem.exposureStatus} />

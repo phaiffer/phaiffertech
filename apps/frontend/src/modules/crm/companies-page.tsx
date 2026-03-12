@@ -140,7 +140,7 @@ export function CrmCompaniesPage() {
                 setIndustry(row.industry ?? '');
                 setStatus(row.status);
               }}
-              className="rounded-lg border border-slate-300 px-2 py-1 text-xs font-medium text-slate-700"
+              className="ui-inline-button"
             >
               Editar
             </button>
@@ -149,7 +149,7 @@ export function CrmCompaniesPage() {
             <button
               type="button"
               onClick={() => setDeleteCandidate(row)}
-              className="rounded-lg border border-rose-300 px-2 py-1 text-xs font-medium text-rose-700"
+              className="ui-inline-danger-button"
             >
               Excluir
             </button>
@@ -162,15 +162,15 @@ export function CrmCompaniesPage() {
   return (
     <PermissionGuard
       permission="crm.company.read"
-      fallback={<div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">Você não possui permissão para visualizar empresas.</div>}
+      fallback={<div className="ui-notice-warning">Você não possui permissão para visualizar empresas.</div>}
     >
       <div className="space-y-5">
         <PageTitle title="CRM Companies" description="Cadastro e gestão de empresas vinculadas ao CRM." />
 
-        <div className="grid gap-3 rounded-xl border border-slate-200 bg-white p-4 md:grid-cols-[1fr_180px_auto_auto]">
+        <div className="grid gap-3 ui-surface-panel p-4 md:grid-cols-[1fr_180px_auto_auto]">
           <SearchBar value={searchInput} onChange={setSearchInput} placeholder="Nome, documento, email, site" />
           <FormSelect label="Status" value={statusFilter} options={statusOptions} onChange={setStatusFilter} />
-          <button type="button" onClick={() => setSearch(searchInput)} className="rounded-lg bg-action px-4 py-2 text-sm font-medium text-white">
+          <button type="button" onClick={() => setSearch(searchInput)} className="ui-primary-button">
             Buscar
           </button>
           <button
@@ -180,14 +180,14 @@ export function CrmCompaniesPage() {
               setSearch('');
               setStatusFilter('');
             }}
-            className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700"
+            className="ui-secondary-button"
           >
             Limpar
           </button>
         </div>
 
         <PermissionGuard permission={editingId ? 'crm.company.update' : 'crm.company.create'}>
-          <div className="grid gap-3 rounded-xl border border-slate-200 bg-white p-4 md:grid-cols-2">
+          <div className="grid gap-3 ui-surface-panel p-4 md:grid-cols-2">
             <FormInput label="Nome" value={name} onChange={setName} required />
             <FormInput label="Razão social" value={legalName} onChange={setLegalName} />
             <FormInput label="Documento" value={document} onChange={setDocument} />
@@ -201,18 +201,18 @@ export function CrmCompaniesPage() {
                 type="button"
                 disabled={saving || !name.trim()}
                 onClick={() => void handleSubmit()}
-                className="rounded-lg bg-action px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
+                className="ui-primary-button"
               >
                 {editingId ? 'Salvar empresa' : 'Criar empresa'}
               </button>
-              <button type="button" onClick={resetForm} className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700">
+              <button type="button" onClick={resetForm} className="ui-secondary-button">
                 Cancelar
               </button>
             </div>
           </div>
         </PermissionGuard>
 
-        {error ? <div className="rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{error}</div> : null}
+        {error ? <div className="ui-notice-error">{error}</div> : null}
 
         <DataTable columns={columns} rows={rows} getRowKey={(row) => row.id} loading={loading} emptyMessage="Nenhuma empresa encontrada." />
 

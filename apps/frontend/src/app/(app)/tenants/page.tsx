@@ -4,6 +4,7 @@ import { FormEvent, useEffect, useMemo, useState } from 'react';
 import { PermissionGuard } from '@/shared/auth/PermissionGuard';
 import { useAuth } from '@/shared/auth/use-auth';
 import { usePermissions } from '@/shared/auth/usePermissions';
+import { sharedInputClass, sharedInputLabelClass } from '@/shared/components/public-visual-system';
 import { resolvePageItems } from '@/shared/lib/pagination';
 import { useModuleCatalog } from '@/shared/modules/use-module-catalog';
 import { tenantService, TenantUpsertInput } from '@/shared/services/tenant-service';
@@ -141,13 +142,13 @@ export default function TenantsPage() {
     <PermissionGuard
       permission="TENANT_READ"
       fallback={(
-        <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">
+        <div className="ui-notice-warning">
           You do not have permission to view tenants.
         </div>
       )}
     >
       {!canManagePlatform ? (
-        <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">
+        <div className="ui-notice-warning">
           Tenant administration is restricted to platform owner administrators.
         </div>
       ) : (
@@ -158,14 +159,14 @@ export default function TenantsPage() {
           />
 
           {error ? (
-            <div className="rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{error}</div>
+            <div className="ui-notice-error">{error}</div>
           ) : null}
 
           {modulesError ? (
-            <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">{modulesError}</div>
+            <div className="ui-notice-warning">{modulesError}</div>
           ) : null}
 
-          <section className="rounded-3xl border border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-panel)] p-5 shadow-card">
+          <section className="ui-surface-panel p-5">
             <div className="mb-5 flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">
               <div>
                 <h2 className="text-base font-semibold text-[color:var(--app-shell-heading)]">
@@ -179,7 +180,7 @@ export default function TenantsPage() {
                 <button
                   type="button"
                   onClick={resetForm}
-                  className="rounded-2xl border border-[color:var(--app-shell-border)] px-4 py-2 text-sm font-medium text-[color:var(--app-shell-text)]"
+                  className="ui-secondary-button"
                 >
                   Cancel edit
                 </button>
@@ -188,75 +189,75 @@ export default function TenantsPage() {
 
             <form onSubmit={handleSubmit} className="grid gap-4 lg:grid-cols-2">
               <label className="space-y-2">
-                <span className="text-sm font-medium text-[color:var(--app-shell-heading)]">Tenant name</span>
+                <span className={sharedInputLabelClass}>Tenant name</span>
                 <input
                   value={form.name}
                   onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))}
-                  className="w-full rounded-2xl border border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-panel-muted)] px-4 py-3 text-sm text-[color:var(--app-shell-text)]"
+                  className={sharedInputClass}
                   placeholder="PhaifferTech Clinic Network"
                   required
                 />
               </label>
 
               <label className="space-y-2">
-                <span className="text-sm font-medium text-[color:var(--app-shell-heading)]">Tenant code</span>
+                <span className={sharedInputLabelClass}>Tenant code</span>
                 <input
                   value={form.code}
                   onChange={(event) => setForm((current) => ({ ...current, code: event.target.value }))}
-                  className="w-full rounded-2xl border border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-panel-muted)] px-4 py-3 text-sm text-[color:var(--app-shell-text)]"
+                  className={sharedInputClass}
                   placeholder="tenant-code"
                   required
                 />
               </label>
 
               <label className="space-y-2 lg:col-span-2">
-                <span className="text-sm font-medium text-[color:var(--app-shell-heading)]">Logo URL</span>
+                <span className={sharedInputLabelClass}>Logo URL</span>
                 <input
                   value={form.logoUrl ?? ''}
                   onChange={(event) => setForm((current) => ({ ...current, logoUrl: event.target.value }))}
-                  className="w-full rounded-2xl border border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-panel-muted)] px-4 py-3 text-sm text-[color:var(--app-shell-text)]"
+                  className={sharedInputClass}
                   placeholder="/branding/tenant-logo.png"
                 />
               </label>
 
               <label className="space-y-2">
-                <span className="text-sm font-medium text-[color:var(--app-shell-heading)]">Primary color</span>
+                <span className={sharedInputLabelClass}>Primary color</span>
                 <div className="flex items-center gap-3">
                   <input
                     type="color"
                     value={form.primaryColor ?? '#0f172a'}
                     onChange={(event) => setForm((current) => ({ ...current, primaryColor: event.target.value }))}
-                    className="h-12 w-16 rounded-xl border border-[color:var(--app-shell-border)] bg-transparent"
+                    className="h-12 w-16 rounded-xl border border-[color:var(--app-shell-border)] bg-transparent shadow-xs"
                   />
                   <input
                     value={form.primaryColor ?? ''}
                     onChange={(event) => setForm((current) => ({ ...current, primaryColor: event.target.value }))}
-                    className="flex-1 rounded-2xl border border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-panel-muted)] px-4 py-3 text-sm text-[color:var(--app-shell-text)]"
+                    className={sharedInputClass}
                     placeholder="#0f172a"
                   />
                 </div>
               </label>
 
               <label className="space-y-2">
-                <span className="text-sm font-medium text-[color:var(--app-shell-heading)]">Accent color</span>
+                <span className={sharedInputLabelClass}>Accent color</span>
                 <div className="flex items-center gap-3">
                   <input
                     type="color"
                     value={form.accentColor ?? '#2563eb'}
                     onChange={(event) => setForm((current) => ({ ...current, accentColor: event.target.value }))}
-                    className="h-12 w-16 rounded-xl border border-[color:var(--app-shell-border)] bg-transparent"
+                    className="h-12 w-16 rounded-xl border border-[color:var(--app-shell-border)] bg-transparent shadow-xs"
                   />
                   <input
                     value={form.accentColor ?? ''}
                     onChange={(event) => setForm((current) => ({ ...current, accentColor: event.target.value }))}
-                    className="flex-1 rounded-2xl border border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-panel-muted)] px-4 py-3 text-sm text-[color:var(--app-shell-text)]"
+                    className={sharedInputClass}
                     placeholder="#2563eb"
                   />
                 </div>
               </label>
 
               <label className="space-y-2">
-                <span className="text-sm font-medium text-[color:var(--app-shell-heading)]">Default theme</span>
+                <span className={sharedInputLabelClass}>Default theme</span>
                 <select
                   value={form.defaultThemeMode}
                   onChange={(event) =>
@@ -264,7 +265,7 @@ export default function TenantsPage() {
                       ...current,
                       defaultThemeMode: event.target.value as TenantThemeMode
                     }))}
-                  className="w-full rounded-2xl border border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-panel-muted)] px-4 py-3 text-sm text-[color:var(--app-shell-text)]"
+                  className={sharedInputClass}
                 >
                   <option value="SYSTEM">System</option>
                   <option value="LIGHT">Light</option>
@@ -272,7 +273,7 @@ export default function TenantsPage() {
                 </select>
               </label>
 
-              <label className="flex items-center gap-3 rounded-2xl border border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-panel-muted)] px-4 py-3 text-sm text-[color:var(--app-shell-text)]">
+              <label className="ui-surface-muted flex items-center gap-3 px-4 py-3 text-sm text-[color:var(--app-shell-text)]">
                 <input
                   type="checkbox"
                   checked={form.allowUserThemeOverride}
@@ -300,7 +301,7 @@ export default function TenantsPage() {
                   </span>
 
                   {modulesLoading ? (
-                    <span className="text-sm text-[color:var(--app-shell-muted)]">Loading module catalog...</span>
+                    <span className="ui-notice-neutral">Loading module catalog...</span>
                   ) : (
                     moduleOptions.map((moduleItem) => {
                       const checked = form.contractedModules.includes(moduleItem.code);
@@ -332,8 +333,7 @@ export default function TenantsPage() {
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="rounded-2xl px-5 py-3 text-sm font-semibold text-white disabled:opacity-60"
-                  style={{ backgroundColor: 'var(--tenant-accent)' }}
+                  className="ui-primary-button"
                 >
                   {submitting ? 'Saving...' : editingTenantId ? 'Update tenant' : 'Create tenant'}
                 </button>
@@ -399,7 +399,7 @@ export default function TenantsPage() {
                     <button
                       type="button"
                       onClick={() => handleEdit(tenant)}
-                      className="rounded-2xl border border-[color:var(--app-shell-border)] px-3 py-2 text-sm font-medium text-[color:var(--app-shell-text)]"
+                      className="ui-secondary-button"
                     >
                       Edit
                     </button>

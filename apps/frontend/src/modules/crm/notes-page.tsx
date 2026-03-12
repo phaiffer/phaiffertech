@@ -230,8 +230,8 @@ export function CrmNotesPage() {
 
         return (
           <div>
-            <p className="font-medium text-slate-900">{buildReferenceHeadline(relation, row.relatedDisplayName)}</p>
-            <p className="text-xs text-slate-500">{buildReferenceContextLine(relation, row.relatedId, row.relatedDisplayContext)}</p>
+            <p className="font-medium text-[color:var(--app-shell-heading)]">{buildReferenceHeadline(relation, row.relatedDisplayName)}</p>
+            <p className="text-xs text-[color:var(--app-shell-muted)]">{buildReferenceContextLine(relation, row.relatedId, row.relatedDisplayContext)}</p>
           </div>
         );
       }
@@ -265,12 +265,12 @@ export function CrmNotesPage() {
                     setRelationType(editableRelation);
                     setRelationId(row.relatedId);
                   }}
-                  className="rounded-lg border border-slate-300 px-2 py-1 text-xs font-medium text-slate-700"
+                  className="ui-inline-button"
                 >
                   Editar
                 </button>
               ) : (
-                <span className="inline-flex items-center rounded-lg border border-slate-200 px-2 py-1 text-xs font-medium text-slate-500">
+                <span className="inline-flex items-center rounded-lg border border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-panel-muted)] px-2 py-1 text-xs font-medium text-[color:var(--app-shell-muted)]">
                   Somente leitura
                 </span>
               )}
@@ -279,7 +279,7 @@ export function CrmNotesPage() {
               <button
                 type="button"
                 onClick={() => setDeleteCandidate(row)}
-                className="rounded-lg border border-rose-300 px-2 py-1 text-xs font-medium text-rose-700"
+                className="ui-inline-danger-button"
               >
                 Excluir
               </button>
@@ -293,12 +293,12 @@ export function CrmNotesPage() {
   return (
     <PermissionGuard
       permission="crm.note.read"
-      fallback={<div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">Você não possui permissão para visualizar notas.</div>}
+      fallback={<div className="ui-notice-warning">Você não possui permissão para visualizar notas.</div>}
     >
       <div className="space-y-5">
         <PageTitle title="CRM Notes" description="Notas rápidas com vínculo legível entre CRM e, quando permitido, entidades do PetFlow." />
 
-        <div className="grid gap-3 rounded-xl border border-slate-200 bg-white p-4 xl:grid-cols-[1fr_180px_220px_auto_auto]">
+        <div className="grid gap-3 ui-surface-panel p-4 xl:grid-cols-[1fr_180px_220px_auto_auto]">
           <SearchBar value={searchInput} onChange={setSearchInput} placeholder="Buscar por conteúdo da nota" />
           <FormSelect
             label="Tipo de vínculo"
@@ -319,7 +319,7 @@ export function CrmNotesPage() {
             onChange={setRelationIdFilter}
             disabled={!relationTypeFilter}
           />
-          <button type="button" onClick={() => setSearch(searchInput)} className="rounded-lg bg-action px-4 py-2 text-sm font-medium text-white">
+          <button type="button" onClick={() => setSearch(searchInput)} className="ui-primary-button">
             Buscar
           </button>
           <button
@@ -330,18 +330,18 @@ export function CrmNotesPage() {
               setRelationTypeFilter('');
               setRelationIdFilter('');
             }}
-            className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700"
+            className="ui-secondary-button"
           >
             Limpar
           </button>
         </div>
 
         <PermissionGuard permission={editingId ? 'crm.note.update' : 'crm.note.create'}>
-          <div className="grid gap-3 rounded-xl border border-slate-200 bg-white p-4 md:grid-cols-2">
+          <div className="grid gap-3 ui-surface-panel p-4 md:grid-cols-2">
             <FormInput label="Conteúdo" value={content} onChange={setContent} required />
             <FormSelect label="Tipo de vínculo" value={relationType} options={relationTypeOptions} onChange={(value) => { setRelationType(value as CrmRelatedReferenceType); setRelationId(''); }} />
             <FormSelect label="Registro vinculado" value={relationId} options={[{ value: '', label: 'Selecione' }, ...relationOptions(relationType)]} onChange={setRelationId} />
-            <p className="text-xs text-slate-500 md:col-span-2">
+            <p className="text-xs text-[color:var(--app-shell-muted)] md:col-span-2">
               Os vínculos CRM legados continuam compatíveis. Referências Pet aparecem quando o usuário possui leitura do recurso correspondente e são enviadas pelo tipo canônico.
             </p>
             <div className="flex gap-2 md:col-span-2">
@@ -349,18 +349,18 @@ export function CrmNotesPage() {
                 type="button"
                 disabled={saving || !content.trim()}
                 onClick={() => void handleSubmit()}
-                className="rounded-lg bg-action px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
+                className="ui-primary-button"
               >
                 {editingId ? 'Salvar nota' : 'Criar nota'}
               </button>
-              <button type="button" onClick={resetForm} className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700">
+              <button type="button" onClick={resetForm} className="ui-secondary-button">
                 Cancelar
               </button>
             </div>
           </div>
         </PermissionGuard>
 
-        {error ? <div className="rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{error}</div> : null}
+        {error ? <div className="ui-notice-error">{error}</div> : null}
 
         <DataTable columns={columns} rows={rows} getRowKey={(row) => row.id} loading={loading} emptyMessage="Nenhuma nota encontrada." />
 

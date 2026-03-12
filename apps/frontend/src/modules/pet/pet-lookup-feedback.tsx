@@ -18,13 +18,13 @@ export function PetLookupFeedback({ issues }: PetLookupFeedbackProps) {
   }
 
   return (
-    <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+    <div className="ui-notice-warning">
       <p className="font-medium">Algumas referências do módulo Pet não estão disponíveis.</p>
-      <p className="mt-1 text-amber-700">
+      <p className="mt-1 text-current/90">
         A listagem continua funcional, mas filtros, rótulos e formulários podem ficar limitados até a referência ser
         carregada.
       </p>
-      <ul className="mt-2 list-disc space-y-1 pl-5 text-amber-700">
+      <ul className="mt-2 list-disc space-y-1 pl-5 text-current/90">
         {issues.map((issue) => (
           <li key={issue.key}>
             <span className="font-medium">{issue.label}:</span> {issue.message}

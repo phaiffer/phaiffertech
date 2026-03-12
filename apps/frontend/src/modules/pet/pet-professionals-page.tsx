@@ -144,7 +144,7 @@ export function PetProfessionalsPage() {
             <button
               type="button"
               onClick={() => beginEdit(item)}
-              className="rounded-lg border border-slate-300 px-2 py-1 text-xs font-medium text-slate-700"
+              className="ui-inline-button"
             >
               Editar
             </button>
@@ -153,7 +153,7 @@ export function PetProfessionalsPage() {
             <button
               type="button"
               onClick={() => setDeleteCandidate(item)}
-              className="rounded-lg border border-rose-300 px-2 py-1 text-xs font-medium text-rose-700"
+              className="ui-inline-danger-button"
             >
               Excluir
             </button>
@@ -166,17 +166,17 @@ export function PetProfessionalsPage() {
   return (
     <PermissionGuard
       permission="pet.professional.read"
-      fallback={<div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">Você não possui permissão para visualizar profissionais.</div>}
+      fallback={<div className="ui-notice-warning">Você não possui permissão para visualizar profissionais.</div>}
     >
       <div className="space-y-5">
         <PageTitle title="Pet Professionals" description="Equipe clínica e operacional vinculada ao tenant atual." />
 
-        <div className="grid gap-3 rounded-xl border border-slate-200 bg-white p-4 md:grid-cols-[1fr_auto_auto]">
+        <div className="grid gap-3 ui-surface-panel p-4 md:grid-cols-[1fr_auto_auto]">
           <SearchBar value={searchInput} onChange={setSearchInput} placeholder="Nome, especialidade, licença ou contato" />
           <button
             type="button"
             onClick={() => setSearch(searchInput)}
-            className="rounded-lg bg-action px-4 py-2 text-sm font-medium text-white"
+            className="ui-primary-button"
           >
             Buscar
           </button>
@@ -186,14 +186,14 @@ export function PetProfessionalsPage() {
               setSearchInput('');
               setSearch('');
             }}
-            className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700"
+            className="ui-secondary-button"
           >
             Limpar
           </button>
         </div>
 
         <PermissionGuard permission={editingId ? 'pet.professional.update' : 'pet.professional.create'}>
-          <form onSubmit={handleSubmit} className="grid gap-3 rounded-xl border border-slate-200 bg-white p-4 md:grid-cols-2">
+          <form onSubmit={handleSubmit} className="grid gap-3 ui-surface-panel p-4 md:grid-cols-2">
             <FormInput label="Nome" value={name} onChange={setName} required />
             <FormInput label="Especialidade" value={specialty} onChange={setSpecialty} />
             <FormInput label="Licença" value={licenseNumber} onChange={setLicenseNumber} />
@@ -204,7 +204,7 @@ export function PetProfessionalsPage() {
               <button
                 type="submit"
                 disabled={submitting}
-                className="rounded-lg bg-action px-4 py-2 text-sm font-medium text-white disabled:opacity-60"
+                className="ui-primary-button"
               >
                 {submitting ? 'Salvando...' : editingId ? 'Atualizar profissional' : 'Criar profissional'}
               </button>
@@ -212,7 +212,7 @@ export function PetProfessionalsPage() {
                 <button
                   type="button"
                   onClick={resetForm}
-                  className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700"
+                  className="ui-secondary-button"
                 >
                   Cancelar edição
                 </button>
@@ -221,8 +221,8 @@ export function PetProfessionalsPage() {
           </form>
         </PermissionGuard>
 
-        {error ? <div className="rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{error}</div> : null}
-        {success ? <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">{success}</div> : null}
+        {error ? <div className="ui-notice-error">{error}</div> : null}
+        {success ? <div className="ui-notice-success">{success}</div> : null}
 
         <DataTable columns={columns} rows={rows} getRowKey={(row) => row.id} loading={loading} emptyMessage="Nenhum profissional encontrado." />
         <Pagination page={pageData.page} totalPages={pageData.totalPages} totalElements={totalItems} onPageChange={(page) => load(page, search)} />

@@ -3,6 +3,7 @@
 import { FormEvent, useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { sharedInputClass, sharedInputLabelClass } from '@/shared/components/public-visual-system';
 import { crmService } from '@/shared/services/crm-service';
 import { ApiClientError } from '@/shared/lib/http';
 import { resolvePageItems } from '@/shared/lib/pagination';
@@ -204,21 +205,21 @@ export function LeadFormPage({ leadId }: LeadFormPageProps) {
   return (
     <PermissionGuard
       permission={requiredPermission}
-      fallback={<div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">Você não possui permissão para esta ação.</div>}
+      fallback={<div className="ui-notice-warning">Você não possui permissão para esta ação.</div>}
     >
       <div className="space-y-5">
         <PageTitle title={title} description="Formulário de cadastro/edição de lead CRM." />
 
         <div className="flex justify-end">
-          <Link href="/crm/leads" className="rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700">
+          <Link href="/crm/leads" className="ui-secondary-button">
             Voltar para listagem
           </Link>
         </div>
 
         {loading ? (
-          <div className="rounded-lg border border-slate-200 bg-white px-4 py-6 text-sm text-slate-600">Carregando lead...</div>
+          <div className="ui-surface-panel px-4 py-6 text-sm text-[color:var(--app-shell-muted)]">Carregando lead...</div>
         ) : (
-          <form onSubmit={handleSubmit} className="grid gap-3 rounded-xl border border-slate-200 bg-white p-4 md:grid-cols-2">
+          <form onSubmit={handleSubmit} className="grid gap-3 ui-surface-panel p-4 md:grid-cols-2">
             <FormInput label="Nome" value={name} onChange={setName} required />
             <FormInput label="Email" value={email} onChange={setEmail} type="email" />
             <FormInput label="Telefone" value={phone} onChange={setPhone} />
@@ -239,12 +240,12 @@ export function LeadFormPage({ leadId }: LeadFormPageProps) {
             />
             <FormSelect label="Status" value={status} options={statusOptions} onChange={setStatus} />
             <label className="block text-sm md:col-span-2">
-              <span className="mb-1 block font-medium text-slate-700">Observações comerciais</span>
+              <span className={sharedInputLabelClass}>Observações comerciais</span>
               <textarea
                 value={notes}
                 onChange={(event) => setNotes(event.target.value)}
                 rows={4}
-                className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-action focus:outline-none"
+                className={`${sharedInputClass} min-h-28 resize-y`}
               />
             </label>
 
@@ -252,7 +253,7 @@ export function LeadFormPage({ leadId }: LeadFormPageProps) {
               <button
                 type="submit"
                 disabled={submitting}
-                className="rounded-lg bg-action px-4 py-2 text-sm font-medium text-white disabled:opacity-60"
+                className="ui-primary-button"
               >
                 {submitting ? 'Salvando...' : isEdit ? 'Atualizar lead' : 'Criar lead'}
               </button>
@@ -260,8 +261,8 @@ export function LeadFormPage({ leadId }: LeadFormPageProps) {
           </form>
         )}
 
-        {error ? <div className="rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{error}</div> : null}
-        {success ? <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">{success}</div> : null}
+        {error ? <div className="ui-notice-error">{error}</div> : null}
+        {success ? <div className="ui-notice-success">{success}</div> : null}
       </div>
     </PermissionGuard>
   );

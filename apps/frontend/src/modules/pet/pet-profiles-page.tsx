@@ -245,7 +245,7 @@ export function PetProfilesPage() {
             <button
               type="button"
               onClick={() => beginEdit(profile)}
-              className="rounded-lg border border-slate-300 px-2 py-1 text-xs font-medium text-slate-700"
+              className="ui-inline-button"
             >
               Editar
             </button>
@@ -255,7 +255,7 @@ export function PetProfilesPage() {
             <button
               type="button"
               onClick={() => setDeleteCandidate(profile)}
-              className="rounded-lg border border-rose-300 px-2 py-1 text-xs font-medium text-rose-700"
+              className="ui-inline-danger-button"
             >
               Excluir
             </button>
@@ -268,18 +268,18 @@ export function PetProfilesPage() {
   return (
     <PermissionGuard
       permission="pet.profile.read"
-      fallback={<div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">Você não possui permissão para visualizar perfis de pet.</div>}
+      fallback={<div className="ui-notice-warning">Você não possui permissão para visualizar perfis de pet.</div>}
     >
       <div className="space-y-5">
         <PageTitle title="Pet Profiles" description="Cadastro de pets vinculados aos clientes do tenant atual." />
 
-        <div className="grid gap-3 rounded-xl border border-slate-200 bg-white p-4 md:grid-cols-[1fr_260px_auto_auto]">
+        <div className="grid gap-3 ui-surface-panel p-4 md:grid-cols-[1fr_260px_auto_auto]">
           <SearchBar value={searchInput} onChange={setSearchInput} placeholder="Nome, espécie, raça" />
           <FormSelect label="Cliente" value={clientFilterId} options={clientOptions} onChange={setClientFilterId} />
           <button
             type="button"
             onClick={() => setSearch(searchInput)}
-            className="rounded-lg bg-action px-4 py-2 text-sm font-medium text-white"
+            className="ui-primary-button"
           >
             Buscar
           </button>
@@ -290,14 +290,14 @@ export function PetProfilesPage() {
               setSearch('');
               setClientFilterId('');
             }}
-            className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700"
+            className="ui-secondary-button"
           >
             Limpar
           </button>
         </div>
 
         <PermissionGuard permission={editingId ? 'pet.profile.update' : 'pet.profile.create'}>
-          <form onSubmit={handleSubmit} className="grid gap-3 rounded-xl border border-slate-200 bg-white p-4 md:grid-cols-3">
+          <form onSubmit={handleSubmit} className="grid gap-3 ui-surface-panel p-4 md:grid-cols-3">
             <FormSelect label="Cliente" value={clientId} options={formClientOptions} onChange={setClientId} />
             <FormInput label="Nome" value={name} onChange={setName} required />
             <FormInput label="Espécie" value={species} onChange={setSpecies} required />
@@ -314,7 +314,7 @@ export function PetProfilesPage() {
               <button
                 type="submit"
                 disabled={submitting}
-                className="rounded-lg bg-action px-4 py-2 text-sm font-medium text-white disabled:opacity-60"
+                className="ui-primary-button"
               >
                 {submitting ? 'Salvando...' : editingId ? 'Atualizar pet' : 'Criar pet'}
               </button>
@@ -322,7 +322,7 @@ export function PetProfilesPage() {
                 <button
                   type="button"
                   onClick={resetForm}
-                  className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700"
+                  className="ui-secondary-button"
                 >
                   Cancelar edição
                 </button>
@@ -331,8 +331,8 @@ export function PetProfilesPage() {
           </form>
         </PermissionGuard>
 
-        {error ? <div className="rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{error}</div> : null}
-        {success ? <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">{success}</div> : null}
+        {error ? <div className="ui-notice-error">{error}</div> : null}
+        {success ? <div className="ui-notice-success">{success}</div> : null}
 
         <DataTable
           columns={columns}

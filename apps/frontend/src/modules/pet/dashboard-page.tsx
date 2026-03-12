@@ -36,7 +36,7 @@ export function PetDashboardPage() {
   return (
     <PermissionGuard
       permission="pet.dashboard.read"
-      fallback={<div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">Você não possui permissão para visualizar o dashboard do Pet.</div>}
+      fallback={<div className="ui-notice-warning">Você não possui permissão para visualizar o dashboard do Pet.</div>}
     >
       <div className="space-y-5">
         <PageTitle
@@ -44,8 +44,8 @@ export function PetDashboardPage() {
           description="Visão clínica e comercial com agenda, prontuários recentes e filas operacionais do tenant."
         />
 
-        {loading ? <div className="rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm text-slate-500">Carregando dashboard...</div> : null}
-        {error ? <div className="rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{error}</div> : null}
+        {loading ? <div className="ui-notice-neutral">Carregando dashboard...</div> : null}
+        {error ? <div className="ui-notice-error">{error}</div> : null}
 
         {summary ? (
           <>

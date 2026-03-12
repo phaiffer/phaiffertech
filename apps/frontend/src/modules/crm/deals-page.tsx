@@ -193,7 +193,7 @@ export function CrmDealsPage() {
                 setLeadId(row.leadId ?? '');
                 setExpectedCloseDate(row.expectedCloseDate ?? '');
               }}
-              className="rounded-lg border border-slate-300 px-2 py-1 text-xs font-medium text-slate-700"
+              className="ui-inline-button"
             >
               Editar
             </button>
@@ -202,7 +202,7 @@ export function CrmDealsPage() {
             <button
               type="button"
               onClick={() => setDeleteCandidate(row)}
-              className="rounded-lg border border-rose-300 px-2 py-1 text-xs font-medium text-rose-700"
+              className="ui-inline-danger-button"
             >
               Excluir
             </button>
@@ -215,16 +215,16 @@ export function CrmDealsPage() {
   return (
     <PermissionGuard
       permission="crm.deal.read"
-      fallback={<div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">Você não possui permissão para visualizar negócios.</div>}
+      fallback={<div className="ui-notice-warning">Você não possui permissão para visualizar negócios.</div>}
     >
       <div className="space-y-5">
         <PageTitle title="CRM Deals" description="Negócios vinculados a empresas e etapas do pipeline." />
 
-        <div className="grid gap-3 rounded-xl border border-slate-200 bg-white p-4 md:grid-cols-[1fr_180px_220px_auto_auto]">
+        <div className="grid gap-3 ui-surface-panel p-4 md:grid-cols-[1fr_180px_220px_auto_auto]">
           <SearchBar value={searchInput} onChange={setSearchInput} placeholder="Título, descrição, moeda" />
           <FormSelect label="Status" value={statusFilter} options={statusOptions} onChange={setStatusFilter} />
           <FormSelect label="Empresa" value={companyFilterId} options={filterCompanyOptions} onChange={setCompanyFilterId} />
-          <button type="button" onClick={() => setSearch(searchInput)} className="rounded-lg bg-action px-4 py-2 text-sm font-medium text-white">
+          <button type="button" onClick={() => setSearch(searchInput)} className="ui-primary-button">
             Buscar
           </button>
           <button
@@ -235,14 +235,14 @@ export function CrmDealsPage() {
               setStatusFilter('');
               setCompanyFilterId('');
             }}
-            className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700"
+            className="ui-secondary-button"
           >
             Limpar
           </button>
         </div>
 
         <PermissionGuard permission={editingId ? 'crm.deal.update' : 'crm.deal.create'}>
-          <div className="grid gap-3 rounded-xl border border-slate-200 bg-white p-4 md:grid-cols-2">
+          <div className="grid gap-3 ui-surface-panel p-4 md:grid-cols-2">
             <FormInput label="Título" value={title} onChange={setTitle} required />
             <FormInput label="Descrição" value={description} onChange={setDescription} />
             <FormInput label="Valor" value={amount} onChange={setAmount} type="number" />
@@ -258,18 +258,18 @@ export function CrmDealsPage() {
                 type="button"
                 disabled={saving || !title.trim()}
                 onClick={() => void handleSubmit()}
-                className="rounded-lg bg-action px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
+                className="ui-primary-button"
               >
                 {editingId ? 'Salvar negócio' : 'Criar negócio'}
               </button>
-              <button type="button" onClick={resetForm} className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700">
+              <button type="button" onClick={resetForm} className="ui-secondary-button">
                 Cancelar
               </button>
             </div>
           </div>
         </PermissionGuard>
 
-        {error ? <div className="rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{error}</div> : null}
+        {error ? <div className="ui-notice-error">{error}</div> : null}
 
         <DataTable columns={columns} rows={rows} getRowKey={(row) => row.id} loading={loading} emptyMessage="Nenhum negócio encontrado." />
 

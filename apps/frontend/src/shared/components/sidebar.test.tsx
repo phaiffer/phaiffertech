@@ -89,7 +89,9 @@ describe('Sidebar', () => {
     const { container, getByText } = render(<Sidebar />);
 
     expect(getByText('PhaifferTech')).toBeTruthy();
-    expect(getByText('Contracted products')).toBeTruthy();
+    expect(getByText('Platform')).toBeTruthy();
+    expect(getByText('CRM')).toBeTruthy();
+    expect(getByText('PetFlow')).toBeTruthy();
     expect(container.querySelector('a[href="/crm"]')).not.toBeNull();
     expect(container.querySelector('a[href="/crm/tasks"]')).not.toBeNull();
     expect(container.querySelector('a[href="/pet"]')).not.toBeNull();

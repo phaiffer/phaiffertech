@@ -749,13 +749,13 @@ export function PetMedicalRecordsPage() {
         />
 
         {appointmentContextLoading ? (
-          <div className="rounded-lg border border-sky-200 bg-sky-50 px-4 py-3 text-sm text-sky-700">
+          <div className="ui-notice-info">
             Carregando contexto clínico do atendimento selecionado...
           </div>
         ) : null}
 
         {appointmentContext ? (
-          <div className="rounded-lg border border-sky-200 bg-sky-50 px-4 py-3 text-sm text-sky-700">
+          <div className="ui-notice-info">
             <div className="font-medium">Atendimento em contexto clínico ativo.</div>
             <div>
               {appointmentContext.serviceName} para {appointmentContext.petName ?? appointmentContext.petId}
@@ -763,22 +763,25 @@ export function PetMedicalRecordsPage() {
               {' '}com {appointmentContext.professionalName ?? appointmentContext.professionalId} em{' '}
               {new Date(appointmentContext.scheduledAt).toLocaleString('pt-BR')}.
             </div>
-            <Link href="/pet/medical-records" className="mt-2 inline-flex text-sm font-medium text-action">
+            <Link
+              href="/pet/medical-records"
+              className="mt-2 inline-flex text-sm font-medium text-accent transition-colors duration-200 hover:text-foreground"
+            >
               Ver histórico completo
             </Link>
           </div>
         ) : null}
 
         {appointmentContextError ? (
-          <div className="rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+          <div className="ui-notice-error">
             {appointmentContextError}
           </div>
         ) : null}
 
         <PetLookupFeedback issues={lookupIssues} />
 
-        {error ? <div className="rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{error}</div> : null}
-        {success ? <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">{success}</div> : null}
+        {error ? <div className="ui-notice-error">{error}</div> : null}
+        {success ? <div className="ui-notice-success">{success}</div> : null}
 
         {canReadMedicalRecords ? (
           <PetClinicalTimelineSection

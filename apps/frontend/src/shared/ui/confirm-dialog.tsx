@@ -26,23 +26,27 @@ export function ConfirmDialog({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[color:var(--tenant-primary-soft)] px-[var(--space-4)]">
-      <div className="w-full max-w-md rounded-[var(--radius-xl)] bg-[color:var(--surface-1)] p-[var(--space-5)] shadow-card">
+    <div className="ui-dialog-overlay fixed inset-0 z-50 flex items-center justify-center px-[var(--space-4)]">
+      <div className="ui-dialog-panel w-full max-w-md p-[var(--space-5)]">
         <h3 className="text-[length:var(--font-size-md)] font-semibold text-[color:var(--app-shell-heading)]">{title}</h3>
-        {description ? <div className="mt-[var(--space-2)] text-[length:var(--font-size-sm)] text-[color:var(--app-shell-muted)]">{description}</div> : null}
+        {description ? (
+          <div className="mt-[var(--space-2)] text-[length:var(--font-size-sm)] text-[color:var(--app-shell-muted)]">
+            {description}
+          </div>
+        ) : null}
 
-        <div className="mt-[var(--space-5)] flex justify-end gap-[var(--space-2)]">
+        <div className="mt-[var(--space-5)] flex flex-col-reverse gap-[var(--space-2)] sm:flex-row sm:justify-end">
           <button
             type="button"
             onClick={onCancel}
-            className="rounded-[var(--radius-md)] border border-[color:var(--app-shell-border)] bg-[color:var(--surface-1)] px-[var(--space-3)] py-[var(--space-2)] text-[length:var(--font-size-sm)] font-medium text-[color:var(--app-shell-text)] transition duration-200 hover:shadow-card"
+            className="ui-secondary-button"
           >
             {cancelLabel}
           </button>
           <button
             type="button"
             onClick={onConfirm}
-            className="rounded-[var(--radius-md)] border border-[color:var(--color-danger)] bg-[color:var(--color-danger)] px-[var(--space-3)] py-[var(--space-2)] text-[length:var(--font-size-sm)] font-medium text-[color:var(--surface-1)] transition duration-200 hover:shadow-card"
+            className="ui-danger-button"
           >
             {confirmLabel}
           </button>

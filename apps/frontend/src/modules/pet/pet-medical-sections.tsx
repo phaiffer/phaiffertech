@@ -4,6 +4,12 @@ import { FormEventHandler } from 'react';
 import { petMedicalRoutePermissions } from '@/modules/pet/pet-medical-permissions';
 import { resolvePetLookupLabel } from '@/modules/pet/pet-lookup-feedback';
 import { PermissionGuard } from '@/shared/auth/PermissionGuard';
+import {
+  sharedCompactTextClass,
+  sharedInputClass,
+  sharedInputLabelClass,
+  sharedSectionHeadingClass
+} from '@/shared/components/public-visual-system';
 import { resolvePageItems, resolveTotalItems } from '@/shared/lib/pagination';
 import { PageResponse } from '@/shared/types/common';
 import {
@@ -41,8 +47,10 @@ function renderClinicalAppointmentLabel(
 
   return (
     <div>
-      <div className="font-medium text-slate-800">{appointmentServiceName ?? 'Atendimento vinculado'}</div>
-      <div className="text-xs text-slate-500">{appointmentDate}</div>
+      <div className="font-medium text-[color:var(--app-shell-heading)]">
+        {appointmentServiceName ?? 'Atendimento vinculado'}
+      </div>
+      <div className="text-xs text-[color:var(--app-shell-muted)]">{appointmentDate}</div>
     </div>
   );
 }
@@ -63,20 +71,20 @@ function resolveClinicalEventLabel(eventType: string) {
 function resolveClinicalEventBadgeClass(eventType: string) {
   switch (eventType) {
     case 'MEDICAL_RECORD':
-      return 'border-sky-200 bg-sky-50 text-sky-700';
+      return 'border-info/30 bg-info-muted text-info';
     case 'VACCINATION':
-      return 'border-emerald-200 bg-emerald-50 text-emerald-700';
+      return 'border-success/30 bg-success-muted text-success';
     case 'PRESCRIPTION':
-      return 'border-amber-200 bg-amber-50 text-amber-700';
+      return 'border-warning/30 bg-warning-muted text-warning';
     default:
-      return 'border-slate-200 bg-slate-100 text-slate-700';
+      return 'border-border bg-surface-inset text-muted';
   }
 }
 
 function renderClinicalContextSummary(data: PetClinicalTimeline) {
   if (data.appointmentId) {
     return (
-      <div className="rounded-lg border border-sky-200 bg-sky-50 px-4 py-3 text-sm text-sky-700">
+      <div className="ui-notice-info">
         <div className="font-medium">Timeline clinica do atendimento atual.</div>
         <div>
           {data.appointmentServiceName ?? 'Atendimento vinculado'}
@@ -90,7 +98,7 @@ function renderClinicalContextSummary(data: PetClinicalTimeline) {
 
   if (data.petName || data.petId) {
     return (
-      <div className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700">
+      <div className="ui-notice-neutral">
         <span className="font-medium">Timeline clinica do pet:</span>{' '}
         {data.petName ?? data.petId}
       </div>
@@ -117,26 +125,26 @@ export function PetClinicalTimelineSection({
   const hiddenCount = data ? Math.max(data.totalEvents - events.length, 0) : 0;
 
   return (
-    <section className="space-y-4 rounded-xl border border-slate-200 bg-white p-4">
+    <section className="space-y-4 ui-surface-panel p-4">
       <div>
-        <h3 className="text-base font-semibold text-slate-900">Clinical Timeline</h3>
-        <p className="text-sm text-slate-600">Leitura consolidada do historico recente por pet e atendimento.</p>
+        <h3 className={sharedSectionHeadingClass}>Clinical Timeline</h3>
+        <p className={sharedCompactTextClass}>Leitura consolidada do historico recente por pet e atendimento.</p>
       </div>
 
       {!ready ? (
-        <div className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700">
+        <div className="ui-notice-neutral">
           Selecione um pet ou abra um atendimento para visualizar a timeline clinica consolidada.
         </div>
       ) : null}
 
       {ready && loading ? (
-        <div className="rounded-lg border border-sky-200 bg-sky-50 px-4 py-3 text-sm text-sky-700">
+        <div className="ui-notice-info">
           Carregando timeline clinica...
         </div>
       ) : null}
 
       {ready && !loading && error ? (
-        <div className="rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+        <div className="ui-notice-error">
           {error}
         </div>
       ) : null}
@@ -146,7 +154,7 @@ export function PetClinicalTimelineSection({
       {ready && !loading && !error && events.length > 0 ? (
         <div className="space-y-3">
           {hiddenCount > 0 ? (
-            <div className="text-xs text-slate-500">
+            <div className="text-xs text-[color:var(--app-shell-muted)]">
               Exibindo os {events.length} eventos mais recentes de um total de {data?.totalEvents}.
             </div>
           ) : null}
@@ -160,7 +168,7 @@ export function PetClinicalTimelineSection({
       ) : null}
 
       {ready && !loading && !error && data && events.length === 0 ? (
-        <div className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700">
+        <div className="ui-notice-neutral">
           Nenhum evento clinico encontrado para o contexto atual.
         </div>
       ) : null}
@@ -170,19 +178,19 @@ export function PetClinicalTimelineSection({
 
 function ClinicalTimelineEventCard({ event }: { event: PetClinicalTimelineEvent }) {
   return (
-    <article className="rounded-xl border border-slate-200 p-4">
+    <article className="ui-surface-muted p-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="space-y-2">
           <div className="flex flex-wrap items-center gap-2">
             <span className={`rounded-full border px-2 py-1 text-xs font-medium ${resolveClinicalEventBadgeClass(event.eventType)}`}>
               {resolveClinicalEventLabel(event.eventType)}
             </span>
-            <h4 className="text-sm font-semibold text-slate-900">{event.title}</h4>
+            <h4 className="text-sm font-semibold text-[color:var(--app-shell-heading)]">{event.title}</h4>
           </div>
 
-          {event.summary ? <p className="text-sm text-slate-700">{event.summary}</p> : null}
+          {event.summary ? <p className="text-sm text-[color:var(--app-shell-text)]">{event.summary}</p> : null}
 
-          <div className="flex flex-wrap gap-3 text-xs text-slate-500">
+          <div className="flex flex-wrap gap-3 text-xs text-[color:var(--app-shell-muted)]">
             <span>{new Date(event.occurredAt).toLocaleString('pt-BR')}</span>
             {event.petName ? <span>Pet: {event.petName}</span> : null}
             {event.professionalName ? <span>Profissional: {event.professionalName}</span> : null}
@@ -211,13 +219,13 @@ type TextAreaFieldProps = {
 function TextAreaField({ label, value, onChange, required = false }: TextAreaFieldProps) {
   return (
     <label className="block text-sm">
-      <span className="mb-1 block font-medium text-slate-700">{label}</span>
+      <span className={sharedInputLabelClass}>{label}</span>
       <textarea
         value={value}
         onChange={(event) => onChange(event.target.value)}
         required={required}
         rows={3}
-        className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-action focus:outline-none"
+        className={`${sharedInputClass} min-h-24 resize-y`}
       />
     </label>
   );
@@ -255,7 +263,7 @@ export function PetMedicalFilters({
   onClear
 }: PetMedicalFiltersProps) {
   return (
-    <div className="grid gap-3 rounded-xl border border-slate-200 bg-white p-4 md:grid-cols-[1fr_240px_240px_auto_auto]">
+    <div className="grid gap-3 ui-surface-panel p-4 md:grid-cols-[1fr_240px_240px_auto_auto]">
       <SearchBar value={searchInput} onChange={onSearchInputChange} placeholder="Descrição, diagnóstico, medicação ou vacina" />
       <FormSelect label="Pet" value={petFilterId} options={petOptions} onChange={onPetFilterIdChange} disabled={petLookupUnavailable} />
       {showProfessionalFilter ? (
@@ -270,14 +278,14 @@ export function PetMedicalFilters({
       <button
         type="button"
         onClick={onSearch}
-        className="rounded-lg bg-action px-4 py-2 text-sm font-medium text-white"
+        className="ui-primary-button"
       >
         Buscar
       </button>
       <button
         type="button"
         onClick={onClear}
-        className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700"
+        className="ui-secondary-button"
       >
         Limpar
       </button>
@@ -337,7 +345,7 @@ export function createPetMedicalRecordColumns({
             <button
               type="button"
               onClick={() => onEdit(item)}
-              className="rounded-lg border border-slate-300 px-2 py-1 text-xs font-medium text-slate-700"
+              className="ui-inline-button"
             >
               Editar
             </button>
@@ -346,7 +354,7 @@ export function createPetMedicalRecordColumns({
             <button
               type="button"
               onClick={() => onDelete(item)}
-              className="rounded-lg border border-rose-300 px-2 py-1 text-xs font-medium text-rose-700"
+              className="ui-inline-danger-button"
             >
               Excluir
             </button>
@@ -397,7 +405,7 @@ export function createPetVaccinationColumns({
             <button
               type="button"
               onClick={() => onEdit(item)}
-              className="rounded-lg border border-slate-300 px-2 py-1 text-xs font-medium text-slate-700"
+              className="ui-inline-button"
             >
               Editar
             </button>
@@ -406,7 +414,7 @@ export function createPetVaccinationColumns({
             <button
               type="button"
               onClick={() => onDelete(item)}
-              className="rounded-lg border border-rose-300 px-2 py-1 text-xs font-medium text-rose-700"
+              className="ui-inline-danger-button"
             >
               Excluir
             </button>
@@ -469,7 +477,7 @@ export function createPetPrescriptionColumns({
             <button
               type="button"
               onClick={() => onEdit(item)}
-              className="rounded-lg border border-slate-300 px-2 py-1 text-xs font-medium text-slate-700"
+              className="ui-inline-button"
             >
               Editar
             </button>
@@ -478,7 +486,7 @@ export function createPetPrescriptionColumns({
             <button
               type="button"
               onClick={() => onDelete(item)}
-              className="rounded-lg border border-rose-300 px-2 py-1 text-xs font-medium text-rose-700"
+              className="ui-inline-danger-button"
             >
               Excluir
             </button>
@@ -547,10 +555,10 @@ export function PetMedicalRecordSection({
   onPageChange
 }: PetMedicalRecordSectionProps) {
   return (
-    <section className="space-y-4 rounded-xl border border-slate-200 bg-white p-4">
+    <section className="space-y-4 ui-surface-panel p-4">
       <div>
-        <h3 className="text-base font-semibold text-slate-900">Medical Records</h3>
-        <p className="text-sm text-slate-600">Histórico clínico e evoluções por pet.</p>
+        <h3 className={sharedSectionHeadingClass}>Medical Records</h3>
+        <p className={sharedCompactTextClass}>Histórico clínico e evoluções por pet.</p>
       </div>
 
       <PermissionGuard permission={editingId ? 'pet.medical-record.update' : 'pet.medical-record.create'}>
@@ -575,19 +583,19 @@ export function PetMedicalRecordSection({
 
           <div className="md:col-span-2 flex gap-2">
             {appointmentContextDescription ? (
-              <div className="w-full rounded-lg border border-sky-200 bg-sky-50 px-4 py-3 text-sm text-sky-700">
+              <div className="w-full ui-notice-info">
                 {appointmentContextDescription}
               </div>
             ) : null}
             {!formReady ? (
-              <div className="w-full rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">
+              <div className="w-full ui-notice-warning">
                 O formulário de prontuário depende das referências de pets e profissionais.
               </div>
             ) : null}
             <button
               type="submit"
               disabled={submitting || !formReady}
-              className="rounded-lg bg-action px-4 py-2 text-sm font-medium text-white disabled:opacity-60"
+              className="ui-primary-button"
             >
               {submitting ? 'Salvando...' : editingId ? 'Atualizar prontuário' : 'Criar prontuário'}
             </button>
@@ -595,7 +603,7 @@ export function PetMedicalRecordSection({
               <button
                 type="button"
                 onClick={onCancelEdit}
-                className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700"
+                className="ui-secondary-button"
               >
                 Cancelar edição
               </button>
@@ -664,10 +672,10 @@ export function PetVaccinationSection({
   onPageChange
 }: PetVaccinationSectionProps) {
   return (
-    <section className="space-y-4 rounded-xl border border-slate-200 bg-white p-4">
+    <section className="space-y-4 ui-surface-panel p-4">
       <div>
-        <h3 className="text-base font-semibold text-slate-900">Vaccinations</h3>
-        <p className="text-sm text-slate-600">Controle de aplicações e próximos reforços.</p>
+        <h3 className={sharedSectionHeadingClass}>Vaccinations</h3>
+        <p className={sharedCompactTextClass}>Controle de aplicações e próximos reforços.</p>
       </div>
 
       <PermissionGuard permission={editingId ? 'pet.vaccination.update' : 'pet.vaccination.create'}>
@@ -686,19 +694,19 @@ export function PetVaccinationSection({
 
           <div className="md:col-span-2 flex gap-2">
             {appointmentContextDescription ? (
-              <div className="w-full rounded-lg border border-sky-200 bg-sky-50 px-4 py-3 text-sm text-sky-700">
+              <div className="w-full ui-notice-info">
                 {appointmentContextDescription}
               </div>
             ) : null}
             {!formReady ? (
-              <div className="w-full rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">
+              <div className="w-full ui-notice-warning">
                 O formulário de vacinação depende da referência de pets.
               </div>
             ) : null}
             <button
               type="submit"
               disabled={submitting || !formReady}
-              className="rounded-lg bg-action px-4 py-2 text-sm font-medium text-white disabled:opacity-60"
+              className="ui-primary-button"
             >
               {submitting ? 'Salvando...' : editingId ? 'Atualizar vacinação' : 'Criar vacinação'}
             </button>
@@ -706,7 +714,7 @@ export function PetVaccinationSection({
               <button
                 type="button"
                 onClick={onCancelEdit}
-                className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700"
+                className="ui-secondary-button"
               >
                 Cancelar edição
               </button>
@@ -781,10 +789,10 @@ export function PetPrescriptionSection({
   onPageChange
 }: PetPrescriptionSectionProps) {
   return (
-    <section className="space-y-4 rounded-xl border border-slate-200 bg-white p-4">
+    <section className="space-y-4 ui-surface-panel p-4">
       <div>
-        <h3 className="text-base font-semibold text-slate-900">Prescriptions</h3>
-        <p className="text-sm text-slate-600">Prescrições vinculadas ao histórico do atendimento.</p>
+        <h3 className={sharedSectionHeadingClass}>Prescriptions</h3>
+        <p className={sharedCompactTextClass}>Prescrições vinculadas ao histórico do atendimento.</p>
       </div>
 
       <PermissionGuard permission={editingId ? 'pet.prescription.update' : 'pet.prescription.create'}>
@@ -811,19 +819,19 @@ export function PetPrescriptionSection({
 
           <div className="md:col-span-2 flex gap-2">
             {appointmentContextDescription ? (
-              <div className="w-full rounded-lg border border-sky-200 bg-sky-50 px-4 py-3 text-sm text-sky-700">
+              <div className="w-full ui-notice-info">
                 {appointmentContextDescription}
               </div>
             ) : null}
             {!formReady ? (
-              <div className="w-full rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">
+              <div className="w-full ui-notice-warning">
                 O formulário de prescrição depende das referências de pets e profissionais.
               </div>
             ) : null}
             <button
               type="submit"
               disabled={submitting || !formReady}
-              className="rounded-lg bg-action px-4 py-2 text-sm font-medium text-white disabled:opacity-60"
+              className="ui-primary-button"
             >
               {submitting ? 'Salvando...' : editingId ? 'Atualizar prescrição' : 'Criar prescrição'}
             </button>
@@ -831,7 +839,7 @@ export function PetPrescriptionSection({
               <button
                 type="button"
                 onClick={onCancelEdit}
-                className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700"
+                className="ui-secondary-button"
               >
                 Cancelar edição
               </button>
@@ -850,7 +858,7 @@ export function PetPrescriptionSection({
 
 export function PetMedicalPageFallback() {
   return (
-    <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">
+    <div className="ui-notice-warning">
       Você não possui permissão para visualizar workflows médicos do Pet.
     </div>
   );

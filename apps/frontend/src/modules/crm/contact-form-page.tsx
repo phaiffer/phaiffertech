@@ -165,21 +165,21 @@ export function ContactFormPage({ contactId }: ContactFormPageProps) {
   return (
     <PermissionGuard
       permission={requiredPermission}
-      fallback={<div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">Você não possui permissão para esta ação.</div>}
+      fallback={<div className="ui-notice-warning">Você não possui permissão para esta ação.</div>}
     >
       <div className="space-y-5">
         <PageTitle title={title} description="Formulário de cadastro/edição de contato CRM." />
 
         <div className="flex justify-end">
-          <Link href="/crm/contacts" className="rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700">
+          <Link href="/crm/contacts" className="ui-secondary-button">
             Voltar para listagem
           </Link>
         </div>
 
         {loading ? (
-          <div className="rounded-lg border border-slate-200 bg-white px-4 py-6 text-sm text-slate-600">Carregando contato...</div>
+          <div className="ui-surface-panel px-4 py-6 text-sm text-[color:var(--app-shell-muted)]">Carregando contato...</div>
         ) : (
-          <form onSubmit={handleSubmit} className="grid gap-3 rounded-xl border border-slate-200 bg-white p-4 md:grid-cols-2">
+          <form onSubmit={handleSubmit} className="grid gap-3 ui-surface-panel p-4 md:grid-cols-2">
             <FormInput label="Nome" value={firstName} onChange={setFirstName} required />
             <FormInput label="Sobrenome" value={lastName} onChange={setLastName} />
             <FormInput label="Email" value={email} onChange={setEmail} type="email" />
@@ -200,7 +200,7 @@ export function ContactFormPage({ contactId }: ContactFormPageProps) {
                   value={manualCompany}
                   onChange={setManualCompany}
                 />
-                <p className="text-xs text-slate-500">
+                <p className="text-xs text-[color:var(--app-shell-muted)]">
                   Use este campo apenas quando o contato ainda não estiver vinculado a uma company cadastrada.
                 </p>
               </div>
@@ -210,7 +210,7 @@ export function ContactFormPage({ contactId }: ContactFormPageProps) {
               <button
                 type="submit"
                 disabled={submitting}
-                className="rounded-lg bg-action px-4 py-2 text-sm font-medium text-white disabled:opacity-60"
+                className="ui-primary-button"
               >
                 {submitting ? 'Salvando...' : isEdit ? 'Atualizar contato' : 'Criar contato'}
               </button>
@@ -218,8 +218,8 @@ export function ContactFormPage({ contactId }: ContactFormPageProps) {
           </form>
         )}
 
-        {error ? <div className="rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{error}</div> : null}
-        {success ? <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">{success}</div> : null}
+        {error ? <div className="ui-notice-error">{error}</div> : null}
+        {success ? <div className="ui-notice-success">{success}</div> : null}
       </div>
     </PermissionGuard>
   );

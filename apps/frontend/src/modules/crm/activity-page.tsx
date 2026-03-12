@@ -167,8 +167,8 @@ export function CrmActivityPage() {
 
         return (
           <div>
-            <p className="font-medium text-slate-900">{buildReferenceHeadline(entity)}</p>
-            <p className="text-xs text-slate-500">{buildReferenceContextLine(entity, row.entityId)}</p>
+            <p className="font-medium text-[color:var(--app-shell-heading)]">{buildReferenceHeadline(entity)}</p>
+            <p className="text-xs text-[color:var(--app-shell-muted)]">{buildReferenceContextLine(entity, row.entityId)}</p>
           </div>
         );
       }
@@ -190,8 +190,8 @@ export function CrmActivityPage() {
 
         return (
           <div>
-            <p className="font-medium text-slate-900">{buildReferenceHeadline(relation, row.relatedDisplayName)}</p>
-            <p className="text-xs text-slate-500">{buildReferenceContextLine(relation, row.relatedId, row.relatedDisplayContext)}</p>
+            <p className="font-medium text-[color:var(--app-shell-heading)]">{buildReferenceHeadline(relation, row.relatedDisplayName)}</p>
+            <p className="text-xs text-[color:var(--app-shell-muted)]">{buildReferenceContextLine(relation, row.relatedId, row.relatedDisplayContext)}</p>
           </div>
         );
       }
@@ -204,12 +204,12 @@ export function CrmActivityPage() {
   return (
     <PermissionGuard
       permission="crm.activity.read"
-      fallback={<div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">Você não possui permissão para visualizar a atividade do CRM.</div>}
+      fallback={<div className="ui-notice-warning">Você não possui permissão para visualizar a atividade do CRM.</div>}
     >
       <div className="space-y-5">
         <PageTitle title="CRM Activity" description="Feed auditável com contexto canônico da entidade CRM e do vínculo relacionado quando houver referência cross-module." />
 
-        <div className="grid gap-3 rounded-xl border border-slate-200 bg-white p-4 xl:grid-cols-[180px_220px_auto]">
+        <div className="grid gap-3 ui-surface-panel p-4 xl:grid-cols-[180px_220px_auto]">
           <FormSelect
             label="Tipo de vínculo"
             value={relationTypeFilter}
@@ -235,13 +235,13 @@ export function CrmActivityPage() {
               setRelationTypeFilter('');
               setRelationIdFilter('');
             }}
-            className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700"
+            className="ui-secondary-button"
           >
             Limpar
           </button>
         </div>
 
-        {error ? <div className="rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{error}</div> : null}
+        {error ? <div className="ui-notice-error">{error}</div> : null}
 
         <DataTable columns={columns} rows={rows} getRowKey={(row) => row.id} loading={loading} emptyMessage="Nenhum evento encontrado." />
 

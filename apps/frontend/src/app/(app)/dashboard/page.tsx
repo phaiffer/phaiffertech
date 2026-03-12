@@ -27,7 +27,7 @@ import { PageTitle } from '@/shared/ui/page-title';
 
 function DashboardNotice({ message }: { message: string }) {
   return (
-    <div className="rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+    <div className="ui-notice-error">
       {message}
     </div>
   );

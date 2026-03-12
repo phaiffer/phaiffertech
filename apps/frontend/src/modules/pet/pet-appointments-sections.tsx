@@ -101,7 +101,7 @@ export function PetAppointmentsFilters({
   onClear
 }: PetAppointmentsFiltersProps) {
   return (
-    <div className="grid gap-3 rounded-xl border border-slate-200 bg-white p-4 md:grid-cols-[1fr_180px_220px_220px_220px_220px_auto_auto]">
+    <div className="grid gap-3 ui-surface-panel p-4 md:grid-cols-[1fr_180px_220px_220px_220px_220px_auto_auto]">
       <SearchBar value={searchInput} onChange={onSearchInputChange} placeholder="Serviço, status, notas" />
       <FormSelect label="Status" value={statusFilter} options={petAppointmentStatusOptions} onChange={onStatusFilterChange} />
       <FormSelect label="Cliente" value={clientFilterId} options={clientOptions} onChange={onClientFilterIdChange} disabled={clientsLookupUnavailable} />
@@ -117,14 +117,14 @@ export function PetAppointmentsFilters({
       <button
         type="button"
         onClick={onSearch}
-        className="rounded-lg bg-action px-4 py-2 text-sm font-medium text-white"
+        className="ui-primary-button"
       >
         Buscar
       </button>
       <button
         type="button"
         onClick={onClear}
-        className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700"
+        className="ui-secondary-button"
       >
         Limpar
       </button>
@@ -193,7 +193,7 @@ export function PetAppointmentForm({
 }: PetAppointmentFormProps) {
   return (
     <PermissionGuard permission={editingId ? 'pet.appointment.update' : 'pet.appointment.create'}>
-      <form onSubmit={onSubmit} className="grid gap-3 rounded-xl border border-slate-200 bg-white p-4 md:grid-cols-3">
+      <form onSubmit={onSubmit} className="grid gap-3 ui-surface-panel p-4 md:grid-cols-3">
         <FormSelect label="Cliente" value={clientId} options={formClientOptions} onChange={onClientIdChange} disabled={clientsLookupUnavailable} />
         <FormSelect label="Pet" value={petId} options={formPetOptions} onChange={onPetIdChange} disabled={profilesLookupUnavailable} />
         <FormSelect label="Serviço" value={serviceId} options={formServiceOptions} onChange={onServiceIdChange} disabled={servicesLookupUnavailable} />
@@ -210,14 +210,14 @@ export function PetAppointmentForm({
 
         <div className="md:col-span-3 flex gap-2">
           {!appointmentReferencesReady ? (
-            <div className="w-full rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">
+            <div className="w-full ui-notice-warning">
               O formulário depende de clientes, pets, serviços e profissionais carregados para funcionar corretamente.
             </div>
           ) : null}
           <button
             type="submit"
             disabled={submitting || !appointmentReferencesReady}
-            className="rounded-lg bg-action px-4 py-2 text-sm font-medium text-white disabled:opacity-60"
+            className="ui-primary-button"
           >
             {submitting ? 'Salvando...' : editingId ? 'Atualizar atendimento' : 'Criar atendimento'}
           </button>
@@ -225,7 +225,7 @@ export function PetAppointmentForm({
             <button
               type="button"
               onClick={onCancelEdit}
-              className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700"
+              className="ui-secondary-button"
             >
               Cancelar edição
             </button>
@@ -283,8 +283,8 @@ export function createPetAppointmentColumns({
 
         return (
           <div>
-            <div className="font-medium text-slate-800">{resolveAppointmentCareState(appointment)}</div>
-            <div className="text-xs text-slate-500">
+            <div className="font-medium text-[color:var(--app-shell-heading)]">{resolveAppointmentCareState(appointment)}</div>
+            <div className="text-xs text-[color:var(--app-shell-muted)]">
               Prontuários {medicalRecordCount} | Vacinas {vaccinationCount} | Prescrições {prescriptionCount}
             </div>
           </div>
@@ -337,7 +337,7 @@ export function createPetAppointmentColumns({
             <button
               type="button"
               onClick={() => onEdit(appointment)}
-              className="rounded-lg border border-slate-300 px-2 py-1 text-xs font-medium text-slate-700"
+              className="ui-inline-button"
             >
               Editar
             </button>
@@ -347,7 +347,7 @@ export function createPetAppointmentColumns({
             <button
               type="button"
               onClick={() => onDelete(appointment)}
-              className="rounded-lg border border-rose-300 px-2 py-1 text-xs font-medium text-rose-700"
+              className="ui-inline-danger-button"
             >
               Excluir
             </button>

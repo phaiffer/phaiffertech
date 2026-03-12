@@ -268,6 +268,171 @@ body {
   padding-inline: 2rem;
 }
 
+.ui-surface-panel {
+  border: 1px solid var(--app-shell-border);
+  border-radius: var(--radius-xl);
+  background: var(--surface-1);
+  box-shadow: var(--shadow-xs);
+}
+
+.ui-surface-muted {
+  border: 1px solid var(--app-shell-border);
+  border-radius: var(--radius-xl);
+  background: var(--app-shell-panel-muted);
+  box-shadow: var(--shadow-xs);
+}
+
+.ui-primary-button,
+.ui-secondary-button,
+.ui-danger-button,
+.ui-inline-button,
+.ui-inline-danger-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  border-radius: var(--radius-lg);
+  border: 1px solid transparent;
+  font-weight: 600;
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    color 0.2s ease,
+    opacity 0.2s ease;
+}
+
+.ui-primary-button,
+.ui-secondary-button,
+.ui-danger-button {
+  min-height: 2.75rem;
+  padding: 0.625rem 1rem;
+  font-size: var(--font-size-sm);
+}
+
+.ui-inline-button,
+.ui-inline-danger-button {
+  min-height: 2rem;
+  padding: 0.375rem 0.625rem;
+  font-size: var(--font-size-xs);
+}
+
+.ui-primary-button {
+  background: var(--accent);
+  color: var(--accent-foreground);
+  box-shadow: var(--shadow-xs);
+}
+
+.ui-primary-button:hover {
+  box-shadow: var(--shadow-sm);
+  opacity: 0.94;
+}
+
+.ui-secondary-button,
+.ui-inline-button {
+  border-color: var(--app-shell-border);
+  background: var(--surface-1);
+  color: var(--app-shell-text);
+  box-shadow: var(--shadow-xs);
+}
+
+.ui-secondary-button:hover,
+.ui-inline-button:hover {
+  border-color: var(--accent);
+  background: var(--accent-muted);
+  box-shadow: var(--shadow-sm);
+}
+
+.ui-danger-button,
+.ui-inline-danger-button {
+  border-color: color-mix(in srgb, var(--color-danger) 28%, transparent);
+  background: var(--destructive-muted);
+  color: var(--color-danger);
+}
+
+.ui-danger-button:hover,
+.ui-inline-danger-button:hover {
+  border-color: var(--color-danger);
+  box-shadow: var(--shadow-sm);
+}
+
+.ui-primary-button:disabled,
+.ui-secondary-button:disabled,
+.ui-danger-button:disabled,
+.ui-inline-button:disabled,
+.ui-inline-danger-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+  box-shadow: none;
+}
+
+.ui-notice-warning,
+.ui-notice-error,
+.ui-notice-success,
+.ui-notice-info,
+.ui-notice-neutral {
+  border: 1px solid var(--app-shell-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
+  font-size: var(--font-size-sm);
+  line-height: 1.5;
+}
+
+.ui-notice-warning {
+  border-color: color-mix(in srgb, var(--warning) 26%, transparent);
+  background: var(--warning-muted);
+  color: var(--warning);
+}
+
+.ui-notice-error {
+  border-color: color-mix(in srgb, var(--destructive) 26%, transparent);
+  background: var(--destructive-muted);
+  color: var(--destructive);
+}
+
+.ui-notice-success {
+  border-color: color-mix(in srgb, var(--success) 26%, transparent);
+  background: var(--success-muted);
+  color: var(--success);
+}
+
+.ui-notice-info {
+  border-color: color-mix(in srgb, var(--info) 26%, transparent);
+  background: var(--info-muted);
+  color: var(--info);
+}
+
+.ui-notice-neutral {
+  background: var(--app-shell-panel-muted);
+  color: var(--app-shell-muted);
+}
+
+.ui-dialog-overlay {
+  background: color-mix(in srgb, var(--tenant-primary-soft) 78%, transparent);
+  backdrop-filter: blur(10px);
+}
+
+.ui-dialog-panel {
+  border: 1px solid var(--app-shell-border);
+  border-radius: var(--radius-xl);
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--accent) 4%, transparent), transparent 140px),
+    var(--surface-1);
+  box-shadow: var(--shadow-lg);
+}
+
+.bg-action {
+  background-color: var(--accent);
+}
+
+.text-action {
+  color: var(--accent);
+}
+
+.focus\:border-action:focus {
+  border-color: var(--accent);
+}
+
 /* ═══════════════════════════════════════════════════════════════════════════
    Animation Utilities
    ═══════════════════════════════════════════════════════════════════════════ */

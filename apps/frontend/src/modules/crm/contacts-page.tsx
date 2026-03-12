@@ -152,7 +152,7 @@ export function CrmContactsPage() {
           <PermissionGuard permission="crm.contact.update">
             <Link
               href={`/crm/contacts/${contact.id}`}
-              className="rounded-lg border border-slate-300 px-2 py-1 text-xs font-medium text-slate-700"
+              className="ui-inline-button"
             >
               Editar
             </Link>
@@ -162,7 +162,7 @@ export function CrmContactsPage() {
             <button
               type="button"
               onClick={() => setDeleteCandidate(contact)}
-              className="rounded-lg border border-rose-300 px-2 py-1 text-xs font-medium text-rose-700"
+              className="ui-inline-danger-button"
             >
               Excluir
             </button>
@@ -175,7 +175,7 @@ export function CrmContactsPage() {
   return (
     <PermissionGuard
       permission="crm.contact.read"
-      fallback={<div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">Você não possui permissão para visualizar contatos.</div>}
+      fallback={<div className="ui-notice-warning">Você não possui permissão para visualizar contatos.</div>}
     >
       <div className="space-y-5">
         <PageTitle
@@ -183,7 +183,7 @@ export function CrmContactsPage() {
           description="Listagem de contatos com busca, filtros e ações controladas por permissão."
         />
 
-        <div className="grid gap-3 rounded-xl border border-slate-200 bg-white p-4 md:grid-cols-[1fr_180px_220px_auto_auto]">
+        <div className="grid gap-3 ui-surface-panel p-4 md:grid-cols-[1fr_180px_220px_auto_auto]">
           <SearchBar
             value={searchInput}
             onChange={setSearchInput}
@@ -205,7 +205,7 @@ export function CrmContactsPage() {
           <button
             type="button"
             onClick={() => setSearch(searchInput)}
-            className="rounded-lg bg-action px-4 py-2 text-sm font-medium text-white"
+            className="ui-primary-button"
           >
             Buscar
           </button>
@@ -217,7 +217,7 @@ export function CrmContactsPage() {
               setStatusFilter('');
               setCompanyFilterId('');
             }}
-            className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700"
+            className="ui-secondary-button"
           >
             Limpar
           </button>
@@ -227,7 +227,7 @@ export function CrmContactsPage() {
           <PermissionGuard permission="crm.contact.create">
             <Link
               href="/crm/contacts/new"
-              className="rounded-lg bg-action px-4 py-2 text-sm font-medium text-white"
+              className="ui-primary-button"
             >
               Novo contato
             </Link>
@@ -235,7 +235,7 @@ export function CrmContactsPage() {
         </div>
 
         {error ? (
-          <div className="rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{error}</div>
+          <div className="ui-notice-error">{error}</div>
         ) : null}
 
         <DataTable

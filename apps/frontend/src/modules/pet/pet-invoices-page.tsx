@@ -251,7 +251,7 @@ export function PetInvoicesPage() {
             <button
               type="button"
               onClick={() => beginEdit(item)}
-              className="rounded-lg border border-slate-300 px-2 py-1 text-xs font-medium text-slate-700"
+              className="ui-inline-button"
             >
               Editar
             </button>
@@ -260,7 +260,7 @@ export function PetInvoicesPage() {
             <button
               type="button"
               onClick={() => setDeleteCandidate(item)}
-              className="rounded-lg border border-rose-300 px-2 py-1 text-xs font-medium text-rose-700"
+              className="ui-inline-danger-button"
             >
               Excluir
             </button>
@@ -273,19 +273,19 @@ export function PetInvoicesPage() {
   return (
     <PermissionGuard
       permission="pet.invoice.read"
-      fallback={<div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">Você não possui permissão para visualizar faturas.</div>}
+      fallback={<div className="ui-notice-warning">Você não possui permissão para visualizar faturas.</div>}
     >
       <div className="space-y-5">
         <PageTitle title="Pet Invoices" description="Faturamento básico por cliente dentro do escopo comercial do PET." />
 
-        <div className="grid gap-3 rounded-xl border border-slate-200 bg-white p-4 md:grid-cols-[1fr_240px_180px_auto_auto]">
+        <div className="grid gap-3 ui-surface-panel p-4 md:grid-cols-[1fr_240px_180px_auto_auto]">
           <SearchBar value={searchInput} onChange={setSearchInput} placeholder="Pesquisar por status" />
           <FormSelect label="Cliente" value={clientFilterId} options={clientOptions} onChange={setClientFilterId} disabled={clientsLookupUnavailable} />
           <FormSelect label="Status" value={statusFilter} options={statusOptions} onChange={setStatusFilter} />
           <button
             type="button"
             onClick={() => setSearch(searchInput)}
-            className="rounded-lg bg-action px-4 py-2 text-sm font-medium text-white"
+            className="ui-primary-button"
           >
             Buscar
           </button>
@@ -297,7 +297,7 @@ export function PetInvoicesPage() {
               setClientFilterId('');
               setStatusFilter('');
             }}
-            className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700"
+            className="ui-secondary-button"
           >
             Limpar
           </button>
@@ -306,7 +306,7 @@ export function PetInvoicesPage() {
         <PetLookupFeedback issues={lookupIssues} />
 
         <PermissionGuard permission={editingId ? 'pet.invoice.update' : 'pet.invoice.create'}>
-          <form onSubmit={handleSubmit} className="grid gap-3 rounded-xl border border-slate-200 bg-white p-4 md:grid-cols-2">
+          <form onSubmit={handleSubmit} className="grid gap-3 ui-surface-panel p-4 md:grid-cols-2">
             <FormSelect label="Cliente" value={clientId} options={formClientOptions} onChange={setClientId} disabled={clientsLookupUnavailable} />
             <FormInput label="Valor total" value={totalAmount} onChange={setTotalAmount} type="number" required />
             <FormSelect label="Status" value={status} options={formStatusOptions} onChange={setStatus} />
@@ -314,14 +314,14 @@ export function PetInvoicesPage() {
 
             <div className="md:col-span-2 flex gap-2">
               {clientsLookupUnavailable ? (
-                <div className="w-full rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">
+                <div className="w-full ui-notice-warning">
                   O formulário depende da referência de clientes para emitir ou editar faturas.
                 </div>
               ) : null}
               <button
                 type="submit"
                 disabled={submitting || clientsLookupUnavailable}
-                className="rounded-lg bg-action px-4 py-2 text-sm font-medium text-white disabled:opacity-60"
+                className="ui-primary-button"
               >
                 {submitting ? 'Salvando...' : editingId ? 'Atualizar fatura' : 'Criar fatura'}
               </button>
@@ -329,7 +329,7 @@ export function PetInvoicesPage() {
                 <button
                   type="button"
                   onClick={resetForm}
-                  className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700"
+                  className="ui-secondary-button"
                 >
                   Cancelar edição
                 </button>
@@ -338,8 +338,8 @@ export function PetInvoicesPage() {
           </form>
         </PermissionGuard>
 
-        {error ? <div className="rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{error}</div> : null}
-        {success ? <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">{success}</div> : null}
+        {error ? <div className="ui-notice-error">{error}</div> : null}
+        {success ? <div className="ui-notice-success">{success}</div> : null}
 
         <DataTable columns={columns} rows={rows} getRowKey={(row) => row.id} loading={loading} emptyMessage="Nenhuma fatura encontrada." />
         <Pagination

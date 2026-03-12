@@ -15,13 +15,13 @@ export default function Error({
   }, [error]);
 
   return (
-    <div className="mx-auto mt-10 w-full max-w-xl rounded-xl border border-rose-200 bg-white p-6 shadow-card">
-      <h2 className="text-xl font-semibold text-rose-700">Falha ao carregar esta página</h2>
-      <p className="mt-2 text-sm text-slate-600">Tente novamente em alguns instantes.</p>
+    <div className="ui-surface-panel mx-auto mt-10 w-full max-w-xl p-6">
+      <h2 className="text-xl font-semibold text-destructive">Falha ao carregar esta página</h2>
+      <p className="mt-2 text-sm text-[color:var(--app-shell-muted)]">Tente novamente em alguns instantes.</p>
       <button
         type="button"
         onClick={reset}
-        className="mt-5 rounded-lg bg-ink px-4 py-2 text-sm font-medium text-white hover:bg-slate-800"
+        className="ui-primary-button mt-5"
       >
         Recarregar
       </button>

@@ -69,7 +69,7 @@ export default function UsersPage() {
   return (
     <PermissionGuard
       permission="USER_READ"
-      fallback={<div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">Você não possui permissão para visualizar usuários.</div>}
+      fallback={<div className="ui-notice-warning">Você não possui permissão para visualizar usuários.</div>}
     >
       <div className="space-y-5">
         <PageTitle title="Users" description="Gestão inicial de usuários por tenant com RBAC." />
@@ -124,7 +124,7 @@ export default function UsersPage() {
         </PermissionGuard>
 
         {error ? (
-          <div className="rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{error}</div>
+          <div className="ui-notice-error">{error}</div>
         ) : null}
 
         <Table headers={['Nome', 'E-mail', 'Role', 'Ativo']}>

@@ -370,7 +370,7 @@ export function PetAppointmentsPage() {
   return (
     <PermissionGuard
       permission="pet.appointment.read"
-      fallback={<div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">Você não possui permissão para visualizar atendimentos.</div>}
+      fallback={<div className="ui-notice-warning">Você não possui permissão para visualizar atendimentos.</div>}
     >
       <div className="space-y-5">
         <PageTitle title="Pet Appointments" description="Agenda de atendimentos com filtros e gerenciamento completo." />
@@ -440,8 +440,8 @@ export function PetAppointmentsPage() {
           onCancelEdit={resetForm}
         />
 
-        {error ? <div className="rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{error}</div> : null}
-        {success ? <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">{success}</div> : null}
+        {error ? <div className="ui-notice-error">{error}</div> : null}
+        {success ? <div className="ui-notice-success">{success}</div> : null}
 
         <DataTable
           columns={columns}

@@ -23,14 +23,14 @@ export function DataTable<T>({
   emptyMessage = 'Nenhum registro encontrado.'
 }: DataTableProps<T>) {
   return (
-    <div className="overflow-hidden rounded-[var(--radius-lg)] border border-[color:var(--app-shell-border)] bg-[color:var(--surface-1)]">
+    <div className="overflow-x-auto rounded-[var(--radius-xl)] border border-[color:var(--app-shell-border)] bg-[color:var(--surface-1)] shadow-xs">
       <table className="min-w-full divide-y divide-[color:var(--app-shell-border)]">
         <thead className="bg-[color:var(--surface-2)]">
           <tr>
             {columns.map((column) => (
               <th
                 key={column.key}
-                className={`px-4 py-2 text-left text-[length:var(--font-size-xs)] font-semibold uppercase tracking-wide text-[color:var(--app-shell-muted)] ${column.className ?? ''}`}
+                className={`px-4 py-3 text-left text-[length:var(--font-size-xs)] font-semibold uppercase tracking-[0.16em] text-[color:var(--app-shell-muted)] ${column.className ?? ''}`}
               >
                 {column.header}
               </th>
@@ -42,7 +42,7 @@ export function DataTable<T>({
             <tr>
               <td
                 colSpan={columns.length}
-                className="px-4 py-6 text-center text-[length:var(--font-size-sm)] text-[color:var(--app-shell-muted)]"
+                className="px-4 py-8 text-center text-[length:var(--font-size-sm)] text-[color:var(--app-shell-muted)]"
               >
                 Carregando...
               </td>
@@ -51,16 +51,22 @@ export function DataTable<T>({
             <tr>
               <td
                 colSpan={columns.length}
-                className="px-4 py-6 text-center text-[length:var(--font-size-sm)] text-[color:var(--app-shell-muted)]"
+                className="px-4 py-8 text-center text-[length:var(--font-size-sm)] text-[color:var(--app-shell-muted)]"
               >
                 {emptyMessage}
               </td>
             </tr>
           ) : (
             rows.map((row) => (
-              <tr key={getRowKey(row)}>
+              <tr
+                key={getRowKey(row)}
+                className="align-top transition-colors duration-200 hover:bg-[color:var(--accent-muted)]"
+              >
                 {columns.map((column) => (
-                  <td key={`${getRowKey(row)}-${column.key}`} className={`px-4 py-2 ${column.className ?? ''}`}>
+                  <td
+                    key={`${getRowKey(row)}-${column.key}`}
+                    className={`px-4 py-3 ${column.className ?? ''}`}
+                  >
                     {column.render(row)}
                   </td>
                 ))}
