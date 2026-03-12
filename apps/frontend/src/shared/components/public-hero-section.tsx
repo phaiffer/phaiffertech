@@ -70,7 +70,7 @@ export function PublicHeroSection({
 
           <div className="relative h-72 w-72 drop-shadow-lg xl:h-80 xl:w-80">
             <Image
-              src="/logo.png"
+              src="/PhaifferTech_logo.png"
               alt="PhaifferTech logo"
               fill
               priority

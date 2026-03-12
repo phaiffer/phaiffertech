@@ -90,7 +90,7 @@ export default function LoginPage() {
               style={visualContext.brandMarkStyle}
             >
               <Image
-                src="/logo.png"
+                src="/PhaifferTech_logo.png"
                 alt="PhaifferTech"
                 width={34}
                 height={34}

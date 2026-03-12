@@ -90,7 +90,7 @@ export function PublicSiteShell({ children }: PublicSiteShellProps) {
           <Link href="/" className="group inline-flex items-center gap-3">
             <div className={`${publicCardSurfaceClass} flex h-11 w-11 items-center justify-center overflow-hidden p-1.5`}>
               <Image
-                src="/logo.png"
+                src="/PhaifferTech_logo.png"
                 alt="PhaifferTech"
                 width={40}
                 height={40}
