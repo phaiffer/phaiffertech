@@ -8,7 +8,6 @@ import { PermissionGuard } from '@/shared/auth/PermissionGuard';
 import { ApiClientError } from '@/shared/lib/http';
 import { crmService } from '@/shared/services/crm-service';
 import { CrmDashboardSummary } from '@/shared/types/crm';
-import { PageTitle } from '@/shared/ui/page-title';
 
 export function CrmDashboardPage() {
   const [summary, setSummary] = useState<CrmDashboardSummary | null>(null);
@@ -35,18 +34,46 @@ export function CrmDashboardPage() {
   return (
     <PermissionGuard
       permission="crm.dashboard.read"
-      fallback={<div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">Você não possui permissão para visualizar o dashboard do CRM.</div>}
+      fallback={
+        <div className="rounded-lg border border-warning/30 bg-warning-muted px-4 py-3 text-sm text-warning">
+          Você não possui permissão para visualizar o dashboard do CRM.
+        </div>
+      }
     >
-      <div className="space-y-5">
-        <PageTitle title="CRM Dashboard" description="Visão operacional de vendas com pipeline, qualificação e atividade recente." />
+      <div className="space-y-6">
+        {/* Page Header */}
+        <div>
+          <p className="mb-2 text-xs font-medium uppercase tracking-wider text-accent">
+            Operações comerciais
+          </p>
+          <h1 className="text-2xl font-semibold text-foreground">Dashboard CRM</h1>
+          <p className="mt-1 text-sm text-muted">
+            Visão operacional de vendas com pipeline, qualificação e atividade recente.
+          </p>
+        </div>
 
-        {loading ? <div className="rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm text-slate-500">Carregando dashboard...</div> : null}
-        {error ? <div className="rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{error}</div> : null}
+        {/* Loading State */}
+        {loading && (
+          <div className="rounded-lg border border-border bg-surface px-4 py-3 text-sm text-muted">
+            Carregando dashboard...
+          </div>
+        )}
 
+        {/* Error State */}
+        {error && (
+          <div className="rounded-lg border border-destructive/30 bg-destructive-muted px-4 py-3 text-sm text-destructive">
+            {error}
+          </div>
+        )}
+
+        {/* Dashboard Content */}
         {summary ? (
           <>
-            <MetricGrid cards={summary.summaryCards} columns="md:grid-cols-2 xl:grid-cols-5" />
-            <div className="space-y-4">
+            {/* Summary Metrics */}
+            <MetricGrid cards={summary.summaryCards} columns="sm:grid-cols-2 lg:grid-cols-5" />
+
+            {/* Sections */}
+            <div className="space-y-6">
               {summary.sections.map((section) => (
                 <DashboardSection key={section.key} section={section} />
               ))}

@@ -3,27 +3,27 @@ type StatusBadgeProps = {
 };
 
 const toneMap: Record<string, string> = {
-  ok: 'border-emerald-200 bg-emerald-50 text-emerald-700',
-  active: 'border-emerald-200 bg-emerald-50 text-emerald-700',
-  completed: 'border-emerald-200 bg-emerald-50 text-emerald-700',
-  paid: 'border-emerald-200 bg-emerald-50 text-emerald-700',
-  info: 'border-sky-200 bg-sky-50 text-sky-700',
-  neutral: 'border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-panel-muted)] text-[color:var(--app-shell-text)]',
-  restricted: 'border-slate-300 bg-slate-100 text-slate-700',
-  locked: 'border-slate-300 bg-slate-100 text-slate-700',
-  unavailable: 'border-slate-300 bg-slate-100 text-slate-700',
-  'no permission': 'border-slate-300 bg-slate-100 text-slate-700',
-  'feature disabled': 'border-slate-300 bg-slate-100 text-slate-700',
-  open: 'border-sky-200 bg-sky-50 text-sky-700',
-  'no data': 'border-sky-200 bg-sky-50 text-sky-700',
-  warn: 'border-amber-200 bg-amber-50 text-amber-700',
-  pending: 'border-amber-200 bg-amber-50 text-amber-700',
-  scheduled: 'border-amber-200 bg-amber-50 text-amber-700',
-  'setup required': 'border-amber-200 bg-amber-50 text-amber-700',
-  overdue: 'border-amber-200 bg-amber-50 text-amber-700',
-  alert: 'border-rose-200 bg-rose-50 text-rose-700',
-  offline: 'border-rose-200 bg-rose-50 text-rose-700',
-  critical: 'border-rose-200 bg-rose-50 text-rose-700'
+  ok: 'border-success/30 bg-success-muted text-success',
+  active: 'border-success/30 bg-success-muted text-success',
+  completed: 'border-success/30 bg-success-muted text-success',
+  paid: 'border-success/30 bg-success-muted text-success',
+  info: 'border-info/30 bg-info-muted text-info',
+  neutral: 'border-border bg-surface-inset text-muted',
+  restricted: 'border-border bg-surface-inset text-muted',
+  locked: 'border-border bg-surface-inset text-muted',
+  unavailable: 'border-border bg-surface-inset text-muted',
+  'no permission': 'border-border bg-surface-inset text-muted',
+  'feature disabled': 'border-border bg-surface-inset text-muted',
+  open: 'border-info/30 bg-info-muted text-info',
+  'no data': 'border-info/30 bg-info-muted text-info',
+  warn: 'border-warning/30 bg-warning-muted text-warning',
+  pending: 'border-warning/30 bg-warning-muted text-warning',
+  scheduled: 'border-warning/30 bg-warning-muted text-warning',
+  'setup required': 'border-warning/30 bg-warning-muted text-warning',
+  overdue: 'border-warning/30 bg-warning-muted text-warning',
+  alert: 'border-destructive/30 bg-destructive-muted text-destructive',
+  offline: 'border-destructive/30 bg-destructive-muted text-destructive',
+  critical: 'border-destructive/30 bg-destructive-muted text-destructive',
 };
 
 function prettify(status: string) {
@@ -39,10 +39,12 @@ export function StatusBadge({ status }: StatusBadgeProps) {
   }
 
   const normalized = status.trim().toLowerCase();
-  const classes = toneMap[normalized] ?? 'border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-panel-muted)] text-[color:var(--app-shell-text)]';
+  const classes = toneMap[normalized] ?? 'border-border bg-surface-inset text-muted';
 
   return (
-    <span className={`inline-flex items-center rounded-full border px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] ${classes}`}>
+    <span
+      className={`inline-flex items-center rounded-md border px-2 py-1 text-2xs font-medium ${classes}`}
+    >
       {prettify(status)}
     </span>
   );

@@ -7,7 +7,7 @@ import {
   publicSecondaryButtonClass,
   publicSectionLayoutClass,
   publicSectionTitleClass,
-  publicSiteContainerClass
+  publicSiteContainerClass,
 } from '@/shared/components/public-visual-system';
 
 type PublicCtaSectionProps = {
@@ -27,37 +27,26 @@ export function PublicCtaSection({
   primaryCtaLabel,
   primaryCtaHref,
   secondaryCtaLabel,
-  secondaryCtaHref
+  secondaryCtaHref,
 }: PublicCtaSectionProps) {
   return (
-    <section className="border-t border-white/5 py-20 lg:py-28">
+    <section className="border-t border-border py-16 lg:py-24">
       <div className={publicSiteContainerClass}>
         <div className={publicSectionLayoutClass}>
           <div className={publicHeadingColumnClass}>
-            <p className={publicEyebrowClass}>
-              {eyebrow}
-            </p>
-
-            <h2 className={publicSectionTitleClass}>
-              {title}
-            </h2>
+            <p className={publicEyebrowClass}>{eyebrow}</p>
+            <h2 className={publicSectionTitleClass}>{title}</h2>
           </div>
 
-          <div className={`${publicHighlightSurfaceClass} p-8 lg:p-10`}>
-            <p className="text-base leading-relaxed text-white/85">{description}</p>
+          <div className={`${publicHighlightSurfaceClass} p-6 lg:p-8`}>
+            <p className="text-base leading-relaxed text-foreground">{description}</p>
 
-            <div className="mt-8 flex flex-wrap gap-4">
-              <Link
-                href={primaryCtaHref}
-                className={publicPrimaryButtonClass}
-              >
+            <div className="mt-6 flex flex-wrap gap-4">
+              <Link href={primaryCtaHref} className={publicPrimaryButtonClass}>
                 {primaryCtaLabel}
               </Link>
 
-              <Link
-                href={secondaryCtaHref}
-                className={publicSecondaryButtonClass}
-              >
+              <Link href={secondaryCtaHref} className={publicSecondaryButtonClass}>
                 {secondaryCtaLabel}
               </Link>
             </div>
