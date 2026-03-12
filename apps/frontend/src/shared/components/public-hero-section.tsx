@@ -32,8 +32,8 @@ export function PublicHeroSection({
 }: PublicHeroSectionProps) {
   return (
     <section id={id} className="relative flex min-h-[75vh] items-center overflow-hidden bg-[#050a15]">
-      {/* Background Banner with deep gradient overlay to protect left content */}
-      <div className="absolute inset-0 z-0">
+      {/* Background Banner with magic mask to protect left content */}
+      <div className="absolute inset-0 z-0 opacity-40">
         <Image
           src="/PhaifferTech.png"
           alt="PhaifferTech Background Banner"
@@ -41,14 +41,14 @@ export function PublicHeroSection({
           priority
           className="object-cover"
         />
-        <div className="absolute inset-0 bg-gradient-to-r from-[#050a15] via-[#050a15]/80 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-r from-[#050a15] via-[#050a15]/90 to-transparent z-10" />
       </div>
 
       <div
-        className={`${publicSiteContainerClass} relative z-10 grid items-center gap-12 py-16 lg:grid-cols-2 lg:gap-16 lg:py-24`}
+        className={`${publicSiteContainerClass} relative z-20 grid items-center gap-12 py-16 lg:grid-cols-2 lg:gap-16 lg:py-24`}
       >
-        {/* Content with high contrast protected on the dark left side */}
-        <div className="relative max-w-xl text-[#e0e1dd] glass-surface border border-white/5 rounded-2xl p-8 lg:p-10 shadow-2xl backdrop-blur-xl bg-[#050a15]/40">
+        {/* Content with high contrast protected on the dark left side (Content Shield) */}
+        <div className="relative z-20 max-w-xl text-[#e0e1dd] backdrop-blur-xl bg-[#050a15]/40 p-8 rounded-2xl border border-white/5 shadow-2xl">
           <p className={`${publicEyebrowClass} inline-flex border-l-2 border-[#00b4d8] pl-4 text-[#00b4d8] drop-shadow-[0_0_8px_rgba(0,180,216,0.8)]`}>
             {eyebrow}
           </p>

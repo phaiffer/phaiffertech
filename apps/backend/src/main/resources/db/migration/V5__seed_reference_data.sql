@@ -113,19 +113,9 @@ INSERT INTO tenants (id, name, code, status)
 SELECT '11111111-1111-1111-1111-111111111111', 'Default Tenant', 'default', 'ACTIVE'
 WHERE NOT EXISTS (SELECT 1 FROM tenants WHERE code = 'default');
 
-INSERT INTO users (id, email, password_hash, full_name, active)
-SELECT '22222222-2222-2222-2222-222222222222', 'admin@local.test', '$2a$10$28RqVTDwgyR5J0XvjGFsUOhADXAU/xi/VX0fhlSoBv46MgMc3HDJi', 'Platform Admin', TRUE
-WHERE NOT EXISTS (SELECT 1 FROM users WHERE email = 'admin@local.test');
-
-INSERT INTO user_tenants (id, tenant_id, user_id, role_id, active)
-SELECT '33333333-3333-3333-3333-333333333333', t.id, u.id, r.id, TRUE
-FROM tenants t
-JOIN users u ON u.email = 'admin@local.test'
-JOIN roles r ON r.code = 'PLATFORM_ADMIN'
-WHERE t.code = 'default'
-  AND NOT EXISTS (
-      SELECT 1 FROM user_tenants ut WHERE ut.tenant_id = t.id AND ut.user_id = u.id
-  );
+-- User creation should be done via env vars / management UI in Prod
+-- INSERT INTO users (id, email, password_hash, full_name, active) ...
+-- INSERT INTO user_tenants (id, tenant_id, user_id, role_id, active) ...
 
 INSERT INTO tenant_modules (id, tenant_id, module_definition_id, enabled)
 SELECT '44444444-4444-4444-4444-444444444001', t.id, m.id, TRUE

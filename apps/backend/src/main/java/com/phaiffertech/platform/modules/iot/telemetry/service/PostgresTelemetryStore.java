@@ -34,7 +34,9 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Service
 public class PostgresTelemetryStore implements TelemetryWriter, TelemetryReader {
 
@@ -329,7 +331,8 @@ public class PostgresTelemetryStore implements TelemetryWriter, TelemetryReader 
         }
         try {
             return Integer.parseInt(value.toString().trim());
-        } catch (NumberFormatException ignored) {
+        } catch (NumberFormatException e) {
+            log.error("Falha no processamento de telemetria IoT: ", e);
             return null;
         }
     }
@@ -347,7 +350,8 @@ public class PostgresTelemetryStore implements TelemetryWriter, TelemetryReader 
         }
         try {
             return objectMapper.writeValueAsString(metadata);
-        } catch (JsonProcessingException ignored) {
+        } catch (JsonProcessingException e) {
+            log.error("Falha no processamento de telemetria IoT: ", e);
             return null;
         }
     }

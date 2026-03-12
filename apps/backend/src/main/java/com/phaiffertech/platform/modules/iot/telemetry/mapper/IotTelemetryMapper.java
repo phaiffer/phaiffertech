@@ -4,9 +4,11 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.phaiffertech.platform.modules.iot.telemetry.domain.IotTelemetryRecord;
 import com.phaiffertech.platform.modules.iot.telemetry.dto.IotTelemetryResponse;
+import lombok.extern.slf4j.Slf4j;
 import java.util.Collections;
 import java.util.Map;
 
+@Slf4j
 public final class IotTelemetryMapper {
 
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
@@ -35,7 +37,8 @@ public final class IotTelemetryMapper {
         try {
             return OBJECT_MAPPER.readValue(metadata, new TypeReference<>() {
             });
-        } catch (Exception ignored) {
+        } catch (Exception e) {
+            log.error("Falha no processamento de telemetria IoT: ", e);
             return Collections.emptyMap();
         }
     }
