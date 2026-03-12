@@ -98,6 +98,25 @@ export function BoltIcon() {
   );
 }
 
+export function FactoryIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.5">
+      <path d="M2 20h20" />
+      <path d="M5 20v-5l3-3v-4l4 4v8" />
+      <path d="M12 20v-8l4-4v-4l4 4v12" />
+    </svg>
+  );
+}
+
+export function AnalysisIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.5">
+      <path d="M3 3v18h18" />
+      <path d="m7 14 4-4 4 4 5-5" />
+    </svg>
+  );
+}
+
 /* ═══════════════════════════════════════════════════════════════════════════
    Chip Component
    ═══════════════════════════════════════════════════════════════════════════ */
