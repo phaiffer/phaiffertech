@@ -269,23 +269,25 @@ export function Sidebar() {
   return (
     <aside className="sticky top-0 flex h-screen w-64 flex-col border-r border-border bg-surface">
       {/* Brand Header */}
-      <div className="flex items-center gap-3 border-b border-border px-4 py-4">
-        {branding.logoUrl ? (
-          <div className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-lg bg-surface-inset">
-            <img
-              src={branding.logoUrl}
-              alt={branding.scopeName}
-              className="h-full w-full object-contain"
-            />
+      <div className="border-b border-border px-4 py-5">
+        <div className="flex items-center gap-3">
+          {branding.logoUrl ? (
+            <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-xl bg-gradient-to-br from-accent/20 to-accent/5 p-1.5 ring-1 ring-accent/20">
+              <img
+                src={branding.logoUrl}
+                alt={branding.scopeName}
+                className="h-full w-full object-contain drop-shadow-sm"
+              />
+            </div>
+          ) : (
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-accent to-accent/80 text-sm font-bold text-accent-foreground shadow-sm">
+              {getInitials(branding.scopeName)}
+            </div>
+          )}
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-sm font-semibold text-foreground">{branding.scopeName}</p>
+            <p className="text-2xs text-muted">{workspace.workspaceLabel}</p>
           </div>
-        ) : (
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-accent text-xs font-semibold text-accent-foreground">
-            {getInitials(branding.scopeName)}
-          </div>
-        )}
-        <div className="min-w-0 flex-1">
-          <p className="truncate text-sm font-semibold text-foreground">{branding.scopeName}</p>
-          <p className="text-2xs text-muted">{workspace.workspaceLabel}</p>
         </div>
       </div>
 

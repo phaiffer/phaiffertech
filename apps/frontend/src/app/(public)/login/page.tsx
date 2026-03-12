@@ -89,20 +89,25 @@ export default function LoginPage() {
       <main className="relative z-10 flex flex-1 items-center justify-center px-4 py-12">
         <div className="w-full max-w-sm">
           {/* Logo & Brand */}
-          <div className="mb-8 text-center">
-            <Link href="/" className="inline-block">
-              <div className="mx-auto flex h-12 w-12 items-center justify-center overflow-hidden rounded-xl border border-border bg-surface">
-                <Image
-                  src="/logo.png"
-                  alt="PhaifferTech"
-                  width={48}
-                  height={48}
-                  priority
-                  className="h-full w-full object-cover"
-                />
+          <div className="mb-10 text-center">
+            <Link href="/" className="group inline-block">
+              <div className="relative mx-auto flex h-16 w-16 items-center justify-center">
+                {/* Glow effect */}
+                <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-accent/30 to-accent/10 blur-xl transition-all duration-300 group-hover:from-accent/40 group-hover:to-accent/20" />
+                {/* Logo container */}
+                <div className="relative flex h-full w-full items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-br from-surface to-surface-inset p-2 ring-1 ring-border/50 transition-all duration-300 group-hover:ring-accent/30">
+                  <Image
+                    src="/logo.png"
+                    alt="PhaifferTech"
+                    width={56}
+                    height={56}
+                    priority
+                    className="h-full w-full object-contain drop-shadow-sm"
+                  />
+                </div>
               </div>
             </Link>
-            <h1 className="mt-6 text-2xl font-semibold tracking-tight text-foreground">
+            <h1 className="mt-8 text-2xl font-semibold tracking-tight text-foreground">
               {t.title}
             </h1>
             <p className="mt-2 text-sm text-muted">{t.description}</p>
