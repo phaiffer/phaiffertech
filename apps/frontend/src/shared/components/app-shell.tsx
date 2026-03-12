@@ -3,6 +3,11 @@
 import { ReactNode, useMemo } from 'react';
 import { usePathname } from 'next/navigation';
 import { Sidebar } from '@/shared/components/sidebar';
+import {
+  sharedCompactTextClass,
+  sharedEyebrowClass,
+  sharedShellHeaderClass
+} from '@/shared/components/public-visual-system';
 import { useFrontendPlatform } from '@/shared/platform/use-frontend-platform';
 
 function resolveModuleContext(pathname: string): 'core' | 'crm' | 'iot' | 'pet' {
@@ -65,30 +70,45 @@ function resolveHeaderMeta(pathname: string, platformAdmin?: boolean) {
 
 export function AppShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
-  const { workspace } = useFrontendPlatform();
+  const { branding, workspace } = useFrontendPlatform();
 
   const moduleContext = useMemo(() => resolveModuleContext(pathname), [pathname]);
   const headerMeta = useMemo(
     () => resolveHeaderMeta(pathname, workspace.canManagePlatformAdministration),
     [pathname, workspace.canManagePlatformAdministration]
   );
+  const shellStyle = useMemo(
+    () => ({
+      ...branding.style,
+      backgroundImage: [
+        'radial-gradient(circle at top left, var(--tenant-accent-soft), transparent 22%)',
+        'radial-gradient(circle at bottom right, var(--tenant-primary-soft), transparent 26%)'
+      ].join(', ')
+    }),
+    [branding.style]
+  );
 
   return (
-    <div className="flex min-h-screen bg-background" data-module={moduleContext}>
+    <div className="flex min-h-screen bg-background bg-no-repeat" data-module={moduleContext} style={shellStyle}>
       <Sidebar />
 
       <div className="flex flex-1 flex-col">
         {/* Header */}
-        <header className="sticky top-0 z-20 flex items-center justify-between border-b border-border bg-background/80 px-6 py-4 backdrop-blur-sm lg:px-8">
-          <div>
-            <h1 className="text-lg font-semibold text-foreground">{headerMeta.label}</h1>
-            <p className="mt-0.5 text-sm text-muted">{headerMeta.description}</p>
+        <header className={`sticky top-0 z-20 ${sharedShellHeaderClass}`}>
+          <div className="flex items-start justify-between px-6 py-5 lg:px-8">
+            <div>
+              <p className={`${sharedEyebrowClass} text-[11px]`}>{workspace.workspaceLabel}</p>
+              <h1 className="mt-2 text-2xl font-semibold tracking-tight text-foreground">
+                {headerMeta.label}
+              </h1>
+              <p className={`mt-2 max-w-3xl ${sharedCompactTextClass}`}>{headerMeta.description}</p>
+            </div>
           </div>
         </header>
 
         {/* Main Content */}
-        <main className="flex-1 px-6 py-6 lg:px-8">
-          <div className="mx-auto max-w-7xl">{children}</div>
+        <main className="flex-1 px-6 py-8 lg:px-8">
+          <div className="mx-auto w-full max-w-7xl">{children}</div>
         </main>
       </div>
     </div>

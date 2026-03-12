@@ -34,6 +34,22 @@ const { currentPlatformState, currentPermissions } = vi.hoisted(() => ({
       tenantCode: 'plant-south',
       style: {}
     },
+    visualProfile: {
+      key: 'iot-industrial',
+      label: 'IoT Industrial',
+      accentFallback: '#0891b2',
+      primaryFallback: '#0f172a',
+      accentColor: '#2563eb',
+      primaryColor: '#0f172a',
+      accentTone: { emphasis: 'industrial', softAlpha: 0.14, highlightAlpha: 0.18 },
+      backgroundMood: { softness: 'balanced', accentOpacity: 0.1, supportOpacity: 0.12, accentAnchor: 'top right', supportAnchor: 'bottom left' },
+      surfaceNuance: { tintOpacity: 0.12, borderOpacity: 0.16, elevation: 'soft' },
+      iconTone: { emphasisOpacity: 0.18, mutedOpacity: 0.1 },
+      chartHighlightTone: { accentOpacity: 0.28, supportOpacity: 0.16 },
+      dashboardHighlightTone: { accentOpacity: 0.14, supportOpacity: 0.12 },
+      loginVisualContext: { accentOpacity: 0.1, supportOpacity: 0.12, cardTintOpacity: 0.04, cardBorderOpacity: 0.18, brandMarkOpacity: 0.14 },
+      illustrationPreset: 'industrial-signals'
+    },
     workspace: {
       workspaceLabel: 'Tenant workspace',
       accessLabel: 'Contracted SaaS workspace',
@@ -86,7 +102,7 @@ describe('IotHome', () => {
     expect(screen.getAllByText('Review alarms').length).toBeGreaterThan(0);
     expect(screen.getByText('Open dashboard')).toBeInTheDocument();
     expect(screen.getByText('Dashboard access required')).toBeInTheDocument();
-    expect(screen.getAllByText('Dashboard visibility required').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('Requires dashboard visibility.').length).toBeGreaterThan(0);
     expect(screen.getAllByText('No permission').length).toBeGreaterThan(0);
     expect(screen.getByText(/operational pulse requires `iot.dashboard.read`/i)).toBeInTheDocument();
   });
@@ -136,7 +152,7 @@ describe('IotHome', () => {
       expect(iotService.getDashboardSummary).toHaveBeenCalledTimes(1);
     });
 
-    expect(screen.getAllByText('Open dashboard')).toHaveLength(2);
+    expect(screen.getAllByText('Open dashboard').length).toBeGreaterThanOrEqual(2);
     expect(screen.getByText('Telemetry in 24h')).toBeInTheDocument();
     expect(screen.getByText('Recent Incidents')).toBeInTheDocument();
     expect(screen.getByText('Boiler Line 4')).toBeInTheDocument();

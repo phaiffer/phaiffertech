@@ -2,6 +2,16 @@
 
 import Link from 'next/link';
 import type { ReactNode } from 'react';
+import {
+  sharedCompactTextClass,
+  sharedDashedSurfaceClass,
+  sharedEyebrowClass,
+  sharedMutedSurfaceClass,
+  sharedPageTitleClass,
+  sharedPanelSurfaceClass,
+  sharedSectionHeadingClass,
+  sharedSupportingTextClass
+} from '@/shared/components/public-visual-system';
 import { EmptyStateCard } from '@/shared/dashboard/empty-state-card';
 import { StatusBadge } from '@/shared/dashboard/status-badge';
 import {
@@ -78,6 +88,11 @@ function chipClasses(tone: ModuleWorkspaceChipTone) {
   return 'border-[color:var(--tenant-accent)] bg-[color:var(--tenant-accent-soft)] text-[color:var(--tenant-accent)]';
 }
 
+const interactiveWorkspaceCardClass =
+  `${sharedMutedSurfaceClass} p-5 transition-all duration-200 hover:border-[color:var(--tenant-accent)] hover:shadow-md`;
+
+const disabledWorkspaceCardClass = `${sharedDashedSurfaceClass} p-5 opacity-90`;
+
 export function ModuleWorkspaceHero({
   eyebrow,
   title,
@@ -94,22 +109,16 @@ export function ModuleWorkspaceHero({
   return (
     <section className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_320px]">
       <div
-        className="rounded-3xl border border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-panel)] p-6 shadow-card"
+        className={`${sharedPanelSurfaceClass} p-6 sm:p-7`}
         style={{
           backgroundImage:
             'radial-gradient(circle at top left, var(--tenant-accent-soft), transparent 36%), '
             + 'radial-gradient(circle at bottom right, var(--tenant-primary-soft), transparent 32%)'
         }}
       >
-        <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[color:var(--tenant-accent)]">
-          {eyebrow}
-        </p>
-        <h1 className="mt-4 text-3xl font-semibold tracking-tight text-[color:var(--app-shell-heading)]">
-          {title}
-        </h1>
-        <p className="mt-3 max-w-3xl text-sm leading-7 text-[color:var(--app-shell-muted)]">
-          {description}
-        </p>
+        <p className={sharedEyebrowClass}>{eyebrow}</p>
+        <h1 className={`mt-4 ${sharedPageTitleClass}`}>{title}</h1>
+        <p className={`mt-4 max-w-3xl ${sharedSupportingTextClass}`}>{description}</p>
         {chips && chips.length > 0 ? (
           <div className="mt-6 flex flex-wrap gap-3">
             {chips.map((chip) => (
@@ -126,7 +135,7 @@ export function ModuleWorkspaceHero({
       </div>
 
       {aside ? (
-        <div className="rounded-3xl border border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-panel)] p-5 shadow-card">
+        <div className={`${sharedPanelSurfaceClass} p-5`}>
           {aside}
         </div>
       ) : null}
@@ -140,19 +149,19 @@ export function ModuleWorkspaceFactList({ facts }: { facts: ModuleWorkspaceFact[
       {facts.map((fact) => (
         <div
           key={`${fact.label}-${fact.value}`}
-          className="rounded-2xl border border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-panel-muted)] p-4"
+          className={`${sharedMutedSurfaceClass} p-4`}
         >
           <div className="flex items-start justify-between gap-3">
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--app-shell-muted)]">
                 {fact.label}
               </p>
-              <p className="mt-2 text-sm font-semibold text-[color:var(--app-shell-heading)]">{fact.value}</p>
+              <p className={`mt-2 ${sharedSectionHeadingClass}`}>{fact.value}</p>
             </div>
             {fact.status ? <StatusBadge status={fact.status} /> : null}
           </div>
           {fact.description ? (
-            <p className="mt-2 text-sm text-[color:var(--app-shell-muted)]">{fact.description}</p>
+            <p className={`mt-2 ${sharedCompactTextClass}`}>{fact.description}</p>
           ) : null}
         </div>
       ))}
@@ -166,7 +175,7 @@ export function ModuleWorkspaceOverviewGrid({ cards }: { cards: ModuleWorkspaceO
       {cards.map((card) => (
         <div
           key={`${card.label}-${card.value}`}
-          className="rounded-3xl border border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-panel)] p-5 shadow-card"
+          className={`${sharedPanelSurfaceClass} p-5`}
         >
           <div className="flex items-start justify-between gap-3">
             <div>
@@ -179,14 +188,14 @@ export function ModuleWorkspaceOverviewGrid({ cards }: { cards: ModuleWorkspaceO
             </div>
             {card.status ? <StatusBadge status={card.status} /> : null}
           </div>
-          <p className="mt-3 text-sm text-[color:var(--app-shell-muted)]">{card.description}</p>
+          <p className={`mt-3 ${sharedCompactTextClass}`}>{card.description}</p>
           {!isCapabilityReady(card.capability) && (card.capability?.title || card.capability?.description) ? (
-            <div className="mt-4 rounded-2xl border border-dashed border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-panel-muted)] px-4 py-3">
+            <div className={`mt-4 ${sharedDashedSurfaceClass} px-4 py-3`}>
               {card.capability?.title ? (
-                <p className="text-sm font-semibold text-[color:var(--app-shell-heading)]">{card.capability.title}</p>
+                <p className={sharedSectionHeadingClass}>{card.capability.title}</p>
               ) : null}
               {card.capability?.description ? (
-                <p className="mt-1 text-sm text-[color:var(--app-shell-muted)]">{card.capability.description}</p>
+                <p className={`mt-1 ${sharedCompactTextClass}`}>{card.capability.description}</p>
               ) : null}
             </div>
           ) : null}
@@ -208,11 +217,11 @@ export function ModuleWorkspaceSection({
   children: ReactNode;
 }) {
   return (
-    <section className="rounded-3xl border border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-panel)] p-5 shadow-card">
+    <section className={`${sharedPanelSurfaceClass} p-5`}>
       <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
         <div>
-          <h2 className="text-base font-semibold text-[color:var(--app-shell-heading)]">{title}</h2>
-          <p className="mt-1 text-sm text-[color:var(--app-shell-muted)]">{description}</p>
+          <h2 className={sharedSectionHeadingClass}>{title}</h2>
+          <p className={`mt-1 ${sharedCompactTextClass}`}>{description}</p>
         </div>
         {action ? <div className="shrink-0">{action}</div> : null}
       </div>
@@ -278,7 +287,7 @@ export function ModuleWorkspaceQuickActionGrid({
                 <Link
                   key={action.href}
                   href={action.href}
-                  className="rounded-3xl border border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-panel-muted)] p-5 transition hover:border-[color:var(--tenant-accent)] hover:shadow-card"
+                  className={interactiveWorkspaceCardClass}
                 >
                   {content}
                 </Link>
@@ -288,7 +297,7 @@ export function ModuleWorkspaceQuickActionGrid({
             return (
               <div
                 key={action.href}
-                className="rounded-3xl border border-dashed border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-panel-muted)] p-5 opacity-90"
+                className={disabledWorkspaceCardClass}
               >
                 {content}
               </div>
@@ -316,8 +325,8 @@ export function ModuleWorkspaceGuidance({
   return (
     <div className="space-y-4">
       <div>
-        <p className="text-sm font-semibold text-[color:var(--app-shell-heading)]">{title}</p>
-        <p className="mt-1 text-sm text-[color:var(--app-shell-muted)]">{description}</p>
+        <p className={sharedSectionHeadingClass}>{title}</p>
+        <p className={`mt-1 ${sharedCompactTextClass}`}>{description}</p>
       </div>
 
       <div className="grid gap-4 md:grid-cols-3">
@@ -348,7 +357,7 @@ export function ModuleWorkspaceGuidance({
               <Link
                 key={step.key}
                 href={href}
-                className="rounded-3xl border border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-panel-muted)] p-5 transition hover:border-[color:var(--tenant-accent)] hover:shadow-card"
+                className={interactiveWorkspaceCardClass}
               >
                 {content}
               </Link>
@@ -358,7 +367,7 @@ export function ModuleWorkspaceGuidance({
           return (
             <div
               key={step.key}
-              className="rounded-3xl border border-dashed border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-panel-muted)] p-5"
+              className={disabledWorkspaceCardClass}
             >
               {content}
             </div>
@@ -382,8 +391,8 @@ export function ModuleWorkspaceState({
     <div
       className={
         tone === 'error'
-          ? 'rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700'
-          : 'rounded-2xl border border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-panel-muted)] px-4 py-3 text-sm text-[color:var(--app-shell-muted)]'
+          ? 'rounded-2xl border border-destructive/30 bg-destructive-muted px-4 py-3 text-sm text-destructive'
+          : `${sharedMutedSurfaceClass} px-4 py-3 text-sm text-[color:var(--app-shell-muted)]`
       }
     >
       <p className="font-semibold">{title}</p>

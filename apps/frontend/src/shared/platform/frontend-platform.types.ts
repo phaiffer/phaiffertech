@@ -1,5 +1,6 @@
 import type { CSSProperties } from 'react';
 import type { AppThemeMode } from '@/shared/lib/tenant-branding';
+import type { VisualProfile } from '@/shared/lib/visual-profile';
 import type { AuthenticatedUser } from '@/shared/types/auth';
 import type { ModuleItem } from '@/shared/types/module';
 
@@ -38,6 +39,7 @@ export type FrontendPlatformState = {
   user: AuthenticatedUser | null;
   theme: FrontendPlatformTheme;
   branding: FrontendPlatformBranding;
+  visualProfile: VisualProfile;
   workspace: FrontendPlatformWorkspace;
   modules: FrontendPlatformModules;
 };

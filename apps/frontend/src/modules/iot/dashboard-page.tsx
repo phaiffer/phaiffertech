@@ -10,17 +10,19 @@ import {
   AlarmIcon,
   BoltIcon,
   Chip,
-  DashboardIcon,
-  DeviceIcon,
-  IotHeroAside,
-  IotMiniTrend,
-  IotMetricCard,
-  IotNotice,
-  IotPageHeader,
-  IotPanel,
-  IotStatusPill,
-  IotSurfaceLink,
-  PlugIcon,
+    DashboardIcon,
+    DeviceIcon,
+    IotHeroAside,
+    IotMiniTrend,
+    IotMetricCard,
+    IotModulePage,
+    IotNotice,
+    IotPageHeader,
+    IotPanel,
+    IotSupportCard,
+    IotStatusPill,
+    IotSurfaceLink,
+    PlugIcon,
   WaveIcon,
 } from '@/modules/iot/iot-chrome';
 import {
@@ -172,7 +174,7 @@ export function IotDashboardPage() {
         </div>
       }
     >
-      <div className="space-y-6">
+      <IotModulePage>
         {/* Page Header */}
         <IotPageHeader
           eyebrow="Operação conectada"
@@ -213,6 +215,10 @@ export function IotDashboardPage() {
             label="Dispositivos totais"
             value={snapshot.totalDevices}
             footnote={`${snapshot.activeDevices} ativos, ${snapshot.offlineDevices} offline`}
+            detailTitle={snapshot.offlineDevices > 0 ? 'Fleet attention required' : 'Fleet coverage is stable'}
+            detailDescription={snapshot.offlineDevices > 0
+              ? 'Open the fleet table to inspect which assets lost heartbeat and whether maintenance or incident flows need to be opened.'
+              : 'Use the device list only to confirm that the nominal state is holding over time.'}
             tone="cyan"
             icon={<DeviceIcon />}
           />
@@ -220,6 +226,10 @@ export function IotDashboardPage() {
             label="Alarmes abertos"
             value={snapshot.totalAlarmsOpen}
             footnote="Incidentes priorizados por severidade"
+            detailTitle={snapshot.totalAlarmsOpen > 0 ? 'Incident pressure needs ownership' : 'No open incident pressure'}
+            detailDescription={snapshot.totalAlarmsOpen > 0
+              ? 'Prioritize acknowledgement first, then decide whether the event should be escalated into field work.'
+              : 'Keep the alarm queue visible to catch changes before they affect availability.'}
             tone={snapshot.totalAlarmsOpen > 0 ? 'amber' : 'green'}
             icon={<AlarmIcon />}
           />
@@ -227,6 +237,10 @@ export function IotDashboardPage() {
             label="Telemetria 24h"
             value={snapshot.telemetryPointsLast24h}
             footnote="Volume consolidado de leituras"
+            detailTitle={snapshot.telemetryPointsLast24h > 0 ? 'Signal flow is active' : 'No recent signal volume'}
+            detailDescription={snapshot.telemetryPointsLast24h > 0
+              ? 'Use the trend cards below to confirm whether collection rhythm is improving or degrading.'
+              : 'Inspect registers and telemetry ingestion before relying on the executive pulse.'}
             tone="green"
             icon={<WaveIcon />}
           />
@@ -234,6 +248,10 @@ export function IotDashboardPage() {
             label="Manutenção pendente"
             value={snapshot.pendingMaintenance}
             footnote="Fila operacional para fechamento"
+            detailTitle={snapshot.pendingMaintenance > 0 ? 'Backlog still open' : 'Backlog currently controlled'}
+            detailDescription={snapshot.pendingMaintenance > 0
+              ? 'Use the maintenance board to sequence actions by urgency and tie them back to incident pressure.'
+              : 'Track maintenance only as a confirmation step while the dashboard remains stable.'}
             tone={snapshot.pendingMaintenance > 0 ? 'amber' : 'green'}
             icon={<BoltIcon />}
           />
@@ -272,22 +290,33 @@ export function IotDashboardPage() {
           {/* Summary Panel */}
           <IotPanel title="Resumo operacional" description="Indicadores chave">
             <div className="space-y-4">
-              <div className="rounded-lg bg-surface-inset p-4">
+              <IotSupportCard>
                 <p className="text-2xs font-medium uppercase tracking-wider text-muted">
                   Eficiência da planta
                 </p>
                 <p className="mt-2 text-3xl font-semibold text-accent">3.85 COP</p>
-                <p className="mt-1 text-xs text-muted">Coeficiente de performance</p>
-              </div>
-              <div className="rounded-lg bg-surface-inset p-4">
+                <p className="mt-1 text-xs text-muted">Estado atual de performance sintética da planta.</p>
+              </IotSupportCard>
+              <IotSupportCard>
                 <p className="text-2xs font-medium uppercase tracking-wider text-muted">
                   Última consolidação
                 </p>
                 <p className="mt-2 text-sm font-medium text-foreground">
                   {formatDateTime(new Date().toISOString())}
                 </p>
-                <p className="mt-1 text-xs text-muted">Estado atual da operação</p>
-              </div>
+                <p className="mt-1 text-xs text-muted">Leitura mais recente disponível para a camada operacional.</p>
+              </IotSupportCard>
+              <IotSupportCard>
+                <p className="text-2xs font-medium uppercase tracking-wider text-muted">
+                  Próxima leitura
+                </p>
+                <p className="mt-2 text-sm font-medium text-foreground">
+                  {snapshot.totalAlarmsOpen > 0 ? 'Abrir alarmes e backlog' : 'Confirmar tendência de coleta'}
+                </p>
+                <p className="mt-1 text-xs text-muted">
+                  Use as tendências abaixo para validar se o estado atual é estável ou se a operação está entrando em pressão.
+                </p>
+              </IotSupportCard>
             </div>
           </IotPanel>
         </div>
@@ -297,12 +326,12 @@ export function IotDashboardPage() {
           <IotMiniTrend
             title="Pressão de alarmes"
             series={alarmPressureSeries}
-            accent="var(--warning)"
+            accent="var(--tenant-accent)"
           />
           <IotMiniTrend
             title="Ritmo de telemetria"
             series={throughputSeries}
-            accent="var(--accent)"
+            accent="var(--info)"
           />
         </div>
 
@@ -319,7 +348,7 @@ export function IotDashboardPage() {
             ))}
           </div>
         </IotPanel>
-      </div>
+      </IotModulePage>
     </PermissionGuard>
   );
 }

@@ -71,6 +71,9 @@ describe('LoginPage', () => {
       </PublicSiteProvider>
     );
 
+    fireEvent.change(screen.getByLabelText('Company or tenant'), { target: { value: 'default' } });
+    fireEvent.change(screen.getByLabelText('Email'), { target: { value: 'admin@local.test' } });
+    fireEvent.change(screen.getByLabelText('Password'), { target: { value: 'Admin@123' } });
     fireEvent.click(await screen.findByRole('button', { name: 'Sign in' }));
 
     await waitFor(() => {
@@ -87,5 +90,22 @@ describe('LoginPage', () => {
       user: authResponseFixture.user
     });
     expect(replaceMock).toHaveBeenCalledWith('/dashboard');
+  });
+
+  it('preenche o formulario com a demo de forma discreta', async () => {
+    render(
+      <PublicSiteProvider>
+        <AuthProvider>
+          <LoginPage />
+        </AuthProvider>
+      </PublicSiteProvider>
+    );
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Use demo' }));
+
+    expect(screen.getByLabelText('Company or tenant')).toHaveValue('default');
+    expect(screen.getByLabelText('Email')).toHaveValue('admin@local.test');
+    expect(screen.getByLabelText('Password')).toHaveValue('Admin@123');
+    expect(screen.getByRole('link', { name: 'Forgot your password?' })).toHaveAttribute('href', '/contact');
   });
 });

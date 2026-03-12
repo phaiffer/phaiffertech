@@ -36,4 +36,20 @@ describe('PublicSiteShell', () => {
     expect(screen.getAllByText('PetFlow').length).toBeGreaterThan(0);
     expect(screen.queryByRole('button', { name: 'Light' })).not.toBeInTheDocument();
   });
+
+  it('uses minimal chrome on the login route', () => {
+    usePathnameMock.mockReturnValue('/login');
+
+    render(
+      <PublicSiteProvider>
+        <PublicSiteShell>
+          <div>login-content</div>
+        </PublicSiteShell>
+      </PublicSiteProvider>
+    );
+
+    expect(screen.getByText('login-content')).toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'About' })).not.toBeInTheDocument();
+    expect(screen.queryByText('PetFlow')).not.toBeInTheDocument();
+  });
 });

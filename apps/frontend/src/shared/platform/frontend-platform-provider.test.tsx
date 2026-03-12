@@ -71,7 +71,7 @@ vi.mock('@/shared/modules/use-module-catalog', () => ({
 }));
 
 function PlatformConsumer() {
-  const { branding, modules, theme, workspace } = useFrontendPlatform();
+  const { branding, modules, theme, visualProfile, workspace } = useFrontendPlatform();
 
   return (
     <div>
@@ -81,6 +81,7 @@ function PlatformConsumer() {
       <span data-testid="full-visibility">{workspace.hasFullPlatformVisibility ? 'yes' : 'no'}</span>
       <span data-testid="contracted-products">{modules.contractedProducts.map((moduleItem) => moduleItem.code).join(',')}</span>
       <span data-testid="branding-scope">{branding.scopeName}</span>
+      <span data-testid="visual-profile">{visualProfile.key}</span>
       <button type="button" onClick={() => theme.setMode('dark')}>
         set-dark
       </button>
@@ -119,6 +120,7 @@ describe('FrontendPlatformProvider', () => {
     expect(screen.getByTestId('full-visibility').textContent).toBe('no');
     expect(screen.getByTestId('contracted-products').textContent).toBe('CRM');
     expect(screen.getByTestId('branding-scope').textContent).toBe('Tenant One');
+    expect(screen.getByTestId('visual-profile').textContent).toBe('crm-corporate');
   });
 
   it('falls back to tenant theme defaults when overrides are disabled', async () => {

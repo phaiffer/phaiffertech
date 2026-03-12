@@ -6,17 +6,19 @@ import { ApiClientError } from '@/shared/lib/http';
 import { iotService } from '@/shared/services/iot-service';
 import { IotReportSummary } from '@/shared/types/iot';
 import {
-  AnalysisIcon,
-  Chip,
-  IotActionButton,
-  IotHeroAside,
-  IotMiniTrend,
-  IotMetricCard,
-  IotNotice,
-  IotPageHeader,
-  IotPanel,
-  IotStatusPill
-} from '@/modules/iot/iot-chrome';
+    AnalysisIcon,
+    Chip,
+    IotActionButton,
+    IotHeroAside,
+    IotMiniTrend,
+    IotMetricCard,
+    IotModulePage,
+    IotNotice,
+    IotPageHeader,
+    IotPanel,
+    IotStatusPill,
+    IotSupportCard
+  } from '@/modules/iot/iot-chrome';
 import {
   buildDemoReportSummary,
 } from '@/modules/iot/iot-demo-data';
@@ -53,23 +55,23 @@ function DistributionBlock({
   const entries = sortedEntries(values);
 
   return (
-    <div className="rounded-[28px] border border-slate-800 bg-slate-950/35 p-5">
-      <p className="text-sm font-semibold text-white">{title}</p>
+    <IotSupportCard className="p-5">
+      <p className="text-sm font-semibold text-foreground">{title}</p>
       <div className="mt-4 space-y-3">
         {entries.length === 0 ? (
-          <p className="text-sm text-slate-500">Sem dados para esta dimensão.</p>
+          <p className="text-sm text-muted">Sem dados para esta dimensão.</p>
         ) : null}
         {entries.map(([key, value]) => (
-          <div
+          <IotSupportCard
             key={key}
-            className="flex items-center justify-between rounded-2xl border border-slate-800 bg-slate-950/60 px-4 py-3"
+            className="flex items-center justify-between px-4 py-3"
           >
-            <span className="text-sm text-slate-300">{key}</span>
-            <span className="text-sm font-semibold text-white">{value}</span>
-          </div>
+            <span className="text-sm text-foreground">{key}</span>
+            <span className="text-sm font-semibold text-foreground">{value}</span>
+          </IotSupportCard>
         ))}
       </div>
-    </div>
+    </IotSupportCard>
   );
 }
 
@@ -174,7 +176,7 @@ export function IotReportsPage() {
         </div>
       }
     >
-      <div className="space-y-6">
+      <IotModulePage>
         <IotPageHeader
           eyebrow="Observabilidade operacional"
           title="Observabilidade consolidada"
@@ -243,7 +245,7 @@ export function IotReportsPage() {
             title="Tendência de performance"
             description="Leitura comparativa para apoiar a discussão executiva sem depender de uma camada analítica completa nesta etapa."
           >
-            <IotMiniTrend title="Performance por pulso" series={performanceSeries} accent="#60a5fa" />
+            <IotMiniTrend title="Performance por pulso" series={performanceSeries} accent="var(--tenant-accent)" />
           </IotPanel>
 
           <IotPanel
@@ -251,24 +253,24 @@ export function IotReportsPage() {
             description="Resumo curto para conectar observabilidade com as demais telas do IoT."
           >
             <div className="space-y-3">
-              <div className="rounded-2xl border border-slate-800 bg-slate-950/35 px-4 py-4">
-                <p className="text-sm font-semibold text-white">Dashboard</p>
-                <p className="mt-2 text-sm text-slate-400">
+              <IotSupportCard className="px-4 py-4">
+                <p className="text-sm font-semibold text-foreground">Dashboard</p>
+                <p className="mt-2 text-sm text-muted">
                   Use disponibilidade, telemetria 24h e backlog como a base da narrativa executiva.
                 </p>
-              </div>
-              <div className="rounded-2xl border border-slate-800 bg-slate-950/35 px-4 py-4">
-                <p className="text-sm font-semibold text-white">Alarmes e manutenção</p>
-                <p className="mt-2 text-sm text-slate-400">
+              </IotSupportCard>
+              <IotSupportCard className="px-4 py-4">
+                <p className="text-sm font-semibold text-foreground">Alarmes e manutenção</p>
+                <p className="mt-2 text-sm text-muted">
                   Cruze severidade de incidentes com o backlog de ação de campo para fechar o loop operacional.
                 </p>
-              </div>
-              <div className="rounded-2xl border border-slate-800 bg-slate-950/35 px-4 py-4">
-                <p className="text-sm font-semibold text-white">Estado da camada</p>
+              </IotSupportCard>
+              <IotSupportCard className="px-4 py-4">
+                <p className="text-sm font-semibold text-foreground">Estado da camada</p>
                 <div className="mt-3 flex flex-wrap gap-2">
                   <IotStatusPill label={usingDemo ? 'Modo assistido' : 'Resumo real'} tone={usingDemo ? 'amber' : 'green'} />
                 </div>
-              </div>
+              </IotSupportCard>
             </div>
           </IotPanel>
         </div>
@@ -278,7 +280,7 @@ export function IotReportsPage() {
             title="Ritmo de coleta"
             description="Cadência visual das coletas para reforçar cobertura temporal e ligação com o stream operacional."
           >
-            <IotMiniTrend title="Coletas consolidadas" series={throughputSeries} accent="#22d3ee" />
+            <IotMiniTrend title="Coletas consolidadas" series={throughputSeries} accent="var(--info)" />
           </IotPanel>
           <IotPanel
             title="Distribuições consolidadas"
@@ -291,7 +293,7 @@ export function IotReportsPage() {
             </div>
           </IotPanel>
         </div>
-      </div>
+      </IotModulePage>
     </PermissionGuard>
   );
 }

@@ -34,6 +34,22 @@ const { currentPlatformState, currentPermissions } = vi.hoisted(() => ({
       tenantCode: 'clinic-north',
       style: {}
     },
+    visualProfile: {
+      key: 'pet-clinic',
+      label: 'Pet Clinic',
+      accentFallback: '#0f766e',
+      primaryFallback: '#164e63',
+      accentColor: '#2563eb',
+      primaryColor: '#0f172a',
+      accentTone: { emphasis: 'clinical', softAlpha: 0.18, highlightAlpha: 0.14 },
+      backgroundMood: { softness: 'soft', accentOpacity: 0.11, supportOpacity: 0.09, accentAnchor: 'top left', supportAnchor: 'bottom center' },
+      surfaceNuance: { tintOpacity: 0.15, borderOpacity: 0.17, elevation: 'quiet' },
+      iconTone: { emphasisOpacity: 0.16, mutedOpacity: 0.08 },
+      chartHighlightTone: { accentOpacity: 0.22, supportOpacity: 0.12 },
+      dashboardHighlightTone: { accentOpacity: 0.12, supportOpacity: 0.09 },
+      loginVisualContext: { accentOpacity: 0.11, supportOpacity: 0.1, cardTintOpacity: 0.05, cardBorderOpacity: 0.16, brandMarkOpacity: 0.15 },
+      illustrationPreset: 'clinical-care'
+    },
     workspace: {
       workspaceLabel: 'Tenant workspace',
       accessLabel: 'Contracted SaaS workspace',

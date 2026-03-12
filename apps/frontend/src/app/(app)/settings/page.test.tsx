@@ -36,6 +36,22 @@ const { currentPlatformState } = vi.hoisted(() => ({
       tenantCode: 'default',
       style: {}
     },
+    visualProfile: {
+      key: 'core-institutional',
+      label: 'Core Institutional',
+      accentFallback: '#2563eb',
+      primaryFallback: '#0f172a',
+      accentColor: '#2563eb',
+      primaryColor: '#0f172a',
+      accentTone: { emphasis: 'institutional', softAlpha: 0.18, highlightAlpha: 0.14 },
+      backgroundMood: { softness: 'soft', accentOpacity: 0.12, supportOpacity: 0.1, accentAnchor: 'top left', supportAnchor: 'bottom right' },
+      surfaceNuance: { tintOpacity: 0.16, borderOpacity: 0.18, elevation: 'quiet' },
+      iconTone: { emphasisOpacity: 0.18, mutedOpacity: 0.1 },
+      chartHighlightTone: { accentOpacity: 0.22, supportOpacity: 0.14 },
+      dashboardHighlightTone: { accentOpacity: 0.14, supportOpacity: 0.1 },
+      loginVisualContext: { accentOpacity: 0.12, supportOpacity: 0.12, cardTintOpacity: 0.05, cardBorderOpacity: 0.18, brandMarkOpacity: 0.16 },
+      illustrationPreset: 'institutional-grid'
+    },
     workspace: {
       workspaceLabel: 'Platform control plane',
       accessLabel: 'Platform owner tenant',

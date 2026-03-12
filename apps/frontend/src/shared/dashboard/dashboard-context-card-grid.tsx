@@ -1,4 +1,8 @@
 import type { DashboardContextCard } from '@/shared/dashboard/contextual-dashboard';
+import {
+  sharedCompactTextClass,
+  sharedMutedSurfaceClass
+} from '@/shared/components/public-visual-system';
 
 type DashboardContextCardGridProps = {
   cards: DashboardContextCard[];
@@ -20,7 +24,7 @@ export function DashboardContextCardGrid({ cards }: DashboardContextCardGridProp
       {cards.map((card) => (
         <div
           key={card.key}
-          className="rounded-2xl border border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-panel)] p-5 shadow-sm"
+          className={`${sharedMutedSurfaceClass} p-5`}
         >
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--app-shell-muted)]">
             {card.label}
@@ -28,7 +32,7 @@ export function DashboardContextCardGrid({ cards }: DashboardContextCardGridProp
           <p className={`mt-3 text-2xl font-semibold ${toneClassMap[card.tone ?? 'neutral']}`}>
             {card.value}
           </p>
-          <p className="mt-3 text-sm text-[color:var(--app-shell-muted)]">{card.description}</p>
+          <p className={`mt-3 ${sharedCompactTextClass}`}>{card.description}</p>
         </div>
       ))}
     </div>

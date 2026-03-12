@@ -272,7 +272,7 @@ export function Sidebar() {
       <div className="border-b border-border px-4 py-5">
         <div className="flex items-center gap-3">
           {branding.logoUrl ? (
-            <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-xl bg-gradient-to-br from-accent/20 to-accent/5 p-1.5 ring-1 ring-accent/20">
+            <div className="flex h-11 w-11 items-center justify-center overflow-hidden rounded-2xl border border-[color:var(--tenant-accent)] bg-[color:var(--tenant-accent-soft)] p-1.5 shadow-xs">
               <img
                 src={branding.logoUrl}
                 alt={branding.scopeName}
@@ -280,7 +280,7 @@ export function Sidebar() {
               />
             </div>
           ) : (
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-accent to-accent/80 text-sm font-bold text-accent-foreground shadow-sm">
+            <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-[color:var(--tenant-accent)] bg-[color:var(--tenant-accent-soft)] text-sm font-semibold text-[color:var(--tenant-accent)] shadow-xs">
               {getInitials(branding.scopeName)}
             </div>
           )}
@@ -334,7 +334,7 @@ export function Sidebar() {
         <button
           type="button"
           onClick={() => void signOut()}
-          className="flex w-full items-center justify-center gap-2 rounded-lg border border-border bg-surface px-3 py-2 text-sm text-muted transition-colors hover:border-destructive hover:bg-destructive-muted hover:text-destructive"
+          className="flex w-full items-center justify-center gap-2 rounded-lg border border-border bg-surface px-3 py-2 text-sm text-muted shadow-xs transition-colors hover:border-destructive hover:bg-destructive-muted hover:text-destructive hover:shadow-sm"
         >
           <IconLogout className="h-4 w-4" />
           <span>Sair</span>

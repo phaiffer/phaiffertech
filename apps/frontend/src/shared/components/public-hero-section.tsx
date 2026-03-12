@@ -2,6 +2,8 @@ import Image from 'next/image';
 import Link from 'next/link';
 import {
   publicEyebrowClass,
+  publicHeroSupportingTextClass,
+  publicHeroTitleClass,
   publicPrimaryButtonClass,
   publicSecondaryButtonClass,
   publicSiteContainerClass,
@@ -45,11 +47,11 @@ export function PublicHeroSection({
             {eyebrow}
           </p>
 
-          <h1 className="mt-6 text-4xl font-semibold tracking-tight text-foreground sm:text-5xl lg:text-6xl">
-            {title}
+          <h1 className="mt-6 max-w-4xl">
+            <span className={publicHeroTitleClass}>{title}</span>
           </h1>
 
-          <p className="mt-6 text-lg leading-relaxed text-muted">{description}</p>
+          <p className={publicHeroSupportingTextClass}>{description}</p>
 
           <div className="mt-8 flex flex-wrap gap-4">
             <Link href={primaryCtaHref} className={publicPrimaryButtonClass}>

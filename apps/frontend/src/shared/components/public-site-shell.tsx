@@ -5,6 +5,9 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
+  publicCardSurfaceClass,
+  publicChromeSurfaceClass,
+  publicCompactButtonClass,
   publicPrimaryButtonClass,
   publicSecondaryButtonClass,
   publicSiteContainerClass,
@@ -20,6 +23,7 @@ export function PublicSiteShell({ children }: PublicSiteShellProps) {
   const pathname = usePathname();
   const { locale, setLocale } = usePublicSite();
   const t = getPublicSiteMessages(locale).shell;
+  const useMinimalChrome = pathname === '/login';
 
   const navigationItems = [
     { href: '/', label: t.navHome, active: pathname === '/' },
@@ -61,8 +65,15 @@ export function PublicSiteShell({ children }: PublicSiteShellProps) {
   const navLinkClass = (active: boolean) =>
     `text-sm font-medium transition-colors ${active ? 'text-accent' : 'text-muted hover:text-foreground'}`;
 
-  const localeButtonClass =
-    'rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-muted transition-colors hover:border-accent hover:text-foreground';
+  const localeButtonClass = publicCompactButtonClass;
+
+  if (useMinimalChrome) {
+    return (
+      <div className="min-h-screen bg-background text-foreground">
+        <main>{children}</main>
+      </div>
+    );
+  }
 
   return (
     <div className="relative min-h-screen bg-background text-foreground">
@@ -73,11 +84,11 @@ export function PublicSiteShell({ children }: PublicSiteShellProps) {
       </div>
 
       {/* Header */}
-      <header className="sticky top-0 z-40 border-b border-border bg-background/80 backdrop-blur-sm">
-        <div className={`${publicSiteContainerClass} flex items-center justify-between py-4`}>
+      <header className={`sticky top-0 z-40 ${publicChromeSurfaceClass}`}>
+        <div className={`${publicSiteContainerClass} flex items-center justify-between py-5`}>
           {/* Logo */}
           <Link href="/" className="group inline-flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-lg border border-border bg-surface">
+            <div className={`${publicCardSurfaceClass} flex h-11 w-11 items-center justify-center overflow-hidden p-1.5`}>
               <Image
                 src="/logo.png"
                 alt="PhaifferTech"
@@ -128,7 +139,7 @@ export function PublicSiteShell({ children }: PublicSiteShellProps) {
         </div>
 
         {/* Mobile Navigation */}
-        <div className={`${publicSiteContainerClass} pb-4 lg:hidden`}>
+        <div className={`${publicSiteContainerClass} pb-5 lg:hidden`}>
           <nav className="flex gap-4 overflow-x-auto whitespace-nowrap">
             {navigationItems.map((item) => (
               <Link key={item.href} href={item.href} className={navLinkClass(item.active)}>

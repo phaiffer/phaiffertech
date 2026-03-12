@@ -10,22 +10,28 @@ import { iotService } from '@/shared/services/iot-service';
 import { PageResponse } from '@/shared/types/common';
 import { IotAlarm, IotDevice, IotMaintenance } from '@/shared/types/iot';
 import {
-  AlarmIcon,
-  BoltIcon,
-  Chip,
-  DeviceIcon,
-  IotDateTimeField,
-  IotHeroAside,
-  IotNotice,
-  IotPageHeader,
-  IotPanel,
+    AlarmIcon,
+    BoltIcon,
+    Chip,
+    DeviceIcon,
+    IotDataTable,
+    IotDataTableHead,
+    IotDateTimeField,
+    IotHeroAside,
+    IotInlineActionButton,
+    IotInlineDangerButton,
+    IotModulePage,
+    IotNotice,
+    IotPageHeader,
+    IotPanel,
   IotPrimaryButton,
-  IotSecondaryButton,
-  IotSelectField,
-  IotStatusPill,
-  IotTableStateRow,
-  IotTextField,
-  IotTextareaField
+    IotSecondaryButton,
+    IotSelectField,
+    IotStatusPill,
+    IotSupportCard,
+    IotTableStateRow,
+    IotTextField,
+    IotTextareaField
 } from '@/modules/iot/iot-chrome';
 import {
   buildDemoDevicesFromReal,
@@ -415,7 +421,7 @@ export function IotMaintenancePage() {
         </div>
       }
     >
-      <div className="space-y-6">
+      <IotModulePage>
         <IotPageHeader
           eyebrow="Fechamento operacional"
           title="Backlog de manutenção"
@@ -504,28 +510,28 @@ export function IotMaintenancePage() {
                 const columnRows = visibleRows.filter((record) => record.status === column.key).slice(0, 3);
 
                 return (
-                  <div key={column.key} className="rounded-[26px] border border-slate-800 bg-slate-950/35 p-4">
+                  <IotSupportCard key={column.key}>
                     <div className="flex items-center justify-between">
-                      <p className="font-semibold text-white">{column.title}</p>
+                      <p className="font-semibold text-foreground">{column.title}</p>
                       <IotStatusPill label={String(columnRows.length)} tone={column.tone} />
                     </div>
                     <div className="mt-4 space-y-3">
                       {columnRows.length === 0 ? (
-                        <p className="text-sm text-slate-500">Nenhuma ordem nesta coluna no momento.</p>
+                        <p className="text-sm text-muted">Nenhuma ordem nesta coluna no momento.</p>
                       ) : (
                         columnRows.map((record) => (
-                          <div key={record.id} className="rounded-2xl border border-slate-800 bg-slate-950/55 px-4 py-3">
-                            <p className="font-medium text-white">{record.title}</p>
-                            <p className="mt-1 text-sm text-slate-400">
+                          <IotSupportCard key={record.id} className="px-4 py-3">
+                            <p className="font-medium text-foreground">{record.title}</p>
+                            <p className="mt-1 text-sm text-muted">
                               {'deviceName' in record && record.deviceName
                                 ? record.deviceName
                                 : resolveDeviceLabel(displayDevices, record.deviceId)}
                             </p>
-                          </div>
+                          </IotSupportCard>
                         ))
                       )}
                     </div>
-                  </div>
+                  </IotSupportCard>
                 );
               })}
             </div>
@@ -584,21 +590,17 @@ export function IotMaintenancePage() {
             title="Tabela operacional do backlog"
             description="Backlog detalhado com ativo, gatilho, prioridade, agenda e responsável."
           >
-            <div className="overflow-hidden rounded-[28px] border border-cyan-500/15">
-              <table className="min-w-full bg-[#050f1f]">
-                <thead className="border-b border-cyan-500/15 bg-[#061427]">
+            <IotDataTable>
+                <thead className="border-b border-border bg-surface-inset/80">
                   <tr>
                     {['Ativo', 'Ação', 'Gatilho', 'Prioridade', 'Status', 'Janela', 'Responsável', 'Ações'].map((header) => (
-                      <th
-                        key={header}
-                        className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.18em] text-slate-400"
-                      >
+                      <IotDataTableHead key={header}>
                         {header}
-                      </th>
+                      </IotDataTableHead>
                     ))}
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-800 text-sm text-slate-200">
+                <tbody className="divide-y divide-border/70 text-sm text-foreground">
                 {loading ? (
                     <IotTableStateRow
                       colSpan={8}
@@ -628,17 +630,17 @@ export function IotMaintenancePage() {
                         'Não atribuído';
 
                       return (
-                        <tr key={record.id} className="bg-[#071223]/80">
-                          <td className="px-4 py-4 text-slate-300">
+                        <tr key={record.id} className="transition-colors hover:bg-surface-inset/40">
+                          <td className="px-4 py-4 text-foreground">
                             {record.deviceName ?? resolveDeviceLabel(displayDevices, record.deviceId)}
                           </td>
                           <td className="px-4 py-4">
-                            <p className="font-semibold text-white">{record.title}</p>
-                            <p className="mt-1 text-sm text-slate-400">{record.description ?? 'Sem descrição'}</p>
+                            <p className="font-semibold text-foreground">{record.title}</p>
+                            <p className="mt-1 text-sm text-muted">{record.description ?? 'Sem descrição'}</p>
                           </td>
-                          <td className="px-4 py-4 text-slate-300">
+                          <td className="px-4 py-4 text-foreground">
                             <p>{trigger}</p>
-                            <p className="mt-1 text-xs text-slate-500">{record.linkedAlarmCode ?? matchedAlarm?.code ?? 'Sem alarme vinculado'}</p>
+                            <p className="mt-1 text-xs text-muted">{record.linkedAlarmCode ?? matchedAlarm?.code ?? 'Sem alarme vinculado'}</p>
                           </td>
                           <td className="px-4 py-4">
                             <IotStatusPill label={resolveMaintenancePriorityLabel(record.priority)} tone={resolvePriorityTone(record.priority)} />
@@ -646,38 +648,30 @@ export function IotMaintenancePage() {
                           <td className="px-4 py-4">
                             <IotStatusPill label={resolveMaintenanceStatusLabel(record.status)} tone={resolveStatusTone(record.status)} />
                           </td>
-                          <td className="px-4 py-4 text-slate-400">
+                          <td className="px-4 py-4 text-muted">
                             <p>{formatDateTime(record.scheduledAt)}</p>
                             <p className="mt-1 text-xs">
                               {record.completedAt ? `Fim ${formatDateTime(record.completedAt)}` : 'Ainda não concluída'}
                             </p>
                           </td>
-                          <td className="px-4 py-4 text-slate-300">{ownerLabel}</td>
+                          <td className="px-4 py-4 text-foreground">{ownerLabel}</td>
                           <td className="px-4 py-4">
                             <div className="flex flex-wrap gap-2">
                               {!useDemoMode ? (
                                 <>
                                   <PermissionGuard permission="iot.maintenance.update">
-                                    <button
-                                      type="button"
-                                      onClick={() => beginEdit(record)}
-                                      className="rounded-2xl border border-slate-700 bg-slate-950/40 px-3 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-slate-200 transition hover:border-cyan-400/35"
-                                    >
+                                    <IotInlineActionButton onClick={() => beginEdit(record)}>
                                       Editar
-                                    </button>
+                                    </IotInlineActionButton>
                                   </PermissionGuard>
                                   <PermissionGuard permission="iot.maintenance.delete">
-                                    <button
-                                      type="button"
-                                      onClick={() => setDeleteCandidate(record)}
-                                      className="rounded-2xl border border-rose-500/30 bg-rose-500/8 px-3 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-rose-200 transition hover:bg-rose-500/12"
-                                    >
+                                    <IotInlineDangerButton onClick={() => setDeleteCandidate(record)}>
                                       Excluir
-                                    </button>
+                                    </IotInlineDangerButton>
                                   </PermissionGuard>
                                 </>
                               ) : (
-                              <span className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
+                              <span className="text-xs font-semibold uppercase tracking-[0.16em] text-muted">
                                   Somente navegação
                               </span>
                             )}
@@ -688,8 +682,7 @@ export function IotMaintenancePage() {
                     })
                   )}
                 </tbody>
-              </table>
-            </div>
+            </IotDataTable>
           </IotPanel>
 
           <IotPanel
@@ -698,19 +691,19 @@ export function IotMaintenancePage() {
           >
             <div className="space-y-3">
               {displayAlarms.slice(0, 4).map((alarm) => (
-                <div
+                <IotSupportCard
                   key={alarm.id}
-                  className="rounded-2xl border border-slate-800 bg-slate-950/35 px-4 py-4"
+                  className="px-4 py-4"
                 >
                   <div className="flex flex-wrap items-center gap-2">
-                    <p className="font-semibold text-white">{alarm.code}</p>
+                    <p className="font-semibold text-foreground">{alarm.code}</p>
                     <IotStatusPill label={resolveAlarmStatusLabel(alarm.status)} tone={resolveStatusTone(alarm.status === 'OPEN' ? 'PENDING' : 'IN_PROGRESS')} />
                   </div>
-                  <p className="mt-2 text-sm text-slate-400">{alarm.message}</p>
-                  <p className="mt-2 text-xs uppercase tracking-[0.16em] text-slate-500">
+                  <p className="mt-2 text-sm text-muted">{alarm.message}</p>
+                  <p className="mt-2 text-xs uppercase tracking-[0.16em] text-muted">
                     {formatDateTime(alarm.triggeredAt)}
                   </p>
-                </div>
+                </IotSupportCard>
               ))}
             </div>
           </IotPanel>
@@ -739,7 +732,7 @@ export function IotMaintenancePage() {
           onCancel={() => setDeleteCandidate(null)}
           onConfirm={handleConfirmDelete}
         />
-      </div>
+      </IotModulePage>
     </PermissionGuard>
   );
 }

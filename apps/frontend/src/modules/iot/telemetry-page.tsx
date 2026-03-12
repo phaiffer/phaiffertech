@@ -9,22 +9,26 @@ import { iotService } from '@/shared/services/iot-service';
 import { PageResponse } from '@/shared/types/common';
 import { IotDevice, IotRegister, IotTelemetryRecord } from '@/shared/types/iot';
 import {
-  Chip,
-  DeviceIcon,
-  IotDateTimeField,
-  IotEmptyState,
-  IotHeroAside,
-  IotMiniTrend,
-  IotNotice,
-  IotPageHeader,
+    Chip,
+    DeviceIcon,
+    IotDataTable,
+    IotDataTableHead,
+    IotDateTimeField,
+    IotEmptyState,
+    IotHeroAside,
+    IotModulePage,
+    IotMiniTrend,
+    IotNotice,
+    IotPageHeader,
   IotPanel,
   IotPrimaryButton,
-  IotSecondaryButton,
-  IotSelectField,
-  IotStatusPill,
-  IotTableStateRow,
-  IotTextField,
-  WaveIcon
+    IotSecondaryButton,
+    IotSelectField,
+    IotStatusPill,
+    IotSupportCard,
+    IotTableStateRow,
+    IotTextField,
+    WaveIcon
 } from '@/modules/iot/iot-chrome';
 import {
   buildDemoDevicesFromReal,
@@ -432,7 +436,7 @@ export function IotTelemetryPage() {
         </div>
       }
     >
-      <div className="space-y-6">
+      <IotModulePage>
         <IotPageHeader
           eyebrow="Fluxo operacional"
           title="Stream de telemetria"
@@ -533,13 +537,13 @@ export function IotTelemetryPage() {
                   return (
                     <div
                       key={record.id}
-                      className="flex flex-col gap-4 rounded-[26px] border border-slate-800 bg-slate-950/35 px-5 py-4 lg:flex-row lg:items-center lg:justify-between"
+                      className="flex flex-col gap-4 rounded-lg border border-border bg-surface-inset px-5 py-4 lg:flex-row lg:items-center lg:justify-between"
                     >
                       <div>
-                        <p className="font-semibold text-white">
+                        <p className="font-semibold text-foreground">
                           {record.deviceName ?? resolveDeviceLabel(displayDevices, record.deviceId)}
                         </p>
-                        <p className="mt-1 text-sm text-slate-400">
+                        <p className="mt-1 text-sm text-muted">
                           {record.registerName ?? resolveRegisterLabel(displayRegisters, record.registerId)} • {mapping.functionCode}:{mapping.registerAddress}
                         </p>
                       </div>
@@ -549,7 +553,7 @@ export function IotTelemetryPage() {
                           tone={resolveQualityTone(quality)}
                         />
                         <IotStatusPill label={resolveTelemetryQualityLabel(quality)} tone={resolveQualityTone(quality)} />
-                        <span className="text-sm text-slate-500">{formatDateTime(record.recordedAt)}</span>
+                        <span className="text-sm text-muted">{formatDateTime(record.recordedAt)}</span>
                       </div>
                     </div>
                   );
@@ -591,25 +595,25 @@ export function IotTelemetryPage() {
             title="Tendência de coleta"
             description="Curva simplificada para comunicar ritmo de ingestão ao longo da janela recente."
           >
-            <IotMiniTrend title="Pontos por janela" series={trendSeries} accent="#22d3ee" />
+            <IotMiniTrend title="Pontos por janela" series={trendSeries} accent="var(--tenant-accent)" />
           </IotPanel>
           <IotPanel
             title="Sinais do stream"
             description="Indicadores curtos para leitura rápida e ligação natural com registradores e dashboard."
           >
             <div className="space-y-3">
-              <div className="rounded-2xl border border-slate-800 bg-slate-950/35 px-4 py-4">
-                <p className="text-sm font-semibold text-white">Cobertura atual</p>
-                <p className="mt-2 text-sm text-slate-400">
+              <IotSupportCard className="px-4 py-4">
+                <p className="text-sm font-semibold text-foreground">Cobertura atual</p>
+                <p className="mt-2 text-sm text-muted">
                   {devicesInFlow} dispositivo(s) e {uniqueMetrics} métrica(s) participando do stream exibido.
                 </p>
-              </div>
-              <div className="rounded-2xl border border-slate-800 bg-slate-950/35 px-4 py-4">
-                <p className="text-sm font-semibold text-white">Relacionamento com registradores</p>
-                <p className="mt-2 text-sm text-slate-400">
+              </IotSupportCard>
+              <IotSupportCard className="px-4 py-4">
+                <p className="text-sm font-semibold text-foreground">Relacionamento com registradores</p>
+                <p className="mt-2 text-sm text-muted">
                   Cada leitura mantém o vínculo com registrador, função Modbus e endereço lógico.
                 </p>
-              </div>
+              </IotSupportCard>
             </div>
           </IotPanel>
         </div>
@@ -618,21 +622,17 @@ export function IotTelemetryPage() {
           title="Tabela de telemetria"
           description="Leitura densa para operação, com contexto de ativo, registrador, mapeamento e qualidade."
         >
-          <div className="overflow-hidden rounded-[28px] border border-cyan-500/15">
-            <table className="min-w-full bg-[#050f1f]">
-              <thead className="border-b border-cyan-500/15 bg-[#061427]">
+          <IotDataTable>
+              <thead className="border-b border-border bg-surface-inset/80">
                 <tr>
                   {['Dispositivo', 'Registrador', 'Mapeamento', 'Métrica', 'Valor', 'Qualidade', 'Coletado em'].map((header) => (
-                    <th
-                      key={header}
-                      className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.18em] text-slate-400"
-                    >
+                    <IotDataTableHead key={header}>
                       {header}
-                    </th>
+                    </IotDataTableHead>
                   ))}
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-800 text-sm text-slate-200">
+              <tbody className="divide-y divide-border/70 text-sm text-foreground">
                 {loading ? (
                   <IotTableStateRow
                     colSpan={7}
@@ -659,11 +659,11 @@ export function IotTelemetryPage() {
                     const quality = resolveQuality(record, register);
 
                     return (
-                      <tr key={record.id} className="bg-[#071223]/80">
-                        <td className="px-4 py-4 text-slate-300">
+                      <tr key={record.id} className="transition-colors hover:bg-surface-inset/40">
+                        <td className="px-4 py-4 text-foreground">
                           {record.deviceName ?? resolveDeviceLabel(displayDevices, record.deviceId)}
                         </td>
-                        <td className="px-4 py-4 text-slate-300">
+                        <td className="px-4 py-4 text-foreground">
                           {record.registerName ?? resolveRegisterLabel(displayRegisters, record.registerId)}
                         </td>
                         <td className="px-4 py-4">
@@ -672,7 +672,7 @@ export function IotTelemetryPage() {
                             <IotStatusPill label={mapping.registerAddress} tone="neutral" />
                           </div>
                         </td>
-                        <td className="px-4 py-4 text-slate-300">{record.metricName}</td>
+                        <td className="px-4 py-4 text-foreground">{record.metricName}</td>
                         <td className="px-4 py-4">
                           <IotStatusPill
                             label={`${record.metricValue}${record.unit ? ` ${record.unit}` : ''}`}
@@ -682,14 +682,13 @@ export function IotTelemetryPage() {
                         <td className="px-4 py-4">
                           <IotStatusPill label={resolveTelemetryQualityLabel(quality)} tone={resolveQualityTone(quality)} />
                         </td>
-                        <td className="px-4 py-4 text-slate-400">{formatDateTime(record.recordedAt)}</td>
+                        <td className="px-4 py-4 text-muted">{formatDateTime(record.recordedAt)}</td>
                       </tr>
                     );
                   })
                 )}
               </tbody>
-            </table>
-          </div>
+          </IotDataTable>
         </IotPanel>
 
         {!useDemoMode ? (
@@ -702,7 +701,7 @@ export function IotTelemetryPage() {
             }
           />
         ) : null}
-      </div>
+      </IotModulePage>
     </PermissionGuard>
   );
 }

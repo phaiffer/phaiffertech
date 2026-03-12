@@ -1,7 +1,10 @@
 'use client';
 
 import Link from 'next/link';
-import { ReactNode, useId } from 'react';
+import type { CSSProperties, ReactNode } from 'react';
+import { useId } from 'react';
+import { resolveVisualProfile, withAlpha } from '@/shared/lib/visual-profile';
+import { useFrontendPlatform } from '@/shared/platform/use-frontend-platform';
 
 /* ═══════════════════════════════════════════════════════════════════════════
    PhaifferTech IoT Design System - Clean, Operational, Readable
@@ -37,6 +40,35 @@ const toneBorder: Record<Tone, string> = {
   amber: 'border-warning/30',
   red: 'border-destructive/30',
 };
+
+export function IotModulePage({
+  children,
+  className
+}: {
+  children: ReactNode;
+  className?: string;
+}) {
+  const platform = useFrontendPlatform();
+  const visualProfile = resolveVisualProfile({
+    tenantCode: platform.branding.tenantCode,
+    moduleContext: 'iot',
+    defaultProfile: 'iot-industrial',
+    accentColor: platform.visualProfile.accentColor,
+    primaryColor: platform.visualProfile.primaryColor
+  });
+
+  const style = {
+    ...platform.branding.style,
+    '--tenant-accent-soft': withAlpha(visualProfile.accentColor, visualProfile.accentTone.softAlpha),
+    '--tenant-primary-soft': withAlpha(visualProfile.primaryColor, visualProfile.surfaceNuance.tintOpacity)
+  } as CSSProperties;
+
+  return (
+    <div className={cn('space-y-6', className)} style={style} data-iot-profile={visualProfile.key}>
+      {children}
+    </div>
+  );
+}
 
 /* ═══════════════════════════════════════════════════════════════════════════
    Icon Components
@@ -207,7 +239,7 @@ export function IotHeroAside({
         {items.map((item) => (
           <div
             key={`${item.label}-${item.value}`}
-            className="flex items-center justify-between rounded-lg bg-surface-inset px-3 py-2"
+            className="flex items-center justify-between rounded-lg border border-border/70 bg-surface-inset px-3 py-2.5"
           >
             <p className="text-xs text-muted">{item.label}</p>
             <div className="flex items-center gap-2">
@@ -228,6 +260,20 @@ export function IotHeroAside({
   );
 }
 
+export function IotSupportCard({
+  children,
+  className
+}: {
+  children: ReactNode;
+  className?: string;
+}) {
+  return (
+    <div className={cn('rounded-lg border border-border bg-surface-inset p-4', className)}>
+      {children}
+    </div>
+  );
+}
+
 /* ═══════════════════════════════════════════════════════════════════════════
    Metric Card - Clean, Single KPI Focus
    ═══════════════════════════════════════════════════════════════════════════ */
@@ -237,6 +283,8 @@ export function IotMetricCard({
   value,
   footnote,
   status,
+  detailTitle,
+  detailDescription,
   tone = 'neutral',
   icon,
 }: {
@@ -252,20 +300,28 @@ export function IotMetricCard({
   return (
     <div className="rounded-xl border border-border bg-surface p-4">
       <div className="flex items-start justify-between gap-3">
-        <p className="text-xs font-medium text-muted">{label}</p>
-        {icon && (
+        <div className="min-w-0">
+          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted">{label}</p>
+          <p className="mt-3 text-3xl font-semibold tabular-nums text-foreground">{value}</p>
+        </div>
+        {icon ? (
           <span className={cn('rounded-lg p-2', toneBg[tone], toneText[tone])}>
             {icon}
           </span>
-        )}
+        ) : null}
       </div>
-      <p className="mt-3 text-3xl font-semibold tabular-nums text-foreground">{value}</p>
-      {footnote && <p className="mt-2 text-xs text-muted">{footnote}</p>}
-      {status && (
-        <div className="mt-3">
-          <IotStatusPill label={status} tone={tone} />
+      {footnote || status ? (
+        <div className="mt-3 flex flex-wrap items-center gap-2">
+          {status ? <IotStatusPill label={status} tone={tone} /> : null}
+          {footnote ? <p className="text-xs leading-5 text-muted">{footnote}</p> : null}
         </div>
-      )}
+      ) : null}
+      {detailTitle || detailDescription ? (
+        <div className="mt-4 border-t border-border/70 pt-3">
+          {detailTitle ? <p className="text-sm font-medium text-foreground">{detailTitle}</p> : null}
+          {detailDescription ? <p className="mt-1 text-xs leading-5 text-muted">{detailDescription}</p> : null}
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -289,7 +345,7 @@ export function IotPanel({
 }) {
   return (
     <section className={cn('rounded-xl border border-border bg-surface p-5', className)}>
-      <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+      <div className="mb-5 flex flex-col gap-2 border-b border-border/70 pb-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h2 className="text-base font-semibold text-foreground">{title}</h2>
           {description && <p className="mt-1 text-sm text-muted">{description}</p>}
@@ -394,6 +450,68 @@ export function IotTableStateRow({
         <IotEmptyState title={title} description={description} tone={tone} compact />
       </td>
     </tr>
+  );
+}
+
+export function IotDataTable({ children }: { children: ReactNode }) {
+  return (
+    <div className="overflow-hidden rounded-xl border border-border bg-surface">
+      <table className="min-w-full">{children}</table>
+    </div>
+  );
+}
+
+export function IotDataTableHeader({ children }: { children: ReactNode }) {
+  return <thead className="border-b border-border bg-surface-inset/80">{children}</thead>;
+}
+
+export function IotDataTableHead({
+  children,
+  className
+}: {
+  children: ReactNode;
+  className?: string;
+}) {
+  return (
+    <th className={cn('px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.18em] text-muted', className)}>
+      {children}
+    </th>
+  );
+}
+
+export function IotInlineActionButton({
+  onClick,
+  children
+}: {
+  onClick: () => void;
+  children: ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="rounded-lg border border-border bg-surface-inset px-3 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-foreground transition-colors hover:border-accent hover:text-accent"
+    >
+      {children}
+    </button>
+  );
+}
+
+export function IotInlineDangerButton({
+  onClick,
+  children
+}: {
+  onClick: () => void;
+  children: ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="rounded-lg border border-destructive/30 bg-destructive-muted px-3 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-destructive transition-colors hover:border-destructive/50"
+    >
+      {children}
+    </button>
   );
 }
 
@@ -584,7 +702,7 @@ export function IotSectionLabel({ children }: { children: ReactNode }) {
 export function IotMiniTrend({
   title,
   series,
-  accent = 'var(--accent)',
+  accent = 'var(--tenant-accent)',
 }: {
   title: string;
   series: Array<{ label: string; value: number }>;
@@ -628,7 +746,7 @@ export function IotMiniTrend({
       <div className="mb-4 flex items-start justify-between gap-4">
         <div>
           <p className="text-sm font-medium text-foreground">{title}</p>
-          <p className="mt-1 text-xs text-muted">Tendencia operacional</p>
+          <p className="mt-1 text-xs text-muted">Pulso recente da operacao</p>
         </div>
         <div className="text-right">
           <p className="text-2xl font-semibold tabular-nums text-foreground">{formatValue(currentValue)}</p>
@@ -711,7 +829,7 @@ export function IotSurfaceLink({
   return (
     <Link
       href={href}
-      className="group flex flex-col rounded-xl border border-border bg-surface p-4 transition-colors hover:border-accent hover:bg-accent-muted"
+      className="group flex flex-col rounded-xl border border-border bg-surface p-4 transition-colors hover:border-accent hover:bg-surface-inset"
     >
       <p className="text-sm font-medium text-foreground group-hover:text-accent">{title}</p>
       <p className="mt-1 text-xs text-muted">{description}</p>

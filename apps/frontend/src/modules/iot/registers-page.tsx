@@ -10,20 +10,26 @@ import { iotService } from '@/shared/services/iot-service';
 import { PageResponse } from '@/shared/types/common';
 import { IotDevice, IotRegister, IotTelemetryRecord } from '@/shared/types/iot';
 import {
-  BoltIcon,
-  Chip,
-  DeviceIcon,
-  IotHeroAside,
-  IotNotice,
-  IotPageHeader,
-  IotPanel,
+    BoltIcon,
+    Chip,
+    DeviceIcon,
+    IotDataTable,
+    IotDataTableHead,
+    IotHeroAside,
+    IotInlineActionButton,
+    IotInlineDangerButton,
+    IotModulePage,
+    IotNotice,
+    IotPageHeader,
+    IotPanel,
   IotPrimaryButton,
-  IotSecondaryButton,
-  IotSelectField,
-  IotStatusPill,
-  IotTableStateRow,
-  IotTextField,
-  PlugIcon,
+    IotSecondaryButton,
+    IotSelectField,
+    IotStatusPill,
+    IotSupportCard,
+    IotTableStateRow,
+    IotTextField,
+    PlugIcon,
   WaveIcon
 } from '@/modules/iot/iot-chrome';
 import {
@@ -432,7 +438,7 @@ export function IotRegistersPage() {
         </div>
       }
     >
-      <div className="space-y-6">
+      <IotModulePage>
         <IotPageHeader
           eyebrow="Mapeamento industrial"
           title="Registradores Modbus"
@@ -583,8 +589,8 @@ export function IotRegistersPage() {
                   />
                 </div>
 
-                <div className="rounded-[28px] border border-slate-800 bg-slate-950/35 p-5">
-                  <p className="text-sm font-semibold text-white">Preview do mapeamento</p>
+                <IotSupportCard>
+                  <p className="text-sm font-semibold text-foreground">Preview do mapeamento</p>
                   <div className="mt-3 flex flex-wrap gap-2">
                     <IotStatusPill label={buildModbusCode(functionCode, registerAddress)} tone="cyan" />
                     <IotStatusPill label={dataType} tone="neutral" />
@@ -593,10 +599,10 @@ export function IotRegistersPage() {
                       <IotStatusPill label={selectedTemplate.label} tone="amber" />
                     ) : null}
                   </div>
-                  <p className="mt-3 text-sm text-slate-400">
+                  <p className="mt-3 text-sm text-muted">
                     O campo `code` persistido no backend continua sendo o mapeamento construído a partir de função e endereço.
                   </p>
-                </div>
+                </IotSupportCard>
 
                 <div className="flex flex-wrap gap-3">
                   <IotPrimaryButton type="submit" disabled={submitting}>
@@ -630,18 +636,18 @@ export function IotRegistersPage() {
                     type="button"
                     onClick={() => applyTemplate(template.id)}
                     className={[
-                      'w-full rounded-[24px] border px-4 py-4 text-left transition',
+                      'w-full rounded-lg border px-4 py-4 text-left transition',
                       active
-                        ? 'border-cyan-400/45 bg-cyan-400/12'
-                        : 'border-slate-800 bg-slate-950/35 hover:border-slate-600'
+                        ? 'border-accent bg-accent-muted'
+                        : 'border-border bg-surface-inset hover:border-accent'
                     ].join(' ')}
                   >
                     <div className="flex flex-wrap items-center gap-2">
-                      <p className="font-semibold text-white">{template.label}</p>
+                      <p className="font-semibold text-foreground">{template.label}</p>
                       <IotStatusPill label={`${template.functionCode}:${template.registerAddress}`} tone="cyan" />
                     </div>
-                    <p className="mt-2 text-sm text-slate-400">{template.description}</p>
-                    <p className="mt-2 text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
+                    <p className="mt-2 text-sm text-muted">{template.description}</p>
+                    <p className="mt-2 text-xs font-semibold uppercase tracking-[0.16em] text-muted">
                       {template.dataType} • {template.unit}
                     </p>
                   </button>
@@ -655,21 +661,17 @@ export function IotRegistersPage() {
           title="Tabela operacional de registradores"
           description="Lista densa com associação ao ativo, mapeamento Modbus, faixas operacionais e última leitura conhecida."
         >
-          <div className="overflow-hidden rounded-[28px] border border-cyan-500/15">
-            <table className="min-w-full bg-[#050f1f]">
-              <thead className="border-b border-cyan-500/15 bg-[#061427]">
+          <IotDataTable>
+              <thead className="border-b border-border bg-surface-inset/80">
                 <tr>
                   {['Variável', 'Dispositivo', 'Mapeamento', 'Tipo / unidade', 'Faixas', 'Última leitura', 'Status', 'Ações'].map((header) => (
-                    <th
-                      key={header}
-                      className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.18em] text-slate-400"
-                    >
+                    <IotDataTableHead key={header}>
                       {header}
-                    </th>
+                    </IotDataTableHead>
                   ))}
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-800 text-sm text-slate-200">
+              <tbody className="divide-y divide-border/70 text-sm text-foreground">
                 {loading ? (
                   <IotTableStateRow
                     colSpan={8}
@@ -704,12 +706,12 @@ export function IotRegistersPage() {
                     );
 
                     return (
-                      <tr key={register.id} className="bg-[#071223]/80">
+                      <tr key={register.id} className="transition-colors hover:bg-surface-inset/40">
                         <td className="px-4 py-4">
-                          <p className="font-semibold text-white">{register.name}</p>
-                          <p className="mt-1 text-sm text-slate-400">{register.metricName}</p>
+                          <p className="font-semibold text-foreground">{register.name}</p>
+                          <p className="mt-1 text-sm text-muted">{register.metricName}</p>
                         </td>
-                        <td className="px-4 py-4 text-slate-300">
+                        <td className="px-4 py-4 text-foreground">
                           {resolveDeviceLabel(displayDevices, register.deviceId)}
                         </td>
                         <td className="px-4 py-4">
@@ -720,9 +722,9 @@ export function IotRegistersPage() {
                         </td>
                         <td className="px-4 py-4">
                           <p>{register.dataType}</p>
-                          <p className="mt-1 text-sm text-slate-400">{register.unit ?? '-'}</p>
+                          <p className="mt-1 text-sm text-muted">{register.unit ?? '-'}</p>
                         </td>
-                        <td className="px-4 py-4 text-slate-300">
+                        <td className="px-4 py-4 text-foreground">
                           {register.minThreshold ?? '-'} / {register.maxThreshold ?? '-'}
                         </td>
                         <td className="px-4 py-4">
@@ -732,12 +734,12 @@ export function IotRegistersPage() {
                                 label={`${latestReading.metricValue}${latestReading.unit ? ` ${latestReading.unit}` : ''}`}
                                 tone={latestTone}
                               />
-                              <span className="text-xs text-slate-500">
+                              <span className="text-xs text-muted">
                                 {formatDateTime(latestReading.recordedAt)}
                               </span>
                             </div>
                           ) : (
-                            <span className="text-slate-500">Sem leitura na janela atual</span>
+                            <span className="text-muted">Sem leitura na janela atual</span>
                           )}
                         </td>
                         <td className="px-4 py-4">
@@ -748,26 +750,18 @@ export function IotRegistersPage() {
                             {!useDemoMode ? (
                               <>
                                 <PermissionGuard permission="iot.register.update">
-                                  <button
-                                    type="button"
-                                    onClick={() => beginEdit(register)}
-                                    className="rounded-2xl border border-slate-700 bg-slate-950/40 px-3 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-slate-200 transition hover:border-cyan-400/35"
-                                  >
+                                  <IotInlineActionButton onClick={() => beginEdit(register)}>
                                     Editar
-                                  </button>
+                                  </IotInlineActionButton>
                                 </PermissionGuard>
                                 <PermissionGuard permission="iot.register.delete">
-                                  <button
-                                    type="button"
-                                    onClick={() => setDeleteCandidate(register)}
-                                    className="rounded-2xl border border-rose-500/30 bg-rose-500/8 px-3 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-rose-200 transition hover:bg-rose-500/12"
-                                  >
+                                  <IotInlineDangerButton onClick={() => setDeleteCandidate(register)}>
                                     Excluir
-                                  </button>
+                                  </IotInlineDangerButton>
                                 </PermissionGuard>
                               </>
                             ) : (
-                              <span className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
+                              <span className="text-xs font-semibold uppercase tracking-[0.16em] text-muted">
                                 Somente navegação
                               </span>
                             )}
@@ -778,8 +772,7 @@ export function IotRegistersPage() {
                   })
                 )}
               </tbody>
-            </table>
-          </div>
+          </IotDataTable>
         </IotPanel>
 
         {!useDemoMode ? (
@@ -805,7 +798,7 @@ export function IotRegistersPage() {
           onCancel={() => setDeleteCandidate(null)}
           onConfirm={handleConfirmDelete}
         />
-      </div>
+      </IotModulePage>
     </PermissionGuard>
   );
 }

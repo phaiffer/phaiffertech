@@ -5,12 +5,12 @@ import { Providers } from '@/shared/components/providers';
 
 const inter = Inter({
   subsets: ['latin'],
-  variable: '--font-sans',
+  variable: '--font-geist-sans',
 });
 
 const jetbrainsMono = JetBrains_Mono({
   subsets: ['latin'],
-  variable: '--font-mono',
+  variable: '--font-geist-mono',
 });
 
 export const metadata: Metadata = {

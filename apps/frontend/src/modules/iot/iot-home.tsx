@@ -12,10 +12,12 @@ import {
   IotEmptyState,
   IotHeroAside,
   IotMetricCard,
+  IotModulePage,
   IotNotice,
   IotPageHeader,
   IotPanel,
   IotStatusPill,
+  IotSupportCard,
   PlugIcon,
   WaveIcon
 } from '@/modules/iot/iot-chrome';
@@ -193,16 +195,16 @@ function IotWorkspaceActionLink({
   const interactive = capability.interactive;
   const content = (
     <>
-      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-cyan-300/80">{eyebrow}</p>
-      <h3 className="mt-3 text-xl font-semibold text-white">{title}</h3>
-      <p className="mt-2 text-sm leading-6 text-slate-400">{description}</p>
+      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--tenant-accent)]">{eyebrow}</p>
+      <h3 className="mt-3 text-lg font-semibold text-foreground">{title}</h3>
+      <p className="mt-2 text-sm leading-6 text-muted">{description}</p>
       {!isCapabilityReady(capability) && (capability.title || capability.description) ? (
-        <div className="mt-4 rounded-[22px] border border-dashed border-slate-700 bg-slate-950/45 px-4 py-3">
-          {capability.title ? <p className="text-sm font-semibold text-white">{capability.title}</p> : null}
-          {capability.description ? <p className="mt-1 text-sm text-slate-400">{capability.description}</p> : null}
+        <div className="mt-4 rounded-lg border border-dashed border-border bg-surface-inset px-4 py-3">
+          {capability.title ? <p className="text-sm font-semibold text-foreground">{capability.title}</p> : null}
+          {capability.description ? <p className="mt-1 text-sm text-muted">{capability.description}</p> : null}
         </div>
       ) : null}
-      <span className="mt-5 inline-flex text-sm font-semibold text-cyan-200 transition group-hover:translate-x-1">
+      <span className="mt-5 inline-flex text-sm font-semibold text-[color:var(--tenant-accent)] transition group-hover:translate-x-1">
         {capability.actionLabel}
       </span>
     </>
@@ -212,7 +214,7 @@ function IotWorkspaceActionLink({
     return (
       <Link
         href={href}
-        className="group rounded-[28px] border border-slate-800 bg-slate-950/35 p-5 transition hover:-translate-y-0.5 hover:border-cyan-400/35 hover:bg-slate-950/65"
+        className="group rounded-xl border border-border bg-surface p-5 transition hover:-translate-y-0.5 hover:border-accent hover:bg-surface-inset"
       >
         {content}
       </Link>
@@ -220,7 +222,7 @@ function IotWorkspaceActionLink({
   }
 
   return (
-    <div className="rounded-[28px] border border-dashed border-slate-700 bg-slate-950/35 p-5 opacity-90">
+    <div className="rounded-xl border border-dashed border-border bg-surface p-5 opacity-90">
       {content}
     </div>
   );
@@ -351,7 +353,7 @@ export function IotHome() {
   }, [canReadDashboard]);
 
   return (
-    <div className="space-y-6" style={platform.branding.style}>
+    <IotModulePage>
       <IotPageHeader
         eyebrow="IoT Workspace"
         title={`${platform.branding.scopeName} · Connected Operations`}
@@ -395,63 +397,88 @@ export function IotHome() {
       />
 
       <div className="grid gap-4 xl:grid-cols-[1.2fr_0.8fr_0.8fr_0.8fr]">
-        <div className="rounded-[28px] border border-slate-800 bg-slate-950/40 p-5 shadow-[0_18px_50px_rgba(2,8,20,0.35)]">
-          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--tenant-accent)]">
-            Workspace identity
-          </p>
-          <h2 className="mt-3 text-2xl font-semibold text-white">{platform.branding.scopeName}</h2>
-          <p className="mt-3 text-sm leading-6 text-slate-400">
-            Controlled tenant branding only touches accent areas here, while the operational IoT surfaces keep their module-specific visual language.
-          </p>
-          <div className="mt-5 flex flex-wrap gap-3">
-            <span
-              className="inline-flex items-center rounded-full border px-3 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--tenant-accent)]"
-              style={{
-                borderColor: 'var(--tenant-accent)',
-                backgroundColor: 'var(--tenant-accent-soft)'
-              }}
-            >
-              Contracted IoT surface
-            </span>
-            <span className="inline-flex items-center rounded-full border border-slate-700/70 bg-slate-900/70 px-3 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-slate-200">
-              {themePolicy}
-            </span>
+        <IotPanel
+          title="Operational focus"
+          description="Use this landing page to confirm the current state, understand the latest movement, and choose the next workflow."
+        >
+          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-1">
+            <IotSupportCard>
+              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--tenant-accent)]">
+                Current state
+              </p>
+              <p className="mt-2 text-sm font-medium text-foreground">
+                {!canReadDashboard
+                  ? 'Workspace access is available, but live pulse data is restricted.'
+                  : firstUse
+                    ? 'The workspace is ready for onboarding, but connected operations have not started yet.'
+                    : 'The landing page is tracking fleet, alarms, and maintenance for the current tenant scope.'}
+              </p>
+              <p className="mt-2 text-sm text-muted">
+                {platform.branding.scopeName} stays in {resolveWorkspaceMode(
+                  platform.workspace.isPlatformOwnerTenant,
+                  platform.workspace.hasSystemAdminRole
+                ).toLowerCase()} with {themePolicy.toLowerCase()}.
+              </p>
+            </IotSupportCard>
+            <IotSupportCard>
+              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--tenant-accent)]">
+                Next action
+              </p>
+              <p className="mt-2 text-sm font-medium text-foreground">
+                {primaryAction ? primaryAction.title : 'Review permitted IoT surfaces'}
+              </p>
+              <p className="mt-2 text-sm text-muted">
+                {!canReadDashboard
+                  ? 'Start with fleet or incident flows while dashboard access stays restricted.'
+                  : firstUse
+                    ? 'Onboard devices, mappings, and the first signals before expecting operational pulse cards.'
+                    : 'Use the pulse below to spot current pressure before moving into the detailed module screens.'}
+              </p>
+            </IotSupportCard>
           </div>
-        </div>
+        </IotPanel>
 
         <IotMetricCard
           label="Active devices"
           value={canReadDashboard && summary ? summary.activeDevices : '--'}
-          footnote={canReadDashboard ? 'Online assets currently reporting into this workspace.' : 'Requires dashboard visibility.'}
-          status={!canReadDashboard ? 'No permission' : summary && firstUse ? 'Setup required' : undefined}
+          footnote={canReadDashboard ? 'Assets currently reporting into this workspace.' : 'Requires dashboard visibility.'}
+          status={!canReadDashboard ? 'No permission' : summary && firstUse ? 'Setup required' : summary && summary.offlineDevices > 0 ? 'Recovery needed' : 'Nominal'}
           detailTitle={!canReadDashboard
             ? 'Dashboard visibility required'
             : summary && firstUse
               ? 'Fleet not configured yet'
-              : undefined}
+              : summary && summary.offlineDevices > 0
+                ? `${summary.offlineDevices} asset(s) are offline`
+                : 'Fleet reporting nominally'}
           detailDescription={!canReadDashboard
             ? 'Grant `iot.dashboard.read` to surface live fleet counts from this workspace landing page.'
             : summary && firstUse
               ? 'Onboard the first connected assets before active device health can surface here.'
-              : undefined}
-          tone="green"
+              : summary && summary.offlineDevices > 0
+                ? 'Open the fleet screen to inspect the communication path and recover the missing heartbeat.'
+                : 'Use the dashboard and telemetry views to confirm whether the nominal state remains stable over time.'}
+          tone={summary && summary.offlineDevices > 0 ? 'amber' : 'green'}
           icon={<DeviceIcon />}
         />
         <IotMetricCard
           label="Open alarms"
           value={canReadDashboard && summary ? summary.totalAlarmsOpen : '--'}
-          footnote={canReadDashboard ? 'Operational incidents still open in the current IoT workspace.' : 'Requires dashboard visibility.'}
-          status={!canReadDashboard ? 'No permission' : summary && firstUse ? 'Setup required' : undefined}
+          footnote={canReadDashboard ? 'Incidents still open in the current IoT workspace.' : 'Requires dashboard visibility.'}
+          status={!canReadDashboard ? 'No permission' : summary && firstUse ? 'Setup required' : summary && summary.totalAlarmsOpen > 0 ? 'Action required' : 'Stable'}
           detailTitle={!canReadDashboard
             ? 'Dashboard visibility required'
             : summary && firstUse
               ? 'Alarm flow not configured yet'
-              : undefined}
+              : summary && summary.totalAlarmsOpen > 0
+                ? 'Incident pressure is active'
+                : 'No open incident pressure'}
           detailDescription={!canReadDashboard
             ? 'Grant `iot.dashboard.read` to surface open incident counts from this workspace landing page.'
             : summary && firstUse
               ? 'Alarm volume appears after the first assets and threshold-driven monitoring signals are established.'
-              : undefined}
+              : summary && summary.totalAlarmsOpen > 0
+                ? 'Review alarms first to acknowledge ownership and decide whether maintenance needs to be opened.'
+                : 'Keep the alarm queue in view to catch changes before they affect the broader operational pulse.'}
           tone={summary && summary.totalAlarmsOpen > 0 ? 'amber' : 'cyan'}
           icon={<AlarmIcon />}
         />
@@ -459,17 +486,21 @@ export function IotHome() {
           label="Pending maintenance"
           value={canReadDashboard && summary ? summary.pendingMaintenance : '--'}
           footnote={canReadDashboard ? 'Interventions still pending for connected assets.' : 'Requires dashboard visibility.'}
-          status={!canReadDashboard ? 'No permission' : summary && firstUse ? 'Setup required' : undefined}
+          status={!canReadDashboard ? 'No permission' : summary && firstUse ? 'Setup required' : summary && summary.pendingMaintenance > 0 ? 'Backlog open' : 'Controlled'}
           detailTitle={!canReadDashboard
             ? 'Dashboard visibility required'
             : summary && firstUse
               ? 'Maintenance flow not configured yet'
-              : undefined}
+              : summary && summary.pendingMaintenance > 0
+                ? 'Field backlog needs prioritization'
+                : 'Backlog is currently controlled'}
           detailDescription={!canReadDashboard
             ? 'Grant `iot.dashboard.read` to surface pending maintenance counts from this workspace landing page.'
             : summary && firstUse
               ? 'Maintenance backlog appears after devices, alarms, and intervention work begin moving through the workspace.'
-              : undefined}
+              : summary && summary.pendingMaintenance > 0
+                ? 'Use the maintenance board to sequence work by urgency, owner, and incident trigger.'
+                : 'Track the maintenance board for changes tied to alarms or communication loss.'}
           tone={summary && summary.pendingMaintenance > 0 ? 'amber' : 'cyan'}
           icon={<PlugIcon />}
         />
@@ -601,26 +632,23 @@ export function IotHome() {
             {activitySection ? (
               <div className="grid gap-4 md:grid-cols-3">
                 {activitySection.items.slice(0, 3).map((item) => (
-                  <div
-                    key={item.id}
-                    className="rounded-[28px] border border-slate-800 bg-slate-950/35 p-5"
-                  >
+                  <IotSupportCard key={item.id}>
                     <div className="flex items-start justify-between gap-3">
                       <div>
-                        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+                        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted">
                           {activitySection.title}
                         </p>
-                        <h3 className="mt-3 text-lg font-semibold text-white">{item.label}</h3>
+                        <h3 className="mt-3 text-lg font-semibold text-foreground">{item.label}</h3>
                       </div>
                       <IotStatusPill label={item.status ?? 'Info'} tone={resolveIotTone(item.status)} />
                     </div>
                     {item.sublabel ? (
-                      <p className="mt-3 text-sm leading-6 text-slate-400">{item.sublabel}</p>
+                      <p className="mt-3 text-sm leading-6 text-muted">{item.sublabel}</p>
                     ) : null}
-                    <p className="mt-4 text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
+                    <p className="mt-4 text-xs font-semibold uppercase tracking-[0.16em] text-muted">
                       {formatTimestamp(item.timestamp)}
                     </p>
-                  </div>
+                  </IotSupportCard>
                 ))}
               </div>
             ) : (
@@ -653,6 +681,6 @@ export function IotHome() {
           />
         )}
       </IotPanel>
-    </div>
+    </IotModulePage>
   );
 }

@@ -9,20 +9,22 @@ import {
   BoltIcon,
   Chip,
   DeviceIcon,
-  FactoryIcon,
-  IotEmptyState,
-  IotHeroAside,
-  IotNotice,
-  IotPageHeader,
-  IotPanel,
+    FactoryIcon,
+    IotEmptyState,
+    IotHeroAside,
+    IotModulePage,
+    IotNotice,
+    IotPageHeader,
+    IotPanel,
   IotPrimaryButton,
   IotSectionLabel,
   IotSecondaryButton,
-  IotSelectField,
-  IotStatusPill,
-  IotTextField,
-  IotTextareaField,
-  PlugIcon
+    IotSelectField,
+    IotStatusPill,
+    IotSupportCard,
+    IotTextField,
+    IotTextareaField,
+    PlugIcon
 } from '@/modules/iot/iot-chrome';
 import { modbusVariableTemplates } from '@/modules/iot/iot-demo-data';
 
@@ -153,7 +155,7 @@ export function IotAddDevicePage() {
         </div>
       }
     >
-      <div className="space-y-6">
+      <IotModulePage>
         <IotPageHeader
           eyebrow="Onboarding industrial"
           title="Cadastrar dispositivo Modbus"
@@ -197,13 +199,10 @@ export function IotAddDevicePage() {
                   ['2. Comunicação', 'Protocolo, endpoint, Unit ID e cadência de coleta.'],
                   ['3. Pacote inicial', 'Seleção do conjunto mínimo de variáveis para demo.']
                 ].map(([title, text]) => (
-                  <div
-                    key={title}
-                    className="rounded-[24px] border border-slate-800 bg-slate-950/35 px-4 py-4"
-                  >
-                    <p className="text-sm font-semibold text-white">{title}</p>
-                    <p className="mt-2 text-sm text-slate-400">{text}</p>
-                  </div>
+                  <IotSupportCard key={title} className="px-4 py-4">
+                    <p className="text-sm font-semibold text-foreground">{title}</p>
+                    <p className="mt-2 text-sm text-muted">{text}</p>
+                  </IotSupportCard>
                 ))}
               </div>
 
@@ -247,13 +246,13 @@ export function IotAddDevicePage() {
                 helper="Esta descrição complementa o contexto Modbus persistido explicitamente no backend."
               />
 
-              <div className="rounded-[28px] border border-slate-800 bg-slate-950/35 p-5">
+              <IotSupportCard className="p-5">
                 <IotSectionLabel>Comunicação Modbus</IotSectionLabel>
                 <div className="flex items-center gap-3">
                   <FactoryIcon />
                   <div>
-                    <p className="text-lg font-semibold text-white">Camada de comunicação</p>
-                    <p className="text-sm text-slate-400">
+                    <p className="text-lg font-semibold text-foreground">Camada de comunicação</p>
+                    <p className="text-sm text-muted">
                       Semântica industrial compatível com Modbus TCP e RS-485, sem alterar o contrato já consolidado.
                     </p>
                   </div>
@@ -296,9 +295,9 @@ export function IotAddDevicePage() {
                     onChange={setPollingProfile}
                     options={pollingOptions}
                   />
-                  <div className="rounded-2xl border border-cyan-500/15 bg-[#071223] px-4 py-4">
-                    <p className="text-sm font-semibold text-white">Resumo da conexão</p>
-                    <p className="mt-2 text-sm text-slate-400">
+                  <IotSupportCard className="px-4 py-4">
+                    <p className="text-sm font-semibold text-foreground">Resumo da conexão</p>
+                    <p className="mt-2 text-sm text-muted">
                       {transport === 'MODBUS_TCP'
                         ? `Leitura via ${host}:${port} com Unit ID ${unitId}.`
                         : `Leitura via gateway ${host} convertendo RS-485 para Modbus com Slave ${unitId}.`}
@@ -308,9 +307,9 @@ export function IotAddDevicePage() {
                       <IotStatusPill label={`Polling ${pollingProfile}`} tone="green" />
                       <IotStatusPill label={`${selectedVariables.length} variáveis`} tone="neutral" />
                     </div>
-                  </div>
+                  </IotSupportCard>
                 </div>
-              </div>
+              </IotSupportCard>
 
               <div className="flex flex-wrap gap-3">
                 <IotPrimaryButton type="submit" disabled={submitting}>
@@ -339,33 +338,33 @@ export function IotAddDevicePage() {
                     <button
                       key={variable.id}
                       type="button"
-                      onClick={() => toggleVariable(variable.id)}
-                      className={[
-                        'w-full rounded-[24px] border px-4 py-4 text-left transition',
-                        checked
-                          ? 'border-cyan-400/45 bg-cyan-400/12'
-                          : 'border-slate-800 bg-slate-950/35 hover:border-slate-600'
-                      ].join(' ')}
-                    >
-                      <div className="flex items-start gap-3">
-                        <span
-                          className={[
-                            'mt-0.5 inline-flex h-5 w-5 rounded-xl border',
-                            checked
-                              ? 'border-cyan-300 bg-cyan-400/25'
-                              : 'border-slate-700 bg-slate-950/30'
-                          ].join(' ')}
-                        />
-                        <div className="min-w-0">
-                          <div className="flex flex-wrap items-center gap-2">
-                            <p className="font-semibold text-white">{variable.label}</p>
-                            <IotStatusPill label={`${variable.functionCode} • ${variable.dataType}`} tone="neutral" />
-                          </div>
-                          <p className="mt-1 text-sm text-slate-400">{variable.description}</p>
-                          <p className="mt-2 text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
-                            Registrador {variable.registerAddress} • Unidade {variable.unit}
-                          </p>
+                    onClick={() => toggleVariable(variable.id)}
+                    className={[
+                      'w-full rounded-lg border px-4 py-4 text-left transition',
+                      checked
+                          ? 'border-accent bg-accent-muted'
+                          : 'border-border bg-surface-inset hover:border-accent'
+                    ].join(' ')}
+                  >
+                    <div className="flex items-start gap-3">
+                      <span
+                        className={[
+                          'mt-0.5 inline-flex h-5 w-5 rounded-xl border',
+                          checked
+                              ? 'border-accent bg-accent-muted'
+                              : 'border-border bg-surface'
+                        ].join(' ')}
+                      />
+                      <div className="min-w-0">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <p className="font-semibold text-foreground">{variable.label}</p>
+                          <IotStatusPill label={`${variable.functionCode} • ${variable.dataType}`} tone="neutral" />
                         </div>
+                        <p className="mt-1 text-sm text-muted">{variable.description}</p>
+                        <p className="mt-2 text-xs font-semibold uppercase tracking-[0.16em] text-muted">
+                          Registrador {variable.registerAddress} • Unidade {variable.unit}
+                        </p>
+                      </div>
                       </div>
                     </button>
                   );
@@ -386,28 +385,28 @@ export function IotAddDevicePage() {
               ) : (
                 <div className="space-y-3">
                   {selectedTemplateItems.map((item) => (
-                    <div
+                    <IotSupportCard
                       key={item.id}
-                      className="rounded-2xl border border-slate-800 bg-slate-950/35 px-4 py-3"
+                      className="px-4 py-3"
                     >
                       <div className="flex flex-wrap items-center justify-between gap-3">
                         <div>
-                          <p className="font-semibold text-white">{item.label}</p>
-                          <p className="text-sm text-slate-400">{item.description}</p>
+                          <p className="font-semibold text-foreground">{item.label}</p>
+                          <p className="text-sm text-muted">{item.description}</p>
                         </div>
-                        <div className="text-right text-xs uppercase tracking-[0.16em] text-slate-500">
+                        <div className="text-right text-xs uppercase tracking-[0.16em] text-muted">
                           <p>{item.registerAddress}</p>
                           <p>{item.unit}</p>
                         </div>
                       </div>
-                    </div>
+                    </IotSupportCard>
                   ))}
                 </div>
               )}
             </IotPanel>
           </div>
         </div>
-      </div>
+      </IotModulePage>
     </PermissionGuard>
   );
 }

@@ -1,8 +1,12 @@
 'use client';
 
-import { useAuth } from '@/shared/auth/use-auth';
-import { usePathname, useRouter } from 'next/navigation';
 import { ReactNode, useEffect } from 'react';
+import { useAuth } from '@/shared/auth/use-auth';
+import {
+  sharedCompactTextClass,
+  sharedPanelSurfaceClass
+} from '@/shared/components/public-visual-system';
+import { usePathname, useRouter } from 'next/navigation';
 
 export function AuthGuard({ children }: { children: ReactNode }) {
   const { isLoading, isAuthenticated } = useAuth();
@@ -17,8 +21,11 @@ export function AuthGuard({ children }: { children: ReactNode }) {
 
   if (isLoading || !isAuthenticated) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-canvas">
-        <div className="rounded-xl bg-panel px-6 py-4 text-sm text-slate-600 shadow-card">Carregando sessão...</div>
+      <div className="flex min-h-screen items-center justify-center bg-background px-6">
+        <div className={`${sharedPanelSurfaceClass} px-6 py-5`}>
+          <p className={`font-medium text-foreground`}>Carregando sessão...</p>
+          <p className={`mt-2 ${sharedCompactTextClass}`}>Sincronizando o workspace autenticado.</p>
+        </div>
       </div>
     );
   }

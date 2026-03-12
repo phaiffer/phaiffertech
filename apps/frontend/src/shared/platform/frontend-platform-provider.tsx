@@ -10,8 +10,7 @@ import { useAuth } from '@/shared/auth/use-auth';
 import {
   APP_THEME_STORAGE_KEY,
   AppThemeMode,
-  buildTenantBrandingStyle,
-  getTenantScopeName,
+  resolveTenantBranding,
   getTenantWorkspaceLabel,
   toAppThemeMode
 } from '@/shared/lib/tenant-branding';
@@ -19,6 +18,7 @@ import { useModuleCatalog } from '@/shared/modules/use-module-catalog';
 import type { AuthenticatedUser } from '@/shared/types/auth';
 import { FrontendPlatformContext } from '@/shared/platform/frontend-platform.context';
 import type { FrontendPlatformState } from '@/shared/platform/frontend-platform.types';
+import type { VisualProfileKey } from '@/shared/lib/visual-profile';
 
 function readStoredThemeMode(): AppThemeMode | null {
   if (typeof window === 'undefined') {
@@ -43,6 +43,28 @@ function hasRole(user: AuthenticatedUser | null | undefined, role: string) {
 
 function resolveDocumentTheme(mode: AppThemeMode, prefersDark: boolean) {
   return mode === 'system' ? (prefersDark ? 'dark' : 'light') : mode;
+}
+
+function resolveDefaultVisualProfileKey(availableModuleCodes: string[]): VisualProfileKey | null {
+  const contractedCodes = availableModuleCodes.filter((code) => code !== 'CORE_PLATFORM');
+
+  if (contractedCodes.length !== 1) {
+    return null;
+  }
+
+  if (contractedCodes[0] === 'CRM') {
+    return 'crm-corporate';
+  }
+
+  if (contractedCodes[0] === 'IOT') {
+    return 'iot-industrial';
+  }
+
+  if (contractedCodes[0] === 'PET') {
+    return 'pet-clinic';
+  }
+
+  return null;
 }
 
 export function FrontendPlatformProvider({ children }: { children: ReactNode }) {
@@ -109,11 +131,18 @@ export function FrontendPlatformProvider({ children }: { children: ReactNode }) 
     () => modules.filter((moduleItem) => moduleItem.available && moduleItem.code !== 'CORE_PLATFORM'),
     [modules]
   );
+  const defaultVisualProfile = useMemo(
+    () => resolveDefaultVisualProfileKey(availableCodes),
+    [availableCodes]
+  );
 
   const value = useMemo<FrontendPlatformState>(() => {
     const isPlatformOwnerTenant = Boolean(user?.platformOwner);
     const hasSystemAdminRole = hasRole(user, 'SYS_ADMIN');
     const canManagePlatformAdministration = Boolean(user?.platformAdmin);
+    const resolvedBranding = resolveTenantBranding(user, {
+      defaultProfile: defaultVisualProfile
+    });
 
     return {
       user,
@@ -124,11 +153,12 @@ export function FrontendPlatformProvider({ children }: { children: ReactNode }) 
         canOverride: canOverrideTheme
       },
       branding: {
-        logoUrl: user?.tenantLogoUrl ?? null,
-        scopeName: getTenantScopeName(user),
-        tenantCode: user?.tenantCode ?? null,
-        style: buildTenantBrandingStyle(user)
+        logoUrl: resolvedBranding.logoUrl,
+        scopeName: resolvedBranding.scopeName,
+        tenantCode: resolvedBranding.tenantCode,
+        style: resolvedBranding.style
       },
+      visualProfile: resolvedBranding.visualProfile,
       workspace: {
         workspaceLabel: getTenantWorkspaceLabel(user),
         accessLabel: canManagePlatformAdministration ? 'Platform owner tenant' : 'Contracted SaaS workspace',
@@ -145,7 +175,18 @@ export function FrontendPlatformProvider({ children }: { children: ReactNode }) 
         contractedProducts
       }
     };
-  }, [availableCodes, canOverrideTheme, contractedProducts, error, loading, modules, tenantDefaultMode, themeMode, user]);
+  }, [
+    availableCodes,
+    canOverrideTheme,
+    contractedProducts,
+    defaultVisualProfile,
+    error,
+    loading,
+    modules,
+    tenantDefaultMode,
+    themeMode,
+    user
+  ]);
 
   return <FrontendPlatformContext.Provider value={value}>{children}</FrontendPlatformContext.Provider>;
 }

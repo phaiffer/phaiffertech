@@ -1,4 +1,9 @@
 import { DashboardSection as DashboardSectionType } from '@/shared/types/dashboard';
+import {
+  sharedCompactTextClass,
+  sharedPanelSurfaceClass,
+  sharedSectionHeadingClass
+} from '@/shared/components/public-visual-system';
 import { EmptyStateCard } from '@/shared/dashboard/empty-state-card';
 import { MetricGrid } from '@/shared/dashboard/metric-grid';
 import { RecentItemsList } from '@/shared/dashboard/recent-items-list';
@@ -17,11 +22,11 @@ export function DashboardSection({ section }: DashboardSectionProps) {
     section.timeSeries.length > 0;
 
   return (
-    <section className="rounded-xl border border-border bg-surface p-5">
+    <section className={`${sharedPanelSurfaceClass} p-5`}>
       <div className="mb-4">
-        <h2 className="text-base font-semibold text-foreground">{section.title}</h2>
+        <h2 className={sharedSectionHeadingClass}>{section.title}</h2>
         {section.description && (
-          <p className="mt-1 text-sm text-muted">{section.description}</p>
+          <p className={`mt-1 ${sharedCompactTextClass}`}>{section.description}</p>
         )}
       </div>
 

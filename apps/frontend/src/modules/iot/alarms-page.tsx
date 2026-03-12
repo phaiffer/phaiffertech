@@ -9,19 +9,24 @@ import { iotService } from '@/shared/services/iot-service';
 import { PageResponse } from '@/shared/types/common';
 import { IotAlarm, IotDevice, IotRegister } from '@/shared/types/iot';
 import {
-  AlarmIcon,
-  Chip,
-  IotHeroAside,
-  IotNotice,
-  IotPageHeader,
-  IotPanel,
+    AlarmIcon,
+    Chip,
+    IotDataTable,
+    IotDataTableHead,
+    IotHeroAside,
+    IotInlineActionButton,
+    IotModulePage,
+    IotNotice,
+    IotPageHeader,
+    IotPanel,
   IotPrimaryButton,
   IotSecondaryButton,
   IotSelectField,
   IotStatusPill,
-  IotTableStateRow,
-  IotTabButton,
-  IotTextField
+    IotSupportCard,
+    IotTableStateRow,
+    IotTabButton,
+    IotTextField
 } from '@/modules/iot/iot-chrome';
 import { demoAlarmList } from '@/modules/iot/iot-demo-data';
 import {
@@ -217,7 +222,7 @@ export function IotAlarmsPage() {
         </div>
       }
     >
-      <div className="space-y-6">
+      <IotModulePage>
         <IotPageHeader
           eyebrow="Resposta operacional"
           title="Central de alarmes"
@@ -307,21 +312,17 @@ export function IotAlarmsPage() {
             title="Fila de alarmes"
             description="Leitura densa para o time operacional com ativo, registrador, mensagem e momento do evento."
           >
-            <div className="overflow-hidden rounded-[28px] border border-cyan-500/15">
-              <table className="min-w-full bg-[#050f1f]">
-                <thead className="border-b border-cyan-500/15 bg-[#061427]">
+            <IotDataTable>
+                <thead className="border-b border-border bg-surface-inset/80">
                   <tr>
                     {['Código', 'Severidade', 'Status', 'Ativo', 'Registrador', 'Mensagem', 'Data/hora', 'Ações'].map((header) => (
-                      <th
-                        key={header}
-                        className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.18em] text-slate-400"
-                      >
+                      <IotDataTableHead key={header}>
                         {header}
-                      </th>
+                      </IotDataTableHead>
                     ))}
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-800 text-sm text-slate-200">
+                <tbody className="divide-y divide-border/70 text-sm text-foreground">
                 {loading ? (
                     <IotTableStateRow
                       colSpan={8}
@@ -342,9 +343,9 @@ export function IotAlarmsPage() {
                         alarm.registerName ?? resolveRegisterLabel(registers, alarm.registerId);
 
                       return (
-                        <tr key={alarm.id} className="bg-[#071223]/80">
+                        <tr key={alarm.id} className="transition-colors hover:bg-surface-inset/40">
                           <td className="px-4 py-4">
-                            <p className="font-semibold text-white">{alarm.code}</p>
+                            <p className="font-semibold text-foreground">{alarm.code}</p>
                           </td>
                           <td className="px-4 py-4">
                             <IotStatusPill label={resolveAlarmSeverityLabel(alarm.severity)} tone={resolveToneFromSeverity(alarm.severity)} />
@@ -352,23 +353,19 @@ export function IotAlarmsPage() {
                           <td className="px-4 py-4">
                             <IotStatusPill label={resolveAlarmStatusLabel(alarm.status)} tone={resolveStatusTone(alarm.status)} />
                           </td>
-                          <td className="px-4 py-4 text-slate-300">{deviceLabel}</td>
-                          <td className="px-4 py-4 text-slate-400">{registerLabel}</td>
+                          <td className="px-4 py-4 text-foreground">{deviceLabel}</td>
+                          <td className="px-4 py-4 text-muted">{registerLabel}</td>
                           <td className="px-4 py-4">
-                            <p className="max-w-sm text-slate-300">{alarm.message}</p>
+                            <p className="max-w-sm text-foreground">{alarm.message}</p>
                           </td>
-                          <td className="px-4 py-4 text-slate-400">{formatDateTime(alarm.triggeredAt)}</td>
+                          <td className="px-4 py-4 text-muted">{formatDateTime(alarm.triggeredAt)}</td>
                           <td className="px-4 py-4">
                             {!useDemoMode && alarm.status === 'OPEN' ? (
-                              <button
-                                type="button"
-                                onClick={() => void acknowledgeAlarm(alarm.id)}
-                                className="rounded-2xl border border-cyan-400/35 bg-cyan-400/12 px-3 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-cyan-100 transition hover:bg-cyan-400/18"
-                              >
+                              <IotInlineActionButton onClick={() => void acknowledgeAlarm(alarm.id)}>
                                 Reconhecer
-                              </button>
+                              </IotInlineActionButton>
                             ) : (
-                              <span className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
+                              <span className="text-xs font-semibold uppercase tracking-[0.16em] text-muted">
                                 {useDemoMode ? 'Somente navegação' : 'Sem ação'}
                               </span>
                             )}
@@ -378,8 +375,7 @@ export function IotAlarmsPage() {
                     })
                   )}
                 </tbody>
-              </table>
-            </div>
+            </IotDataTable>
           </IotPanel>
 
           <IotPanel
@@ -393,12 +389,12 @@ export function IotAlarmsPage() {
                 '3. Direcionar manutenção quando houver repetição, perda de heartbeat ou criticidade alta.',
                 '4. Fechar o loop no dashboard e na observabilidade consolidada.'
               ].map((step) => (
-                <div
+                <IotSupportCard
                   key={step}
-                  className="rounded-2xl border border-slate-800 bg-slate-950/35 px-4 py-3 text-sm text-slate-300"
+                  className="px-4 py-3 text-sm text-foreground"
                 >
                   {step}
-                </div>
+                </IotSupportCard>
               ))}
             </div>
           </IotPanel>
@@ -412,7 +408,7 @@ export function IotAlarmsPage() {
             onPageChange={(nextPage) => load(nextPage, search, severityFilter, statusFilter)}
           />
         ) : null}
-      </div>
+      </IotModulePage>
     </PermissionGuard>
   );
 }

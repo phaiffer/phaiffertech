@@ -12,12 +12,17 @@ import { PageResponse } from '@/shared/types/common';
 import { IotDevice } from '@/shared/types/iot';
 import {
   Chip,
-  DeviceIcon,
-  IotActionButton,
-  IotHeroAside,
-  IotNotice,
-  IotPageHeader,
-  IotPanel,
+    DeviceIcon,
+    IotActionButton,
+    IotDataTable,
+    IotDataTableHead,
+    IotHeroAside,
+    IotInlineActionButton,
+    IotInlineDangerButton,
+    IotModulePage,
+    IotNotice,
+    IotPageHeader,
+    IotPanel,
   IotPrimaryButton,
   IotSecondaryButton,
   IotSelectField,
@@ -257,7 +262,7 @@ export function IotDevicesPage() {
         </div>
       }
     >
-      <div className="space-y-6">
+      <IotModulePage>
         <IotPageHeader
           eyebrow="Frota conectada"
           title="Dispositivos da operação"
@@ -368,21 +373,17 @@ export function IotDevicesPage() {
           title="Tabela operacional"
           description="Lista densa com contexto Modbus, cobertura de leitura, status atual e último contato conhecido."
         >
-          <div className="overflow-hidden rounded-[28px] border border-cyan-500/15">
-            <table className="min-w-full bg-[#050f1f]">
-              <thead className="border-b border-cyan-500/15 bg-[#061427]">
+          <IotDataTable>
+            <thead className="border-b border-border bg-surface-inset/80">
                 <tr>
                   {['Nome', 'Contexto Modbus', 'Leituras', 'Status', 'Último contato', 'Ações'].map((header) => (
-                    <th
-                      key={header}
-                      className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.18em] text-slate-400"
-                    >
+                    <IotDataTableHead key={header}>
                       {header}
-                    </th>
+                    </IotDataTableHead>
                   ))}
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-800 text-sm text-slate-200">
+              <tbody className="divide-y divide-border/70 text-sm text-foreground">
                 {loading ? (
                   <IotTableStateRow
                     colSpan={6}
@@ -402,25 +403,25 @@ export function IotDevicesPage() {
                     const tone = resolveTone(device.status);
 
                     return (
-                      <tr key={device.id} className="bg-[#071223]/80">
+                      <tr key={device.id} className="transition-colors hover:bg-surface-inset/40">
                         <td className="px-4 py-4">
-                          <p className="font-semibold text-white">{device.name}</p>
-                          <p className="mt-1 text-sm text-slate-400">
+                          <p className="font-semibold text-foreground">{device.name}</p>
+                          <p className="mt-1 text-sm text-muted">
                             {device.identifier ?? device.serialNumber ?? '-'} • {device.location ?? profile.area}
                           </p>
-                          <p className="mt-1 text-xs uppercase tracking-[0.16em] text-slate-500">
+                          <p className="mt-1 text-xs uppercase tracking-[0.16em] text-muted">
                             {resolveDeviceTypeLabel(device.type)} • {profile.transport}
                           </p>
                         </td>
                         <td className="px-4 py-4">
                           <p>{profile.transport}</p>
-                          <p className="mt-1 text-sm text-slate-400">
+                          <p className="mt-1 text-sm text-muted">
                             {profile.host}:{profile.port} • Unit {profile.unitId}
                           </p>
                         </td>
                         <td className="px-4 py-4">
                           <p>{profile.registerCount} variáveis</p>
-                          <p className="mt-1 text-sm text-slate-400">
+                          <p className="mt-1 text-sm text-muted">
                             Polling {profile.pollInterval} • Gateway {profile.gateway}
                           </p>
                         </td>
@@ -430,28 +431,20 @@ export function IotDevicesPage() {
                             <IotStatusPill label={profile.signal} tone={profile.health} />
                           </div>
                         </td>
-                        <td className="px-4 py-4 text-slate-400">{formatDateTime(device.lastSeenAt)}</td>
+                        <td className="px-4 py-4 text-muted">{formatDateTime(device.lastSeenAt)}</td>
                         <td className="px-4 py-4">
                           <div className="flex flex-wrap gap-2">
                             {!shouldUseDemo ? (
                               <>
-                                <button
-                                  type="button"
-                                  onClick={() => beginEdit(device)}
-                                  className="rounded-2xl border border-slate-700 bg-slate-950/40 px-3 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-slate-200 transition hover:border-cyan-400/35"
-                                >
+                                <IotInlineActionButton onClick={() => beginEdit(device)}>
                                   Editar
-                                </button>
-                                <button
-                                  type="button"
-                                  onClick={() => setDeleteCandidate(device)}
-                                  className="rounded-2xl border border-rose-500/30 bg-rose-500/8 px-3 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-rose-200 transition hover:bg-rose-500/12"
-                                >
+                                </IotInlineActionButton>
+                                <IotInlineDangerButton onClick={() => setDeleteCandidate(device)}>
                                   Excluir
-                                </button>
+                                </IotInlineDangerButton>
                               </>
                             ) : (
-                              <span className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
+                              <span className="text-xs font-semibold uppercase tracking-[0.16em] text-muted">
                                 Somente navegação
                               </span>
                             )}
@@ -462,8 +455,7 @@ export function IotDevicesPage() {
                   })
                 )}
               </tbody>
-            </table>
-          </div>
+          </IotDataTable>
         </IotPanel>
 
         {!shouldUseDemo ? (
@@ -483,7 +475,7 @@ export function IotDevicesPage() {
           onCancel={() => setDeleteCandidate(null)}
           onConfirm={handleConfirmDelete}
         />
-      </div>
+      </IotModulePage>
     </PermissionGuard>
   );
 }

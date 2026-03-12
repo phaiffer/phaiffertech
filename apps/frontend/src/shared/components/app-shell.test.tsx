@@ -60,15 +60,16 @@ vi.mock('@/shared/platform/use-frontend-platform', () => ({
 }));
 
 describe('AppShell', () => {
-  it('renders tenant-managed theme messaging from the platform context', () => {
+  it('renders the workspace header and propagates tenant branding from the platform context', () => {
     render(
       <AppShell>
         <div>Dashboard content</div>
       </AppShell>
     );
 
-    expect(screen.getByText(/Theme managed by tenant:/)).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Dark' })).not.toBeInTheDocument();
-    expect(screen.getByText('Workspace Overview')).toBeInTheDocument();
+    expect(screen.getByText('Tenant workspace')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Dashboard' })).toBeInTheDocument();
+    expect(screen.getByText('Visão geral do workspace e módulos contratados.')).toBeInTheDocument();
+    expect(screen.getByTestId('sidebar').parentElement).toHaveStyle({ '--tenant-accent': '#2563eb' });
   });
 });

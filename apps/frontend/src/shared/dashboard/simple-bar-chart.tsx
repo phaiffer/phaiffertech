@@ -1,3 +1,8 @@
+import {
+  sharedCompactTextClass,
+  sharedPanelSurfaceClass,
+  sharedSectionHeadingClass
+} from '@/shared/components/public-visual-system';
 import { DashboardCountMetric } from '@/shared/types/dashboard';
 import { EmptyStateCard } from '@/shared/dashboard/empty-state-card';
 
@@ -19,19 +24,22 @@ export function SimpleBarChart({ title, metrics, emptyMessage }: SimpleBarChartP
   const maxValue = Math.max(...metrics.map((metric) => metric.value), 1);
 
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-      <h3 className="text-sm font-semibold text-slate-900">{title}</h3>
+    <div className={`${sharedPanelSurfaceClass} p-5`}>
+      <h3 className={sharedSectionHeadingClass}>{title}</h3>
       <div className="mt-4 space-y-3">
         {metrics.map((metric) => (
           <div key={metric.key}>
-            <div className="mb-1 flex items-center justify-between text-sm text-slate-600">
+            <div className={`mb-2 flex items-center justify-between ${sharedCompactTextClass}`}>
               <span>{metric.label}</span>
-              <span className="font-semibold text-slate-900">{formatValue(metric.value)}</span>
+              <span className="font-semibold text-foreground">{formatValue(metric.value)}</span>
             </div>
-            <div className="h-2 rounded-full bg-slate-100">
+            <div className="h-2 rounded-full bg-surface-inset">
               <div
-                className="h-2 rounded-full bg-gradient-to-r from-action to-accent"
-                style={{ width: `${Math.max((metric.value / maxValue) * 100, 6)}%` }}
+                className="h-2 rounded-full"
+                style={{
+                  width: `${Math.max((metric.value / maxValue) * 100, 6)}%`,
+                  backgroundImage: 'linear-gradient(90deg, var(--tenant-primary), var(--tenant-accent))'
+                }}
               />
             </div>
           </div>
