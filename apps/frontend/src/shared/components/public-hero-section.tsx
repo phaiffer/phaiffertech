@@ -32,7 +32,7 @@ export function PublicHeroSection({
 }: PublicHeroSectionProps) {
   return (
     <section id={id} className="relative flex min-h-[75vh] items-center overflow-hidden bg-[#050a15]">
-      {/* Background Banner with deep gradient overlay */}
+      {/* Background Banner with deep gradient overlay to protect left content */}
       <div className="absolute inset-0 z-0">
         <Image
           src="/PhaifferTech.png"
@@ -41,23 +41,23 @@ export function PublicHeroSection({
           priority
           className="object-cover"
         />
-        <div className="absolute inset-0 bg-gradient-to-b from-[#050a15]/50 to-[#050a15]" />
+        <div className="absolute inset-0 bg-gradient-to-r from-[#050a15] via-[#050a15]/80 to-transparent" />
       </div>
 
       <div
         className={`${publicSiteContainerClass} relative z-10 grid items-center gap-12 py-16 lg:grid-cols-2 lg:gap-16 lg:py-24`}
       >
-        {/* Content with high contrast */}
-        <div className="relative max-w-xl text-[#e0e1dd]">
+        {/* Content with high contrast protected on the dark left side */}
+        <div className="relative max-w-xl text-[#e0e1dd] glass-surface border border-white/5 rounded-2xl p-8 lg:p-10 shadow-2xl backdrop-blur-xl bg-[#050a15]/40">
           <p className={`${publicEyebrowClass} inline-flex border-l-2 border-[#00b4d8] pl-4 text-[#00b4d8] drop-shadow-[0_0_8px_rgba(0,180,216,0.8)]`}>
             {eyebrow}
           </p>
 
           <h1 className="mt-6 max-w-4xl">
-            <span className={`${publicHeroTitleClass} text-white drop-shadow-sm`}>{title}</span>
+            <span className={`${publicHeroTitleClass} text-white drop-shadow-sm leading-tight`}>{title}</span>
           </h1>
 
-          <p className={`${publicHeroSupportingTextClass} text-gray-300 font-medium tracking-wide`}>
+          <p className={`${publicHeroSupportingTextClass} text-gray-300 font-medium tracking-wide drop-shadow-sm`}>
             {description}
           </p>
 
@@ -66,7 +66,7 @@ export function PublicHeroSection({
               {primaryCtaLabel}
             </Link>
 
-            <Link href={secondaryCtaHref} className={`${publicSecondaryButtonClass} border-white/20 text-[#e0e1dd] bg-white/5 hover:bg-white/10 hover:text-white transition-all backdrop-blur-md`}>
+            <Link href={secondaryCtaHref} className={`${publicSecondaryButtonClass} border-white/20 text-[#e0e1dd] bg-white/5 hover:bg-white/10 hover:text-white transition-all backdrop-blur-md hover:border-white/40`}>
               {secondaryCtaLabel}
             </Link>
           </div>
