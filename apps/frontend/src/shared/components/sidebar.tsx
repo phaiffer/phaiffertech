@@ -16,171 +16,162 @@ type SidebarItem = {
   moduleCode?: 'CRM' | 'IOT' | 'PET';
   group: SidebarGroup;
   platformOnly?: boolean;
-  icon: (props: { active: boolean }) => ReactNode;
+  icon: (props: { className?: string }) => ReactNode;
 };
 
-function NavIcon({
-  active,
-  path,
-  viewBox = '0 0 24 24'
-}: {
-  active: boolean;
-  path: ReactNode;
-  viewBox?: string;
-}) {
+/* ═══════════════════════════════════════════════════════════════════════════
+   Icon Components - Minimal stroke-based icons
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+function IconGrid({ className }: { className?: string }) {
   return (
-    <span
-      className={[
-        'inline-flex h-8 w-8 items-center justify-center rounded-xl border transition',
-        active
-          ? 'border-[color:var(--tenant-accent)] bg-[color:var(--tenant-accent-soft)] text-[color:var(--app-shell-heading)]'
-          : 'border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-panel-muted)] text-[color:var(--app-shell-muted)]'
-      ].join(' ')}
-    >
-      <svg viewBox={viewBox} className="h-4.5 w-4.5" fill="none" stroke="currentColor" strokeWidth="1.8">
-        {path}
-      </svg>
-    </span>
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+      <rect x="3" y="3" width="7" height="7" rx="1" />
+      <rect x="14" y="3" width="7" height="7" rx="1" />
+      <rect x="3" y="14" width="7" height="7" rx="1" />
+      <rect x="14" y="14" width="7" height="7" rx="1" />
+    </svg>
   );
 }
 
-const DashboardNavIcon = ({ active }: { active: boolean }) => (
-  <NavIcon
-    active={active}
-    path={<path d="M4 4h7v7H4zm9 0h7v7h-7zm-9 9h7v7H4zm9 3h7v4h-7z" />}
-  />
-);
+function IconUsers({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+      <circle cx="9" cy="7" r="4" />
+      <path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2" />
+      <circle cx="17" cy="11" r="3" />
+      <path d="M21 21v-1a3 3 0 0 0-3-3h-1" />
+    </svg>
+  );
+}
 
-const DeviceNavIcon = ({ active }: { active: boolean }) => (
-  <NavIcon
-    active={active}
-    path={(
-      <>
-        <rect x="8" y="3" width="8" height="18" rx="2" />
-        <path d="M10 7h4M10 11h4M10 15h4" />
-      </>
-    )}
-  />
-);
+function IconSettings({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+      <circle cx="12" cy="12" r="3" />
+      <path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83" />
+    </svg>
+  );
+}
 
-const AlarmNavIcon = ({ active }: { active: boolean }) => (
-  <NavIcon
-    active={active}
-    path={(
-      <>
-        <path d="m12 4-8 14h16L12 4Z" />
-        <path d="M12 9v4m0 3h.01" />
-      </>
-    )}
-  />
-);
+function IconBuilding({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+      <path d="M3 21h18M5 21V7l8-4v18M19 21V11l-6-4" />
+      <path d="M9 9v.01M9 12v.01M9 15v.01M9 18v.01" />
+    </svg>
+  );
+}
 
-const AnalysisNavIcon = ({ active }: { active: boolean }) => (
-  <NavIcon
-    active={active}
-    path={(
-      <>
-        <path d="M4 17 10 11l3 3 7-7" />
-        <path d="M15 7h5v5" />
-      </>
-    )}
-  />
-);
+function IconDevice({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+      <rect x="5" y="2" width="14" height="20" rx="2" />
+      <path d="M9 6h6M9 10h6M9 14h4" />
+    </svg>
+  );
+}
 
-const AddDeviceNavIcon = ({ active }: { active: boolean }) => (
-  <NavIcon active={active} path={<path d="M12 4v16M4 12h16" />} />
-);
+function IconBell({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+      <path d="M18 8A6 6 0 1 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+      <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+    </svg>
+  );
+}
 
-const WaveNavIcon = ({ active }: { active: boolean }) => (
-  <NavIcon
-    active={active}
-    path={<path d="M2 12c2.5 0 2.5-6 5-6s2.5 12 5 12 2.5-12 5-12 2.5 6 5 6" />}
-  />
-);
+function IconChart({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+      <path d="M3 3v18h18" />
+      <path d="m19 9-5 5-4-4-3 3" />
+    </svg>
+  );
+}
 
-const RegistersNavIcon = ({ active }: { active: boolean }) => (
-  <NavIcon
-    active={active}
-    path={(
-      <>
-        <path d="M6 5h12M6 12h12M6 19h12" />
-        <path d="M4 5h.01M4 12h.01M4 19h.01" />
-      </>
-    )}
-  />
-);
+function IconPlus({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+      <path d="M12 5v14M5 12h14" />
+    </svg>
+  );
+}
 
-const ToolNavIcon = ({ active }: { active: boolean }) => (
-  <NavIcon active={active} path={<path d="M14 7a4 4 0 1 1-5 5L4 17l3 3 5-5a4 4 0 0 1 5-5l-3 3" />} />
-);
+function IconWave({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+      <path d="M2 12c2-3 4-6 6-3s4 6 6 3 4-6 6-3" />
+    </svg>
+  );
+}
 
-const UserNavIcon = ({ active }: { active: boolean }) => (
-  <NavIcon
-    active={active}
-    viewBox="0 0 24 24"
-    path={(
-      <>
-        <path d="M8 9a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm8 2a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" />
-        <path d="M2 21a6 6 0 0 1 12 0M14 21a5 5 0 0 1 8 0" />
-      </>
-    )}
-  />
-);
+function IconList({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+      <path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01" />
+    </svg>
+  );
+}
 
-const SettingsNavIcon = ({ active }: { active: boolean }) => (
-  <NavIcon
-    active={active}
-    path={(
-      <>
-        <path d="M12 8.5A3.5 3.5 0 1 0 12 15.5A3.5 3.5 0 1 0 12 8.5Z" />
-        <path d="m19.4 15 .8 1.3-1.5 2.5-1.5-.3a7.5 7.5 0 0 1-1.5.9l-.4 1.5H10.7l-.4-1.5a7.5 7.5 0 0 1-1.5-.9l-1.5.3-1.5-2.5.8-1.3a7.7 7.7 0 0 1 0-1.8l-.8-1.3 1.5-2.5 1.5.3a7.5 7.5 0 0 1 1.5-.9l.4-1.5h2.9l.4 1.5a7.5 7.5 0 0 1 1.5.9l1.5-.3 1.5 2.5-.8 1.3a7.7 7.7 0 0 1 0 1.8Z" />
-      </>
-    )}
-  />
-);
+function IconTool({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+      <path d="m14.7 6.3-1.4 1.4 3 3 1.4-1.4a2.1 2.1 0 0 0 0-3 2.1 2.1 0 0 0-3 0Z" />
+      <path d="m4 21 6-6" />
+      <path d="m3 16 5 5" />
+    </svg>
+  );
+}
 
-const ClipboardNavIcon = ({ active }: { active: boolean }) => (
-  <NavIcon
-    active={active}
-    path={(
-      <>
-        <path d="M9 4h6" />
-        <path d="M9 7h6" />
-        <path d="M8 4H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-2" />
-        <path d="M9 3h6v3H9z" />
-      </>
-    )}
-  />
-);
+function IconClipboard({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+      <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
+      <rect x="8" y="2" width="8" height="4" rx="1" />
+    </svg>
+  );
+}
 
-const NoteNavIcon = ({ active }: { active: boolean }) => (
-  <NavIcon
-    active={active}
-    path={(
-      <>
-        <path d="M7 4h7l3 3v13H7z" />
-        <path d="M14 4v4h4" />
-        <path d="M10 12h4M10 16h4" />
-      </>
-    )}
-  />
-);
+function IconNote({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+      <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" />
+      <polyline points="14,2 14,8 20,8" />
+    </svg>
+  );
+}
 
-const CalendarNavIcon = ({ active }: { active: boolean }) => (
-  <NavIcon
-    active={active}
-    path={(
-      <>
-        <rect x="4" y="6" width="16" height="14" rx="2" />
-        <path d="M8 3v6M16 3v6M4 10h16" />
-      </>
-    )}
-  />
-);
+function IconCalendar({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+      <rect x="3" y="4" width="18" height="18" rx="2" />
+      <path d="M16 2v4M8 2v4M3 10h18" />
+    </svg>
+  );
+}
 
-const HeartbeatNavIcon = ({ active }: { active: boolean }) => (
-  <NavIcon active={active} path={<path d="M3 12h4l2-3 3 6 2-3h7" />} />
-);
+function IconHeart({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+      <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" />
+    </svg>
+  );
+}
+
+function IconLogout({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+      <polyline points="16,17 21,12 16,7" />
+      <line x1="21" y1="12" x2="9" y2="12" />
+    </svg>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Navigation Items Configuration
+   ═══════════════════════════════════════════════════════════════════════════ */
 
 const crmOverviewPermissions = [
   'crm.dashboard.read',
@@ -191,7 +182,7 @@ const crmOverviewPermissions = [
   'crm.pipeline.read',
   'crm.task.read',
   'crm.note.read',
-  'crm.activity.read'
+  'crm.activity.read',
 ];
 
 const petOverviewPermissions = [
@@ -206,198 +197,56 @@ const petOverviewPermissions = [
   'pet.prescription.read',
   'pet.product.read',
   'pet.inventory.read',
-  'pet.invoice.read'
+  'pet.invoice.read',
 ];
 
 const items: SidebarItem[] = [
-  {
-    href: '/dashboard',
-    label: 'Overview',
-    group: 'core',
-    icon: DashboardNavIcon
-  },
-  {
-    href: '/users',
-    label: 'Users',
-    anyOf: ['USER_READ'],
-    group: 'core',
-    icon: UserNavIcon
-  },
-  {
-    href: '/tenants',
-    label: 'Tenants',
-    anyOf: ['TENANT_READ'],
-    group: 'core',
-    platformOnly: true,
-    icon: SettingsNavIcon
-  },
-  {
-    href: '/settings',
-    label: 'Settings',
-    group: 'core',
-    icon: SettingsNavIcon
-  },
-  {
-    href: '/iot/dashboard',
-    label: 'Dashboard',
-    anyOf: ['iot.dashboard.read'],
-    moduleCode: 'IOT',
-    group: 'iot',
-    icon: DashboardNavIcon
-  },
-  {
-    href: '/iot/alarms',
-    label: 'Alarms',
-    anyOf: ['iot.alarm.read'],
-    moduleCode: 'IOT',
-    group: 'iot',
-    icon: AlarmNavIcon
-  },
-  {
-    href: '/iot/observability',
-    label: 'Observability',
-    anyOf: ['iot.report.read'],
-    moduleCode: 'IOT',
-    group: 'iot',
-    icon: AnalysisNavIcon
-  },
-  {
-    href: '/iot/devices',
-    label: 'Devices',
-    anyOf: ['iot.device.read'],
-    moduleCode: 'IOT',
-    group: 'iot',
-    icon: DeviceNavIcon
-  },
-  {
-    href: '/iot/add-device',
-    label: 'Modbus registration',
-    anyOf: ['iot.device.create'],
-    moduleCode: 'IOT',
-    group: 'iot',
-    icon: AddDeviceNavIcon
-  },
-  {
-    href: '/iot/telemetry',
-    label: 'Telemetry',
-    anyOf: ['iot.telemetry.read'],
-    moduleCode: 'IOT',
-    group: 'iot',
-    icon: WaveNavIcon
-  },
-  {
-    href: '/iot/registers',
-    label: 'Registers',
-    anyOf: ['iot.register.read'],
-    moduleCode: 'IOT',
-    group: 'iot',
-    icon: RegistersNavIcon
-  },
-  {
-    href: '/iot/maintenance',
-    label: 'Maintenance',
-    anyOf: ['iot.maintenance.read'],
-    moduleCode: 'IOT',
-    group: 'iot',
-    icon: ToolNavIcon
-  },
-  {
-    href: '/crm',
-    label: 'CRM hub',
-    anyOf: crmOverviewPermissions,
-    moduleCode: 'CRM',
-    group: 'crm',
-    icon: DashboardNavIcon
-  },
-  {
-    href: '/crm/dashboard',
-    label: 'Dashboard',
-    anyOf: ['crm.dashboard.read'],
-    moduleCode: 'CRM',
-    group: 'crm',
-    icon: AnalysisNavIcon
-  },
-  {
-    href: '/crm/tasks',
-    label: 'Tasks',
-    anyOf: ['crm.task.read'],
-    moduleCode: 'CRM',
-    group: 'crm',
-    icon: ClipboardNavIcon
-  },
-  {
-    href: '/crm/notes',
-    label: 'Notes',
-    anyOf: ['crm.note.read'],
-    moduleCode: 'CRM',
-    group: 'crm',
-    icon: NoteNavIcon
-  },
-  {
-    href: '/crm/activity',
-    label: 'Activity',
-    anyOf: ['crm.activity.read'],
-    moduleCode: 'CRM',
-    group: 'crm',
-    icon: WaveNavIcon
-  },
-  {
-    href: '/pet',
-    label: 'Pet hub',
-    anyOf: petOverviewPermissions,
-    moduleCode: 'PET',
-    group: 'pet',
-    icon: DashboardNavIcon
-  },
-  {
-    href: '/pet/dashboard',
-    label: 'Dashboard',
-    anyOf: ['pet.dashboard.read'],
-    moduleCode: 'PET',
-    group: 'pet',
-    icon: AnalysisNavIcon
-  },
-  {
-    href: '/pet/clients',
-    label: 'Clients',
-    anyOf: ['pet.client.read'],
-    moduleCode: 'PET',
-    group: 'pet',
-    icon: UserNavIcon
-  },
-  {
-    href: '/pet/appointments',
-    label: 'Appointments',
-    anyOf: ['pet.appointment.read'],
-    moduleCode: 'PET',
-    group: 'pet',
-    icon: CalendarNavIcon
-  },
-  {
-    href: '/pet/medical-records',
-    label: 'Medical',
-    anyOf: ['pet.medical-record.read', 'pet.vaccination.read', 'pet.prescription.read'],
-    moduleCode: 'PET',
-    group: 'pet',
-    icon: HeartbeatNavIcon
-  }
+  { href: '/dashboard', label: 'Overview', group: 'core', icon: IconGrid },
+  { href: '/users', label: 'Usuários', anyOf: ['USER_READ'], group: 'core', icon: IconUsers },
+  { href: '/tenants', label: 'Tenants', anyOf: ['TENANT_READ'], group: 'core', platformOnly: true, icon: IconBuilding },
+  { href: '/settings', label: 'Configurações', group: 'core', icon: IconSettings },
+  
+  // IoT
+  { href: '/iot/dashboard', label: 'Dashboard', anyOf: ['iot.dashboard.read'], moduleCode: 'IOT', group: 'iot', icon: IconGrid },
+  { href: '/iot/alarms', label: 'Alarmes', anyOf: ['iot.alarm.read'], moduleCode: 'IOT', group: 'iot', icon: IconBell },
+  { href: '/iot/observability', label: 'Observabilidade', anyOf: ['iot.report.read'], moduleCode: 'IOT', group: 'iot', icon: IconChart },
+  { href: '/iot/devices', label: 'Dispositivos', anyOf: ['iot.device.read'], moduleCode: 'IOT', group: 'iot', icon: IconDevice },
+  { href: '/iot/add-device', label: 'Adicionar Dispositivo', anyOf: ['iot.device.create'], moduleCode: 'IOT', group: 'iot', icon: IconPlus },
+  { href: '/iot/telemetry', label: 'Telemetria', anyOf: ['iot.telemetry.read'], moduleCode: 'IOT', group: 'iot', icon: IconWave },
+  { href: '/iot/registers', label: 'Registros', anyOf: ['iot.register.read'], moduleCode: 'IOT', group: 'iot', icon: IconList },
+  { href: '/iot/maintenance', label: 'Manutenção', anyOf: ['iot.maintenance.read'], moduleCode: 'IOT', group: 'iot', icon: IconTool },
+  
+  // CRM
+  { href: '/crm', label: 'Hub CRM', anyOf: crmOverviewPermissions, moduleCode: 'CRM', group: 'crm', icon: IconGrid },
+  { href: '/crm/dashboard', label: 'Dashboard', anyOf: ['crm.dashboard.read'], moduleCode: 'CRM', group: 'crm', icon: IconChart },
+  { href: '/crm/tasks', label: 'Tarefas', anyOf: ['crm.task.read'], moduleCode: 'CRM', group: 'crm', icon: IconClipboard },
+  { href: '/crm/notes', label: 'Notas', anyOf: ['crm.note.read'], moduleCode: 'CRM', group: 'crm', icon: IconNote },
+  { href: '/crm/activity', label: 'Atividades', anyOf: ['crm.activity.read'], moduleCode: 'CRM', group: 'crm', icon: IconWave },
+  
+  // PetFlow
+  { href: '/pet', label: 'Hub Pet', anyOf: petOverviewPermissions, moduleCode: 'PET', group: 'pet', icon: IconGrid },
+  { href: '/pet/dashboard', label: 'Dashboard', anyOf: ['pet.dashboard.read'], moduleCode: 'PET', group: 'pet', icon: IconChart },
+  { href: '/pet/clients', label: 'Clientes', anyOf: ['pet.client.read'], moduleCode: 'PET', group: 'pet', icon: IconUsers },
+  { href: '/pet/appointments', label: 'Agendamentos', anyOf: ['pet.appointment.read'], moduleCode: 'PET', group: 'pet', icon: IconCalendar },
+  { href: '/pet/medical-records', label: 'Prontuários', anyOf: ['pet.medical-record.read', 'pet.vaccination.read', 'pet.prescription.read'], moduleCode: 'PET', group: 'pet', icon: IconHeart },
 ];
 
 function isItemActive(pathname: string, href: string) {
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
-function monogram(name?: string) {
-  if (!name) {
-    return 'PT';
-  }
-
+function getInitials(name?: string) {
+  if (!name) return 'PT';
   return name
     .split(/\s+/)
     .slice(0, 2)
     .map((part) => part[0]?.toUpperCase() ?? '')
     .join('');
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Sidebar Component
+   ═══════════════════════════════════════════════════════════════════════════ */
 
 export function Sidebar() {
   const pathname = usePathname();
@@ -407,13 +256,8 @@ export function Sidebar() {
   const visibleItems = useMemo(() => {
     return filterSidebarItems(items, {
       user,
-      modules: {
-        availableCodes: modules.availableCodes,
-        loading: modules.loading
-      },
-      workspace: {
-        canManagePlatformAdministration: workspace.canManagePlatformAdministration
-      }
+      modules: { availableCodes: modules.availableCodes, loading: modules.loading },
+      workspace: { canManagePlatformAdministration: workspace.canManagePlatformAdministration },
     });
   }, [modules.availableCodes, modules.loading, user, workspace.canManagePlatformAdministration]);
 
@@ -423,93 +267,37 @@ export function Sidebar() {
   );
 
   return (
-    <aside
-      className="sticky top-0 flex h-screen w-[320px] flex-col border-r px-4 py-5"
-      style={{
-        borderColor: 'var(--app-shell-border)',
-        backgroundColor: 'var(--app-shell-panel-strong)'
-      }}
-    >
-      <div
-        className="rounded-[28px] border p-4 shadow-card"
-        style={{
-          borderColor: 'var(--app-shell-border)',
-          background:
-            'linear-gradient(180deg, var(--app-shell-panel) 0%, var(--app-shell-panel-muted) 100%)'
-        }}
-      >
-        <div className="flex items-start gap-3">
-          {branding.logoUrl ? (
-            <span className="flex h-11 w-11 items-center justify-center overflow-hidden rounded-2xl border border-[color:var(--app-shell-border)] bg-[color:var(--surface-1)]">
-              <img src={branding.logoUrl} alt={`${branding.scopeName} logo`} className="h-full w-full object-contain" />
-            </span>
-          ) : (
-            <span
-              className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border text-sm font-semibold uppercase"
-              style={{
-                borderColor: 'var(--tenant-accent)',
-                backgroundColor: 'var(--tenant-accent-soft)',
-                color: 'var(--app-shell-heading)'
-              }}
-            >
-              {monogram(branding.scopeName)}
-            </span>
-          )}
-          <div className="min-w-0">
-            <p className="truncate text-lg font-semibold text-[color:var(--app-shell-heading)]">{branding.scopeName}</p>
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--tenant-accent)]">
-              {workspace.accessLabel}
-            </p>
-            {branding.tenantCode ? (
-              <p className="mt-1 text-xs text-[color:var(--app-shell-muted)]">Tenant code: {branding.tenantCode}</p>
-            ) : null}
+    <aside className="sticky top-0 flex h-screen w-64 flex-col border-r border-border bg-surface">
+      {/* Brand Header */}
+      <div className="flex items-center gap-3 border-b border-border px-4 py-4">
+        {branding.logoUrl ? (
+          <div className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-lg bg-surface-inset">
+            <img
+              src={branding.logoUrl}
+              alt={branding.scopeName}
+              className="h-full w-full object-contain"
+            />
           </div>
-        </div>
-
-        <div
-          className="mt-5 rounded-[24px] border p-4"
-          style={{
-            borderColor: 'var(--app-shell-border)',
-            backgroundColor: 'var(--app-shell-panel)'
-          }}
-        >
-          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--app-shell-muted)]">Contracted products</p>
-          {modules.contractedProducts.length > 0 ? (
-            <div className="mt-3 flex flex-wrap gap-2">
-              {modules.contractedProducts.map((moduleItem) => (
-                <span
-                  key={moduleItem.code}
-                  className="inline-flex items-center rounded-full border px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em]"
-                  style={{
-                    borderColor: 'var(--tenant-accent)',
-                    backgroundColor: 'var(--tenant-accent-soft)',
-                    color: 'var(--app-shell-heading)'
-                  }}
-                >
-                  {moduleItem.code}
-                </span>
-              ))}
-            </div>
-          ) : (
-            <p className="mt-2 text-sm text-[color:var(--app-shell-muted)]">
-              Core platform active. Additional contracted products are not visible for this user.
-            </p>
-          )}
+        ) : (
+          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-accent text-xs font-semibold text-accent-foreground">
+            {getInitials(branding.scopeName)}
+          </div>
+        )}
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-sm font-semibold text-foreground">{branding.scopeName}</p>
+          <p className="text-2xs text-muted">{workspace.workspaceLabel}</p>
         </div>
       </div>
 
-      <nav className="mt-6 flex-1 overflow-y-auto pr-1">
+      {/* Navigation */}
+      <nav className="flex-1 overflow-y-auto px-3 py-4">
         <div className="space-y-6">
-          {groupedItems.map((group, index) => (
-            <section
-              key={group.key}
-              className={index > 0 ? 'border-t pt-6' : ''}
-              style={index > 0 ? { borderColor: 'var(--app-shell-border)' } : undefined}
-            >
-              <p className="px-3 text-[length:var(--font-size-xs)] font-semibold uppercase tracking-[0.24em] text-[color:var(--app-shell-muted)]">
+          {groupedItems.map((group) => (
+            <div key={group.key}>
+              <p className="mb-2 px-2 text-2xs font-semibold uppercase tracking-wider text-muted">
                 {group.title}
               </p>
-              <div className="mt-3 space-y-1.5">
+              <div className="space-y-0.5">
                 {group.items.map((item) => {
                   const active = isItemActive(pathname, item.href);
                   const Icon = item.icon;
@@ -518,51 +306,36 @@ export function Sidebar() {
                     <Link
                       key={item.href}
                       href={item.href}
-                      className={[
-                        'flex items-center gap-3 rounded-[22px] px-3 py-3 transition',
+                      className={`flex items-center gap-2.5 rounded-lg px-2 py-2 text-sm transition-colors ${
                         active
-                          ? 'text-[color:var(--app-shell-heading)]'
-                          : 'text-[color:var(--app-shell-text)] hover:text-[color:var(--app-shell-heading)]'
-                      ].join(' ')}
-                      style={active ? { backgroundColor: 'var(--tenant-accent-soft)' } : undefined}
+                          ? 'bg-accent-muted text-accent font-medium'
+                          : 'text-muted hover:bg-surface-inset hover:text-foreground'
+                      }`}
                     >
-                      <Icon active={active} />
-                      <span className="truncate text-[15px] font-medium">{item.label}</span>
+                      <Icon className="h-4 w-4 flex-shrink-0" />
+                      <span className="truncate">{item.label}</span>
                     </Link>
                   );
                 })}
               </div>
-            </section>
+            </div>
           ))}
         </div>
       </nav>
 
-      <div
-        className="mt-5 rounded-[28px] border px-4 py-4"
-        style={{
-          borderColor: 'var(--app-shell-border)',
-          backgroundColor: 'var(--app-shell-panel)'
-        }}
-      >
-        <p className="truncate text-sm font-semibold text-[color:var(--app-shell-heading)]">{user?.fullName}</p>
-        <p className="mt-1 truncate text-sm text-[color:var(--app-shell-muted)]">{user?.email}</p>
-        <p className="mt-2 text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--tenant-accent)]">
-          {workspace.canManagePlatformAdministration ? 'PLATFORM_ADMIN' : user?.role}
-        </p>
-
+      {/* User Section */}
+      <div className="border-t border-border p-4">
+        <div className="mb-3">
+          <p className="truncate text-sm font-medium text-foreground">{user?.fullName}</p>
+          <p className="truncate text-2xs text-muted">{user?.email}</p>
+        </div>
         <button
           type="button"
-          onClick={() => {
-            void signOut();
-          }}
-          className="mt-4 w-full rounded-2xl border px-4 py-3 text-sm font-semibold transition"
-          style={{
-            borderColor: 'var(--color-danger)',
-            backgroundColor: 'var(--color-danger-soft)',
-            color: 'var(--color-danger)'
-          }}
+          onClick={() => void signOut()}
+          className="flex w-full items-center justify-center gap-2 rounded-lg border border-border bg-surface px-3 py-2 text-sm text-muted transition-colors hover:border-destructive hover:bg-destructive-muted hover:text-destructive"
         >
-          Sign out
+          <IconLogout className="h-4 w-4" />
+          <span>Sair</span>
         </button>
       </div>
     </aside>

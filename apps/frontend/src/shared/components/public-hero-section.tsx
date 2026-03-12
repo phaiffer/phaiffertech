@@ -4,7 +4,7 @@ import {
   publicEyebrowClass,
   publicPrimaryButtonClass,
   publicSecondaryButtonClass,
-  publicSiteContainerClass
+  publicSiteContainerClass,
 } from '@/shared/components/public-visual-system';
 
 type PublicHeroSectionProps = {
@@ -26,54 +26,47 @@ export function PublicHeroSection({
   primaryCtaLabel,
   primaryCtaHref,
   secondaryCtaLabel,
-  secondaryCtaHref
+  secondaryCtaHref,
 }: PublicHeroSectionProps) {
   return (
-    <section
-      id={id}
-      className="relative flex min-h-[70vh] items-center overflow-hidden"
-    >
+    <section id={id} className="relative flex min-h-[60vh] items-center overflow-hidden">
+      {/* Subtle background gradient */}
       <div className="pointer-events-none absolute inset-0">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_14%_8%,rgba(14,165,233,0.14),transparent_36%),radial-gradient(circle_at_82%_50%,rgba(14,165,233,0.14),transparent_28%)]" />
+        <div className="absolute -left-40 -top-40 h-96 w-96 rounded-full bg-accent/10 blur-3xl" />
+        <div className="absolute -bottom-40 -right-40 h-96 w-96 rounded-full bg-accent/5 blur-3xl" />
       </div>
 
       <div
-        className={`${publicSiteContainerClass} relative grid items-center gap-8 py-16 lg:grid-cols-[minmax(0,1fr)_minmax(280px,0.72fr)] lg:gap-10 lg:py-20`}
+        className={`${publicSiteContainerClass} relative grid items-center gap-12 py-16 lg:grid-cols-2 lg:gap-16 lg:py-24`}
       >
-        <div className="relative z-10 max-w-3xl">
-          <p className={`${publicEyebrowClass} inline-flex border-l-4 border-sky-400 pl-6`}>
+        {/* Content */}
+        <div className="relative z-10 max-w-xl">
+          <p className={`${publicEyebrowClass} inline-flex border-l-2 border-accent pl-4`}>
             {eyebrow}
           </p>
 
-          <h1 className="mt-6 max-w-3xl text-5xl font-black leading-[0.88] tracking-[-0.04em] text-white sm:text-6xl lg:text-[5.25rem]">
+          <h1 className="mt-6 text-4xl font-semibold tracking-tight text-foreground sm:text-5xl lg:text-6xl">
             {title}
           </h1>
 
-          <p className="mt-6 max-w-2xl text-lg leading-relaxed text-[#b6bec5]">
-            {description}
-          </p>
+          <p className="mt-6 text-lg leading-relaxed text-muted">{description}</p>
 
-          <div className="mt-10 flex flex-wrap gap-4">
-            <Link
-              href={primaryCtaHref}
-              className={publicPrimaryButtonClass}
-            >
+          <div className="mt-8 flex flex-wrap gap-4">
+            <Link href={primaryCtaHref} className={publicPrimaryButtonClass}>
               {primaryCtaLabel}
             </Link>
 
-            <Link
-              href={secondaryCtaHref}
-              className={publicSecondaryButtonClass}
-            >
+            <Link href={secondaryCtaHref} className={publicSecondaryButtonClass}>
               {secondaryCtaLabel}
             </Link>
           </div>
         </div>
 
+        {/* Logo */}
         <div className="relative hidden justify-center lg:flex">
-          <div className="absolute left-1/2 top-1/2 h-[20rem] w-[20rem] -translate-x-1/2 -translate-y-1/2 rounded-full bg-sky-400/18 blur-[90px]" />
+          <div className="absolute left-1/2 top-1/2 h-72 w-72 -translate-x-1/2 -translate-y-1/2 rounded-full bg-accent/10 blur-3xl" />
 
-          <div className="relative h-[22rem] w-[22rem] drop-shadow-[0_0_30px_rgba(14,165,233,0.3)] xl:h-[24rem] xl:w-[24rem]">
+          <div className="relative h-72 w-72 drop-shadow-lg xl:h-80 xl:w-80">
             <Image
               src="/logo.png"
               alt="PhaifferTech logo"

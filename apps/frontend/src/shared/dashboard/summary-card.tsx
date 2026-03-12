@@ -17,18 +17,21 @@ function SummaryCardBody({ card }: SummaryCardProps) {
     <>
       <div className="flex items-start justify-between gap-3">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">{card.label}</p>
-          <p className="mt-3 text-3xl font-semibold text-ink">{formatValue(card.value)}</p>
+          <p className="text-xs font-medium text-muted">{card.label}</p>
+          <p className="mt-2 text-2xl font-semibold tabular-nums text-foreground">
+            {formatValue(card.value)}
+          </p>
         </div>
         <StatusBadge status={card.status} />
       </div>
-      {card.trend ? <p className="mt-4 text-sm text-slate-500">{card.trend}</p> : <div className="mt-4 h-[20px]" />}
+      {card.trend && <p className="mt-3 text-xs text-muted">{card.trend}</p>}
     </>
   );
 }
 
 export function SummaryCard({ card }: SummaryCardProps) {
-  const className = 'rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:border-action hover:shadow-md';
+  const className =
+    'rounded-xl border border-border bg-surface p-4 transition-colors hover:border-accent';
 
   if (card.href) {
     return (

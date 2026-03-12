@@ -1,27 +1,46 @@
-import type { Metadata } from 'next';
-import { Space_Grotesk } from 'next/font/google';
+import type { Metadata, Viewport } from 'next';
+import { Geist, Geist_Mono } from 'next/font/google';
 import './globals.css';
 import { Providers } from '@/shared/components/providers';
 
-const spaceGrotesk = Space_Grotesk({
+const geistSans = Geist({
   subsets: ['latin'],
-  variable: '--font-display'
+  variable: '--font-geist-sans',
+});
+
+const geistMono = Geist_Mono({
+  subsets: ['latin'],
+  variable: '--font-geist-mono',
 });
 
 export const metadata: Metadata = {
-  title: 'PhaifferTech',
+  title: {
+    default: 'PhaifferTech',
+    template: '%s | PhaifferTech',
+  },
   description:
     'Modular SaaS platform for operational systems, cloud architecture, data engineering and applied research.',
   icons: {
     icon: '/favicon.ico',
-    shortcut: '/favicon.ico'
-  }
+    shortcut: '/favicon.ico',
+  },
+};
+
+export const viewport: Viewport = {
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#fafafa' },
+    { media: '(prefers-color-scheme: dark)', color: '#09090b' },
+  ],
+  width: 'device-width',
+  initialScale: 1,
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="pt-BR">
-      <body className={`${spaceGrotesk.variable} bg-canvas text-ink antialiased`}>
+    <html lang="pt-BR" data-theme="dark" suppressHydrationWarning>
+      <body
+        className={`${geistSans.variable} ${geistMono.variable} font-sans bg-background text-foreground antialiased`}
+      >
         <Providers>{children}</Providers>
       </body>
     </html>

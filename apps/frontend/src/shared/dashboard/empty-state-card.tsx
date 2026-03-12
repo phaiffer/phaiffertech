@@ -5,9 +5,9 @@ type EmptyStateCardProps = {
 
 export function EmptyStateCard({ title, description }: EmptyStateCardProps) {
   return (
-    <div className="rounded-2xl border border-dashed border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-panel-muted)] px-5 py-6">
-      <p className="text-sm font-semibold text-[color:var(--app-shell-heading)]">{title}</p>
-      <p className="mt-2 text-sm text-[color:var(--app-shell-muted)]">{description}</p>
+    <div className="rounded-lg border border-dashed border-border bg-surface-inset px-5 py-6">
+      <p className="text-sm font-medium text-foreground">{title}</p>
+      <p className="mt-1 text-sm text-muted">{description}</p>
     </div>
   );
 }

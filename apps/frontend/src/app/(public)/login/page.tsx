@@ -10,18 +10,6 @@ import { useAuth } from '@/shared/hooks/use-auth';
 import { usePublicSite } from '@/shared/public/public-site-provider';
 import { getPublicSiteMessages } from '@/shared/public/public-site-messages';
 
-const fieldLabelClass =
-  'mb-[var(--space-2)] block text-[length:var(--font-size-sm)] font-semibold tracking-[0.01em] text-[color:var(--app-shell-muted)]';
-
-const fieldInputClass =
-  'mt-[var(--space-2)] w-full rounded-[var(--radius-lg)] border border-[color:var(--app-shell-border)] bg-[color:var(--surface-1)] px-[var(--space-4)] py-[var(--space-3)] text-[length:var(--font-size-sm)] text-[color:var(--app-shell-text)] outline-none transition duration-200 placeholder:text-[color:var(--app-shell-muted)] focus:border-[color:var(--tenant-accent)] focus:ring-2 focus:ring-[color:var(--tenant-accent-soft)]';
-
-const eyebrowClass =
-  'text-[length:var(--font-size-xs)] font-semibold uppercase tracking-[0.22em] text-[color:var(--app-shell-muted)]';
-
-const helperSectionClass =
-  'rounded-[var(--radius-xl)] border border-[color:var(--app-shell-border)] bg-[color:var(--surface-1)] p-[var(--space-6)] shadow-card';
-
 export default function LoginPage() {
   const router = useRouter();
   const { locale } = usePublicSite();
@@ -49,13 +37,13 @@ export default function LoginPage() {
       const tokenData = await authService.login({
         tenantCode,
         email,
-        password
+        password,
       });
 
       signIn({
         accessToken: tokenData.accessToken,
         refreshToken: tokenData.refreshToken,
-        user: tokenData.user
+        user: tokenData.user,
       });
 
       router.replace('/dashboard');
@@ -71,180 +59,150 @@ export default function LoginPage() {
   }
 
   return (
-    <div
-      className="border-b border-[color:var(--border)]"
-      style={{ backgroundImage: 'linear-gradient(180deg, var(--tenant-primary-soft), transparent 70%)' }}
-    >
-      <div className="mx-auto grid w-full max-w-7xl gap-[var(--space-10)] px-[var(--space-4)] py-[var(--space-16)] sm:px-[var(--space-6)] lg:grid-cols-[0.95fr_1.05fr] lg:px-[var(--space-8)] lg:py-[var(--space-16)]">
-        <section className="rounded-[var(--radius-xl)] border border-[color:var(--app-shell-border)] bg-[color:var(--surface-1)] p-[var(--space-8)] shadow-card">
-          <Link
-            href="/"
-            className="text-[length:var(--font-size-sm)] font-medium text-[color:var(--tenant-accent)]"
-          >
-            {t.returnToSite}
-          </Link>
-
-          <p className="mt-[var(--space-6)] text-[length:var(--font-size-xs)] font-semibold uppercase tracking-[0.25em] text-[color:var(--tenant-accent)]">
-            {t.eyebrow}
-          </p>
-
-          <h1 className="mt-[var(--space-4)] text-3xl font-semibold text-[color:var(--foreground)]">
-            {t.title}
-          </h1>
-
-          <p className="mt-[var(--space-3)] max-w-2xl text-[length:var(--font-size-sm)] leading-6 text-[color:var(--app-shell-muted)]">
-            {t.description}
-          </p>
-
-          <form onSubmit={handleSubmit} className="mt-[var(--space-8)] space-y-[var(--space-5)]">
-            <div>
-              <label htmlFor="tenant-code" className={fieldLabelClass}>
-                {t.tenantCodeLabel}
-              </label>
-              <input
-                id="tenant-code"
-                value={tenantCode}
-                onChange={(e) => setTenantCode(e.target.value)}
-                className={fieldInputClass}
-                required
-              />
-            </div>
-
-            <div>
-              <label htmlFor="email" className={fieldLabelClass}>
-                {t.emailLabel}
-              </label>
-              <input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className={fieldInputClass}
-                required
-              />
-            </div>
-
-            <div>
-              <label htmlFor="password" className={fieldLabelClass}>
-                {t.passwordLabel}
-              </label>
-              <input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className={fieldInputClass}
-                required
-              />
-            </div>
-
-            {error ? (
-              <div className="rounded-[var(--radius-lg)] border border-[color:var(--color-danger)] bg-[color:var(--color-danger-soft)] px-[var(--space-4)] py-[var(--space-3)] text-[length:var(--font-size-sm)] text-[color:var(--color-danger)]">
-                {error}
-              </div>
-            ) : null}
-
-            <button
-              type="submit"
-              disabled={submitting}
-              className="w-full rounded-[var(--radius-lg)] border border-[color:var(--tenant-accent)] bg-[color:var(--tenant-accent)] px-[var(--space-5)] py-[var(--space-3)] text-[length:var(--font-size-sm)] font-semibold text-[color:var(--foreground)] shadow-card transition duration-200 hover:shadow-[0_18px_40px_var(--tenant-accent-soft)] focus:outline-none focus:ring-2 focus:ring-[color:var(--tenant-accent-soft)] active:scale-[0.98] disabled:opacity-70"
-            >
-              {submitting ? t.loadingLabel : t.submitLabel}
-            </button>
-          </form>
-
-          <div className="mt-[var(--space-8)] rounded-[var(--radius-xl)] border border-[color:var(--app-shell-border)] bg-[color:var(--surface-2)] px-[var(--space-5)] py-[var(--space-4)]">
-            <p className={eyebrowClass}>
-              {t.demoReadinessEyebrow}
-            </p>
-
-            <div className="mt-[var(--space-4)] grid gap-[var(--space-3)] sm:grid-cols-2">
-              <div>
-                <p className="text-[length:var(--font-size-xs)] text-[color:var(--app-shell-muted)]">
-                  {t.demoEmail}
-                </p>
-                <p className="text-[length:var(--font-size-sm)] font-medium text-[color:var(--foreground)]">
-                  admin@local.test
-                </p>
-              </div>
-
-              <div>
-                <p className="text-[length:var(--font-size-xs)] text-[color:var(--app-shell-muted)]">
-                  {t.demoPassword}
-                </p>
-                <p className="text-[length:var(--font-size-sm)] font-medium text-[color:var(--foreground)]">
-                  Admin@123
-                </p>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <aside className="grid gap-[var(--space-5)]">
-          <section className={`${helperSectionClass} bg-[color:var(--surface-2)]`}>
-            <div className="flex h-24 w-24 items-center justify-center overflow-hidden rounded-[var(--radius-xl)] border border-[color:var(--app-shell-border)] bg-[color:var(--surface-1)] shadow-card">
-              <Image
-                src="/logo.png"
-                alt="PhaifferTech logo"
-                width={96}
-                height={96}
-                priority
-                className="h-full w-full object-cover"
-              />
-            </div>
-
-            <p className={`mt-[var(--space-5)] ${eyebrowClass}`}>
-              {t.platformContextEyebrow}
-            </p>
-
-            <h2 className="mt-[var(--space-5)] text-2xl font-semibold text-[color:var(--foreground)]">
-              {t.helperTitle}
-            </h2>
-
-            <p className="mt-[var(--space-4)] text-[length:var(--font-size-sm)] leading-7 text-[color:var(--app-shell-muted)]">
-              {t.helperText}
-            </p>
-          </section>
-
-          <div className="grid gap-[var(--space-4)] sm:grid-cols-2">
-            <section className={helperSectionClass}>
-              <p className={eyebrowClass}>
-                {t.contractScopeEyebrow}
-              </p>
-              <h3 className="mt-[var(--space-3)] text-[length:var(--font-size-lg)] font-semibold text-[color:var(--foreground)]">
-                {t.contractTitle}
-              </h3>
-              <p className="mt-[var(--space-3)] text-[length:var(--font-size-sm)] leading-6 text-[color:var(--app-shell-muted)]">
-                {t.contractText}
-              </p>
-            </section>
-
-            <section className={helperSectionClass}>
-              <p className={eyebrowClass}>
-                {t.governanceEyebrow}
-              </p>
-              <h3 className="mt-[var(--space-3)] text-[length:var(--font-size-lg)] font-semibold text-[color:var(--foreground)]">
-                {t.governanceTitle}
-              </h3>
-              <p className="mt-[var(--space-3)] text-[length:var(--font-size-sm)] leading-6 text-[color:var(--app-shell-muted)]">
-                {t.governanceText}
-              </p>
-            </section>
-          </div>
-
-          <section className={helperSectionClass}>
-            <p className={eyebrowClass}>
-              {t.demoReadinessEyebrow}
-            </p>
-            <h3 className="mt-[var(--space-3)] text-[length:var(--font-size-lg)] font-semibold text-[color:var(--foreground)]">
-              {t.demoTitle}
-            </h3>
-            <p className="mt-[var(--space-3)] text-[length:var(--font-size-sm)] leading-6 text-[color:var(--app-shell-muted)]">
-              {t.demoText}
-            </p>
-          </section>
-        </aside>
+    <div className="flex min-h-screen flex-col bg-background">
+      {/* Subtle background gradient */}
+      <div className="pointer-events-none fixed inset-0 overflow-hidden">
+        <div className="absolute -left-40 -top-40 h-80 w-80 rounded-full bg-accent/5 blur-3xl" />
+        <div className="absolute -bottom-40 -right-40 h-80 w-80 rounded-full bg-accent/5 blur-3xl" />
       </div>
+
+      {/* Header */}
+      <header className="relative z-10 flex items-center justify-between px-6 py-4 lg:px-8">
+        <Link
+          href="/"
+          className="inline-flex items-center gap-3 text-muted transition-colors hover:text-foreground"
+        >
+          <svg
+            className="h-4 w-4"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            strokeWidth="2"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+          </svg>
+          <span className="text-sm font-medium">{t.returnToSite}</span>
+        </Link>
+      </header>
+
+      {/* Main Content */}
+      <main className="relative z-10 flex flex-1 items-center justify-center px-4 py-12">
+        <div className="w-full max-w-sm">
+          {/* Logo & Brand */}
+          <div className="mb-8 text-center">
+            <Link href="/" className="inline-block">
+              <div className="mx-auto flex h-12 w-12 items-center justify-center overflow-hidden rounded-xl border border-border bg-surface">
+                <Image
+                  src="/logo.png"
+                  alt="PhaifferTech"
+                  width={48}
+                  height={48}
+                  priority
+                  className="h-full w-full object-cover"
+                />
+              </div>
+            </Link>
+            <h1 className="mt-6 text-2xl font-semibold tracking-tight text-foreground">
+              {t.title}
+            </h1>
+            <p className="mt-2 text-sm text-muted">{t.description}</p>
+          </div>
+
+          {/* Login Form */}
+          <div className="rounded-xl border border-border bg-surface p-6 shadow-sm">
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div>
+                <label
+                  htmlFor="tenant-code"
+                  className="mb-1.5 block text-sm font-medium text-foreground"
+                >
+                  {t.tenantCodeLabel}
+                </label>
+                <input
+                  id="tenant-code"
+                  type="text"
+                  value={tenantCode}
+                  onChange={(e) => setTenantCode(e.target.value)}
+                  className="w-full rounded-lg border border-border bg-surface-inset px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground outline-none transition-colors focus:border-accent focus:ring-1 focus:ring-accent"
+                  required
+                />
+              </div>
+
+              <div>
+                <label
+                  htmlFor="email"
+                  className="mb-1.5 block text-sm font-medium text-foreground"
+                >
+                  {t.emailLabel}
+                </label>
+                <input
+                  id="email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full rounded-lg border border-border bg-surface-inset px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground outline-none transition-colors focus:border-accent focus:ring-1 focus:ring-accent"
+                  required
+                />
+              </div>
+
+              <div>
+                <label
+                  htmlFor="password"
+                  className="mb-1.5 block text-sm font-medium text-foreground"
+                >
+                  {t.passwordLabel}
+                </label>
+                <input
+                  id="password"
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full rounded-lg border border-border bg-surface-inset px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground outline-none transition-colors focus:border-accent focus:ring-1 focus:ring-accent"
+                  required
+                />
+              </div>
+
+              {error && (
+                <div className="rounded-lg border border-destructive/30 bg-destructive-muted px-3 py-2.5 text-sm text-destructive">
+                  {error}
+                </div>
+              )}
+
+              <button
+                type="submit"
+                disabled={submitting}
+                className="w-full rounded-lg bg-foreground px-4 py-2.5 text-sm font-medium text-background transition-opacity hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background disabled:opacity-50"
+              >
+                {submitting ? t.loadingLabel : t.submitLabel}
+              </button>
+            </form>
+
+            {/* Demo credentials - subtle hint */}
+            <div className="mt-6 border-t border-border pt-4">
+              <p className="mb-2 text-2xs font-medium uppercase tracking-wider text-muted">
+                {t.demoReadinessEyebrow}
+              </p>
+              <div className="grid grid-cols-2 gap-4 text-xs">
+                <div>
+                  <p className="text-muted-foreground">{t.demoEmail}</p>
+                  <p className="font-mono text-foreground">admin@local.test</p>
+                </div>
+                <div>
+                  <p className="text-muted-foreground">{t.demoPassword}</p>
+                  <p className="font-mono text-foreground">Admin@123</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Footer text */}
+          <p className="mt-6 text-center text-xs text-muted">
+            {locale === 'pt-BR'
+              ? 'Isolamento por tenant, permissões granulares e governança operacional.'
+              : 'Tenant isolation, granular permissions and operational governance.'}
+          </p>
+        </div>
+      </main>
     </div>
   );
 }

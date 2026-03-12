@@ -7,7 +7,7 @@ import { usePathname } from 'next/navigation';
 import {
   publicPrimaryButtonClass,
   publicSecondaryButtonClass,
-  publicSiteContainerClass
+  publicSiteContainerClass,
 } from '@/shared/components/public-visual-system';
 import { usePublicSite } from '@/shared/public/public-site-provider';
 import { getPublicSiteMessages } from '@/shared/public/public-site-messages';
@@ -26,18 +26,10 @@ export function PublicSiteShell({ children }: PublicSiteShellProps) {
     { href: '/about', label: t.navAbout, active: pathname === '/about' },
     { href: '/platform', label: t.navPlatform, active: pathname === '/platform' },
     { href: '/products', label: t.navProducts, active: pathname === '/products' },
-    {
-      href: '/engineering',
-      label: t.navEngineering,
-      active: pathname === '/engineering'
-    },
+    { href: '/engineering', label: t.navEngineering, active: pathname === '/engineering' },
     { href: '/research', label: t.navResearch, active: pathname === '/research' },
-    {
-      href: '/articles',
-      label: t.navArticles,
-      active: pathname === '/articles' || pathname.startsWith('/articles/')
-    },
-    { href: '/contact', label: t.navContact, active: pathname === '/contact' }
+    { href: '/articles', label: t.navArticles, active: pathname === '/articles' || pathname.startsWith('/articles/') },
+    { href: '/contact', label: t.navContact, active: pathname === '/contact' },
   ];
 
   const footerLinks = [
@@ -48,67 +40,66 @@ export function PublicSiteShell({ children }: PublicSiteShellProps) {
     { href: '/engineering', label: t.navEngineering },
     { href: '/research', label: t.navResearch },
     { href: '/articles', label: t.navArticles },
-    { href: '/contact', label: t.navContact }
+    { href: '/contact', label: t.navContact },
   ];
 
   const productLinks = [
     { href: '/products', label: 'IoT System' },
     { href: '/products', label: 'PetFlow' },
-    { href: '/products', label: 'CRM / Operational Hub' }
+    { href: '/products', label: 'CRM Hub' },
   ];
 
   const accessLinks = [
     { href: '/login', label: t.navLogin },
     { href: '/platform', label: t.navPlatform },
-    { href: '/research', label: t.navResearch }
+    { href: '/research', label: t.navResearch },
   ];
 
   const nextLocale = locale === 'pt-BR' ? 'en-US' : 'pt-BR';
-  const localeSwitchLabel = nextLocale.toUpperCase();
+  const localeSwitchLabel = nextLocale === 'en-US' ? 'EN' : 'PT';
 
   const navLinkClass = (active: boolean) =>
-    [
-      'text-[11px] font-bold uppercase tracking-[0.22em] transition-colors',
-      active ? 'text-sky-400' : 'text-[#b6bec5] hover:text-sky-400'
-    ].join(' ');
+    `text-sm font-medium transition-colors ${active ? 'text-accent' : 'text-muted hover:text-foreground'}`;
 
-  const localeButtonClass = [
-    'rounded-[14px] border border-white/10 px-4 py-2 text-[11px] font-bold uppercase tracking-[0.22em] transition-colors',
-    'text-[#b6bec5] hover:border-sky-400/50 hover:text-sky-400'
-  ].join(' ');
+  const localeButtonClass =
+    'rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-muted transition-colors hover:border-accent hover:text-foreground';
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-[#020617] text-white">
-      <div className="pointer-events-none absolute inset-0">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_12%_8%,rgba(14,165,233,0.12),transparent_34%),radial-gradient(circle_at_88%_78%,rgba(14,165,233,0.08),transparent_30%)]" />
+    <div className="relative min-h-screen bg-background text-foreground">
+      {/* Subtle Background */}
+      <div className="pointer-events-none fixed inset-0 overflow-hidden">
+        <div className="absolute -left-40 -top-40 h-80 w-80 rounded-full bg-accent/5 blur-3xl" />
+        <div className="absolute -bottom-40 -right-40 h-80 w-80 rounded-full bg-accent/5 blur-3xl" />
       </div>
 
-      <header className="sticky top-0 z-40 border-b border-white/10 bg-[#020617]/80 backdrop-blur-xl">
+      {/* Header */}
+      <header className="sticky top-0 z-40 border-b border-border bg-background/80 backdrop-blur-sm">
         <div className={`${publicSiteContainerClass} flex items-center justify-between py-4`}>
-          <Link href="/" className="group inline-flex items-center gap-4 text-inherit no-underline">
-            <span className="relative block h-16 w-16 shrink-0 md:h-[4.5rem] md:w-[4.5rem]">
+          {/* Logo */}
+          <Link href="/" className="group inline-flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-lg border border-border bg-surface">
               <Image
                 src="/logo.png"
-                alt="PhaifferTech logo"
-                width={96}
-                height={96}
+                alt="PhaifferTech"
+                width={40}
+                height={40}
                 priority
-                className="h-full w-full scale-[1.46] object-contain transition-transform duration-200 group-hover:scale-[1.52]"
+                className="h-full w-full object-cover"
               />
-            </span>
-
-            <span className="min-w-0 leading-tight">
-              <span className="block text-4xl font-black leading-none tracking-[-0.05em] text-white md:text-[3.4rem]">
-                PHAIFFER <span className="text-sky-400">TECH</span>
+            </div>
+            <div className="hidden sm:block">
+              <span className="block text-lg font-semibold tracking-tight text-foreground">
+                PhaifferTech
               </span>
-              <span className="mt-1.5 block text-[11px] font-bold uppercase tracking-[0.42em] text-[#b6bec5] md:text-[12px]">
-                SOFTWARE &amp; DATA
+              <span className="block text-2xs font-medium uppercase tracking-wider text-muted">
+                Software & Data
               </span>
-            </span>
+            </div>
           </Link>
 
-          <div className="hidden items-center gap-8 xl:flex">
-            <nav className="flex items-center gap-8">
+          {/* Desktop Navigation */}
+          <div className="hidden items-center gap-6 lg:flex">
+            <nav className="flex items-center gap-6">
               {navigationItems.map((item) => (
                 <Link key={item.href} href={item.href} className={navLinkClass(item.active)}>
                   {item.label}
@@ -116,32 +107,31 @@ export function PublicSiteShell({ children }: PublicSiteShellProps) {
               ))}
             </nav>
 
-            <button
-              type="button"
-              onClick={() => setLocale(nextLocale)}
-              aria-label={t.localeLabel}
-              className={localeButtonClass}
-            >
-              {localeSwitchLabel}
-            </button>
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={() => setLocale(nextLocale)}
+                aria-label={t.localeLabel}
+                className={localeButtonClass}
+              >
+                {localeSwitchLabel}
+              </button>
 
-            <Link
-              href="/login"
-              className={pathname === '/login' ? publicSecondaryButtonClass : publicPrimaryButtonClass}
-            >
-              {t.navLogin}
-            </Link>
+              <Link
+                href="/login"
+                className={pathname === '/login' ? publicSecondaryButtonClass : publicPrimaryButtonClass}
+              >
+                {t.navLogin}
+              </Link>
+            </div>
           </div>
         </div>
 
-        <div className={`${publicSiteContainerClass} pb-4 xl:hidden`}>
-          <nav className="flex gap-6 overflow-x-auto whitespace-nowrap">
+        {/* Mobile Navigation */}
+        <div className={`${publicSiteContainerClass} pb-4 lg:hidden`}>
+          <nav className="flex gap-4 overflow-x-auto whitespace-nowrap">
             {navigationItems.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={navLinkClass(item.active)}
-              >
+              <Link key={item.href} href={item.href} className={navLinkClass(item.active)}>
                 {item.label}
               </Link>
             ))}
@@ -167,39 +157,42 @@ export function PublicSiteShell({ children }: PublicSiteShellProps) {
         </div>
       </header>
 
+      {/* Main Content */}
       <main className="relative z-10">{children}</main>
 
-      <footer className="relative z-10 border-t border-white/10 bg-[#020617]">
-        <div className={`${publicSiteContainerClass} grid gap-10 py-16 lg:grid-cols-[1.2fr_0.8fr_0.8fr_0.8fr]`}>
-          <div className="max-w-md">
-            <p className="text-3xl font-black tracking-tight text-white">
-              PHAIFFER <span className="text-sky-400">TECH</span>
+      {/* Footer */}
+      <footer className="relative z-10 border-t border-border bg-surface">
+        <div className={`${publicSiteContainerClass} grid gap-10 py-16 lg:grid-cols-4`}>
+          {/* Brand Column */}
+          <div className="lg:col-span-1">
+            <p className="text-lg font-semibold text-foreground">PhaifferTech</p>
+            <p className="mt-1 text-2xs font-medium uppercase tracking-wider text-muted">
+              Software & Data
             </p>
-            <p className="mt-2 text-[11px] font-bold uppercase tracking-[0.36em] text-[#b6bec5]">
-              SOFTWARE &amp; DATA
-            </p>
-            <p className="mt-5 text-sm leading-7 text-[#b6bec5]">{t.footerNarrativeText}</p>
+            <p className="mt-4 text-sm leading-relaxed text-muted">{t.footerNarrativeText}</p>
           </div>
 
+          {/* Explore Links */}
           <div>
-            <p className="text-sm font-semibold text-white">{t.footerExploreTitle}</p>
-            <div className="mt-4 flex flex-col gap-3 text-sm text-[#b6bec5]">
+            <p className="text-sm font-medium text-foreground">{t.footerExploreTitle}</p>
+            <div className="mt-4 flex flex-col gap-2 text-sm text-muted">
               {footerLinks.map((item) => (
-                <Link key={item.href} href={item.href} className="transition hover:text-sky-400">
+                <Link key={item.href} href={item.href} className="transition-colors hover:text-accent">
                   {item.label}
                 </Link>
               ))}
             </div>
           </div>
 
+          {/* Products Links */}
           <div>
-            <p className="text-sm font-semibold text-white">{t.footerProductsTitle}</p>
-            <div className="mt-4 flex flex-col gap-3 text-sm text-[#b6bec5]">
+            <p className="text-sm font-medium text-foreground">{t.footerProductsTitle}</p>
+            <div className="mt-4 flex flex-col gap-2 text-sm text-muted">
               {productLinks.map((item) => (
                 <Link
                   key={`${item.href}-${item.label}`}
                   href={item.href}
-                  className="transition hover:text-sky-400"
+                  className="transition-colors hover:text-accent"
                 >
                   {item.label}
                 </Link>
@@ -207,11 +200,12 @@ export function PublicSiteShell({ children }: PublicSiteShellProps) {
             </div>
           </div>
 
+          {/* Access Links */}
           <div>
-            <p className="text-sm font-semibold text-white">{t.footerAccessTitle}</p>
-            <div className="mt-4 flex flex-col gap-3 text-sm text-[#b6bec5]">
+            <p className="text-sm font-medium text-foreground">{t.footerAccessTitle}</p>
+            <div className="mt-4 flex flex-col gap-2 text-sm text-muted">
               {accessLinks.map((item) => (
-                <Link key={item.href} href={item.href} className="transition hover:text-sky-400">
+                <Link key={item.href} href={item.href} className="transition-colors hover:text-accent">
                   {item.label}
                 </Link>
               ))}
@@ -219,8 +213,9 @@ export function PublicSiteShell({ children }: PublicSiteShellProps) {
           </div>
         </div>
 
-        <div className="border-t border-white/10">
-          <div className={`${publicSiteContainerClass} py-5 text-sm text-[#7e8a9a]`}>
+        {/* Copyright */}
+        <div className="border-t border-border">
+          <div className={`${publicSiteContainerClass} py-5 text-sm text-muted`}>
             {t.footerCopyright}
           </div>
         </div>
