@@ -267,27 +267,16 @@ export function Sidebar() {
   );
 
   return (
-    <aside className="sticky top-0 flex h-screen w-64 flex-col border-r border-border bg-surface">
+    <aside className="sticky top-0 flex h-screen w-64 flex-col border-r border-white/10 glass-surface">
       {/* Brand Header */}
-      <div className="border-b border-border px-4 py-5">
-        <div className="flex items-center gap-3">
-          {branding.logoUrl ? (
-            <div className="flex h-11 w-11 items-center justify-center overflow-hidden rounded-2xl border border-[color:var(--tenant-accent)] bg-[color:var(--tenant-accent-soft)] p-1.5 shadow-xs">
-              <img
-                src={branding.logoUrl}
-                alt={branding.scopeName}
-                className="h-full w-full object-contain drop-shadow-sm"
-              />
-            </div>
-          ) : (
-            <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-[color:var(--tenant-accent)] bg-[color:var(--tenant-accent-soft)] text-sm font-semibold text-[color:var(--tenant-accent)] shadow-xs">
-              {getInitials(branding.scopeName)}
-            </div>
-          )}
-          <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-semibold text-foreground">{branding.scopeName}</p>
-            <p className="text-2xs text-muted">{workspace.workspaceLabel}</p>
-          </div>
+      <div className="border-b border-white/10 px-4 py-6 flex flex-col items-center justify-center gap-3">
+        <img
+          src="/PhaifferTech_logo.png"
+          alt="Phaiffer Tech"
+          className="h-8 w-auto object-contain drop-shadow-[0_0_10px_rgba(0,180,216,0.5)]"
+        />
+        <div className="w-full rounded bg-white/5 py-1 text-center border border-white/10">
+          <p className="truncate text-xs font-semibold text-accent tracking-widest uppercase">{branding.scopeName}</p>
         </div>
       </div>
 
@@ -304,17 +293,24 @@ export function Sidebar() {
                   const active = isItemActive(pathname, item.href);
                   const Icon = item.icon;
 
+                  const getNeonClass = (code?: string) => {
+                    if (code === 'IOT') return 'text-[color:var(--accent-iot)] drop-shadow-[0_0_8px_var(--accent-iot)]';
+                    if (code === 'PET') return 'text-[color:var(--accent-pet)] drop-shadow-[0_0_8px_var(--accent-pet)]';
+                    if (code === 'CRM') return 'text-[color:var(--accent-crm)] drop-shadow-[0_0_8px_var(--accent-crm)]';
+                    return 'text-[color:var(--accent-core)] drop-shadow-[0_0_8px_var(--accent-core)]';
+                  };
+
                   return (
                     <Link
                       key={item.href}
                       href={item.href}
-                      className={`flex items-center gap-2.5 rounded-lg px-2 py-2 text-sm transition-colors ${
+                      className={`group flex items-center gap-2.5 rounded-lg px-2 py-2 text-sm transition-all duration-300 ${
                         active
-                          ? 'bg-accent-muted text-accent font-medium'
-                          : 'text-muted hover:bg-surface-inset hover:text-foreground'
+                          ? 'bg-white/10 text-foreground font-medium border border-white/5'
+                          : 'text-muted hover:bg-white/5 hover:text-foreground'
                       }`}
                     >
-                      <Icon className="h-4 w-4 flex-shrink-0" />
+                      <Icon className={`h-4 w-4 flex-shrink-0 transition-all duration-300 ${active ? getNeonClass(item.moduleCode) : 'group-hover:' + getNeonClass(item.moduleCode)}`} />
                       <span className="truncate">{item.label}</span>
                     </Link>
                   );

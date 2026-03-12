@@ -109,31 +109,31 @@
 
 [data-theme='dark'],
 .dark {
-  --background: #09090b;
-  --foreground: #fafafa;
-  --muted: #a1a1aa;
-  --muted-foreground: #71717a;
+  --background: #050a15;
+  --foreground: #e0e1dd;
+  --muted: #8b949e;
+  --muted-foreground: #6e7681;
 
-  --surface: #18181b;
-  --surface-elevated: #27272a;
-  --surface-inset: #09090b;
+  --surface: #0a1120;
+  --surface-elevated: #111b2b;
+  --surface-inset: #050a15;
 
-  --border: #27272a;
-  --border-muted: #18181b;
-  --ring: #d4d4d8;
+  --border: #1e293b;
+  --border-muted: #0f172a;
+  --ring: #00b4d8;
 
-  --accent-core: #3b82f6;
-  --accent-core-foreground: #ffffff;
+  --accent-core: #00b4d8;
+  --accent-core-foreground: #050a15;
   --accent-crm: #8b5cf6;
   --accent-crm-foreground: #ffffff;
-  --accent-iot: #22d3ee;
-  --accent-iot-foreground: #09090b;
-  --accent-pet: #fbbf24;
-  --accent-pet-foreground: #09090b;
+  --accent-iot: #00b4d8;
+  --accent-iot-foreground: #050a15;
+  --accent-pet: #3b82f6;
+  --accent-pet-foreground: #ffffff;
 
   --accent: var(--accent-core);
   --accent-foreground: var(--accent-core-foreground);
-  --accent-muted: rgba(59, 130, 246, 0.15);
+  --accent-muted: rgba(0, 180, 216, 0.15);
 
   --success: #22c55e;
   --success-muted: rgba(34, 197, 94, 0.15);
@@ -144,13 +144,13 @@
   --info: #0ea5e9;
   --info-muted: rgba(14, 165, 233, 0.15);
 
-  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.3);
-  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.4), 0 1px 2px rgba(0, 0, 0, 0.3);
-  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -1px rgba(0, 0, 0, 0.3);
-  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -2px rgba(0, 0, 0, 0.2);
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.5);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.6), 0 1px 2px rgba(0, 0, 0, 0.5);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.6), 0 2px 4px -1px rgba(0, 0, 0, 0.5);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.6), 0 4px 6px -2px rgba(0, 0, 0, 0.4);
 
-  --chart-grid: rgba(255, 255, 255, 0.06);
-  --chart-axis: rgba(255, 255, 255, 0.4);
+  --chart-grid: rgba(255, 255, 255, 0.05);
+  --chart-axis: rgba(255, 255, 255, 0.3);
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -462,4 +462,10 @@ body {
 
 .animate-pulse-subtle {
   animation: pulse-subtle 2s ease-in-out infinite;
+}
+
+@layer utilities {
+  .glass-surface {
+    @apply backdrop-blur-xl bg-white/5;
+  }
 }

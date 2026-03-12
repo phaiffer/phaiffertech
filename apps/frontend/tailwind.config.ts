@@ -78,7 +78,14 @@ const config: Config = {
         'fade-in': 'fade-in 0.2s ease-out',
         'slide-up': 'slide-up 0.3s ease-out',
         'pulse-subtle': 'pulse-subtle 2s ease-in-out infinite',
+        'pulse-live': 'pulse-live 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
       },
+      keyframes: {
+        'pulse-live': {
+          '0%, 100%': { opacity: '1', transform: 'scale(1)' },
+          '50%': { opacity: '0.5', transform: 'scale(1.05)' },
+        }
+      }
     },
   },
   plugins: [],
