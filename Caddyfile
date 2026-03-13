@@ -1,4 +1,6 @@
 api.phaiffertech.com.br {
+    @blocked path /actuator* /swagger-ui* /v3/api-docs*
+    respond @blocked 404
     reverse_proxy platform-backend:8080
 }
 

@@ -17,7 +17,7 @@ describe('WebsitePlatformPage', () => {
     expect(
       await screen.findByText(/One modular SaaS platform designed to host different operational products/i)
     ).toBeInTheDocument();
-    expect(screen.getByAltText('PhaifferTech logo')).toBeInTheDocument();
+    expect(screen.getByAltText('PhaifferTech Background Banner')).toBeInTheDocument();
     expect(screen.getByText('Shared foundation')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Products' })).toHaveAttribute('href', '/products');
     expect(screen.getByRole('link', { name: 'Engineering' })).toHaveAttribute('href', '/engineering');

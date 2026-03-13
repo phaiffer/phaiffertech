@@ -22,11 +22,16 @@ public class FeatureFlagService {
 
     @Transactional(readOnly = true)
     public boolean isEnabled(String flagKey, UUID tenantId) {
+        return isEnabled(flagKey, tenantId, true);
+    }
+
+    @Transactional(readOnly = true)
+    public boolean isEnabled(String flagKey, UUID tenantId, boolean defaultEnabled) {
         return featureFlagRepository.findByFlagKeyAndTenantIdAndDeletedAtIsNull(flagKey, tenantId)
                 .map(flag -> flag.isEnabled())
                 .orElseGet(() -> featureFlagRepository.findByFlagKeyAndTenantIdIsNullAndDeletedAtIsNull(flagKey)
                         .map(flag -> flag.isEnabled())
-                        .orElse(true));
+                        .orElse(defaultEnabled));
     }
 
     @Transactional(readOnly = true)

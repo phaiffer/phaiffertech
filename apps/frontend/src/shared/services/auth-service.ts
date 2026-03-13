@@ -15,6 +15,9 @@ export const authService = {
       password: input.password
     }, { skipAuth: true }),
 
+  demoLogin: () =>
+    apiClient.post<AuthTokenResponse>('/auth/demo-login', undefined, { skipAuth: true }),
+
   refresh: (refreshToken: string) =>
     apiClient.post<AuthTokenResponse>('/auth/refresh', { refreshToken }, { skipAuth: true }),
 

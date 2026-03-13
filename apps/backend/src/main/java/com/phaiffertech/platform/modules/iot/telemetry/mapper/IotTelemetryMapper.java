@@ -3,32 +3,52 @@ package com.phaiffertech.platform.modules.iot.telemetry.mapper;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.phaiffertech.platform.modules.iot.telemetry.domain.IotTelemetryRecord;
+import com.phaiffertech.platform.modules.iot.telemetry.dto.IotTelemetryCreateRequest;
 import com.phaiffertech.platform.modules.iot.telemetry.dto.IotTelemetryResponse;
-import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
 import org.mapstruct.Named;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import java.util.Collections;
 import java.util.Map;
 
-@Mapper(componentModel = "spring")
-public abstract class IotTelemetryMapper {
+@org.springframework.stereotype.Component
+public class IotTelemetryMapper {
 
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     private static final Logger log = LoggerFactory.getLogger(IotTelemetryMapper.class);
 
-    @Mapping(target = "metadata", source = "metadata", qualifiedByName = "parseMetadata")
-    public abstract IotTelemetryResponse toResponse(IotTelemetryRecord entity);
+    public IotTelemetryResponse toResponse(IotTelemetryRecord entity) {
+        if (entity == null) {
+            return null;
+        }
+        return new IotTelemetryResponse(
+                entity.getId(),
+                entity.getDeviceId(),
+                entity.getRegisterId(),
+                entity.getMetricName(),
+                entity.getMetricValue(),
+                entity.getUnit(),
+                parseMetadata(entity.getMetadata()),
+                entity.getRecordedAt(),
+                entity.getCreatedAt()
+        );
+    }
 
-    @Mapping(target = "metadata", source = "request.metadata", qualifiedByName = "stringifyMetadata")
-    @Mapping(target = "tenantId", source = "tenantId")
-    @Mapping(target = "id", ignore = true)
-    @Mapping(target = "deletedAt", ignore = true)
-    @Mapping(target = "createdAt", ignore = true)
-    @Mapping(target = "updatedAt", ignore = true)
-    public abstract IotTelemetryRecord toEntity(com.phaiffertech.platform.modules.iot.telemetry.dto.IotTelemetryCreateRequest request, java.util.UUID tenantId);
+    public IotTelemetryRecord toEntity(IotTelemetryCreateRequest request, java.util.UUID tenantId) {
+        if (request == null) {
+            return null;
+        }
+        IotTelemetryRecord record = new IotTelemetryRecord();
+        record.setTenantId(tenantId);
+        record.setDeviceId(request.deviceId());
+        record.setRegisterId(request.registerId());
+        record.setMetricName(request.metricName());
+        record.setMetricValue(request.metricValue());
+        record.setUnit(request.unit());
+        record.setRecordedAt(request.recordedAt());
+        record.setMetadata(stringifyMetadata(request.metadata()));
+        return record;
+    }
 
     @Named("stringifyMetadata")
     protected String stringifyMetadata(Map<String, Object> metadata) {

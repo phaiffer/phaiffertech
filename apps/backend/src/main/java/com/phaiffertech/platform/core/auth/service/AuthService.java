@@ -1,6 +1,7 @@
 package com.phaiffertech.platform.core.auth.service;
 
 import com.phaiffertech.platform.core.audit.service.AuditLogService;
+import com.phaiffertech.platform.core.auth.config.DemoAccessProperties;
 import com.phaiffertech.platform.core.auth.domain.RefreshToken;
 import com.phaiffertech.platform.core.auth.dto.AuthTokenResponse;
 import com.phaiffertech.platform.core.auth.dto.AuthenticatedUserResponse;
@@ -26,6 +27,7 @@ import com.phaiffertech.platform.shared.security.JwtService;
 import java.time.Instant;
 import java.util.Map;
 import java.util.UUID;
+import com.phaiffertech.platform.core.module.featureflag.service.FeatureFlagService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -45,6 +47,8 @@ public class AuthService {
     private final CurrentUserService currentUserService;
     private final AuditLogService auditLogService;
     private final PlatformMetricsService platformMetricsService;
+    private final FeatureFlagService featureFlagService;
+    private final DemoAccessProperties demoAccessProperties;
 
     public AuthService(
             TenantRepository tenantRepository,
@@ -58,7 +62,9 @@ public class AuthService {
             RefreshTokenHashService refreshTokenHashService,
             CurrentUserService currentUserService,
             AuditLogService auditLogService,
-            PlatformMetricsService platformMetricsService
+            PlatformMetricsService platformMetricsService,
+            FeatureFlagService featureFlagService,
+            DemoAccessProperties demoAccessProperties
     ) {
         this.tenantRepository = tenantRepository;
         this.userRepository = userRepository;
@@ -72,6 +78,38 @@ public class AuthService {
         this.currentUserService = currentUserService;
         this.auditLogService = auditLogService;
         this.platformMetricsService = platformMetricsService;
+        this.featureFlagService = featureFlagService;
+        this.demoAccessProperties = demoAccessProperties;
+    }
+
+    @Transactional
+    public AuthTokenResponse demoLogin() {
+        if (!demoAccessProperties.isEnabled()) {
+            platformMetricsService.recordAuthenticationAttempt(false);
+            throw new ForbiddenOperationException("Demo access is currently disabled.");
+        }
+
+        if (demoAccessProperties.isEnforceFeatureFlag()) {
+            String featureFlagKey = demoAccessProperties.getFeatureFlagKey();
+            if (featureFlagKey == null
+                    || featureFlagKey.isBlank()
+                    || !featureFlagService.isEnabled(featureFlagKey, null, false)) {
+                platformMetricsService.recordAuthenticationAttempt(false);
+                throw new ForbiddenOperationException("Demo access is currently disabled.");
+            }
+        }
+
+        if (!demoAccessProperties.hasCredentialsConfigured()) {
+            platformMetricsService.recordAuthenticationAttempt(false);
+            throw new ForbiddenOperationException("Demo access is currently unavailable.");
+        }
+
+        LoginRequest request = new LoginRequest(
+                demoAccessProperties.getTenantCode(),
+                demoAccessProperties.getUserEmail(),
+                demoAccessProperties.getUserPassword()
+        );
+        return this.login(request);
     }
 
     @Transactional

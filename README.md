@@ -27,6 +27,10 @@ Unified multi-tenant SaaS platform (CRM, Pet and IoT) built as a modular monolit
 - Terraform (OCI base)
 - Root Makefile
 
+Operational hardening notes:
+
+- `docs/platform/demo-sysadmin-secrets-hardening.pt-BR.md`
+
 ## Package Root
 
 Backend package root is fixed:

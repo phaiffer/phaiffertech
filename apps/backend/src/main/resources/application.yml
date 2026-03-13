@@ -63,6 +63,9 @@ app:
       access-minutes: ${APP_SECURITY_JWT_ACCESS_MINUTES:15}
       refresh-days: ${APP_SECURITY_JWT_REFRESH_DAYS:7}
       issuer: ${APP_SECURITY_JWT_ISSUER:platform-api}
+    public-endpoints:
+      docs-enabled: ${APP_SECURITY_PUBLIC_DOCS_ENABLED:true}
+      observability-enabled: ${APP_SECURITY_PUBLIC_OBSERVABILITY_ENABLED:true}
     bruteforce:
       enabled: ${APP_SECURITY_BRUTEFORCE_ENABLED:true}
       max-attempts: ${APP_SECURITY_BRUTEFORCE_MAX_ATTEMPTS:5}
@@ -72,3 +75,19 @@ app:
     auth-per-minute: ${APP_RATE_LIMIT_AUTH_PER_MINUTE:10}
     api-per-minute: ${APP_RATE_LIMIT_API_PER_MINUTE:100}
     telemetry-per-minute: ${APP_RATE_LIMIT_TELEMETRY_PER_MINUTE:500}
+  demo:
+    assisted:
+      enabled: ${APP_DEMO_ASSISTED_ENABLED:false}
+      tenant-code: ${APP_DEMO_ASSISTED_TENANT_CODE:}
+      user-email: ${APP_DEMO_ASSISTED_USER_EMAIL:}
+      user-password: ${APP_DEMO_ASSISTED_USER_PASSWORD:}
+      feature-flag-key: ${APP_DEMO_ASSISTED_FEATURE_FLAG_KEY:demo.assisted.enabled}
+      enforce-feature-flag: ${APP_DEMO_ASSISTED_ENFORCE_FEATURE_FLAG:false}
+  bootstrap:
+    master-admin:
+      enabled: ${APP_BOOTSTRAP_MASTER_ADMIN_ENABLED:false}
+      tenant-code: ${APP_BOOTSTRAP_MASTER_ADMIN_TENANT_CODE:PHAIFFER_TECH}
+      tenant-name: ${APP_BOOTSTRAP_MASTER_ADMIN_TENANT_NAME:Willian Phaiffer Cardoso Desenvolvimento de Software LTDA}
+      user-email: ${APP_BOOTSTRAP_MASTER_ADMIN_EMAIL:sysadmin@phaiffer.tech}
+      user-password: ${APP_BOOTSTRAP_MASTER_ADMIN_PASSWORD:}
+      full-name: ${APP_BOOTSTRAP_MASTER_ADMIN_FULL_NAME:System Administrator}

@@ -23,6 +23,7 @@ vi.mock('next/navigation', () => ({
 vi.mock('@/shared/services/auth-service', () => ({
   authService: {
     login: vi.fn(),
+    demoLogin: vi.fn(),
     refresh: vi.fn(),
     logout: vi.fn(),
     me: vi.fn()
@@ -92,7 +93,9 @@ describe('LoginPage', () => {
     expect(replaceMock).toHaveBeenCalledWith('/dashboard');
   });
 
-  it('preenche o formulario com a demo de forma discreta', async () => {
+  it('aciona o fluxo de demo assistida sem expor credenciais no formulario', async () => {
+    vi.mocked(authService.demoLogin).mockResolvedValue(authResponseFixture);
+
     render(
       <PublicSiteProvider>
         <AuthProvider>
@@ -103,9 +106,14 @@ describe('LoginPage', () => {
 
     fireEvent.click(await screen.findByRole('button', { name: 'Use demo' }));
 
-    expect(screen.getByLabelText('Company or tenant')).toHaveValue('default');
-    expect(screen.getByLabelText('Email')).toHaveValue('admin@local.test');
-    expect(screen.getByLabelText('Password')).toHaveValue('Admin@123');
+    await waitFor(() => {
+      expect(authService.demoLogin).toHaveBeenCalledTimes(1);
+    });
+
+    expect(screen.getByLabelText('Company or tenant')).toHaveValue('');
+    expect(screen.getByLabelText('Email')).toHaveValue('');
+    expect(screen.getByLabelText('Password')).toHaveValue('');
     expect(screen.getByRole('link', { name: 'Forgot your password?' })).toHaveAttribute('href', '/contact');
+    expect(replaceMock).toHaveBeenCalledWith('/dashboard');
   });
 });

@@ -18,12 +18,6 @@ import {
 import { usePublicSite } from '@/shared/public/public-site-provider';
 import { getPublicSiteMessages } from '@/shared/public/public-site-messages';
 
-const demoCredentials = {
-  tenantCode: 'default',
-  email: 'admin@local.test',
-  password: 'Admin@123'
-};
-
 export default function LoginPage() {
   const router = useRouter();
   const { locale } = usePublicSite();
@@ -43,11 +37,29 @@ export default function LoginPage() {
     }
   }, [isAuthenticated, isLoading, router]);
 
-  function handleUseDemo() {
-    setTenantCode(demoCredentials.tenantCode);
-    setEmail(demoCredentials.email);
-    setPassword(demoCredentials.password);
+  async function handleUseDemo() {
     setError(null);
+    setSubmitting(true);
+
+    try {
+      const tokenData = await authService.demoLogin();
+
+      signIn({
+        accessToken: tokenData.accessToken,
+        refreshToken: tokenData.refreshToken,
+        user: tokenData.user,
+      });
+
+      router.replace('/dashboard');
+    } catch (err) {
+      if (err instanceof ApiClientError) {
+        setError(err.message);
+      } else {
+        setError(t.errorFallback);
+      }
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -166,7 +178,8 @@ export default function LoginPage() {
                 <button
                   type="button"
                   onClick={handleUseDemo}
-                  className="text-sm text-muted transition-colors hover:text-foreground"
+                  disabled={submitting}
+                  className="text-sm text-muted transition-colors hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   {t.demoActionLabel}
                 </button>

@@ -188,6 +188,12 @@
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
+                <configuration>
+                    <layers>
+                        <enabled>true</enabled>
+                    </layers>
+                    <jvmArguments>-Xms256m -Xmx512m -XX:MaxMetaspaceSize=128m -XX:+UseSerialGC</jvmArguments>
+                </configuration>
             </plugin>
         </plugins>
     </build>

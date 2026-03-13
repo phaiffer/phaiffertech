@@ -42,6 +42,20 @@ public class AuthController {
         }
     }
 
+    @PostMapping("/demo-login")
+    public ApiResponse<AuthTokenResponse> demoLogin(HttpServletRequest httpServletRequest) {
+        String ipAddress = httpServletRequest.getRemoteAddr();
+        loginAttemptService.checkAllowed("demo", "demo", ipAddress);
+        try {
+            AuthTokenResponse response = authService.demoLogin();
+            loginAttemptService.onSuccess("demo", "demo", ipAddress);
+            return ApiResponse.success(response);
+        } catch (RuntimeException ex) {
+            loginAttemptService.onFailure("demo", "demo", ipAddress);
+            throw ex;
+        }
+    }
+
     @PostMapping("/refresh")
     public ApiResponse<AuthTokenResponse> refresh(@Valid @RequestBody RefreshRequest request) {
         return ApiResponse.success(authService.refresh(request));
