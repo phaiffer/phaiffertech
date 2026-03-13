@@ -4,39 +4,52 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.phaiffertech.platform.modules.iot.telemetry.domain.IotTelemetryRecord;
 import com.phaiffertech.platform.modules.iot.telemetry.dto.IotTelemetryResponse;
-import lombok.extern.slf4j.Slf4j;
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
+import org.mapstruct.Named;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.Collections;
 import java.util.Map;
 
-@Slf4j
-public final class IotTelemetryMapper {
+@Mapper(componentModel = "spring")
+public abstract class IotTelemetryMapper {
 
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+    private static final Logger log = LoggerFactory.getLogger(IotTelemetryMapper.class);
 
-    private IotTelemetryMapper() {
+    @Mapping(target = "metadata", source = "metadata", qualifiedByName = "parseMetadata")
+    public abstract IotTelemetryResponse toResponse(IotTelemetryRecord entity);
+
+    @Mapping(target = "metadata", source = "request.metadata", qualifiedByName = "stringifyMetadata")
+    @Mapping(target = "tenantId", source = "tenantId")
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "deletedAt", ignore = true)
+    @Mapping(target = "createdAt", ignore = true)
+    @Mapping(target = "updatedAt", ignore = true)
+    public abstract IotTelemetryRecord toEntity(com.phaiffertech.platform.modules.iot.telemetry.dto.IotTelemetryCreateRequest request, java.util.UUID tenantId);
+
+    @Named("stringifyMetadata")
+    protected String stringifyMetadata(Map<String, Object> metadata) {
+        if (metadata == null || metadata.isEmpty()) {
+            return null;
+        }
+        try {
+            return OBJECT_MAPPER.writeValueAsString(metadata);
+        } catch (Exception e) {
+            log.error("Falha ao converter metadata para string: ", e);
+            return null;
+        }
     }
 
-    public static IotTelemetryResponse toResponse(IotTelemetryRecord record) {
-        return new IotTelemetryResponse(
-                record.getId(),
-                record.getDeviceId(),
-                record.getRegisterId(),
-                record.getMetricName(),
-                record.getMetricValue(),
-                record.getUnit(),
-                parseMetadata(record.getMetadata()),
-                record.getRecordedAt(),
-                record.getCreatedAt()
-        );
-    }
-
-    private static Map<String, Object> parseMetadata(String metadata) {
+    @Named("parseMetadata")
+    protected Map<String, Object> parseMetadata(String metadata) {
         if (metadata == null || metadata.isBlank()) {
             return Collections.emptyMap();
         }
         try {
-            return OBJECT_MAPPER.readValue(metadata, new TypeReference<>() {
-            });
+            return OBJECT_MAPPER.readValue(metadata, new TypeReference<>() {});
         } catch (Exception e) {
             log.error("Falha no processamento de telemetria IoT: ", e);
             return Collections.emptyMap();

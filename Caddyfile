@@ -1,0 +1,11 @@
+api.phaiffertech.com.br {
+    reverse_proxy platform-backend:8080
+}
+
+app.phaiffertech.com.br {
+    reverse_proxy platform-frontend:3000
+}
+
+phaiffertech.com.br {
+    redir https://app.phaiffertech.com.br{uri}
+}
