@@ -1,29 +1,19 @@
-output "vcn_id" {
-  description = "Platform VCN ID"
-  value       = oci_core_virtual_network.platform_vcn.id
+output "vpc_id" {
+  description = "Platform VPC network ID"
+  value       = google_compute_network.platform_vpc.id
 }
 
-output "public_subnet_id" {
-  description = "Public subnet ID"
-  value       = oci_core_subnet.public_subnet.id
+output "subnet_id" {
+  description = "Subnet ID"
+  value       = google_compute_subnetwork.platform_subnet.id
 }
 
-output "private_subnet_id" {
-  description = "Private subnet ID"
-  value       = oci_core_subnet.private_subnet.id
+output "app_instance_external_ip" {
+  description = "External IP address of the app instance"
+  value       = google_compute_instance.app_instance.network_interface.0.access_config.0.nat_ip
 }
 
-output "app_instance_id" {
-  description = "Application compute instance ID"
-  value       = oci_core_instance.app_instance.id
-}
-
-output "load_balancer_id" {
-  description = "Public load balancer ID"
-  value       = oci_load_balancer_load_balancer.platform_lb.id
-}
-
-output "postgresql_db_system_id" {
-  description = "PostgreSQL managed DB system ID"
-  value       = oci_psql_db_system.platform_postgresql.id
+output "app_instance_internal_ip" {
+  description = "Internal IP address of the app instance"
+  value       = google_compute_instance.app_instance.network_interface.0.network_ip
 }
