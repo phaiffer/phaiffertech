@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.phaiffertech.platform.shared.response.ApiErrorResponse;
 import com.phaiffertech.platform.shared.security.AuthenticatedUser;
 import com.phaiffertech.platform.shared.tenancy.TenantContext;
+import com.phaiffertech.platform.shared.web.ClientIpResolver;
 import io.github.bucket4j.Bandwidth;
 import io.github.bucket4j.Bucket;
 import io.github.bucket4j.Refill;
@@ -102,7 +103,7 @@ public class ApiRateLimitFilter extends OncePerRequestFilter {
     }
 
     private String resolveIdentity(HttpServletRequest request) {
-        String ip = request.getRemoteAddr() == null ? "unknown-ip" : request.getRemoteAddr();
+        String ip = ClientIpResolver.resolve(request);
         UUID tenantId = TenantContext.getTenantId();
         String tenant = tenantId == null ? "no-tenant" : tenantId.toString();
 

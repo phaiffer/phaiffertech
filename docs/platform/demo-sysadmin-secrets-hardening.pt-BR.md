@@ -132,5 +132,6 @@ Fluxo recomendado:
 
 ## Limites atuais
 
-- O diretorio `infra/terraform` continua baseado em OCI e nao representa um blueprint final de GCP.
-- A prontidao para GCP nesta etapa esta focada em configuracao de env/secrets e endurecimento de runtime, nao em IaC completa para GCP.
+- O diretorio `infra/terraform` permanece apenas como referencia historica e nao representa a arquitetura alvo.
+- A base atual de IaC para GCP passou para `infra/gcp/terraform`.
+- O runbook de deploy inicial na GCP esta em `docs/platform/gcp-minimal-infra.pt-BR.md`.

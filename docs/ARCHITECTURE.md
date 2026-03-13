@@ -816,9 +816,11 @@ Docker compatibility note:
 - `tools`: adminer
 - `observability`: prometheus + grafana + loki
 
-### Terraform (Oracle Cloud)
-Base IaC scaffolding at `infra/terraform`:
-- provider and variables
-- network (VCN, subnets, route/security primitives)
-- compute and load balancer
-- managed PostgreSQL service blueprint
+### Terraform (GCP Minimal)
+Base IaC scaffolding at `infra/gcp/terraform`:
+- Artifact Registry for container images
+- Cloud SQL for PostgreSQL
+- Secret Manager for runtime secrets
+- Cloud Run backend/frontend and minimum IAM
+
+Legacy Terraform under `infra/terraform` is historical reference only and should not be treated as the target online architecture.

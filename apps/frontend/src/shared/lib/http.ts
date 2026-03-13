@@ -3,8 +3,21 @@ import { logClientError, logClientInfo } from '@/shared/observability/client-log
 import { AuthTokenResponse, SessionState } from '@/shared/types/auth';
 import { ApiEnvelope, ApiErrorEnvelope } from '@/shared/types/common';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8080/api/v1';
+const API_BASE_URL = resolveApiBaseUrl();
 let refreshSessionPromise: Promise<SessionState | null> | null = null;
+
+function resolveApiBaseUrl(): string {
+  const configuredApiUrl = process.env.NEXT_PUBLIC_API_URL;
+  if (configuredApiUrl) {
+    return configuredApiUrl;
+  }
+
+  if (process.env.NODE_ENV !== 'production') {
+    return 'http://localhost:8080/api/v1';
+  }
+
+  throw new Error('NEXT_PUBLIC_API_URL must be configured for production builds.');
+}
 
 export class ApiClientError extends Error {
   readonly status: number;

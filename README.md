@@ -24,7 +24,7 @@ Unified multi-tenant SaaS platform (CRM, Pet and IoT) built as a modular monolit
 ### Infra
 - Docker Compose
 - GitHub Actions CI
-- Terraform (OCI base)
+- Terraform (GCP minimal base)
 - Root Makefile
 
 Operational hardening notes:
@@ -483,6 +483,7 @@ Main targets:
 - `make metrics`
 - `make observability-up`, `make observability-down`
 - `make terraform-init`, `make terraform-plan`
+- `make terraform-legacy-init`, `make terraform-legacy-plan`
 - `make migrate`, `make crm-seed`, `make pet-seed`, `make iot-seed`, `make db-shell`
 
 ## Docker Profiles
@@ -534,15 +535,19 @@ Notes:
   - frontend `npm ci && npm run lint && npm run build`
   - docker build (`docker compose build backend frontend`)
 
-## Terraform (OCI)
+## Terraform (GCP)
 
-Initial IaC base is available at `infra/terraform`:
-- `provider.tf`
-- `variables.tf`
-- `network.tf`
-- `compute.tf`
-- `postgresql.tf`
-- `outputs.tf`
+Current deploy base is available at `infra/gcp/terraform`:
+- Artifact Registry
+- Cloud SQL for PostgreSQL
+- Secret Manager
+- Cloud Run backend/frontend
+- service accounts and minimum IAM
+
+Legacy Terraform remains in `infra/terraform` only as historical reference and should not be used as the target production architecture.
+
+Detailed runbook:
+- [docs/platform/gcp-minimal-infra.pt-BR.md](/home/willian/IdeaProjects/phaiffertech/docs/platform/gcp-minimal-infra.pt-BR.md)
 
 ## Dev Credentials
 

@@ -1,0 +1,27 @@
+project_id = "my-gcp-project"
+region     = "us-central1"
+
+application_name = "phaiffertech"
+environment      = "prod"
+
+database_name          = "platform_prod_db"
+database_tier          = "db-custom-1-3840"
+database_disk_size_gb  = 20
+database_deletion_protection = true
+service_deletion_protection  = true
+
+deploy_backend_service  = false
+deploy_frontend_service = false
+
+backend_image  = "us-central1-docker.pkg.dev/my-gcp-project/phaiffertech-prod-apps/backend:initial"
+frontend_image = "us-central1-docker.pkg.dev/my-gcp-project/phaiffertech-prod-apps/frontend:initial"
+
+allowed_cors_origins = "https://app.example.com"
+jwt_issuer           = "platform-api"
+
+backend_max_instances           = 3
+backend_hikari_maximum_pool_size = 5
+frontend_max_instances          = 3
+
+demo_assisted_enabled            = false
+master_admin_bootstrap_enabled   = false

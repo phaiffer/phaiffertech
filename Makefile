@@ -4,7 +4,8 @@ COMPOSE := docker compose
 COMPOSE_RAW := docker compose
 BACKEND_DIR := apps/backend
 FRONTEND_DIR := apps/frontend
-TERRAFORM_DIR := infra/terraform
+TERRAFORM_DIR := infra/gcp/terraform
+LEGACY_TERRAFORM_DIR := infra/terraform
 CRM_SEED_SQL := infra/docker/sql/crm-seed.sql
 PET_SEED_SQL := infra/docker/sql/pet-seed.sql
 IOT_SEED_SQL := infra/docker/sql/iot-seed.sql
@@ -12,8 +13,8 @@ IOT_SEED_SQL := infra/docker/sql/iot-seed.sql
 .PHONY: help up down restart rebuild status logs logs-follow logs-backend logs-frontend logs-db docker-build docker-reset-db \
 	build test test-backend test-integration test-unit test-pet test-iot lint clean backend frontend install-backend install-frontend \
 	package-backend package-frontend db-shell migrate seed crm-seed pet-seed iot-seed logs-all swagger verify \
-	ci metrics logs-json observability-up observability-down terraform-init terraform-plan validate-iot-suite validate-iot-live \
-	simulate-iot-demo simulate-iot-test
+	ci metrics logs-json observability-up observability-down terraform-init terraform-plan terraform-legacy-init terraform-legacy-plan \
+	validate-iot-suite validate-iot-live simulate-iot-demo simulate-iot-test
 
 help: ## List available commands
 	@awk 'BEGIN {FS = ":.*##"; printf "\nAvailable targets:\n"} /^[a-zA-Z0-9_.-]+:.*##/ { printf "  %-20s %s\n", $$1, $$2 }' $(MAKEFILE_LIST)
@@ -146,6 +147,12 @@ terraform-init: ## Initialize Terraform working directory
 
 terraform-plan: ## Generate Terraform execution plan
 	cd $(TERRAFORM_DIR) && terraform plan
+
+terraform-legacy-init: ## Initialize legacy Terraform directory
+	cd $(LEGACY_TERRAFORM_DIR) && terraform init
+
+terraform-legacy-plan: ## Generate plan for legacy Terraform directory
+	cd $(LEGACY_TERRAFORM_DIR) && terraform plan
 
 ci: verify docker-build ## Run local CI flow (verify + docker build)
 

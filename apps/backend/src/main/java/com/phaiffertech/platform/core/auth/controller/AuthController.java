@@ -7,6 +7,7 @@ import com.phaiffertech.platform.core.auth.dto.AuthenticatedUserResponse;
 import com.phaiffertech.platform.core.auth.dto.LoginRequest;
 import com.phaiffertech.platform.shared.response.ApiResponse;
 import com.phaiffertech.platform.shared.security.JwtProperties;
+import com.phaiffertech.platform.shared.web.ClientIpResolver;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
@@ -39,7 +40,7 @@ public class AuthController {
             HttpServletRequest httpServletRequest,
             HttpServletResponse httpServletResponse
     ) {
-        String ipAddress = httpServletRequest.getRemoteAddr();
+        String ipAddress = ClientIpResolver.resolve(httpServletRequest);
         loginAttemptService.checkAllowed(request.tenantCode(), request.email(), ipAddress);
         try {
             AuthService.AuthSessionResult result = authService.login(request);
@@ -57,7 +58,7 @@ public class AuthController {
             HttpServletRequest httpServletRequest,
             HttpServletResponse httpServletResponse
     ) {
-        String ipAddress = httpServletRequest.getRemoteAddr();
+        String ipAddress = ClientIpResolver.resolve(httpServletRequest);
         loginAttemptService.checkAllowed("demo", "demo", ipAddress);
         try {
             AuthService.AuthSessionResult result = authService.demoLogin();

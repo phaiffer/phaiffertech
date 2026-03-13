@@ -104,4 +104,4 @@ Limitação importante:
 
 - diferenças de plano de execução entre MySQL e PostgreSQL podem alterar performance em consultas grandes
 - dados legados com valores fora do esperado para `uuid`, boolean ou timestamps precisam saneamento prévio
-- o blueprint Terraform usa o recurso OCI oficial de PostgreSQL, mas deve ser validado no tenancy alvo antes de aplicar em produção
+- o blueprint atual para deploy inicial na GCP fica em `infra/gcp/terraform`; qualquer referencia OCI deve ser tratada apenas como historica
