@@ -45,6 +45,7 @@ async function performFetch(path: string, options: RequestOptions, sessionOverri
   try {
     response = await fetch(`${API_BASE_URL}${path}`, {
       ...options,
+      credentials: options.credentials ?? 'include',
       headers,
       body: options.body !== undefined ? JSON.stringify(options.body) : undefined
     });
@@ -92,7 +93,7 @@ async function refreshSession(): Promise<SessionState | null> {
   }
 
   const session = getSession();
-  if (!session?.refreshToken) {
+  if (!session?.accessToken) {
     clearSession();
     return null;
   }
@@ -101,7 +102,6 @@ async function refreshSession(): Promise<SessionState | null> {
     try {
       const response = await performFetch('/auth/refresh', {
         method: 'POST',
-        body: { refreshToken: session.refreshToken },
         skipAuth: true
       }, null);
 
@@ -113,7 +113,6 @@ async function refreshSession(): Promise<SessionState | null> {
       const tokenData = await parseSuccessEnvelope<AuthTokenResponse>(response);
       const refreshedSession: SessionState = {
         accessToken: tokenData.accessToken,
-        refreshToken: tokenData.refreshToken,
         user: tokenData.user
       };
 

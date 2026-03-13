@@ -54,7 +54,7 @@ class PermissionEnforcementIntegrationTest extends AbstractIntegrationTest {
         ));
 
         assertEquals(200, loginResponse.getStatusCode().value());
-        AuthSession viewerSession = sessionFromLoginPayload(requireBody(loginResponse).path("data"));
+        AuthSession viewerSession = sessionFromLoginResponse(loginResponse);
 
         ResponseEntity<JsonNode> readResponse = get("/crm/contacts?page=0&size=20", viewerSession);
         assertEquals(200, readResponse.getStatusCode().value());

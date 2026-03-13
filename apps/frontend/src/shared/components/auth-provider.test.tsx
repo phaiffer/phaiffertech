@@ -32,7 +32,6 @@ vi.mock('@/shared/observability/client-logger', () => ({
 
 const sessionFixture: SessionState = {
   accessToken: 'access-token',
-  refreshToken: 'refresh-token',
   user: {
     userId: 'user-1',
     email: 'admin@local.test',
@@ -177,7 +176,7 @@ describe('AuthProvider', () => {
     fireEvent.click(screen.getByRole('button', { name: 'sign-out' }));
 
     await waitFor(() => {
-      expect(authService.logout).toHaveBeenCalledWith('refresh-token');
+      expect(authService.logout).toHaveBeenCalledWith();
     });
 
     expect(getSession()).toBeNull();
@@ -202,7 +201,7 @@ describe('AuthProvider', () => {
     fireEvent.click(screen.getByRole('button', { name: 'sign-out' }));
 
     await waitFor(() => {
-      expect(authService.logout).toHaveBeenCalledWith('refresh-token');
+      expect(authService.logout).toHaveBeenCalledWith();
     });
 
     expect(getSession()).toBeNull();

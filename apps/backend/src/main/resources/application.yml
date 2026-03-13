@@ -63,6 +63,10 @@ app:
       access-minutes: ${APP_SECURITY_JWT_ACCESS_MINUTES:15}
       refresh-days: ${APP_SECURITY_JWT_REFRESH_DAYS:7}
       issuer: ${APP_SECURITY_JWT_ISSUER:platform-api}
+      refresh-cookie-name: ${APP_SECURITY_JWT_REFRESH_COOKIE_NAME:platform_refresh_token}
+      refresh-cookie-path: ${APP_SECURITY_JWT_REFRESH_COOKIE_PATH:/api/v1/auth}
+      refresh-cookie-same-site: ${APP_SECURITY_JWT_REFRESH_COOKIE_SAME_SITE:Lax}
+      refresh-cookie-secure: ${APP_SECURITY_JWT_REFRESH_COOKIE_SECURE:false}
     public-endpoints:
       docs-enabled: ${APP_SECURITY_PUBLIC_DOCS_ENABLED:true}
       observability-enabled: ${APP_SECURITY_PUBLIC_OBSERVABILITY_ENABLED:true}

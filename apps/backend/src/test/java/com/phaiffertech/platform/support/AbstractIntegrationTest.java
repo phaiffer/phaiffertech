@@ -40,10 +40,11 @@ public abstract class AbstractIntegrationTest extends IntegrationTestContainersC
     protected JdbcTemplate jdbcTemplate;
 
     protected AuthSession loginAsDefaultAdmin() {
+        ensureDefaultAdminExists();
         ResponseEntity<JsonNode> response = login("default", "admin@local.test", DEFAULT_PASSWORD);
 
         Assertions.assertEquals(200, response.getStatusCode().value());
-        return sessionFromLoginPayload(requireBody(response).path("data"));
+        return sessionFromLoginResponse(response);
     }
 
     protected AuthSession createTenantAdminSession(String tenantCode, String email) {
@@ -82,7 +83,7 @@ public abstract class AbstractIntegrationTest extends IntegrationTestContainersC
 
         ResponseEntity<JsonNode> response = login(tenantCode, email, DEFAULT_PASSWORD);
         Assertions.assertEquals(200, response.getStatusCode().value());
-        return sessionFromLoginPayload(requireBody(response).path("data"));
+        return sessionFromLoginResponse(response);
     }
 
     protected AuthSession createTenantSessionWithPermissions(
@@ -147,7 +148,7 @@ public abstract class AbstractIntegrationTest extends IntegrationTestContainersC
 
         ResponseEntity<JsonNode> response = login(tenantCode, email, DEFAULT_PASSWORD);
         Assertions.assertEquals(200, response.getStatusCode().value());
-        return sessionFromLoginPayload(requireBody(response).path("data"));
+        return sessionFromLoginResponse(response);
     }
 
     protected void enableTenantModules(String tenantId, String... moduleCodes) {
@@ -185,6 +186,10 @@ public abstract class AbstractIntegrationTest extends IntegrationTestContainersC
         return exchange(path, HttpMethod.POST, payload, session, session.tenantId());
     }
 
+    protected ResponseEntity<JsonNode> post(String path, Object payload, AuthSession session, String cookie) {
+        return exchange(path, HttpMethod.POST, payload, session, session.tenantId(), cookie);
+    }
+
     protected ResponseEntity<JsonNode> put(String path, Object payload, AuthSession session) {
         return exchange(path, HttpMethod.PUT, payload, session, session.tenantId());
     }
@@ -198,8 +203,15 @@ public abstract class AbstractIntegrationTest extends IntegrationTestContainersC
     }
 
     protected ResponseEntity<JsonNode> postPublic(String path, Object payload) {
+        return postPublic(path, payload, null);
+    }
+
+    protected ResponseEntity<JsonNode> postPublic(String path, Object payload, String cookie) {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
+        if (cookie != null) {
+            headers.add(HttpHeaders.COOKIE, cookie);
+        }
         HttpEntity<Object> request = new HttpEntity<>(payload, headers);
         return restTemplate.exchange(api(path), HttpMethod.POST, request, JsonNode.class);
     }
@@ -223,13 +235,27 @@ public abstract class AbstractIntegrationTest extends IntegrationTestContainersC
         return count == null ? 0 : count;
     }
 
-    protected AuthSession sessionFromLoginPayload(JsonNode data) {
+    protected AuthSession sessionFromLoginResponse(ResponseEntity<JsonNode> response) {
+        JsonNode data = requireBody(response).path("data");
         return new AuthSession(
                 data.path("accessToken").asText(),
-                data.path("refreshToken").asText(),
+                requireRefreshCookie(response),
                 data.path("user").path("tenantId").asText(),
                 data.path("user").path("userId").asText()
         );
+    }
+
+    protected String requireRefreshCookie(ResponseEntity<?> response) {
+        String setCookie = response.getHeaders().getFirst(HttpHeaders.SET_COOKIE);
+        Assertions.assertNotNull(setCookie, "Expected refresh cookie header.");
+        int separator = setCookie.indexOf(';');
+        return separator >= 0 ? setCookie.substring(0, separator) : setCookie;
+    }
+
+    protected String requireSetCookieHeader(ResponseEntity<?> response) {
+        String setCookie = response.getHeaders().getFirst(HttpHeaders.SET_COOKIE);
+        Assertions.assertNotNull(setCookie, "Expected Set-Cookie header.");
+        return setCookie;
     }
 
     private ResponseEntity<JsonNode> exchange(
@@ -239,10 +265,24 @@ public abstract class AbstractIntegrationTest extends IntegrationTestContainersC
             AuthSession session,
             String tenantId
     ) {
+        return exchange(path, method, payload, session, tenantId, null);
+    }
+
+    private ResponseEntity<JsonNode> exchange(
+            String path,
+            HttpMethod method,
+            Object payload,
+            AuthSession session,
+            String tenantId,
+            String cookie
+    ) {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.setBearerAuth(session.accessToken());
         headers.set("X-Tenant-Id", tenantId);
+        if (cookie != null) {
+            headers.add(HttpHeaders.COOKIE, cookie);
+        }
 
         HttpEntity<Object> request = new HttpEntity<>(payload, headers);
         return restTemplate.exchange(api(path), method, request, JsonNode.class);
@@ -252,7 +292,7 @@ public abstract class AbstractIntegrationTest extends IntegrationTestContainersC
         return "http://localhost:" + port + "/api/v1" + path;
     }
 
-    protected record AuthSession(String accessToken, String refreshToken, String tenantId, String userId) {
+    protected record AuthSession(String accessToken, String refreshCookie, String tenantId, String userId) {
     }
 
     private ResponseEntity<JsonNode> login(String tenantCode, String email, String password) {
@@ -261,6 +301,59 @@ public abstract class AbstractIntegrationTest extends IntegrationTestContainersC
                 "email", email,
                 "password", password
         ));
+    }
+
+    private void ensureDefaultAdminExists() {
+        executeSql(
+                """
+                INSERT INTO users (id, email, password_hash, full_name, active)
+                SELECT ?, ?, ?, ?, TRUE
+                WHERE NOT EXISTS (SELECT 1 FROM users WHERE email = ?)
+                """,
+                "11111111-1111-1111-1111-111111111110",
+                "admin@local.test",
+                DEFAULT_PASSWORD_HASH,
+                "Default Platform Admin",
+                "admin@local.test"
+        );
+        executeSql(
+                """
+                INSERT INTO user_tenants (id, tenant_id, user_id, role_id, active)
+                SELECT ?, t.id, u.id, r.id, TRUE
+                FROM tenants t
+                JOIN users u ON u.email = ?
+                JOIN roles r ON r.code = 'PLATFORM_ADMIN'
+                WHERE t.code = 'default'
+                  AND NOT EXISTS (
+                      SELECT 1
+                      FROM user_tenants ut
+                      WHERE ut.tenant_id = t.id
+                        AND ut.user_id = u.id
+                  )
+                """,
+                "11111111-1111-1111-1111-111111111112",
+                "admin@local.test"
+        );
+        executeSql(
+                """
+                INSERT INTO user_tenant_roles (id, user_tenant_id, role_id, created_at)
+                SELECT ?, ut.id, r.id, NOW()
+                FROM user_tenants ut
+                JOIN users u ON ut.user_id = u.id
+                JOIN tenants t ON ut.tenant_id = t.id
+                JOIN roles r ON r.code = 'PLATFORM_ADMIN'
+                WHERE t.code = 'default'
+                  AND u.email = ?
+                  AND NOT EXISTS (
+                      SELECT 1
+                      FROM user_tenant_roles utr
+                      WHERE utr.user_tenant_id = ut.id
+                        AND utr.role_id = r.id
+                  )
+                """,
+                "11111111-1111-1111-1111-111111111113",
+                "admin@local.test"
+        );
     }
 
     private void enableTenantModule(String tenantId, String moduleCode) {

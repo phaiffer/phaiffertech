@@ -61,6 +61,7 @@ services:
       dockerfile: apps/frontend/Dockerfile
       args:
         NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
+        NEXT_PUBLIC_DEMO_ASSISTED_ENABLED: ${NEXT_PUBLIC_DEMO_ASSISTED_ENABLED:-false}
     container_name: platform-frontend
     restart: unless-stopped
     depends_on:

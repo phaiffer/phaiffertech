@@ -148,6 +148,8 @@ public class CrmDealService {
             }
         }
 
+        companyService.requireActiveTenantUser(tenantId, ownerUserId, "Deal owner user not found for tenant.");
+
         deal.setTitle(title.trim());
         deal.setDescription(normalize(description));
         deal.setAmount(amount);

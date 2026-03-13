@@ -32,7 +32,6 @@ vi.mock('@/shared/services/auth-service', () => ({
 
 const authResponseFixture: AuthTokenResponse = {
   accessToken: 'access-token',
-  refreshToken: 'refresh-token',
   expiresInSeconds: 300,
   user: {
     userId: 'user-1',
@@ -58,6 +57,7 @@ describe('LoginPage', () => {
   beforeEach(() => {
     pushMock.mockReset();
     replaceMock.mockReset();
+    delete process.env.NEXT_PUBLIC_DEMO_ASSISTED_ENABLED;
     window.localStorage.setItem('phaiffertech-public-locale', 'en-US');
   });
 
@@ -87,13 +87,13 @@ describe('LoginPage', () => {
 
     expect(getSession()).toEqual({
       accessToken: authResponseFixture.accessToken,
-      refreshToken: authResponseFixture.refreshToken,
       user: authResponseFixture.user
     });
     expect(replaceMock).toHaveBeenCalledWith('/dashboard');
   });
 
   it('aciona o fluxo de demo assistida sem expor credenciais no formulario', async () => {
+    process.env.NEXT_PUBLIC_DEMO_ASSISTED_ENABLED = 'true';
     vi.mocked(authService.demoLogin).mockResolvedValue(authResponseFixture);
 
     render(

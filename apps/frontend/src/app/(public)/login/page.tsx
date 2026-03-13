@@ -23,6 +23,7 @@ export default function LoginPage() {
   const { locale } = usePublicSite();
   const t = getPublicSiteMessages(locale).login;
   const { isAuthenticated, isLoading, signIn } = useAuth();
+  const demoAssistedEnabled = process.env.NEXT_PUBLIC_DEMO_ASSISTED_ENABLED === 'true';
 
   const [tenantCode, setTenantCode] = useState('');
   const [email, setEmail] = useState('');
@@ -46,7 +47,6 @@ export default function LoginPage() {
 
       signIn({
         accessToken: tokenData.accessToken,
-        refreshToken: tokenData.refreshToken,
         user: tokenData.user,
       });
 
@@ -76,7 +76,6 @@ export default function LoginPage() {
 
       signIn({
         accessToken: tokenData.accessToken,
-        refreshToken: tokenData.refreshToken,
         user: tokenData.user,
       });
 
@@ -175,14 +174,16 @@ export default function LoginPage() {
                 >
                   {t.forgotPasswordLabel}
                 </Link>
-                <button
-                  type="button"
-                  onClick={handleUseDemo}
-                  disabled={submitting}
-                  className="text-sm text-muted transition-colors hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  {t.demoActionLabel}
-                </button>
+                {demoAssistedEnabled ? (
+                  <button
+                    type="button"
+                    onClick={handleUseDemo}
+                    disabled={submitting}
+                    className="text-sm text-muted transition-colors hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    {t.demoActionLabel}
+                  </button>
+                ) : null}
               </div>
 
               {error ? (

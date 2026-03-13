@@ -1,6 +1,7 @@
 package com.phaiffertech.platform.modules.iot.maintenance.service;
 
 import com.phaiffertech.platform.core.audit.service.AuditableAction;
+import com.phaiffertech.platform.core.iam.repository.UserTenantRepository;
 import com.phaiffertech.platform.modules.iot.alarm.domain.IotAlarm;
 import com.phaiffertech.platform.modules.iot.alarm.repository.IotAlarmRepository;
 import com.phaiffertech.platform.modules.iot.device.repository.IotDeviceRepository;
@@ -42,18 +43,21 @@ public class IotMaintenanceService extends BaseTenantCrudService<
     private final IotDeviceRepository deviceRepository;
     private final IotAlarmRepository alarmRepository;
     private final IotRegisterRepository registerRepository;
+    private final UserTenantRepository userTenantRepository;
 
     public IotMaintenanceService(
             IotMaintenanceRepository repository,
             IotDeviceRepository deviceRepository,
             IotAlarmRepository alarmRepository,
-            IotRegisterRepository registerRepository
+            IotRegisterRepository registerRepository,
+            UserTenantRepository userTenantRepository
     ) {
         super(repository, repository, IotMaintenanceMapper.INSTANCE, "IoT maintenance record not found.");
         this.repository = repository;
         this.deviceRepository = deviceRepository;
         this.alarmRepository = alarmRepository;
         this.registerRepository = registerRepository;
+        this.userTenantRepository = userTenantRepository;
     }
 
     @Override
@@ -160,6 +164,7 @@ public class IotMaintenanceService extends BaseTenantCrudService<
     }
 
     private void validateOperationalContext(UUID tenantId, IotMaintenance entity) {
+        validateAssignedUser(tenantId, entity.getAssignedUserId());
         IotAlarm linkedAlarm = resolveLinkedAlarm(tenantId, entity.getLinkedAlarmId());
         IotRegister linkedRegister = resolveLinkedRegister(tenantId, entity.getLinkedRegisterId());
 
@@ -212,6 +217,15 @@ public class IotMaintenanceService extends BaseTenantCrudService<
             return "REGISTER";
         }
         return "MANUAL";
+    }
+
+    private void validateAssignedUser(UUID tenantId, UUID assignedUserId) {
+        if (assignedUserId == null) {
+            return;
+        }
+        if (!userTenantRepository.existsByTenantIdAndUserIdAndActiveTrue(tenantId, assignedUserId)) {
+            throw new ResourceNotFoundException("IoT maintenance assigned user not found for tenant.");
+        }
     }
 
     private String resolveTrigger(String trigger, IotAlarm linkedAlarm) {

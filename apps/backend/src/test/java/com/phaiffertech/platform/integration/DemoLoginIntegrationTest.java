@@ -71,5 +71,6 @@ class DemoLoginIntegrationTest extends AbstractIntegrationTest {
         assertEquals("demo-clinic", data.path("user").path("tenantCode").asText());
         assertEquals("demo@phaiffer.tech", data.path("user").path("email").asText());
         assertTrue(data.path("accessToken").asText().length() > 20);
+        assertTrue(requireSetCookieHeader(response).startsWith("platform_refresh_token="));
     }
 }

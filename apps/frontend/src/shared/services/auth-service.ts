@@ -18,11 +18,11 @@ export const authService = {
   demoLogin: () =>
     apiClient.post<AuthTokenResponse>('/auth/demo-login', undefined, { skipAuth: true }),
 
-  refresh: (refreshToken: string) =>
-    apiClient.post<AuthTokenResponse>('/auth/refresh', { refreshToken }, { skipAuth: true }),
+  refresh: () =>
+    apiClient.post<AuthTokenResponse>('/auth/refresh', undefined, { skipAuth: true }),
 
-  logout: (refreshToken: string) =>
-    apiClient.post<void>('/auth/logout', { refreshToken }),
+  logout: () =>
+    apiClient.post<void>('/auth/logout'),
 
   me: () => apiClient.get<AuthenticatedUser>('/auth/me')
 };

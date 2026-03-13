@@ -21,13 +21,11 @@ export type AuthenticatedUser = {
 
 export type AuthTokenResponse = {
   accessToken: string;
-  refreshToken: string;
   expiresInSeconds: number;
   user: AuthenticatedUser;
 };
 
 export type SessionState = {
   accessToken: string;
-  refreshToken: string;
   user: AuthenticatedUser;
 };

@@ -1,5 +1,6 @@
 package com.phaiffertech.platform.modules.crm.company.service;
 
+import com.phaiffertech.platform.core.iam.repository.UserTenantRepository;
 import com.phaiffertech.platform.core.audit.service.AuditableAction;
 import com.phaiffertech.platform.modules.crm.company.domain.CrmCompany;
 import com.phaiffertech.platform.modules.crm.company.dto.CrmCompanyCreateRequest;
@@ -22,9 +23,11 @@ import org.springframework.transaction.annotation.Transactional;
 public class CrmCompanyService {
 
     private final CrmCompanyRepository repository;
+    private final UserTenantRepository userTenantRepository;
 
-    public CrmCompanyService(CrmCompanyRepository repository) {
+    public CrmCompanyService(CrmCompanyRepository repository, UserTenantRepository userTenantRepository) {
         this.repository = repository;
+        this.userTenantRepository = userTenantRepository;
     }
 
     @Transactional(readOnly = true)
@@ -55,6 +58,7 @@ public class CrmCompanyService {
     public CrmCompanyResponse create(CrmCompanyCreateRequest request) {
         UUID tenantId = TenantContext.getRequiredTenantId();
         validateUniqueness(tenantId, request.email(), request.document(), null);
+        requireActiveTenantUser(tenantId, request.ownerUserId(), "Company owner user not found for tenant.");
 
         CrmCompany company = CrmCompanyMapper.toEntity(request);
         company.setTenantId(tenantId);
@@ -69,6 +73,7 @@ public class CrmCompanyService {
                 .orElseThrow(() -> new com.phaiffertech.platform.shared.exception.ResourceNotFoundException("Company not found."));
 
         validateUniqueness(tenantId, request.email(), request.document(), id);
+        requireActiveTenantUser(tenantId, request.ownerUserId(), "Company owner user not found for tenant.");
         CrmCompanyMapper.apply(company, request);
         return CrmCompanyMapper.toResponse(repository.save(company));
     }
@@ -98,6 +103,16 @@ public class CrmCompanyService {
             return java.util.Optional.empty();
         }
         return repository.findByIdAndTenantId(companyId, tenantId);
+    }
+
+    @Transactional(readOnly = true)
+    public void requireActiveTenantUser(UUID tenantId, UUID userId, String message) {
+        if (userId == null) {
+            return;
+        }
+        if (!userTenantRepository.existsByTenantIdAndUserIdAndActiveTrue(tenantId, userId)) {
+            throw new com.phaiffertech.platform.shared.exception.ResourceNotFoundException(message);
+        }
     }
 
     private void validateUniqueness(UUID tenantId, String email, String document, UUID currentId) {

@@ -108,6 +108,7 @@ public class CrmLeadService extends BaseTenantCrudService<
     }
 
     private void validateReferences(UUID tenantId, CrmLead entity) {
+        companyService.requireActiveTenantUser(tenantId, entity.getAssignedUserId(), "Lead assigned user not found for tenant.");
         if (entity.getCompanyId() != null) {
             companyService.requireActiveCompany(tenantId, entity.getCompanyId());
         }

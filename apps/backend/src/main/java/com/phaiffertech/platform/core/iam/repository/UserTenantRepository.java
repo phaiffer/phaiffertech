@@ -19,4 +19,6 @@ public interface UserTenantRepository extends JpaRepository<UserTenant, UUID> {
     Page<UserTenant> findAllByTenantIdAndActiveTrue(UUID tenantId, Pageable pageable);
 
     boolean existsByTenantIdAndUserId(UUID tenantId, UUID userId);
+
+    boolean existsByTenantIdAndUserIdAndActiveTrue(UUID tenantId, UUID userId);
 }

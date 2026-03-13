@@ -15,6 +15,33 @@ function notifySessionChange(): void {
   window.dispatchEvent(new Event(SESSION_CHANGE_EVENT));
 }
 
+function sanitizeSession(candidate: unknown): SessionState | null {
+  if (!candidate || typeof candidate !== 'object') {
+    return null;
+  }
+
+  const parsed = candidate as {
+    accessToken?: unknown;
+    user?: SessionState['user'];
+    refreshToken?: unknown;
+  };
+
+  if (typeof parsed.accessToken !== 'string' || !parsed.accessToken || !parsed.user) {
+    return null;
+  }
+
+  const sanitizedSession: SessionState = {
+    accessToken: parsed.accessToken,
+    user: parsed.user
+  };
+
+  if (parsed.refreshToken !== undefined && isBrowser()) {
+    localStorage.setItem(SESSION_KEY, JSON.stringify(sanitizedSession));
+  }
+
+  return sanitizedSession;
+}
+
 export function getSession(): SessionState | null {
   if (!isBrowser()) {
     return null;
@@ -26,7 +53,12 @@ export function getSession(): SessionState | null {
   }
 
   try {
-    return JSON.parse(raw) as SessionState;
+    const parsed = sanitizeSession(JSON.parse(raw));
+    if (!parsed) {
+      clearSession();
+      return null;
+    }
+    return parsed;
   } catch {
     clearSession();
     return null;

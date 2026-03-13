@@ -42,7 +42,7 @@ resource "google_compute_instance" "app_instance" {
         -e POSTGRES_USER="${var.postgres_admin_user}" \
         -e POSTGRES_PASSWORD="${var.postgres_admin_password}" \
         -e POSTGRES_DB="phaiffertech" \
-        -p 5432:5432 \
+        -p 127.0.0.1:5432:5432 \
         -v /var/lib/postgresql/data:/var/lib/postgresql/data \
         postgres:14
     EOF

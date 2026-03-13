@@ -114,25 +114,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const signOut = useCallback(async () => {
-    const storedSession = getSession() ?? session;
-    const initialRefreshToken = storedSession?.refreshToken ?? null;
-
     try {
-      if (initialRefreshToken) {
-        try {
-          await authService.logout(initialRefreshToken);
-        } catch (error) {
-          const latestRefreshToken = getSession()?.refreshToken;
-
-          if (latestRefreshToken && latestRefreshToken !== initialRefreshToken) {
-            await authService.logout(latestRefreshToken);
-          } else {
-            throw error;
-          }
-        }
+      if (getSession() ?? session) {
+        await authService.logout();
       }
     } catch (error) {
-      logRemoteLogoutFailure(error, initialRefreshToken);
+      logRemoteLogoutFailure(error, null);
     } finally {
       clearSession();
       setSessionState(null);

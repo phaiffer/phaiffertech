@@ -1,6 +1,7 @@
 package com.phaiffertech.platform.modules.crm.task.service;
 
 import com.phaiffertech.platform.core.audit.service.AuditableAction;
+import com.phaiffertech.platform.core.iam.repository.UserTenantRepository;
 import com.phaiffertech.platform.modules.crm.shared.service.CrmRelationResolverService;
 import com.phaiffertech.platform.modules.crm.task.domain.CrmTask;
 import com.phaiffertech.platform.modules.crm.task.dto.CrmTaskCreateRequest;
@@ -26,10 +27,16 @@ public class CrmTaskService {
 
     private final CrmTaskRepository repository;
     private final CrmRelationResolverService relationResolverService;
+    private final UserTenantRepository userTenantRepository;
 
-    public CrmTaskService(CrmTaskRepository repository, CrmRelationResolverService relationResolverService) {
+    public CrmTaskService(
+            CrmTaskRepository repository,
+            CrmRelationResolverService relationResolverService,
+            UserTenantRepository userTenantRepository
+    ) {
         this.repository = repository;
         this.relationResolverService = relationResolverService;
+        this.userTenantRepository = userTenantRepository;
     }
 
     @Transactional(readOnly = true)
@@ -119,6 +126,7 @@ public class CrmTaskService {
         task.setDueDate(request.dueDate());
         task.setStatus(resolveStatus(request.status()));
         task.setPriority(resolvePriority(request.priority()));
+        validateAssignedUser(TenantContext.getRequiredTenantId(), request.assignedUserId());
         task.setAssignedUserId(request.assignedUserId());
         task.setRelatedType(relation.relatedReferenceType());
         task.setRelatedId(relation.relatedId());
@@ -144,6 +152,7 @@ public class CrmTaskService {
         task.setDueDate(request.dueDate());
         task.setStatus(resolveStatus(request.status()));
         task.setPriority(resolvePriority(request.priority()));
+        validateAssignedUser(TenantContext.getRequiredTenantId(), request.assignedUserId());
         task.setAssignedUserId(request.assignedUserId());
         task.setRelatedType(relation.relatedReferenceType());
         task.setRelatedId(relation.relatedId());
@@ -181,6 +190,15 @@ public class CrmTaskService {
             return null;
         }
         return value.trim();
+    }
+
+    private void validateAssignedUser(UUID tenantId, UUID assignedUserId) {
+        if (assignedUserId == null) {
+            return;
+        }
+        if (!userTenantRepository.existsByTenantIdAndUserIdAndActiveTrue(tenantId, assignedUserId)) {
+            throw new ResourceNotFoundException("Task assigned user not found for tenant.");
+        }
     }
 
     private CrmTaskResponse toResponse(UUID tenantId, CrmTask task) {

@@ -106,6 +106,7 @@ public class CrmContactService extends BaseTenantCrudService<
     }
 
     private void hydrateCompany(UUID tenantId, CrmContact entity) {
+        companyService.requireActiveTenantUser(tenantId, entity.getOwnerUserId(), "Contact owner user not found for tenant.");
         if (entity.getCompanyId() == null) {
             return;
         }

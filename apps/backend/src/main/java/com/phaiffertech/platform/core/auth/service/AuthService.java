@@ -6,8 +6,6 @@ import com.phaiffertech.platform.core.auth.domain.RefreshToken;
 import com.phaiffertech.platform.core.auth.dto.AuthTokenResponse;
 import com.phaiffertech.platform.core.auth.dto.AuthenticatedUserResponse;
 import com.phaiffertech.platform.core.auth.dto.LoginRequest;
-import com.phaiffertech.platform.core.auth.dto.LogoutRequest;
-import com.phaiffertech.platform.core.auth.dto.RefreshRequest;
 import com.phaiffertech.platform.core.auth.mapper.AuthMapper;
 import com.phaiffertech.platform.core.auth.repository.RefreshTokenRepository;
 import com.phaiffertech.platform.core.iam.domain.UserTenant;
@@ -83,7 +81,7 @@ public class AuthService {
     }
 
     @Transactional
-    public AuthTokenResponse demoLogin() {
+    public AuthSessionResult demoLogin() {
         if (!demoAccessProperties.isEnabled()) {
             platformMetricsService.recordAuthenticationAttempt(false);
             throw new ForbiddenOperationException("Demo access is currently disabled.");
@@ -113,7 +111,7 @@ public class AuthService {
     }
 
     @Transactional
-    public AuthTokenResponse login(LoginRequest request) {
+    public AuthSessionResult login(LoginRequest request) {
         Tenant tenant = tenantRepository.findByCodeIgnoreCase(request.tenantCode())
                 .orElseThrow(() -> {
                     platformMetricsService.recordAuthenticationAttempt(false);
@@ -147,7 +145,7 @@ public class AuthService {
                 resolved.permissions()
         );
 
-        AuthTokenResponse response = createTokenResponse(principal, user.getFullName(), tenant);
+        AuthSessionResult response = createTokenResponse(principal, user.getFullName(), tenant);
         platformMetricsService.recordAuthenticationAttempt(true);
 
         auditLogService.logEvent(
@@ -163,8 +161,8 @@ public class AuthService {
     }
 
     @Transactional
-    public AuthTokenResponse refresh(RefreshRequest request) {
-        String tokenHash = refreshTokenHashService.hash(request.refreshToken());
+    public AuthSessionResult refresh(String refreshToken) {
+        String tokenHash = refreshTokenHashService.hash(refreshToken);
 
         RefreshToken storedToken = refreshTokenRepository.findByTokenHashAndRevokedAtIsNull(tokenHash)
                 .orElseThrow(() -> new ForbiddenOperationException("Refresh token is invalid."));
@@ -198,7 +196,7 @@ public class AuthService {
                 resolved.permissions()
         );
 
-        AuthTokenResponse response = createTokenResponse(principal, user.getFullName(), tenant);
+        AuthSessionResult response = createTokenResponse(principal, user.getFullName(), tenant);
 
         auditLogService.logEvent(
                 storedToken.getTenantId(),
@@ -213,8 +211,8 @@ public class AuthService {
     }
 
     @Transactional
-    public void logout(LogoutRequest request) {
-        String tokenHash = refreshTokenHashService.hash(request.refreshToken());
+    public void logout(String refreshToken) {
+        String tokenHash = refreshTokenHashService.hash(refreshToken);
 
         RefreshToken storedToken = refreshTokenRepository.findByTokenHashAndRevokedAtIsNull(tokenHash)
                 .orElseThrow(() -> new ForbiddenOperationException("Refresh token is invalid."));
@@ -243,7 +241,7 @@ public class AuthService {
         return AuthMapper.toAuthenticatedUserResponse(user, authenticatedUser, tenant);
     }
 
-    private AuthTokenResponse createTokenResponse(AuthenticatedUser principal, String fullName, Tenant tenant) {
+    private AuthSessionResult createTokenResponse(AuthenticatedUser principal, String fullName, Tenant tenant) {
         revokeActiveRefreshTokens(principal.tenantId(), principal.userId());
 
         String accessToken = jwtService.generateAccessToken(principal);
@@ -258,11 +256,13 @@ public class AuthService {
 
         AuthenticatedUserResponse userResponse = AuthMapper.toAuthenticatedUserResponse(principal, fullName, tenant);
 
-        return new AuthTokenResponse(
-                accessToken,
-                refreshToken,
-                jwtProperties.getAccessMinutes() * 60,
-                userResponse
+        return new AuthSessionResult(
+                new AuthTokenResponse(
+                        accessToken,
+                        jwtProperties.getAccessMinutes() * 60,
+                        userResponse
+                ),
+                refreshToken
         );
     }
 
@@ -275,5 +275,8 @@ public class AuthService {
 
         activeTokens.forEach(token -> token.setRevokedAt(revokedAt));
         refreshTokenRepository.saveAll(activeTokens);
+    }
+
+    public record AuthSessionResult(AuthTokenResponse response, String refreshToken) {
     }
 }

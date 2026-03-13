@@ -16,7 +16,7 @@ resource "google_compute_firewall" "platform_allow_web" {
 
   allow {
     protocol = "tcp"
-    ports    = ["80", "443", "8080"]
+    ports    = ["80", "443"]
   }
 
   source_ranges = ["0.0.0.0/0"]

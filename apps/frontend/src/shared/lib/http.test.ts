@@ -5,7 +5,6 @@ import { SessionState } from '@/shared/types/auth';
 
 const sessionFixture: SessionState = {
   accessToken: 'expired-access-token',
-  refreshToken: 'refresh-token',
   user: {
     userId: 'user-1',
     email: 'admin@local.test',
@@ -28,7 +27,6 @@ const sessionFixture: SessionState = {
 
 const refreshedSession: SessionState = {
   accessToken: 'new-access-token',
-  refreshToken: 'new-refresh-token',
   user: {
     ...sessionFixture.user,
     fullName: 'Admin Refreshed'
@@ -65,7 +63,6 @@ describe('apiClient refresh flow', () => {
         success: true,
         data: {
           accessToken: refreshedSession.accessToken,
-          refreshToken: refreshedSession.refreshToken,
           expiresInSeconds: 300,
           user: refreshedSession.user
         },
@@ -93,6 +90,7 @@ describe('apiClient refresh flow', () => {
     expect(getSession()).toEqual(refreshedSession);
 
     const refreshRequest = fetchMock.mock.calls[1]?.[1];
-    expect(refreshRequest?.body).toBe(JSON.stringify({ refreshToken: 'refresh-token' }));
+    expect(refreshRequest?.body).toBeUndefined();
+    expect(refreshRequest?.credentials).toBe('include');
   });
 });
