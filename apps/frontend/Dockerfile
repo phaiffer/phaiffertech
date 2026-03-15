@@ -16,16 +16,15 @@ RUN npm run build
 
 FROM node:20-alpine
 WORKDIR /app
-ARG NEXT_PUBLIC_API_URL
-ARG NEXT_PUBLIC_DEMO_ASSISTED_ENABLED=false
+
 ENV NODE_ENV=production
-ENV NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
-ENV NEXT_PUBLIC_DEMO_ASSISTED_ENABLED=${NEXT_PUBLIC_DEMO_ASSISTED_ENABLED}
+ENV PORT=8080
 
 COPY --from=build --chown=node:node /app/.next/standalone ./
 COPY --from=build --chown=node:node /app/.next/static ./.next/static
 COPY --from=build --chown=node:node /app/public ./public
+
 USER node
 
-EXPOSE 3000
+EXPOSE 8080
 CMD ["node", "server.js"]
