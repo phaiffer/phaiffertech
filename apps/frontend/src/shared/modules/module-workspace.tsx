@@ -103,13 +103,15 @@ export function ModuleWorkspaceHero({
   title,
   description,
   chips,
-  aside
+  aside,
+  action
 }: {
   eyebrow: string;
   title: string;
   description: string;
   chips?: ModuleWorkspaceChip[];
   aside?: ReactNode;
+  action?: ReactNode;
 }) {
   return (
     <section className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_320px]">
@@ -127,6 +129,7 @@ export function ModuleWorkspaceHero({
         <p className={sharedEyebrowClass}>{eyebrow}</p>
         <h1 className={`mt-4 ${sharedPageTitleClass}`}>{title}</h1>
         <p className={`mt-4 max-w-3xl ${sharedSupportingTextClass}`}>{description}</p>
+        {action ? <div className="mt-6">{action}</div> : null}
         {chips && chips.length > 0 ? (
           <div className="mt-6 flex flex-wrap gap-3">
             {chips.map((chip) => (

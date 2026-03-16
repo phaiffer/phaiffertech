@@ -234,6 +234,53 @@ function buildIotGuidanceSteps(actions: ModuleWorkspaceAction[], keys: string[])
     .filter((action): action is ModuleWorkspaceAction => Boolean(action));
 }
 
+function findAvailableIotAction(actions: ModuleWorkspaceAction[], href: string) {
+  return actions.find((action) => action.href === href && action.capability?.interactive !== false) ?? null;
+}
+
+function resolveIotPrimaryAction(
+  actions: ModuleWorkspaceAction[],
+  summary: IotDashboardSummary | null,
+  firstUse: boolean,
+  canReadDashboard: boolean
+) {
+  if (firstUse) {
+    return findAvailableIotAction(actions, '/iot/add-device')
+      ?? findAvailableIotAction(actions, '/iot/devices')
+      ?? actions[0]
+      ?? null;
+  }
+
+  if ((summary?.totalAlarmsOpen ?? 0) > 0) {
+    return findAvailableIotAction(actions, '/iot/alarms')
+      ?? findAvailableIotAction(actions, '/iot/devices')
+      ?? actions[0]
+      ?? null;
+  }
+
+  if ((summary?.offlineDevices ?? 0) > 0) {
+    return findAvailableIotAction(actions, '/iot/devices')
+      ?? findAvailableIotAction(actions, '/iot/telemetry')
+      ?? actions[0]
+      ?? null;
+  }
+
+  if ((summary?.pendingMaintenance ?? 0) > 0) {
+    return findAvailableIotAction(actions, '/iot/maintenance')
+      ?? findAvailableIotAction(actions, '/iot/alarms')
+      ?? actions[0]
+      ?? null;
+  }
+
+  if (canReadDashboard) {
+    return findAvailableIotAction(actions, '/iot/dashboard')
+      ?? actions[0]
+      ?? null;
+  }
+
+  return actions[0] ?? null;
+}
+
 function isIotFirstUse(summary: IotDashboardSummary) {
   return summary.totalDevices === 0
     && summary.activeDevices === 0
@@ -305,7 +352,7 @@ export function IotHome() {
       return action;
     });
   const availableActions = actionStates.filter((action) => action.capability?.interactive !== false);
-  const primaryAction = availableActions.find((action) => action.href === '/iot/dashboard') ?? availableActions[0] ?? null;
+  const primaryAction = resolveIotPrimaryAction(availableActions, summary, firstUse, canReadDashboard);
   const themePolicy = platform.theme.canOverride
     ? `${getAppThemeModeLabel(platform.theme.tenantDefaultMode)} with user override`
     : `${getAppThemeModeLabel(platform.theme.tenantDefaultMode)} tenant-managed`;
@@ -674,11 +721,25 @@ export function IotHome() {
             )}
           </div>
         ) : (
-          <IotEmptyState
-            title="No IoT summary available"
-            description="No IoT dashboard data was returned for the current tenant workspace."
-            tone="neutral"
-          />
+          <div className="space-y-4">
+            <IotEmptyState
+              title="No IoT summary available"
+              description="No IoT dashboard data was returned for the current tenant workspace."
+              tone="neutral"
+            />
+            <div className="grid gap-4 md:grid-cols-3">
+              {restrictedGuidance.map((action) => (
+                <IotWorkspaceActionLink
+                  key={action.href}
+                  href={action.href}
+                  eyebrow={action.eyebrow}
+                  title={action.title}
+                  description={action.capability?.kind === 'ready' ? action.description : action.capability?.description ?? action.description}
+                  capability={action.capability}
+                />
+              ))}
+            </div>
+          </div>
         )}
       </IotPanel>
     </IotModulePage>

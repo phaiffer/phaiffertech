@@ -35,7 +35,8 @@ public class CrmDashboardCapabilityService implements CrmDashboardCapability {
                 "CRM",
                 "Companies, contacts, leads, deals and pending work.",
                 "/crm/dashboard",
-                summary.summaryCards()
+                summary.summaryCards(),
+                summary.sections()
         );
     }
 }

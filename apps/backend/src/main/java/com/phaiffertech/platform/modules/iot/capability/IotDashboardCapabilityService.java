@@ -34,7 +34,8 @@ public class IotDashboardCapabilityService implements IotDashboardCapability {
                 "IoT",
                 "Devices, alarms, telemetry flow and maintenance queue.",
                 "/iot/dashboard",
-                summary.summaryCards()
+                summary.summaryCards(),
+                summary.sections()
         );
     }
 }

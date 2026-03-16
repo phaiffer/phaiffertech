@@ -34,7 +34,8 @@ public class PetDashboardCapabilityService implements PetDashboardCapability {
                 "Pet",
                 "Clinical agenda, medical workflow and commercial backlog for the tenant.",
                 "/pet/dashboard",
-                summary.summaryCards()
+                summary.summaryCards(),
+                summary.sections()
         );
     }
 }

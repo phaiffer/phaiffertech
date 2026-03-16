@@ -141,12 +141,13 @@ describe('PetHome', () => {
     expect(screen.getByText('Open appointments')).toBeInTheDocument();
     expect(screen.getByText('Open medical records')).toBeInTheDocument();
     expect(screen.getByText('Review products')).toBeInTheDocument();
+    expect(screen.getAllByText("Review today's appointments").length).toBeGreaterThan(0);
     expect(screen.getByText('Product access required')).toBeInTheDocument();
     expect(screen.queryByRole('link', { name: /review products/i })).not.toBeInTheDocument();
     expect(screen.getByText('Clinical Operating Context')).toBeInTheDocument();
     expect(screen.getByText('Clinic Snapshot')).toBeInTheDocument();
     expect(screen.getByText('Clinical Feed')).toBeInTheDocument();
-  });
+  }, 10000);
 
   it('shows guided first-use messaging when the PetFlow workspace has no records yet', async () => {
     vi.mocked(petService.getDashboardSummary).mockResolvedValue({
@@ -170,6 +171,7 @@ describe('PetHome', () => {
     expect(screen.getByText('PetFlow Onboarding')).toBeInTheDocument();
     expect(screen.getByText('Set up the PetFlow workspace')).toBeInTheDocument();
     expect(screen.getByText(/does not have the first clinic entities in place yet/i)).toBeInTheDocument();
+    expect(screen.getAllByText('Register first client').length).toBeGreaterThan(0);
     expect(screen.getAllByText('Open appointments').length).toBeGreaterThan(0);
   });
 

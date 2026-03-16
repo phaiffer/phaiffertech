@@ -12,6 +12,7 @@ public record CrmDashboardSummaryResponse(
         long totalDeals,
         Map<String, Long> dealsPorStatus,
         long tasksPendentes,
+        long overdueTasks,
         Map<String, Long> leadsPorStatus,
         List<DashboardSummaryCardDto> summaryCards,
         List<DashboardSectionDto> sections

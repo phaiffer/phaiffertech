@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 import { DashboardContextCardGrid } from '@/shared/dashboard/dashboard-context-card-grid';
 import type { DashboardContextCard } from '@/shared/dashboard/contextual-dashboard';
@@ -31,6 +32,12 @@ import { useFrontendPlatform } from '@/shared/platform/use-frontend-platform';
 import { crmService } from '@/shared/services/crm-service';
 import { usePermissions } from '@/shared/auth/usePermissions';
 import { CrmDashboardSummary } from '@/shared/types/crm';
+
+type CrmPrimaryAction = {
+  title: string;
+  description: string;
+  href: string;
+};
 
 const crmWorkspaceActions: ModuleWorkspaceAction[] = [
   {
@@ -190,13 +197,13 @@ function buildCrmContextCards({
     },
     {
       key: 'crm-follow-up-rhythm',
-      label: 'Follow-up rhythm',
+      label: 'Follow-up attention',
       value: !canReadDashboard
         ? 'Permission-bound'
         : summary
-          ? `${summary.tasksPendentes} pending`
+          ? `${summary.overdueTasks} overdue / ${summary.tasksPendentes} open`
           : 'Loading...',
-      description: 'Pending tasks keep the next commercial moves visible so execution does not disappear behind record volume.',
+      description: 'Open and overdue tasks keep the next commercial moves visible so execution does not disappear behind record volume.',
       tone: 'primary'
     },
     {
@@ -207,6 +214,76 @@ function buildCrmContextCards({
       tone: 'neutral'
     }
   ];
+}
+
+function resolveActionHref(actions: ModuleWorkspaceAction[], href: string, fallbackHref: string) {
+  const action = actions.find((candidate) => candidate.href === href && candidate.capability?.interactive !== false);
+  return action?.href ?? fallbackHref;
+}
+
+function resolveFallbackCrmAction(actions: ModuleWorkspaceAction[]) {
+  const interactiveAction = actions.find((candidate) => candidate.capability?.interactive !== false);
+  if (!interactiveAction) {
+    return null;
+  }
+
+  return {
+    title: interactiveAction.title,
+    description: interactiveAction.capability?.kind === 'ready'
+      ? interactiveAction.description
+      : interactiveAction.capability?.description ?? interactiveAction.description,
+    href: interactiveAction.href
+  } satisfies CrmPrimaryAction;
+}
+
+function findPulseCard(summary: CrmDashboardSummary | null, key: string) {
+  return summary?.summaryCards.find((card) => card.key === key) ?? null;
+}
+
+function resolveCrmPrimaryAction(actions: ModuleWorkspaceAction[], summary: CrmDashboardSummary | null, firstUse: boolean) {
+  const fallbackAction = resolveFallbackCrmAction(actions);
+
+  if (!fallbackAction) {
+    return null;
+  }
+
+  if (firstUse) {
+    return {
+      title: 'Create first company',
+      description: 'Start the CRM workspace by creating the first company and unlocking contacts, leads, and deal flow.',
+      href: resolveActionHref(actions, '/crm/companies', fallbackAction.href)
+    } satisfies CrmPrimaryAction;
+  }
+
+  if ((summary?.overdueTasks ?? 0) > 0) {
+    return {
+      title: 'Review overdue tasks',
+      description: `${summary?.overdueTasks ?? 0} commercial follow-up item(s) are overdue and need ownership now.`,
+      href: resolveActionHref(actions, '/crm/tasks', fallbackAction.href)
+    } satisfies CrmPrimaryAction;
+  }
+
+  if ((summary?.totalDeals ?? 0) > 0) {
+    return {
+      title: 'Open deals pipeline',
+      description: `${summary?.totalDeals ?? 0} active deal(s) are still moving through the tenant pipeline.`,
+      href: resolveActionHref(actions, '/crm/deals', fallbackAction.href)
+    } satisfies CrmPrimaryAction;
+  }
+
+  if ((summary?.totalLeads ?? 0) > 0) {
+    return {
+      title: 'Qualify recent leads',
+      description: `${summary?.totalLeads ?? 0} lead(s) are ready for qualification before they stall.`,
+      href: resolveActionHref(actions, '/crm/leads', fallbackAction.href)
+    } satisfies CrmPrimaryAction;
+  }
+
+  return {
+    title: 'Open CRM dashboard',
+    description: 'Review pipeline posture, active follow-up, and the latest commercial movement.',
+    href: resolveActionHref(actions, '/crm/dashboard', fallbackAction.href)
+  } satisfies CrmPrimaryAction;
 }
 
 export function CrmHome() {
@@ -287,6 +364,19 @@ export function CrmHome() {
     : `${getAppThemeModeLabel(platform.theme.tenantDefaultMode)} tenant-managed`;
   const fallbackGuidance = buildCrmGuidanceSteps(actionStates, ['/crm/companies', '/crm/contacts', '/crm/leads']);
   const restrictedGuidance = buildCrmGuidanceSteps(actionStates, ['/crm/companies', '/crm/tasks', '/crm/notes']);
+  const primaryAction = useMemo(
+    () => resolveCrmPrimaryAction(actionStates, summary, firstUse),
+    [actionStates, firstUse, summary]
+  );
+  const pulseCards = useMemo(() => {
+    if (!summary) {
+      return [];
+    }
+
+    return ['pipeline-value', 'active-deals', 'overdue-tasks', 'pending-tasks']
+      .map((key) => findPulseCard(summary, key))
+      .filter((card): card is NonNullable<ReturnType<typeof findPulseCard>> => Boolean(card));
+  }, [summary]);
   const contextCards = useMemo(
     () => buildCrmContextCards({
       canReadDashboard,
@@ -353,6 +443,14 @@ export function CrmHome() {
           platform.workspace.isPlatformOwnerTenant,
           platform.workspace.hasSystemAdminRole
         )}
+        action={primaryAction ? (
+          <Link
+            href={primaryAction.href}
+            className="inline-flex rounded-full border border-[color:var(--tenant-accent)] bg-[color:var(--tenant-accent-soft)] px-4 py-2 text-sm font-semibold text-[color:var(--tenant-accent)] transition hover:-translate-y-0.5"
+          >
+            {primaryAction.title}
+          </Link>
+        ) : null}
         chips={[
           { label: 'Workspace', value: platform.workspace.workspaceLabel },
           { label: 'Access', value: platform.workspace.accessLabel, tone: 'neutral' },
@@ -379,6 +477,12 @@ export function CrmHome() {
                 value: 'Contracted CRM workspace',
                 description: 'Only tenant-contracted CRM routes remain exposed from this landing page.',
                 status: 'active'
+              },
+              {
+                label: 'Next action',
+                value: primaryAction?.title ?? 'Open CRM workspace',
+                description: primaryAction?.description ?? 'Use the workspace actions below to continue.',
+                status: summary?.overdueTasks ? 'alert' : firstUse ? 'setup required' : 'active'
               }
             ]}
           />
@@ -427,15 +531,21 @@ export function CrmHome() {
                 : undefined
           },
           {
-            label: 'Pending follow-up',
-            value: canReadDashboard ? resolveOverviewValue(summary?.tasksPendentes) : '--',
-            description: 'Tasks still waiting for execution in the commercial workflow.',
+            label: 'Follow-up attention',
+            value: canReadDashboard
+              ? summary
+                ? `${summary.overdueTasks} overdue / ${summary.tasksPendentes} open`
+                : 'Loading...'
+              : '--',
+            description: 'Keep open and overdue commitments visible before they disappear behind record volume.',
             status: !canReadDashboard
               ? 'no permission'
               : summary && firstUse
                 ? 'setup required'
-                : summary && summary.tasksPendentes > 0
-                  ? 'pending'
+                : summary && summary.overdueTasks > 0
+                  ? 'alert'
+                  : summary && summary.tasksPendentes > 0
+                    ? 'pending'
                   : summary
                     ? 'active'
                     : null,
@@ -472,6 +582,14 @@ export function CrmHome() {
       <ModuleWorkspaceSection
         title="Commercial Pulse"
         description="Keep a compact operational slice visible before navigating into the deeper CRM dashboards and record lists."
+        action={primaryAction ? (
+          <Link
+            href={primaryAction.href}
+            className="inline-flex text-sm font-semibold text-[color:var(--tenant-accent)]"
+          >
+            {primaryAction.title}
+          </Link>
+        ) : null}
       >
         {!canReadDashboard ? (
           <div className="space-y-4">
@@ -510,7 +628,7 @@ export function CrmHome() {
           />
         ) : summary ? (
           <div className="space-y-4">
-            <MetricGrid cards={summary.summaryCards.slice(0, 4)} columns="md:grid-cols-2 xl:grid-cols-4" />
+            <MetricGrid cards={pulseCards} columns="md:grid-cols-2 xl:grid-cols-4" />
             {featuredSection ? (
               <DashboardSection section={featuredSection} />
             ) : (
@@ -532,6 +650,8 @@ export function CrmHome() {
           <EmptyStateCard
             title="No CRM summary available"
             description="No CRM dashboard data was returned for the current tenant workspace."
+            actionLabel={primaryAction?.title}
+            href={primaryAction?.href}
           />
         )}
       </ModuleWorkspaceSection>

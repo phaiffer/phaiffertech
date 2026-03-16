@@ -226,10 +226,12 @@ describe('DashboardPage workspace context', () => {
   it('renders a platform-oriented dashboard for the platform tenant admin workspace', async () => {
     vi.mocked(moduleService.getDashboardSummary).mockResolvedValue({
       coreSummary: {
-        key: 'core',
-        title: 'Platform Overview',
-        description: 'Shared platform summary',
-        cards: [],
+        key: 'executive-summary',
+        title: 'Executive Snapshot',
+        description: 'Cross-module view',
+        cards: [
+          { key: 'attention-signals', label: 'Attention Signals', value: 0, status: 'ok' }
+        ],
         metrics: [],
         items: [],
         timeSeries: []
@@ -240,7 +242,8 @@ describe('DashboardPage workspace context', () => {
           title: 'CRM Snapshot',
           description: 'Commercial overview',
           href: '/crm',
-          summaryCards: []
+          summaryCards: [],
+          sections: []
         }
       ]
     });
@@ -251,9 +254,9 @@ describe('DashboardPage workspace context', () => {
       expect(moduleService.getDashboardSummary).toHaveBeenCalledTimes(1);
     });
 
-    expect(screen.getByText(/Platform control plane overview/)).toBeInTheDocument();
-    expect(screen.getByText('Platform Operations')).toBeInTheDocument();
-    expect(screen.getByText('Manage tenants')).toBeInTheDocument();
+    expect(screen.getByText(/Executive control plane/)).toBeInTheDocument();
+    expect(screen.getByText('Recommended Actions')).toBeInTheDocument();
+    expect(screen.getAllByText('Create first company').length).toBeGreaterThan(0);
     expect(screen.getByText('Module Access Matrix')).toBeInTheDocument();
     expect(screen.queryByText('Contracted Modules')).not.toBeInTheDocument();
   });
@@ -328,10 +331,12 @@ describe('DashboardPage workspace context', () => {
 
     vi.mocked(moduleService.getDashboardSummary).mockResolvedValue({
       coreSummary: {
-        key: 'core',
-        title: 'Workspace Overview',
+        key: 'executive-summary',
+        title: 'Executive Snapshot',
         description: 'Workspace summary',
-        cards: [],
+        cards: [
+          { key: 'attention-signals', label: 'Attention Signals', value: 0, status: 'ok' }
+        ],
         metrics: [],
         items: [],
         timeSeries: []
@@ -342,14 +347,16 @@ describe('DashboardPage workspace context', () => {
           title: 'CRM Snapshot',
           description: 'Commercial overview',
           href: '/crm',
-          summaryCards: []
+          summaryCards: [],
+          sections: []
         },
         {
           moduleCode: 'PET',
           title: 'Pet Snapshot',
           description: 'Clinical overview',
           href: '/pet',
-          summaryCards: []
+          summaryCards: [],
+          sections: []
         }
       ]
     });
@@ -360,10 +367,10 @@ describe('DashboardPage workspace context', () => {
       expect(moduleService.getDashboardSummary).toHaveBeenCalledTimes(1);
     });
 
-    expect(screen.getByText(/Workspace overview for Clinic North/)).toBeInTheDocument();
-    expect(screen.getByText('Workspace Actions')).toBeInTheDocument();
+    expect(screen.getByText(/Executive workspace for Clinic North/)).toBeInTheDocument();
+    expect(screen.getByText('Recommended Actions')).toBeInTheDocument();
     expect(screen.getByText('Contracted Modules')).toBeInTheDocument();
-    expect(screen.getByText('Open CRM workspace')).toBeInTheDocument();
+    expect(screen.getAllByText('Create first company').length).toBeGreaterThan(0);
     expect(screen.queryByText('Manage tenants')).not.toBeInTheDocument();
     expect(screen.queryByText('Module Access Matrix')).not.toBeInTheDocument();
     expect(screen.queryByText('Pet Snapshot')).not.toBeInTheDocument();
@@ -430,10 +437,12 @@ describe('DashboardPage workspace context', () => {
 
     vi.mocked(moduleService.getDashboardSummary).mockResolvedValue({
       coreSummary: {
-        key: 'core',
-        title: 'Workspace Overview',
+        key: 'executive-summary',
+        title: 'Executive Snapshot',
         description: 'Workspace summary',
-        cards: [],
+        cards: [
+          { key: 'modules-needing-setup', label: 'Modules Needing Setup', value: 1, status: 'warn' }
+        ],
         metrics: [],
         items: [],
         timeSeries: []
@@ -447,9 +456,9 @@ describe('DashboardPage workspace context', () => {
       expect(moduleService.getDashboardSummary).toHaveBeenCalledTimes(1);
     });
 
-    expect(screen.getByText('Workspace Onboarding')).toBeInTheDocument();
-    expect(screen.getByText('Get Clinic North ready')).toBeInTheDocument();
-    expect(screen.getByText('Confirm workspace settings')).toBeInTheDocument();
-    expect(screen.getAllByText('Open CRM workspace').length).toBeGreaterThan(0);
+    expect(screen.getByText('Guided Onboarding')).toBeInTheDocument();
+    expect(screen.getByText('Get Clinic North moving')).toBeInTheDocument();
+    expect(screen.getAllByText('Create first company').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('Start CRM setup').length).toBeGreaterThan(0);
   });
 });

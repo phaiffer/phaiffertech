@@ -2,8 +2,11 @@ package com.phaiffertech.platform.integration;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.phaiffertech.platform.support.AbstractIntegrationTest;
+import java.time.Instant;
+import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.ResponseEntity;
@@ -97,6 +100,7 @@ class ModuleEnablementIntegrationTest extends AbstractIntegrationTest {
         assertFalse(moduleCodes.contains("IOT"));
         assertTrue(requireBody(dashboardResponse).path("data").path("coreSummary").path("cards").size() > 0);
         assertTrue(summaries.get(0).path("summaryCards").size() > 0);
+        assertTrue(summaries.get(0).path("sections").size() > 0);
     }
 
     @Test
@@ -133,6 +137,56 @@ class ModuleEnablementIntegrationTest extends AbstractIntegrationTest {
         assertEquals("FORBIDDEN", requireBody(response).path("code").asText());
     }
 
+    @Test
+    void shouldAggregateRecentModuleActivityIntoExecutiveDashboardSummary() {
+        AuthSession session = createTenantAdminSession(
+                "tenant-executive-summary",
+                "tenant-executive-summary@example.test",
+                "CORE_PLATFORM",
+                "CRM"
+        );
+        String marker = randomSearchMarker();
+        String companyId = createCompany(session, marker);
+        String stageId = defaultPipelineStageId(session);
+
+        post("/crm/leads", Map.of(
+                "name", "Lead " + marker,
+                "status", "QUALIFIED",
+                "source", "WEBSITE",
+                "companyId", companyId
+        ), session);
+
+        post("/crm/deals", Map.of(
+                "title", "Deal " + marker,
+                "status", "OPEN",
+                "companyId", companyId,
+                "pipelineStageId", stageId,
+                "currency", "BRL",
+                "expectedCloseDate", LocalDate.now().plusDays(7).toString()
+        ), session);
+
+        post("/crm/tasks", Map.of(
+                "title", "Overdue task " + marker,
+                "status", "OPEN",
+                "priority", "HIGH",
+                "dueDate", Instant.now().minusSeconds(3600).toString(),
+                "companyId", companyId
+        ), session);
+
+        ResponseEntity<JsonNode> response = get("/dashboard/summary", session);
+        assertEquals(200, response.getStatusCode().value());
+
+        JsonNode data = requireBody(response).path("data");
+        JsonNode coreSummary = data.path("coreSummary");
+        JsonNode summaries = data.path("modules");
+
+        assertEquals(1, summaries.size());
+        assertTrue(coreSummary.path("items").size() >= 1);
+        assertTrue(findCard(coreSummary.path("cards"), "attention-signals").path("value").asLong() >= 1);
+        assertTrue(findCard(coreSummary.path("cards"), "modules-needing-setup").path("value").asLong() == 0);
+        assertTrue(summaries.get(0).path("sections").size() >= 2);
+    }
+
     private JsonNode findModule(JsonNode modules, String code) {
         for (JsonNode module : modules) {
             if (code.equals(module.path("code").asText())) {
@@ -140,5 +194,28 @@ class ModuleEnablementIntegrationTest extends AbstractIntegrationTest {
             }
         }
         return null;
+    }
+
+    private JsonNode findCard(JsonNode cards, String key) {
+        for (JsonNode card : cards) {
+            if (key.equals(card.path("key").asText())) {
+                return card;
+            }
+        }
+        return null;
+    }
+
+    private String createCompany(AuthSession session, String marker) {
+        ResponseEntity<JsonNode> response = post("/crm/companies", Map.of(
+                "name", "Executive Company " + marker,
+                "document", "EXEC-" + marker,
+                "status", "ACTIVE"
+        ), session);
+        return requireBody(response).path("data").path("id").asText();
+    }
+
+    private String defaultPipelineStageId(AuthSession session) {
+        ResponseEntity<JsonNode> response = get("/crm/pipeline-stages?page=0&size=20", session);
+        return requireBody(response).path("data").path("items").get(0).path("id").asText();
     }
 }

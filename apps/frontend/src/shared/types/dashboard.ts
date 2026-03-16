@@ -43,4 +43,5 @@ export type DashboardModuleSummary = {
   description: string;
   href: string;
   summaryCards: DashboardSummaryCard[];
+  sections: DashboardSection[];
 };

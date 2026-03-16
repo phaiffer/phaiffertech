@@ -105,15 +105,16 @@ describe('CrmHome', () => {
         WON: 2
       },
       tasksPendentes: 4,
+      overdueTasks: 2,
       leadsPorStatus: {
         NEW: 6,
         QUALIFIED: 6
       },
       summaryCards: [
-        { key: 'contacts', label: 'Contacts', value: 42, status: 'ok' },
-        { key: 'leads', label: 'Leads', value: 12, status: 'info' },
-        { key: 'deals', label: 'Deals', value: 5, status: 'active' },
-        { key: 'tasks', label: 'Tasks', value: 4, status: 'pending' }
+        { key: 'pipeline-value', label: 'Pipeline Value (BRL)', value: 180000, status: 'info' },
+        { key: 'active-deals', label: 'Active Deals', value: 5, status: 'active' },
+        { key: 'overdue-tasks', label: 'Overdue Tasks', value: 2, status: 'alert' },
+        { key: 'pending-tasks', label: 'Pending Tasks', value: 4, status: 'pending' }
       ],
       sections: [
         {
@@ -148,6 +149,8 @@ describe('CrmHome', () => {
     expect(screen.getByText('Manage companies')).toBeInTheDocument();
     expect(screen.getByText('Handle tasks')).toBeInTheDocument();
     expect(screen.getByText('Check activity')).toBeInTheDocument();
+    expect(screen.getAllByText('Review overdue tasks').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('Follow-up attention').length).toBeGreaterThan(0);
     expect(screen.getByText('Activity access required')).toBeInTheDocument();
     expect(screen.queryByRole('link', { name: /check activity/i })).not.toBeInTheDocument();
     expect(screen.getByText('Commercial Operating Context')).toBeInTheDocument();
@@ -163,6 +166,7 @@ describe('CrmHome', () => {
       totalDeals: 0,
       dealsPorStatus: {},
       tasksPendentes: 0,
+      overdueTasks: 0,
       leadsPorStatus: {},
       summaryCards: [],
       sections: []
