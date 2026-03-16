@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { PermissionGuard } from '@/shared/auth/PermissionGuard';
+import { StatusBadge } from '@/shared/dashboard/status-badge';
 import { ApiClientError } from '@/shared/lib/http';
 import { resolvePageItems, resolveTotalItems } from '@/shared/lib/pagination';
 import { crmService, CreateDealInput, UpdateDealInput } from '@/shared/services/crm-service';
@@ -171,7 +172,7 @@ export function CrmDealsPage() {
     { key: 'company', header: 'Empresa', render: (row) => companyName(row.companyId) },
     { key: 'stage', header: 'Etapa', render: (row) => stageName(row.pipelineStageId) },
     { key: 'amount', header: 'Valor', render: (row) => (row.amount ? `${row.currency} ${row.amount}` : '-') },
-    { key: 'status', header: 'Status', render: (row) => row.status },
+    { key: 'status', header: 'Status', render: (row) => <StatusBadge status={row.status} /> },
     {
       key: 'actions',
       header: 'Ações',
@@ -271,7 +272,18 @@ export function CrmDealsPage() {
 
         {error ? <div className="ui-notice-error">{error}</div> : null}
 
-        <DataTable columns={columns} rows={rows} getRowKey={(row) => row.id} loading={loading} emptyMessage="Nenhum negócio encontrado." />
+        <DataTable
+          columns={columns}
+          rows={rows}
+          getRowKey={(row) => row.id}
+          loading={loading}
+          loadingTitle="Carregando negócios"
+          loadingDescription="Consolidando pipeline, empresa vinculada e status comercial para esta visão."
+          emptyState={{
+            title: 'Nenhum negócio registrado',
+            description: 'Crie o primeiro negócio para começar a acompanhar o pipeline comercial do tenant.'
+          }}
+        />
 
         <Pagination page={pageData.page} totalPages={pageData.totalPages} totalElements={totalItems} onPageChange={(nextPage) => void load(nextPage, search, statusFilter, companyFilterId)} />
 

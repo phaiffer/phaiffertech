@@ -3,10 +3,12 @@
 import { FormEvent, useCallback, useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { PermissionGuard } from '@/shared/auth/PermissionGuard';
+import { StatusBadge } from '@/shared/dashboard/status-badge';
 import { ApiClientError } from '@/shared/lib/http';
 import { resolvePageItems, resolveTotalItems } from '@/shared/lib/pagination';
 import { ConfirmDialog } from '@/shared/ui/confirm-dialog';
 import { Pagination } from '@/shared/ui/pagination';
+import { DataTable, DataTableColumn } from '@/shared/ui/data-table';
 import { iotService } from '@/shared/services/iot-service';
 import { PageResponse } from '@/shared/types/common';
 import { IotDevice } from '@/shared/types/iot';
@@ -14,8 +16,6 @@ import {
   Chip,
     DeviceIcon,
     IotActionButton,
-    IotDataTable,
-    IotDataTableHead,
     IotHeroAside,
     IotInlineActionButton,
     IotInlineDangerButton,
@@ -26,10 +26,8 @@ import {
   IotPrimaryButton,
   IotSecondaryButton,
   IotSelectField,
-  IotStatusPill,
-  IotTableStateRow,
-  IotTabButton,
-  IotTextField
+    IotTabButton,
+    IotTextField
 } from '@/modules/iot/iot-chrome';
 import { buildDemoDevicesFromReal, getOperationalProfile } from '@/modules/iot/iot-demo-data';
 import { formatDateTime, resolveDeviceStatusLabel, resolveDeviceTypeLabel } from '@/modules/iot/iot-utils';
@@ -65,20 +63,6 @@ const initialPage: PageResponse<IotDevice> = {
   page: 0,
   size: pageSize
 };
-
-function resolveTone(status: string) {
-  switch (status) {
-    case 'ONLINE':
-      return 'green' as const;
-    case 'OFFLINE':
-      return 'red' as const;
-    case 'ALERT':
-    case 'MAINTENANCE':
-      return 'amber' as const;
-    default:
-      return 'neutral' as const;
-  }
-}
 
 export function IotDevicesPage() {
   const searchParams = useSearchParams();
@@ -184,6 +168,104 @@ export function IotDevicesPage() {
   const onlineCount = visibleRows.filter((device) => device.status === 'ONLINE').length;
   const offlineCount = visibleRows.filter((device) => device.status === 'OFFLINE').length;
   const attentionCount = visibleRows.filter((device) => device.status !== 'ONLINE').length;
+  const profileByDeviceId = useMemo(
+    () => new Map(visibleRows.map((device, index) => [device.id, getOperationalProfile(device, index)])),
+    [visibleRows]
+  );
+  const columns: DataTableColumn<IotDevice>[] = [
+    {
+      key: 'name',
+      header: 'Nome',
+      render: (device) => {
+        const profile = profileByDeviceId.get(device.id);
+
+        return (
+          <div>
+            <p className="font-semibold text-foreground">{device.name}</p>
+            <p className="mt-1 text-sm text-muted">
+              {device.identifier ?? device.serialNumber ?? '-'} • {device.location ?? profile?.area ?? '-'}
+            </p>
+            <p className="mt-1 text-xs uppercase tracking-[0.16em] text-muted">
+              {resolveDeviceTypeLabel(device.type)} • {profile?.transport ?? '-'}
+            </p>
+          </div>
+        );
+      }
+    },
+    {
+      key: 'modbus',
+      header: 'Contexto Modbus',
+      render: (device) => {
+        const profile = profileByDeviceId.get(device.id);
+
+        return (
+          <div>
+            <p>{profile?.transport ?? '-'}</p>
+            <p className="mt-1 text-sm text-muted">
+              {profile ? `${profile.host}:${profile.port} • Unit ${profile.unitId}` : '-'}
+            </p>
+          </div>
+        );
+      }
+    },
+    {
+      key: 'readings',
+      header: 'Leituras',
+      render: (device) => {
+        const profile = profileByDeviceId.get(device.id);
+
+        return (
+          <div>
+            <p>{profile?.registerCount ?? 0} variáveis</p>
+            <p className="mt-1 text-sm text-muted">
+              {profile ? `Polling ${profile.pollInterval} • Gateway ${profile.gateway}` : '-'}
+            </p>
+          </div>
+        );
+      }
+    },
+    {
+      key: 'status',
+      header: 'Status',
+      render: (device) => {
+        const profile = profileByDeviceId.get(device.id);
+
+        return (
+          <div className="flex flex-col gap-2">
+            <StatusBadge status={resolveDeviceStatusLabel(device.status)} />
+            <span className="text-xs text-muted">{profile?.signal ?? 'Sem sinal operacional'}</span>
+          </div>
+        );
+      }
+    },
+    {
+      key: 'lastSeen',
+      header: 'Ultimo contato',
+      render: (device) => <span className="text-muted">{formatDateTime(device.lastSeenAt)}</span>
+    },
+    {
+      key: 'actions',
+      header: 'Acoes',
+      render: (device) => (
+        <div className="flex flex-wrap gap-2">
+          {!shouldUseDemo ? (
+            <>
+              <IotInlineActionButton onClick={() => beginEdit(device)}>
+                Editar
+              </IotInlineActionButton>
+              <IotInlineDangerButton onClick={() => setDeleteCandidate(device)}>
+                Excluir
+              </IotInlineDangerButton>
+            </>
+          ) : (
+            <span className="text-xs font-semibold uppercase tracking-[0.16em] text-muted">
+              Somente navegação
+            </span>
+          )}
+        </div>
+      )
+    }
+  ];
 
   function beginEdit(device: IotDevice) {
     setEditingDevice(device);
@@ -373,89 +455,18 @@ export function IotDevicesPage() {
           title="Tabela operacional"
           description="Lista densa com contexto Modbus, cobertura de leitura, status atual e último contato conhecido."
         >
-          <IotDataTable>
-            <thead className="border-b border-border bg-surface-inset/80">
-                <tr>
-                  {['Nome', 'Contexto Modbus', 'Leituras', 'Status', 'Último contato', 'Ações'].map((header) => (
-                    <IotDataTableHead key={header}>
-                      {header}
-                    </IotDataTableHead>
-                  ))}
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border/70 text-sm text-foreground">
-                {loading ? (
-                  <IotTableStateRow
-                    colSpan={6}
-                    title="Sincronizando a frota"
-                    description="Consolidando o inventário operacional e o contexto de comunicação dos ativos."
-                  />
-                ) : visibleRows.length === 0 ? (
-                  <IotTableStateRow
-                    colSpan={6}
-                    title="Nenhum dispositivo nesta janela"
-                    description="Ajuste os filtros ou siga em modo assistido para manter a narrativa da frota."
-                    tone="amber"
-                  />
-                ) : (
-                  visibleRows.map((device, index) => {
-                    const profile = getOperationalProfile(device, index);
-                    const tone = resolveTone(device.status);
-
-                    return (
-                      <tr key={device.id} className="transition-colors hover:bg-surface-inset/40">
-                        <td className="px-4 py-4">
-                          <p className="font-semibold text-foreground">{device.name}</p>
-                          <p className="mt-1 text-sm text-muted">
-                            {device.identifier ?? device.serialNumber ?? '-'} • {device.location ?? profile.area}
-                          </p>
-                          <p className="mt-1 text-xs uppercase tracking-[0.16em] text-muted">
-                            {resolveDeviceTypeLabel(device.type)} • {profile.transport}
-                          </p>
-                        </td>
-                        <td className="px-4 py-4">
-                          <p>{profile.transport}</p>
-                          <p className="mt-1 text-sm text-muted">
-                            {profile.host}:{profile.port} • Unit {profile.unitId}
-                          </p>
-                        </td>
-                        <td className="px-4 py-4">
-                          <p>{profile.registerCount} variáveis</p>
-                          <p className="mt-1 text-sm text-muted">
-                            Polling {profile.pollInterval} • Gateway {profile.gateway}
-                          </p>
-                        </td>
-                        <td className="px-4 py-4">
-                          <div className="flex flex-wrap gap-2">
-                            <IotStatusPill label={resolveDeviceStatusLabel(device.status)} tone={tone} />
-                            <IotStatusPill label={profile.signal} tone={profile.health} />
-                          </div>
-                        </td>
-                        <td className="px-4 py-4 text-muted">{formatDateTime(device.lastSeenAt)}</td>
-                        <td className="px-4 py-4">
-                          <div className="flex flex-wrap gap-2">
-                            {!shouldUseDemo ? (
-                              <>
-                                <IotInlineActionButton onClick={() => beginEdit(device)}>
-                                  Editar
-                                </IotInlineActionButton>
-                                <IotInlineDangerButton onClick={() => setDeleteCandidate(device)}>
-                                  Excluir
-                                </IotInlineDangerButton>
-                              </>
-                            ) : (
-                              <span className="text-xs font-semibold uppercase tracking-[0.16em] text-muted">
-                                Somente navegação
-                              </span>
-                            )}
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })
-                )}
-              </tbody>
-          </IotDataTable>
+          <DataTable
+            columns={columns}
+            rows={visibleRows}
+            getRowKey={(device) => device.id}
+            loading={loading}
+            loadingTitle="Sincronizando a frota"
+            loadingDescription="Consolidando o inventario operacional e o contexto de comunicacao dos ativos."
+            emptyState={{
+              title: 'Nenhum dispositivo nesta janela',
+              description: 'Ajuste os filtros ou cadastre o primeiro dispositivo para iniciar a operacao conectada.'
+            }}
+          />
         </IotPanel>
 
         {!shouldUseDemo ? (

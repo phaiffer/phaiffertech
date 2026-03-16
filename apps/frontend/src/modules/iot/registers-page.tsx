@@ -2,10 +2,12 @@
 
 import { FormEvent, useCallback, useEffect, useMemo, useState } from 'react';
 import { PermissionGuard } from '@/shared/auth/PermissionGuard';
+import { StatusBadge } from '@/shared/dashboard/status-badge';
 import { ApiClientError } from '@/shared/lib/http';
 import { resolvePageItems, resolveTotalItems } from '@/shared/lib/pagination';
 import { ConfirmDialog } from '@/shared/ui/confirm-dialog';
 import { Pagination } from '@/shared/ui/pagination';
+import { DataTable, DataTableColumn } from '@/shared/ui/data-table';
 import { iotService } from '@/shared/services/iot-service';
 import { PageResponse } from '@/shared/types/common';
 import { IotDevice, IotRegister, IotTelemetryRecord } from '@/shared/types/iot';
@@ -13,8 +15,6 @@ import {
     BoltIcon,
     Chip,
     DeviceIcon,
-    IotDataTable,
-    IotDataTableHead,
     IotHeroAside,
     IotInlineActionButton,
     IotInlineDangerButton,
@@ -27,7 +27,6 @@ import {
     IotSelectField,
     IotStatusPill,
     IotSupportCard,
-    IotTableStateRow,
     IotTextField,
     PlugIcon,
   WaveIcon
@@ -104,19 +103,6 @@ function parseRequiredInteger(value: string) {
   }
 
   return parsed;
-}
-
-function resolveTone(status: string) {
-  switch (status) {
-    case 'ACTIVE':
-      return 'green' as const;
-    case 'MAINTENANCE':
-      return 'amber' as const;
-    case 'INACTIVE':
-      return 'red' as const;
-    default:
-      return 'neutral' as const;
-  }
 }
 
 function resolveReadingTone(value?: number, min?: number, max?: number) {
@@ -296,6 +282,125 @@ export function IotRegistersPage() {
     (register.functionCode ?? parseModbusMapping(register.code, register.metricName, register.name).functionCode) ===
     'FC03'
   ).length;
+  const columns: DataTableColumn<IotRegister>[] = [
+    {
+      key: 'variable',
+      header: 'Variavel',
+      render: (register) => (
+        <div>
+          <p className="font-semibold text-foreground">{register.name}</p>
+          <p className="mt-1 text-sm text-muted">{register.metricName}</p>
+        </div>
+      )
+    },
+    {
+      key: 'device',
+      header: 'Dispositivo',
+      render: (register) => (
+        <span className="text-foreground">{resolveDeviceLabel(displayDevices, register.deviceId)}</span>
+      )
+    },
+    {
+      key: 'mapping',
+      header: 'Mapeamento',
+      render: (register) => {
+        const mapping = parseModbusMapping(
+          register.code,
+          register.metricName,
+          register.name,
+          register.dataType,
+          register.unit
+        );
+
+        return (
+          <div className="flex flex-wrap gap-2">
+            <IotStatusPill label={mapping.functionCode} tone="cyan" />
+            <IotStatusPill label={mapping.registerAddress} tone="neutral" />
+          </div>
+        );
+      }
+    },
+    {
+      key: 'type',
+      header: 'Tipo / unidade',
+      render: (register) => (
+        <div>
+          <p>{register.dataType}</p>
+          <p className="mt-1 text-sm text-muted">{register.unit ?? '-'}</p>
+        </div>
+      )
+    },
+    {
+      key: 'thresholds',
+      header: 'Faixas',
+      render: (register) => (
+        <span className="text-foreground">
+          {register.minThreshold ?? '-'} / {register.maxThreshold ?? '-'}
+        </span>
+      )
+    },
+    {
+      key: 'lastReading',
+      header: 'Ultima leitura',
+      render: (register) => {
+        const latestReading = latestTelemetryByRegister.get(register.id);
+        const latestValue =
+          latestReading?.metricValue !== undefined
+            ? Number(latestReading.metricValue)
+            : undefined;
+        const latestTone = resolveReadingTone(
+          latestValue,
+          register.minThreshold,
+          register.maxThreshold
+        );
+
+        return latestReading ? (
+          <div className="flex flex-col gap-2">
+            <IotStatusPill
+              label={`${latestReading.metricValue}${latestReading.unit ? ` ${latestReading.unit}` : ''}`}
+              tone={latestTone}
+            />
+            <span className="text-xs text-muted">
+              {formatDateTime(latestReading.recordedAt)}
+            </span>
+          </div>
+        ) : (
+          <span className="text-muted">Sem leitura na janela atual</span>
+        );
+      }
+    },
+    {
+      key: 'status',
+      header: 'Status',
+      render: (register) => <StatusBadge status={resolveRegisterStatusLabel(register.status)} />
+    },
+    {
+      key: 'actions',
+      header: 'Acoes',
+      render: (register) => (
+        <div className="flex flex-wrap gap-2">
+          {!useDemoMode ? (
+            <>
+              <PermissionGuard permission="iot.register.update">
+                <IotInlineActionButton onClick={() => beginEdit(register)}>
+                  Editar
+                </IotInlineActionButton>
+              </PermissionGuard>
+              <PermissionGuard permission="iot.register.delete">
+                <IotInlineDangerButton onClick={() => setDeleteCandidate(register)}>
+                  Excluir
+                </IotInlineDangerButton>
+              </PermissionGuard>
+            </>
+          ) : (
+            <span className="text-xs font-semibold uppercase tracking-[0.16em] text-muted">
+              Somente navegação
+            </span>
+          )}
+        </div>
+      )
+    }
+  ];
 
   function resetForm() {
     setEditingRegister(null);
@@ -661,118 +766,18 @@ export function IotRegistersPage() {
           title="Tabela operacional de registradores"
           description="Lista densa com associação ao ativo, mapeamento Modbus, faixas operacionais e última leitura conhecida."
         >
-          <IotDataTable>
-              <thead className="border-b border-border bg-surface-inset/80">
-                <tr>
-                  {['Variável', 'Dispositivo', 'Mapeamento', 'Tipo / unidade', 'Faixas', 'Última leitura', 'Status', 'Ações'].map((header) => (
-                    <IotDataTableHead key={header}>
-                      {header}
-                    </IotDataTableHead>
-                  ))}
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border/70 text-sm text-foreground">
-                {loading ? (
-                  <IotTableStateRow
-                    colSpan={8}
-                    title="Sincronizando os registradores"
-                    description="Consolidando mapeamento Modbus, faixas operacionais e vínculo com as leituras."
-                  />
-                ) : visibleRows.length === 0 ? (
-                  <IotTableStateRow
-                    colSpan={8}
-                    title="Nenhum registrador nesta janela"
-                    description="Ajuste os filtros ou mantenha a apresentação com o mapeamento assistido do módulo."
-                    tone="amber"
-                  />
-                ) : (
-                  visibleRows.map((register) => {
-                    const mapping = parseModbusMapping(
-                      register.code,
-                      register.metricName,
-                      register.name,
-                      register.dataType,
-                      register.unit
-                    );
-                    const latestReading = latestTelemetryByRegister.get(register.id);
-                    const latestValue =
-                      latestReading?.metricValue !== undefined
-                        ? Number(latestReading.metricValue)
-                        : undefined;
-                    const latestTone = resolveReadingTone(
-                      latestValue,
-                      register.minThreshold,
-                      register.maxThreshold
-                    );
-
-                    return (
-                      <tr key={register.id} className="transition-colors hover:bg-surface-inset/40">
-                        <td className="px-4 py-4">
-                          <p className="font-semibold text-foreground">{register.name}</p>
-                          <p className="mt-1 text-sm text-muted">{register.metricName}</p>
-                        </td>
-                        <td className="px-4 py-4 text-foreground">
-                          {resolveDeviceLabel(displayDevices, register.deviceId)}
-                        </td>
-                        <td className="px-4 py-4">
-                          <div className="flex flex-wrap gap-2">
-                            <IotStatusPill label={mapping.functionCode} tone="cyan" />
-                            <IotStatusPill label={mapping.registerAddress} tone="neutral" />
-                          </div>
-                        </td>
-                        <td className="px-4 py-4">
-                          <p>{register.dataType}</p>
-                          <p className="mt-1 text-sm text-muted">{register.unit ?? '-'}</p>
-                        </td>
-                        <td className="px-4 py-4 text-foreground">
-                          {register.minThreshold ?? '-'} / {register.maxThreshold ?? '-'}
-                        </td>
-                        <td className="px-4 py-4">
-                          {latestReading ? (
-                            <div className="flex flex-col gap-2">
-                              <IotStatusPill
-                                label={`${latestReading.metricValue}${latestReading.unit ? ` ${latestReading.unit}` : ''}`}
-                                tone={latestTone}
-                              />
-                              <span className="text-xs text-muted">
-                                {formatDateTime(latestReading.recordedAt)}
-                              </span>
-                            </div>
-                          ) : (
-                            <span className="text-muted">Sem leitura na janela atual</span>
-                          )}
-                        </td>
-                        <td className="px-4 py-4">
-                          <IotStatusPill label={resolveRegisterStatusLabel(register.status)} tone={resolveTone(register.status)} />
-                        </td>
-                        <td className="px-4 py-4">
-                          <div className="flex flex-wrap gap-2">
-                            {!useDemoMode ? (
-                              <>
-                                <PermissionGuard permission="iot.register.update">
-                                  <IotInlineActionButton onClick={() => beginEdit(register)}>
-                                    Editar
-                                  </IotInlineActionButton>
-                                </PermissionGuard>
-                                <PermissionGuard permission="iot.register.delete">
-                                  <IotInlineDangerButton onClick={() => setDeleteCandidate(register)}>
-                                    Excluir
-                                  </IotInlineDangerButton>
-                                </PermissionGuard>
-                              </>
-                            ) : (
-                              <span className="text-xs font-semibold uppercase tracking-[0.16em] text-muted">
-                                Somente navegação
-                              </span>
-                            )}
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })
-                )}
-              </tbody>
-          </IotDataTable>
+          <DataTable
+            columns={columns}
+            rows={visibleRows}
+            getRowKey={(register) => register.id}
+            loading={loading}
+            loadingTitle="Sincronizando os registradores"
+            loadingDescription="Consolidando mapeamento Modbus, faixas operacionais e vinculo com as leituras."
+            emptyState={{
+              title: 'Nenhum registrador nesta janela',
+              description: 'Ajuste os filtros ou crie o primeiro registrador para iniciar o mapeamento industrial.'
+            }}
+          />
         </IotPanel>
 
         {!useDemoMode ? (

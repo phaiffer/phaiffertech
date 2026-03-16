@@ -7,12 +7,21 @@ export type DataTableColumn<T> = {
   className?: string;
 };
 
+type DataTableEmptyState = {
+  title: string;
+  description: string;
+  action?: ReactNode;
+};
+
 type DataTableProps<T> = {
   columns: DataTableColumn<T>[];
   rows: T[];
   getRowKey: (row: T) => string;
   loading?: boolean;
   emptyMessage?: string;
+  loadingTitle?: string;
+  loadingDescription?: string;
+  emptyState?: DataTableEmptyState;
 };
 
 export function DataTable<T>({
@@ -20,8 +29,32 @@ export function DataTable<T>({
   rows,
   getRowKey,
   loading = false,
-  emptyMessage = 'Nenhum registro encontrado.'
+  emptyMessage = 'Nenhum registro encontrado.',
+  loadingTitle = 'Carregando registros',
+  loadingDescription = 'Aguarde enquanto os dados mais recentes sao preparados para esta tabela.',
+  emptyState
 }: DataTableProps<T>) {
+  const renderStateRow = (
+    title: string,
+    description: string,
+    action?: ReactNode
+  ) => (
+    <tr>
+      <td
+        colSpan={columns.length}
+        className="px-4 py-8"
+      >
+        <div className="mx-auto flex max-w-2xl flex-col items-center gap-3 text-center">
+          <div>
+            <p className="text-sm font-semibold text-[color:var(--app-shell-heading)]">{title}</p>
+            <p className="mt-1 text-sm text-[color:var(--app-shell-muted)]">{description}</p>
+          </div>
+          {action ? <div>{action}</div> : null}
+        </div>
+      </td>
+    </tr>
+  );
+
   return (
     <div className="overflow-x-auto rounded-[var(--radius-xl)] border border-[color:var(--app-shell-border)] bg-[color:var(--surface-1)] shadow-xs">
       <table className="min-w-full divide-y divide-[color:var(--app-shell-border)]">
@@ -39,23 +72,13 @@ export function DataTable<T>({
         </thead>
         <tbody className="divide-y divide-[color:var(--app-shell-border)] text-[length:var(--font-size-sm)] text-[color:var(--app-shell-text)]">
           {loading ? (
-            <tr>
-              <td
-                colSpan={columns.length}
-                className="px-4 py-8 text-center text-[length:var(--font-size-sm)] text-[color:var(--app-shell-muted)]"
-              >
-                Carregando...
-              </td>
-            </tr>
+            renderStateRow(loadingTitle, loadingDescription)
           ) : rows.length === 0 ? (
-            <tr>
-              <td
-                colSpan={columns.length}
-                className="px-4 py-8 text-center text-[length:var(--font-size-sm)] text-[color:var(--app-shell-muted)]"
-              >
-                {emptyMessage}
-              </td>
-            </tr>
+            renderStateRow(
+              emptyState?.title ?? 'Nenhum resultado nesta tabela',
+              emptyState?.description ?? emptyMessage,
+              emptyState?.action
+            )
           ) : (
             rows.map((row) => (
               <tr

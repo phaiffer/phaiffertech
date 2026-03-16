@@ -7,6 +7,7 @@ import { petService } from '@/shared/services/pet-service';
 import { PageResponse } from '@/shared/types/common';
 import { PetClient } from '@/shared/types/pet';
 import { PermissionGuard } from '@/shared/auth/PermissionGuard';
+import { StatusBadge } from '@/shared/dashboard/status-badge';
 import { ConfirmDialog } from '@/shared/ui/confirm-dialog';
 import { DataTable, DataTableColumn } from '@/shared/ui/data-table';
 import { FormInput } from '@/shared/ui/form-input';
@@ -182,7 +183,7 @@ export function PetClientsPage() {
     {
       key: 'status',
       header: 'Status',
-      render: (client) => client.status
+      render: (client) => <StatusBadge status={client.status} />
     },
     {
       key: 'actions',
@@ -282,7 +283,12 @@ export function PetClientsPage() {
           rows={rows}
           getRowKey={(row) => row.id}
           loading={loading}
-          emptyMessage="Nenhum cliente encontrado."
+          loadingTitle="Carregando clientes"
+          loadingDescription="Preparando a base de clientes do PetFlow com status e dados operacionais."
+          emptyState={{
+            title: 'Nenhum cliente cadastrado',
+            description: 'Crie o primeiro cliente para iniciar os cadastros clinicos e operacionais do PetFlow.'
+          }}
         />
 
         <Pagination

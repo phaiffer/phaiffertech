@@ -1,14 +1,29 @@
 'use client';
 
-import { FormEvent, useEffect, useState } from 'react';
+import { FormEvent, useEffect, useMemo, useState } from 'react';
 import { PermissionGuard } from '@/shared/auth/PermissionGuard';
 import { useAuth } from '@/shared/auth/use-auth';
 import { usePermissions } from '@/shared/auth/usePermissions';
-import { resolvePageItems } from '@/shared/lib/pagination';
+import { StatusBadge } from '@/shared/dashboard/status-badge';
+import { resolveTotalItems } from '@/shared/lib/pagination';
 import { userService } from '@/shared/services/user-service';
+import { PageResponse } from '@/shared/types/common';
 import { PlatformUser } from '@/shared/types/user';
+import { DataTable, DataTableColumn } from '@/shared/ui/data-table';
+import { FormInput } from '@/shared/ui/form-input';
+import { FormSelect } from '@/shared/ui/form-select';
 import { PageTitle } from '@/shared/ui/page-title';
-import { Table } from '@/shared/ui/table';
+import { Pagination } from '@/shared/ui/pagination';
+
+const pageSize = 10;
+
+const initialPage: PageResponse<PlatformUser> = {
+  items: [],
+  totalItems: 0,
+  totalPages: 0,
+  page: 0,
+  size: pageSize
+};
 
 export default function UsersPage() {
   const { session } = useAuth();
@@ -18,7 +33,8 @@ export default function UsersPage() {
   const availableRoles = session?.user.platformAdmin
     ? ['PLATFORM_ADMIN', 'TENANT_OWNER', 'TENANT_ADMIN', 'MANAGER', 'OPERATOR', 'VIEWER', 'CUSTOMER_PORTAL_USER']
     : ['TENANT_OWNER', 'TENANT_ADMIN', 'MANAGER', 'OPERATOR', 'VIEWER', 'CUSTOMER_PORTAL_USER'];
-  const [users, setUsers] = useState<PlatformUser[]>([]);
+  const [pageData, setPageData] = useState<PageResponse<PlatformUser>>(initialPage);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
@@ -27,23 +43,18 @@ export default function UsersPage() {
   const [password, setPassword] = useState('');
   const [roleCode, setRoleCode] = useState('OPERATOR');
 
-  async function loadUsers() {
+  async function loadUsers(page = 0) {
+    setLoading(true);
     try {
-      const data = await userService.list();
-      setUsers(resolvePageItems(data));
+      const data = await userService.list(page, pageSize);
+      setPageData(data);
       setError(null);
     } catch (err) {
       setError((err as Error).message);
+    } finally {
+      setLoading(false);
     }
   }
-
-  useEffect(() => {
-    if (!canReadUsers) {
-      return;
-    }
-
-    void loadUsers();
-  }, [canReadUsers]);
 
   async function handleCreate(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -58,7 +69,7 @@ export default function UsersPage() {
       setFullName('');
       setPassword('');
       setRoleCode('OPERATOR');
-      await loadUsers();
+      await loadUsers(pageData.page);
     } catch (err) {
       setError((err as Error).message);
     } finally {
@@ -66,60 +77,112 @@ export default function UsersPage() {
     }
   }
 
+  useEffect(() => {
+    if (!canReadUsers) {
+      return;
+    }
+
+    void loadUsers();
+  }, [canReadUsers]);
+
+  const users = pageData.items ?? pageData.content ?? [];
+  const totalItems = resolveTotalItems(pageData);
+  const workspaceLabel = session?.user.tenantName ?? 'Current tenant';
+  const workspaceCode = session?.user.tenantCode ?? 'workspace';
+  const roleOptions = useMemo(
+    () => availableRoles.map((role) => ({ value: role, label: role.replace(/_/g, ' ') })),
+    [availableRoles]
+  );
+  const columns: DataTableColumn<PlatformUser>[] = [
+    {
+      key: 'name',
+      header: 'User',
+      render: (user) => (
+        <div>
+          <p className="font-medium text-[color:var(--app-shell-heading)]">{user.fullName}</p>
+          <p className="text-xs text-[color:var(--app-shell-muted)]">{user.email}</p>
+        </div>
+      )
+    },
+    {
+      key: 'role',
+      header: 'Role',
+      render: (user) => <StatusBadge status={user.role} />
+    },
+    {
+      key: 'workspace',
+      header: 'Tenant workspace',
+      render: () => (
+        <div>
+          <p className="font-medium text-[color:var(--app-shell-heading)]">{workspaceLabel}</p>
+          <p className="text-xs uppercase tracking-[0.16em] text-[color:var(--app-shell-muted)]">{workspaceCode}</p>
+        </div>
+      )
+    },
+    {
+      key: 'status',
+      header: 'Access',
+      render: (user) => <StatusBadge status={user.active ? 'active' : 'inactive'} />
+    }
+  ];
+
   return (
     <PermissionGuard
       permission="USER_READ"
       fallback={<div className="ui-notice-warning">Você não possui permissão para visualizar usuários.</div>}
     >
       <div className="space-y-5">
-        <PageTitle title="Users" description="Gestão inicial de usuários por tenant com RBAC." />
+        <PageTitle
+          title="Users"
+          description="Tenant-scoped user administration with clearer role, workspace, and access signals."
+        />
+
+        <div className="ui-notice-neutral">
+          The current list is scoped to <strong>{workspaceLabel}</strong> and uses the active tenant context from your authenticated workspace.
+        </div>
 
         <PermissionGuard permission="USER_WRITE">
           <form
             onSubmit={handleCreate}
-            className="grid gap-3 rounded-xl border border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-panel)] p-4 shadow-card md:grid-cols-5"
+            className="grid gap-3 ui-surface-panel p-4 md:grid-cols-4"
           >
-            <input
+            <FormInput
+              label="Full name"
               value={fullName}
-              onChange={(event) => setFullName(event.target.value)}
-              className="rounded-lg border border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-panel-muted)] px-3 py-2 text-sm text-[color:var(--app-shell-text)]"
-              placeholder="Nome completo"
+              onChange={setFullName}
+              placeholder="Operator One"
               required
             />
-            <input
-              type="email"
+            <FormInput
+              label="Email"
               value={email}
-              onChange={(event) => setEmail(event.target.value)}
-              className="rounded-lg border border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-panel-muted)] px-3 py-2 text-sm text-[color:var(--app-shell-text)]"
-              placeholder="E-mail"
+              onChange={setEmail}
+              type="email"
+              placeholder="operator@example.test"
               required
             />
-            <input
+            <FormInput
+              label="Temporary password"
               value={password}
-              onChange={(event) => setPassword(event.target.value)}
-              className="rounded-lg border border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-panel-muted)] px-3 py-2 text-sm text-[color:var(--app-shell-text)]"
-              placeholder="Senha"
+              onChange={setPassword}
+              placeholder="Create a secure password"
               required
             />
-            <select
+            <FormSelect
+              label="Role"
               value={roleCode}
-              onChange={(event) => setRoleCode(event.target.value)}
-              className="rounded-lg border border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-panel-muted)] px-3 py-2 text-sm text-[color:var(--app-shell-text)]"
-            >
-              {availableRoles.map((role) => (
-                <option key={role} value={role}>
-                  {role}
-                </option>
-              ))}
-            </select>
-            <button
-              type="submit"
-              disabled={submitting}
-              className="rounded-lg px-4 py-2 text-sm font-medium text-white disabled:opacity-60"
-              style={{ backgroundColor: 'var(--tenant-accent)' }}
-            >
-              {submitting ? 'Salvando...' : 'Criar usuário'}
-            </button>
+              options={roleOptions}
+              onChange={setRoleCode}
+            />
+            <div className="md:col-span-4 flex gap-2">
+              <button
+                type="submit"
+                disabled={submitting}
+                className="ui-primary-button"
+              >
+                {submitting ? 'Saving user...' : 'Create user'}
+              </button>
+            </div>
           </form>
         </PermissionGuard>
 
@@ -127,16 +190,26 @@ export default function UsersPage() {
           <div className="ui-notice-error">{error}</div>
         ) : null}
 
-        <Table headers={['Nome', 'E-mail', 'Role', 'Ativo']}>
-          {users.map((user) => (
-            <tr key={user.id}>
-              <td className="px-4 py-2">{user.fullName}</td>
-              <td className="px-4 py-2">{user.email}</td>
-              <td className="px-4 py-2">{user.role}</td>
-              <td className="px-4 py-2">{user.active ? 'Sim' : 'Não'}</td>
-            </tr>
-          ))}
-        </Table>
+        <DataTable
+          columns={columns}
+          rows={users}
+          getRowKey={(user) => user.id}
+          loading={loading}
+          loadingTitle="Loading workspace users"
+          loadingDescription="Preparing the users, roles, and access state for the current tenant workspace."
+          emptyState={{
+            title: 'No users registered in this tenant',
+            description:
+              'Create the first user to start assigning roles and controlled access inside this workspace.'
+          }}
+        />
+
+        <Pagination
+          page={pageData.page}
+          totalPages={pageData.totalPages}
+          totalElements={totalItems}
+          onPageChange={(nextPage) => void loadUsers(nextPage)}
+        />
       </div>
     </PermissionGuard>
   );

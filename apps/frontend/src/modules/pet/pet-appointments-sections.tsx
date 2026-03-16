@@ -4,6 +4,7 @@ import { FormEventHandler } from 'react';
 import Link from 'next/link';
 import { petMedicalRoutePermissions } from '@/modules/pet/pet-medical-permissions';
 import { PermissionGuard } from '@/shared/auth/PermissionGuard';
+import { StatusBadge } from '@/shared/dashboard/status-badge';
 import { DataTableColumn } from '@/shared/ui/data-table';
 import { DateTimeInput } from '@/shared/ui/datetime-input';
 import { FormInput } from '@/shared/ui/form-input';
@@ -271,7 +272,7 @@ export function createPetAppointmentColumns({
     {
       key: 'status',
       header: 'Status',
-      render: (appointment) => appointment.status
+      render: (appointment) => <StatusBadge status={appointment.status} />
     },
     {
       key: 'careState',
@@ -283,7 +284,9 @@ export function createPetAppointmentColumns({
 
         return (
           <div>
-            <div className="font-medium text-[color:var(--app-shell-heading)]">{resolveAppointmentCareState(appointment)}</div>
+            <div>
+              <StatusBadge status={resolveAppointmentCareState(appointment)} />
+            </div>
             <div className="text-xs text-[color:var(--app-shell-muted)]">
               Prontuários {medicalRecordCount} | Vacinas {vaccinationCount} | Prescrições {prescriptionCount}
             </div>
