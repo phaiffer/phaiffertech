@@ -5,6 +5,7 @@ import com.phaiffertech.platform.core.auth.config.DemoAccessProperties;
 import com.phaiffertech.platform.core.auth.domain.RefreshToken;
 import com.phaiffertech.platform.core.auth.dto.AuthTokenResponse;
 import com.phaiffertech.platform.core.auth.dto.AuthenticatedUserResponse;
+import com.phaiffertech.platform.core.auth.dto.ChangePasswordRequest;
 import com.phaiffertech.platform.core.auth.dto.LoginRequest;
 import com.phaiffertech.platform.core.auth.mapper.AuthMapper;
 import com.phaiffertech.platform.core.auth.repository.RefreshTokenRepository;
@@ -230,6 +231,43 @@ public class AuthService {
         );
     }
 
+    @Transactional
+    public void changePassword(ChangePasswordRequest request) {
+        AuthenticatedUser authenticatedUser = currentUserService.getRequiredUser();
+        User user = userRepository.findById(authenticatedUser.userId())
+                .orElseThrow(() -> new ResourceNotFoundException("Authenticated user not found."));
+
+        if (!user.isActive()) {
+            throw new ForbiddenOperationException("Inactive users cannot change password.");
+        }
+
+        if (!passwordEncoder.matches(request.currentPassword(), user.getPasswordHash())) {
+            throw new ForbiddenOperationException("Current password is incorrect.");
+        }
+
+        if (!request.newPassword().equals(request.confirmNewPassword())) {
+            throw new IllegalArgumentException("New password confirmation does not match.");
+        }
+
+        if (passwordEncoder.matches(request.newPassword(), user.getPasswordHash())) {
+            throw new IllegalArgumentException("New password must be different from the current password.");
+        }
+
+        user.setPasswordHash(passwordEncoder.encode(request.newPassword()));
+        userRepository.save(user);
+
+        int revokedRefreshSessions = revokeAllActiveRefreshTokensForUser(authenticatedUser.userId());
+
+        auditLogService.logEvent(
+                authenticatedUser.tenantId(),
+                authenticatedUser.userId(),
+                "CHANGE_PASSWORD",
+                "auth",
+                authenticatedUser.userId().toString(),
+                Map.of("revokedRefreshSessions", revokedRefreshSessions)
+        );
+    }
+
     @Transactional(readOnly = true)
     public AuthenticatedUserResponse me() {
         AuthenticatedUser authenticatedUser = currentUserService.getRequiredUser();
@@ -264,6 +302,20 @@ public class AuthService {
                 ),
                 refreshToken
         );
+    }
+
+    // Refresh-token revocation is the current server-side credential invalidation control point.
+    // Access tokens stay valid until expiry because they are stateless in the existing architecture.
+    private int revokeAllActiveRefreshTokensForUser(UUID userId) {
+        Instant revokedAt = Instant.now();
+        var activeTokens = refreshTokenRepository.findAllByUserIdAndRevokedAtIsNull(userId);
+        if (activeTokens.isEmpty()) {
+            return 0;
+        }
+
+        activeTokens.forEach(token -> token.setRevokedAt(revokedAt));
+        refreshTokenRepository.saveAll(activeTokens);
+        return activeTokens.size();
     }
 
     private void revokeActiveRefreshTokens(UUID tenantId, UUID userId) {

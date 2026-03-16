@@ -1,7 +1,11 @@
 import { SessionState } from '@/shared/types/auth';
 
 const SESSION_KEY = 'platform.session';
+const AUTH_NOTICE_KEY = 'platform.auth.notice';
 export const SESSION_CHANGE_EVENT = 'platform:session-changed';
+const AUTH_NOTICE_REASONS = ['signed-out', 'session-expired', 'tenant-mismatch', 'password-changed'] as const;
+
+export type AuthNoticeReason = (typeof AUTH_NOTICE_REASONS)[number];
 
 function isBrowser(): boolean {
   return typeof window !== 'undefined';
@@ -13,6 +17,10 @@ function notifySessionChange(): void {
   }
 
   window.dispatchEvent(new Event(SESSION_CHANGE_EVENT));
+}
+
+function isAuthNoticeReason(value: string | null): value is AuthNoticeReason {
+  return value !== null && AUTH_NOTICE_REASONS.includes(value as AuthNoticeReason);
 }
 
 function sanitizeSession(candidate: unknown): SessionState | null {
@@ -81,4 +89,31 @@ export function clearSession(): void {
 
   localStorage.removeItem(SESSION_KEY);
   notifySessionChange();
+}
+
+export function setAuthNotice(reason: AuthNoticeReason): void {
+  if (!isBrowser()) {
+    return;
+  }
+
+  window.sessionStorage.setItem(AUTH_NOTICE_KEY, reason);
+}
+
+export function clearAuthNotice(): void {
+  if (!isBrowser()) {
+    return;
+  }
+
+  window.sessionStorage.removeItem(AUTH_NOTICE_KEY);
+}
+
+export function consumeAuthNotice(): AuthNoticeReason | null {
+  if (!isBrowser()) {
+    return null;
+  }
+
+  const storedValue = window.sessionStorage.getItem(AUTH_NOTICE_KEY);
+  window.sessionStorage.removeItem(AUTH_NOTICE_KEY);
+
+  return isAuthNoticeReason(storedValue) ? storedValue : null;
 }

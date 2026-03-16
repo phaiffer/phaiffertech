@@ -3,6 +3,7 @@
 import type { ReactNode } from 'react';
 import { StatusBadge } from '@/shared/dashboard/status-badge';
 import { useFrontendPlatform } from '@/shared/platform/use-frontend-platform';
+import { AccountSecurityPanel } from '@/shared/settings/account-security-panel';
 import { buildWorkspaceConfigurationOverview, type WorkspaceConfigurationField } from '@/shared/settings/workspace-configuration';
 import { PageTitle } from '@/shared/ui/page-title';
 
@@ -204,6 +205,8 @@ export function WorkspaceConfigurationOverview() {
 
         <p className="mt-5 text-sm text-[color:var(--app-shell-muted)]">{overview.coreAccessNote}</p>
       </SectionCard>
+
+      <AccountSecurityPanel user={platform.user} />
     </div>
   );
 }

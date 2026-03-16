@@ -3,7 +3,8 @@
 import { FormEvent, useEffect, useMemo, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { consumeAuthNotice } from '@/shared/lib/session';
 import { authService } from '@/shared/services/auth-service';
 import { ApiClientError } from '@/shared/lib/http';
 import { useAuth } from '@/shared/hooks/use-auth';
@@ -20,6 +21,7 @@ import { getPublicSiteMessages } from '@/shared/public/public-site-messages';
 
 export default function LoginPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { locale } = usePublicSite();
   const t = getPublicSiteMessages(locale).login;
   const { isAuthenticated, isLoading, signIn } = useAuth();
@@ -30,13 +32,46 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
   const visualContext = useMemo(() => buildLoginVisualContext(tenantCode), [tenantCode]);
+  const nextPath = useMemo(() => {
+    const next = searchParams.get('next');
+    if (!next || !next.startsWith('/') || next.startsWith('//')) {
+      return '/dashboard';
+    }
+    return next;
+  }, [searchParams]);
+
+  useEffect(() => {
+    const authNotice = consumeAuthNotice();
+    if (!authNotice) {
+      setNotice(null);
+      return;
+    }
+
+    if (authNotice === 'signed-out') {
+      setNotice(t.signedOutNotice);
+      return;
+    }
+
+    if (authNotice === 'session-expired') {
+      setNotice(t.sessionExpiredNotice);
+      return;
+    }
+
+    if (authNotice === 'tenant-mismatch') {
+      setNotice(t.tenantMismatchNotice);
+      return;
+    }
+
+    setNotice(t.passwordChangedNotice);
+  }, [t]);
 
   useEffect(() => {
     if (!isLoading && isAuthenticated) {
-      router.replace('/dashboard');
+      router.replace(nextPath);
     }
-  }, [isAuthenticated, isLoading, router]);
+  }, [isAuthenticated, isLoading, nextPath, router]);
 
   async function handleUseDemo() {
     setError(null);
@@ -50,7 +85,7 @@ export default function LoginPage() {
         user: tokenData.user,
       });
 
-      router.replace('/dashboard');
+      router.replace(nextPath);
     } catch (err) {
       if (err instanceof ApiClientError) {
         setError(err.message);
@@ -79,7 +114,7 @@ export default function LoginPage() {
         user: tokenData.user,
       });
 
-      router.replace('/dashboard');
+      router.replace(nextPath);
     } catch (err) {
       if (err instanceof ApiClientError) {
         setError(err.message);
@@ -185,6 +220,12 @@ export default function LoginPage() {
                   </button>
                 ) : null}
               </div>
+
+              {notice ? (
+                <div className="ui-notice-info">
+                  {notice}
+                </div>
+              ) : null}
 
               {error ? (
                 <div className="rounded-lg border border-destructive/30 bg-destructive-muted px-3 py-2.5 text-sm text-destructive">

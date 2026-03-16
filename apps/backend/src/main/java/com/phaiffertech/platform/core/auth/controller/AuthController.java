@@ -4,6 +4,7 @@ import com.phaiffertech.platform.core.auth.service.AuthService;
 import com.phaiffertech.platform.core.auth.service.LoginAttemptService;
 import com.phaiffertech.platform.core.auth.dto.AuthTokenResponse;
 import com.phaiffertech.platform.core.auth.dto.AuthenticatedUserResponse;
+import com.phaiffertech.platform.core.auth.dto.ChangePasswordRequest;
 import com.phaiffertech.platform.core.auth.dto.LoginRequest;
 import com.phaiffertech.platform.shared.response.ApiResponse;
 import com.phaiffertech.platform.shared.security.JwtProperties;
@@ -91,6 +92,16 @@ public class AuthController {
         if (refreshToken != null) {
             authService.logout(refreshToken);
         }
+        return ApiResponse.success(null);
+    }
+
+    @PostMapping("/change-password")
+    public ApiResponse<Void> changePassword(
+            @Valid @RequestBody ChangePasswordRequest request,
+            HttpServletResponse httpServletResponse
+    ) {
+        authService.changePassword(request);
+        clearRefreshTokenCookie(httpServletResponse);
         return ApiResponse.success(null);
     }
 

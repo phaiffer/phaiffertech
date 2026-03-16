@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { SESSION_CHANGE_EVENT, clearSession, getSession, setSession } from '@/shared/lib/session';
+import { SESSION_CHANGE_EVENT, clearSession, consumeAuthNotice, getSession, setAuthNotice, setSession } from '@/shared/lib/session';
 import { SessionState } from '@/shared/types/auth';
 
 const sessionFixture: SessionState = {
@@ -66,5 +66,12 @@ describe('session storage', () => {
     expect(listener).toHaveBeenCalledTimes(2);
 
     window.removeEventListener(SESSION_CHANGE_EVENT, listener);
+  });
+
+  it('stores and consumes transient auth notices', () => {
+    setAuthNotice('session-expired');
+
+    expect(consumeAuthNotice()).toBe('session-expired');
+    expect(consumeAuthNotice()).toBeNull();
   });
 });

@@ -7,6 +7,12 @@ export type LoginInput = {
   password: string;
 };
 
+export type ChangePasswordInput = {
+  currentPassword: string;
+  newPassword: string;
+  confirmNewPassword: string;
+};
+
 export const authService = {
   login: (input: LoginInput) =>
     apiClient.post<AuthTokenResponse>('/auth/login', {
@@ -23,6 +29,13 @@ export const authService = {
 
   logout: () =>
     apiClient.post<void>('/auth/logout'),
+
+  changePassword: (input: ChangePasswordInput) =>
+    apiClient.post<void>('/auth/change-password', {
+      currentPassword: input.currentPassword,
+      newPassword: input.newPassword,
+      confirmNewPassword: input.confirmNewPassword
+    }),
 
   me: () => apiClient.get<AuthenticatedUser>('/auth/me')
 };

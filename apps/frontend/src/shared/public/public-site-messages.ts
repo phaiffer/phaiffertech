@@ -38,7 +38,11 @@ export const publicSiteMessages = {
       loadingLabel: 'Entrando...',
       errorFallback: 'Falha inesperada ao autenticar.',
       forgotPasswordLabel: 'Esqueci minha senha',
-      demoActionLabel: 'Usar demo'
+      demoActionLabel: 'Usar demo',
+      signedOutNotice: 'Sua sessão foi encerrada com sucesso.',
+      sessionExpiredNotice: 'Sua sessão expirou. Entre novamente para continuar.',
+      tenantMismatchNotice: 'A sessão ativa ficou inconsistente com o tenant atual. Entre novamente para restaurar o contexto.',
+      passwordChangedNotice: 'Senha atualizada com sucesso. Entre novamente com a nova credencial.'
     }
   },
   'en-US': {
@@ -78,7 +82,11 @@ export const publicSiteMessages = {
       loadingLabel: 'Signing in...',
       errorFallback: 'Unexpected authentication failure.',
       forgotPasswordLabel: 'Forgot your password?',
-      demoActionLabel: 'Use demo'
+      demoActionLabel: 'Use demo',
+      signedOutNotice: 'You have signed out successfully.',
+      sessionExpiredNotice: 'Your session expired. Sign in again to continue.',
+      tenantMismatchNotice: 'The active session no longer matches the current tenant context. Sign in again to restore it.',
+      passwordChangedNotice: 'Password updated successfully. Sign in again with the new credential.'
     }
   }
 } as const;

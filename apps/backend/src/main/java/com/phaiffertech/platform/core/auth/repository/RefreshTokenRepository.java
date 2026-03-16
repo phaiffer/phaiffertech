@@ -14,5 +14,7 @@ public interface RefreshTokenRepository extends JpaRepository<RefreshToken, UUID
 
     List<RefreshToken> findAllByTenantIdAndUserIdAndRevokedAtIsNull(UUID tenantId, UUID userId);
 
+    List<RefreshToken> findAllByUserIdAndRevokedAtIsNull(UUID userId);
+
     int deleteByExpiresAtBefore(Instant expiresAt);
 }
