@@ -81,8 +81,10 @@ export function CrmDashboardPage() {
           </>
         ) : !loading && !error ? (
           <EmptyStateCard
-            title="Nenhum pipeline configurado ainda"
-            description="Cadastre empresas, contatos e deals para liberar valor de pipeline, atividade recente e distribuição por etapa neste dashboard."
+            title="No deals yet"
+            description="Create the first company, contact, and deal so this dashboard can surface pipeline value, recent movement, and stage distribution."
+            actionLabel="Open CRM workspace"
+            href="/crm"
           />
         ) : null}
       </div>

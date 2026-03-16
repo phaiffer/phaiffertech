@@ -45,9 +45,9 @@ const moduleWorkspaceMeta: Record<string, ModuleWorkspaceMeta> = {
     actionDescription: 'Review contacts, pipeline flow, and commercial activity for the current workspace.'
   },
   IOT: {
-    href: '/iot/dashboard',
-    actionTitle: 'Open Industrial IoT',
-    actionDescription: 'Inspect telemetry, alarms, and operational signals exposed to this workspace.'
+    href: '/iot',
+    actionTitle: 'Open IoT workspace',
+    actionDescription: 'Inspect fleet health, alarms, telemetry, and the next operational action for this workspace.'
   },
   PET: {
     href: '/pet',
@@ -95,31 +95,31 @@ export function buildDashboardExperienceCopy(platform: FrontendPlatformState): D
   if (variant === 'platform') {
     return {
       description:
-        'Platform control plane overview for tenant administration, contracted products, and module visibility.',
-      actionsTitle: 'Platform Operations',
+        'Executive control plane for cross-module health, current pressure, and the next operational action across the platform workspace.',
+      actionsTitle: 'Recommended Actions',
       actionsDescription:
-        'Jump into tenant governance, user access, and the shared control surfaces that shape the platform workspace.',
+        'Start with the highest-leverage move for the current workspace, then use the supporting platform controls below when needed.',
       modulesTitle: 'Module Access Matrix',
       modulesDescription:
         'Explicit separation between tenant bindings, feature exposure, and final availability across the platform.',
       summariesTitle: 'Module Executive Summaries',
       summariesDescription:
-        'Cross-module snapshots for the products currently exposed in the authenticated platform workspace.'
+        'Cross-module snapshots that keep KPI posture, recent movement, and the next best action visible in one place.'
     };
   }
 
   return {
     description:
-      `Workspace overview for ${platform.branding.scopeName}, shaped by contracted modules and the access currently granted to this tenant.`,
-    actionsTitle: 'Workspace Actions',
+      `Executive workspace for ${platform.branding.scopeName}, built to show what is happening now, what needs attention, and where to act first.`,
+    actionsTitle: 'Recommended Actions',
     actionsDescription:
-      'Open the contracted module surfaces and tenant-level controls available in this authenticated workspace.',
+      'Use the strongest next action first, then move into the contracted module surfaces that are available in this workspace.',
     modulesTitle: 'Contracted Modules',
     modulesDescription:
       'Tenant-bound products stay explicit here so workspace scope is clear before navigating into individual modules.',
     summariesTitle: 'Module Snapshots',
     summariesDescription:
-      'Only summaries returned for the current tenant workspace are shown here.'
+      'Each module snapshot is trimmed to the KPIs, recent movement, and continuation step that matter first.'
   };
 }
 

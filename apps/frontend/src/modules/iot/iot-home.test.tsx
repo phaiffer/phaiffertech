@@ -152,7 +152,7 @@ describe('IotHome', () => {
       expect(iotService.getDashboardSummary).toHaveBeenCalledTimes(1);
     });
 
-    expect(screen.getAllByText('Open dashboard').length).toBeGreaterThanOrEqual(2);
+    expect(screen.getByRole('link', { name: 'Review alarms' })).toBeInTheDocument();
     expect(screen.getByText('Telemetry in 24h')).toBeInTheDocument();
     expect(screen.getByText('Recent Incidents')).toBeInTheDocument();
     expect(screen.getByText('Boiler Line 4')).toBeInTheDocument();
@@ -182,6 +182,7 @@ describe('IotHome', () => {
     expect(screen.getByText('IoT Onboarding')).toBeInTheDocument();
     expect(screen.getByText('Set up the IoT workspace')).toBeInTheDocument();
     expect(screen.getByText('Telemetry is not configured yet')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Register device' })).toBeInTheDocument();
     expect(screen.getAllByText('Register device').length).toBeGreaterThan(0);
   });
 });

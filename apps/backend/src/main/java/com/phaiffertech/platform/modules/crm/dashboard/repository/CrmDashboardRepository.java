@@ -1,5 +1,6 @@
 package com.phaiffertech.platform.modules.crm.dashboard.repository;
 
+import java.time.Instant;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -44,6 +45,22 @@ public class CrmDashboardRepository {
         return count(
                 "SELECT COUNT(*) FROM crm_tasks WHERE tenant_id = ? AND deleted_at IS NULL AND UPPER(status) <> 'DONE'",
                 tenantId
+        );
+    }
+
+    public long countOverdueTasks(UUID tenantId, Instant referenceTime) {
+        return count(
+                """
+                SELECT COUNT(*)
+                FROM crm_tasks
+                WHERE tenant_id = ?
+                  AND deleted_at IS NULL
+                  AND due_date IS NOT NULL
+                  AND due_date < ?
+                  AND UPPER(status) <> 'DONE'
+                """,
+                tenantId,
+                referenceTime
         );
     }
 
@@ -95,8 +112,8 @@ public class CrmDashboardRepository {
         return groupByStatus("crm_leads", tenantId);
     }
 
-    private long count(String sql, UUID tenantId) {
-        Long value = jdbcTemplate.queryForObject(sql, Long.class, tenantId);
+    private long count(String sql, Object... args) {
+        Long value = jdbcTemplate.queryForObject(sql, Long.class, args);
         return value == null ? 0L : value;
     }
 

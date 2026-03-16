@@ -140,6 +140,7 @@ export type CrmDashboardSummary = {
   totalDeals: number;
   dealsPorStatus: Record<string, number>;
   tasksPendentes: number;
+  overdueTasks: number;
   leadsPorStatus: Record<string, number>;
   summaryCards: DashboardSummaryCard[];
   sections: DashboardSection[];

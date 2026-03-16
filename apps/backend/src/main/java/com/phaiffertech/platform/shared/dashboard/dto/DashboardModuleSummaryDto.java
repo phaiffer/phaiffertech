@@ -7,6 +7,7 @@ public record DashboardModuleSummaryDto(
         String title,
         String description,
         String href,
-        List<DashboardSummaryCardDto> summaryCards
+        List<DashboardSummaryCardDto> summaryCards,
+        List<DashboardSectionDto> sections
 ) {
 }

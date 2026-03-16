@@ -44,6 +44,14 @@ class CrmDashboardIntegrationTest extends AbstractIntegrationTest {
                 "companyId", companyId
         ), session);
 
+        post("/crm/tasks", Map.of(
+                "title", "Overdue Task " + marker,
+                "status", "OPEN",
+                "priority", "HIGH",
+                "dueDate", Instant.now().minusSeconds(3600).toString(),
+                "companyId", companyId
+        ), session);
+
         ResponseEntity<JsonNode> response = get("/crm/dashboard/summary", session);
         assertEquals(200, response.getStatusCode().value());
 
@@ -52,9 +60,10 @@ class CrmDashboardIntegrationTest extends AbstractIntegrationTest {
         assertTrue(data.path("totalLeads").asLong() >= 1);
         assertTrue(data.path("totalDeals").asLong() >= 1);
         assertTrue(data.path("tasksPendentes").asLong() >= 1);
+        assertTrue(data.path("overdueTasks").asLong() >= 1);
         assertTrue(data.path("dealsPorStatus").has("OPEN"));
         assertTrue(data.path("leadsPorStatus").has("QUALIFIED"));
-        assertTrue(data.path("summaryCards").size() >= 5);
+        assertTrue(data.path("summaryCards").size() >= 6);
         assertTrue(data.path("sections").size() >= 2);
         assertTrue(data.path("sections").get(0).path("items").size() >= 1);
     }

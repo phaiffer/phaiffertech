@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 import { petMedicalRoutePermissions } from '@/modules/pet/pet-medical-permissions';
 import { usePermissions } from '@/shared/auth/usePermissions';
@@ -35,6 +36,12 @@ import { petService } from '@/shared/services/pet-service';
 import { PetDashboardSummary } from '@/shared/types/pet';
 
 type PetWorkspaceMode = 'clinic' | 'grooming';
+
+type PetPrimaryAction = {
+  title: string;
+  description: string;
+  href: string;
+};
 
 type PetWorkspaceCopy = {
   heroEyebrow: string;
@@ -360,6 +367,80 @@ function buildPetContextCards({
   ];
 }
 
+function resolvePetActionHref(actions: ModuleWorkspaceAction[], href: string, fallbackHref: string) {
+  const action = actions.find((candidate) => candidate.href === href && candidate.capability?.interactive !== false);
+  return action?.href ?? fallbackHref;
+}
+
+function resolveFallbackPetAction(actions: ModuleWorkspaceAction[]) {
+  const interactiveAction = actions.find((candidate) => candidate.capability?.interactive !== false);
+  if (!interactiveAction) {
+    return null;
+  }
+
+  return {
+    title: interactiveAction.title,
+    description: interactiveAction.capability?.kind === 'ready'
+      ? interactiveAction.description
+      : interactiveAction.capability?.description ?? interactiveAction.description,
+    href: interactiveAction.href
+  } satisfies PetPrimaryAction;
+}
+
+function findPetPulseCard(summary: PetDashboardSummary | null, key: string) {
+  return summary?.summaryCards.find((card) => card.key === key) ?? null;
+}
+
+function resolvePetPrimaryAction(actions: ModuleWorkspaceAction[], summary: PetDashboardSummary | null, firstUse: boolean, mode: PetWorkspaceMode) {
+  const fallbackAction = resolveFallbackPetAction(actions);
+
+  if (!fallbackAction) {
+    return null;
+  }
+
+  if (firstUse) {
+    return {
+      title: mode === 'grooming' ? 'Register first client' : 'Register first client',
+      description: mode === 'grooming'
+        ? 'Start the service workspace by creating the first client and pet profile.'
+        : 'Start the clinic workspace by creating the first client and patient profile.',
+      href: resolvePetActionHref(actions, '/pet/clients', fallbackAction.href)
+    } satisfies PetPrimaryAction;
+  }
+
+  if ((summary?.appointmentsToday ?? 0) > 0) {
+    return {
+      title: mode === 'grooming' ? 'Review today\'s services' : 'Review today\'s appointments',
+      description: `${summary?.appointmentsToday ?? 0} scheduled item(s) are already queued for the current operating day.`,
+      href: resolvePetActionHref(actions, '/pet/appointments', fallbackAction.href)
+    } satisfies PetPrimaryAction;
+  }
+
+  if ((summary?.pendingInvoices ?? 0) > 0) {
+    return {
+      title: 'Review pending invoices',
+      description: `${summary?.pendingInvoices ?? 0} invoice(s) still need billing follow-through in PetFlow.`,
+      href: resolvePetActionHref(actions, '/pet/invoices', fallbackAction.href)
+    } satisfies PetPrimaryAction;
+  }
+
+  if ((summary?.lowStockProducts ?? 0) > 0) {
+    return {
+      title: 'Check low stock items',
+      description: `${summary?.lowStockProducts ?? 0} product SKU(s) are approaching stock pressure.`,
+      href: resolvePetActionHref(actions, '/pet/products', fallbackAction.href)
+    } satisfies PetPrimaryAction;
+  }
+
+  return {
+    title: 'Open PetFlow dashboard',
+    description: mode === 'grooming'
+      ? 'Review service throughput, upcoming visits, and the operational backlog.'
+      : 'Review clinic throughput, recent records, and the current operational backlog.',
+    href: resolvePetActionHref(actions, '/pet/dashboard', fallbackAction.href)
+  } satisfies PetPrimaryAction;
+}
+
 export function PetHome() {
   const platform = useFrontendPlatform();
   const { hasPermission, hasAnyPermission } = usePermissions();
@@ -445,6 +526,19 @@ export function PetHome() {
     : `${getAppThemeModeLabel(platform.theme.tenantDefaultMode)} tenant-managed`;
   const setupGuidance = buildPetGuidanceSteps(actionStates, ['/pet/clients', '/pet/pets', '/pet/appointments']);
   const restrictedGuidance = buildPetGuidanceSteps(actionStates, ['/pet/appointments', '/pet/medical-records', '/pet/invoices']);
+  const primaryAction = useMemo(
+    () => resolvePetPrimaryAction(actionStates, summary, firstUse, petMode),
+    [actionStates, firstUse, petMode, summary]
+  );
+  const pulseCards = useMemo(() => {
+    if (!summary) {
+      return [];
+    }
+
+    return ['appointments-today', 'pets', 'pending-invoices', 'low-stock-products']
+      .map((key) => findPetPulseCard(summary, key))
+      .filter((card): card is NonNullable<ReturnType<typeof findPetPulseCard>> => Boolean(card));
+  }, [summary]);
   const contextCards = useMemo(
     () => buildPetContextCards({
       canReadDashboard,
@@ -513,6 +607,14 @@ export function PetHome() {
           platform.workspace.hasSystemAdminRole,
           petMode
         )}
+        action={primaryAction ? (
+          <Link
+            href={primaryAction.href}
+            className="inline-flex rounded-full border border-[color:var(--tenant-accent)] bg-[color:var(--tenant-accent-soft)] px-4 py-2 text-sm font-semibold text-[color:var(--tenant-accent)] transition hover:-translate-y-0.5"
+          >
+            {primaryAction.title}
+          </Link>
+        ) : null}
         chips={[
           { label: 'Workspace', value: platform.workspace.workspaceLabel },
           { label: 'Access', value: platform.workspace.accessLabel, tone: 'neutral' },
@@ -539,6 +641,12 @@ export function PetHome() {
                 value: 'Contracted PetFlow workspace',
                 description: petCopy.moduleSurfaceDescription,
                 status: 'active'
+              },
+              {
+                label: 'Next action',
+                value: primaryAction?.title ?? 'Open PetFlow workspace',
+                description: primaryAction?.description ?? 'Use the workspace actions below to continue.',
+                status: firstUse ? 'setup required' : summary && (summary.pendingInvoices > 0 || summary.lowStockProducts > 0) ? 'pending' : 'active'
               }
             ]}
           />
@@ -640,6 +748,14 @@ export function PetHome() {
       <ModuleWorkspaceSection
         title={petCopy.snapshotTitle}
         description={petCopy.snapshotDescription}
+        action={primaryAction ? (
+          <Link
+            href={primaryAction.href}
+            className="inline-flex text-sm font-semibold text-[color:var(--tenant-accent)]"
+          >
+            {primaryAction.title}
+          </Link>
+        ) : null}
       >
         {!canReadDashboard ? (
           <div className="space-y-4">
@@ -678,7 +794,7 @@ export function PetHome() {
           />
         ) : summary ? (
           <div className="space-y-4">
-            <MetricGrid cards={summary.summaryCards.slice(0, 4)} columns="md:grid-cols-2 xl:grid-cols-4" />
+            <MetricGrid cards={pulseCards} columns="md:grid-cols-2 xl:grid-cols-4" />
             {featuredSection ? (
               <DashboardSection section={featuredSection} />
             ) : (
@@ -700,6 +816,8 @@ export function PetHome() {
           <EmptyStateCard
             title={petCopy.emptySummaryTitle}
             description={petCopy.emptySummaryDescription}
+            actionLabel={primaryAction?.title}
+            href={primaryAction?.href}
           />
         )}
       </ModuleWorkspaceSection>

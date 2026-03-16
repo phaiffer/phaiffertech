@@ -58,8 +58,10 @@ export function PetDashboardPage() {
           </>
         ) : !loading && !error ? (
           <EmptyStateCard
-            title="Nenhum fluxo clínico ativo ainda"
-            description="Cadastre clientes, pacientes, serviços e a primeira consulta para liberar agenda, prontuários recentes e fila operacional neste dashboard."
+            title="No PetFlow activity yet"
+            description="Register the first client, patient, service, and appointment so this dashboard can surface schedule load, recent records, and the operational queue."
+            actionLabel="Open PetFlow workspace"
+            href="/pet"
           />
         ) : null}
       </div>
