@@ -9,7 +9,6 @@ import { authService } from '@/shared/services/auth-service';
 import { AuthTokenResponse } from '@/shared/types/auth';
 
 const navigationMocks = vi.hoisted(() => ({
-  currentSearchParams: '',
   pushMock: vi.fn(),
   replaceMock: vi.fn()
 }));
@@ -18,8 +17,7 @@ vi.mock('next/navigation', () => ({
   useRouter: () => ({
     push: navigationMocks.pushMock,
     replace: navigationMocks.replaceMock
-  }),
-  useSearchParams: () => new URLSearchParams(navigationMocks.currentSearchParams)
+  })
 }));
 
 vi.mock('@/shared/services/auth-service', () => ({
@@ -57,7 +55,6 @@ const authResponseFixture: AuthTokenResponse = {
 
 describe('LoginPage', () => {
   beforeEach(() => {
-    navigationMocks.currentSearchParams = '';
     navigationMocks.pushMock.mockReset();
     navigationMocks.replaceMock.mockReset();
     delete process.env.NEXT_PUBLIC_DEMO_ASSISTED_ENABLED;
@@ -96,13 +93,12 @@ describe('LoginPage', () => {
   });
 
   it('respects the requested next path after login', async () => {
-    navigationMocks.currentSearchParams = 'next=%2Fsettings';
     vi.mocked(authService.login).mockResolvedValue(authResponseFixture);
 
     render(
       <PublicSiteProvider>
         <AuthProvider>
-          <LoginPage />
+          <LoginPage searchParams={{ next: '/settings' }} />
         </AuthProvider>
       </PublicSiteProvider>
     );
