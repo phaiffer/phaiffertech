@@ -8,4 +8,10 @@ public record ChangePasswordRequest(
         @NotBlank @Size(min = 8, max = 72, message = "New password must be between 8 and 72 characters.") String newPassword,
         @NotBlank String confirmNewPassword
 ) {
+
+    @Override
+    public String toString() {
+        return "ChangePasswordRequest[currentPassword=%s, newPassword=%s, confirmNewPassword=%s]"
+                .formatted("[REDACTED]", "[REDACTED]", "[REDACTED]");
+    }
 }

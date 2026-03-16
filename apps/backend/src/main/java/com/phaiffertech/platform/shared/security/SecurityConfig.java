@@ -19,6 +19,7 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter.ReferrerPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
@@ -79,14 +80,17 @@ public class SecurityConfig {
         http
                 .csrf(csrf -> csrf.disable())
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-                .headers(headers -> headers
-                        .frameOptions(frame -> frame.deny())
-                        .contentTypeOptions(Customizer.withDefaults())
-                        .httpStrictTransportSecurity(hsts -> hsts
-                                .includeSubDomains(true)
-                                .maxAgeInSeconds(31536000))
-                        .contentSecurityPolicy(csp -> csp
-                                .policyDirectives("default-src 'self'; frame-ancestors 'none'; object-src 'none'")))
+                .headers(headers -> {
+                    headers.frameOptions(frame -> frame.deny());
+                    headers.contentTypeOptions(Customizer.withDefaults());
+                    headers.referrerPolicy(referrer -> referrer.policy(ReferrerPolicy.NO_REFERRER));
+                    headers.permissionsPolicy(policy -> policy.policy("camera=(), geolocation=(), microphone=()"));
+                    headers.httpStrictTransportSecurity(hsts -> hsts
+                            .includeSubDomains(true)
+                            .maxAgeInSeconds(31536000));
+                    headers.contentSecurityPolicy(csp -> csp
+                            .policyDirectives("default-src 'self'; frame-ancestors 'none'; object-src 'none'"));
+                })
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .exceptionHandling(exception -> exception
                         .authenticationEntryPoint(restAuthenticationEntryPoint)
@@ -115,9 +119,10 @@ public class SecurityConfig {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOriginPatterns(corsProperties.getAllowedOrigins());
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
-        configuration.setAllowedHeaders(List.of("Authorization", "Content-Type", "X-Tenant-Id"));
+        configuration.setAllowedHeaders(List.of("Authorization", "Content-Type", "X-Tenant-Id", "X-Requested-With"));
         configuration.setExposedHeaders(List.of("Authorization"));
         configuration.setAllowCredentials(true);
+        configuration.setMaxAge(3600L);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
@@ -130,7 +135,8 @@ public class SecurityConfig {
                 "/api/v1/auth/demo-login",
                 "/api/v1/auth/refresh",
                 "/api/v1/health",
-                "/actuator/health"
+                "/actuator/health",
+                "/actuator/health/**"
         ));
 
         if (publicEndpointProperties.isObservabilityEnabled()) {

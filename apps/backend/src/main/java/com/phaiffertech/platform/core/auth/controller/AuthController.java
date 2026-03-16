@@ -41,6 +41,7 @@ public class AuthController {
             HttpServletRequest httpServletRequest,
             HttpServletResponse httpServletResponse
     ) {
+        applyNoStore(httpServletResponse);
         String ipAddress = ClientIpResolver.resolve(httpServletRequest);
         loginAttemptService.checkAllowed(request.tenantCode(), request.email(), ipAddress);
         try {
@@ -59,6 +60,7 @@ public class AuthController {
             HttpServletRequest httpServletRequest,
             HttpServletResponse httpServletResponse
     ) {
+        applyNoStore(httpServletResponse);
         String ipAddress = ClientIpResolver.resolve(httpServletRequest);
         loginAttemptService.checkAllowed("demo", "demo", ipAddress);
         try {
@@ -74,6 +76,7 @@ public class AuthController {
 
     @PostMapping("/refresh")
     public ApiResponse<AuthTokenResponse> refresh(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) {
+        applyNoStore(httpServletResponse);
         String refreshToken = requireRefreshToken(httpServletRequest);
         try {
             AuthService.AuthSessionResult result = authService.refresh(refreshToken);
@@ -87,6 +90,7 @@ public class AuthController {
 
     @PostMapping("/logout")
     public ApiResponse<Void> logout(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) {
+        applyNoStore(httpServletResponse);
         String refreshToken = extractRefreshToken(httpServletRequest);
         clearRefreshTokenCookie(httpServletResponse);
         if (refreshToken != null) {
@@ -100,13 +104,15 @@ public class AuthController {
             @Valid @RequestBody ChangePasswordRequest request,
             HttpServletResponse httpServletResponse
     ) {
+        applyNoStore(httpServletResponse);
         authService.changePassword(request);
         clearRefreshTokenCookie(httpServletResponse);
         return ApiResponse.success(null);
     }
 
     @GetMapping("/me")
-    public ApiResponse<AuthenticatedUserResponse> me() {
+    public ApiResponse<AuthenticatedUserResponse> me(HttpServletResponse httpServletResponse) {
+        applyNoStore(httpServletResponse);
         return ApiResponse.success(authService.me());
     }
 
@@ -152,5 +158,11 @@ public class AuthController {
         }
 
         return null;
+    }
+
+    private void applyNoStore(HttpServletResponse httpServletResponse) {
+        httpServletResponse.setHeader(HttpHeaders.CACHE_CONTROL, "no-store, no-cache, must-revalidate");
+        httpServletResponse.setHeader(HttpHeaders.PRAGMA, "no-cache");
+        httpServletResponse.setDateHeader(HttpHeaders.EXPIRES, 0);
     }
 }

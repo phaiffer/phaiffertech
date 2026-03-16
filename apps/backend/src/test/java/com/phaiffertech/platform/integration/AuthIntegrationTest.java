@@ -44,6 +44,8 @@ class AuthIntegrationTest extends AbstractIntegrationTest {
         assertTrue(setCookie.contains("HttpOnly"));
         assertTrue(setCookie.contains("Path=/api/v1/auth"));
         assertTrue(setCookie.contains("SameSite=Lax"));
+        assertEquals("no-store, no-cache, must-revalidate", response.getHeaders().getFirst(HttpHeaders.CACHE_CONTROL));
+        assertEquals("no-cache", response.getHeaders().getFirst(HttpHeaders.PRAGMA));
     }
 
     @Test
@@ -91,6 +93,7 @@ class AuthIntegrationTest extends AbstractIntegrationTest {
         assertEquals("admin@local.test", user.path("email").asText());
         assertEquals("default", user.path("tenantCode").asText());
         assertEquals("SYSTEM", user.path("tenantDefaultThemeMode").asText());
+        assertEquals("no-store, no-cache, must-revalidate", meResponse.getHeaders().getFirst(HttpHeaders.CACHE_CONTROL));
     }
 
     @Test

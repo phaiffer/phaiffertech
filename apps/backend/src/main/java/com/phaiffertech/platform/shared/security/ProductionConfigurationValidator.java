@@ -2,26 +2,35 @@ package com.phaiffertech.platform.shared.security;
 
 import com.phaiffertech.platform.core.auth.config.DemoAccessProperties;
 import com.phaiffertech.platform.infrastructure.bootstrap.MasterAdminBootstrapProperties;
+import com.phaiffertech.platform.shared.config.CorsProperties;
+import io.jsonwebtoken.io.Decoders;
 import java.util.Arrays;
+import java.util.List;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
 
 @Component
 public class ProductionConfigurationValidator {
 
+    static final String LOCAL_DEVELOPMENT_JWT_SECRET = "ZmFrZV9qd3Rfc2VjcmV0X2Zvcl9kZXZlbG9wbWVudF9vbmx5XzEyMzQ1";
+    private static final int MINIMUM_SECRET_BYTES = 32;
+
     private final Environment environment;
     private final JwtProperties jwtProperties;
+    private final CorsProperties corsProperties;
     private final DemoAccessProperties demoAccessProperties;
     private final MasterAdminBootstrapProperties masterAdminBootstrapProperties;
 
     public ProductionConfigurationValidator(
             Environment environment,
             JwtProperties jwtProperties,
+            CorsProperties corsProperties,
             DemoAccessProperties demoAccessProperties,
             MasterAdminBootstrapProperties masterAdminBootstrapProperties
     ) {
         this.environment = environment;
         this.jwtProperties = jwtProperties;
+        this.corsProperties = corsProperties;
         this.demoAccessProperties = demoAccessProperties;
         this.masterAdminBootstrapProperties = masterAdminBootstrapProperties;
     }
@@ -37,9 +46,9 @@ public class ProductionConfigurationValidator {
             requireNonBlank("spring.datasource.password", environment.getProperty("spring.datasource.password"));
             requireNonBlank("app.security.jwt.secret", jwtProperties.getSecret());
 
-            if (!jwtProperties.isRefreshCookieSecure()) {
-                throw new IllegalStateException("Production requires app.security.jwt.refresh-cookie-secure=true.");
-            }
+            validateJwtSecret();
+            validateRefreshCookiePolicy();
+            validateCorsOrigins();
         }
 
         if (masterAdminBootstrapProperties.isEnabled() && !masterAdminBootstrapProperties.hasRequiredCredentials()) {
@@ -66,6 +75,47 @@ public class ProductionConfigurationValidator {
     private void requireNonBlank(String propertyName, String value) {
         if (value == null || value.isBlank()) {
             throw new IllegalStateException("Missing required production property: " + propertyName);
+        }
+    }
+
+    private void validateJwtSecret() {
+        String secret = jwtProperties.getSecret();
+        if (LOCAL_DEVELOPMENT_JWT_SECRET.equals(secret)) {
+            throw new IllegalStateException("Production profile cannot use the local development JWT secret.");
+        }
+
+        byte[] decodedSecret;
+        try {
+            decodedSecret = Decoders.BASE64.decode(secret);
+        } catch (IllegalArgumentException exception) {
+            throw new IllegalStateException("Production JWT secret must be valid Base64.", exception);
+        }
+
+        if (decodedSecret.length < MINIMUM_SECRET_BYTES) {
+            throw new IllegalStateException("Production JWT secret must decode to at least 32 bytes.");
+        }
+    }
+
+    private void validateRefreshCookiePolicy() {
+        if (!jwtProperties.isRefreshCookieSecure()) {
+            throw new IllegalStateException("Production requires app.security.jwt.refresh-cookie-secure=true.");
+        }
+
+        if ("None".equalsIgnoreCase(jwtProperties.getRefreshCookieSameSite()) && !jwtProperties.isRefreshCookieSecure()) {
+            throw new IllegalStateException("SameSite=None cookies require the secure flag in production.");
+        }
+    }
+
+    private void validateCorsOrigins() {
+        List<String> allowedOrigins = corsProperties.getAllowedOrigins();
+        for (String allowedOrigin : allowedOrigins) {
+            if (allowedOrigin == null || allowedOrigin.isBlank()) {
+                throw new IllegalStateException("Production CORS origins cannot contain blank values.");
+            }
+
+            if ("*".equals(allowedOrigin.trim())) {
+                throw new IllegalStateException("Production CORS origins cannot use a wildcard when credentials are enabled.");
+            }
         }
     }
 }
