@@ -8,4 +8,9 @@ public record LoginRequest(
         @Email @NotBlank String email,
         @NotBlank String password
 ) {
+
+    @Override
+    public String toString() {
+        return "LoginRequest[tenantCode=%s, email=%s, password=%s]".formatted(tenantCode, "[REDACTED]", "[REDACTED]");
+    }
 }

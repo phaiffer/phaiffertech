@@ -21,11 +21,19 @@ spring:
 
 server:
   port: ${PORT:${SERVER_PORT:8080}}
+  forward-headers-strategy: framework
 
 management:
   endpoint:
     health:
       show-details: always
+      probes:
+        enabled: true
+      group:
+        readiness:
+          include: readinessState,db,migrationStatus
+        liveness:
+          include: livenessState,ping
     prometheus:
       enabled: true
   endpoints:
@@ -36,7 +44,7 @@ management:
     tags:
       service: ${spring.application.name}
   tracing:
-    enabled: true
+    enabled: ${MANAGEMENT_TRACING_ENABLED:false}
     sampling:
       probability: ${MANAGEMENT_TRACING_SAMPLING_PROBABILITY:1.0}
   otlp:
@@ -44,6 +52,10 @@ management:
       endpoint: ${OTEL_EXPORTER_OTLP_ENDPOINT:http://localhost:4318/v1/traces}
   health:
     db:
+      enabled: true
+    readinessstate:
+      enabled: true
+    livenessstate:
       enabled: true
 
 springdoc:
