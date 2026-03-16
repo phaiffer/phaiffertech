@@ -15,6 +15,7 @@ import com.phaiffertech.platform.shared.dashboard.dto.DashboardSummaryCardDto;
 import com.phaiffertech.platform.shared.tenancy.TenantContext;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Locale;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -80,7 +81,7 @@ public class IotDashboardService implements MonitoringSummaryService {
             DeviceStatusSnapshot snapshot = deviceStatusService.evaluate(tenantId, device.getId());
             if ("OFFLINE".equalsIgnoreCase(snapshot.status())) {
                 offlineDevices++;
-            } else if ("ONLINE".equalsIgnoreCase(snapshot.status())) {
+            } else if (snapshot.lastSeenAt() != null) {
                 activeDevices++;
             }
             bucketLastSeen(lastSeenSummary, snapshot.lastSeenAt(), now);
@@ -130,6 +131,24 @@ public class IotDashboardService implements MonitoringSummaryService {
                                 List.of()
                         ),
                         new DashboardSectionDto(
+                                "iot-telemetry",
+                                "Recent Telemetry",
+                                "Latest readings captured from the connected equipment in the current tenant.",
+                                List.of(),
+                                List.of(),
+                                monitoringRepository.findRecentTelemetry(tenantId, 5).stream()
+                                        .map(item -> new DashboardListItemDto(
+                                                item.id().toString(),
+                                                item.deviceName() + " · " + item.metricName(),
+                                                "Latest field signal captured by the demo monitoring flow.",
+                                                formatTelemetryValue(item.metricValue(), item.unit()),
+                                                item.recordedAt(),
+                                                "/iot/telemetry"
+                                        ))
+                                        .toList(),
+                                List.of()
+                        ),
+                        new DashboardSectionDto(
                                 "iot-last-seen",
                                 "Fleet Recency",
                                 "Operational bucketization based on device last seen timestamps.",
@@ -169,5 +188,15 @@ public class IotDashboardService implements MonitoringSummaryService {
             bucket = "stale";
         }
         summary.put(bucket, summary.get(bucket) + 1);
+    }
+
+    private String formatTelemetryValue(java.math.BigDecimal value, String unit) {
+        String renderedValue = value == null
+                ? "--"
+                : value.stripTrailingZeros().toPlainString();
+        String renderedUnit = unit == null ? "" : unit.trim();
+        return renderedUnit.isEmpty()
+                ? renderedValue
+                : renderedValue + " " + renderedUnit.toUpperCase(Locale.ROOT);
     }
 }

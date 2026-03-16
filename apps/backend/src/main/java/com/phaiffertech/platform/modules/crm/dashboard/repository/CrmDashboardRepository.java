@@ -28,7 +28,16 @@ public class CrmDashboardRepository {
     }
 
     public long countDeals(UUID tenantId) {
-        return count("SELECT COUNT(*) FROM crm_deals WHERE tenant_id = ? AND deleted_at IS NULL", tenantId);
+        return count(
+                """
+                SELECT COUNT(*)
+                FROM crm_deals
+                WHERE tenant_id = ?
+                  AND deleted_at IS NULL
+                  AND UPPER(status) NOT IN ('CLOSED', 'CLOSED_WON', 'CLOSED_LOST', 'WON', 'LOST')
+                """,
+                tenantId
+        );
     }
 
     public long countPendingTasks(UUID tenantId) {
@@ -40,6 +49,46 @@ public class CrmDashboardRepository {
 
     public Map<String, Long> countDealsByStatus(UUID tenantId) {
         return groupByStatus("crm_deals", tenantId);
+    }
+
+    public Map<String, Long> countDealsByPipelineStage(UUID tenantId) {
+        return jdbcTemplate.query(
+                """
+                SELECT COALESCE(ps.name, 'Unassigned') AS bucket, COUNT(*) AS total
+                FROM crm_deals d
+                LEFT JOIN crm_pipeline_stages ps
+                  ON ps.id = d.pipeline_stage_id
+                 AND ps.tenant_id = d.tenant_id
+                 AND ps.deleted_at IS NULL
+                WHERE d.tenant_id = ?
+                  AND d.deleted_at IS NULL
+                GROUP BY COALESCE(ps.name, 'Unassigned')
+                ORDER BY MIN(COALESCE(ps.position, 9999)), bucket
+                """,
+                rs -> {
+                    Map<String, Long> result = new LinkedHashMap<>();
+                    while (rs.next()) {
+                        result.put(rs.getString("bucket"), rs.getLong("total"));
+                    }
+                    return result;
+                },
+                tenantId
+        );
+    }
+
+    public long sumOpenPipelineValue(UUID tenantId) {
+        Long value = jdbcTemplate.queryForObject(
+                """
+                SELECT COALESCE(SUM(amount), 0)
+                FROM crm_deals
+                WHERE tenant_id = ?
+                  AND deleted_at IS NULL
+                  AND UPPER(status) NOT IN ('CLOSED', 'CLOSED_WON', 'CLOSED_LOST', 'WON', 'LOST')
+                """,
+                Long.class,
+                tenantId
+        );
+        return value == null ? 0L : value;
     }
 
     public Map<String, Long> countLeadsByStatus(UUID tenantId) {
