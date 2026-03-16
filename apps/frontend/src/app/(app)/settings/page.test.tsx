@@ -207,6 +207,7 @@ describe('SettingsPage', () => {
     expect(screen.getByText('Branding Preview')).toBeInTheDocument();
     expect(screen.getByText('Theme Policy')).toBeInTheDocument();
     expect(screen.getByText('Contracted Modules')).toBeInTheDocument();
+    expect(screen.getByText('Account Security')).toBeInTheDocument();
     expect(screen.getByText('Pending workspace exposure')).toBeInTheDocument();
     expect(screen.getByText('Feature exposure pending')).toBeInTheDocument();
   });

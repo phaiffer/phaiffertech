@@ -8,16 +8,18 @@ import { PublicSiteProvider } from '@/shared/public/public-site-provider';
 import { authService } from '@/shared/services/auth-service';
 import { AuthTokenResponse } from '@/shared/types/auth';
 
-const { pushMock, replaceMock } = vi.hoisted(() => ({
+const navigationMocks = vi.hoisted(() => ({
+  currentSearchParams: '',
   pushMock: vi.fn(),
   replaceMock: vi.fn()
 }));
 
 vi.mock('next/navigation', () => ({
   useRouter: () => ({
-    push: pushMock,
-    replace: replaceMock
-  })
+    push: navigationMocks.pushMock,
+    replace: navigationMocks.replaceMock
+  }),
+  useSearchParams: () => new URLSearchParams(navigationMocks.currentSearchParams)
 }));
 
 vi.mock('@/shared/services/auth-service', () => ({
@@ -55,8 +57,9 @@ const authResponseFixture: AuthTokenResponse = {
 
 describe('LoginPage', () => {
   beforeEach(() => {
-    pushMock.mockReset();
-    replaceMock.mockReset();
+    navigationMocks.currentSearchParams = '';
+    navigationMocks.pushMock.mockReset();
+    navigationMocks.replaceMock.mockReset();
     delete process.env.NEXT_PUBLIC_DEMO_ASSISTED_ENABLED;
     window.localStorage.setItem('phaiffertech-public-locale', 'en-US');
   });
@@ -89,7 +92,29 @@ describe('LoginPage', () => {
       accessToken: authResponseFixture.accessToken,
       user: authResponseFixture.user
     });
-    expect(replaceMock).toHaveBeenCalledWith('/dashboard');
+    expect(navigationMocks.replaceMock).toHaveBeenCalledWith('/dashboard');
+  });
+
+  it('respects the requested next path after login', async () => {
+    navigationMocks.currentSearchParams = 'next=%2Fsettings';
+    vi.mocked(authService.login).mockResolvedValue(authResponseFixture);
+
+    render(
+      <PublicSiteProvider>
+        <AuthProvider>
+          <LoginPage />
+        </AuthProvider>
+      </PublicSiteProvider>
+    );
+
+    fireEvent.change(screen.getByLabelText('Company or tenant'), { target: { value: 'default' } });
+    fireEvent.change(screen.getByLabelText('Email'), { target: { value: 'admin@local.test' } });
+    fireEvent.change(screen.getByLabelText('Password'), { target: { value: 'Admin@123' } });
+    fireEvent.click(await screen.findByRole('button', { name: 'Sign in' }));
+
+    await waitFor(() => {
+      expect(navigationMocks.replaceMock).toHaveBeenCalledWith('/settings');
+    });
   });
 
   it('aciona o fluxo de demo assistida sem expor credenciais no formulario', async () => {
@@ -114,6 +139,6 @@ describe('LoginPage', () => {
     expect(screen.getByLabelText('Email')).toHaveValue('');
     expect(screen.getByLabelText('Password')).toHaveValue('');
     expect(screen.getByRole('link', { name: 'Forgot your password?' })).toHaveAttribute('href', '/contact');
-    expect(replaceMock).toHaveBeenCalledWith('/dashboard');
+    expect(navigationMocks.replaceMock).toHaveBeenCalledWith('/dashboard');
   });
 });

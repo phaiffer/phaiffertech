@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { apiClient } from '@/shared/lib/http';
-import { getSession, setSession } from '@/shared/lib/session';
+import { consumeAuthNotice, getSession, setSession } from '@/shared/lib/session';
 import { SessionState } from '@/shared/types/auth';
 
 const sessionFixture: SessionState = {
@@ -49,6 +49,7 @@ function headerValue(input: RequestInit | undefined, headerName: string): string
 describe('apiClient refresh flow', () => {
   beforeEach(() => {
     setSession(sessionFixture);
+    window.sessionStorage.clear();
   });
 
   it('faz refresh no primeiro 401, atualiza a sessao e repete a request original', async () => {
@@ -92,5 +93,22 @@ describe('apiClient refresh flow', () => {
     const refreshRequest = fetchMock.mock.calls[1]?.[1];
     expect(refreshRequest?.body).toBeUndefined();
     expect(refreshRequest?.credentials).toBe('include');
+  });
+
+  it('clears the session when the backend reports a tenant mismatch', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(jsonResponse({
+      success: false,
+      code: 'FORBIDDEN',
+      message: 'Tenant mismatch in request context.',
+      timestamp: '2026-03-09T00:00:03Z'
+    }, 403)));
+
+    await expect(apiClient.get('/protected-resource')).rejects.toMatchObject({
+      status: 403,
+      code: 'FORBIDDEN'
+    });
+
+    expect(getSession()).toBeNull();
+    expect(consumeAuthNotice()).toBe('tenant-mismatch');
   });
 });

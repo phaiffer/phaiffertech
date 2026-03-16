@@ -1,4 +1,4 @@
-import { clearSession, getSession, setSession } from '@/shared/lib/session';
+import { AuthNoticeReason, clearSession, getSession, setAuthNotice, setSession } from '@/shared/lib/session';
 import { logClientError, logClientInfo } from '@/shared/observability/client-logger';
 import { AuthTokenResponse, SessionState } from '@/shared/types/auth';
 import { ApiEnvelope, ApiErrorEnvelope } from '@/shared/types/common';
@@ -100,6 +100,18 @@ async function parseSuccessEnvelope<T>(response: Response): Promise<T> {
   return envelope.data;
 }
 
+function invalidateSession(reason: AuthNoticeReason): void {
+  setAuthNotice(reason);
+  clearSession();
+}
+
+function isTenantMismatchResponse(response: Response, payload: ApiErrorEnvelope | null): boolean {
+  return response.status === 403
+    && payload?.code === 'FORBIDDEN'
+    && typeof payload.message === 'string'
+    && payload.message.includes('Tenant mismatch');
+}
+
 async function refreshSession(): Promise<SessionState | null> {
   if (refreshSessionPromise) {
     return refreshSessionPromise;
@@ -119,7 +131,7 @@ async function refreshSession(): Promise<SessionState | null> {
       }, null);
 
       if (!response.ok) {
-        clearSession();
+        invalidateSession('session-expired');
         return null;
       }
 
@@ -132,7 +144,7 @@ async function refreshSession(): Promise<SessionState | null> {
       setSession(refreshedSession);
       return refreshedSession;
     } catch {
-      clearSession();
+      invalidateSession('session-expired');
       return null;
     } finally {
       refreshSessionPromise = null;
@@ -155,8 +167,12 @@ async function request<T>(path: string, options: RequestOptions = {}, allowRefre
       }
     }
 
+    if (isTenantMismatchResponse(response, payload)) {
+      invalidateSession('tenant-mismatch');
+    }
+
     if (response.status === 401) {
-      clearSession();
+      invalidateSession('session-expired');
     }
 
     logClientInfo('apiClient', 'API request failed', {

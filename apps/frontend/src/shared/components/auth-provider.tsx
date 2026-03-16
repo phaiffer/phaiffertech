@@ -1,6 +1,6 @@
 'use client';
 
-import { SESSION_CHANGE_EVENT, clearSession, getSession, setSession } from '@/shared/lib/session';
+import { SESSION_CHANGE_EVENT, clearAuthNotice, clearSession, getSession, setAuthNotice, setSession } from '@/shared/lib/session';
 import { ApiClientError } from '@/shared/lib/http';
 import { logClientError, logClientInfo } from '@/shared/observability/client-logger';
 import { authService } from '@/shared/services/auth-service';
@@ -109,6 +109,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const signIn = useCallback((newSession: SessionState) => {
+    clearAuthNotice();
     setSession(newSession);
     setSessionState(newSession);
   }, []);
@@ -121,6 +122,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch (error) {
       logRemoteLogoutFailure(error, null);
     } finally {
+      setAuthNotice('signed-out');
       clearSession();
       setSessionState(null);
       router.push('/login');
