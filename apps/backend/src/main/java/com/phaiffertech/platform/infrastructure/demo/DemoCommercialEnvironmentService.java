@@ -15,6 +15,7 @@ import com.phaiffertech.platform.core.tenant.domain.TenantThemeMode;
 import com.phaiffertech.platform.core.tenant.repository.TenantRepository;
 import com.phaiffertech.platform.core.user.domain.User;
 import com.phaiffertech.platform.core.user.repository.UserRepository;
+import jakarta.persistence.EntityManager;
 import java.math.BigDecimal;
 import java.sql.Timestamp;
 import java.time.Duration;
@@ -129,6 +130,7 @@ public class DemoCommercialEnvironmentService {
     private final TenantModuleRepository tenantModuleRepository;
     private final PasswordEncoder passwordEncoder;
     private final JdbcTemplate jdbcTemplate;
+    private final EntityManager entityManager;
 
     public DemoCommercialEnvironmentService(
             DemoCommercialProperties properties,
@@ -140,7 +142,8 @@ public class DemoCommercialEnvironmentService {
             ModuleDefinitionRepository moduleDefinitionRepository,
             TenantModuleRepository tenantModuleRepository,
             PasswordEncoder passwordEncoder,
-            JdbcTemplate jdbcTemplate
+            JdbcTemplate jdbcTemplate,
+            EntityManager entityManager
     ) {
         this.properties = properties;
         this.tenantRepository = tenantRepository;
@@ -152,6 +155,7 @@ public class DemoCommercialEnvironmentService {
         this.tenantModuleRepository = tenantModuleRepository;
         this.passwordEncoder = passwordEncoder;
         this.jdbcTemplate = jdbcTemplate;
+        this.entityManager = entityManager;
     }
 
     @Transactional
@@ -166,16 +170,21 @@ public class DemoCommercialEnvironmentService {
         UserTenant userTenant = ensureUserTenant(tenant, user, tenantAdminRole);
         ensureUserTenantRole(userTenant, tenantAdminRole);
         enableModules(tenant.getId());
-        clearTenantData(tenant.getId());
+        flushPersistenceState();
+
+        Tenant persistedTenant = resolvePersistedTenant();
+        User persistedUser = resolvePersistedUser();
+
+        clearTenantData(persistedTenant.getId());
 
         Instant now = Instant.now();
-        seedCrm(tenant.getId(), user.getId(), now);
-        seedPet(tenant.getId(), now);
-        seedIot(tenant.getId(), user.getId(), now);
+        seedCrm(persistedTenant.getId(), persistedUser.getId(), now);
+        seedPet(persistedTenant.getId(), now);
+        seedIot(persistedTenant.getId(), persistedUser.getId(), now);
 
         return new DemoCommercialSeedSummary(
-                properties.getTenantCode(),
-                properties.getUserEmail(),
+                persistedTenant.getCode(),
+                persistedUser.getEmail(),
                 25,
                 25,
                 33
@@ -255,6 +264,24 @@ public class DemoCommercialEnvironmentService {
             tenantModule.setDeletedAt(null);
             tenantModuleRepository.save(tenantModule);
         }
+    }
+
+    private void flushPersistenceState() {
+        entityManager.flush();
+    }
+
+    private Tenant resolvePersistedTenant() {
+        return tenantRepository.findByCodeIgnoreCase(properties.getTenantCode())
+                .orElseThrow(() -> new IllegalStateException(
+                        "Commercial demo tenant was not persisted for code '" + properties.getTenantCode() + "'."
+                ));
+    }
+
+    private User resolvePersistedUser() {
+        return userRepository.findByEmailIgnoreCase(properties.getUserEmail())
+                .orElseThrow(() -> new IllegalStateException(
+                        "Commercial demo user was not persisted for email '" + properties.getUserEmail() + "'."
+                ));
     }
 
     private void clearTenantData(UUID tenantId) {
