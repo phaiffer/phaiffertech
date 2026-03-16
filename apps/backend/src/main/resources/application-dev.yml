@@ -2,3 +2,11 @@ logging:
   level:
     org.springframework.security: INFO
     org.hibernate.SQL: DEBUG
+
+app:
+  demo:
+    commercial:
+      enabled: ${APP_DEMO_COMMERCIAL_ENABLED:true}
+      user-email: ${APP_DEMO_COMMERCIAL_USER_EMAIL:demo@phaiffertech.local}
+      user-password: ${APP_DEMO_COMMERCIAL_USER_PASSWORD:Demo@123}
+      user-full-name: ${APP_DEMO_COMMERCIAL_USER_FULL_NAME:PhaifferTech Demo Operator}

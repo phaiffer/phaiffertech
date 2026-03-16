@@ -70,7 +70,7 @@ export function CrmDashboardPage() {
         {summary ? (
           <>
             {/* Summary Metrics */}
-            <MetricGrid cards={summary.summaryCards} columns="sm:grid-cols-2 lg:grid-cols-5" />
+            <MetricGrid cards={summary.summaryCards} columns="sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6" />
 
             {/* Sections */}
             <div className="space-y-6">
@@ -81,8 +81,8 @@ export function CrmDashboardPage() {
           </>
         ) : !loading && !error ? (
           <EmptyStateCard
-            title="Sem dados de CRM"
-            description="Nenhuma métrica de CRM está disponível para o tenant atual."
+            title="Nenhum pipeline configurado ainda"
+            description="Cadastre empresas, contatos e deals para liberar valor de pipeline, atividade recente e distribuição por etapa neste dashboard."
           />
         ) : null}
       </div>

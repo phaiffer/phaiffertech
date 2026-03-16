@@ -85,6 +85,13 @@ app:
       user-password: ${APP_DEMO_ASSISTED_USER_PASSWORD:}
       feature-flag-key: ${APP_DEMO_ASSISTED_FEATURE_FLAG_KEY:demo.assisted.enabled}
       enforce-feature-flag: ${APP_DEMO_ASSISTED_ENFORCE_FEATURE_FLAG:false}
+    commercial:
+      enabled: ${APP_DEMO_COMMERCIAL_ENABLED:false}
+      tenant-code: ${APP_DEMO_COMMERCIAL_TENANT_CODE:phaiffertech-demo}
+      tenant-name: ${APP_DEMO_COMMERCIAL_TENANT_NAME:PhaifferTech Demo}
+      user-email: ${APP_DEMO_COMMERCIAL_USER_EMAIL:}
+      user-password: ${APP_DEMO_COMMERCIAL_USER_PASSWORD:}
+      user-full-name: ${APP_DEMO_COMMERCIAL_USER_FULL_NAME:PhaifferTech Demo Operator}
   bootstrap:
     master-admin:
       enabled: ${APP_BOOTSTRAP_MASTER_ADMIN_ENABLED:false}

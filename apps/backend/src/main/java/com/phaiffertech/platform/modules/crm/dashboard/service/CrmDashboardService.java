@@ -40,8 +40,9 @@ public class CrmDashboardService {
         long totalLeads = repository.countLeads(tenantId);
         long totalCompanies = repository.countCompanies(tenantId);
         long totalDeals = repository.countDeals(tenantId);
+        long pipelineValue = repository.sumOpenPipelineValue(tenantId);
         long pendingTasks = repository.countPendingTasks(tenantId);
-        var dealsByStatus = repository.countDealsByStatus(tenantId);
+        var dealsByStage = repository.countDealsByPipelineStage(tenantId);
         var leadsByStatus = repository.countLeadsByStatus(tenantId);
 
         return new CrmDashboardSummaryResponse(
@@ -49,23 +50,24 @@ public class CrmDashboardService {
                 totalLeads,
                 totalCompanies,
                 totalDeals,
-                dealsByStatus,
+                repository.countDealsByStatus(tenantId),
                 pendingTasks,
                 leadsByStatus,
                 List.of(
                         new DashboardSummaryCardDto("contacts", "Contacts", totalContacts, null, "neutral", "/crm/contacts"),
-                        new DashboardSummaryCardDto("leads", "Leads", totalLeads, null, "info", "/crm/leads"),
                         new DashboardSummaryCardDto("companies", "Companies", totalCompanies, null, "neutral", "/crm/companies"),
-                        new DashboardSummaryCardDto("deals", "Open Pipeline", totalDeals, null, "ok", "/crm/deals"),
+                        new DashboardSummaryCardDto("leads", "Leads", totalLeads, null, "info", "/crm/leads"),
+                        new DashboardSummaryCardDto("active-deals", "Active Deals", totalDeals, null, "ok", "/crm/deals"),
+                        new DashboardSummaryCardDto("pipeline-value", "Pipeline Value (BRL)", pipelineValue, null, "info", "/crm/deals"),
                         new DashboardSummaryCardDto("pending-tasks", "Pending Tasks", pendingTasks, null, "warn", "/crm/tasks")
                 ),
                 List.of(
                         new DashboardSectionDto(
                                 "crm-status-overview",
                                 "Pipeline Overview",
-                                "Deal and lead distribution grouped by current workflow status.",
+                                "Active opportunities grouped by pipeline stage and recent commercial movement.",
                                 List.of(),
-                                buildMetrics("deal-status-", dealsByStatus),
+                                buildMetrics("deal-stage-", dealsByStage),
                                 buildRecentActivity(tenantId),
                                 List.of()
                         ),

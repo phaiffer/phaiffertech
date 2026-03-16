@@ -58,8 +58,8 @@ export function PetDashboardPage() {
           </>
         ) : !loading && !error ? (
           <EmptyStateCard
-            title="Sem dados de Pet"
-            description="Nenhuma métrica clínica ou comercial está disponível para o tenant atual."
+            title="Nenhum fluxo clínico ativo ainda"
+            description="Cadastre clientes, pacientes, serviços e a primeira consulta para liberar agenda, prontuários recentes e fila operacional neste dashboard."
           />
         ) : null}
       </div>

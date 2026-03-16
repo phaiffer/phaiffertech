@@ -91,7 +91,7 @@ public class PetDashboardService {
                 pendingInvoices,
                 List.of(
                         new DashboardSummaryCardDto("clients", "Clients", totalClients, null, "neutral", "/pet/clients"),
-                        new DashboardSummaryCardDto("pets", "Pets", totalPets, null, "info", "/pet/pets"),
+                        new DashboardSummaryCardDto("pets", "Active Patients", totalPets, null, "info", "/pet/pets"),
                         new DashboardSummaryCardDto("appointments-today", "Appointments Today", appointmentsToday, null, "ok", "/pet/appointments"),
                         new DashboardSummaryCardDto("upcoming-appointments", "Upcoming", upcomingAppointments, null, "info", "/pet/appointments"),
                         new DashboardSummaryCardDto("services", "Services", totalServices, null, "neutral", "/pet/services"),
