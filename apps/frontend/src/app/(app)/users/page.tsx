@@ -25,14 +25,31 @@ const initialPage: PageResponse<PlatformUser> = {
   size: pageSize
 };
 
+const platformAdminRoles = [
+  'PLATFORM_ADMIN',
+  'TENANT_OWNER',
+  'TENANT_ADMIN',
+  'MANAGER',
+  'OPERATOR',
+  'VIEWER',
+  'CUSTOMER_PORTAL_USER'
+];
+
+const tenantRoles = [
+  'TENANT_OWNER',
+  'TENANT_ADMIN',
+  'MANAGER',
+  'OPERATOR',
+  'VIEWER',
+  'CUSTOMER_PORTAL_USER'
+];
+
 export default function UsersPage() {
   const { session } = useAuth();
   const { hasPermission } = usePermissions();
   const canReadUsers = hasPermission('USER_READ');
   const canWriteUsers = hasPermission('USER_WRITE');
-  const availableRoles = session?.user.platformAdmin
-    ? ['PLATFORM_ADMIN', 'TENANT_OWNER', 'TENANT_ADMIN', 'MANAGER', 'OPERATOR', 'VIEWER', 'CUSTOMER_PORTAL_USER']
-    : ['TENANT_OWNER', 'TENANT_ADMIN', 'MANAGER', 'OPERATOR', 'VIEWER', 'CUSTOMER_PORTAL_USER'];
+  const availableRoles = session?.user.platformAdmin ? platformAdminRoles : tenantRoles;
   const [pageData, setPageData] = useState<PageResponse<PlatformUser>>(initialPage);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
