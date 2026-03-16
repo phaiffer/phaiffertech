@@ -5,13 +5,26 @@ import { PermissionGuard } from '@/shared/auth/PermissionGuard';
 import { useAuth } from '@/shared/auth/use-auth';
 import { usePermissions } from '@/shared/auth/usePermissions';
 import { sharedInputClass, sharedInputLabelClass } from '@/shared/components/public-visual-system';
-import { resolvePageItems } from '@/shared/lib/pagination';
+import { StatusBadge } from '@/shared/dashboard/status-badge';
+import { resolvePageItems, resolveTotalItems } from '@/shared/lib/pagination';
 import { useModuleCatalog } from '@/shared/modules/use-module-catalog';
 import { tenantService, TenantUpsertInput } from '@/shared/services/tenant-service';
+import { PageResponse } from '@/shared/types/common';
 import { TenantThemeMode } from '@/shared/types/auth';
 import { Tenant } from '@/shared/types/tenant';
+import { DataTable, DataTableColumn } from '@/shared/ui/data-table';
 import { PageTitle } from '@/shared/ui/page-title';
-import { Table } from '@/shared/ui/table';
+import { Pagination } from '@/shared/ui/pagination';
+
+const pageSize = 10;
+
+const initialPage: PageResponse<Tenant> = {
+  items: [],
+  totalItems: 0,
+  totalPages: 0,
+  page: 0,
+  size: pageSize
+};
 
 const emptyTenantForm: TenantUpsertInput = {
   name: '',
@@ -57,7 +70,8 @@ export default function TenantsPage() {
   const canWriteTenants = hasPermission('TENANT_WRITE');
   const canManagePlatform = Boolean(session?.user.platformAdmin);
 
-  const [tenants, setTenants] = useState<Tenant[]>([]);
+  const [pageData, setPageData] = useState<PageResponse<Tenant>>(initialPage);
+  const [loading, setLoading] = useState(false);
   const [editingTenantId, setEditingTenantId] = useState<string | null>(null);
   const [form, setForm] = useState<TenantUpsertInput>(emptyTenantForm);
   const [error, setError] = useState<string | null>(null);
@@ -68,13 +82,16 @@ export default function TenantsPage() {
     [modules]
   );
 
-  async function loadTenants() {
+  async function loadTenants(page = 0) {
+    setLoading(true);
     try {
-      const page = await tenantService.list();
-      setTenants(resolvePageItems(page));
+      const result = await tenantService.list(page, pageSize);
+      setPageData(result);
       setError(null);
     } catch (err) {
       setError((err as Error).message);
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -121,7 +138,7 @@ export default function TenantsPage() {
         await tenantService.create(payload);
       }
       resetForm();
-      await loadTenants();
+      await loadTenants(pageData.page);
     } catch (err) {
       setError((err as Error).message);
     } finally {
@@ -137,6 +154,98 @@ export default function TenantsPage() {
         : [...current.contractedModules, moduleCode]
     }));
   }
+
+  const tenants = resolvePageItems(pageData);
+  const totalItems = resolveTotalItems(pageData);
+  const columns: DataTableColumn<Tenant>[] = [
+    {
+      key: 'tenant',
+      header: 'Tenant',
+      render: (tenant) => (
+        <div>
+          <p className="font-medium text-[color:var(--app-shell-heading)]">{tenant.name}</p>
+          <p className="text-xs uppercase tracking-[0.16em] text-[color:var(--app-shell-muted)]">{tenant.code}</p>
+        </div>
+      )
+    },
+    {
+      key: 'status',
+      header: 'Status',
+      render: (tenant) => <StatusBadge status={tenant.status} />
+    },
+    {
+      key: 'theme',
+      header: 'Theme',
+      render: (tenant) => (
+        <div className="text-sm text-[color:var(--app-shell-text)]">
+          <p>{themeLabel(tenant.defaultThemeMode)}</p>
+          <p className="text-xs text-[color:var(--app-shell-muted)]">
+            {tenant.allowUserThemeOverride ? 'User override enabled' : 'Tenant-controlled'}
+          </p>
+        </div>
+      )
+    },
+    {
+      key: 'branding',
+      header: 'Branding',
+      render: (tenant) => (
+        <div className="flex items-center gap-3">
+          <span
+            className="inline-flex h-5 w-5 rounded-full border"
+            style={{
+              borderColor: 'var(--app-shell-border)',
+              backgroundColor: tenant.primaryColor ?? '#0f172a'
+            }}
+          />
+          <span
+            className="inline-flex h-5 w-5 rounded-full border"
+            style={{
+              borderColor: 'var(--app-shell-border)',
+              backgroundColor: tenant.accentColor ?? '#2563eb'
+            }}
+          />
+          <span className="text-xs text-[color:var(--app-shell-muted)]">
+            {tenant.logoUrl ? 'Logo configured' : 'No logo'}
+          </span>
+        </div>
+      )
+    },
+    {
+      key: 'modules',
+      header: 'Modules',
+      render: (tenant) => (
+        <div className="flex flex-wrap gap-2">
+          {tenant.contractedModules.map((moduleCode) => (
+            <span
+              key={`${tenant.id}-${moduleCode}`}
+              className="inline-flex items-center rounded-full border border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-panel-muted)] px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-[color:var(--app-shell-text)]"
+            >
+              {moduleCode}
+            </span>
+          ))}
+        </div>
+      )
+    },
+    {
+      key: 'access',
+      header: 'Access',
+      render: (tenant) => <StatusBadge status={tenant.platformOwner ? 'platform owner' : 'customer tenant'} />
+    },
+    {
+      key: 'actions',
+      header: 'Actions',
+      render: (tenant) =>
+        canWriteTenants ? (
+          <button
+            type="button"
+            onClick={() => handleEdit(tenant)}
+            className="ui-secondary-button"
+          >
+            Edit
+          </button>
+        ) : null
+    }
+  ];
 
   return (
     <PermissionGuard
@@ -341,73 +450,26 @@ export default function TenantsPage() {
             </form>
           </section>
 
-          <Table headers={['Tenant', 'Theme', 'Branding', 'Modules', 'Access', 'Actions']}>
-            {tenants.map((tenant) => (
-              <tr key={tenant.id}>
-                <td className="px-4 py-3">
-                  <div>
-                    <p className="font-medium text-[color:var(--app-shell-heading)]">{tenant.name}</p>
-                    <p className="text-xs uppercase tracking-[0.16em] text-[color:var(--app-shell-muted)]">{tenant.code}</p>
-                  </div>
-                </td>
-                <td className="px-4 py-3">
-                  <div className="text-sm text-[color:var(--app-shell-text)]">
-                    <p>{themeLabel(tenant.defaultThemeMode)}</p>
-                    <p className="text-xs text-[color:var(--app-shell-muted)]">
-                      {tenant.allowUserThemeOverride ? 'User override enabled' : 'Tenant-controlled'}
-                    </p>
-                  </div>
-                </td>
-                <td className="px-4 py-3">
-                  <div className="flex items-center gap-3">
-                    <span
-                      className="inline-flex h-5 w-5 rounded-full border"
-                      style={{
-                        borderColor: 'var(--app-shell-border)',
-                        backgroundColor: tenant.primaryColor ?? '#0f172a'
-                      }}
-                    />
-                    <span
-                      className="inline-flex h-5 w-5 rounded-full border"
-                      style={{
-                        borderColor: 'var(--app-shell-border)',
-                        backgroundColor: tenant.accentColor ?? '#2563eb'
-                      }}
-                    />
-                    <span className="text-xs text-[color:var(--app-shell-muted)]">
-                      {tenant.logoUrl ? 'Logo configured' : 'No logo'}
-                    </span>
-                  </div>
-                </td>
-                <td className="px-4 py-3">
-                  <div className="flex flex-wrap gap-2">
-                    {tenant.contractedModules.map((moduleCode) => (
-                      <span
-                        key={`${tenant.id}-${moduleCode}`}
-                        className="inline-flex items-center rounded-full border border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-panel-muted)] px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-[color:var(--app-shell-text)]"
-                      >
-                        {moduleCode}
-                      </span>
-                    ))}
-                  </div>
-                </td>
-                <td className="px-4 py-3 text-sm text-[color:var(--app-shell-text)]">
-                  {tenant.platformOwner ? 'Platform owner' : 'Customer tenant'}
-                </td>
-                <td className="px-4 py-3">
-                  {canWriteTenants ? (
-                    <button
-                      type="button"
-                      onClick={() => handleEdit(tenant)}
-                      className="ui-secondary-button"
-                    >
-                      Edit
-                    </button>
-                  ) : null}
-                </td>
-              </tr>
-            ))}
-          </Table>
+          <DataTable
+            columns={columns}
+            rows={tenants}
+            getRowKey={(tenant) => tenant.id}
+            loading={loading}
+            loadingTitle="Loading tenant workspaces"
+            loadingDescription="Preparing contracted modules, branding defaults, and access posture for the platform control panel."
+            emptyState={{
+              title: 'No tenant workspaces registered',
+              description:
+                'Create the first tenant to define branding, contracted modules, and default workspace behavior.'
+            }}
+          />
+
+          <Pagination
+            page={pageData.page}
+            totalPages={pageData.totalPages}
+            totalElements={totalItems}
+            onPageChange={(nextPage) => void loadTenants(nextPage)}
+          />
         </div>
       )}
     </PermissionGuard>

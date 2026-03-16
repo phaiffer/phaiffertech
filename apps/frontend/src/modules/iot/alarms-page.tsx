@@ -2,17 +2,17 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { PermissionGuard } from '@/shared/auth/PermissionGuard';
+import { StatusBadge } from '@/shared/dashboard/status-badge';
 import { ApiClientError } from '@/shared/lib/http';
 import { resolvePageItems, resolveTotalItems } from '@/shared/lib/pagination';
 import { Pagination } from '@/shared/ui/pagination';
+import { DataTable, DataTableColumn } from '@/shared/ui/data-table';
 import { iotService } from '@/shared/services/iot-service';
 import { PageResponse } from '@/shared/types/common';
 import { IotAlarm, IotDevice, IotRegister } from '@/shared/types/iot';
 import {
     AlarmIcon,
     Chip,
-    IotDataTable,
-    IotDataTableHead,
     IotHeroAside,
     IotInlineActionButton,
     IotModulePage,
@@ -22,9 +22,7 @@ import {
   IotPrimaryButton,
   IotSecondaryButton,
   IotSelectField,
-  IotStatusPill,
     IotSupportCard,
-    IotTableStateRow,
     IotTabButton,
     IotTextField
 } from '@/modules/iot/iot-chrome';
@@ -67,33 +65,6 @@ type DisplayAlarm = IotAlarm & {
   deviceName?: string;
   registerName?: string;
 };
-
-function resolveToneFromSeverity(severity: string) {
-  switch (severity) {
-    case 'CRITICAL':
-    case 'HIGH':
-      return 'red' as const;
-    case 'MEDIUM':
-      return 'amber' as const;
-    case 'LOW':
-      return 'green' as const;
-    default:
-      return 'neutral' as const;
-  }
-}
-
-function resolveStatusTone(status: string) {
-  switch (status) {
-    case 'OPEN':
-      return 'red' as const;
-    case 'ACKNOWLEDGED':
-      return 'amber' as const;
-    case 'RESOLVED':
-      return 'green' as const;
-    default:
-      return 'neutral' as const;
-  }
-}
 
 export function IotAlarmsPage() {
   const [pageData, setPageData] = useState<PageResponse<IotAlarm>>(initialPage);
@@ -212,6 +183,65 @@ export function IotAlarmsPage() {
   const openCount = visibleRows.filter((alarm) => alarm.status === 'OPEN').length;
   const acknowledgedCount = visibleRows.filter((alarm) => alarm.status === 'ACKNOWLEDGED').length;
   const resolvedCount = visibleRows.filter((alarm) => alarm.status === 'RESOLVED').length;
+  const columns: DataTableColumn<DisplayAlarm>[] = [
+    {
+      key: 'code',
+      header: 'Codigo',
+      render: (alarm) => <p className="font-semibold text-foreground">{alarm.code}</p>
+    },
+    {
+      key: 'severity',
+      header: 'Severidade',
+      render: (alarm) => <StatusBadge status={resolveAlarmSeverityLabel(alarm.severity)} />
+    },
+    {
+      key: 'status',
+      header: 'Status',
+      render: (alarm) => <StatusBadge status={resolveAlarmStatusLabel(alarm.status)} />
+    },
+    {
+      key: 'device',
+      header: 'Ativo',
+      render: (alarm) => (
+        <span className="text-foreground">
+          {alarm.deviceName ?? resolveDeviceLabel(devices, alarm.deviceId)}
+        </span>
+      )
+    },
+    {
+      key: 'register',
+      header: 'Registrador',
+      render: (alarm) => (
+        <span className="text-muted">
+          {alarm.registerName ?? resolveRegisterLabel(registers, alarm.registerId)}
+        </span>
+      )
+    },
+    {
+      key: 'message',
+      header: 'Mensagem',
+      render: (alarm) => <p className="max-w-sm text-foreground">{alarm.message}</p>
+    },
+    {
+      key: 'triggeredAt',
+      header: 'Data/hora',
+      render: (alarm) => <span className="text-muted">{formatDateTime(alarm.triggeredAt)}</span>
+    },
+    {
+      key: 'actions',
+      header: 'Acoes',
+      render: (alarm) =>
+        !useDemoMode && alarm.status === 'OPEN' ? (
+          <IotInlineActionButton onClick={() => void acknowledgeAlarm(alarm.id)}>
+            Reconhecer
+          </IotInlineActionButton>
+        ) : (
+          <span className="text-xs font-semibold uppercase tracking-[0.16em] text-muted">
+            {useDemoMode ? 'Somente navegação' : 'Sem ação'}
+          </span>
+        )
+    }
+  ];
 
   return (
     <PermissionGuard
@@ -312,70 +342,18 @@ export function IotAlarmsPage() {
             title="Fila de alarmes"
             description="Leitura densa para o time operacional com ativo, registrador, mensagem e momento do evento."
           >
-            <IotDataTable>
-                <thead className="border-b border-border bg-surface-inset/80">
-                  <tr>
-                    {['Código', 'Severidade', 'Status', 'Ativo', 'Registrador', 'Mensagem', 'Data/hora', 'Ações'].map((header) => (
-                      <IotDataTableHead key={header}>
-                        {header}
-                      </IotDataTableHead>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-border/70 text-sm text-foreground">
-                {loading ? (
-                    <IotTableStateRow
-                      colSpan={8}
-                      title="Sincronizando a fila de alarmes"
-                      description="Consolidando severidade, status e relacionamento com ativos e registradores."
-                    />
-                  ) : visibleRows.length === 0 ? (
-                    <IotTableStateRow
-                      colSpan={8}
-                      title="Nenhum alarme nesta janela"
-                      description="Ajuste os filtros ou mantenha a apresentação com a fila assistida do módulo."
-                      tone="amber"
-                    />
-                  ) : (
-                  visibleRows.map((alarm) => {
-                      const deviceLabel = alarm.deviceName ?? resolveDeviceLabel(devices, alarm.deviceId);
-                      const registerLabel =
-                        alarm.registerName ?? resolveRegisterLabel(registers, alarm.registerId);
-
-                      return (
-                        <tr key={alarm.id} className="transition-colors hover:bg-surface-inset/40">
-                          <td className="px-4 py-4">
-                            <p className="font-semibold text-foreground">{alarm.code}</p>
-                          </td>
-                          <td className="px-4 py-4">
-                            <IotStatusPill label={resolveAlarmSeverityLabel(alarm.severity)} tone={resolveToneFromSeverity(alarm.severity)} />
-                          </td>
-                          <td className="px-4 py-4">
-                            <IotStatusPill label={resolveAlarmStatusLabel(alarm.status)} tone={resolveStatusTone(alarm.status)} />
-                          </td>
-                          <td className="px-4 py-4 text-foreground">{deviceLabel}</td>
-                          <td className="px-4 py-4 text-muted">{registerLabel}</td>
-                          <td className="px-4 py-4">
-                            <p className="max-w-sm text-foreground">{alarm.message}</p>
-                          </td>
-                          <td className="px-4 py-4 text-muted">{formatDateTime(alarm.triggeredAt)}</td>
-                          <td className="px-4 py-4">
-                            {!useDemoMode && alarm.status === 'OPEN' ? (
-                              <IotInlineActionButton onClick={() => void acknowledgeAlarm(alarm.id)}>
-                                Reconhecer
-                              </IotInlineActionButton>
-                            ) : (
-                              <span className="text-xs font-semibold uppercase tracking-[0.16em] text-muted">
-                                {useDemoMode ? 'Somente navegação' : 'Sem ação'}
-                              </span>
-                            )}
-                          </td>
-                        </tr>
-                      );
-                    })
-                  )}
-                </tbody>
-            </IotDataTable>
+            <DataTable
+              columns={columns}
+              rows={visibleRows}
+              getRowKey={(alarm) => alarm.id}
+              loading={loading}
+              loadingTitle="Sincronizando a fila de alarmes"
+              loadingDescription="Consolidando severidade, status e relacionamento com ativos e registradores."
+              emptyState={{
+                title: 'Nenhum alarme nesta janela',
+                description: 'Ajuste os filtros ou siga com a primeira integracao ativa para preencher a central de alarmes.'
+              }}
+            />
           </IotPanel>
 
           <IotPanel

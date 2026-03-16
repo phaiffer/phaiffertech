@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { PermissionGuard } from '@/shared/auth/PermissionGuard';
+import { StatusBadge } from '@/shared/dashboard/status-badge';
 import { ApiClientError } from '@/shared/lib/http';
 import { resolvePageItems, resolveTotalItems } from '@/shared/lib/pagination';
 import { crmService, CreateCompanyInput, UpdateCompanyInput } from '@/shared/services/crm-service';
@@ -120,7 +121,7 @@ export function CrmCompaniesPage() {
     { key: 'name', header: 'Empresa', render: (row) => row.name },
     { key: 'document', header: 'Documento', render: (row) => row.document ?? '-' },
     { key: 'email', header: 'Email', render: (row) => row.email ?? '-' },
-    { key: 'status', header: 'Status', render: (row) => row.status },
+    { key: 'status', header: 'Status', render: (row) => <StatusBadge status={row.status} /> },
     {
       key: 'actions',
       header: 'Ações',
@@ -214,7 +215,18 @@ export function CrmCompaniesPage() {
 
         {error ? <div className="ui-notice-error">{error}</div> : null}
 
-        <DataTable columns={columns} rows={rows} getRowKey={(row) => row.id} loading={loading} emptyMessage="Nenhuma empresa encontrada." />
+        <DataTable
+          columns={columns}
+          rows={rows}
+          getRowKey={(row) => row.id}
+          loading={loading}
+          loadingTitle="Carregando empresas"
+          loadingDescription="Preparando a lista de empresas, filtros e sinais comerciais do CRM."
+          emptyState={{
+            title: 'Nenhuma empresa registrada',
+            description: 'Crie sua primeira empresa para iniciar a estrutura comercial e organizar a base do CRM.'
+          }}
+        />
 
         <Pagination page={pageData.page} totalPages={pageData.totalPages} totalElements={totalItems} onPageChange={(nextPage) => void load(nextPage, search, statusFilter)} />
 

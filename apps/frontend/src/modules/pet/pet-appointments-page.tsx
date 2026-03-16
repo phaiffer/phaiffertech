@@ -448,7 +448,12 @@ export function PetAppointmentsPage() {
           rows={rows}
           getRowKey={(row) => row.id}
           loading={loading}
-          emptyMessage="Nenhum atendimento encontrado."
+          loadingTitle="Carregando atendimentos"
+          loadingDescription="Preparando agenda, status clinicos e relacionamento com clientes, pets e profissionais."
+          emptyState={{
+            title: 'Nenhum atendimento agendado',
+            description: 'Crie o primeiro atendimento para iniciar a agenda operacional e clinica deste workspace.'
+          }}
         />
 
         <Pagination

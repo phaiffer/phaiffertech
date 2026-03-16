@@ -16,7 +16,9 @@ vi.mock('@/shared/auth/use-auth', () => ({
   useAuth: () => ({
     session: {
       user: {
-        platformAdmin: false
+        platformAdmin: false,
+        tenantName: 'Workspace One',
+        tenantCode: 'workspace-one'
       }
     }
   })
@@ -67,6 +69,24 @@ describe('UsersPage authorization', () => {
     });
 
     expect(await screen.findByText('Operator One')).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Criar usuário' })).not.toBeInTheDocument();
+    expect(screen.getAllByText('Workspace One').length).toBeGreaterThan(0);
+    expect(screen.queryByRole('button', { name: 'Create user' })).not.toBeInTheDocument();
+  });
+
+  it('renders the guided empty state for a tenant without users', async () => {
+    hasPermissionMock.mockImplementation((permission) => permission === 'USER_READ');
+    vi.mocked(userService.list).mockResolvedValue({
+      items: [],
+      totalItems: 0,
+      totalPages: 0,
+      page: 0,
+      size: 10
+    });
+
+    render(<UsersPage />);
+
+    expect(await screen.findByText('No users registered in this tenant')).toBeInTheDocument();
+    expect(screen.getByText('Create the first user to start assigning roles and controlled access inside this workspace.')).toBeInTheDocument();
+    expect(screen.getByText(/The current list is scoped to/)).toBeInTheDocument();
   });
 });

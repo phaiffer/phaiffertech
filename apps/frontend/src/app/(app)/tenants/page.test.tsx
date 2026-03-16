@@ -119,8 +119,9 @@ describe('TenantsPage access model', () => {
     });
 
     expect(await screen.findByText('Clinic North')).toBeInTheDocument();
+    expect(screen.getByText('Active')).toBeInTheDocument();
     expect(screen.getAllByText('CORE_PLATFORM').length).toBeGreaterThan(0);
     expect(screen.getAllByText('PET').length).toBeGreaterThan(0);
-    expect(screen.getByText('Customer tenant')).toBeInTheDocument();
+    expect(screen.getByText('Customer Tenant')).toBeInTheDocument();
   });
 });

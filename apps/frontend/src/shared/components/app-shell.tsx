@@ -70,7 +70,7 @@ function resolveHeaderMeta(pathname: string, platformAdmin?: boolean) {
 
 export function AppShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
-  const { branding, workspace } = useFrontendPlatform();
+  const { branding, modules, workspace } = useFrontendPlatform();
 
   const moduleContext = useMemo(() => resolveModuleContext(pathname), [pathname]);
   const headerMeta = useMemo(
@@ -95,13 +95,30 @@ export function AppShell({ children }: { children: ReactNode }) {
       <div className="flex flex-1 flex-col">
         {/* Header */}
         <header className={`sticky top-0 z-20 ${sharedShellHeaderClass}`}>
-          <div className="flex items-start justify-between px-6 py-5 lg:px-8">
+          <div className="flex flex-col gap-5 px-6 py-5 lg:flex-row lg:items-start lg:justify-between lg:px-8">
             <div>
               <p className={`${sharedEyebrowClass} text-[11px]`}>{workspace.workspaceLabel}</p>
               <h1 className="mt-2 text-2xl font-semibold tracking-tight text-foreground">
                 {headerMeta.label}
               </h1>
               <p className={`mt-2 max-w-3xl ${sharedCompactTextClass}`}>{headerMeta.description}</p>
+            </div>
+            <div className="w-full max-w-md rounded-2xl border border-border bg-surface px-4 py-4 shadow-xs">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[color:var(--app-shell-muted)]">
+                Active tenant
+              </p>
+              <p className="mt-2 text-base font-semibold text-foreground">{branding.scopeName}</p>
+              <div className="mt-3 flex flex-wrap gap-2">
+                <span className="inline-flex items-center rounded-full border border-border bg-surface-inset px-3 py-1 text-xs font-medium text-[color:var(--app-shell-text)]">
+                  {branding.tenantCode ? branding.tenantCode : 'platform-workspace'}
+                </span>
+                <span className="inline-flex items-center rounded-full border border-[color:var(--tenant-accent)] bg-[color:var(--tenant-accent-soft)] px-3 py-1 text-xs font-medium text-foreground">
+                  {workspace.accessLabel}
+                </span>
+                <span className="inline-flex items-center rounded-full border border-border bg-surface-inset px-3 py-1 text-xs font-medium text-[color:var(--app-shell-text)]">
+                  {modules.contractedProducts.length} contracted module{modules.contractedProducts.length === 1 ? '' : 's'}
+                </span>
+              </div>
             </div>
           </div>
         </header>

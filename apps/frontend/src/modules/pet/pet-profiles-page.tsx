@@ -339,7 +339,12 @@ export function PetProfilesPage() {
           rows={rows}
           getRowKey={(row) => row.id}
           loading={loading}
-          emptyMessage="Nenhum pet encontrado."
+          loadingTitle="Carregando pets"
+          loadingDescription="Preparando os perfis de pets vinculados aos clientes do tenant atual."
+          emptyState={{
+            title: 'Nenhum pet cadastrado',
+            description: 'Cadastre o primeiro pet para começar a organizar atendimentos e historico clinico.'
+          }}
         />
 
         <Pagination

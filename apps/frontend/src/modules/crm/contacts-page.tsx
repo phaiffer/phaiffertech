@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useCallback, useEffect, useState } from 'react';
 import { crmService } from '@/shared/services/crm-service';
+import { StatusBadge } from '@/shared/dashboard/status-badge';
 import { ApiClientError } from '@/shared/lib/http';
 import { resolvePageItems, resolveTotalItems } from '@/shared/lib/pagination';
 import { CrmCompany, CrmContact } from '@/shared/types/crm';
@@ -142,7 +143,7 @@ export function CrmContactsPage() {
     {
       key: 'status',
       header: 'Status',
-      render: (contact) => contact.status
+      render: (contact) => <StatusBadge status={contact.status} />
     },
     {
       key: 'actions',
@@ -243,7 +244,12 @@ export function CrmContactsPage() {
           rows={rows}
           getRowKey={(row) => row.id}
           loading={loading}
-          emptyMessage="Nenhum contato encontrado."
+          loadingTitle="Carregando contatos"
+          loadingDescription="Preparando a lista de contatos, empresas relacionadas e sinais de relacionamento."
+          emptyState={{
+            title: 'Nenhum contato encontrado',
+            description: 'Cadastre o primeiro contato para começar a consolidar relacionamentos dentro do CRM.'
+          }}
         />
 
         <Pagination
