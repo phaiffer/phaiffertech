@@ -37,6 +37,7 @@ public interface CrmActivityRepository extends JpaRepository<AuditLog, UUID> {
                   (a.entity = 'crm_note' AND a.action = 'CREATE')
               )
             ORDER BY a.createdAt DESC
+            LIMIT 5
             """)
-    List<AuditLog> findRecentCrmActivity(@Param("tenantId") UUID tenantId, Pageable pageable);
+    List<AuditLog> findRecentCrmActivity(@Param("tenantId") UUID tenantId);
 }

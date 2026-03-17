@@ -11,7 +11,6 @@ import com.phaiffertech.platform.shared.dashboard.dto.DashboardSummaryCardDto;
 import com.phaiffertech.platform.shared.tenancy.TenantContext;
 import java.util.List;
 import java.util.UUID;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -95,7 +94,7 @@ public class CrmDashboardService {
     }
 
     private List<DashboardListItemDto> buildRecentActivity(UUID tenantId) {
-        return activityRepository.findRecentCrmActivity(tenantId, PageRequest.of(0, 5)).stream()
+        return activityRepository.findRecentCrmActivity(tenantId).stream()
                 .map(this::toListItem)
                 .toList();
     }

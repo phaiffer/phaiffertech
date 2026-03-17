@@ -40,6 +40,9 @@ const emptyTenantForm: TenantUpsertInput = {
   featureEntitlements: [],
 };
 
+/** Available plan tiers exposed to platform administrators. */
+const PLAN_CODES = ['BASIC', 'STANDARD', 'PRO', 'ENTERPRISE'] as const;
+
 function normalizeTenantInput(form: TenantUpsertInput): TenantUpsertInput {
   return {
     ...form,
@@ -333,13 +336,16 @@ export default function TenantsPage() {
               </label>
 
               <label className="space-y-2 lg:col-span-2">
-                <span className={sharedInputLabelClass}>Plan code</span>
-                <input
-                  value={form.planCode ?? ''}
+                <span className={sharedInputLabelClass}>Plan</span>
+                <select
+                  value={form.planCode ?? 'BASIC'}
                   onChange={(event) => setForm((current) => ({ ...current, planCode: event.target.value }))}
                   className={sharedInputClass}
-                  placeholder="BASIC"
-                />
+                >
+                  {PLAN_CODES.map((code) => (
+                    <option key={code} value={code}>{code}</option>
+                  ))}
+                </select>
               </label>
 
               <label className="space-y-2 lg:col-span-2">
