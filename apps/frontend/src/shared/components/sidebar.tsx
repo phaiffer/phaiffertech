@@ -2,7 +2,7 @@
 
 /* eslint-disable @next/next/no-img-element */
 
-import { ReactNode, useMemo } from 'react';
+import { ReactNode, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/shared/auth/use-auth';
@@ -169,6 +169,14 @@ function IconLogout({ className }: { className?: string }) {
   );
 }
 
+function IconChevronDown({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <polyline points="6,9 12,15 18,9" />
+    </svg>
+  );
+}
+
 /* ═══════════════════════════════════════════════════════════════════════════
    Navigation Items Configuration
    ═══════════════════════════════════════════════════════════════════════════ */
@@ -235,6 +243,48 @@ function isItemActive(pathname: string, href: string) {
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
+/* ═══════════════════════════════════════════════════════════════════════════
+   Collapsible Group Sub-component
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+type SidebarCollapsibleGroupProps = {
+  groupKey: string;
+  title: string;
+  isOpen: boolean;
+  onToggle: () => void;
+  children: ReactNode;
+};
+
+function SidebarCollapsibleGroup({
+  groupKey,
+  title,
+  isOpen,
+  onToggle,
+  children,
+}: SidebarCollapsibleGroupProps) {
+  return (
+    <div>
+      <button
+        type="button"
+        id={`sidebar-group-${groupKey}`}
+        aria-expanded={isOpen}
+        onClick={onToggle}
+        className="mb-1 flex w-full items-center justify-between rounded px-2 py-1 text-left transition-colors hover:bg-white/5"
+      >
+        <span className="text-2xs font-semibold uppercase tracking-wider text-muted">
+          {title}
+        </span>
+        <IconChevronDown
+          className={`h-3 w-3 flex-shrink-0 text-muted transition-transform duration-200 ${
+            isOpen ? 'rotate-0' : '-rotate-90'
+          }`}
+        />
+      </button>
+      {isOpen && <div className="space-y-0.5">{children}</div>}
+    </div>
+  );
+}
+
 function getInitials(name?: string) {
   if (!name) return 'PT';
   return name
@@ -266,6 +316,30 @@ export function Sidebar() {
     [visibleItems, workspace.canManagePlatformAdministration]
   );
 
+  // Determine which group contains the currently active route so it can auto-expand
+  const activeGroupKey = useMemo<SidebarGroup>(() => {
+    for (const group of groupedItems) {
+      if (group.items.some((item) => isItemActive(pathname, item.href))) {
+        return group.key as SidebarGroup;
+      }
+    }
+    return groupedItems[0]?.key as SidebarGroup ?? 'core';
+  }, [groupedItems, pathname]);
+
+  // Accordion state: track which single group is open. Initialise to the active group.
+  const [openGroup, setOpenGroup] = useState<SidebarGroup | null>(activeGroupKey);
+
+  function handleToggle(key: SidebarGroup) {
+    setOpenGroup((prev) => (prev === key ? null : key));
+  }
+
+  const getNeonClass = (code?: string) => {
+    if (code === 'IOT') return 'text-[color:var(--accent-iot)] drop-shadow-[0_0_8px_var(--accent-iot)]';
+    if (code === 'PET') return 'text-[color:var(--accent-pet)] drop-shadow-[0_0_8px_var(--accent-pet)]';
+    if (code === 'CRM') return 'text-[color:var(--accent-crm)] drop-shadow-[0_0_8px_var(--accent-crm)]';
+    return 'text-[color:var(--accent-core)] drop-shadow-[0_0_8px_var(--accent-core)]';
+  };
+
   return (
     <aside className="sticky top-0 flex h-screen w-64 flex-col border-r border-white/10 glass-surface">
       {/* Brand Header */}
@@ -282,41 +356,35 @@ export function Sidebar() {
 
       {/* Navigation */}
       <nav className="flex-1 overflow-y-auto px-3 py-4">
-        <div className="space-y-6">
+        <div className="space-y-4">
           {groupedItems.map((group) => (
-            <div key={group.key}>
-              <p className="mb-2 px-2 text-2xs font-semibold uppercase tracking-wider text-muted">
-                {group.title}
-              </p>
-              <div className="space-y-0.5">
-                {group.items.map((item) => {
-                  const active = isItemActive(pathname, item.href);
-                  const Icon = item.icon;
+            <SidebarCollapsibleGroup
+              key={group.key}
+              groupKey={group.key}
+              title={group.title}
+              isOpen={openGroup === group.key}
+              onToggle={() => handleToggle(group.key as SidebarGroup)}
+            >
+              {group.items.map((item) => {
+                const active = isItemActive(pathname, item.href);
+                const Icon = item.icon;
 
-                  const getNeonClass = (code?: string) => {
-                    if (code === 'IOT') return 'text-[color:var(--accent-iot)] drop-shadow-[0_0_8px_var(--accent-iot)]';
-                    if (code === 'PET') return 'text-[color:var(--accent-pet)] drop-shadow-[0_0_8px_var(--accent-pet)]';
-                    if (code === 'CRM') return 'text-[color:var(--accent-crm)] drop-shadow-[0_0_8px_var(--accent-crm)]';
-                    return 'text-[color:var(--accent-core)] drop-shadow-[0_0_8px_var(--accent-core)]';
-                  };
-
-                  return (
-                    <Link
-                      key={item.href}
-                      href={item.href}
-                      className={`group flex items-center gap-2.5 rounded-lg px-2 py-2 text-sm transition-all duration-300 ${
-                        active
-                          ? 'bg-white/10 text-foreground font-medium border border-white/5'
-                          : 'text-muted hover:bg-white/5 hover:text-foreground'
-                      }`}
-                    >
-                      <Icon className={`h-4 w-4 flex-shrink-0 transition-all duration-300 ${active ? getNeonClass(item.moduleCode) : 'group-hover:' + getNeonClass(item.moduleCode)}`} />
-                      <span className="truncate">{item.label}</span>
-                    </Link>
-                  );
-                })}
-              </div>
-            </div>
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className={`group flex items-center gap-2.5 rounded-lg px-2 py-2 text-sm transition-all duration-300 ${
+                      active
+                        ? 'bg-white/10 text-foreground font-medium border border-white/5'
+                        : 'text-muted hover:bg-white/5 hover:text-foreground'
+                    }`}
+                  >
+                    <Icon className={`h-4 w-4 flex-shrink-0 transition-all duration-300 ${active ? getNeonClass(item.moduleCode) : 'group-hover:' + getNeonClass(item.moduleCode)}`} />
+                    <span className="truncate">{item.label}</span>
+                  </Link>
+                );
+              })}
+            </SidebarCollapsibleGroup>
           ))}
         </div>
       </nav>

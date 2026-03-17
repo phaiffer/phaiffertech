@@ -34,7 +34,10 @@ const emptyTenantForm: TenantUpsertInput = {
   accentColor: '#2563eb',
   defaultThemeMode: 'SYSTEM',
   allowUserThemeOverride: true,
-  contractedModules: []
+  contractedModules: [],
+
+  planCode: 'BASIC',
+  featureEntitlements: [],
 };
 
 function normalizeTenantInput(form: TenantUpsertInput): TenantUpsertInput {
@@ -113,7 +116,8 @@ export default function TenantsPage() {
       accentColor: tenant.accentColor ?? '#2563eb',
       defaultThemeMode: tenant.defaultThemeMode,
       allowUserThemeOverride: tenant.allowUserThemeOverride,
-      contractedModules: tenant.contractedModules.filter((moduleCode) => moduleCode !== 'CORE_PLATFORM')
+      contractedModules: tenant.contractedModules.filter((moduleCode) => moduleCode !== 'CORE_PLATFORM'),
+      planCode: tenant.planCode ?? 'BASIC'
     });
   }
 
@@ -172,6 +176,15 @@ export default function TenantsPage() {
       key: 'status',
       header: 'Status',
       render: (tenant) => <StatusBadge status={tenant.status} />
+    },
+    {
+      key: 'plan',
+      header: 'Plan',
+      render: (tenant) => (
+        <span className="text-sm font-medium text-[color:var(--app-shell-heading)]">
+          {tenant.planCode ?? '-'}
+        </span>
+      )
     },
     {
       key: 'theme',
@@ -316,6 +329,16 @@ export default function TenantsPage() {
                   className={sharedInputClass}
                   placeholder="tenant-code"
                   required
+                />
+              </label>
+
+              <label className="space-y-2 lg:col-span-2">
+                <span className={sharedInputLabelClass}>Plan code</span>
+                <input
+                  value={form.planCode ?? ''}
+                  onChange={(event) => setForm((current) => ({ ...current, planCode: event.target.value }))}
+                  className={sharedInputClass}
+                  placeholder="BASIC"
                 />
               </label>
 

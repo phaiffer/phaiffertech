@@ -18,6 +18,7 @@ import com.phaiffertech.platform.core.tenant.repository.TenantRepository;
 import com.phaiffertech.platform.core.user.domain.User;
 import com.phaiffertech.platform.core.user.repository.UserRepository;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Profile;
@@ -129,15 +130,23 @@ public class DevelopmentDataSeeder implements CommandLineRunner {
                 });
 
         for (ModuleDefinition definition : definitions) {
-            boolean alreadyEnabled = tenantModuleRepository.findByTenantIdAndEnabledTrue(tenant.getId()).stream()
-                    .anyMatch(tenantModule -> tenantModule.getModuleDefinitionId().equals(definition.getId()));
-            if (!alreadyEnabled) {
-                TenantModule tenantModule = new TenantModule();
+            UUID moduleId = definition.getId();
+
+            // Look up the row regardless of enabled/soft-delete state to avoid duplicate inserts
+            Optional<TenantModule> existing = tenantModuleRepository
+                    .findByTenantIdAndModuleDefinitionId(tenant.getId(), moduleId);
+
+            TenantModule tenantModule;
+            if (existing.isPresent()) {
+                tenantModule = existing.get();
+            } else {
+                tenantModule = new TenantModule();
                 tenantModule.setTenantId(tenant.getId());
-                tenantModule.setModuleDefinitionId(definition.getId());
-                tenantModule.setEnabled(true);
-                tenantModuleRepository.save(tenantModule);
+                tenantModule.setModuleDefinitionId(moduleId);
             }
+            tenantModule.setEnabled(true);
+            tenantModule.setDeletedAt(null);
+            tenantModuleRepository.save(tenantModule);
         }
     }
 

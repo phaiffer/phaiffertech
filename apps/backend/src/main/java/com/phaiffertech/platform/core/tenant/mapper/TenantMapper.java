@@ -9,19 +9,21 @@ public final class TenantMapper {
     private TenantMapper() {
     }
 
-    public static TenantResponse toResponse(Tenant tenant, List<String> contractedModules) {
+    public static TenantResponse toResponse(Tenant tenant, List<String> contractedModules, List<String> featureEntitlements) {
         return new TenantResponse(
                 tenant.getId(),
                 tenant.getName(),
                 tenant.getCode(),
                 tenant.getStatus(),
+                tenant.getPlanCode(),
                 tenant.isPlatformOwner(),
                 tenant.getLogoUrl(),
                 tenant.getPrimaryColor(),
                 tenant.getAccentColor(),
                 tenant.getDefaultThemeMode(),
                 tenant.isAllowUserThemeOverride(),
-                contractedModules
+                contractedModules,
+                featureEntitlements
         );
     }
 }

@@ -12,6 +12,8 @@ export type TenantUpsertInput = {
   defaultThemeMode: TenantThemeMode;
   allowUserThemeOverride: boolean;
   contractedModules: string[];
+  planCode?: string;
+  featureEntitlements?: string[];
 };
 
 export const tenantService = {

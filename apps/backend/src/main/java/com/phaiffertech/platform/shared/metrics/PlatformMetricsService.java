@@ -2,6 +2,7 @@ package com.phaiffertech.platform.shared.metrics;
 
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
+import java.util.Locale;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -33,6 +34,37 @@ public class PlatformMetricsService {
         meterRegistry.counter("auth.attempts", "outcome", success ? "success" : "failure").increment();
     }
 
+    public void recordApiRequest(String moduleCode, int status) {
+        meterRegistry.counter(
+                "platform.api.requests",
+                "module", normalizeTag(moduleCode, "core_platform"),
+                "status_family", statusFamily(status)
+        ).increment();
+    }
+
+    public void recordUsageEvent(String metricKey, String source) {
+        meterRegistry.counter(
+                "platform.usage.events",
+                "metric_key", normalizeTag(metricKey, "unknown"),
+                "source", normalizeTag(source, "unknown")
+        ).increment();
+    }
+
+    public void recordAuditEvent(String action, String entity) {
+        meterRegistry.counter(
+                "platform.audit.events",
+                "action", normalizeTag(action, "unknown"),
+                "entity", normalizeTag(entity, "unknown")
+        ).increment();
+    }
+
+    public void recordFeatureFlagMutation(String operation) {
+        meterRegistry.counter(
+                "platform.feature.flags.mutations",
+                "operation", normalizeTag(operation, "unknown")
+        ).increment();
+    }
+
     public void incrementCrmContactsCreated() {
         crmContactsCreated.increment();
     }
@@ -47,5 +79,19 @@ public class PlatformMetricsService {
 
     public void incrementIotAlarmsTriggered() {
         iotAlarmsTriggered.increment();
+    }
+
+    private String statusFamily(int status) {
+        if (status < 100) {
+            return "unknown";
+        }
+        return (status / 100) + "xx";
+    }
+
+    private String normalizeTag(String value, String fallback) {
+        if (value == null || value.isBlank()) {
+            return fallback;
+        }
+        return value.trim().toLowerCase(Locale.ROOT);
     }
 }

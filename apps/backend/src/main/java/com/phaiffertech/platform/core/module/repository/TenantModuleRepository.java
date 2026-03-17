@@ -2,6 +2,7 @@ package com.phaiffertech.platform.core.module.repository;
 
 import com.phaiffertech.platform.core.module.domain.TenantModule;
 
+import java.util.Optional;
 import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
@@ -15,5 +16,8 @@ public interface TenantModuleRepository extends JpaRepository<TenantModule, UUID
 
     List<TenantModule> findByTenantIdInAndDeletedAtIsNull(Collection<UUID> tenantIds);
 
-    boolean existsByTenantIdAndModuleDefinitionIdAndEnabledTrueAndDeletedAtIsNull(UUID tenantId, UUID moduleDefinitionId);
+    boolean existsByTenantIdAndModuleDefinitionIdAndEnabledTrueAndDeletedAtIsNull(UUID tenantId,
+            UUID moduleDefinitionId);
+
+    Optional<TenantModule> findByTenantIdAndModuleDefinitionId(UUID tenantId, UUID moduleDefinitionId);
 }

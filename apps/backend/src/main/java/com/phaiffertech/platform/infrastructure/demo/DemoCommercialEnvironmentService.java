@@ -24,6 +24,7 @@ import java.time.LocalDate;
 import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -33,1409 +34,1480 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class DemoCommercialEnvironmentService {
 
-    private static final String SEED_ACTOR = "demo-commercial";
+        private static final String SEED_ACTOR = "demo-commercial";
 
-    private static final UUID CRM_AGROTECH_COMPANY_ID = uuid("10000000-0000-0000-0000-000000000001");
-    private static final UUID CRM_PETCARE_COMPANY_ID = uuid("10000000-0000-0000-0000-000000000002");
-    private static final UUID CRM_DELTA_COMPANY_ID = uuid("10000000-0000-0000-0000-000000000003");
+        private static final UUID CRM_AGROTECH_COMPANY_ID = uuid("10000000-0000-0000-0000-000000000001");
+        private static final UUID CRM_PETCARE_COMPANY_ID = uuid("10000000-0000-0000-0000-000000000002");
+        private static final UUID CRM_DELTA_COMPANY_ID = uuid("10000000-0000-0000-0000-000000000003");
 
-    private static final UUID CRM_CARLOS_CONTACT_ID = uuid("10000000-0000-0000-0000-000000000011");
-    private static final UUID CRM_ANA_CONTACT_ID = uuid("10000000-0000-0000-0000-000000000012");
-    private static final UUID CRM_JULIANA_CONTACT_ID = uuid("10000000-0000-0000-0000-000000000013");
+        private static final UUID CRM_CARLOS_CONTACT_ID = uuid("10000000-0000-0000-0000-000000000011");
+        private static final UUID CRM_ANA_CONTACT_ID = uuid("10000000-0000-0000-0000-000000000012");
+        private static final UUID CRM_JULIANA_CONTACT_ID = uuid("10000000-0000-0000-0000-000000000013");
 
-    private static final UUID CRM_AGROTECH_LEAD_ID = uuid("10000000-0000-0000-0000-000000000021");
-    private static final UUID CRM_PETCARE_LEAD_ID = uuid("10000000-0000-0000-0000-000000000022");
-    private static final UUID CRM_DELTA_LEAD_ID = uuid("10000000-0000-0000-0000-000000000023");
+        private static final UUID CRM_AGROTECH_LEAD_ID = uuid("10000000-0000-0000-0000-000000000021");
+        private static final UUID CRM_PETCARE_LEAD_ID = uuid("10000000-0000-0000-0000-000000000022");
+        private static final UUID CRM_DELTA_LEAD_ID = uuid("10000000-0000-0000-0000-000000000023");
 
-    private static final UUID CRM_PIPELINE_ID = uuid("10000000-0000-0000-0000-000000000031");
-    private static final UUID CRM_STAGE_LEAD_ID = uuid("10000000-0000-0000-0000-000000000032");
-    private static final UUID CRM_STAGE_QUALIFICATION_ID = uuid("10000000-0000-0000-0000-000000000033");
-    private static final UUID CRM_STAGE_PROPOSAL_ID = uuid("10000000-0000-0000-0000-000000000034");
-    private static final UUID CRM_STAGE_NEGOTIATION_ID = uuid("10000000-0000-0000-0000-000000000035");
-    private static final UUID CRM_STAGE_CLOSED_ID = uuid("10000000-0000-0000-0000-000000000036");
+        private static final UUID CRM_PIPELINE_ID = uuid("10000000-0000-0000-0000-000000000031");
+        private static final UUID CRM_STAGE_LEAD_ID = uuid("10000000-0000-0000-0000-000000000032");
+        private static final UUID CRM_STAGE_QUALIFICATION_ID = uuid("10000000-0000-0000-0000-000000000033");
+        private static final UUID CRM_STAGE_PROPOSAL_ID = uuid("10000000-0000-0000-0000-000000000034");
+        private static final UUID CRM_STAGE_NEGOTIATION_ID = uuid("10000000-0000-0000-0000-000000000035");
+        private static final UUID CRM_STAGE_CLOSED_ID = uuid("10000000-0000-0000-0000-000000000036");
 
-    private static final UUID CRM_AGROTECH_DEAL_ID = uuid("10000000-0000-0000-0000-000000000041");
-    private static final UUID CRM_PETCARE_DEAL_ID = uuid("10000000-0000-0000-0000-000000000042");
-    private static final UUID CRM_DELTA_DEAL_ID = uuid("10000000-0000-0000-0000-000000000043");
+        private static final UUID CRM_AGROTECH_DEAL_ID = uuid("10000000-0000-0000-0000-000000000041");
+        private static final UUID CRM_PETCARE_DEAL_ID = uuid("10000000-0000-0000-0000-000000000042");
+        private static final UUID CRM_DELTA_DEAL_ID = uuid("10000000-0000-0000-0000-000000000043");
 
-    private static final UUID CRM_AGROTECH_TASK_ID = uuid("10000000-0000-0000-0000-000000000051");
-    private static final UUID CRM_PETCARE_TASK_ID = uuid("10000000-0000-0000-0000-000000000052");
-    private static final UUID CRM_DELTA_TASK_ID = uuid("10000000-0000-0000-0000-000000000053");
+        private static final UUID CRM_AGROTECH_TASK_ID = uuid("10000000-0000-0000-0000-000000000051");
+        private static final UUID CRM_PETCARE_TASK_ID = uuid("10000000-0000-0000-0000-000000000052");
+        private static final UUID CRM_DELTA_TASK_ID = uuid("10000000-0000-0000-0000-000000000053");
 
-    private static final UUID CRM_AGROTECH_NOTE_ID = uuid("10000000-0000-0000-0000-000000000061");
-    private static final UUID CRM_PETCARE_NOTE_ID = uuid("10000000-0000-0000-0000-000000000062");
+        private static final UUID CRM_AGROTECH_NOTE_ID = uuid("10000000-0000-0000-0000-000000000061");
+        private static final UUID CRM_PETCARE_NOTE_ID = uuid("10000000-0000-0000-0000-000000000062");
 
-    private static final UUID PET_MARIA_CLIENT_ID = uuid("20000000-0000-0000-0000-000000000001");
-    private static final UUID PET_JOAO_CLIENT_ID = uuid("20000000-0000-0000-0000-000000000002");
+        private static final UUID PET_MARIA_CLIENT_ID = uuid("20000000-0000-0000-0000-000000000001");
+        private static final UUID PET_JOAO_CLIENT_ID = uuid("20000000-0000-0000-0000-000000000002");
 
-    private static final UUID PET_REX_ID = uuid("20000000-0000-0000-0000-000000000011");
-    private static final UUID PET_LUNA_ID = uuid("20000000-0000-0000-0000-000000000012");
-    private static final UUID PET_THOR_ID = uuid("20000000-0000-0000-0000-000000000013");
+        private static final UUID PET_REX_ID = uuid("20000000-0000-0000-0000-000000000011");
+        private static final UUID PET_LUNA_ID = uuid("20000000-0000-0000-0000-000000000012");
+        private static final UUID PET_THOR_ID = uuid("20000000-0000-0000-0000-000000000013");
 
-    private static final UUID PET_SERVICE_VACCINATION_ID = uuid("20000000-0000-0000-0000-000000000021");
-    private static final UUID PET_SERVICE_CHECKUP_ID = uuid("20000000-0000-0000-0000-000000000022");
-    private static final UUID PET_SERVICE_CONSULTATION_ID = uuid("20000000-0000-0000-0000-000000000023");
+        private static final UUID PET_SERVICE_VACCINATION_ID = uuid("20000000-0000-0000-0000-000000000021");
+        private static final UUID PET_SERVICE_CHECKUP_ID = uuid("20000000-0000-0000-0000-000000000022");
+        private static final UUID PET_SERVICE_CONSULTATION_ID = uuid("20000000-0000-0000-0000-000000000023");
 
-    private static final UUID PET_PROFESSIONAL_MARINA_ID = uuid("20000000-0000-0000-0000-000000000031");
-    private static final UUID PET_PROFESSIONAL_RAFAEL_ID = uuid("20000000-0000-0000-0000-000000000032");
+        private static final UUID PET_PROFESSIONAL_MARINA_ID = uuid("20000000-0000-0000-0000-000000000031");
+        private static final UUID PET_PROFESSIONAL_RAFAEL_ID = uuid("20000000-0000-0000-0000-000000000032");
 
-    private static final UUID PET_APPOINTMENT_REX_ID = uuid("20000000-0000-0000-0000-000000000041");
-    private static final UUID PET_APPOINTMENT_THOR_ID = uuid("20000000-0000-0000-0000-000000000042");
-    private static final UUID PET_APPOINTMENT_LUNA_ID = uuid("20000000-0000-0000-0000-000000000043");
+        private static final UUID PET_APPOINTMENT_REX_ID = uuid("20000000-0000-0000-0000-000000000041");
+        private static final UUID PET_APPOINTMENT_THOR_ID = uuid("20000000-0000-0000-0000-000000000042");
+        private static final UUID PET_APPOINTMENT_LUNA_ID = uuid("20000000-0000-0000-0000-000000000043");
 
-    private static final UUID PET_RECORD_REX_ID = uuid("20000000-0000-0000-0000-000000000051");
-    private static final UUID PET_RECORD_THOR_ID = uuid("20000000-0000-0000-0000-000000000052");
+        private static final UUID PET_RECORD_REX_ID = uuid("20000000-0000-0000-0000-000000000051");
+        private static final UUID PET_RECORD_THOR_ID = uuid("20000000-0000-0000-0000-000000000052");
 
-    private static final UUID PET_VACCINATION_REX_ID = uuid("20000000-0000-0000-0000-000000000061");
-    private static final UUID PET_VACCINATION_LUNA_ID = uuid("20000000-0000-0000-0000-000000000062");
+        private static final UUID PET_VACCINATION_REX_ID = uuid("20000000-0000-0000-0000-000000000061");
+        private static final UUID PET_VACCINATION_LUNA_ID = uuid("20000000-0000-0000-0000-000000000062");
 
-    private static final UUID PET_PRODUCT_RABIES_ID = uuid("20000000-0000-0000-0000-000000000071");
-    private static final UUID PET_PRODUCT_SUPPLEMENT_ID = uuid("20000000-0000-0000-0000-000000000072");
-    private static final UUID PET_PRODUCT_PARASITE_ID = uuid("20000000-0000-0000-0000-000000000073");
+        private static final UUID PET_PRODUCT_RABIES_ID = uuid("20000000-0000-0000-0000-000000000071");
+        private static final UUID PET_PRODUCT_SUPPLEMENT_ID = uuid("20000000-0000-0000-0000-000000000072");
+        private static final UUID PET_PRODUCT_PARASITE_ID = uuid("20000000-0000-0000-0000-000000000073");
 
-    private static final UUID PET_INVENTORY_RABIES_ID = uuid("20000000-0000-0000-0000-000000000081");
-    private static final UUID PET_INVENTORY_SUPPLEMENT_ID = uuid("20000000-0000-0000-0000-000000000082");
-    private static final UUID PET_INVENTORY_PARASITE_ID = uuid("20000000-0000-0000-0000-000000000083");
+        private static final UUID PET_INVENTORY_RABIES_ID = uuid("20000000-0000-0000-0000-000000000081");
+        private static final UUID PET_INVENTORY_SUPPLEMENT_ID = uuid("20000000-0000-0000-0000-000000000082");
+        private static final UUID PET_INVENTORY_PARASITE_ID = uuid("20000000-0000-0000-0000-000000000083");
 
-    private static final UUID PET_INVOICE_MARIA_ID = uuid("20000000-0000-0000-0000-000000000091");
-    private static final UUID PET_INVOICE_JOAO_ID = uuid("20000000-0000-0000-0000-000000000092");
+        private static final UUID PET_INVOICE_MARIA_ID = uuid("20000000-0000-0000-0000-000000000091");
+        private static final UUID PET_INVOICE_JOAO_ID = uuid("20000000-0000-0000-0000-000000000092");
 
-    private static final UUID IOT_COMPRESSOR_DEVICE_ID = uuid("30000000-0000-0000-0000-000000000001");
-    private static final UUID IOT_OVEN_DEVICE_ID = uuid("30000000-0000-0000-0000-000000000002");
-    private static final UUID IOT_PANEL_DEVICE_ID = uuid("30000000-0000-0000-0000-000000000003");
+        private static final UUID IOT_COMPRESSOR_DEVICE_ID = uuid("30000000-0000-0000-0000-000000000001");
+        private static final UUID IOT_OVEN_DEVICE_ID = uuid("30000000-0000-0000-0000-000000000002");
+        private static final UUID IOT_PANEL_DEVICE_ID = uuid("30000000-0000-0000-0000-000000000003");
 
-    private static final UUID IOT_COMPRESSOR_TEMPERATURE_ID = uuid("30000000-0000-0000-0000-000000000011");
-    private static final UUID IOT_COMPRESSOR_VIBRATION_ID = uuid("30000000-0000-0000-0000-000000000012");
-    private static final UUID IOT_COMPRESSOR_POWER_ID = uuid("30000000-0000-0000-0000-000000000013");
-    private static final UUID IOT_OVEN_TEMPERATURE_ID = uuid("30000000-0000-0000-0000-000000000021");
-    private static final UUID IOT_OVEN_VIBRATION_ID = uuid("30000000-0000-0000-0000-000000000022");
-    private static final UUID IOT_OVEN_POWER_ID = uuid("30000000-0000-0000-0000-000000000023");
-    private static final UUID IOT_PANEL_TEMPERATURE_ID = uuid("30000000-0000-0000-0000-000000000031");
-    private static final UUID IOT_PANEL_VIBRATION_ID = uuid("30000000-0000-0000-0000-000000000032");
-    private static final UUID IOT_PANEL_POWER_ID = uuid("30000000-0000-0000-0000-000000000033");
+        private static final UUID IOT_COMPRESSOR_TEMPERATURE_ID = uuid("30000000-0000-0000-0000-000000000011");
+        private static final UUID IOT_COMPRESSOR_VIBRATION_ID = uuid("30000000-0000-0000-0000-000000000012");
+        private static final UUID IOT_COMPRESSOR_POWER_ID = uuid("30000000-0000-0000-0000-000000000013");
+        private static final UUID IOT_OVEN_TEMPERATURE_ID = uuid("30000000-0000-0000-0000-000000000021");
+        private static final UUID IOT_OVEN_VIBRATION_ID = uuid("30000000-0000-0000-0000-000000000022");
+        private static final UUID IOT_OVEN_POWER_ID = uuid("30000000-0000-0000-0000-000000000023");
+        private static final UUID IOT_PANEL_TEMPERATURE_ID = uuid("30000000-0000-0000-0000-000000000031");
+        private static final UUID IOT_PANEL_VIBRATION_ID = uuid("30000000-0000-0000-0000-000000000032");
+        private static final UUID IOT_PANEL_POWER_ID = uuid("30000000-0000-0000-0000-000000000033");
 
-    private static final UUID IOT_TEMPERATURE_ALARM_ID = uuid("30000000-0000-0000-0000-000000000041");
-    private static final UUID IOT_VIBRATION_ALARM_ID = uuid("30000000-0000-0000-0000-000000000042");
+        private static final UUID IOT_TEMPERATURE_ALARM_ID = uuid("30000000-0000-0000-0000-000000000041");
+        private static final UUID IOT_VIBRATION_ALARM_ID = uuid("30000000-0000-0000-0000-000000000042");
 
-    private static final UUID IOT_OVEN_MAINTENANCE_ID = uuid("30000000-0000-0000-0000-000000000051");
-    private static final UUID IOT_PANEL_MAINTENANCE_ID = uuid("30000000-0000-0000-0000-000000000052");
+        private static final UUID IOT_OVEN_MAINTENANCE_ID = uuid("30000000-0000-0000-0000-000000000051");
+        private static final UUID IOT_PANEL_MAINTENANCE_ID = uuid("30000000-0000-0000-0000-000000000052");
 
-    private final DemoCommercialProperties properties;
-    private final TenantRepository tenantRepository;
-    private final UserRepository userRepository;
-    private final RoleRepository roleRepository;
-    private final UserTenantRepository userTenantRepository;
-    private final UserTenantRoleRepository userTenantRoleRepository;
-    private final ModuleDefinitionRepository moduleDefinitionRepository;
-    private final TenantModuleRepository tenantModuleRepository;
-    private final PasswordEncoder passwordEncoder;
-    private final JdbcTemplate jdbcTemplate;
-    private final EntityManager entityManager;
+        private final DemoCommercialProperties properties;
+        private final TenantRepository tenantRepository;
+        private final UserRepository userRepository;
+        private final RoleRepository roleRepository;
+        private final UserTenantRepository userTenantRepository;
+        private final UserTenantRoleRepository userTenantRoleRepository;
+        private final ModuleDefinitionRepository moduleDefinitionRepository;
+        private final TenantModuleRepository tenantModuleRepository;
+        private final PasswordEncoder passwordEncoder;
+        private final JdbcTemplate jdbcTemplate;
+        private final EntityManager entityManager;
 
-    public DemoCommercialEnvironmentService(
-            DemoCommercialProperties properties,
-            TenantRepository tenantRepository,
-            UserRepository userRepository,
-            RoleRepository roleRepository,
-            UserTenantRepository userTenantRepository,
-            UserTenantRoleRepository userTenantRoleRepository,
-            ModuleDefinitionRepository moduleDefinitionRepository,
-            TenantModuleRepository tenantModuleRepository,
-            PasswordEncoder passwordEncoder,
-            JdbcTemplate jdbcTemplate,
-            EntityManager entityManager
-    ) {
-        this.properties = properties;
-        this.tenantRepository = tenantRepository;
-        this.userRepository = userRepository;
-        this.roleRepository = roleRepository;
-        this.userTenantRepository = userTenantRepository;
-        this.userTenantRoleRepository = userTenantRoleRepository;
-        this.moduleDefinitionRepository = moduleDefinitionRepository;
-        this.tenantModuleRepository = tenantModuleRepository;
-        this.passwordEncoder = passwordEncoder;
-        this.jdbcTemplate = jdbcTemplate;
-        this.entityManager = entityManager;
-    }
-
-    @Transactional
-    public DemoCommercialSeedSummary seed() {
-        validateProperties();
-
-        Tenant tenant = ensureTenant();
-        User user = ensureUser();
-        Role tenantAdminRole = roleRepository.findByCode("TENANT_ADMIN")
-                .orElseThrow(() -> new IllegalStateException("TENANT_ADMIN role should exist before demo seeding."));
-
-        UserTenant userTenant = ensureUserTenant(tenant, user, tenantAdminRole);
-        ensureUserTenantRole(userTenant, tenantAdminRole);
-        enableModules(tenant.getId());
-        flushPersistenceState();
-
-        Tenant persistedTenant = resolvePersistedTenant();
-        User persistedUser = resolvePersistedUser();
-
-        clearTenantData(persistedTenant.getId());
-
-        Instant now = Instant.now();
-        seedCrm(persistedTenant.getId(), persistedUser.getId(), now);
-        seedPet(persistedTenant.getId(), now);
-        seedIot(persistedTenant.getId(), persistedUser.getId(), now);
-
-        return new DemoCommercialSeedSummary(
-                persistedTenant.getCode(),
-                persistedUser.getEmail(),
-                25,
-                25,
-                33
-        );
-    }
-
-    private void validateProperties() {
-        if (!properties.hasCredentialsConfigured()) {
-            throw new IllegalStateException("Commercial demo seed requires demo user email and password.");
-        }
-    }
-
-    private Tenant ensureTenant() {
-        Tenant tenant = tenantRepository.findByCodeIgnoreCase(properties.getTenantCode())
-                .orElseGet(Tenant::new);
-        tenant.setName(properties.getTenantName());
-        tenant.setCode(properties.getTenantCode());
-        tenant.setStatus("ACTIVE");
-        tenant.setPrimaryColor("#0f172a");
-        tenant.setAccentColor("#16a34a");
-        tenant.setDefaultThemeMode(TenantThemeMode.DARK);
-        tenant.setAllowUserThemeOverride(true);
-        tenant.setPlatformOwner(false);
-        tenant.setDeletedAt(null);
-        return tenantRepository.save(tenant);
-    }
-
-    private User ensureUser() {
-        User user = userRepository.findByEmailIgnoreCase(properties.getUserEmail())
-                .orElseGet(User::new);
-        user.setEmail(properties.getUserEmail());
-        user.setFullName(properties.getUserFullName());
-        user.setPasswordHash(passwordEncoder.encode(properties.getUserPassword()));
-        user.setActive(true);
-        user.setDeletedAt(null);
-        return userRepository.save(user);
-    }
-
-    private UserTenant ensureUserTenant(Tenant tenant, User user, Role tenantAdminRole) {
-        UserTenant userTenant = userTenantRepository.findByTenantIdAndUserId(tenant.getId(), user.getId())
-                .orElseGet(UserTenant::new);
-        userTenant.setTenantId(tenant.getId());
-        userTenant.setUserId(user.getId());
-        userTenant.setRoleId(tenantAdminRole.getId());
-        userTenant.setActive(true);
-        userTenant.setDeletedAt(null);
-        return userTenantRepository.save(userTenant);
-    }
-
-    private void ensureUserTenantRole(UserTenant userTenant, Role tenantAdminRole) {
-        if (userTenantRoleRepository.existsByUserTenantIdAndRoleId(userTenant.getId(), tenantAdminRole.getId())) {
-            return;
+        public DemoCommercialEnvironmentService(
+                        DemoCommercialProperties properties,
+                        TenantRepository tenantRepository,
+                        UserRepository userRepository,
+                        RoleRepository roleRepository,
+                        UserTenantRepository userTenantRepository,
+                        UserTenantRoleRepository userTenantRoleRepository,
+                        ModuleDefinitionRepository moduleDefinitionRepository,
+                        TenantModuleRepository tenantModuleRepository,
+                        PasswordEncoder passwordEncoder,
+                        JdbcTemplate jdbcTemplate,
+                        EntityManager entityManager) {
+                this.properties = properties;
+                this.tenantRepository = tenantRepository;
+                this.userRepository = userRepository;
+                this.roleRepository = roleRepository;
+                this.userTenantRepository = userTenantRepository;
+                this.userTenantRoleRepository = userTenantRoleRepository;
+                this.moduleDefinitionRepository = moduleDefinitionRepository;
+                this.tenantModuleRepository = tenantModuleRepository;
+                this.passwordEncoder = passwordEncoder;
+                this.jdbcTemplate = jdbcTemplate;
+                this.entityManager = entityManager;
         }
 
-        UserTenantRole userTenantRole = new UserTenantRole();
-        userTenantRole.setUserTenantId(userTenant.getId());
-        userTenantRole.setRoleId(tenantAdminRole.getId());
-        userTenantRoleRepository.save(userTenantRole);
-    }
+        @Transactional
+        public DemoCommercialSeedSummary seed() {
+                validateProperties();
 
-    private void enableModules(UUID tenantId) {
-        Map<UUID, TenantModule> existingModules = tenantModuleRepository.findByTenantIdAndDeletedAtIsNull(tenantId).stream()
-                .collect(java.util.stream.Collectors.toMap(TenantModule::getModuleDefinitionId, module -> module));
+                Tenant tenant = ensureTenant();
+                User user = ensureUser();
+                Role tenantAdminRole = roleRepository.findByCode("TENANT_ADMIN")
+                                .orElseThrow(() -> new IllegalStateException(
+                                                "TENANT_ADMIN role should exist before demo seeding."));
 
-        List<ModuleDefinition> definitions = moduleDefinitionRepository.findAllByCodeInAndActiveTrueAndDeletedAtIsNull(
-                List.of("CORE_PLATFORM", "CRM", "PET", "IOT")
-        );
+                UserTenant userTenant = ensureUserTenant(tenant, user, tenantAdminRole);
+                ensureUserTenantRole(userTenant, tenantAdminRole);
+                enableModules(tenant.getId());
+                flushPersistenceState();
 
-        for (ModuleDefinition definition : definitions) {
-            TenantModule tenantModule = existingModules.get(definition.getId());
-            if (tenantModule == null) {
-                tenantModule = new TenantModule();
-                tenantModule.setTenantId(tenantId);
-                tenantModule.setModuleDefinitionId(definition.getId());
-            }
-            tenantModule.setEnabled(true);
-            tenantModule.setDeletedAt(null);
-            tenantModuleRepository.save(tenantModule);
+                Tenant persistedTenant = tenant;
+                User persistedUser = user;
+
+                clearTenantData(persistedTenant.getId());
+
+                Instant now = Instant.now();
+                seedCrm(persistedTenant.getId(), persistedUser.getId(), now);
+                seedPet(persistedTenant.getId(), now);
+                seedIot(persistedTenant.getId(), persistedUser.getId(), now);
+
+                return new DemoCommercialSeedSummary(
+                                persistedTenant.getCode(),
+                                persistedUser.getEmail(),
+                                25,
+                                25,
+                                33);
         }
-    }
 
-    private void flushPersistenceState() {
-        entityManager.flush();
-    }
+        private void validateProperties() {
+                if (!properties.hasCredentialsConfigured()) {
+                        throw new IllegalStateException("Commercial demo seed requires demo user email and password.");
+                }
+        }
 
-    private Tenant resolvePersistedTenant() {
-        return tenantRepository.findByCodeIgnoreCase(properties.getTenantCode())
-                .orElseThrow(() -> new IllegalStateException(
-                        "Commercial demo tenant was not persisted for code '" + properties.getTenantCode() + "'."
-                ));
-    }
+        private Tenant ensureTenant() {
+                Tenant tenant = tenantRepository.findByCodeIgnoreCase(properties.getTenantCode())
+                                .orElseGet(Tenant::new);
+                tenant.setName(properties.getTenantName());
+                tenant.setCode(properties.getTenantCode());
+                tenant.setStatus("ACTIVE");
+                tenant.setPrimaryColor("#0f172a");
+                tenant.setAccentColor("#16a34a");
+                tenant.setDefaultThemeMode(TenantThemeMode.DARK);
+                tenant.setAllowUserThemeOverride(true);
+                tenant.setPlatformOwner(false);
+                tenant.setDeletedAt(null);
+                return tenantRepository.saveAndFlush(tenant);
+        }
 
-    private User resolvePersistedUser() {
-        return userRepository.findByEmailIgnoreCase(properties.getUserEmail())
-                .orElseThrow(() -> new IllegalStateException(
-                        "Commercial demo user was not persisted for email '" + properties.getUserEmail() + "'."
-                ));
-    }
+        private User ensureUser() {
+                User user = userRepository.findByEmailIgnoreCase(properties.getUserEmail())
+                                .orElseGet(User::new);
+                user.setEmail(properties.getUserEmail());
+                user.setFullName(properties.getUserFullName());
+                user.setPasswordHash(passwordEncoder.encode(properties.getUserPassword()));
+                user.setActive(true);
+                user.setDeletedAt(null);
+                return userRepository.saveAndFlush(user);
+        }
 
-    private void clearTenantData(UUID tenantId) {
-        deleteByTenant("refresh_tokens", tenantId);
-        deleteByTenant("audit_logs", tenantId);
+        private UserTenant ensureUserTenant(Tenant tenant, User user, Role tenantAdminRole) {
+                UserTenant userTenant = userTenantRepository.findByTenantIdAndUserId(tenant.getId(), user.getId())
+                                .orElseGet(UserTenant::new);
+                userTenant.setTenantId(tenant.getId());
+                userTenant.setUserId(user.getId());
+                userTenant.setRoleId(tenantAdminRole.getId());
+                userTenant.setActive(true);
+                userTenant.setDeletedAt(null);
+                return userTenantRepository.saveAndFlush(userTenant);
+        }
 
-        deleteByTenant("crm_notes", tenantId);
-        deleteByTenant("crm_tasks", tenantId);
-        deleteByTenant("crm_deals", tenantId);
-        deleteByTenant("crm_pipeline_stages", tenantId);
-        deleteByTenant("crm_pipelines", tenantId);
-        deleteByTenant("crm_leads", tenantId);
-        deleteByTenant("crm_contacts", tenantId);
-        deleteByTenant("crm_companies", tenantId);
+        private void ensureUserTenantRole(UserTenant userTenant, Role tenantAdminRole) {
+                if (userTenantRoleRepository.existsByUserTenantIdAndRoleId(userTenant.getId(),
+                                tenantAdminRole.getId())) {
+                        return;
+                }
 
-        deleteByTenant("pet_vaccinations", tenantId);
-        deleteByTenant("pet_prescriptions", tenantId);
-        deleteByTenant("pet_medical_records", tenantId);
-        deleteByTenant("pet_appointments", tenantId);
-        deleteByTenant("pet_inventory_movements", tenantId);
-        deleteByTenant("pet_invoices", tenantId);
-        deleteByTenant("pet_products", tenantId);
-        deleteByTenant("pet_services", tenantId);
-        deleteByTenant("pet_professionals", tenantId);
-        deleteByTenant("pet_profiles", tenantId);
-        deleteByTenant("pet_clients", tenantId);
+                UserTenantRole userTenantRole = new UserTenantRole();
+                userTenantRole.setUserTenantId(userTenant.getId());
+                userTenantRole.setRoleId(tenantAdminRole.getId());
+                userTenantRoleRepository.save(userTenantRole);
+        }
 
-        deleteByTenant("iot_maintenance", tenantId);
-        deleteByTenant("iot_alarms", tenantId);
-        deleteByTenant("iot_telemetry_records", tenantId);
-        deleteByTenant("iot_registers", tenantId);
-        deleteByTenant("iot_devices", tenantId);
-    }
+        private void enableModules(UUID tenantId) {
+                List<ModuleDefinition> definitions = moduleDefinitionRepository
+                                .findAllByCodeInAndActiveTrueAndDeletedAtIsNull(
+                                                List.of("CORE_PLATFORM", "CRM", "PET", "IOT"));
 
-    private void deleteByTenant(String tableName, UUID tenantId) {
-        jdbcTemplate.update("DELETE FROM " + tableName + " WHERE tenant_id = ?", tenantId);
-    }
+                for (ModuleDefinition definition : definitions) {
+                        UUID moduleId = definition.getId();
 
-    private void seedCrm(UUID tenantId, UUID userId, Instant now) {
-        insertCrmCompany(
-                CRM_AGROTECH_COMPANY_ID,
-                tenantId,
-                "AgroTech Sul",
-                "AgroTech Sul Automacao Industrial Ltda",
-                "12.345.678/0001-90",
-                "comercial@agrotechsul.com.br",
-                "+55 41 3200-1100",
-                "https://agrotechsul.demo",
-                "Industrial Automation",
-                "ACTIVE",
-                userId,
-                now.minus(Duration.ofDays(30))
-        );
-        insertCrmCompany(
-                CRM_PETCARE_COMPANY_ID,
-                tenantId,
-                "PetCare Curitiba",
-                "PetCare Curitiba Clinica Veterinaria Ltda",
-                "23.456.789/0001-10",
-                "contato@petcarecuritiba.com.br",
-                "+55 41 3200-2200",
-                "https://petcarecuritiba.demo",
-                "Veterinary Services",
-                "ACTIVE",
-                userId,
-                now.minus(Duration.ofDays(24))
-        );
-        insertCrmCompany(
-                CRM_DELTA_COMPANY_ID,
-                tenantId,
-                "Industria Delta",
-                "Industria Delta Componentes S.A.",
-                "34.567.890/0001-21",
-                "operacoes@industriadelta.com.br",
-                "+55 41 3200-3300",
-                "https://industriadelta.demo",
-                "Manufacturing",
-                "ACTIVE",
-                userId,
-                now.minus(Duration.ofDays(18))
-        );
+                        Optional<TenantModule> existing = tenantModuleRepository
+                                        .findByTenantIdAndModuleDefinitionId(tenantId, moduleId);
 
-        insertCrmContact(
-                CRM_CARLOS_CONTACT_ID,
-                tenantId,
-                "Carlos",
-                "Mendes",
-                "carlos.mendes@agrotechsul.com.br",
-                "+55 41 99800-1101",
-                "AgroTech Sul",
-                CRM_AGROTECH_COMPANY_ID,
-                "ACTIVE",
-                userId,
-                now.minus(Duration.ofDays(17))
-        );
-        insertCrmContact(
-                CRM_ANA_CONTACT_ID,
-                tenantId,
-                "Ana",
-                "Ferreira",
-                "ana.ferreira@petcarecuritiba.com.br",
-                "+55 41 99800-2202",
-                "PetCare Curitiba",
-                CRM_PETCARE_COMPANY_ID,
-                "ACTIVE",
-                userId,
-                now.minus(Duration.ofDays(12))
-        );
-        insertCrmContact(
-                CRM_JULIANA_CONTACT_ID,
-                tenantId,
-                "Juliana",
-                "Costa",
-                "juliana.costa@industriadelta.com.br",
-                "+55 41 99800-3303",
-                "Industria Delta",
-                CRM_DELTA_COMPANY_ID,
-                "ACTIVE",
-                userId,
-                now.minus(Duration.ofDays(9))
-        );
+                        TenantModule tenantModule;
 
-        insertCrmLead(
-                CRM_AGROTECH_LEAD_ID,
-                tenantId,
-                "Industrial monitoring proposal",
-                "monitoring@agrotechsul.com.br",
-                "+55 41 3200-4400",
-                "FIELD_VISIT",
-                "QUALIFIED",
-                userId,
-                CRM_AGROTECH_COMPANY_ID,
-                CRM_CARLOS_CONTACT_ID,
-                "Pilot scope confirmed for compressor, oven and energy panel monitoring.",
-                now.minus(Duration.ofDays(8))
-        );
-        insertCrmLead(
-                CRM_PETCARE_LEAD_ID,
-                tenantId,
-                "Veterinary software expansion",
-                "expansao@petcarecuritiba.com.br",
-                "+55 41 3200-5500",
-                "REFERRAL",
-                "NEGOTIATION",
-                userId,
-                CRM_PETCARE_COMPANY_ID,
-                CRM_ANA_CONTACT_ID,
-                "Clinic wants scheduling, records and billing in a single tenant workspace.",
-                now.minus(Duration.ofDays(6))
-        );
-        insertCrmLead(
-                CRM_DELTA_LEAD_ID,
-                tenantId,
-                "Predictive maintenance contract",
-                "projetos@industriadelta.com.br",
-                "+55 41 3200-6600",
-                "EXECUTIVE_MEETING",
-                "CLOSED_WON",
-                userId,
-                CRM_DELTA_COMPANY_ID,
-                CRM_JULIANA_CONTACT_ID,
-                "Board approved the connected maintenance rollout after the plant walkthrough.",
-                now.minus(Duration.ofDays(3))
-        );
+                        if (existing.isPresent()) {
+                                tenantModule = existing.get();
+                        } else {
+                                tenantModule = new TenantModule();
+                                tenantModule.setTenantId(tenantId);
+                                tenantModule.setModuleDefinitionId(moduleId);
+                        }
 
-        insertCrmPipeline(tenantId, CRM_PIPELINE_ID, "Commercial Demo Pipeline", true, now.minus(Duration.ofDays(10)));
-        insertCrmPipelineStage(tenantId, CRM_STAGE_LEAD_ID, CRM_PIPELINE_ID, "Lead", "LEAD", 1, "#2563eb", false, now.minus(Duration.ofDays(10)));
-        insertCrmPipelineStage(tenantId, CRM_STAGE_QUALIFICATION_ID, CRM_PIPELINE_ID, "Qualification", "QUALIFICATION", 2, "#0ea5e9", false, now.minus(Duration.ofDays(10)));
-        insertCrmPipelineStage(tenantId, CRM_STAGE_PROPOSAL_ID, CRM_PIPELINE_ID, "Proposal", "PROPOSAL", 3, "#14b8a6", false, now.minus(Duration.ofDays(10)));
-        insertCrmPipelineStage(tenantId, CRM_STAGE_NEGOTIATION_ID, CRM_PIPELINE_ID, "Negotiation", "NEGOTIATION", 4, "#f59e0b", false, now.minus(Duration.ofDays(10)));
-        insertCrmPipelineStage(tenantId, CRM_STAGE_CLOSED_ID, CRM_PIPELINE_ID, "Closed", "CLOSED", 5, "#22c55e", true, now.minus(Duration.ofDays(10)));
+                        tenantModule.setEnabled(true);
+                        tenantModule.setDeletedAt(null);
 
-        insertCrmDeal(
-                CRM_AGROTECH_DEAL_ID,
-                tenantId,
-                "Industrial monitoring proposal",
-                "AgroTech Sul wants connected visibility for compressor, oven and panel telemetry.",
-                new BigDecimal("185000.00"),
-                "BRL",
-                "OPEN",
-                CRM_PIPELINE_ID,
-                CRM_STAGE_PROPOSAL_ID,
-                CRM_AGROTECH_COMPANY_ID,
-                CRM_CARLOS_CONTACT_ID,
-                CRM_AGROTECH_LEAD_ID,
-                userId,
-                LocalDate.now(ZoneOffset.UTC).plusDays(21),
-                now.minus(Duration.ofDays(5))
-        );
-        insertCrmDeal(
-                CRM_PETCARE_DEAL_ID,
-                tenantId,
-                "Veterinary software expansion",
-                "PetCare Curitiba is negotiating rollout for appointments, records and invoicing.",
-                new BigDecimal("96000.00"),
-                "BRL",
-                "OPEN",
-                CRM_PIPELINE_ID,
-                CRM_STAGE_NEGOTIATION_ID,
-                CRM_PETCARE_COMPANY_ID,
-                CRM_ANA_CONTACT_ID,
-                CRM_PETCARE_LEAD_ID,
-                userId,
-                LocalDate.now(ZoneOffset.UTC).plusDays(12),
-                now.minus(Duration.ofDays(4))
-        );
-        insertCrmDeal(
-                CRM_DELTA_DEAL_ID,
-                tenantId,
-                "Predictive maintenance contract",
-                "Industry Delta closed the predictive maintenance program after the executive review.",
-                new BigDecimal("240000.00"),
-                "BRL",
-                "CLOSED_WON",
-                CRM_PIPELINE_ID,
-                CRM_STAGE_CLOSED_ID,
-                CRM_DELTA_COMPANY_ID,
-                CRM_JULIANA_CONTACT_ID,
-                CRM_DELTA_LEAD_ID,
-                userId,
-                LocalDate.now(ZoneOffset.UTC).minusDays(8),
-                now.minus(Duration.ofDays(2))
-        );
+                        tenantModuleRepository.save(tenantModule);
+                }
 
-        insertCrmTask(
-                CRM_AGROTECH_TASK_ID,
-                tenantId,
-                "Confirm plant network topology",
-                "Validate Modbus TCP segmentation before sending the final proposal revision.",
-                now.plus(Duration.ofDays(2)),
-                "OPEN",
-                "HIGH",
-                userId,
-                CRM_AGROTECH_COMPANY_ID,
-                CRM_CARLOS_CONTACT_ID,
-                CRM_AGROTECH_LEAD_ID,
-                CRM_AGROTECH_DEAL_ID,
-                "CRM.DEAL",
-                CRM_AGROTECH_DEAL_ID,
-                now.minus(Duration.ofDays(1))
-        );
-        insertCrmTask(
-                CRM_PETCARE_TASK_ID,
-                tenantId,
-                "Review rollout milestones",
-                "Align onboarding dates for reception, medical records and billing flows.",
-                now.plus(Duration.ofDays(1)),
-                "IN_PROGRESS",
-                "MEDIUM",
-                userId,
-                CRM_PETCARE_COMPANY_ID,
-                CRM_ANA_CONTACT_ID,
-                CRM_PETCARE_LEAD_ID,
-                CRM_PETCARE_DEAL_ID,
-                "CRM.DEAL",
-                CRM_PETCARE_DEAL_ID,
-                now.minus(Duration.ofHours(20))
-        );
-        insertCrmTask(
-                CRM_DELTA_TASK_ID,
-                tenantId,
-                "Share kickoff checklist",
-                "Send the post-sale checklist to the Delta maintenance manager.",
-                now.minus(Duration.ofDays(1)),
-                "DONE",
-                "LOW",
-                userId,
-                CRM_DELTA_COMPANY_ID,
-                CRM_JULIANA_CONTACT_ID,
-                CRM_DELTA_LEAD_ID,
-                CRM_DELTA_DEAL_ID,
-                "CRM.DEAL",
-                CRM_DELTA_DEAL_ID,
-                now.minus(Duration.ofHours(8))
-        );
+                tenantModuleRepository.flush();
+        }
 
-        insertCrmNote(
-                CRM_AGROTECH_NOTE_ID,
-                tenantId,
-                "Operations manager requested a proposal that includes temperature, vibration and power dashboards for the compressor line.",
-                CRM_AGROTECH_COMPANY_ID,
-                CRM_CARLOS_CONTACT_ID,
-                CRM_AGROTECH_LEAD_ID,
-                CRM_AGROTECH_DEAL_ID,
-                "CRM.DEAL",
-                CRM_AGROTECH_DEAL_ID,
-                userId,
-                now.minus(Duration.ofHours(6))
-        );
-        insertCrmNote(
-                CRM_PETCARE_NOTE_ID,
-                tenantId,
-                "Clinic director wants the PetFlow pilot to start with vaccination, checkup and billing flows already configured.",
-                CRM_PETCARE_COMPANY_ID,
-                CRM_ANA_CONTACT_ID,
-                CRM_PETCARE_LEAD_ID,
-                CRM_PETCARE_DEAL_ID,
-                "CRM.DEAL",
-                CRM_PETCARE_DEAL_ID,
-                userId,
-                now.minus(Duration.ofHours(3))
-        );
+        private void flushPersistenceState() {
+                entityManager.flush();
+                entityManager.clear();
+        }
 
-        insertAuditLog(tenantId, userId, "CREATE", "crm_contact", CRM_ANA_CONTACT_ID, "{\"company\":\"PetCare Curitiba\"}", now.minus(Duration.ofHours(9)));
-        insertAuditLog(tenantId, userId, "CREATE", "crm_lead", CRM_PETCARE_LEAD_ID, "{\"source\":\"REFERRAL\"}", now.minus(Duration.ofHours(8)));
-        insertAuditLog(tenantId, userId, "UPDATE", "crm_deal", CRM_PETCARE_DEAL_ID, "{\"stage\":\"NEGOTIATION\"}", now.minus(Duration.ofHours(5)));
-        insertAuditLog(tenantId, userId, "CREATE", "crm_task", CRM_AGROTECH_TASK_ID, "{\"priority\":\"HIGH\"}", now.minus(Duration.ofHours(4)));
-        insertAuditLog(tenantId, userId, "CREATE", "crm_note", CRM_PETCARE_NOTE_ID, "{\"related\":\"CRM.DEAL\"}", now.minus(Duration.ofHours(2)));
-    }
+        private Tenant resolvePersistedTenant() {
+                return tenantRepository.findByCodeIgnoreCase(properties.getTenantCode())
+                                .orElseThrow(() -> new IllegalStateException(
+                                                "Commercial demo tenant was not persisted for code '"
+                                                                + properties.getTenantCode() + "'."));
+        }
 
-    private void seedPet(UUID tenantId, Instant now) {
-        Instant rexVaccinationAt = LocalDate.now(ZoneOffset.UTC).atTime(9, 30).toInstant(ZoneOffset.UTC);
-        Instant thorConsultationAt = now.plus(Duration.ofHours(2));
-        Instant lunaCheckupAt = now.plus(Duration.ofDays(1));
+        private User resolvePersistedUser() {
+                return userRepository.findByEmailIgnoreCase(properties.getUserEmail())
+                                .orElseThrow(() -> new IllegalStateException(
+                                                "Commercial demo user was not persisted for email '"
+                                                                + properties.getUserEmail() + "'."));
+        }
 
-        insertPetClient(
-                PET_MARIA_CLIENT_ID,
-                tenantId,
-                "Maria Oliveira",
-                "Maria Oliveira",
-                "maria.oliveira@petcarecuritiba.com.br",
-                "+55 41 99710-1101",
-                "CPF-MARIA-001",
-                "Rua das Araucarias, 120 - Curitiba/PR",
-                "ACTIVE",
-                now.minus(Duration.ofDays(20))
-        );
-        insertPetClient(
-                PET_JOAO_CLIENT_ID,
-                tenantId,
-                "Joao Batista",
-                "Joao Batista",
-                "joao.batista@petcarecuritiba.com.br",
-                "+55 41 99710-2202",
-                "CPF-JOAO-002",
-                "Av. Vicente Machado, 890 - Curitiba/PR",
-                "ACTIVE",
-                now.minus(Duration.ofDays(15))
-        );
+        private void clearTenantData(UUID tenantId) {
+                deleteByTenant("refresh_tokens", tenantId);
+                deleteByTenant("audit_logs", tenantId);
 
-        insertPetProfile(PET_REX_ID, tenantId, PET_MARIA_CLIENT_ID, "Rex", "DOG", "Golden Retriever", LocalDate.of(2020, 5, 14), "MALE", new BigDecimal("31.20"), "Golden", "Annual vaccination plan on track.", now.minus(Duration.ofDays(14)));
-        insertPetProfile(PET_LUNA_ID, tenantId, PET_MARIA_CLIENT_ID, "Luna", "CAT", "Siamese", LocalDate.of(2021, 8, 9), "FEMALE", new BigDecimal("4.30"), "Seal point", "Indoor cat with routine follow-up.", now.minus(Duration.ofDays(13)));
-        insertPetProfile(PET_THOR_ID, tenantId, PET_JOAO_CLIENT_ID, "Thor", "DOG", "German Shepherd", LocalDate.of(2019, 11, 3), "MALE", new BigDecimal("34.80"), "Black and tan", "Returned after mild gait discomfort.", now.minus(Duration.ofDays(12)));
+                deleteByTenant("crm_notes", tenantId);
+                deleteByTenant("crm_tasks", tenantId);
+                deleteByTenant("crm_deals", tenantId);
+                deleteByTenant("crm_pipeline_stages", tenantId);
+                deleteByTenant("crm_pipelines", tenantId);
+                deleteByTenant("crm_leads", tenantId);
+                deleteByTenant("crm_contacts", tenantId);
+                deleteByTenant("crm_companies", tenantId);
 
-        insertPetService(PET_SERVICE_VACCINATION_ID, tenantId, "Vaccination", "Core immunization appointments with vaccine tracking.", new BigDecimal("180.00"), 30, now.minus(Duration.ofDays(11)));
-        insertPetService(PET_SERVICE_CHECKUP_ID, tenantId, "Checkup", "Routine preventive assessment with owner guidance.", new BigDecimal("220.00"), 45, now.minus(Duration.ofDays(11)));
-        insertPetService(PET_SERVICE_CONSULTATION_ID, tenantId, "Clinical consultation", "Focused clinical consultation for symptoms or follow-up.", new BigDecimal("260.00"), 50, now.minus(Duration.ofDays(11)));
+                deleteByTenant("pet_vaccinations", tenantId);
+                deleteByTenant("pet_prescriptions", tenantId);
+                deleteByTenant("pet_medical_records", tenantId);
+                deleteByTenant("pet_appointments", tenantId);
+                deleteByTenant("pet_inventory_movements", tenantId);
+                deleteByTenant("pet_invoices", tenantId);
+                deleteByTenant("pet_products", tenantId);
+                deleteByTenant("pet_services", tenantId);
+                deleteByTenant("pet_professionals", tenantId);
+                deleteByTenant("pet_profiles", tenantId);
+                deleteByTenant("pet_clients", tenantId);
 
-        insertPetProfessional(PET_PROFESSIONAL_MARINA_ID, tenantId, "Dr. Marina Lopes", "Veterinary clinician", "CRMV-PR-11234", "+55 41 98800-1101", "marina.lopes@petcarecuritiba.com.br", now.minus(Duration.ofDays(10)));
-        insertPetProfessional(PET_PROFESSIONAL_RAFAEL_ID, tenantId, "Dr. Rafael Souza", "Preventive care", "CRMV-PR-11888", "+55 41 98800-2202", "rafael.souza@petcarecuritiba.com.br", now.minus(Duration.ofDays(10)));
+                deleteByTenant("iot_maintenance", tenantId);
+                deleteByTenant("iot_alarms", tenantId);
+                deleteByTenant("iot_telemetry_records", tenantId);
+                deleteByTenant("iot_registers", tenantId);
+                deleteByTenant("iot_devices", tenantId);
+        }
 
-        insertPetAppointment(PET_APPOINTMENT_REX_ID, tenantId, PET_MARIA_CLIENT_ID, PET_REX_ID, PET_SERVICE_VACCINATION_ID, PET_PROFESSIONAL_RAFAEL_ID, rexVaccinationAt, "Vaccination", "COMPLETED", "Rabies booster applied and owner instructed about the next cycle.", now.minus(Duration.ofHours(8)));
-        insertPetAppointment(PET_APPOINTMENT_THOR_ID, tenantId, PET_JOAO_CLIENT_ID, PET_THOR_ID, PET_SERVICE_CONSULTATION_ID, PET_PROFESSIONAL_MARINA_ID, thorConsultationAt, "Clinical consultation", "SCHEDULED", "Evaluate gait recovery and adjust anti-inflammatory follow-up if needed.", now.minus(Duration.ofHours(2)));
-        insertPetAppointment(PET_APPOINTMENT_LUNA_ID, tenantId, PET_MARIA_CLIENT_ID, PET_LUNA_ID, PET_SERVICE_CHECKUP_ID, PET_PROFESSIONAL_MARINA_ID, lunaCheckupAt, "Checkup", "SCHEDULED", "Routine wellness review before the next vaccination cycle.", now.minus(Duration.ofHours(1)));
+        private void deleteByTenant(String tableName, UUID tenantId) {
+                jdbcTemplate.update("DELETE FROM " + tableName + " WHERE tenant_id = ?", tenantId);
+        }
 
-        insertPetMedicalRecord(
-                PET_RECORD_REX_ID,
-                tenantId,
-                PET_REX_ID,
-                PET_PROFESSIONAL_RAFAEL_ID,
-                PET_APPOINTMENT_REX_ID,
-                "Annual vaccination visit completed without adverse reactions.",
-                "Preventive care up to date.",
-                "Maintain hydration and return for the booster next year.",
-                now.minus(Duration.ofHours(7))
-        );
-        insertPetMedicalRecord(
-                PET_RECORD_THOR_ID,
-                tenantId,
-                PET_THOR_ID,
-                PET_PROFESSIONAL_MARINA_ID,
-                null,
-                "Owner reported intermittent rear-limb discomfort after intense exercise.",
-                "Mild musculoskeletal overload suspected.",
-                "Clinical re-evaluation scheduled with rest and anti-inflammatory support.",
-                now.minus(Duration.ofHours(5))
-        );
+        private void seedCrm(UUID tenantId, UUID userId, Instant now) {
+                insertCrmCompany(
+                                CRM_AGROTECH_COMPANY_ID,
+                                tenantId,
+                                "AgroTech Sul",
+                                "AgroTech Sul Automacao Industrial Ltda",
+                                "12.345.678/0001-90",
+                                "comercial@agrotechsul.com.br",
+                                "+55 41 3200-1100",
+                                "https://agrotechsul.demo",
+                                "Industrial Automation",
+                                "ACTIVE",
+                                userId,
+                                now.minus(Duration.ofDays(30)));
+                insertCrmCompany(
+                                CRM_PETCARE_COMPANY_ID,
+                                tenantId,
+                                "PetCare Curitiba",
+                                "PetCare Curitiba Clinica Veterinaria Ltda",
+                                "23.456.789/0001-10",
+                                "contato@petcarecuritiba.com.br",
+                                "+55 41 3200-2200",
+                                "https://petcarecuritiba.demo",
+                                "Veterinary Services",
+                                "ACTIVE",
+                                userId,
+                                now.minus(Duration.ofDays(24)));
+                insertCrmCompany(
+                                CRM_DELTA_COMPANY_ID,
+                                tenantId,
+                                "Industria Delta",
+                                "Industria Delta Componentes S.A.",
+                                "34.567.890/0001-21",
+                                "operacoes@industriadelta.com.br",
+                                "+55 41 3200-3300",
+                                "https://industriadelta.demo",
+                                "Manufacturing",
+                                "ACTIVE",
+                                userId,
+                                now.minus(Duration.ofDays(18)));
 
-        insertPetVaccination(PET_VACCINATION_REX_ID, tenantId, PET_REX_ID, PET_APPOINTMENT_REX_ID, "Rabies", rexVaccinationAt, rexVaccinationAt.plus(Duration.ofDays(365)), "Annual booster registered in the patient timeline.", now.minus(Duration.ofHours(7)));
-        insertPetVaccination(PET_VACCINATION_LUNA_ID, tenantId, PET_LUNA_ID, null, "Triple Feline", now.minus(Duration.ofDays(28)), now.plus(Duration.ofDays(337)), "Routine feline vaccination already applied for the next cycle.", now.minus(Duration.ofDays(28)));
+                insertCrmContact(
+                                CRM_CARLOS_CONTACT_ID,
+                                tenantId,
+                                "Carlos",
+                                "Mendes",
+                                "carlos.mendes@agrotechsul.com.br",
+                                "+55 41 99800-1101",
+                                "AgroTech Sul",
+                                CRM_AGROTECH_COMPANY_ID,
+                                "ACTIVE",
+                                userId,
+                                now.minus(Duration.ofDays(17)));
+                insertCrmContact(
+                                CRM_ANA_CONTACT_ID,
+                                tenantId,
+                                "Ana",
+                                "Ferreira",
+                                "ana.ferreira@petcarecuritiba.com.br",
+                                "+55 41 99800-2202",
+                                "PetCare Curitiba",
+                                CRM_PETCARE_COMPANY_ID,
+                                "ACTIVE",
+                                userId,
+                                now.minus(Duration.ofDays(12)));
+                insertCrmContact(
+                                CRM_JULIANA_CONTACT_ID,
+                                tenantId,
+                                "Juliana",
+                                "Costa",
+                                "juliana.costa@industriadelta.com.br",
+                                "+55 41 99800-3303",
+                                "Industria Delta",
+                                CRM_DELTA_COMPANY_ID,
+                                "ACTIVE",
+                                userId,
+                                now.minus(Duration.ofDays(9)));
 
-        insertPetProduct(PET_PRODUCT_RABIES_ID, tenantId, "Rabies vaccine dose", "VAC-RAB-001", new BigDecimal("58.00"), 4, now.minus(Duration.ofDays(6)));
-        insertPetProduct(PET_PRODUCT_SUPPLEMENT_ID, tenantId, "Joint support supplement", "SUP-JNT-014", new BigDecimal("92.00"), 12, now.minus(Duration.ofDays(6)));
-        insertPetProduct(PET_PRODUCT_PARASITE_ID, tenantId, "Antiparasitic kit", "MED-ANT-020", new BigDecimal("48.00"), 3, now.minus(Duration.ofDays(6)));
+                insertCrmLead(
+                                CRM_AGROTECH_LEAD_ID,
+                                tenantId,
+                                "Industrial monitoring proposal",
+                                "monitoring@agrotechsul.com.br",
+                                "+55 41 3200-4400",
+                                "FIELD_VISIT",
+                                "QUALIFIED",
+                                userId,
+                                CRM_AGROTECH_COMPANY_ID,
+                                CRM_CARLOS_CONTACT_ID,
+                                "Pilot scope confirmed for compressor, oven and energy panel monitoring.",
+                                now.minus(Duration.ofDays(8)));
+                insertCrmLead(
+                                CRM_PETCARE_LEAD_ID,
+                                tenantId,
+                                "Veterinary software expansion",
+                                "expansao@petcarecuritiba.com.br",
+                                "+55 41 3200-5500",
+                                "REFERRAL",
+                                "NEGOTIATION",
+                                userId,
+                                CRM_PETCARE_COMPANY_ID,
+                                CRM_ANA_CONTACT_ID,
+                                "Clinic wants scheduling, records and billing in a single tenant workspace.",
+                                now.minus(Duration.ofDays(6)));
+                insertCrmLead(
+                                CRM_DELTA_LEAD_ID,
+                                tenantId,
+                                "Predictive maintenance contract",
+                                "projetos@industriadelta.com.br",
+                                "+55 41 3200-6600",
+                                "EXECUTIVE_MEETING",
+                                "CLOSED_WON",
+                                userId,
+                                CRM_DELTA_COMPANY_ID,
+                                CRM_JULIANA_CONTACT_ID,
+                                "Board approved the connected maintenance rollout after the plant walkthrough.",
+                                now.minus(Duration.ofDays(3)));
 
-        insertPetInventoryMovement(PET_INVENTORY_RABIES_ID, tenantId, PET_PRODUCT_RABIES_ID, "OUTBOUND", 2, "Vaccination appointments consumed two doses this week.", now.minus(Duration.ofHours(12)));
-        insertPetInventoryMovement(PET_INVENTORY_SUPPLEMENT_ID, tenantId, PET_PRODUCT_SUPPLEMENT_ID, "INBOUND", 6, "Monthly replenishment received for preventive care stock.", now.minus(Duration.ofDays(2)));
-        insertPetInventoryMovement(PET_INVENTORY_PARASITE_ID, tenantId, PET_PRODUCT_PARASITE_ID, "OUTBOUND", 3, "Campaign stock reserved for current consultations.", now.minus(Duration.ofHours(18)));
+                insertCrmPipeline(tenantId, CRM_PIPELINE_ID, "Commercial Demo Pipeline", true,
+                                now.minus(Duration.ofDays(10)));
+                insertCrmPipelineStage(tenantId, CRM_STAGE_LEAD_ID, CRM_PIPELINE_ID, "Lead", "LEAD", 1, "#2563eb",
+                                false, now.minus(Duration.ofDays(10)));
+                insertCrmPipelineStage(tenantId, CRM_STAGE_QUALIFICATION_ID, CRM_PIPELINE_ID, "Qualification",
+                                "QUALIFICATION", 2, "#0ea5e9", false, now.minus(Duration.ofDays(10)));
+                insertCrmPipelineStage(tenantId, CRM_STAGE_PROPOSAL_ID, CRM_PIPELINE_ID, "Proposal", "PROPOSAL", 3,
+                                "#14b8a6", false, now.minus(Duration.ofDays(10)));
+                insertCrmPipelineStage(tenantId, CRM_STAGE_NEGOTIATION_ID, CRM_PIPELINE_ID, "Negotiation",
+                                "NEGOTIATION", 4, "#f59e0b", false, now.minus(Duration.ofDays(10)));
+                insertCrmPipelineStage(tenantId, CRM_STAGE_CLOSED_ID, CRM_PIPELINE_ID, "Closed", "CLOSED", 5, "#22c55e",
+                                true, now.minus(Duration.ofDays(10)));
 
-        insertPetInvoice(PET_INVOICE_MARIA_ID, tenantId, PET_MARIA_CLIENT_ID, new BigDecimal("440.00"), "PENDING", now.minus(Duration.ofDays(1)), now.minus(Duration.ofDays(1)));
-        insertPetInvoice(PET_INVOICE_JOAO_ID, tenantId, PET_JOAO_CLIENT_ID, new BigDecimal("260.00"), "OVERDUE", now.minus(Duration.ofDays(4)), now.minus(Duration.ofDays(4)));
-    }
+                insertCrmDeal(
+                                CRM_AGROTECH_DEAL_ID,
+                                tenantId,
+                                "Industrial monitoring proposal",
+                                "AgroTech Sul wants connected visibility for compressor, oven and panel telemetry.",
+                                new BigDecimal("185000.00"),
+                                "BRL",
+                                "OPEN",
+                                CRM_PIPELINE_ID,
+                                CRM_STAGE_PROPOSAL_ID,
+                                CRM_AGROTECH_COMPANY_ID,
+                                CRM_CARLOS_CONTACT_ID,
+                                CRM_AGROTECH_LEAD_ID,
+                                userId,
+                                LocalDate.now(ZoneOffset.UTC).plusDays(21),
+                                now.minus(Duration.ofDays(5)));
+                insertCrmDeal(
+                                CRM_PETCARE_DEAL_ID,
+                                tenantId,
+                                "Veterinary software expansion",
+                                "PetCare Curitiba is negotiating rollout for appointments, records and invoicing.",
+                                new BigDecimal("96000.00"),
+                                "BRL",
+                                "OPEN",
+                                CRM_PIPELINE_ID,
+                                CRM_STAGE_NEGOTIATION_ID,
+                                CRM_PETCARE_COMPANY_ID,
+                                CRM_ANA_CONTACT_ID,
+                                CRM_PETCARE_LEAD_ID,
+                                userId,
+                                LocalDate.now(ZoneOffset.UTC).plusDays(12),
+                                now.minus(Duration.ofDays(4)));
+                insertCrmDeal(
+                                CRM_DELTA_DEAL_ID,
+                                tenantId,
+                                "Predictive maintenance contract",
+                                "Industry Delta closed the predictive maintenance program after the executive review.",
+                                new BigDecimal("240000.00"),
+                                "BRL",
+                                "CLOSED_WON",
+                                CRM_PIPELINE_ID,
+                                CRM_STAGE_CLOSED_ID,
+                                CRM_DELTA_COMPANY_ID,
+                                CRM_JULIANA_CONTACT_ID,
+                                CRM_DELTA_LEAD_ID,
+                                userId,
+                                LocalDate.now(ZoneOffset.UTC).minusDays(8),
+                                now.minus(Duration.ofDays(2)));
 
-    private void seedIot(UUID tenantId, UUID userId, Instant now) {
-        Instant recent = now.minus(Duration.ofMinutes(3));
-        Instant alertWindow = now.minus(Duration.ofMinutes(18));
-        Instant acknowledgedWindow = now.minus(Duration.ofMinutes(42));
-        Instant stale = now.minus(Duration.ofHours(5));
+                insertCrmTask(
+                                CRM_AGROTECH_TASK_ID,
+                                tenantId,
+                                "Confirm plant network topology",
+                                "Validate Modbus TCP segmentation before sending the final proposal revision.",
+                                now.plus(Duration.ofDays(2)),
+                                "OPEN",
+                                "HIGH",
+                                userId,
+                                CRM_AGROTECH_COMPANY_ID,
+                                CRM_CARLOS_CONTACT_ID,
+                                CRM_AGROTECH_LEAD_ID,
+                                CRM_AGROTECH_DEAL_ID,
+                                "CRM.DEAL",
+                                CRM_AGROTECH_DEAL_ID,
+                                now.minus(Duration.ofDays(1)));
+                insertCrmTask(
+                                CRM_PETCARE_TASK_ID,
+                                tenantId,
+                                "Review rollout milestones",
+                                "Align onboarding dates for reception, medical records and billing flows.",
+                                now.plus(Duration.ofDays(1)),
+                                "IN_PROGRESS",
+                                "MEDIUM",
+                                userId,
+                                CRM_PETCARE_COMPANY_ID,
+                                CRM_ANA_CONTACT_ID,
+                                CRM_PETCARE_LEAD_ID,
+                                CRM_PETCARE_DEAL_ID,
+                                "CRM.DEAL",
+                                CRM_PETCARE_DEAL_ID,
+                                now.minus(Duration.ofHours(20)));
+                insertCrmTask(
+                                CRM_DELTA_TASK_ID,
+                                tenantId,
+                                "Share kickoff checklist",
+                                "Send the post-sale checklist to the Delta maintenance manager.",
+                                now.minus(Duration.ofDays(1)),
+                                "DONE",
+                                "LOW",
+                                userId,
+                                CRM_DELTA_COMPANY_ID,
+                                CRM_JULIANA_CONTACT_ID,
+                                CRM_DELTA_LEAD_ID,
+                                CRM_DELTA_DEAL_ID,
+                                "CRM.DEAL",
+                                CRM_DELTA_DEAL_ID,
+                                now.minus(Duration.ofHours(8)));
 
-        insertIotDevice(
-                IOT_COMPRESSOR_DEVICE_ID,
-                tenantId,
-                "compressor-line-01",
-                "CMP-01-SN",
-                "compressor-line-01",
-                "ACTUATOR",
-                "Utility bay",
-                "Compressed-air line monitored for temperature, vibration and power draw.",
-                "MODBUS_TCP",
-                "10.20.0.21",
-                502,
-                1,
-                "5s",
-                "gw-demo-01",
-                "ONLINE",
-                recent,
-                now.minus(Duration.ofDays(7))
-        );
-        insertIotDevice(
-                IOT_OVEN_DEVICE_ID,
-                tenantId,
-                "industrial-oven-02",
-                "OVN-02-SN",
-                "industrial-oven-02",
-                "SENSOR",
-                "Heat treatment line",
-                "Industrial oven monitored for temperature stability and mechanical vibration.",
-                "MODBUS_TCP",
-                "10.20.0.22",
-                502,
-                2,
-                "10s",
-                "gw-demo-01",
-                "ALERT",
-                now.minus(Duration.ofMinutes(2)),
-                now.minus(Duration.ofDays(7))
-        );
-        insertIotDevice(
-                IOT_PANEL_DEVICE_ID,
-                tenantId,
-                "electrical-panel-03",
-                "PNL-03-SN",
-                "electrical-panel-03",
-                "GATEWAY",
-                "Main electrical room",
-                "Electrical distribution panel with telemetry for load and cabinet conditions.",
-                "MODBUS_TCP",
-                "10.20.0.30",
-                502,
-                3,
-                "15s",
-                "gw-demo-02",
-                "OFFLINE",
-                stale,
-                now.minus(Duration.ofDays(7))
-        );
+                insertCrmNote(
+                                CRM_AGROTECH_NOTE_ID,
+                                tenantId,
+                                "Operations manager requested a proposal that includes temperature, vibration and power dashboards for the compressor line.",
+                                CRM_AGROTECH_COMPANY_ID,
+                                CRM_CARLOS_CONTACT_ID,
+                                CRM_AGROTECH_LEAD_ID,
+                                CRM_AGROTECH_DEAL_ID,
+                                "CRM.DEAL",
+                                CRM_AGROTECH_DEAL_ID,
+                                userId,
+                                now.minus(Duration.ofHours(6)));
+                insertCrmNote(
+                                CRM_PETCARE_NOTE_ID,
+                                tenantId,
+                                "Clinic director wants the PetFlow pilot to start with vaccination, checkup and billing flows already configured.",
+                                CRM_PETCARE_COMPANY_ID,
+                                CRM_ANA_CONTACT_ID,
+                                CRM_PETCARE_LEAD_ID,
+                                CRM_PETCARE_DEAL_ID,
+                                "CRM.DEAL",
+                                CRM_PETCARE_DEAL_ID,
+                                userId,
+                                now.minus(Duration.ofHours(3)));
 
-        insertIotRegister(IOT_COMPRESSOR_TEMPERATURE_ID, tenantId, IOT_COMPRESSOR_DEVICE_ID, "Compressor temperature", "CMP_TEMP", "FC03", 40001, "temperature", "C", "DECIMAL", new BigDecimal("35.0000"), new BigDecimal("85.0000"), "ACTIVE", now.minus(Duration.ofDays(7)));
-        insertIotRegister(IOT_COMPRESSOR_VIBRATION_ID, tenantId, IOT_COMPRESSOR_DEVICE_ID, "Compressor vibration", "CMP_VIB", "FC03", 40002, "vibration", "mm/s", "DECIMAL", new BigDecimal("0.5000"), new BigDecimal("4.5000"), "ACTIVE", now.minus(Duration.ofDays(7)));
-        insertIotRegister(IOT_COMPRESSOR_POWER_ID, tenantId, IOT_COMPRESSOR_DEVICE_ID, "Compressor power consumption", "CMP_PWR", "FC03", 40003, "power_consumption", "kW", "DECIMAL", new BigDecimal("20.0000"), new BigDecimal("95.0000"), "ACTIVE", now.minus(Duration.ofDays(7)));
-        insertIotRegister(IOT_OVEN_TEMPERATURE_ID, tenantId, IOT_OVEN_DEVICE_ID, "Oven temperature", "OVN_TEMP", "FC03", 40101, "temperature", "C", "DECIMAL", new BigDecimal("120.0000"), new BigDecimal("260.0000"), "ACTIVE", now.minus(Duration.ofDays(7)));
-        insertIotRegister(IOT_OVEN_VIBRATION_ID, tenantId, IOT_OVEN_DEVICE_ID, "Oven vibration", "OVN_VIB", "FC03", 40102, "vibration", "mm/s", "DECIMAL", new BigDecimal("0.3000"), new BigDecimal("3.2000"), "ACTIVE", now.minus(Duration.ofDays(7)));
-        insertIotRegister(IOT_OVEN_POWER_ID, tenantId, IOT_OVEN_DEVICE_ID, "Oven power consumption", "OVN_PWR", "FC03", 40103, "power_consumption", "kW", "DECIMAL", new BigDecimal("40.0000"), new BigDecimal("180.0000"), "ACTIVE", now.minus(Duration.ofDays(7)));
-        insertIotRegister(IOT_PANEL_TEMPERATURE_ID, tenantId, IOT_PANEL_DEVICE_ID, "Panel temperature", "PNL_TEMP", "FC04", 30011, "temperature", "C", "DECIMAL", new BigDecimal("18.0000"), new BigDecimal("55.0000"), "ACTIVE", now.minus(Duration.ofDays(7)));
-        insertIotRegister(IOT_PANEL_VIBRATION_ID, tenantId, IOT_PANEL_DEVICE_ID, "Panel vibration", "PNL_VIB", "FC04", 30012, "vibration", "mm/s", "DECIMAL", new BigDecimal("0.0000"), new BigDecimal("1.5000"), "ACTIVE", now.minus(Duration.ofDays(7)));
-        insertIotRegister(IOT_PANEL_POWER_ID, tenantId, IOT_PANEL_DEVICE_ID, "Panel power consumption", "PNL_PWR", "FC04", 30013, "power_consumption", "kW", "DECIMAL", new BigDecimal("10.0000"), new BigDecimal("220.0000"), "ACTIVE", now.minus(Duration.ofDays(7)));
+                insertAuditLog(tenantId, userId, "CREATE", "crm_contact", CRM_ANA_CONTACT_ID,
+                                "{\"company\":\"PetCare Curitiba\"}", now.minus(Duration.ofHours(9)));
+                insertAuditLog(tenantId, userId, "CREATE", "crm_lead", CRM_PETCARE_LEAD_ID, "{\"source\":\"REFERRAL\"}",
+                                now.minus(Duration.ofHours(8)));
+                insertAuditLog(tenantId, userId, "UPDATE", "crm_deal", CRM_PETCARE_DEAL_ID,
+                                "{\"stage\":\"NEGOTIATION\"}", now.minus(Duration.ofHours(5)));
+                insertAuditLog(tenantId, userId, "CREATE", "crm_task", CRM_AGROTECH_TASK_ID, "{\"priority\":\"HIGH\"}",
+                                now.minus(Duration.ofHours(4)));
+                insertAuditLog(tenantId, userId, "CREATE", "crm_note", CRM_PETCARE_NOTE_ID,
+                                "{\"related\":\"CRM.DEAL\"}", now.minus(Duration.ofHours(2)));
+        }
 
-        insertTelemetryPoint(tenantId, IOT_COMPRESSOR_DEVICE_ID, IOT_COMPRESSOR_TEMPERATURE_ID, "temperature", new BigDecimal("67.4000"), "C", "{\"source\":\"demo-seed\",\"asset\":\"compressor-line-01\"}", now.minus(Duration.ofMinutes(26)));
-        insertTelemetryPoint(tenantId, IOT_COMPRESSOR_DEVICE_ID, IOT_COMPRESSOR_VIBRATION_ID, "vibration", new BigDecimal("2.8000"), "mm/s", "{\"source\":\"demo-seed\",\"asset\":\"compressor-line-01\"}", now.minus(Duration.ofMinutes(22)));
-        insertTelemetryPoint(tenantId, IOT_COMPRESSOR_DEVICE_ID, IOT_COMPRESSOR_POWER_ID, "power_consumption", new BigDecimal("64.2000"), "kW", "{\"source\":\"demo-seed\",\"asset\":\"compressor-line-01\"}", now.minus(Duration.ofMinutes(21)));
-        insertTelemetryPoint(tenantId, IOT_OVEN_DEVICE_ID, IOT_OVEN_TEMPERATURE_ID, "temperature", new BigDecimal("244.6000"), "C", "{\"source\":\"demo-seed\",\"asset\":\"industrial-oven-02\"}", now.minus(Duration.ofMinutes(19)));
-        insertTelemetryPoint(tenantId, IOT_OVEN_DEVICE_ID, IOT_OVEN_VIBRATION_ID, "vibration", new BigDecimal("2.1000"), "mm/s", "{\"source\":\"demo-seed\",\"asset\":\"industrial-oven-02\"}", now.minus(Duration.ofMinutes(18)));
-        insertTelemetryPoint(tenantId, IOT_OVEN_DEVICE_ID, IOT_OVEN_POWER_ID, "power_consumption", new BigDecimal("171.3000"), "kW", "{\"source\":\"demo-seed\",\"asset\":\"industrial-oven-02\"}", now.minus(Duration.ofMinutes(17)));
-        insertTelemetryPoint(tenantId, IOT_COMPRESSOR_DEVICE_ID, IOT_COMPRESSOR_TEMPERATURE_ID, "temperature", new BigDecimal("70.1000"), "C", "{\"source\":\"demo-seed\",\"asset\":\"compressor-line-01\"}", now.minus(Duration.ofMinutes(11)));
-        insertTelemetryPoint(tenantId, IOT_COMPRESSOR_DEVICE_ID, IOT_COMPRESSOR_VIBRATION_ID, "vibration", new BigDecimal("3.6000"), "mm/s", "{\"source\":\"demo-seed\",\"asset\":\"compressor-line-01\"}", now.minus(Duration.ofMinutes(9)));
-        insertTelemetryPoint(tenantId, IOT_COMPRESSOR_DEVICE_ID, IOT_COMPRESSOR_POWER_ID, "power_consumption", new BigDecimal("69.8000"), "kW", "{\"source\":\"demo-seed\",\"asset\":\"compressor-line-01\"}", now.minus(Duration.ofMinutes(8)));
-        insertTelemetryPoint(tenantId, IOT_OVEN_DEVICE_ID, IOT_OVEN_TEMPERATURE_ID, "temperature", new BigDecimal("268.9000"), "C", "{\"source\":\"demo-seed\",\"asset\":\"industrial-oven-02\"}", now.minus(Duration.ofMinutes(6)));
-        insertTelemetryPoint(tenantId, IOT_OVEN_DEVICE_ID, IOT_OVEN_VIBRATION_ID, "vibration", new BigDecimal("2.4000"), "mm/s", "{\"source\":\"demo-seed\",\"asset\":\"industrial-oven-02\"}", now.minus(Duration.ofMinutes(5)));
-        insertTelemetryPoint(tenantId, IOT_OVEN_DEVICE_ID, IOT_OVEN_POWER_ID, "power_consumption", new BigDecimal("176.1000"), "kW", "{\"source\":\"demo-seed\",\"asset\":\"industrial-oven-02\"}", now.minus(Duration.ofMinutes(4)));
-        insertTelemetryPoint(tenantId, IOT_COMPRESSOR_DEVICE_ID, IOT_COMPRESSOR_TEMPERATURE_ID, "temperature", new BigDecimal("68.2000"), "C", "{\"source\":\"demo-seed\",\"asset\":\"compressor-line-01\"}", now.minus(Duration.ofMinutes(3)));
-        insertTelemetryPoint(tenantId, IOT_COMPRESSOR_DEVICE_ID, IOT_COMPRESSOR_VIBRATION_ID, "vibration", new BigDecimal("3.9000"), "mm/s", "{\"source\":\"demo-seed\",\"asset\":\"compressor-line-01\"}", now.minus(Duration.ofMinutes(2)));
-        insertTelemetryPoint(tenantId, IOT_COMPRESSOR_DEVICE_ID, IOT_COMPRESSOR_POWER_ID, "power_consumption", new BigDecimal("70.4000"), "kW", "{\"source\":\"demo-seed\",\"asset\":\"compressor-line-01\"}", now.minus(Duration.ofMinutes(1)));
-        insertTelemetryPoint(tenantId, IOT_PANEL_DEVICE_ID, IOT_PANEL_TEMPERATURE_ID, "temperature", new BigDecimal("32.5000"), "C", "{\"source\":\"demo-seed\",\"asset\":\"electrical-panel-03\"}", now.minus(Duration.ofHours(6)));
-        insertTelemetryPoint(tenantId, IOT_PANEL_DEVICE_ID, IOT_PANEL_POWER_ID, "power_consumption", new BigDecimal("118.0000"), "kW", "{\"source\":\"demo-seed\",\"asset\":\"electrical-panel-03\"}", now.minus(Duration.ofHours(6)).plus(Duration.ofMinutes(4)));
+        private void seedPet(UUID tenantId, Instant now) {
+                Instant rexVaccinationAt = LocalDate.now(ZoneOffset.UTC).atTime(9, 30).toInstant(ZoneOffset.UTC);
+                Instant thorConsultationAt = now.plus(Duration.ofHours(2));
+                Instant lunaCheckupAt = now.plus(Duration.ofDays(1));
 
-        insertIotAlarm(
-                IOT_TEMPERATURE_ALARM_ID,
-                tenantId,
-                IOT_OVEN_DEVICE_ID,
-                IOT_OVEN_TEMPERATURE_ID,
-                "temperature-high",
-                "HIGH",
-                "Industrial oven temperature exceeded the safe operating envelope.",
-                "OPEN",
-                alertWindow,
-                null,
-                null
-        );
-        insertIotAlarm(
-                IOT_VIBRATION_ALARM_ID,
-                tenantId,
-                IOT_COMPRESSOR_DEVICE_ID,
-                IOT_COMPRESSOR_VIBRATION_ID,
-                "vibration-anomaly",
-                "MEDIUM",
-                "Compressor vibration drifted above the normal baseline during the current shift.",
-                "ACKNOWLEDGED",
-                acknowledgedWindow,
-                acknowledgedWindow.plus(Duration.ofMinutes(7)),
-                userId
-        );
+                insertPetClient(
+                                PET_MARIA_CLIENT_ID,
+                                tenantId,
+                                "Maria Oliveira",
+                                "Maria Oliveira",
+                                "maria.oliveira@petcarecuritiba.com.br",
+                                "+55 41 99710-1101",
+                                "CPF-MARIA-001",
+                                "Rua das Araucarias, 120 - Curitiba/PR",
+                                "ACTIVE",
+                                now.minus(Duration.ofDays(20)));
+                insertPetClient(
+                                PET_JOAO_CLIENT_ID,
+                                tenantId,
+                                "Joao Batista",
+                                "Joao Batista",
+                                "joao.batista@petcarecuritiba.com.br",
+                                "+55 41 99710-2202",
+                                "CPF-JOAO-002",
+                                "Av. Vicente Machado, 890 - Curitiba/PR",
+                                "ACTIVE",
+                                now.minus(Duration.ofDays(15)));
 
-        insertIotMaintenance(
-                IOT_OVEN_MAINTENANCE_ID,
-                tenantId,
-                IOT_OVEN_DEVICE_ID,
-                IOT_TEMPERATURE_ALARM_ID,
-                IOT_OVEN_TEMPERATURE_ID,
-                "Review oven cooling loop",
-                "Investigate the temperature excursion and validate the exhaust and cooling controls before the next batch.",
-                "PENDING",
-                "HIGH",
-                "ALARM",
-                "Temperature high alarm triggered on industrial-oven-02.",
-                now.plus(Duration.ofMinutes(90)),
-                null,
-                userId,
-                "Field Engineering Team",
-                now.minus(Duration.ofMinutes(12))
-        );
-        insertIotMaintenance(
-                IOT_PANEL_MAINTENANCE_ID,
-                tenantId,
-                IOT_PANEL_DEVICE_ID,
-                null,
-                IOT_PANEL_POWER_ID,
-                "Restore panel heartbeat",
-                "Confirm communication path to the electrical panel and recover the telemetry agent.",
-                "SCHEDULED",
-                "MEDIUM",
-                "OPERATIONS",
-                "No heartbeat received from electrical-panel-03 for more than four hours.",
-                now.plus(Duration.ofHours(4)),
-                null,
-                null,
-                "Remote Support",
-                now.minus(Duration.ofMinutes(50))
-        );
-    }
+                insertPetProfile(PET_REX_ID, tenantId, PET_MARIA_CLIENT_ID, "Rex", "DOG", "Golden Retriever",
+                                LocalDate.of(2020, 5, 14), "MALE", new BigDecimal("31.20"), "Golden",
+                                "Annual vaccination plan on track.", now.minus(Duration.ofDays(14)));
+                insertPetProfile(PET_LUNA_ID, tenantId, PET_MARIA_CLIENT_ID, "Luna", "CAT", "Siamese",
+                                LocalDate.of(2021, 8, 9), "FEMALE", new BigDecimal("4.30"), "Seal point",
+                                "Indoor cat with routine follow-up.", now.minus(Duration.ofDays(13)));
+                insertPetProfile(PET_THOR_ID, tenantId, PET_JOAO_CLIENT_ID, "Thor", "DOG", "German Shepherd",
+                                LocalDate.of(2019, 11, 3), "MALE", new BigDecimal("34.80"), "Black and tan",
+                                "Returned after mild gait discomfort.", now.minus(Duration.ofDays(12)));
 
-    private void insertCrmCompany(
-            UUID id,
-            UUID tenantId,
-            String name,
-            String legalName,
-            String document,
-            String email,
-            String phone,
-            String website,
-            String industry,
-            String status,
-            UUID ownerUserId,
-            Instant createdAt
-    ) {
-        insert(
-                """
-                INSERT INTO crm_companies (
-                    id, tenant_id, name, legal_name, document, email, phone, website, industry, status, owner_user_id,
-                    created_at, updated_at, created_by, updated_by
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                """,
-                id, tenantId, name, legalName, document, email, phone, website, industry, status, ownerUserId,
-                ts(createdAt), ts(createdAt), SEED_ACTOR, SEED_ACTOR
-        );
-    }
+                insertPetService(PET_SERVICE_VACCINATION_ID, tenantId, "Vaccination",
+                                "Core immunization appointments with vaccine tracking.", new BigDecimal("180.00"), 30,
+                                now.minus(Duration.ofDays(11)));
+                insertPetService(PET_SERVICE_CHECKUP_ID, tenantId, "Checkup",
+                                "Routine preventive assessment with owner guidance.", new BigDecimal("220.00"), 45,
+                                now.minus(Duration.ofDays(11)));
+                insertPetService(PET_SERVICE_CONSULTATION_ID, tenantId, "Clinical consultation",
+                                "Focused clinical consultation for symptoms or follow-up.", new BigDecimal("260.00"),
+                                50, now.minus(Duration.ofDays(11)));
 
-    private void insertCrmContact(
-            UUID id,
-            UUID tenantId,
-            String firstName,
-            String lastName,
-            String email,
-            String phone,
-            String company,
-            UUID companyId,
-            String status,
-            UUID ownerUserId,
-            Instant createdAt
-    ) {
-        insert(
-                """
-                INSERT INTO crm_contacts (
-                    id, tenant_id, first_name, last_name, email, phone, company, company_id, status, owner_user_id,
-                    created_at, updated_at, created_by, updated_by
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                """,
-                id, tenantId, firstName, lastName, email, phone, company, companyId, status, ownerUserId,
-                ts(createdAt), ts(createdAt), SEED_ACTOR, SEED_ACTOR
-        );
-    }
+                insertPetProfessional(PET_PROFESSIONAL_MARINA_ID, tenantId, "Dr. Marina Lopes", "Veterinary clinician",
+                                "CRMV-PR-11234", "+55 41 98800-1101", "marina.lopes@petcarecuritiba.com.br",
+                                now.minus(Duration.ofDays(10)));
+                insertPetProfessional(PET_PROFESSIONAL_RAFAEL_ID, tenantId, "Dr. Rafael Souza", "Preventive care",
+                                "CRMV-PR-11888", "+55 41 98800-2202", "rafael.souza@petcarecuritiba.com.br",
+                                now.minus(Duration.ofDays(10)));
 
-    private void insertCrmLead(
-            UUID id,
-            UUID tenantId,
-            String name,
-            String email,
-            String phone,
-            String source,
-            String status,
-            UUID assignedUserId,
-            UUID companyId,
-            UUID contactId,
-            String notes,
-            Instant createdAt
-    ) {
-        insert(
-                """
-                INSERT INTO crm_leads (
-                    id, tenant_id, name, email, phone, source, status, assigned_user_id, company_id, contact_id, notes,
-                    created_at, updated_at, created_by, updated_by
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                """,
-                id, tenantId, name, email, phone, source, status, assignedUserId, companyId, contactId, notes,
-                ts(createdAt), ts(createdAt), SEED_ACTOR, SEED_ACTOR
-        );
-    }
+                insertPetAppointment(PET_APPOINTMENT_REX_ID, tenantId, PET_MARIA_CLIENT_ID, PET_REX_ID,
+                                PET_SERVICE_VACCINATION_ID, PET_PROFESSIONAL_RAFAEL_ID, rexVaccinationAt, "Vaccination",
+                                "COMPLETED", "Rabies booster applied and owner instructed about the next cycle.",
+                                now.minus(Duration.ofHours(8)));
+                insertPetAppointment(PET_APPOINTMENT_THOR_ID, tenantId, PET_JOAO_CLIENT_ID, PET_THOR_ID,
+                                PET_SERVICE_CONSULTATION_ID, PET_PROFESSIONAL_MARINA_ID, thorConsultationAt,
+                                "Clinical consultation", "SCHEDULED",
+                                "Evaluate gait recovery and adjust anti-inflammatory follow-up if needed.",
+                                now.minus(Duration.ofHours(2)));
+                insertPetAppointment(PET_APPOINTMENT_LUNA_ID, tenantId, PET_MARIA_CLIENT_ID, PET_LUNA_ID,
+                                PET_SERVICE_CHECKUP_ID, PET_PROFESSIONAL_MARINA_ID, lunaCheckupAt, "Checkup",
+                                "SCHEDULED", "Routine wellness review before the next vaccination cycle.",
+                                now.minus(Duration.ofHours(1)));
 
-    private void insertCrmPipeline(UUID tenantId, UUID id, String name, boolean isDefault, Instant createdAt) {
-        insert(
-                """
-                INSERT INTO crm_pipelines (
-                    id, tenant_id, name, is_default, created_at, updated_at, created_by, updated_by
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-                """,
-                id, tenantId, name, isDefault, ts(createdAt), ts(createdAt), SEED_ACTOR, SEED_ACTOR
-        );
-    }
+                insertPetMedicalRecord(
+                                PET_RECORD_REX_ID,
+                                tenantId,
+                                PET_REX_ID,
+                                PET_PROFESSIONAL_RAFAEL_ID,
+                                PET_APPOINTMENT_REX_ID,
+                                "Annual vaccination visit completed without adverse reactions.",
+                                "Preventive care up to date.",
+                                "Maintain hydration and return for the booster next year.",
+                                now.minus(Duration.ofHours(7)));
+                insertPetMedicalRecord(
+                                PET_RECORD_THOR_ID,
+                                tenantId,
+                                PET_THOR_ID,
+                                PET_PROFESSIONAL_MARINA_ID,
+                                null,
+                                "Owner reported intermittent rear-limb discomfort after intense exercise.",
+                                "Mild musculoskeletal overload suspected.",
+                                "Clinical re-evaluation scheduled with rest and anti-inflammatory support.",
+                                now.minus(Duration.ofHours(5)));
 
-    private void insertCrmPipelineStage(
-            UUID tenantId,
-            UUID id,
-            UUID pipelineId,
-            String name,
-            String code,
-            int position,
-            String color,
-            boolean isDefault,
-            Instant createdAt
-    ) {
-        insert(
-                """
-                INSERT INTO crm_pipeline_stages (
-                    id, tenant_id, pipeline_id, name, code, position, color, is_default,
-                    created_at, updated_at, created_by, updated_by
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                """,
-                id, tenantId, pipelineId, name, code, position, color, isDefault,
-                ts(createdAt), ts(createdAt), SEED_ACTOR, SEED_ACTOR
-        );
-    }
+                insertPetVaccination(PET_VACCINATION_REX_ID, tenantId, PET_REX_ID, PET_APPOINTMENT_REX_ID, "Rabies",
+                                rexVaccinationAt, rexVaccinationAt.plus(Duration.ofDays(365)),
+                                "Annual booster registered in the patient timeline.", now.minus(Duration.ofHours(7)));
+                insertPetVaccination(PET_VACCINATION_LUNA_ID, tenantId, PET_LUNA_ID, null, "Triple Feline",
+                                now.minus(Duration.ofDays(28)), now.plus(Duration.ofDays(337)),
+                                "Routine feline vaccination already applied for the next cycle.",
+                                now.minus(Duration.ofDays(28)));
 
-    private void insertCrmDeal(
-            UUID id,
-            UUID tenantId,
-            String title,
-            String description,
-            BigDecimal amount,
-            String currency,
-            String status,
-            UUID pipelineId,
-            UUID pipelineStageId,
-            UUID companyId,
-            UUID contactId,
-            UUID leadId,
-            UUID ownerUserId,
-            LocalDate expectedCloseDate,
-            Instant createdAt
-    ) {
-        insert(
-                """
-                INSERT INTO crm_deals (
-                    id, tenant_id, title, description, amount, currency, status, pipeline_id, pipeline_stage_id,
-                    company_id, contact_id, lead_id, owner_user_id, expected_close_date,
-                    created_at, updated_at, created_by, updated_by
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                """,
-                id, tenantId, title, description, amount, currency, status, pipelineId, pipelineStageId,
-                companyId, contactId, leadId, ownerUserId, expectedCloseDate,
-                ts(createdAt), ts(createdAt), SEED_ACTOR, SEED_ACTOR
-        );
-    }
+                insertPetProduct(PET_PRODUCT_RABIES_ID, tenantId, "Rabies vaccine dose", "VAC-RAB-001",
+                                new BigDecimal("58.00"), 4, now.minus(Duration.ofDays(6)));
+                insertPetProduct(PET_PRODUCT_SUPPLEMENT_ID, tenantId, "Joint support supplement", "SUP-JNT-014",
+                                new BigDecimal("92.00"), 12, now.minus(Duration.ofDays(6)));
+                insertPetProduct(PET_PRODUCT_PARASITE_ID, tenantId, "Antiparasitic kit", "MED-ANT-020",
+                                new BigDecimal("48.00"), 3, now.minus(Duration.ofDays(6)));
 
-    private void insertCrmTask(
-            UUID id,
-            UUID tenantId,
-            String title,
-            String description,
-            Instant dueDate,
-            String status,
-            String priority,
-            UUID assignedUserId,
-            UUID companyId,
-            UUID contactId,
-            UUID leadId,
-            UUID dealId,
-            String relatedType,
-            UUID relatedId,
-            Instant createdAt
-    ) {
-        insert(
-                """
-                INSERT INTO crm_tasks (
-                    id, tenant_id, title, description, due_date, status, priority, assigned_user_id,
-                    company_id, contact_id, lead_id, deal_id, related_type, related_id,
-                    created_at, updated_at, created_by, updated_by
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                """,
-                id, tenantId, title, description, ts(dueDate), status, priority, assignedUserId,
-                companyId, contactId, leadId, dealId, relatedType, relatedId,
-                ts(createdAt), ts(createdAt), SEED_ACTOR, SEED_ACTOR
-        );
-    }
+                insertPetInventoryMovement(PET_INVENTORY_RABIES_ID, tenantId, PET_PRODUCT_RABIES_ID, "OUTBOUND", 2,
+                                "Vaccination appointments consumed two doses this week.",
+                                now.minus(Duration.ofHours(12)));
+                insertPetInventoryMovement(PET_INVENTORY_SUPPLEMENT_ID, tenantId, PET_PRODUCT_SUPPLEMENT_ID, "INBOUND",
+                                6, "Monthly replenishment received for preventive care stock.",
+                                now.minus(Duration.ofDays(2)));
+                insertPetInventoryMovement(PET_INVENTORY_PARASITE_ID, tenantId, PET_PRODUCT_PARASITE_ID, "OUTBOUND", 3,
+                                "Campaign stock reserved for current consultations.", now.minus(Duration.ofHours(18)));
 
-    private void insertCrmNote(
-            UUID id,
-            UUID tenantId,
-            String content,
-            UUID companyId,
-            UUID contactId,
-            UUID leadId,
-            UUID dealId,
-            String relatedType,
-            UUID relatedId,
-            UUID authorUserId,
-            Instant createdAt
-    ) {
-        insert(
-                """
-                INSERT INTO crm_notes (
-                    id, tenant_id, content, company_id, contact_id, lead_id, deal_id, related_type, related_id, author_user_id,
-                    created_at, updated_at, created_by, updated_by
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                """,
-                id, tenantId, content, companyId, contactId, leadId, dealId, relatedType, relatedId, authorUserId,
-                ts(createdAt), ts(createdAt), SEED_ACTOR, SEED_ACTOR
-        );
-    }
+                insertPetInvoice(PET_INVOICE_MARIA_ID, tenantId, PET_MARIA_CLIENT_ID, new BigDecimal("440.00"),
+                                "PENDING", now.minus(Duration.ofDays(1)), now.minus(Duration.ofDays(1)));
+                insertPetInvoice(PET_INVOICE_JOAO_ID, tenantId, PET_JOAO_CLIENT_ID, new BigDecimal("260.00"), "OVERDUE",
+                                now.minus(Duration.ofDays(4)), now.minus(Duration.ofDays(4)));
+        }
 
-    private void insertPetClient(
-            UUID id,
-            UUID tenantId,
-            String fullName,
-            String name,
-            String email,
-            String phone,
-            String document,
-            String address,
-            String status,
-            Instant createdAt
-    ) {
-        insert(
-                """
-                INSERT INTO pet_clients (
-                    id, tenant_id, full_name, name, email, phone, document, address, status,
-                    created_at, updated_at, created_by, updated_by
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                """,
-                id, tenantId, fullName, name, email, phone, document, address, status,
-                ts(createdAt), ts(createdAt), SEED_ACTOR, SEED_ACTOR
-        );
-    }
+        private void seedIot(UUID tenantId, UUID userId, Instant now) {
+                Instant recent = now.minus(Duration.ofMinutes(3));
+                Instant alertWindow = now.minus(Duration.ofMinutes(18));
+                Instant acknowledgedWindow = now.minus(Duration.ofMinutes(42));
+                Instant stale = now.minus(Duration.ofHours(5));
 
-    private void insertPetProfile(
-            UUID id,
-            UUID tenantId,
-            UUID clientId,
-            String name,
-            String species,
-            String breed,
-            LocalDate birthDate,
-            String gender,
-            BigDecimal weight,
-            String color,
-            String notes,
-            Instant createdAt
-    ) {
-        insert(
-                """
-                INSERT INTO pet_profiles (
-                    id, tenant_id, client_id, name, species, breed, birth_date, gender, weight, color, notes,
-                    created_at, updated_at, created_by, updated_by
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                """,
-                id, tenantId, clientId, name, species, breed, birthDate, gender, weight, color, notes,
-                ts(createdAt), ts(createdAt), SEED_ACTOR, SEED_ACTOR
-        );
-    }
+                insertIotDevice(
+                                IOT_COMPRESSOR_DEVICE_ID,
+                                tenantId,
+                                "compressor-line-01",
+                                "CMP-01-SN",
+                                "compressor-line-01",
+                                "ACTUATOR",
+                                "Utility bay",
+                                "Compressed-air line monitored for temperature, vibration and power draw.",
+                                "MODBUS_TCP",
+                                "10.20.0.21",
+                                502,
+                                1,
+                                "5s",
+                                "gw-demo-01",
+                                "ONLINE",
+                                recent,
+                                now.minus(Duration.ofDays(7)));
+                insertIotDevice(
+                                IOT_OVEN_DEVICE_ID,
+                                tenantId,
+                                "industrial-oven-02",
+                                "OVN-02-SN",
+                                "industrial-oven-02",
+                                "SENSOR",
+                                "Heat treatment line",
+                                "Industrial oven monitored for temperature stability and mechanical vibration.",
+                                "MODBUS_TCP",
+                                "10.20.0.22",
+                                502,
+                                2,
+                                "10s",
+                                "gw-demo-01",
+                                "ALERT",
+                                now.minus(Duration.ofMinutes(2)),
+                                now.minus(Duration.ofDays(7)));
+                insertIotDevice(
+                                IOT_PANEL_DEVICE_ID,
+                                tenantId,
+                                "electrical-panel-03",
+                                "PNL-03-SN",
+                                "electrical-panel-03",
+                                "GATEWAY",
+                                "Main electrical room",
+                                "Electrical distribution panel with telemetry for load and cabinet conditions.",
+                                "MODBUS_TCP",
+                                "10.20.0.30",
+                                502,
+                                3,
+                                "15s",
+                                "gw-demo-02",
+                                "OFFLINE",
+                                stale,
+                                now.minus(Duration.ofDays(7)));
 
-    private void insertPetService(
-            UUID id,
-            UUID tenantId,
-            String name,
-            String description,
-            BigDecimal price,
-            int durationMinutes,
-            Instant createdAt
-    ) {
-        insert(
-                """
-                INSERT INTO pet_services (
-                    id, tenant_id, name, description, price, duration_minutes,
-                    created_at, updated_at, created_by, updated_by
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                """,
-                id, tenantId, name, description, price, durationMinutes,
-                ts(createdAt), ts(createdAt), SEED_ACTOR, SEED_ACTOR
-        );
-    }
+                insertIotRegister(IOT_COMPRESSOR_TEMPERATURE_ID, tenantId, IOT_COMPRESSOR_DEVICE_ID,
+                                "Compressor temperature", "CMP_TEMP", "FC03", 40001, "temperature", "C", "DECIMAL",
+                                new BigDecimal("35.0000"), new BigDecimal("85.0000"), "ACTIVE",
+                                now.minus(Duration.ofDays(7)));
+                insertIotRegister(IOT_COMPRESSOR_VIBRATION_ID, tenantId, IOT_COMPRESSOR_DEVICE_ID,
+                                "Compressor vibration", "CMP_VIB", "FC03", 40002, "vibration", "mm/s", "DECIMAL",
+                                new BigDecimal("0.5000"), new BigDecimal("4.5000"), "ACTIVE",
+                                now.minus(Duration.ofDays(7)));
+                insertIotRegister(IOT_COMPRESSOR_POWER_ID, tenantId, IOT_COMPRESSOR_DEVICE_ID,
+                                "Compressor power consumption", "CMP_PWR", "FC03", 40003, "power_consumption", "kW",
+                                "DECIMAL", new BigDecimal("20.0000"), new BigDecimal("95.0000"), "ACTIVE",
+                                now.minus(Duration.ofDays(7)));
+                insertIotRegister(IOT_OVEN_TEMPERATURE_ID, tenantId, IOT_OVEN_DEVICE_ID, "Oven temperature", "OVN_TEMP",
+                                "FC03", 40101, "temperature", "C", "DECIMAL", new BigDecimal("120.0000"),
+                                new BigDecimal("260.0000"), "ACTIVE", now.minus(Duration.ofDays(7)));
+                insertIotRegister(IOT_OVEN_VIBRATION_ID, tenantId, IOT_OVEN_DEVICE_ID, "Oven vibration", "OVN_VIB",
+                                "FC03", 40102, "vibration", "mm/s", "DECIMAL", new BigDecimal("0.3000"),
+                                new BigDecimal("3.2000"), "ACTIVE", now.minus(Duration.ofDays(7)));
+                insertIotRegister(IOT_OVEN_POWER_ID, tenantId, IOT_OVEN_DEVICE_ID, "Oven power consumption", "OVN_PWR",
+                                "FC03", 40103, "power_consumption", "kW", "DECIMAL", new BigDecimal("40.0000"),
+                                new BigDecimal("180.0000"), "ACTIVE", now.minus(Duration.ofDays(7)));
+                insertIotRegister(IOT_PANEL_TEMPERATURE_ID, tenantId, IOT_PANEL_DEVICE_ID, "Panel temperature",
+                                "PNL_TEMP", "FC04", 30011, "temperature", "C", "DECIMAL", new BigDecimal("18.0000"),
+                                new BigDecimal("55.0000"), "ACTIVE", now.minus(Duration.ofDays(7)));
+                insertIotRegister(IOT_PANEL_VIBRATION_ID, tenantId, IOT_PANEL_DEVICE_ID, "Panel vibration", "PNL_VIB",
+                                "FC04", 30012, "vibration", "mm/s", "DECIMAL", new BigDecimal("0.0000"),
+                                new BigDecimal("1.5000"), "ACTIVE", now.minus(Duration.ofDays(7)));
+                insertIotRegister(IOT_PANEL_POWER_ID, tenantId, IOT_PANEL_DEVICE_ID, "Panel power consumption",
+                                "PNL_PWR", "FC04", 30013, "power_consumption", "kW", "DECIMAL",
+                                new BigDecimal("10.0000"), new BigDecimal("220.0000"), "ACTIVE",
+                                now.minus(Duration.ofDays(7)));
 
-    private void insertPetProfessional(
-            UUID id,
-            UUID tenantId,
-            String name,
-            String specialty,
-            String licenseNumber,
-            String phone,
-            String email,
-            Instant createdAt
-    ) {
-        insert(
-                """
-                INSERT INTO pet_professionals (
-                    id, tenant_id, name, specialty, license_number, phone, email,
-                    created_at, updated_at, created_by, updated_by
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                """,
-                id, tenantId, name, specialty, licenseNumber, phone, email,
-                ts(createdAt), ts(createdAt), SEED_ACTOR, SEED_ACTOR
-        );
-    }
+                insertTelemetryPoint(tenantId, IOT_COMPRESSOR_DEVICE_ID, IOT_COMPRESSOR_TEMPERATURE_ID, "temperature",
+                                new BigDecimal("67.4000"), "C",
+                                "{\"source\":\"demo-seed\",\"asset\":\"compressor-line-01\"}",
+                                now.minus(Duration.ofMinutes(26)));
+                insertTelemetryPoint(tenantId, IOT_COMPRESSOR_DEVICE_ID, IOT_COMPRESSOR_VIBRATION_ID, "vibration",
+                                new BigDecimal("2.8000"), "mm/s",
+                                "{\"source\":\"demo-seed\",\"asset\":\"compressor-line-01\"}",
+                                now.minus(Duration.ofMinutes(22)));
+                insertTelemetryPoint(tenantId, IOT_COMPRESSOR_DEVICE_ID, IOT_COMPRESSOR_POWER_ID, "power_consumption",
+                                new BigDecimal("64.2000"), "kW",
+                                "{\"source\":\"demo-seed\",\"asset\":\"compressor-line-01\"}",
+                                now.minus(Duration.ofMinutes(21)));
+                insertTelemetryPoint(tenantId, IOT_OVEN_DEVICE_ID, IOT_OVEN_TEMPERATURE_ID, "temperature",
+                                new BigDecimal("244.6000"), "C",
+                                "{\"source\":\"demo-seed\",\"asset\":\"industrial-oven-02\"}",
+                                now.minus(Duration.ofMinutes(19)));
+                insertTelemetryPoint(tenantId, IOT_OVEN_DEVICE_ID, IOT_OVEN_VIBRATION_ID, "vibration",
+                                new BigDecimal("2.1000"), "mm/s",
+                                "{\"source\":\"demo-seed\",\"asset\":\"industrial-oven-02\"}",
+                                now.minus(Duration.ofMinutes(18)));
+                insertTelemetryPoint(tenantId, IOT_OVEN_DEVICE_ID, IOT_OVEN_POWER_ID, "power_consumption",
+                                new BigDecimal("171.3000"), "kW",
+                                "{\"source\":\"demo-seed\",\"asset\":\"industrial-oven-02\"}",
+                                now.minus(Duration.ofMinutes(17)));
+                insertTelemetryPoint(tenantId, IOT_COMPRESSOR_DEVICE_ID, IOT_COMPRESSOR_TEMPERATURE_ID, "temperature",
+                                new BigDecimal("70.1000"), "C",
+                                "{\"source\":\"demo-seed\",\"asset\":\"compressor-line-01\"}",
+                                now.minus(Duration.ofMinutes(11)));
+                insertTelemetryPoint(tenantId, IOT_COMPRESSOR_DEVICE_ID, IOT_COMPRESSOR_VIBRATION_ID, "vibration",
+                                new BigDecimal("3.6000"), "mm/s",
+                                "{\"source\":\"demo-seed\",\"asset\":\"compressor-line-01\"}",
+                                now.minus(Duration.ofMinutes(9)));
+                insertTelemetryPoint(tenantId, IOT_COMPRESSOR_DEVICE_ID, IOT_COMPRESSOR_POWER_ID, "power_consumption",
+                                new BigDecimal("69.8000"), "kW",
+                                "{\"source\":\"demo-seed\",\"asset\":\"compressor-line-01\"}",
+                                now.minus(Duration.ofMinutes(8)));
+                insertTelemetryPoint(tenantId, IOT_OVEN_DEVICE_ID, IOT_OVEN_TEMPERATURE_ID, "temperature",
+                                new BigDecimal("268.9000"), "C",
+                                "{\"source\":\"demo-seed\",\"asset\":\"industrial-oven-02\"}",
+                                now.minus(Duration.ofMinutes(6)));
+                insertTelemetryPoint(tenantId, IOT_OVEN_DEVICE_ID, IOT_OVEN_VIBRATION_ID, "vibration",
+                                new BigDecimal("2.4000"), "mm/s",
+                                "{\"source\":\"demo-seed\",\"asset\":\"industrial-oven-02\"}",
+                                now.minus(Duration.ofMinutes(5)));
+                insertTelemetryPoint(tenantId, IOT_OVEN_DEVICE_ID, IOT_OVEN_POWER_ID, "power_consumption",
+                                new BigDecimal("176.1000"), "kW",
+                                "{\"source\":\"demo-seed\",\"asset\":\"industrial-oven-02\"}",
+                                now.minus(Duration.ofMinutes(4)));
+                insertTelemetryPoint(tenantId, IOT_COMPRESSOR_DEVICE_ID, IOT_COMPRESSOR_TEMPERATURE_ID, "temperature",
+                                new BigDecimal("68.2000"), "C",
+                                "{\"source\":\"demo-seed\",\"asset\":\"compressor-line-01\"}",
+                                now.minus(Duration.ofMinutes(3)));
+                insertTelemetryPoint(tenantId, IOT_COMPRESSOR_DEVICE_ID, IOT_COMPRESSOR_VIBRATION_ID, "vibration",
+                                new BigDecimal("3.9000"), "mm/s",
+                                "{\"source\":\"demo-seed\",\"asset\":\"compressor-line-01\"}",
+                                now.minus(Duration.ofMinutes(2)));
+                insertTelemetryPoint(tenantId, IOT_COMPRESSOR_DEVICE_ID, IOT_COMPRESSOR_POWER_ID, "power_consumption",
+                                new BigDecimal("70.4000"), "kW",
+                                "{\"source\":\"demo-seed\",\"asset\":\"compressor-line-01\"}",
+                                now.minus(Duration.ofMinutes(1)));
+                insertTelemetryPoint(tenantId, IOT_PANEL_DEVICE_ID, IOT_PANEL_TEMPERATURE_ID, "temperature",
+                                new BigDecimal("32.5000"), "C",
+                                "{\"source\":\"demo-seed\",\"asset\":\"electrical-panel-03\"}",
+                                now.minus(Duration.ofHours(6)));
+                insertTelemetryPoint(tenantId, IOT_PANEL_DEVICE_ID, IOT_PANEL_POWER_ID, "power_consumption",
+                                new BigDecimal("118.0000"), "kW",
+                                "{\"source\":\"demo-seed\",\"asset\":\"electrical-panel-03\"}",
+                                now.minus(Duration.ofHours(6)).plus(Duration.ofMinutes(4)));
 
-    private void insertPetAppointment(
-            UUID id,
-            UUID tenantId,
-            UUID clientId,
-            UUID petId,
-            UUID serviceId,
-            UUID professionalId,
-            Instant scheduledAt,
-            String serviceName,
-            String status,
-            String notes,
-            Instant createdAt
-    ) {
-        insert(
-                """
-                INSERT INTO pet_appointments (
-                    id, tenant_id, client_id, pet_id, service_id, professional_id, scheduled_at, service_name, status, notes,
-                    created_at, updated_at, created_by, updated_by
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                """,
-                id, tenantId, clientId, petId, serviceId, professionalId, ts(scheduledAt), serviceName, status, notes,
-                ts(createdAt), ts(createdAt), SEED_ACTOR, SEED_ACTOR
-        );
-    }
+                insertIotAlarm(
+                                IOT_TEMPERATURE_ALARM_ID,
+                                tenantId,
+                                IOT_OVEN_DEVICE_ID,
+                                IOT_OVEN_TEMPERATURE_ID,
+                                "temperature-high",
+                                "HIGH",
+                                "Industrial oven temperature exceeded the safe operating envelope.",
+                                "OPEN",
+                                alertWindow,
+                                null,
+                                null);
+                insertIotAlarm(
+                                IOT_VIBRATION_ALARM_ID,
+                                tenantId,
+                                IOT_COMPRESSOR_DEVICE_ID,
+                                IOT_COMPRESSOR_VIBRATION_ID,
+                                "vibration-anomaly",
+                                "MEDIUM",
+                                "Compressor vibration drifted above the normal baseline during the current shift.",
+                                "ACKNOWLEDGED",
+                                acknowledgedWindow,
+                                acknowledgedWindow.plus(Duration.ofMinutes(7)),
+                                userId);
 
-    private void insertPetMedicalRecord(
-            UUID id,
-            UUID tenantId,
-            UUID petId,
-            UUID professionalId,
-            UUID appointmentId,
-            String description,
-            String diagnosis,
-            String treatment,
-            Instant createdAt
-    ) {
-        insert(
-                """
-                INSERT INTO pet_medical_records (
-                    id, tenant_id, pet_id, professional_id, appointment_id, description, diagnosis, treatment,
-                    created_at, updated_at, created_by, updated_by
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                """,
-                id, tenantId, petId, professionalId, appointmentId, description, diagnosis, treatment,
-                ts(createdAt), ts(createdAt), SEED_ACTOR, SEED_ACTOR
-        );
-    }
+                insertIotMaintenance(
+                                IOT_OVEN_MAINTENANCE_ID,
+                                tenantId,
+                                IOT_OVEN_DEVICE_ID,
+                                IOT_TEMPERATURE_ALARM_ID,
+                                IOT_OVEN_TEMPERATURE_ID,
+                                "Review oven cooling loop",
+                                "Investigate the temperature excursion and validate the exhaust and cooling controls before the next batch.",
+                                "PENDING",
+                                "HIGH",
+                                "ALARM",
+                                "Temperature high alarm triggered on industrial-oven-02.",
+                                now.plus(Duration.ofMinutes(90)),
+                                null,
+                                userId,
+                                "Field Engineering Team",
+                                now.minus(Duration.ofMinutes(12)));
+                insertIotMaintenance(
+                                IOT_PANEL_MAINTENANCE_ID,
+                                tenantId,
+                                IOT_PANEL_DEVICE_ID,
+                                null,
+                                IOT_PANEL_POWER_ID,
+                                "Restore panel heartbeat",
+                                "Confirm communication path to the electrical panel and recover the telemetry agent.",
+                                "SCHEDULED",
+                                "MEDIUM",
+                                "OPERATIONS",
+                                "No heartbeat received from electrical-panel-03 for more than four hours.",
+                                now.plus(Duration.ofHours(4)),
+                                null,
+                                null,
+                                "Remote Support",
+                                now.minus(Duration.ofMinutes(50)));
+        }
 
-    private void insertPetVaccination(
-            UUID id,
-            UUID tenantId,
-            UUID petId,
-            UUID appointmentId,
-            String vaccineName,
-            Instant appliedAt,
-            Instant nextDueAt,
-            String notes,
-            Instant createdAt
-    ) {
-        insert(
-                """
-                INSERT INTO pet_vaccinations (
-                    id, tenant_id, pet_id, appointment_id, vaccine_name, applied_at, next_due_at, notes,
-                    created_at, updated_at, created_by, updated_by
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                """,
-                id, tenantId, petId, appointmentId, vaccineName, ts(appliedAt), ts(nextDueAt), notes,
-                ts(createdAt), ts(createdAt), SEED_ACTOR, SEED_ACTOR
-        );
-    }
+        private void insertCrmCompany(
+                        UUID id,
+                        UUID tenantId,
+                        String name,
+                        String legalName,
+                        String document,
+                        String email,
+                        String phone,
+                        String website,
+                        String industry,
+                        String status,
+                        UUID ownerUserId,
+                        Instant createdAt) {
+                insert(
+                                """
+                                                INSERT INTO crm_companies (
+                                                    id, tenant_id, name, legal_name, document, email, phone, website, industry, status, owner_user_id,
+                                                    created_at, updated_at, created_by, updated_by
+                                                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                                                """,
+                                id, tenantId, name, legalName, document, email, phone, website, industry, status,
+                                ownerUserId,
+                                ts(createdAt), ts(createdAt), SEED_ACTOR, SEED_ACTOR);
+        }
 
-    private void insertPetProduct(
-            UUID id,
-            UUID tenantId,
-            String name,
-            String sku,
-            BigDecimal price,
-            int stockQuantity,
-            Instant createdAt
-    ) {
-        insert(
-                """
-                INSERT INTO pet_products (
-                    id, tenant_id, name, sku, price, stock_quantity,
-                    created_at, updated_at, created_by, updated_by
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                """,
-                id, tenantId, name, sku, price, stockQuantity,
-                ts(createdAt), ts(createdAt), SEED_ACTOR, SEED_ACTOR
-        );
-    }
+        private void insertCrmContact(
+                        UUID id,
+                        UUID tenantId,
+                        String firstName,
+                        String lastName,
+                        String email,
+                        String phone,
+                        String company,
+                        UUID companyId,
+                        String status,
+                        UUID ownerUserId,
+                        Instant createdAt) {
+                insert(
+                                """
+                                                INSERT INTO crm_contacts (
+                                                    id, tenant_id, first_name, last_name, email, phone, company, company_id, status, owner_user_id,
+                                                    created_at, updated_at, created_by, updated_by
+                                                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                                                """,
+                                id, tenantId, firstName, lastName, email, phone, company, companyId, status,
+                                ownerUserId,
+                                ts(createdAt), ts(createdAt), SEED_ACTOR, SEED_ACTOR);
+        }
 
-    private void insertPetInventoryMovement(
-            UUID id,
-            UUID tenantId,
-            UUID productId,
-            String movementType,
-            int quantity,
-            String notes,
-            Instant createdAt
-    ) {
-        insert(
-                """
-                INSERT INTO pet_inventory_movements (
-                    id, tenant_id, product_id, movement_type, quantity, notes,
-                    created_at, updated_at, created_by, updated_by
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                """,
-                id, tenantId, productId, movementType, quantity, notes,
-                ts(createdAt), ts(createdAt), SEED_ACTOR, SEED_ACTOR
-        );
-    }
+        private void insertCrmLead(
+                        UUID id,
+                        UUID tenantId,
+                        String name,
+                        String email,
+                        String phone,
+                        String source,
+                        String status,
+                        UUID assignedUserId,
+                        UUID companyId,
+                        UUID contactId,
+                        String notes,
+                        Instant createdAt) {
+                insert(
+                                """
+                                                INSERT INTO crm_leads (
+                                                    id, tenant_id, name, email, phone, source, status, assigned_user_id, company_id, contact_id, notes,
+                                                    created_at, updated_at, created_by, updated_by
+                                                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                                                """,
+                                id, tenantId, name, email, phone, source, status, assignedUserId, companyId, contactId,
+                                notes,
+                                ts(createdAt), ts(createdAt), SEED_ACTOR, SEED_ACTOR);
+        }
 
-    private void insertPetInvoice(
-            UUID id,
-            UUID tenantId,
-            UUID clientId,
-            BigDecimal totalAmount,
-            String status,
-            Instant issuedAt,
-            Instant createdAt
-    ) {
-        insert(
-                """
-                INSERT INTO pet_invoices (
-                    id, tenant_id, client_id, total_amount, status, issued_at,
-                    created_at, updated_at, created_by, updated_by
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                """,
-                id, tenantId, clientId, totalAmount, status, ts(issuedAt),
-                ts(createdAt), ts(createdAt), SEED_ACTOR, SEED_ACTOR
-        );
-    }
+        private void insertCrmPipeline(UUID tenantId, UUID id, String name, boolean isDefault, Instant createdAt) {
+                insert(
+                                """
+                                                INSERT INTO crm_pipelines (
+                                                    id, tenant_id, name, is_default, created_at, updated_at, created_by, updated_by
+                                                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                                                """,
+                                id, tenantId, name, isDefault, ts(createdAt), ts(createdAt), SEED_ACTOR, SEED_ACTOR);
+        }
 
-    private void insertIotDevice(
-            UUID id,
-            UUID tenantId,
-            String name,
-            String serialNumber,
-            String identifier,
-            String type,
-            String location,
-            String description,
-            String transport,
-            String host,
-            int port,
-            int unitId,
-            String pollingProfile,
-            String gateway,
-            String status,
-            Instant lastSeenAt,
-            Instant createdAt
-    ) {
-        insert(
-                """
-                INSERT INTO iot_devices (
-                    id, tenant_id, name, identifier, serial_number, type, location, description, transport, host, port,
-                    unit_id, polling_profile, gateway, status, last_seen_at,
-                    created_at, updated_at, created_by, updated_by
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                """,
-                id, tenantId, name, identifier, serialNumber, type, location, description, transport, host, port,
-                unitId, pollingProfile, gateway, status, ts(lastSeenAt),
-                ts(createdAt), ts(createdAt), SEED_ACTOR, SEED_ACTOR
-        );
-    }
+        private void insertCrmPipelineStage(
+                        UUID tenantId,
+                        UUID id,
+                        UUID pipelineId,
+                        String name,
+                        String code,
+                        int position,
+                        String color,
+                        boolean isDefault,
+                        Instant createdAt) {
+                insert(
+                                """
+                                                INSERT INTO crm_pipeline_stages (
+                                                    id, tenant_id, pipeline_id, name, code, position, color, is_default,
+                                                    created_at, updated_at, created_by, updated_by
+                                                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                                                """,
+                                id, tenantId, pipelineId, name, code, position, color, isDefault,
+                                ts(createdAt), ts(createdAt), SEED_ACTOR, SEED_ACTOR);
+        }
 
-    private void insertIotRegister(
-            UUID id,
-            UUID tenantId,
-            UUID deviceId,
-            String name,
-            String code,
-            String functionCode,
-            int registerAddress,
-            String metricName,
-            String unit,
-            String dataType,
-            BigDecimal minThreshold,
-            BigDecimal maxThreshold,
-            String status,
-            Instant createdAt
-    ) {
-        insert(
-                """
-                INSERT INTO iot_registers (
-                    id, tenant_id, device_id, name, code, function_code, register_address, metric_name, unit, data_type,
-                    min_threshold, max_threshold, status, created_at, updated_at, created_by, updated_by
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                """,
-                id, tenantId, deviceId, name, code, functionCode, registerAddress, metricName, unit, dataType,
-                minThreshold, maxThreshold, status, ts(createdAt), ts(createdAt), SEED_ACTOR, SEED_ACTOR
-        );
-    }
+        private void insertCrmDeal(
+                        UUID id,
+                        UUID tenantId,
+                        String title,
+                        String description,
+                        BigDecimal amount,
+                        String currency,
+                        String status,
+                        UUID pipelineId,
+                        UUID pipelineStageId,
+                        UUID companyId,
+                        UUID contactId,
+                        UUID leadId,
+                        UUID ownerUserId,
+                        LocalDate expectedCloseDate,
+                        Instant createdAt) {
+                insert(
+                                """
+                                                INSERT INTO crm_deals (
+                                                    id, tenant_id, title, description, amount, currency, status, pipeline_id, pipeline_stage_id,
+                                                    company_id, contact_id, lead_id, owner_user_id, expected_close_date,
+                                                    created_at, updated_at, created_by, updated_by
+                                                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                                                """,
+                                id, tenantId, title, description, amount, currency, status, pipelineId, pipelineStageId,
+                                companyId, contactId, leadId, ownerUserId, expectedCloseDate,
+                                ts(createdAt), ts(createdAt), SEED_ACTOR, SEED_ACTOR);
+        }
 
-    private void insertTelemetryPoint(
-            UUID tenantId,
-            UUID deviceId,
-            UUID registerId,
-            String metricName,
-            BigDecimal metricValue,
-            String unit,
-            String metadata,
-            Instant recordedAt
-    ) {
-        insert(
-                """
-                INSERT INTO iot_telemetry_records (
-                    id, tenant_id, device_id, register_id, metric_name, metric_value, unit, metadata, recorded_at,
-                    created_at, updated_at, created_by, updated_by
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                """,
-                UUID.randomUUID(), tenantId, deviceId, registerId, metricName, metricValue, unit, metadata, ts(recordedAt),
-                ts(recordedAt), ts(recordedAt), SEED_ACTOR, SEED_ACTOR
-        );
-    }
+        private void insertCrmTask(
+                        UUID id,
+                        UUID tenantId,
+                        String title,
+                        String description,
+                        Instant dueDate,
+                        String status,
+                        String priority,
+                        UUID assignedUserId,
+                        UUID companyId,
+                        UUID contactId,
+                        UUID leadId,
+                        UUID dealId,
+                        String relatedType,
+                        UUID relatedId,
+                        Instant createdAt) {
+                insert(
+                                """
+                                                INSERT INTO crm_tasks (
+                                                    id, tenant_id, title, description, due_date, status, priority, assigned_user_id,
+                                                    company_id, contact_id, lead_id, deal_id, related_type, related_id,
+                                                    created_at, updated_at, created_by, updated_by
+                                                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                                                """,
+                                id, tenantId, title, description, ts(dueDate), status, priority, assignedUserId,
+                                companyId, contactId, leadId, dealId, relatedType, relatedId,
+                                ts(createdAt), ts(createdAt), SEED_ACTOR, SEED_ACTOR);
+        }
 
-    private void insertIotAlarm(
-            UUID id,
-            UUID tenantId,
-            UUID deviceId,
-            UUID registerId,
-            String code,
-            String severity,
-            String message,
-            String status,
-            Instant triggeredAt,
-            Instant acknowledgedAt,
-            UUID acknowledgedBy
-    ) {
-        insert(
-                """
-                INSERT INTO iot_alarms (
-                    id, tenant_id, device_id, register_id, code, severity, message, status, triggered_at, acknowledged_at, acknowledged_by,
-                    created_at, updated_at, created_by, updated_by
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                """,
-                id, tenantId, deviceId, registerId, code, severity, message, status, ts(triggeredAt), ts(acknowledgedAt), acknowledgedBy,
-                ts(triggeredAt), ts(triggeredAt), SEED_ACTOR, SEED_ACTOR
-        );
-    }
+        private void insertCrmNote(
+                        UUID id,
+                        UUID tenantId,
+                        String content,
+                        UUID companyId,
+                        UUID contactId,
+                        UUID leadId,
+                        UUID dealId,
+                        String relatedType,
+                        UUID relatedId,
+                        UUID authorUserId,
+                        Instant createdAt) {
+                insert(
+                                """
+                                                INSERT INTO crm_notes (
+                                                    id, tenant_id, content, company_id, contact_id, lead_id, deal_id, related_type, related_id, author_user_id,
+                                                    created_at, updated_at, created_by, updated_by
+                                                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                                                """,
+                                id, tenantId, content, companyId, contactId, leadId, dealId, relatedType, relatedId,
+                                authorUserId,
+                                ts(createdAt), ts(createdAt), SEED_ACTOR, SEED_ACTOR);
+        }
 
-    private void insertIotMaintenance(
-            UUID id,
-            UUID tenantId,
-            UUID deviceId,
-            UUID linkedAlarmId,
-            UUID linkedRegisterId,
-            String title,
-            String description,
-            String status,
-            String priority,
-            String origin,
-            String trigger,
-            Instant scheduledAt,
-            Instant completedAt,
-            UUID assignedUserId,
-            String assignedUserLabel,
-            Instant createdAt
-    ) {
-        insert(
-                """
-                INSERT INTO iot_maintenance (
-                    id, tenant_id, device_id, linked_alarm_id, linked_register_id, title, description, status, priority, origin,
-                    trigger_message, scheduled_at, completed_at, assigned_user_id, assigned_user_label,
-                    created_at, updated_at, created_by, updated_by
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                """,
-                id, tenantId, deviceId, linkedAlarmId, linkedRegisterId, title, description, status, priority, origin,
-                trigger, ts(scheduledAt), ts(completedAt), assignedUserId, assignedUserLabel,
-                ts(createdAt), ts(createdAt), SEED_ACTOR, SEED_ACTOR
-        );
-    }
+        private void insertPetClient(
+                        UUID id,
+                        UUID tenantId,
+                        String fullName,
+                        String name,
+                        String email,
+                        String phone,
+                        String document,
+                        String address,
+                        String status,
+                        Instant createdAt) {
+                insert(
+                                """
+                                                INSERT INTO pet_clients (
+                                                    id, tenant_id, full_name, name, email, phone, document, address, status,
+                                                    created_at, updated_at, created_by, updated_by
+                                                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                                                """,
+                                id, tenantId, fullName, name, email, phone, document, address, status,
+                                ts(createdAt), ts(createdAt), SEED_ACTOR, SEED_ACTOR);
+        }
 
-    private void insertAuditLog(
-            UUID tenantId,
-            UUID userId,
-            String action,
-            String entityName,
-            UUID entityId,
-            String payload,
-            Instant createdAt
-    ) {
-        insert(
-                """
-                INSERT INTO audit_logs (
-                    id, tenant_id, user_id, action, entity_name, entity_id, payload, ip_address,
-                    created_at, updated_at, created_by, updated_by
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                """,
-                UUID.randomUUID(), tenantId, userId, action, entityName, entityId.toString(), payload, "127.0.0.1",
-                ts(createdAt), ts(createdAt), SEED_ACTOR, SEED_ACTOR
-        );
-    }
+        private void insertPetProfile(
+                        UUID id,
+                        UUID tenantId,
+                        UUID clientId,
+                        String name,
+                        String species,
+                        String breed,
+                        LocalDate birthDate,
+                        String gender,
+                        BigDecimal weight,
+                        String color,
+                        String notes,
+                        Instant createdAt) {
+                insert(
+                                """
+                                                INSERT INTO pet_profiles (
+                                                    id, tenant_id, client_id, name, species, breed, birth_date, gender, weight, color, notes,
+                                                    created_at, updated_at, created_by, updated_by
+                                                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                                                """,
+                                id, tenantId, clientId, name, species, breed, birthDate, gender, weight, color, notes,
+                                ts(createdAt), ts(createdAt), SEED_ACTOR, SEED_ACTOR);
+        }
 
-    private void insert(String sql, Object... args) {
-        jdbcTemplate.update(sql, args);
-    }
+        private void insertPetService(
+                        UUID id,
+                        UUID tenantId,
+                        String name,
+                        String description,
+                        BigDecimal price,
+                        int durationMinutes,
+                        Instant createdAt) {
+                insert(
+                                """
+                                                INSERT INTO pet_services (
+                                                    id, tenant_id, name, description, price, duration_minutes,
+                                                    created_at, updated_at, created_by, updated_by
+                                                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                                                """,
+                                id, tenantId, name, description, price, durationMinutes,
+                                ts(createdAt), ts(createdAt), SEED_ACTOR, SEED_ACTOR);
+        }
 
-    private Timestamp ts(Instant value) {
-        return value == null ? null : Timestamp.from(value);
-    }
+        private void insertPetProfessional(
+                        UUID id,
+                        UUID tenantId,
+                        String name,
+                        String specialty,
+                        String licenseNumber,
+                        String phone,
+                        String email,
+                        Instant createdAt) {
+                insert(
+                                """
+                                                INSERT INTO pet_professionals (
+                                                    id, tenant_id, name, specialty, license_number, phone, email,
+                                                    created_at, updated_at, created_by, updated_by
+                                                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                                                """,
+                                id, tenantId, name, specialty, licenseNumber, phone, email,
+                                ts(createdAt), ts(createdAt), SEED_ACTOR, SEED_ACTOR);
+        }
 
-    private static UUID uuid(String value) {
-        return UUID.fromString(value);
-    }
+        private void insertPetAppointment(
+                        UUID id,
+                        UUID tenantId,
+                        UUID clientId,
+                        UUID petId,
+                        UUID serviceId,
+                        UUID professionalId,
+                        Instant scheduledAt,
+                        String serviceName,
+                        String status,
+                        String notes,
+                        Instant createdAt) {
+                insert(
+                                """
+                                                INSERT INTO pet_appointments (
+                                                    id, tenant_id, client_id, pet_id, service_id, professional_id, scheduled_at, service_name, status, notes,
+                                                    created_at, updated_at, created_by, updated_by
+                                                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                                                """,
+                                id, tenantId, clientId, petId, serviceId, professionalId, ts(scheduledAt), serviceName,
+                                status, notes,
+                                ts(createdAt), ts(createdAt), SEED_ACTOR, SEED_ACTOR);
+        }
 
-    public record DemoCommercialSeedSummary(
-            String tenantCode,
-            String userEmail,
-            int crmRecords,
-            int petRecords,
-            int iotRecords
-    ) {
-    }
+        private void insertPetMedicalRecord(
+                        UUID id,
+                        UUID tenantId,
+                        UUID petId,
+                        UUID professionalId,
+                        UUID appointmentId,
+                        String description,
+                        String diagnosis,
+                        String treatment,
+                        Instant createdAt) {
+                insert(
+                                """
+                                                INSERT INTO pet_medical_records (
+                                                    id, tenant_id, pet_id, professional_id, appointment_id, description, diagnosis, treatment,
+                                                    created_at, updated_at, created_by, updated_by
+                                                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                                                """,
+                                id, tenantId, petId, professionalId, appointmentId, description, diagnosis, treatment,
+                                ts(createdAt), ts(createdAt), SEED_ACTOR, SEED_ACTOR);
+        }
+
+        private void insertPetVaccination(
+                        UUID id,
+                        UUID tenantId,
+                        UUID petId,
+                        UUID appointmentId,
+                        String vaccineName,
+                        Instant appliedAt,
+                        Instant nextDueAt,
+                        String notes,
+                        Instant createdAt) {
+                insert(
+                                """
+                                                INSERT INTO pet_vaccinations (
+                                                    id, tenant_id, pet_id, appointment_id, vaccine_name, applied_at, next_due_at, notes,
+                                                    created_at, updated_at, created_by, updated_by
+                                                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                                                """,
+                                id, tenantId, petId, appointmentId, vaccineName, ts(appliedAt), ts(nextDueAt), notes,
+                                ts(createdAt), ts(createdAt), SEED_ACTOR, SEED_ACTOR);
+        }
+
+        private void insertPetProduct(
+                        UUID id,
+                        UUID tenantId,
+                        String name,
+                        String sku,
+                        BigDecimal price,
+                        int stockQuantity,
+                        Instant createdAt) {
+                insert(
+                                """
+                                                INSERT INTO pet_products (
+                                                    id, tenant_id, name, sku, price, stock_quantity,
+                                                    created_at, updated_at, created_by, updated_by
+                                                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                                                """,
+                                id, tenantId, name, sku, price, stockQuantity,
+                                ts(createdAt), ts(createdAt), SEED_ACTOR, SEED_ACTOR);
+        }
+
+        private void insertPetInventoryMovement(
+                        UUID id,
+                        UUID tenantId,
+                        UUID productId,
+                        String movementType,
+                        int quantity,
+                        String notes,
+                        Instant createdAt) {
+                insert(
+                                """
+                                                INSERT INTO pet_inventory_movements (
+                                                    id, tenant_id, product_id, movement_type, quantity, notes,
+                                                    created_at, updated_at, created_by, updated_by
+                                                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                                                """,
+                                id, tenantId, productId, movementType, quantity, notes,
+                                ts(createdAt), ts(createdAt), SEED_ACTOR, SEED_ACTOR);
+        }
+
+        private void insertPetInvoice(
+                        UUID id,
+                        UUID tenantId,
+                        UUID clientId,
+                        BigDecimal totalAmount,
+                        String status,
+                        Instant issuedAt,
+                        Instant createdAt) {
+                insert(
+                                """
+                                                INSERT INTO pet_invoices (
+                                                    id, tenant_id, client_id, total_amount, status, issued_at,
+                                                    created_at, updated_at, created_by, updated_by
+                                                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                                                """,
+                                id, tenantId, clientId, totalAmount, status, ts(issuedAt),
+                                ts(createdAt), ts(createdAt), SEED_ACTOR, SEED_ACTOR);
+        }
+
+        private void insertIotDevice(
+                        UUID id,
+                        UUID tenantId,
+                        String name,
+                        String serialNumber,
+                        String identifier,
+                        String type,
+                        String location,
+                        String description,
+                        String transport,
+                        String host,
+                        int port,
+                        int unitId,
+                        String pollingProfile,
+                        String gateway,
+                        String status,
+                        Instant lastSeenAt,
+                        Instant createdAt) {
+                insert(
+                                """
+                                                INSERT INTO iot_devices (
+                                                    id, tenant_id, name, identifier, serial_number, type, location, description, transport, host, port,
+                                                    unit_id, polling_profile, gateway, status, last_seen_at,
+                                                    created_at, updated_at, created_by, updated_by
+                                                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                                                """,
+                                id, tenantId, name, identifier, serialNumber, type, location, description, transport,
+                                host, port,
+                                unitId, pollingProfile, gateway, status, ts(lastSeenAt),
+                                ts(createdAt), ts(createdAt), SEED_ACTOR, SEED_ACTOR);
+        }
+
+        private void insertIotRegister(
+                        UUID id,
+                        UUID tenantId,
+                        UUID deviceId,
+                        String name,
+                        String code,
+                        String functionCode,
+                        int registerAddress,
+                        String metricName,
+                        String unit,
+                        String dataType,
+                        BigDecimal minThreshold,
+                        BigDecimal maxThreshold,
+                        String status,
+                        Instant createdAt) {
+                insert(
+                                """
+                                                INSERT INTO iot_registers (
+                                                    id, tenant_id, device_id, name, code, function_code, register_address, metric_name, unit, data_type,
+                                                    min_threshold, max_threshold, status, created_at, updated_at, created_by, updated_by
+                                                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                                                """,
+                                id, tenantId, deviceId, name, code, functionCode, registerAddress, metricName, unit,
+                                dataType,
+                                minThreshold, maxThreshold, status, ts(createdAt), ts(createdAt), SEED_ACTOR,
+                                SEED_ACTOR);
+        }
+
+        private void insertTelemetryPoint(
+                        UUID tenantId,
+                        UUID deviceId,
+                        UUID registerId,
+                        String metricName,
+                        BigDecimal metricValue,
+                        String unit,
+                        String metadata,
+                        Instant recordedAt) {
+                insert(
+                                """
+                                                INSERT INTO iot_telemetry_records (
+                                                    id, tenant_id, device_id, register_id, metric_name, metric_value, unit, metadata, recorded_at,
+                                                    created_at, updated_at, created_by, updated_by
+                                                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                                                """,
+                                UUID.randomUUID(), tenantId, deviceId, registerId, metricName, metricValue, unit,
+                                metadata, ts(recordedAt),
+                                ts(recordedAt), ts(recordedAt), SEED_ACTOR, SEED_ACTOR);
+        }
+
+        private void insertIotAlarm(
+                        UUID id,
+                        UUID tenantId,
+                        UUID deviceId,
+                        UUID registerId,
+                        String code,
+                        String severity,
+                        String message,
+                        String status,
+                        Instant triggeredAt,
+                        Instant acknowledgedAt,
+                        UUID acknowledgedBy) {
+                insert(
+                                """
+                                                INSERT INTO iot_alarms (
+                                                    id, tenant_id, device_id, register_id, code, severity, message, status, triggered_at, acknowledged_at, acknowledged_by,
+                                                    created_at, updated_at, created_by, updated_by
+                                                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                                                """,
+                                id, tenantId, deviceId, registerId, code, severity, message, status, ts(triggeredAt),
+                                ts(acknowledgedAt), acknowledgedBy,
+                                ts(triggeredAt), ts(triggeredAt), SEED_ACTOR, SEED_ACTOR);
+        }
+
+        private void insertIotMaintenance(
+                        UUID id,
+                        UUID tenantId,
+                        UUID deviceId,
+                        UUID linkedAlarmId,
+                        UUID linkedRegisterId,
+                        String title,
+                        String description,
+                        String status,
+                        String priority,
+                        String origin,
+                        String trigger,
+                        Instant scheduledAt,
+                        Instant completedAt,
+                        UUID assignedUserId,
+                        String assignedUserLabel,
+                        Instant createdAt) {
+                insert(
+                                """
+                                                INSERT INTO iot_maintenance (
+                                                    id, tenant_id, device_id, linked_alarm_id, linked_register_id, title, description, status, priority, origin,
+                                                    trigger_message, scheduled_at, completed_at, assigned_user_id, assigned_user_label,
+                                                    created_at, updated_at, created_by, updated_by
+                                                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                                                """,
+                                id, tenantId, deviceId, linkedAlarmId, linkedRegisterId, title, description, status,
+                                priority, origin,
+                                trigger, ts(scheduledAt), ts(completedAt), assignedUserId, assignedUserLabel,
+                                ts(createdAt), ts(createdAt), SEED_ACTOR, SEED_ACTOR);
+        }
+
+        private void insertAuditLog(
+                        UUID tenantId,
+                        UUID userId,
+                        String action,
+                        String entityName,
+                        UUID entityId,
+                        String payload,
+                        Instant createdAt) {
+                insert(
+                                """
+                                                INSERT INTO audit_logs (
+                                                    id, tenant_id, user_id, action, entity_name, entity_id, payload, ip_address,
+                                                    created_at, updated_at, created_by, updated_by
+                                                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                                                """,
+                                UUID.randomUUID(), tenantId, userId, action, entityName, entityId.toString(), payload,
+                                "127.0.0.1",
+                                ts(createdAt), ts(createdAt), SEED_ACTOR, SEED_ACTOR);
+        }
+
+        private void insert(String sql, Object... args) {
+                jdbcTemplate.update(sql, args);
+        }
+
+        private Timestamp ts(Instant value) {
+                return value == null ? null : Timestamp.from(value);
+        }
+
+        private static UUID uuid(String value) {
+                return UUID.fromString(value);
+        }
+
+        public record DemoCommercialSeedSummary(
+                        String tenantCode,
+                        String userEmail,
+                        int crmRecords,
+                        int petRecords,
+                        int iotRecords) {
+        }
 }

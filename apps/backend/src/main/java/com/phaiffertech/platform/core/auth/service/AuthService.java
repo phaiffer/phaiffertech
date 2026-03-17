@@ -23,6 +23,7 @@ import com.phaiffertech.platform.shared.security.AuthenticatedUser;
 import com.phaiffertech.platform.shared.security.CurrentUserService;
 import com.phaiffertech.platform.shared.security.JwtProperties;
 import com.phaiffertech.platform.shared.security.JwtService;
+import com.phaiffertech.platform.shared.usage.UsageTelemetryService;
 import java.time.Instant;
 import java.util.Map;
 import java.util.UUID;
@@ -46,6 +47,7 @@ public class AuthService {
     private final CurrentUserService currentUserService;
     private final AuditLogService auditLogService;
     private final PlatformMetricsService platformMetricsService;
+    private final UsageTelemetryService usageTelemetryService;
     private final FeatureFlagService featureFlagService;
     private final DemoAccessProperties demoAccessProperties;
 
@@ -62,6 +64,7 @@ public class AuthService {
             CurrentUserService currentUserService,
             AuditLogService auditLogService,
             PlatformMetricsService platformMetricsService,
+            UsageTelemetryService usageTelemetryService,
             FeatureFlagService featureFlagService,
             DemoAccessProperties demoAccessProperties
     ) {
@@ -77,6 +80,7 @@ public class AuthService {
         this.currentUserService = currentUserService;
         this.auditLogService = auditLogService;
         this.platformMetricsService = platformMetricsService;
+        this.usageTelemetryService = usageTelemetryService;
         this.featureFlagService = featureFlagService;
         this.demoAccessProperties = demoAccessProperties;
     }
@@ -148,6 +152,7 @@ public class AuthService {
 
         AuthSessionResult response = createTokenResponse(principal, user.getFullName(), tenant);
         platformMetricsService.recordAuthenticationAttempt(true);
+        usageTelemetryService.recordLoginSuccess(tenant.getId());
 
         auditLogService.logEvent(
                 tenant.getId(),

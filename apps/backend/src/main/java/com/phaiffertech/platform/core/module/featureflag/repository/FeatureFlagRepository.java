@@ -8,6 +8,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface FeatureFlagRepository extends JpaRepository<FeatureFlag, UUID> {
 
+    Optional<FeatureFlag> findByFlagKeyAndTenantId(String flagKey, UUID tenantId);
+
     Optional<FeatureFlag> findByFlagKeyAndTenantIdAndDeletedAtIsNull(String flagKey, UUID tenantId);
 
     Optional<FeatureFlag> findByFlagKeyAndTenantIdIsNullAndDeletedAtIsNull(String flagKey);

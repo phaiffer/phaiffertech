@@ -88,15 +88,22 @@ describe('Sidebar', () => {
   it('renders contextual CRM and Pet navigation and keeps tenant admin visible only for platform admins', () => {
     const { container, getByText } = render(<Sidebar />);
 
+    // Group labels are now buttons — all are always in the DOM
     expect(getByText('PhaifferTech')).toBeTruthy();
     expect(getByText('Platform')).toBeTruthy();
     expect(getByText('CRM')).toBeTruthy();
     expect(getByText('PetFlow')).toBeTruthy();
+
+    // Active route is /crm/tasks, so CRM group auto-expands — its links should be present
     expect(container.querySelector('a[href="/crm"]')).not.toBeNull();
     expect(container.querySelector('a[href="/crm/tasks"]')).not.toBeNull();
-    expect(container.querySelector('a[href="/pet"]')).not.toBeNull();
-    expect(container.querySelector('a[href="/pet/appointments"]')).not.toBeNull();
-    expect(container.querySelector('a[href="/tenants"]')).not.toBeNull();
+
+    // Pet group starts collapsed (not the active group) — its links are not rendered
+    expect(container.querySelector('a[href="/pet"]')).toBeNull();
+    expect(container.querySelector('a[href="/pet/appointments"]')).toBeNull();
+
+    // Platform group is collapsed — tenants link is not rendered
+    expect(container.querySelector('a[href="/tenants"]')).toBeNull();
   });
 
   it('hides platform-only tenant administration for regular tenant users', () => {
