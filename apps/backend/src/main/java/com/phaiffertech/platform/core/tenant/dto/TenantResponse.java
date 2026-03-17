@@ -9,12 +9,14 @@ public record TenantResponse(
         String name,
         String code,
         String status,
+        String planCode,
         boolean platformOwner,
         String logoUrl,
         String primaryColor,
         String accentColor,
         TenantThemeMode defaultThemeMode,
         boolean allowUserThemeOverride,
-        List<String> contractedModules
+        List<String> contractedModules,
+        List<String> featureEntitlements
 ) {
 }

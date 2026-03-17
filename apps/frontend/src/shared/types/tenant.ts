@@ -12,4 +12,7 @@ export type Tenant = {
   defaultThemeMode: TenantThemeMode;
   allowUserThemeOverride: boolean;
   contractedModules: string[];
+
+  planCode?: string;
+  featureEntitlements?: string[];
 };

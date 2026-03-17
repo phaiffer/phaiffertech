@@ -27,6 +27,7 @@ management:
   endpoint:
     health:
       show-details: always
+      show-components: always
       probes:
         enabled: true
       group:
@@ -43,6 +44,11 @@ management:
   metrics:
     tags:
       service: ${spring.application.name}
+    distribution:
+      percentiles-histogram:
+        http.server.requests: true
+      slo:
+        http.server.requests: 100ms,250ms,500ms,1s,2s,5s
   tracing:
     enabled: ${MANAGEMENT_TRACING_ENABLED:false}
     sampling:

@@ -20,6 +20,9 @@ public class Tenant extends BaseEntity {
     @Column(name = "status", nullable = false, length = 30)
     private String status;
 
+    @Column(name = "plan_code", nullable = false, length = 80)
+    private String planCode = "STANDARD";
+
     @Column(name = "logo_url", length = 512)
     private String logoUrl;
 
@@ -61,6 +64,14 @@ public class Tenant extends BaseEntity {
 
     public void setStatus(String status) {
         this.status = status;
+    }
+
+    public String getPlanCode() {
+        return planCode;
+    }
+
+    public void setPlanCode(String planCode) {
+        this.planCode = planCode;
     }
 
     public String getLogoUrl() {

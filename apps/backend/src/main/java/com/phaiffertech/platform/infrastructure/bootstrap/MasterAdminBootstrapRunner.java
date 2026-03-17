@@ -15,9 +15,8 @@ import com.phaiffertech.platform.core.tenant.repository.TenantRepository;
 import com.phaiffertech.platform.core.user.domain.User;
 import com.phaiffertech.platform.core.user.repository.UserRepository;
 import com.phaiffertech.platform.shared.domain.enums.RoleCode;
-import java.util.Map;
-import java.util.function.Function;
-import java.util.stream.Collectors;
+import java.util.Optional;
+import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.CommandLineRunner;
@@ -131,18 +130,24 @@ public class MasterAdminBootstrapRunner implements CommandLineRunner {
     }
 
     private void ensureTenantModulesEnabled(Tenant tenant) {
-        Map<java.util.UUID, TenantModule> existingModules = tenantModuleRepository.findByTenantIdAndDeletedAtIsNull(tenant.getId())
-                .stream()
-                .collect(Collectors.toMap(TenantModule::getModuleDefinitionId, Function.identity()));
-
         for (ModuleDefinition definition : moduleDefinitionRepository.findAllByActiveTrueAndDeletedAtIsNullOrderByNameAsc()) {
-            TenantModule tenantModule = existingModules.get(definition.getId());
-            if (tenantModule == null) {
+            UUID moduleId = definition.getId();
+
+            // Look up the row regardless of soft-delete state to avoid duplicate inserts
+            Optional<TenantModule> existing = tenantModuleRepository
+                    .findByTenantIdAndModuleDefinitionId(tenant.getId(), moduleId);
+
+            TenantModule tenantModule;
+            if (existing.isPresent()) {
+                tenantModule = existing.get();
+            } else {
                 tenantModule = new TenantModule();
                 tenantModule.setTenantId(tenant.getId());
-                tenantModule.setModuleDefinitionId(definition.getId());
+                tenantModule.setModuleDefinitionId(moduleId);
             }
+
             tenantModule.setEnabled(true);
+            tenantModule.setDeletedAt(null);
             tenantModuleRepository.save(tenantModule);
         }
     }

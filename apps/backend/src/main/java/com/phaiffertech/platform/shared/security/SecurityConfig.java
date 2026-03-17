@@ -7,6 +7,7 @@ import com.phaiffertech.platform.shared.ratelimit.ApiRateLimitFilter;
 import com.phaiffertech.platform.shared.ratelimit.RateLimitProperties;
 import com.phaiffertech.platform.shared.tenancy.TenantContextFilter;
 import com.phaiffertech.platform.shared.tenancy.TenantProperties;
+import com.phaiffertech.platform.shared.usage.UsageTelemetryFilter;
 import java.util.ArrayList;
 import java.util.List;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -44,6 +45,7 @@ public class SecurityConfig {
     private final ApiRateLimitFilter apiRateLimitFilter;
     private final TenantLoggingFilter tenantLoggingFilter;
     private final RequestLoggingFilter requestLoggingFilter;
+    private final UsageTelemetryFilter usageTelemetryFilter;
     private final CorsProperties corsProperties;
     private final RestAuthenticationEntryPoint restAuthenticationEntryPoint;
     private final RestAccessDeniedHandler restAccessDeniedHandler;
@@ -56,6 +58,7 @@ public class SecurityConfig {
             ApiRateLimitFilter apiRateLimitFilter,
             TenantLoggingFilter tenantLoggingFilter,
             RequestLoggingFilter requestLoggingFilter,
+            UsageTelemetryFilter usageTelemetryFilter,
             CorsProperties corsProperties,
             RestAuthenticationEntryPoint restAuthenticationEntryPoint,
             RestAccessDeniedHandler restAccessDeniedHandler,
@@ -67,6 +70,7 @@ public class SecurityConfig {
         this.apiRateLimitFilter = apiRateLimitFilter;
         this.tenantLoggingFilter = tenantLoggingFilter;
         this.requestLoggingFilter = requestLoggingFilter;
+        this.usageTelemetryFilter = usageTelemetryFilter;
         this.corsProperties = corsProperties;
         this.restAuthenticationEntryPoint = restAuthenticationEntryPoint;
         this.restAccessDeniedHandler = restAccessDeniedHandler;
@@ -104,7 +108,8 @@ public class SecurityConfig {
                 .addFilterAfter(moduleAccessGuard, TenantContextFilter.class)
                 .addFilterAfter(apiRateLimitFilter, ModuleAccessGuard.class)
                 .addFilterAfter(tenantLoggingFilter, TenantContextFilter.class)
-                .addFilterAfter(requestLoggingFilter, TenantLoggingFilter.class);
+                .addFilterAfter(requestLoggingFilter, TenantLoggingFilter.class)
+                .addFilterAfter(usageTelemetryFilter, RequestLoggingFilter.class);
 
         return http.build();
     }

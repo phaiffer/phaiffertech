@@ -19,17 +19,20 @@ class TenantManagementIntegrationTest extends AbstractIntegrationTest {
         ResponseEntity<JsonNode> createResponse = post("/tenants", Map.of(
                 "name", "Clinic North",
                 "code", "clinic-north",
+                "planCode", "PRO",
                 "logoUrl", "/branding/clinic-north.png",
                 "primaryColor", "#1e3a8a",
                 "accentColor", "#0ea5e9",
                 "defaultThemeMode", "DARK",
                 "allowUserThemeOverride", false,
-                "contractedModules", List.of("CRM", "PET")
+                "contractedModules", List.of("CRM", "PET"),
+                "featureEntitlements", List.of("beta.dashboard", "usage.billing.preview")
         ), session);
 
         assertEquals(200, createResponse.getStatusCode().value());
         JsonNode created = requireBody(createResponse).path("data");
         assertEquals("clinic-north", created.path("code").asText());
+        assertEquals("PRO", created.path("planCode").asText());
         assertEquals("/branding/clinic-north.png", created.path("logoUrl").asText());
         assertEquals("#1e3a8a", created.path("primaryColor").asText());
         assertEquals("#0ea5e9", created.path("accentColor").asText());
@@ -37,25 +40,32 @@ class TenantManagementIntegrationTest extends AbstractIntegrationTest {
         assertTrue(containsValue(created.path("contractedModules"), "CORE_PLATFORM"));
         assertTrue(containsValue(created.path("contractedModules"), "CRM"));
         assertTrue(containsValue(created.path("contractedModules"), "PET"));
+        assertTrue(containsValue(created.path("featureEntitlements"), "beta.dashboard"));
+        assertTrue(containsValue(created.path("featureEntitlements"), "usage.billing.preview"));
 
         String tenantId = created.path("id").asText();
         ResponseEntity<JsonNode> updateResponse = put("/tenants/" + tenantId, Map.of(
                 "name", "Clinic North Updated",
                 "code", "clinic-north",
+                "planCode", "ENTERPRISE",
                 "logoUrl", "",
                 "primaryColor", "#1e40af",
                 "accentColor", "#06b6d4",
                 "defaultThemeMode", "LIGHT",
                 "allowUserThemeOverride", true,
-                "contractedModules", List.of("IOT")
+                "contractedModules", List.of("IOT"),
+                "featureEntitlements", List.of("usage.billing.preview")
         ), session);
 
         assertEquals(200, updateResponse.getStatusCode().value());
         JsonNode updated = requireBody(updateResponse).path("data");
         assertEquals("Clinic North Updated", updated.path("name").asText());
+        assertEquals("ENTERPRISE", updated.path("planCode").asText());
         assertEquals("LIGHT", updated.path("defaultThemeMode").asText());
         assertTrue(containsValue(updated.path("contractedModules"), "CORE_PLATFORM"));
         assertTrue(containsValue(updated.path("contractedModules"), "IOT"));
+        assertEquals(1, updated.path("featureEntitlements").size());
+        assertTrue(containsValue(updated.path("featureEntitlements"), "usage.billing.preview"));
     }
 
     private boolean containsValue(JsonNode arrayNode, String expected) {
