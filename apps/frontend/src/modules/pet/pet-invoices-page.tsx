@@ -11,7 +11,7 @@ import {
   resolvePetLookupIssue,
   resolvePetLookupLabel
 } from '@/modules/pet/pet-lookup-feedback';
-import { petService } from '@/shared/services/pet-service';
+import { CreatePetInvoicePaymentInput, petService } from '@/shared/services/pet-service';
 import { PageResponse } from '@/shared/types/common';
 import { PetClient, PetInvoice } from '@/shared/types/pet';
 import { ConfirmDialog } from '@/shared/ui/confirm-dialog';
@@ -27,12 +27,28 @@ const pageSize = 10;
 
 const statusOptions = [
   { value: '', label: 'Todos' },
+  { value: 'DRAFT', label: 'DRAFT' },
   { value: 'ISSUED', label: 'ISSUED' },
   { value: 'PAID', label: 'PAID' },
   { value: 'CANCELED', label: 'CANCELED' }
 ];
 
-const formStatusOptions = statusOptions.filter((item) => item.value);
+const formStatusOptions = [
+  { value: 'DRAFT', label: 'DRAFT' },
+  { value: 'ISSUED', label: 'ISSUED' },
+  { value: 'CANCELED', label: 'CANCELED' }
+];
+
+const paymentMethodOptions = [
+  { value: 'PIX', label: 'PIX' },
+  { value: 'CASH', label: 'Dinheiro' },
+  { value: 'CREDIT_CARD', label: 'Cartão de crédito' },
+  { value: 'DEBIT_CARD', label: 'Cartão de débito' },
+  { value: 'BANK_TRANSFER', label: 'Transferência' },
+  { value: 'BOLETO', label: 'Boleto' },
+  { value: 'MANUAL', label: 'Manual' },
+  { value: 'OTHER', label: 'Outro' }
+];
 
 const initialPage: PageResponse<PetInvoice> = {
   items: [],
@@ -42,7 +58,7 @@ const initialPage: PageResponse<PetInvoice> = {
   size: pageSize
 };
 
-function toDateTimeLocal(isoValue?: string) {
+function toDateTimeLocal(isoValue?: string | null) {
   if (!isoValue) {
     return '';
   }
@@ -57,6 +73,21 @@ function toIsoDate(value: string) {
     return undefined;
   }
   return new Date(value).toISOString();
+}
+
+function formatDateTime(value?: string | null) {
+  if (!value) {
+    return 'Nao emitida';
+  }
+  return new Date(value).toLocaleString('pt-BR');
+}
+
+function formatCurrency(value: number) {
+  return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+}
+
+function nowLocalDateTime() {
+  return toDateTimeLocal(new Date().toISOString());
 }
 
 export function PetInvoicesPage() {
@@ -78,7 +109,17 @@ export function PetInvoicesPage() {
   const [totalAmount, setTotalAmount] = useState('');
   const [status, setStatus] = useState('ISSUED');
   const [issuedAt, setIssuedAt] = useState('');
+  const [dueAt, setDueAt] = useState('');
+  const [description, setDescription] = useState('');
   const [submitting, setSubmitting] = useState(false);
+
+  const [paymentInvoice, setPaymentInvoice] = useState<PetInvoice | null>(null);
+  const [paymentAmount, setPaymentAmount] = useState('');
+  const [paymentMethod, setPaymentMethod] = useState('PIX');
+  const [paymentReceivedAt, setPaymentReceivedAt] = useState(nowLocalDateTime());
+  const [paymentReferenceCode, setPaymentReferenceCode] = useState('');
+  const [paymentNotes, setPaymentNotes] = useState('');
+  const [paymentSubmitting, setPaymentSubmitting] = useState(false);
 
   const [deleteCandidate, setDeleteCandidate] = useState<PetInvoice | null>(null);
   const canReadClients = hasPermission('pet.client.read');
@@ -144,14 +185,43 @@ export function PetInvoicesPage() {
     setTotalAmount('');
     setStatus('ISSUED');
     setIssuedAt('');
+    setDueAt('');
+    setDescription('');
+  }
+
+  function resetPaymentForm() {
+    setPaymentInvoice(null);
+    setPaymentAmount('');
+    setPaymentMethod('PIX');
+    setPaymentReceivedAt(nowLocalDateTime());
+    setPaymentReferenceCode('');
+    setPaymentNotes('');
   }
 
   function beginEdit(item: PetInvoice) {
+    if (item.status === 'PAID') {
+      setError('Invoices pagas devem ser ajustadas via novo documento ou acerto financeiro controlado.');
+      return;
+    }
+
     setEditingId(item.id);
     setClientId(item.clientId);
     setTotalAmount(String(item.totalAmount));
-    setStatus(item.status);
+    setStatus(item.status === 'PAID' ? 'ISSUED' : item.status);
     setIssuedAt(toDateTimeLocal(item.issuedAt));
+    setDueAt(toDateTimeLocal(item.dueAt));
+    setDescription(item.description ?? '');
+    setError(null);
+    setSuccess(null);
+  }
+
+  function beginPayment(item: PetInvoice) {
+    setPaymentInvoice(item);
+    setPaymentAmount(String(item.outstandingAmount > 0 ? item.outstandingAmount : item.totalAmount));
+    setPaymentMethod('PIX');
+    setPaymentReceivedAt(nowLocalDateTime());
+    setPaymentReferenceCode('');
+    setPaymentNotes('');
     setError(null);
     setSuccess(null);
   }
@@ -161,8 +231,13 @@ export function PetInvoicesPage() {
 
     const parsedTotal = Number(totalAmount);
     const isoIssuedAt = toIsoDate(issuedAt);
-    if (!clientId || Number.isNaN(parsedTotal) || parsedTotal < 0 || !isoIssuedAt) {
-      setError('Selecione um cliente e informe valor/data válidos.');
+    const isoDueAt = toIsoDate(dueAt);
+    if (!clientId || Number.isNaN(parsedTotal) || parsedTotal < 0) {
+      setError('Selecione um cliente e informe um valor valido.');
+      return;
+    }
+    if (status !== 'DRAFT' && !isoIssuedAt) {
+      setError('Invoices emitidas ou canceladas precisam de data de emissao.');
       return;
     }
 
@@ -176,7 +251,9 @@ export function PetInvoicesPage() {
           clientId,
           totalAmount: parsedTotal,
           status,
-          issuedAt: isoIssuedAt
+          issuedAt: isoIssuedAt,
+          dueAt: isoDueAt,
+          description: description || undefined
         });
         setSuccess('Fatura atualizada com sucesso.');
       } else {
@@ -184,7 +261,9 @@ export function PetInvoicesPage() {
           clientId,
           totalAmount: parsedTotal,
           status,
-          issuedAt: isoIssuedAt
+          issuedAt: isoIssuedAt,
+          dueAt: isoDueAt,
+          description: description || undefined
         });
         setSuccess('Fatura criada com sucesso.');
       }
@@ -195,6 +274,44 @@ export function PetInvoicesPage() {
       setError(err instanceof ApiClientError ? err.message : 'Erro ao salvar fatura.');
     } finally {
       setSubmitting(false);
+    }
+  }
+
+  async function handlePaymentSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    if (!paymentInvoice) {
+      return;
+    }
+
+    const parsedAmount = Number(paymentAmount);
+    const isoReceivedAt = toIsoDate(paymentReceivedAt);
+    if (Number.isNaN(parsedAmount) || parsedAmount <= 0 || !isoReceivedAt) {
+      setError('Informe valor e data validos para registrar o pagamento.');
+      return;
+    }
+
+    const input: CreatePetInvoicePaymentInput = {
+      amount: parsedAmount,
+      method: paymentMethod,
+      receivedAt: isoReceivedAt,
+      referenceCode: paymentReferenceCode || undefined,
+      notes: paymentNotes || undefined
+    };
+
+    setPaymentSubmitting(true);
+    setError(null);
+    setSuccess(null);
+
+    try {
+      await petService.createInvoicePayment(paymentInvoice.id, input);
+      setSuccess('Pagamento registrado com sucesso.');
+      resetPaymentForm();
+      await load(pageData.page, search, clientFilterId, statusFilter);
+    } catch (err) {
+      setError(err instanceof ApiClientError ? err.message : 'Erro ao registrar pagamento.');
+    } finally {
+      setPaymentSubmitting(false);
     }
   }
 
@@ -220,8 +337,15 @@ export function PetInvoicesPage() {
   const columns: DataTableColumn<PetInvoice>[] = [
     {
       key: 'issuedAt',
-      header: 'Emitida em',
-      render: (item) => new Date(item.issuedAt).toLocaleString('pt-BR')
+      header: 'Emissao',
+      render: (item) => (
+        <div className="space-y-1">
+          <div>{formatDateTime(item.issuedAt)}</div>
+          <div className="text-xs text-[color:var(--app-shell-muted)]">
+            Vencimento: {item.dueAt ? formatDateTime(item.dueAt) : 'Nao definido'}
+          </div>
+        </div>
+      )
     },
     {
       key: 'client',
@@ -237,24 +361,64 @@ export function PetInvoicesPage() {
         )
     },
     {
-      key: 'totalAmount',
-      header: 'Valor',
-      render: (item) => item.totalAmount.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
+      key: 'context',
+      header: 'Contexto',
+      render: (item) => (
+        <div className="space-y-1">
+          <div>{item.businessContextLabel ?? item.description ?? 'Sem contexto vinculado'}</div>
+          <div className="text-xs text-[color:var(--app-shell-muted)]">{item.financeInvoiceId}</div>
+        </div>
+      )
     },
-    { key: 'status', header: 'Status', render: (item) => item.status },
+    {
+      key: 'amounts',
+      header: 'Financeiro',
+      render: (item) => (
+        <div className="space-y-1 text-sm">
+          <div>Total: {formatCurrency(item.totalAmount)}</div>
+          <div>Pago: {formatCurrency(item.paidAmount)}</div>
+          <div className="font-semibold">Aberto: {formatCurrency(item.outstandingAmount)}</div>
+        </div>
+      )
+    },
+    {
+      key: 'status',
+      header: 'Status',
+      render: (item) => (
+        <div className="space-y-1">
+          <div>{item.status}</div>
+          {item.paidAt ? (
+            <div className="text-xs text-[color:var(--app-shell-muted)]">Pago em {formatDateTime(item.paidAt)}</div>
+          ) : null}
+        </div>
+      )
+    },
     {
       key: 'actions',
-      header: 'Ações',
+      header: 'Acoes',
       render: (item) => (
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <PermissionGuard permission="pet.invoice.update">
-            <button
-              type="button"
-              onClick={() => beginEdit(item)}
-              className="ui-inline-button"
-            >
-              Editar
-            </button>
+            {item.status !== 'PAID' ? (
+              <button
+                type="button"
+                onClick={() => beginEdit(item)}
+                className="ui-inline-button"
+              >
+                Editar
+              </button>
+            ) : null}
+          </PermissionGuard>
+          <PermissionGuard permission="pet.invoice.update">
+            {item.status !== 'PAID' && item.status !== 'CANCELED' && item.outstandingAmount > 0 ? (
+              <button
+                type="button"
+                onClick={() => beginPayment(item)}
+                className="ui-inline-button"
+              >
+                Registrar pagamento
+              </button>
+            ) : null}
           </PermissionGuard>
           <PermissionGuard permission="pet.invoice.delete">
             <button
@@ -273,13 +437,16 @@ export function PetInvoicesPage() {
   return (
     <PermissionGuard
       permission="pet.invoice.read"
-      fallback={<div className="ui-notice-warning">Você não possui permissão para visualizar faturas.</div>}
+      fallback={<div className="ui-notice-warning">Voce nao possui permissao para visualizar faturas.</div>}
     >
       <div className="space-y-5">
-        <PageTitle title="Pet Invoices" description="Faturamento básico por cliente dentro do escopo comercial do PET." />
+        <PageTitle
+          title="Pet Invoices"
+          description="Base financeira tenant-scoped do PetFlow, com saldo em aberto e registro de pagamentos sem duplicar o ledger."
+        />
 
         <div className="grid gap-3 ui-surface-panel p-4 md:grid-cols-[1fr_240px_180px_auto_auto]">
-          <SearchBar value={searchInput} onChange={setSearchInput} placeholder="Pesquisar por status" />
+          <SearchBar value={searchInput} onChange={setSearchInput} placeholder="Pesquisar cliente, contexto ou documento" />
           <FormSelect label="Cliente" value={clientFilterId} options={clientOptions} onChange={setClientFilterId} disabled={clientsLookupUnavailable} />
           <FormSelect label="Status" value={statusFilter} options={statusOptions} onChange={setStatusFilter} />
           <button
@@ -310,12 +477,14 @@ export function PetInvoicesPage() {
             <FormSelect label="Cliente" value={clientId} options={formClientOptions} onChange={setClientId} disabled={clientsLookupUnavailable} />
             <FormInput label="Valor total" value={totalAmount} onChange={setTotalAmount} type="number" required />
             <FormSelect label="Status" value={status} options={formStatusOptions} onChange={setStatus} />
-            <DateTimeInput label="Emitida em" value={issuedAt} onChange={setIssuedAt} required />
+            <DateTimeInput label="Emitida em" value={issuedAt} onChange={setIssuedAt} required={status !== 'DRAFT'} />
+            <DateTimeInput label="Vencimento" value={dueAt} onChange={setDueAt} />
+            <FormInput label="Descricao" value={description} onChange={setDescription} placeholder="Contexto comercial ou observacao" />
 
             <div className="md:col-span-2 flex gap-2">
               {clientsLookupUnavailable ? (
                 <div className="w-full ui-notice-warning">
-                  O formulário depende da referência de clientes para emitir ou editar faturas.
+                  O formulario depende da referencia de clientes para emitir ou editar faturas.
                 </div>
               ) : null}
               <button
@@ -331,12 +500,72 @@ export function PetInvoicesPage() {
                   onClick={resetForm}
                   className="ui-secondary-button"
                 >
-                  Cancelar edição
+                  Cancelar edicao
                 </button>
               ) : null}
             </div>
           </form>
         </PermissionGuard>
+
+        {paymentInvoice ? (
+          <PermissionGuard permission="pet.invoice.update">
+            <form onSubmit={handlePaymentSubmit} className="grid gap-3 ui-surface-panel p-4 md:grid-cols-2">
+              <div className="md:col-span-2 flex flex-col gap-2 md:flex-row md:items-start md:justify-between">
+                <div>
+                  <div className="text-sm font-semibold text-[color:var(--app-shell-heading)]">
+                    Registrar pagamento para {paymentInvoice.clientName ?? paymentInvoice.clientId}
+                  </div>
+                  <div className="text-sm text-[color:var(--app-shell-muted)]">
+                    Aberto: {formatCurrency(paymentInvoice.outstandingAmount)} | Contexto: {paymentInvoice.businessContextLabel ?? 'sem vinculo'}
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={resetPaymentForm}
+                  className="ui-secondary-button"
+                >
+                  Fechar
+                </button>
+              </div>
+
+              <FormInput label="Valor recebido" value={paymentAmount} onChange={setPaymentAmount} type="number" required />
+              <FormSelect label="Metodo" value={paymentMethod} options={paymentMethodOptions} onChange={setPaymentMethod} />
+              <DateTimeInput label="Recebido em" value={paymentReceivedAt} onChange={setPaymentReceivedAt} required />
+              <FormInput label="Referencia" value={paymentReferenceCode} onChange={setPaymentReferenceCode} placeholder="PIX, NSU ou comprovante" />
+              <FormInput label="Observacoes" value={paymentNotes} onChange={setPaymentNotes} placeholder="Notas operacionais do caixa" />
+
+              <div className="md:col-span-2 flex gap-2">
+                <button
+                  type="submit"
+                  disabled={paymentSubmitting}
+                  className="ui-primary-button"
+                >
+                  {paymentSubmitting ? 'Registrando...' : 'Confirmar pagamento'}
+                </button>
+              </div>
+
+              <div className="md:col-span-2 space-y-2">
+                <div className="text-sm font-semibold text-[color:var(--app-shell-heading)]">Historico de pagamentos</div>
+                {paymentInvoice.payments.length === 0 ? (
+                  <div className="ui-notice-warning">Nenhum pagamento registrado nesta invoice.</div>
+                ) : (
+                  paymentInvoice.payments.map((payment) => (
+                    <div key={payment.id} className="rounded-[var(--radius-md)] border border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-surface-muted)] p-3 text-sm">
+                      <div className="font-semibold">
+                        {formatCurrency(payment.amount)} via {payment.method}
+                      </div>
+                      <div className="text-[color:var(--app-shell-muted)]">
+                        {payment.status} em {formatDateTime(payment.receivedAt)}
+                      </div>
+                      {payment.referenceCode ? <div className="text-[color:var(--app-shell-muted)]">Ref: {payment.referenceCode}</div> : null}
+                      {payment.notes ? <div className="text-[color:var(--app-shell-muted)]">{payment.notes}</div> : null}
+                    </div>
+                  ))
+                )}
+              </div>
+            </form>
+          </PermissionGuard>
+        ) : null}
 
         {error ? <div className="ui-notice-error">{error}</div> : null}
         {success ? <div className="ui-notice-success">{success}</div> : null}
@@ -352,7 +581,7 @@ export function PetInvoicesPage() {
         <ConfirmDialog
           open={deleteCandidate !== null}
           title="Excluir fatura?"
-          description={deleteCandidate ? `A fatura ${deleteCandidate.id} será removida.` : undefined}
+          description={deleteCandidate ? `A fatura ${deleteCandidate.financeInvoiceId} sera removida.` : undefined}
           onConfirm={handleConfirmDelete}
           onCancel={() => setDeleteCandidate(null)}
         />

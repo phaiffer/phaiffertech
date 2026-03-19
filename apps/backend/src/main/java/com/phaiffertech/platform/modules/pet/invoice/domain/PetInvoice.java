@@ -1,11 +1,13 @@
 package com.phaiffertech.platform.modules.pet.invoice.domain;
 
+import com.phaiffertech.platform.core.finance.domain.FinanceInvoice;
 import com.phaiffertech.platform.shared.domain.base.BaseTenantEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
-import java.math.BigDecimal;
-import java.time.Instant;
 import java.util.UUID;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.Where;
@@ -19,14 +21,12 @@ public class PetInvoice extends BaseTenantEntity {
     @Column(name = "client_id", nullable = false)
     private UUID clientId;
 
-    @Column(name = "total_amount", nullable = false, precision = 10, scale = 2)
-    private BigDecimal totalAmount = BigDecimal.ZERO;
+    @Column(name = "finance_invoice_id", nullable = false)
+    private UUID financeInvoiceId;
 
-    @Column(name = "status", nullable = false, length = 40)
-    private String status = "ISSUED";
-
-    @Column(name = "issued_at", nullable = false)
-    private Instant issuedAt = Instant.now();
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "finance_invoice_id", insertable = false, updatable = false)
+    private FinanceInvoice financeInvoice;
 
     public UUID getClientId() {
         return clientId;
@@ -36,27 +36,19 @@ public class PetInvoice extends BaseTenantEntity {
         this.clientId = clientId;
     }
 
-    public BigDecimal getTotalAmount() {
-        return totalAmount;
+    public UUID getFinanceInvoiceId() {
+        return financeInvoiceId;
     }
 
-    public void setTotalAmount(BigDecimal totalAmount) {
-        this.totalAmount = totalAmount;
+    public void setFinanceInvoiceId(UUID financeInvoiceId) {
+        this.financeInvoiceId = financeInvoiceId;
     }
 
-    public String getStatus() {
-        return status;
+    public FinanceInvoice getFinanceInvoice() {
+        return financeInvoice;
     }
 
-    public void setStatus(String status) {
-        this.status = status;
-    }
-
-    public Instant getIssuedAt() {
-        return issuedAt;
-    }
-
-    public void setIssuedAt(Instant issuedAt) {
-        this.issuedAt = issuedAt;
+    public void setFinanceInvoice(FinanceInvoice financeInvoice) {
+        this.financeInvoice = financeInvoice;
     }
 }

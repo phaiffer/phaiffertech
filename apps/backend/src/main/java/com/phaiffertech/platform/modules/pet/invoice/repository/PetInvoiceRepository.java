@@ -1,7 +1,9 @@
 package com.phaiffertech.platform.modules.pet.invoice.repository;
 
+import com.phaiffertech.platform.core.finance.domain.FinanceInvoiceStatus;
 import com.phaiffertech.platform.modules.pet.invoice.domain.PetInvoice;
 import com.phaiffertech.platform.shared.crud.BaseTenantCrudRepository;
+import java.util.Collection;
 import java.util.Optional;
 import java.util.UUID;
 import org.springframework.data.domain.Page;
@@ -14,25 +16,31 @@ public interface PetInvoiceRepository extends JpaRepository<PetInvoice, UUID>, B
 
     long countByTenantIdAndDeletedAtIsNull(UUID tenantId);
 
-    long countByTenantIdAndStatusIn(UUID tenantId, Iterable<String> statuses);
-
     @Query("""
             SELECT i
             FROM PetInvoice i
+            JOIN i.financeInvoice f
             WHERE i.tenantId = :tenantId
               AND (:clientId IS NULL OR i.clientId = :clientId)
-              AND (:status IS NULL OR i.status = :status)
-              AND (:search = '%' OR LOWER(i.status) LIKE :search)
+              AND (:status IS NULL OR f.status = :status)
+              AND (:search = '%' OR
+                   LOWER(COALESCE(f.counterpartyName, '')) LIKE :search OR
+                   LOWER(COALESCE(f.description, '')) LIKE :search OR
+                   LOWER(COALESCE(f.businessContextLabel, '')) LIKE :search OR
+                   LOWER(COALESCE(f.documentNumber, '')) LIKE :search)
+            ORDER BY COALESCE(f.issuedAt, f.createdAt) DESC
             """)
     Page<PetInvoice> findAllByTenantIdAndSearch(
             @Param("tenantId") UUID tenantId,
             @Param("clientId") UUID clientId,
-            @Param("status") String status,
+            @Param("status") FinanceInvoiceStatus status,
             @Param("search") String search,
             Pageable pageable
     );
 
     Optional<PetInvoice> findByIdAndTenantId(UUID id, UUID tenantId);
+
+    java.util.List<PetInvoice> findAllByTenantIdAndFinanceInvoiceIdIn(UUID tenantId, Collection<UUID> financeInvoiceIds);
 
     @Query(value = """
             SELECT *

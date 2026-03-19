@@ -11,6 +11,10 @@ public record PetInvoiceUpdateRequest(
         @NotNull UUID clientId,
         @NotNull @DecimalMin("0.00") BigDecimal totalAmount,
         @NotBlank String status,
-        @NotNull Instant issuedAt
+        Instant issuedAt,
+        Instant dueAt,
+        String description,
+        UUID appointmentId,
+        UUID serviceId
 ) {
 }

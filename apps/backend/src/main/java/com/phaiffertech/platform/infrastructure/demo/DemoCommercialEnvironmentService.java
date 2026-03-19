@@ -102,6 +102,8 @@ public class DemoCommercialEnvironmentService {
 
         private static final UUID PET_INVOICE_MARIA_ID = uuid("20000000-0000-0000-0000-000000000091");
         private static final UUID PET_INVOICE_JOAO_ID = uuid("20000000-0000-0000-0000-000000000092");
+        private static final UUID PET_PAYMENT_MARIA_ID = uuid("20000000-0000-0000-0000-000000000093");
+        private static final UUID PET_CASH_MARIA_ID = uuid("20000000-0000-0000-0000-000000000094");
 
         private static final UUID IOT_COMPRESSOR_DEVICE_ID = uuid("30000000-0000-0000-0000-000000000001");
         private static final UUID IOT_OVEN_DEVICE_ID = uuid("30000000-0000-0000-0000-000000000002");
@@ -325,6 +327,9 @@ public class DemoCommercialEnvironmentService {
                 deleteByTenant("pet_appointments", tenantId);
                 deleteByTenant("pet_inventory_movements", tenantId);
                 deleteByTenant("pet_invoices", tenantId);
+                deleteByTenant("finance_cash_movements", tenantId);
+                deleteByTenant("finance_payments", tenantId);
+                deleteByTenant("finance_invoices", tenantId);
                 deleteByTenant("pet_products", tenantId);
                 deleteByTenant("pet_services", tenantId);
                 deleteByTenant("pet_professionals", tenantId);
@@ -726,10 +731,53 @@ public class DemoCommercialEnvironmentService {
                 insertPetInventoryMovement(PET_INVENTORY_PARASITE_ID, tenantId, PET_PRODUCT_PARASITE_ID, "OUTBOUND", 3,
                                 "Campaign stock reserved for current consultations.", now.minus(Duration.ofHours(18)));
 
-                insertPetInvoice(PET_INVOICE_MARIA_ID, tenantId, PET_MARIA_CLIENT_ID, new BigDecimal("440.00"),
-                                "PENDING", now.minus(Duration.ofDays(1)), now.minus(Duration.ofDays(1)));
-                insertPetInvoice(PET_INVOICE_JOAO_ID, tenantId, PET_JOAO_CLIENT_ID, new BigDecimal("260.00"), "OVERDUE",
-                                now.minus(Duration.ofDays(4)), now.minus(Duration.ofDays(4)));
+                Instant mariaIssuedAt = now.minus(Duration.ofDays(1));
+                Instant joaoIssuedAt = now.minus(Duration.ofDays(4));
+
+                insertPetInvoice(
+                                PET_INVOICE_MARIA_ID,
+                                tenantId,
+                                PET_MARIA_CLIENT_ID,
+                                new BigDecimal("440.00"),
+                                "PAID",
+                                mariaIssuedAt,
+                                now.minus(Duration.ofDays(1)),
+                                "Vaccination and preventive care invoice settled in the last shift.",
+                                "PET.APPOINTMENT",
+                                PET_APPOINTMENT_REX_ID);
+                insertFinancePayment(
+                                PET_PAYMENT_MARIA_ID,
+                                tenantId,
+                                PET_INVOICE_MARIA_ID,
+                                new BigDecimal("440.00"),
+                                "PIX",
+                                mariaIssuedAt.plus(Duration.ofHours(2)),
+                                "PIX-PET-MARIA",
+                                "Customer settled the invoice after the vaccination visit.",
+                                now.minus(Duration.ofDays(1)));
+                insertFinanceCashMovement(
+                                PET_CASH_MARIA_ID,
+                                tenantId,
+                                PET_INVOICE_MARIA_ID,
+                                PET_PAYMENT_MARIA_ID,
+                                "IN",
+                                "INVOICE_PAYMENT",
+                                new BigDecimal("440.00"),
+                                mariaIssuedAt.plus(Duration.ofHours(2)),
+                                "Cash entry generated from Maria invoice payment.",
+                                now.minus(Duration.ofDays(1)));
+
+                insertPetInvoice(
+                                PET_INVOICE_JOAO_ID,
+                                tenantId,
+                                PET_JOAO_CLIENT_ID,
+                                new BigDecimal("260.00"),
+                                "ISSUED",
+                                joaoIssuedAt,
+                                now.minus(Duration.ofDays(4)),
+                                "Clinical consultation invoice still open for collection.",
+                                "PET.APPOINTMENT",
+                                PET_APPOINTMENT_THOR_ID);
         }
 
         private void seedIot(UUID tenantId, UUID userId, Instant now) {
@@ -1371,16 +1419,88 @@ public class DemoCommercialEnvironmentService {
                         BigDecimal totalAmount,
                         String status,
                         Instant issuedAt,
-                        Instant createdAt) {
+                        Instant createdAt,
+                        String description,
+                        String businessContextType,
+                        UUID businessContextId) {
+                BigDecimal paidAmount = "PAID".equalsIgnoreCase(status) ? totalAmount : BigDecimal.ZERO;
+                Instant paidAt = "PAID".equalsIgnoreCase(status) ? issuedAt.plus(Duration.ofHours(2)) : null;
+
+                insert(
+                                """
+                                                INSERT INTO finance_invoices (
+                                                    id, tenant_id, source_module, counterparty_reference_type, counterparty_reference_id, counterparty_name,
+                                                    business_context_type, business_context_id, business_context_label, description,
+                                                    status, currency, total_amount, paid_amount, issued_at, due_at, paid_at, canceled_at,
+                                                    created_at, updated_at, created_by, updated_by
+                                                ) VALUES (?, ?, 'PET', 'PET.CLIENT', ?, ?, ?, ?, ?, ?, ?, 'BRL', ?, ?, ?, ?, ?, NULL, ?, ?, ?, ?)
+                                                """,
+                                id, tenantId, clientId, resolvePetClientName(clientId), businessContextType, businessContextId,
+                                businessContextType == null ? null : description, description, status,
+                                totalAmount, paidAmount, ts(issuedAt), ts(issuedAt.plus(Duration.ofDays(7))), ts(paidAt),
+                                ts(createdAt), ts(createdAt), SEED_ACTOR, SEED_ACTOR);
                 insert(
                                 """
                                                 INSERT INTO pet_invoices (
-                                                    id, tenant_id, client_id, total_amount, status, issued_at,
+                                                    id, tenant_id, client_id, finance_invoice_id,
                                                     created_at, updated_at, created_by, updated_by
-                                                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                                                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
                                                 """,
-                                id, tenantId, clientId, totalAmount, status, ts(issuedAt),
+                                id, tenantId, clientId, id,
                                 ts(createdAt), ts(createdAt), SEED_ACTOR, SEED_ACTOR);
+        }
+
+        private void insertFinancePayment(
+                        UUID id,
+                        UUID tenantId,
+                        UUID invoiceId,
+                        BigDecimal amount,
+                        String method,
+                        Instant receivedAt,
+                        String referenceCode,
+                        String notes,
+                        Instant createdAt) {
+                insert(
+                                """
+                                                INSERT INTO finance_payments (
+                                                    id, tenant_id, invoice_id, status, method, amount, received_at, reference_code, notes,
+                                                    created_at, updated_at, created_by, updated_by
+                                                ) VALUES (?, ?, ?, 'CONFIRMED', ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                                                """,
+                                id, tenantId, invoiceId, method, amount, ts(receivedAt), referenceCode, notes,
+                                ts(createdAt), ts(createdAt), SEED_ACTOR, SEED_ACTOR);
+        }
+
+        private void insertFinanceCashMovement(
+                        UUID id,
+                        UUID tenantId,
+                        UUID invoiceId,
+                        UUID paymentId,
+                        String direction,
+                        String category,
+                        BigDecimal amount,
+                        Instant occurredAt,
+                        String description,
+                        Instant createdAt) {
+                insert(
+                                """
+                                                INSERT INTO finance_cash_movements (
+                                                    id, tenant_id, invoice_id, payment_id, direction, category, amount, currency, occurred_at, description,
+                                                    created_at, updated_at, created_by, updated_by
+                                                ) VALUES (?, ?, ?, ?, ?, ?, ?, 'BRL', ?, ?, ?, ?, ?, ?)
+                                                """,
+                                id, tenantId, invoiceId, paymentId, direction, category, amount, ts(occurredAt), description,
+                                ts(createdAt), ts(createdAt), SEED_ACTOR, SEED_ACTOR);
+        }
+
+        private String resolvePetClientName(UUID clientId) {
+                if (PET_MARIA_CLIENT_ID.equals(clientId)) {
+                        return "Maria Oliveira";
+                }
+                if (PET_JOAO_CLIENT_ID.equals(clientId)) {
+                        return "Joao Batista";
+                }
+                return "Pet client";
         }
 
         private void insertIotDevice(

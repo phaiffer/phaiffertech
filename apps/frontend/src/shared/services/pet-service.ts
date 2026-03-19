@@ -6,6 +6,7 @@ import {
   PetClient,
   PetDashboardSummary,
   PetInvoice,
+  PetInvoicePayment,
   PetInventoryMovement,
   PetMedicalRecord,
   PetPrescription,
@@ -147,13 +148,29 @@ export type CreatePetInvoiceInput = {
   totalAmount: number;
   status?: string;
   issuedAt?: string;
+  dueAt?: string;
+  description?: string;
+  appointmentId?: string;
+  serviceId?: string;
 };
 
 export type UpdatePetInvoiceInput = {
   clientId: string;
   totalAmount: number;
   status: string;
-  issuedAt: string;
+  issuedAt?: string;
+  dueAt?: string;
+  description?: string;
+  appointmentId?: string;
+  serviceId?: string;
+};
+
+export type CreatePetInvoicePaymentInput = {
+  amount: number;
+  method?: string;
+  receivedAt?: string;
+  referenceCode?: string;
+  notes?: string;
 };
 
 type PetClientFilters = {
@@ -455,6 +472,9 @@ export const petService = {
 
   updateInvoice: (id: string, input: UpdatePetInvoiceInput) =>
     apiClient.put<PetInvoice>(`/pet/invoices/${id}`, input),
+
+  createInvoicePayment: (id: string, input: CreatePetInvoicePaymentInput) =>
+    apiClient.post<PetInvoicePayment>(`/pet/invoices/${id}/payments`, input),
 
   deleteInvoice: (id: string) => apiClient.delete<void>(`/pet/invoices/${id}`),
 

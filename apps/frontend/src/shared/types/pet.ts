@@ -173,15 +173,38 @@ export type PetInventoryMovement = {
   updatedAt: string;
 };
 
+export type PetInvoicePayment = {
+  id: string;
+  status: string;
+  method: string;
+  amount: number;
+  receivedAt: string;
+  referenceCode?: string;
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
 export type PetInvoice = {
   id: string;
+  financeInvoiceId: string;
   clientId: string;
   clientName?: string;
   totalAmount: number;
+  paidAmount: number;
+  outstandingAmount: number;
   status: string;
-  issuedAt: string;
+  description?: string;
+  businessContextType?: string;
+  businessContextId?: string;
+  businessContextLabel?: string;
+  issuedAt?: string | null;
+  dueAt?: string | null;
+  paidAt?: string | null;
+  canceledAt?: string | null;
   createdAt: string;
   updatedAt: string;
+  payments: PetInvoicePayment[];
 };
 
 export type PetDashboardSummary = {

@@ -1,9 +1,11 @@
 package com.phaiffertech.platform.modules.pet.dashboard.service;
 
+import com.phaiffertech.platform.core.finance.domain.FinanceInvoiceStatus;
+import com.phaiffertech.platform.core.finance.domain.FinanceSourceModule;
+import com.phaiffertech.platform.core.finance.repository.FinanceInvoiceRepository;
 import com.phaiffertech.platform.modules.pet.appointment.repository.PetAppointmentRepository;
 import com.phaiffertech.platform.modules.pet.client.repository.PetClientRepository;
 import com.phaiffertech.platform.modules.pet.dashboard.dto.PetDashboardSummaryResponse;
-import com.phaiffertech.platform.modules.pet.invoice.repository.PetInvoiceRepository;
 import com.phaiffertech.platform.modules.pet.medical.record.repository.PetMedicalRecordRepository;
 import com.phaiffertech.platform.modules.pet.petprofile.repository.PetProfileRepository;
 import com.phaiffertech.platform.modules.pet.product.repository.PetProductRepository;
@@ -31,7 +33,7 @@ public class PetDashboardService {
     private final PetAppointmentRepository appointmentRepository;
     private final PetServiceCatalogRepository serviceCatalogRepository;
     private final PetProductRepository productRepository;
-    private final PetInvoiceRepository invoiceRepository;
+    private final FinanceInvoiceRepository financeInvoiceRepository;
     private final PetMedicalRecordRepository medicalRecordRepository;
 
     public PetDashboardService(
@@ -40,7 +42,7 @@ public class PetDashboardService {
             PetAppointmentRepository appointmentRepository,
             PetServiceCatalogRepository serviceCatalogRepository,
             PetProductRepository productRepository,
-            PetInvoiceRepository invoiceRepository,
+            FinanceInvoiceRepository financeInvoiceRepository,
             PetMedicalRecordRepository medicalRecordRepository
     ) {
         this.clientRepository = clientRepository;
@@ -48,7 +50,7 @@ public class PetDashboardService {
         this.appointmentRepository = appointmentRepository;
         this.serviceCatalogRepository = serviceCatalogRepository;
         this.productRepository = productRepository;
-        this.invoiceRepository = invoiceRepository;
+        this.financeInvoiceRepository = financeInvoiceRepository;
         this.medicalRecordRepository = medicalRecordRepository;
     }
 
@@ -76,9 +78,10 @@ public class PetDashboardService {
                 .countByTenantIdAndServiceIdIsNotNullAndProfessionalIdIsNotNullAndScheduledAtGreaterThanEqual(tenantId, now);
         long totalServices = serviceCatalogRepository.countByTenantId(tenantId);
         long lowStockProducts = productRepository.countLowStockProducts(tenantId, LOW_STOCK_THRESHOLD);
-        long pendingInvoices = invoiceRepository.countByTenantIdAndStatusIn(
+        long pendingInvoices = financeInvoiceRepository.countByTenantIdAndSourceModuleAndStatusIn(
                 tenantId,
-                List.of("ISSUED", "PENDING", "OVERDUE")
+                FinanceSourceModule.PET,
+                List.of(FinanceInvoiceStatus.ISSUED)
         );
 
         return new PetDashboardSummaryResponse(

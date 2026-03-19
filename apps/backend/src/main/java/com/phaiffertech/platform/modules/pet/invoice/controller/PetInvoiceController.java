@@ -2,6 +2,8 @@ package com.phaiffertech.platform.modules.pet.invoice.controller;
 
 import com.phaiffertech.platform.core.tenant.entitlement.TenantEntitlementKeys;
 import com.phaiffertech.platform.modules.pet.invoice.dto.PetInvoiceCreateRequest;
+import com.phaiffertech.platform.modules.pet.invoice.dto.PetInvoicePaymentCreateRequest;
+import com.phaiffertech.platform.modules.pet.invoice.dto.PetInvoicePaymentResponse;
 import com.phaiffertech.platform.modules.pet.invoice.dto.PetInvoiceResponse;
 import com.phaiffertech.platform.modules.pet.invoice.dto.PetInvoiceUpdateRequest;
 import com.phaiffertech.platform.modules.pet.invoice.service.PetInvoiceService;
@@ -76,5 +78,14 @@ public class PetInvoiceController {
     @RequirePermission("pet.invoice.delete")
     public ApiResponse<PetInvoiceResponse> restore(@PathVariable UUID id) {
         return ApiResponse.success(service.restore(id));
+    }
+
+    @PostMapping("/{id}/payments")
+    @RequirePermission("pet.invoice.update")
+    public ApiResponse<PetInvoicePaymentResponse> createPayment(
+            @PathVariable UUID id,
+            @Valid @RequestBody PetInvoicePaymentCreateRequest request
+    ) {
+        return ApiResponse.success(service.createPayment(id, request));
     }
 }
