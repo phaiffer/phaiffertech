@@ -14,22 +14,28 @@ public class ModuleRegistryService {
 
     private final ModuleDefinitionRepository moduleDefinitionRepository;
     private final ModuleAccessService moduleAccessService;
+    private final ModuleCatalogCacheService moduleCatalogCacheService;
 
     public ModuleRegistryService(
             ModuleDefinitionRepository moduleDefinitionRepository,
-            ModuleAccessService moduleAccessService
+            ModuleAccessService moduleAccessService,
+            ModuleCatalogCacheService moduleCatalogCacheService
     ) {
         this.moduleDefinitionRepository = moduleDefinitionRepository;
         this.moduleAccessService = moduleAccessService;
+        this.moduleCatalogCacheService = moduleCatalogCacheService;
     }
 
     @Transactional(readOnly = true)
     public List<ModuleViewResponse> listModulesForTenant() {
         UUID tenantId = TenantContext.getRequiredTenantId();
 
-        return moduleDefinitionRepository.findAllByActiveTrueAndDeletedAtIsNullOrderByNameAsc().stream()
-                .map(definition -> toResponse(definition, moduleAccessService.evaluate(tenantId, definition.getCode())))
-                .toList();
+        return moduleCatalogCacheService.getOrLoad(
+                tenantId,
+                () -> moduleDefinitionRepository.findAllByActiveTrueAndDeletedAtIsNullOrderByNameAsc().stream()
+                        .map(definition -> toResponse(definition, moduleAccessService.evaluate(tenantId, definition.getCode())))
+                        .toList()
+        );
     }
 
     private ModuleViewResponse toResponse(ModuleDefinition definition, ModuleAccessStatus status) {

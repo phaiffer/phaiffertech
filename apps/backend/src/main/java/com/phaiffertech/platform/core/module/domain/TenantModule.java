@@ -1,6 +1,7 @@
 package com.phaiffertech.platform.core.module.domain;
 
 import com.phaiffertech.platform.shared.domain.base.BaseTenantEntity;
+import com.phaiffertech.platform.core.tenant.service.TenantContractGrantSource;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
@@ -16,6 +17,9 @@ public class TenantModule extends BaseTenantEntity {
     @Column(name = "enabled", nullable = false)
     private boolean enabled = true;
 
+    @Column(name = "source", nullable = false, length = 20)
+    private String source = TenantContractGrantSource.MANUAL;
+
     public UUID getModuleDefinitionId() {
         return moduleDefinitionId;
     }
@@ -30,5 +34,13 @@ public class TenantModule extends BaseTenantEntity {
 
     public void setEnabled(boolean enabled) {
         this.enabled = enabled;
+    }
+
+    public String getSource() {
+        return source;
+    }
+
+    public void setSource(String source) {
+        this.source = source;
     }
 }

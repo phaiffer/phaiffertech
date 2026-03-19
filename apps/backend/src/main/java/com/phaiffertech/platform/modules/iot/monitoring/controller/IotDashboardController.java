@@ -19,7 +19,7 @@ public class IotDashboardController {
     }
 
     @GetMapping("/summary")
-    @RequirePermission("iot.dashboard.read")
+    @RequirePermission(value = "iot.dashboard.read", entitlement = "iot.basic")
     public ApiResponse<IotDashboardSummaryResponse> summary() {
         return ApiResponse.success(monitoringSummaryService.summary());
     }

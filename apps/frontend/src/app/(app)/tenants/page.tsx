@@ -44,7 +44,46 @@ const emptyTenantForm: TenantUpsertInput = {
 /** Available plan tiers exposed to platform administrators. */
 const PLAN_CODES = ['BASIC', 'STANDARD', 'PRO', 'ENTERPRISE'] as const;
 
+const PLAN_DETAILS: Record<typeof PLAN_CODES[number], { defaultModules: string[]; defaultEntitlements: string[] }> = {
+  BASIC: {
+    defaultModules: ['CRM'],
+    defaultEntitlements: ['crm.basic']
+  },
+  STANDARD: {
+    defaultModules: ['CRM', 'PET'],
+    defaultEntitlements: ['crm.full', 'pet.basic']
+  },
+  PRO: {
+    defaultModules: ['CRM', 'PET', 'IOT'],
+    defaultEntitlements: ['crm.full', 'pet.full', 'iot.basic']
+  },
+  ENTERPRISE: {
+    defaultModules: ['CRM', 'PET', 'IOT'],
+    defaultEntitlements: ['*']
+  }
+};
+
+function resolvePlanDetails(planCode?: string) {
+  const normalizedCode = (planCode ?? 'STANDARD').toUpperCase() as keyof typeof PLAN_DETAILS;
+  return PLAN_DETAILS[normalizedCode] ?? PLAN_DETAILS.STANDARD;
+}
+
+function resolveEffectiveModuleSelection(planCode: string | undefined, moduleOverrides: string[]) {
+  return Array.from(new Set([
+    ...resolvePlanDetails(planCode).defaultModules,
+    ...moduleOverrides
+  ]));
+}
+
 function normalizeTenantInput(form: TenantUpsertInput): TenantUpsertInput {
+  const planDetails = resolvePlanDetails(form.planCode);
+  const manualOverrides = Array.from(new Set(
+    form.contractedModules
+      .map((moduleCode) => moduleCode.trim().toUpperCase())
+      .filter(Boolean)
+      .filter((moduleCode) => !planDetails.defaultModules.includes(moduleCode))
+  ));
+
   return {
     ...form,
     name: form.name.trim(),
@@ -52,7 +91,7 @@ function normalizeTenantInput(form: TenantUpsertInput): TenantUpsertInput {
     logoUrl: form.logoUrl?.trim() ? form.logoUrl.trim() : null,
     primaryColor: form.primaryColor?.trim() ? form.primaryColor.trim() : null,
     accentColor: form.accentColor?.trim() ? form.accentColor.trim() : null,
-    contractedModules: Array.from(new Set(form.contractedModules)),
+    contractedModules: resolveEffectiveModuleSelection(form.planCode, manualOverrides),
     featureEntitlements: Array.from(new Set(
       (form.featureEntitlements ?? [])
         .map((featureKey) => featureKey.trim().toLowerCase())
@@ -104,6 +143,28 @@ export default function TenantsPage() {
   const [usageMetrics, setUsageMetrics] = useState<TenantUsageMetric[]>([]);
   const [usageMetricsLoading, setUsageMetricsLoading] = useState(false);
   const [usageMetricsError, setUsageMetricsError] = useState<string | null>(null);
+  const selectedPlanDetails = useMemo(
+    () => resolvePlanDetails(form.planCode),
+    [form.planCode]
+  );
+  const effectiveSelectedModules = useMemo(
+    () => resolveEffectiveModuleSelection(form.planCode, form.contractedModules),
+    [form.contractedModules, form.planCode]
+  );
+  const usageMetricGroups = useMemo(() => {
+    const groups = new Map<string, TenantUsageMetric[]>();
+
+    usageMetrics.forEach((metric) => {
+      const currentItems = groups.get(metric.metricKey) ?? [];
+      currentItems.push(metric);
+      groups.set(metric.metricKey, currentItems);
+    });
+
+    return Array.from(groups.entries()).map(([metricKey, items]) => ({
+      metricKey,
+      items
+    }));
+  }, [usageMetrics]);
 
   const moduleOptions = useMemo(
     () => modules.filter((moduleItem) => moduleItem.code !== 'CORE_PLATFORM'),
@@ -205,7 +266,11 @@ export default function TenantsPage() {
       accentColor: tenant.accentColor ?? '#2563eb',
       defaultThemeMode: tenant.defaultThemeMode,
       allowUserThemeOverride: tenant.allowUserThemeOverride,
-      contractedModules: tenant.contractedModules.filter((moduleCode) => moduleCode !== 'CORE_PLATFORM'),
+      contractedModules: tenant.moduleOverrides
+        ?? tenant.contractedModules.filter((moduleCode) => (
+          moduleCode !== 'CORE_PLATFORM'
+          && !resolvePlanDetails(tenant.planCode).defaultModules.includes(moduleCode)
+        )),
       planCode: tenant.planCode ?? 'BASIC',
       featureEntitlements: tenant.featureEntitlements ?? []
     });
@@ -511,6 +576,31 @@ export default function TenantsPage() {
                     <option key={code} value={code}>{code}</option>
                   ))}
                 </select>
+                <div className="ui-surface-muted space-y-2 rounded-2xl px-4 py-3 text-sm">
+                  <p className="font-medium text-[color:var(--app-shell-heading)]">
+                    Plan defines default modules and features.
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {selectedPlanDetails.defaultModules.map((moduleCode) => (
+                      <span
+                        key={`plan-module-${moduleCode}`}
+                        className="inline-flex items-center rounded-full border border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-panel)] px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-[color:var(--app-shell-text)]"
+                      >
+                        {moduleCode}
+                      </span>
+                    ))}
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {selectedPlanDetails.defaultEntitlements.map((featureKey) => (
+                      <span
+                        key={`plan-entitlement-${featureKey}`}
+                        className="inline-flex items-center rounded-full border border-[color:var(--tenant-accent)] bg-[color:var(--tenant-accent-soft)] px-2.5 py-1 text-[11px] font-semibold text-[color:var(--app-shell-heading)]"
+                      >
+                        {featureKey}
+                      </span>
+                    ))}
+                  </div>
+                </div>
               </label>
 
               <div className="space-y-3 lg:col-span-2">
@@ -639,7 +729,7 @@ export default function TenantsPage() {
                 <div>
                   <p className="text-sm font-medium text-[color:var(--app-shell-heading)]">Contracted modules</p>
                   <p className="mt-1 text-sm text-[color:var(--app-shell-muted)]">
-                    CORE_PLATFORM remains active for every tenant. Additional products are explicit contract decisions.
+                    CORE_PLATFORM remains active for every tenant. Modules included by the selected plan stay enabled, and additional products remain explicit overrides.
                   </p>
                 </div>
 
@@ -652,7 +742,8 @@ export default function TenantsPage() {
                     <span className="ui-notice-neutral">Loading module catalog...</span>
                   ) : (
                     moduleOptions.map((moduleItem) => {
-                      const checked = form.contractedModules.includes(moduleItem.code);
+                      const includedByPlan = selectedPlanDetails.defaultModules.includes(moduleItem.code);
+                      const checked = effectiveSelectedModules.includes(moduleItem.code);
                       return (
                         <label
                           key={moduleItem.code}
@@ -666,10 +757,12 @@ export default function TenantsPage() {
                           <input
                             type="checkbox"
                             checked={checked}
+                            disabled={includedByPlan}
                             onChange={() => toggleModule(moduleItem.code)}
                             className="h-4 w-4 rounded border-[color:var(--app-shell-border)]"
                           />
                           {moduleItem.code}
+                          {includedByPlan ? <span className="text-[10px] text-[color:var(--app-shell-muted)]">Included by plan</span> : null}
                         </label>
                       );
                     })
@@ -767,37 +860,43 @@ export default function TenantsPage() {
                           <table className="min-w-full text-left text-sm">
                             <thead>
                               <tr className="border-b border-[color:var(--app-shell-border)] text-xs uppercase tracking-[0.16em] text-[color:var(--app-shell-muted)]">
-                                <th className="px-3 py-2 font-semibold">Metric</th>
                                 <th className="px-3 py-2 font-semibold">Source</th>
                                 <th className="px-3 py-2 font-semibold">Quantity</th>
-                                <th className="px-3 py-2 font-semibold">Date</th>
-                                <th className="px-3 py-2 font-semibold">Last recorded</th>
+                                <th className="px-3 py-2 font-semibold">Last active day</th>
+                                <th className="px-3 py-2 font-semibold">Last updated</th>
                               </tr>
                             </thead>
-                            <tbody>
-                              {usageMetrics.map((metric) => (
-                                <tr
-                                  key={`${metric.metricKey}-${metric.source}-${metric.metricDate}`}
-                                  className="border-b border-[color:var(--app-shell-border)] last:border-b-0"
-                                >
-                                  <td className="px-3 py-2 text-[color:var(--app-shell-heading)]">
-                                    {formatTokenLabel(metric.metricKey)}
-                                  </td>
-                                  <td className="px-3 py-2 text-[color:var(--app-shell-text)]">
-                                    {formatTokenLabel(metric.source)}
-                                  </td>
-                                  <td className="px-3 py-2 text-[color:var(--app-shell-text)]">
-                                    {metric.quantity} {metric.unit}
-                                  </td>
-                                  <td className="px-3 py-2 text-[color:var(--app-shell-text)]">
-                                    {metric.metricDate}
-                                  </td>
-                                  <td className="px-3 py-2 text-[color:var(--app-shell-text)]">
-                                    {new Date(metric.lastRecordedAt).toLocaleString()}
-                                  </td>
+                            {usageMetricGroups.map((group) => (
+                              <tbody key={group.metricKey}>
+                                <tr className="border-b border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-panel)]">
+                                  <th
+                                    colSpan={4}
+                                    className="px-3 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--app-shell-heading)]"
+                                  >
+                                    {formatTokenLabel(group.metricKey)}
+                                  </th>
                                 </tr>
-                              ))}
-                            </tbody>
+                                {group.items.map((metric) => (
+                                  <tr
+                                    key={`${metric.metricKey}-${metric.source}-${metric.metricDate}`}
+                                    className="border-b border-[color:var(--app-shell-border)] last:border-b-0"
+                                  >
+                                    <td className="px-3 py-2 text-[color:var(--app-shell-text)]">
+                                      {formatTokenLabel(metric.source)}
+                                    </td>
+                                    <td className="px-3 py-2 text-[color:var(--app-shell-text)]">
+                                      {metric.quantity} {metric.unit}
+                                    </td>
+                                    <td className="px-3 py-2 text-[color:var(--app-shell-text)]">
+                                      {metric.metricDate}
+                                    </td>
+                                    <td className="px-3 py-2 text-[color:var(--app-shell-text)]">
+                                      {new Date(metric.lastRecordedAt).toLocaleString()}
+                                    </td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            ))}
                           </table>
                         </div>
                       ) : (

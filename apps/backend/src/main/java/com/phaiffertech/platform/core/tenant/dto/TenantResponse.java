@@ -17,6 +17,8 @@ public record TenantResponse(
         TenantThemeMode defaultThemeMode,
         boolean allowUserThemeOverride,
         List<String> contractedModules,
-        List<String> featureEntitlements
+        List<String> featureEntitlements,
+        List<String> moduleOverrides,
+        List<String> effectiveFeatureEntitlements
 ) {
 }

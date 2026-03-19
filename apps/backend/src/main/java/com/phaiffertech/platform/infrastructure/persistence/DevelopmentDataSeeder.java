@@ -13,8 +13,10 @@ import com.phaiffertech.platform.core.module.domain.ModuleDefinition;
 import com.phaiffertech.platform.core.module.repository.ModuleDefinitionRepository;
 import com.phaiffertech.platform.core.module.domain.TenantModule;
 import com.phaiffertech.platform.core.module.repository.TenantModuleRepository;
+import com.phaiffertech.platform.core.tenant.entitlement.service.TenantEntitlementService;
 import com.phaiffertech.platform.core.tenant.domain.Tenant;
 import com.phaiffertech.platform.core.tenant.repository.TenantRepository;
+import com.phaiffertech.platform.core.tenant.service.TenantModuleContractService;
 import com.phaiffertech.platform.core.user.domain.User;
 import com.phaiffertech.platform.core.user.repository.UserRepository;
 import java.util.List;
@@ -38,6 +40,8 @@ public class DevelopmentDataSeeder implements CommandLineRunner {
     private final UserTenantRoleRepository userTenantRoleRepository;
     private final ModuleDefinitionRepository moduleDefinitionRepository;
     private final TenantModuleRepository tenantModuleRepository;
+    private final TenantModuleContractService tenantModuleContractService;
+    private final TenantEntitlementService tenantEntitlementService;
     private final PasswordEncoder passwordEncoder;
 
     public DevelopmentDataSeeder(
@@ -49,6 +53,8 @@ public class DevelopmentDataSeeder implements CommandLineRunner {
             UserTenantRoleRepository userTenantRoleRepository,
             ModuleDefinitionRepository moduleDefinitionRepository,
             TenantModuleRepository tenantModuleRepository,
+            TenantModuleContractService tenantModuleContractService,
+            TenantEntitlementService tenantEntitlementService,
             PasswordEncoder passwordEncoder
     ) {
         this.roleRepository = roleRepository;
@@ -59,6 +65,8 @@ public class DevelopmentDataSeeder implements CommandLineRunner {
         this.userTenantRoleRepository = userTenantRoleRepository;
         this.moduleDefinitionRepository = moduleDefinitionRepository;
         this.tenantModuleRepository = tenantModuleRepository;
+        this.tenantModuleContractService = tenantModuleContractService;
+        this.tenantEntitlementService = tenantEntitlementService;
         this.passwordEncoder = passwordEncoder;
     }
 
@@ -148,6 +156,11 @@ public class DevelopmentDataSeeder implements CommandLineRunner {
             tenantModule.setDeletedAt(null);
             tenantModuleRepository.save(tenantModule);
         }
+
+        tenant.setPlanCode("ENTERPRISE");
+        tenantRepository.save(tenant);
+        tenantModuleContractService.syncEffectiveModules(tenant.getId(), tenant.getPlanCode(), List.of());
+        tenantEntitlementService.syncManualEntitlements(tenant.getId(), tenant.getPlanCode(), List.of());
     }
 
     private ModuleDefinition ensureModule(String code, String name, String description) {

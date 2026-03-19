@@ -10,4 +10,6 @@ import java.lang.annotation.Target;
 public @interface RequirePermission {
 
     String value();
+
+    String entitlement() default "";
 }

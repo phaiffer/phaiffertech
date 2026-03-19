@@ -56,7 +56,7 @@ public abstract class AbstractIntegrationTest extends IntegrationTestContainersC
         String userId = UUID.randomUUID().toString();
 
         executeSql(
-                "INSERT INTO tenants (id, name, code, status) VALUES (?, ?, ?, 'ACTIVE')",
+                "INSERT INTO tenants (id, name, code, status, plan_code) VALUES (?, ?, ?, 'ACTIVE', 'ENTERPRISE')",
                 tenantId,
                 "Tenant " + tenantCode,
                 tenantCode
@@ -80,6 +80,8 @@ public abstract class AbstractIntegrationTest extends IntegrationTestContainersC
                 userId
         );
         enableTenantModules(tenantId, moduleCodes);
+        grantModuleEntitlements(tenantId, moduleCodes);
+        seedModuleDefaults(tenantId, moduleCodes);
 
         ResponseEntity<JsonNode> response = login(tenantCode, email, DEFAULT_PASSWORD);
         Assertions.assertEquals(200, response.getStatusCode().value());
@@ -99,7 +101,7 @@ public abstract class AbstractIntegrationTest extends IntegrationTestContainersC
         String roleCode = "TEST_" + tenantCode.toUpperCase().replace('-', '_') + "_" + UUID.randomUUID().toString().substring(0, 8);
 
         executeSql(
-                "INSERT INTO tenants (id, name, code, status) VALUES (?, ?, ?, 'ACTIVE')",
+                "INSERT INTO tenants (id, name, code, status, plan_code) VALUES (?, ?, ?, 'ACTIVE', 'ENTERPRISE')",
                 tenantId,
                 "Tenant " + tenantCode,
                 tenantCode
@@ -145,6 +147,8 @@ public abstract class AbstractIntegrationTest extends IntegrationTestContainersC
                 roleId
         );
         enableTenantModules(tenantId, moduleCodes);
+        grantModuleEntitlements(tenantId, moduleCodes);
+        seedModuleDefaults(tenantId, moduleCodes);
 
         ResponseEntity<JsonNode> response = login(tenantCode, email, DEFAULT_PASSWORD);
         Assertions.assertEquals(200, response.getStatusCode().value());
@@ -155,6 +159,79 @@ public abstract class AbstractIntegrationTest extends IntegrationTestContainersC
         for (String moduleCode : moduleCodes) {
             enableTenantModule(tenantId, moduleCode);
         }
+    }
+
+    protected void grantModuleEntitlements(String tenantId, String... moduleCodes) {
+        for (String moduleCode : moduleCodes) {
+            switch (moduleCode) {
+                case "CRM" -> upsertTenantEntitlement(tenantId, "crm.full", "MANUAL");
+                case "PET" -> upsertTenantEntitlement(tenantId, "pet.full", "MANUAL");
+                case "IOT" -> upsertTenantEntitlement(tenantId, "iot.basic", "MANUAL");
+                default -> {
+                }
+            }
+        }
+    }
+
+    protected void seedModuleDefaults(String tenantId, String... moduleCodes) {
+        for (String moduleCode : moduleCodes) {
+            if ("CRM".equals(moduleCode)) {
+                ensureCrmDefaultPipeline(tenantId);
+            }
+        }
+    }
+
+    protected void ensureCrmDefaultPipeline(String tenantId) {
+        String pipelineId = UUID.randomUUID().toString();
+        executeSql(
+                """
+                INSERT INTO crm_pipelines (id, tenant_id, name, is_default, created_by, updated_by)
+                SELECT ?, ?, 'Default Pipeline', TRUE, 'test', 'test'
+                WHERE NOT EXISTS (
+                    SELECT 1
+                    FROM crm_pipelines
+                    WHERE tenant_id = ?
+                      AND is_default = TRUE
+                      AND deleted_at IS NULL
+                )
+                """,
+                pipelineId,
+                tenantId,
+                tenantId
+        );
+
+        String stageId = UUID.randomUUID().toString();
+        executeSql(
+                """
+                INSERT INTO crm_pipeline_stages (
+                    id,
+                    tenant_id,
+                    pipeline_id,
+                    name,
+                    position,
+                    code,
+                    color,
+                    is_default,
+                    created_by,
+                    updated_by
+                )
+                SELECT ?, ?, p.id, 'NEW', 1, 'NEW', '#2563eb', TRUE, 'test', 'test'
+                FROM crm_pipelines p
+                WHERE p.tenant_id = ?
+                  AND p.is_default = TRUE
+                  AND p.deleted_at IS NULL
+                  AND NOT EXISTS (
+                      SELECT 1
+                      FROM crm_pipeline_stages s
+                      WHERE s.tenant_id = ?
+                        AND s.deleted_at IS NULL
+                  )
+                """,
+                stageId,
+                tenantId,
+                tenantId,
+                tenantId
+        );
     }
 
     protected void upsertTenantFeatureFlag(String tenantId, String flagKey, boolean enabled) {
@@ -171,6 +248,24 @@ public abstract class AbstractIntegrationTest extends IntegrationTestContainersC
                 flagKey,
                 enabled,
                 tenantId
+        );
+    }
+
+    protected void upsertTenantEntitlement(String tenantId, String featureKey, String source) {
+        executeSql(
+                """
+                INSERT INTO tenant_feature_entitlements (id, tenant_id, feature_key, enabled, source, created_by, updated_by)
+                VALUES (?, ?, ?, TRUE, ?, 'test', 'test')
+                ON CONFLICT (tenant_id, feature_key) DO UPDATE
+                SET enabled = TRUE,
+                    source = EXCLUDED.source,
+                    deleted_at = NULL,
+                    updated_by = 'test'
+                """,
+                UUID.randomUUID().toString(),
+                tenantId,
+                featureKey,
+                source
         );
     }
 
@@ -359,8 +454,8 @@ public abstract class AbstractIntegrationTest extends IntegrationTestContainersC
     private void enableTenantModule(String tenantId, String moduleCode) {
         executeSql(
                 """
-                INSERT INTO tenant_modules (id, tenant_id, module_definition_id, enabled)
-                SELECT ?, ?, m.id, TRUE
+                INSERT INTO tenant_modules (id, tenant_id, module_definition_id, enabled, source)
+                SELECT ?, ?, m.id, TRUE, 'MANUAL'
                 FROM module_definitions m
                 WHERE m.code = ?
                 """,

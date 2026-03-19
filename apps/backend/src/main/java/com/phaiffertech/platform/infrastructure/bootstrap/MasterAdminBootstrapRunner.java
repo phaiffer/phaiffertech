@@ -10,11 +10,14 @@ import com.phaiffertech.platform.core.module.domain.ModuleDefinition;
 import com.phaiffertech.platform.core.module.domain.TenantModule;
 import com.phaiffertech.platform.core.module.repository.ModuleDefinitionRepository;
 import com.phaiffertech.platform.core.module.repository.TenantModuleRepository;
+import com.phaiffertech.platform.core.tenant.entitlement.service.TenantEntitlementService;
 import com.phaiffertech.platform.core.tenant.domain.Tenant;
 import com.phaiffertech.platform.core.tenant.repository.TenantRepository;
+import com.phaiffertech.platform.core.tenant.service.TenantModuleContractService;
 import com.phaiffertech.platform.core.user.domain.User;
 import com.phaiffertech.platform.core.user.repository.UserRepository;
 import com.phaiffertech.platform.shared.domain.enums.RoleCode;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import org.slf4j.Logger;
@@ -39,6 +42,8 @@ public class MasterAdminBootstrapRunner implements CommandLineRunner {
     private final UserTenantRoleRepository userTenantRoleRepository;
     private final ModuleDefinitionRepository moduleDefinitionRepository;
     private final TenantModuleRepository tenantModuleRepository;
+    private final TenantModuleContractService tenantModuleContractService;
+    private final TenantEntitlementService tenantEntitlementService;
     private final PasswordEncoder passwordEncoder;
 
     public MasterAdminBootstrapRunner(
@@ -50,6 +55,8 @@ public class MasterAdminBootstrapRunner implements CommandLineRunner {
             UserTenantRoleRepository userTenantRoleRepository,
             ModuleDefinitionRepository moduleDefinitionRepository,
             TenantModuleRepository tenantModuleRepository,
+            TenantModuleContractService tenantModuleContractService,
+            TenantEntitlementService tenantEntitlementService,
             PasswordEncoder passwordEncoder
     ) {
         this.properties = properties;
@@ -60,6 +67,8 @@ public class MasterAdminBootstrapRunner implements CommandLineRunner {
         this.userTenantRoleRepository = userTenantRoleRepository;
         this.moduleDefinitionRepository = moduleDefinitionRepository;
         this.tenantModuleRepository = tenantModuleRepository;
+        this.tenantModuleContractService = tenantModuleContractService;
+        this.tenantEntitlementService = tenantEntitlementService;
         this.passwordEncoder = passwordEncoder;
     }
 
@@ -87,6 +96,8 @@ public class MasterAdminBootstrapRunner implements CommandLineRunner {
         }
 
         ensureTenantModulesEnabled(tenant);
+        tenantModuleContractService.syncEffectiveModules(tenant.getId(), tenant.getPlanCode(), List.of());
+        tenantEntitlementService.syncManualEntitlements(tenant.getId(), tenant.getPlanCode(), List.of());
 
         log.info(
                 "Master admin bootstrap reconciled tenant '{}' and user '{}'.",
@@ -101,6 +112,7 @@ public class MasterAdminBootstrapRunner implements CommandLineRunner {
         tenant.setCode(properties.getTenantCode());
         tenant.setStatus("ACTIVE");
         tenant.setPlatformOwner(true);
+        tenant.setPlanCode("ENTERPRISE");
         if (tenant.getPrimaryColor() == null || tenant.getPrimaryColor().isBlank()) {
             tenant.setPrimaryColor("#0f172a");
         }

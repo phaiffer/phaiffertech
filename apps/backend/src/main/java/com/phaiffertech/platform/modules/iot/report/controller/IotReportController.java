@@ -19,7 +19,7 @@ public class IotReportController {
     }
 
     @GetMapping("/summary")
-    @RequirePermission("iot.report.read")
+    @RequirePermission(value = "iot.report.read", entitlement = "iot.basic")
     public ApiResponse<IotReportSummaryResponse> summary() {
         return ApiResponse.success(service.summary());
     }

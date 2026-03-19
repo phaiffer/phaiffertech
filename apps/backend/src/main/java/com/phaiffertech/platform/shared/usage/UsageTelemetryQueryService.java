@@ -43,15 +43,16 @@ public class UsageTelemetryQueryService {
                 """
                 SELECT metric_key,
                        source,
-                       quantity,
+                       SUM(quantity) AS quantity,
                        unit,
-                       metric_date,
-                       last_recorded_at
+                       MAX(metric_date) AS metric_date,
+                       MAX(last_recorded_at) AS last_recorded_at
                 FROM tenant_usage_metrics
                 WHERE tenant_id = ?
                   AND deleted_at IS NULL
                   AND metric_date >= ?
-                ORDER BY metric_date DESC, last_recorded_at DESC, metric_key ASC, source ASC
+                GROUP BY metric_key, source, unit
+                ORDER BY metric_key ASC, last_recorded_at DESC, source ASC
                 LIMIT ?
                 """,
                 (rs, rowNum) -> new TenantUsageMetricResponse(

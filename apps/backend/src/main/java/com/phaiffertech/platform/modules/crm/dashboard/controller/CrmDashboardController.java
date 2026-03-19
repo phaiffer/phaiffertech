@@ -19,7 +19,7 @@ public class CrmDashboardController {
     }
 
     @GetMapping("/summary")
-    @RequirePermission("crm.dashboard.read")
+    @RequirePermission(value = "crm.dashboard.read", entitlement = "crm.basic")
     public ApiResponse<CrmDashboardSummaryResponse> summary() {
         return ApiResponse.success(service.summary());
     }

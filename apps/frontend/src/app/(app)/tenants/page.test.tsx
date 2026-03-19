@@ -141,6 +141,27 @@ describe('TenantsPage access model', () => {
     expect(screen.getByText('Customer Tenant')).toBeInTheDocument();
   });
 
+  it('shows the selected plan defaults as a read-only hint', async () => {
+    vi.mocked(tenantService.list).mockResolvedValue({
+      items: [],
+      totalItems: 0,
+      totalPages: 0,
+      page: 0,
+      size: 20
+    });
+
+    render(<TenantsPage />);
+
+    await waitFor(() => {
+      expect(tenantService.list).toHaveBeenCalledTimes(1);
+    });
+
+    expect(screen.getByText('Plan defines default modules and features.')).toBeInTheDocument();
+    expect(screen.getAllByText('CRM').length).toBeGreaterThan(0);
+    expect(screen.getByText('crm.basic')).toBeInTheDocument();
+    expect(screen.getByText('Included by plan')).toBeInTheDocument();
+  });
+
   it('loads feature flags and usage telemetry when editing an existing tenant', async () => {
     vi.mocked(tenantService.list).mockResolvedValue({
       items: [
