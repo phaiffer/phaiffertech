@@ -218,7 +218,15 @@ public class TenantService {
         for (String code : normalizedCodes) {
             ModuleDefinition definition = definitionsByCode.get(code);
             TenantModule tenantModule = existingByModuleDefinitionId.get(definition.getId());
-            boolean stateChanged = tenantModule == null || !tenantModule.isEnabled();
+
+            if (tenantModule == null) {
+                tenantModule = tenantModuleRepository.findByTenantIdAndModuleDefinitionId(tenant.getId(), definition.getId())
+                        .orElse(null);
+            }
+
+            boolean stateChanged = tenantModule == null
+                    || !tenantModule.isEnabled()
+                    || tenantModule.getDeletedAt() != null;
 
             if (tenantModule == null) {
                 tenantModule = new TenantModule();
@@ -227,7 +235,9 @@ public class TenantService {
             }
 
             tenantModule.setEnabled(true);
+            tenantModule.setDeletedAt(null);
             TenantModule saved = tenantModuleRepository.save(tenantModule);
+            existingByModuleDefinitionId.put(definition.getId(), saved);
             if (stateChanged) {
                 auditModuleStateChange(tenant.getId(), saved, definition.getCode(), true);
             }
