@@ -33,6 +33,7 @@ class AuthIntegrationTest extends AbstractIntegrationTest {
         assertTrue(data.path("accessToken").asText().length() > 20);
         assertTrue(data.path("refreshToken").isMissingNode() || data.path("refreshToken").asText().isBlank());
         assertTrue(data.path("user").path("permissions").isArray());
+        assertTrue(data.path("user").path("featureEntitlements").isArray());
         assertTrue(data.path("user").path("permissions").toString().contains("crm.contact.read"));
         assertEquals("default", data.path("user").path("tenantCode").asText());
         assertEquals("Default Tenant", data.path("user").path("tenantName").asText());
@@ -92,6 +93,7 @@ class AuthIntegrationTest extends AbstractIntegrationTest {
         assertEquals(session.userId(), user.path("userId").asText());
         assertEquals("admin@local.test", user.path("email").asText());
         assertEquals("default", user.path("tenantCode").asText());
+        assertTrue(user.path("featureEntitlements").isArray());
         assertEquals("SYSTEM", user.path("tenantDefaultThemeMode").asText());
         assertEquals("no-store, no-cache, must-revalidate", meResponse.getHeaders().getFirst(HttpHeaders.CACHE_CONTROL));
     }

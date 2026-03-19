@@ -164,6 +164,63 @@ class ModuleEnablementIntegrationTest extends AbstractIntegrationTest {
     }
 
     @Test
+    void shouldBlockVeterinaryPetEndpointsWhenTenantOnlyContractsAestheticsAndRetail() {
+        AuthSession session = createTenantSessionWithPermissions(
+                "tenant-pet-vertical-segregation",
+                "tenant-pet-vertical-segregation@example.test",
+                List.of("pet.appointment.read", "pet.product.read", "pet.medical-record.read"),
+                "PET"
+        );
+
+        executeSql(
+                """
+                UPDATE tenant_feature_entitlements
+                SET enabled = FALSE
+                WHERE tenant_id = ?
+                  AND feature_key = 'pet.full'
+                """,
+                session.tenantId()
+        );
+        upsertTenantEntitlement(session.tenantId(), "pet.aesthetics", "MANUAL");
+        upsertTenantEntitlement(session.tenantId(), "pet.retail", "MANUAL");
+
+        ResponseEntity<JsonNode> appointmentResponse = get("/pet/appointments?page=0&size=20", session);
+        ResponseEntity<JsonNode> productResponse = get("/pet/products?page=0&size=20", session);
+        ResponseEntity<JsonNode> medicalRecordResponse = get("/pet/medical-records?page=0&size=20", session);
+
+        assertEquals(200, appointmentResponse.getStatusCode().value());
+        assertEquals(200, productResponse.getStatusCode().value());
+        assertEquals(403, medicalRecordResponse.getStatusCode().value());
+        assertEquals("FORBIDDEN", requireBody(medicalRecordResponse).path("code").asText());
+        assertTrue(requireBody(medicalRecordResponse).path("message").asText().contains("pet.veterinary"));
+    }
+
+    @Test
+    void shouldAllowLegacyPetBasicEntitlementToSatisfyPetSubmoduleChecks() {
+        AuthSession session = createTenantSessionWithPermissions(
+                "tenant-pet-basic-compatibility",
+                "tenant-pet-basic-compatibility@example.test",
+                List.of("pet.medical-record.read"),
+                "PET"
+        );
+
+        executeSql(
+                """
+                UPDATE tenant_feature_entitlements
+                SET enabled = FALSE
+                WHERE tenant_id = ?
+                  AND feature_key = 'pet.full'
+                """,
+                session.tenantId()
+        );
+        upsertTenantEntitlement(session.tenantId(), "pet.basic", "MANUAL");
+
+        ResponseEntity<JsonNode> response = get("/pet/medical-records?page=0&size=20", session);
+
+        assertEquals(200, response.getStatusCode().value());
+    }
+
+    @Test
     void shouldAggregateRecentModuleActivityIntoExecutiveDashboardSummary() {
         AuthSession session = createTenantAdminSession(
                 "tenant-executive-summary",

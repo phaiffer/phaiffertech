@@ -17,6 +17,7 @@ export type AuthenticatedUser = {
   role: string;
   roles?: string[];
   permissions: string[];
+  featureEntitlements?: string[];
 };
 
 export type AuthTokenResponse = {

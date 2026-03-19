@@ -1,5 +1,6 @@
 package com.phaiffertech.platform.modules.pet.dashboard.controller;
 
+import com.phaiffertech.platform.core.tenant.entitlement.TenantEntitlementKeys;
 import com.phaiffertech.platform.modules.pet.dashboard.dto.PetDashboardSummaryResponse;
 import com.phaiffertech.platform.modules.pet.dashboard.service.PetDashboardService;
 import com.phaiffertech.platform.shared.response.ApiResponse;
@@ -10,6 +11,12 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/v1/pet/dashboard")
+@RequirePermission(anyEntitlements = {
+        TenantEntitlementKeys.PET_AESTHETICS,
+        TenantEntitlementKeys.PET_CLINIC,
+        TenantEntitlementKeys.PET_RETAIL,
+        TenantEntitlementKeys.PET_VETERINARY
+})
 public class PetDashboardController {
 
     private final PetDashboardService petDashboardService;
@@ -19,7 +26,7 @@ public class PetDashboardController {
     }
 
     @GetMapping("/summary")
-    @RequirePermission(value = "pet.dashboard.read", entitlement = "pet.basic")
+    @RequirePermission("pet.dashboard.read")
     public ApiResponse<PetDashboardSummaryResponse> summary() {
         return ApiResponse.success(petDashboardService.summary());
     }

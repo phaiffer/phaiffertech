@@ -1,5 +1,6 @@
 package com.phaiffertech.platform.modules.pet.inventory.controller;
 
+import com.phaiffertech.platform.core.tenant.entitlement.TenantEntitlementKeys;
 import com.phaiffertech.platform.modules.pet.inventory.dto.PetInventoryMovementCreateRequest;
 import com.phaiffertech.platform.modules.pet.inventory.dto.PetInventoryMovementResponse;
 import com.phaiffertech.platform.modules.pet.inventory.dto.PetInventoryMovementUpdateRequest;
@@ -24,6 +25,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/v1/pet/inventory")
+@RequirePermission(entitlement = TenantEntitlementKeys.PET_RETAIL)
 public class PetInventoryMovementController {
 
     private final PetInventoryMovementService service;

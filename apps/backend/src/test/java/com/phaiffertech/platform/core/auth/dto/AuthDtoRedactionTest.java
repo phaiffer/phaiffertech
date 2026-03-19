@@ -1,6 +1,7 @@
 package com.phaiffertech.platform.core.auth.dto;
 
 import com.phaiffertech.platform.core.tenant.domain.TenantThemeMode;
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
@@ -35,7 +36,8 @@ class AuthDtoRedactionTest {
                         true,
                         "ADMIN",
                         Set.of("ADMIN"),
-                        Set.of("tenant.read")
+                        Set.of("tenant.read"),
+                        List.of("pet.full")
                 )
         );
 

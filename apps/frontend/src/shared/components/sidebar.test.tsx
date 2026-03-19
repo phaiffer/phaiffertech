@@ -3,7 +3,8 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { Sidebar } from '@/shared/components/sidebar';
 import { AuthenticatedUser } from '@/shared/types/auth';
 
-const { signOutMock, currentUser } = vi.hoisted(() => ({
+const { navigationState, signOutMock, currentUser } = vi.hoisted(() => ({
+  navigationState: { pathname: '/crm/tasks' },
   signOutMock: vi.fn(),
   currentUser: {
     userId: 'user-1',
@@ -20,12 +21,13 @@ const { signOutMock, currentUser } = vi.hoisted(() => ({
     tenantAllowUserThemeOverride: true,
     platformOwner: true,
     platformAdmin: true,
-    permissions: []
+    permissions: [],
+    featureEntitlements: ['crm.full', 'pet.full', 'iot.basic']
   } as AuthenticatedUser
 }));
 
 vi.mock('next/navigation', () => ({
-  usePathname: () => '/crm/tasks'
+  usePathname: () => navigationState.pathname
 }));
 
 vi.mock('@/shared/auth/use-auth', () => ({
@@ -79,10 +81,12 @@ vi.mock('@/shared/platform/use-frontend-platform', () => ({
 describe('Sidebar', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    navigationState.pathname = '/crm/tasks';
     currentUser.role = 'PLATFORM_ADMIN';
     currentUser.platformAdmin = true;
     currentUser.platformOwner = true;
     currentUser.permissions = ['TENANT_READ', 'USER_READ', 'crm.task.read', 'pet.appointment.read', 'crm.dashboard.read', 'pet.dashboard.read'];
+    currentUser.featureEntitlements = ['crm.full', 'pet.full', 'iot.basic'];
   });
 
   it('renders contextual CRM and Pet navigation and keeps tenant admin visible only for platform admins', () => {
@@ -115,5 +119,30 @@ describe('Sidebar', () => {
 
     expect(container.querySelector('a[href="/tenants"]')).toBeNull();
     expect(container.querySelector('a[href="/crm/tasks"]')).not.toBeNull();
+  });
+
+  it('hides IoT navigation when the tenant does not contract the IoT monitor entitlement', () => {
+    currentUser.permissions = ['iot.dashboard.read'];
+    currentUser.featureEntitlements = ['pet.full'];
+    navigationState.pathname = '/iot/dashboard';
+
+    const { container } = render(<Sidebar />);
+
+    expect(container.querySelector('a[href="/iot/dashboard"]')).toBeNull();
+  });
+
+  it('filters veterinary-only PetFlow navigation when the tenant only contracts aesthetics and retail', () => {
+    currentUser.role = 'TENANT_ADMIN';
+    currentUser.platformAdmin = false;
+    currentUser.platformOwner = false;
+    currentUser.permissions = ['pet.client.read', 'pet.appointment.read', 'pet.medical-record.read'];
+    currentUser.featureEntitlements = ['pet.aesthetics', 'pet.retail'];
+    navigationState.pathname = '/pet/dashboard';
+
+    const { container } = render(<Sidebar />);
+
+    expect(container.querySelector('a[href="/pet/clients"]')).not.toBeNull();
+    expect(container.querySelector('a[href="/pet/appointments"]')).not.toBeNull();
+    expect(container.querySelector('a[href="/pet/medical-records"]')).toBeNull();
   });
 });

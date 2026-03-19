@@ -8,6 +8,13 @@ import { DashboardContextCardGrid } from '@/shared/dashboard/dashboard-context-c
 import type { DashboardContextCard } from '@/shared/dashboard/contextual-dashboard';
 import { DashboardSection } from '@/shared/dashboard/dashboard-section';
 import { EmptyStateCard } from '@/shared/dashboard/empty-state-card';
+import {
+  hasAnyTenantEntitlement,
+  petClinicalEntitlements,
+  petOperationalEntitlements,
+  petRetailEntitlements,
+  petSubmoduleEntitlements
+} from '@/shared/entitlements/tenant-entitlements';
 import { MetricGrid } from '@/shared/dashboard/metric-grid';
 import { ApiClientError } from '@/shared/lib/http';
 import { getAppThemeModeLabel } from '@/shared/lib/tenant-branding';
@@ -89,6 +96,7 @@ function getPetWorkspaceActions(mode: PetWorkspaceMode): ModuleWorkspaceAction[]
         ? 'Review service throughput, today bookings, and the current operational backlog.'
         : 'Review clinic throughput, today appointments, and the current commercial backlog.',
       permission: 'pet.dashboard.read',
+      anyEntitlements: petSubmoduleEntitlements,
       restrictionTitle: 'Dashboard permission required',
       restrictionDescription: 'This workspace pulse becomes available when your role includes PetFlow dashboard access.'
     },
@@ -98,6 +106,7 @@ function getPetWorkspaceActions(mode: PetWorkspaceMode): ModuleWorkspaceAction[]
       title: 'Manage clients',
       description: 'Work through the client base attached to the current tenant workspace.',
       permission: 'pet.client.read',
+      anyEntitlements: petSubmoduleEntitlements,
       restrictionTitle: 'Client access required',
       restrictionDescription: 'Client management appears here when your workspace role can read PetFlow clients.'
     },
@@ -109,6 +118,7 @@ function getPetWorkspaceActions(mode: PetWorkspaceMode): ModuleWorkspaceAction[]
         ? 'Inspect pet identity, service notes, and linked customer context.'
         : 'Inspect patient identity, species, breed, and linked customer context.',
       permission: 'pet.profile.read',
+      anyEntitlements: petClinicalEntitlements,
       restrictionTitle: 'Pet profile access required',
       restrictionDescription: 'Patient profiles stay unavailable until your workspace role can read PetFlow pet records.'
     },
@@ -120,6 +130,7 @@ function getPetWorkspaceActions(mode: PetWorkspaceMode): ModuleWorkspaceAction[]
         ? 'Handle bookings, service assignment, and attendance flow for the current workspace.'
         : 'Handle scheduling, service assignment, and clinical attendance flow.',
       permission: 'pet.appointment.read',
+      anyEntitlements: petOperationalEntitlements,
       restrictionTitle: 'Appointment access required',
       restrictionDescription: 'Appointment flow becomes available when your workspace role can read PetFlow appointments.'
     },
@@ -129,6 +140,7 @@ function getPetWorkspaceActions(mode: PetWorkspaceMode): ModuleWorkspaceAction[]
       title: 'Inspect services',
       description: 'Review the service catalog currently sold through this workspace.',
       permission: 'pet.service.read',
+      anyEntitlements: petOperationalEntitlements,
       restrictionTitle: 'Service access required',
       restrictionDescription: 'Service catalog access appears here when your workspace role can read PetFlow services.'
     },
@@ -140,6 +152,7 @@ function getPetWorkspaceActions(mode: PetWorkspaceMode): ModuleWorkspaceAction[]
         ? 'Keep groomers, attendants, and operational staff visible for the current tenant.'
         : 'Keep the medical and operational team context visible for the current tenant.',
       permission: 'pet.professional.read',
+      anyEntitlements: petOperationalEntitlements,
       restrictionTitle: 'Professional access required',
       restrictionDescription: 'Team management stays hidden until your workspace role can read PetFlow professionals.'
     },
@@ -151,6 +164,7 @@ function getPetWorkspaceActions(mode: PetWorkspaceMode): ModuleWorkspaceAction[]
         ? 'Access care records, prescriptions, vaccinations, and longitudinal context when medical permissions apply.'
         : 'Access patient records, vaccinations, prescriptions, and clinical timeline context.',
       anyOf: petMedicalRoutePermissions,
+      anyEntitlements: petClinicalEntitlements,
       restrictionTitle: 'Medical access required',
       restrictionDescription: 'Medical records, vaccinations, and prescriptions appear here when your workspace role includes at least one medical read permission.'
     },
@@ -160,6 +174,7 @@ function getPetWorkspaceActions(mode: PetWorkspaceMode): ModuleWorkspaceAction[]
       title: 'Review products',
       description: 'Inspect SKUs, pricing, and items linked to the PetFlow commercial workspace.',
       permission: 'pet.product.read',
+      anyEntitlements: petRetailEntitlements,
       restrictionTitle: 'Product access required',
       restrictionDescription: 'Product management appears here when your workspace role can read PetFlow products.'
     },
@@ -169,6 +184,7 @@ function getPetWorkspaceActions(mode: PetWorkspaceMode): ModuleWorkspaceAction[]
       title: 'Track inventory',
       description: 'Follow stock movement and operational traceability for tenant inventory.',
       permission: 'pet.inventory.read',
+      anyEntitlements: petRetailEntitlements,
       restrictionTitle: 'Inventory access required',
       restrictionDescription: 'Inventory flow becomes available when your workspace role can read PetFlow inventory.'
     },
@@ -178,6 +194,7 @@ function getPetWorkspaceActions(mode: PetWorkspaceMode): ModuleWorkspaceAction[]
       title: 'Open invoices',
       description: 'Review invoice issuance and pending payment signals for current clients.',
       permission: 'pet.invoice.read',
+      anyEntitlements: petRetailEntitlements,
       restrictionTitle: 'Invoice access required',
       restrictionDescription: 'Billing signals appear here when your workspace role can read PetFlow invoices.'
     }
@@ -448,7 +465,8 @@ export function PetHome() {
   const [loadingSummary, setLoadingSummary] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const canReadDashboard = hasPermission('pet.dashboard.read');
+  const canReadDashboard = hasPermission('pet.dashboard.read')
+    && hasAnyTenantEntitlement(platform.user, petSubmoduleEntitlements);
   const petVisual = useMemo(
     () => resolveModuleWorkspaceVisualState(platform, {
       moduleContext: 'pet',
@@ -458,7 +476,12 @@ export function PetHome() {
   );
   const petMode = resolvePetWorkspaceMode(petVisual.visualProfile.key);
   const petCopy = useMemo(() => getPetWorkspaceCopy(petMode), [petMode]);
-  const petWorkspaceActions = useMemo(() => getPetWorkspaceActions(petMode), [petMode]);
+  const petWorkspaceActions = useMemo(
+    () => getPetWorkspaceActions(petMode).filter((action) => (
+      !action.anyEntitlements || hasAnyTenantEntitlement(platform.user, action.anyEntitlements)
+    )),
+    [petMode, platform.user]
+  );
   const featuredSection = summary?.sections.find((section) => (
     section.cards.length > 0
     || section.metrics.length > 0

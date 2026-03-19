@@ -1,5 +1,6 @@
 package com.phaiffertech.platform.modules.pet.medical.prescription.controller;
 
+import com.phaiffertech.platform.core.tenant.entitlement.TenantEntitlementKeys;
 import com.phaiffertech.platform.modules.pet.medical.prescription.dto.PetPrescriptionCreateRequest;
 import com.phaiffertech.platform.modules.pet.medical.prescription.dto.PetPrescriptionResponse;
 import com.phaiffertech.platform.modules.pet.medical.prescription.dto.PetPrescriptionUpdateRequest;
@@ -24,6 +25,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/v1/pet/prescriptions")
+@RequirePermission(entitlement = TenantEntitlementKeys.PET_VETERINARY)
 public class PetPrescriptionController {
 
     private final PetPrescriptionService service;

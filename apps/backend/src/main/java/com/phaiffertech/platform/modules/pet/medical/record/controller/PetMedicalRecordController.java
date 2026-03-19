@@ -1,5 +1,6 @@
 package com.phaiffertech.platform.modules.pet.medical.record.controller;
 
+import com.phaiffertech.platform.core.tenant.entitlement.TenantEntitlementKeys;
 import com.phaiffertech.platform.modules.pet.medical.record.dto.PetMedicalRecordCreateRequest;
 import com.phaiffertech.platform.modules.pet.medical.record.dto.PetMedicalRecordResponse;
 import com.phaiffertech.platform.modules.pet.medical.record.dto.PetMedicalRecordUpdateRequest;
@@ -24,6 +25,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/v1/pet/medical-records")
+@RequirePermission(entitlement = TenantEntitlementKeys.PET_VETERINARY)
 public class PetMedicalRecordController {
 
     private final PetMedicalRecordService service;

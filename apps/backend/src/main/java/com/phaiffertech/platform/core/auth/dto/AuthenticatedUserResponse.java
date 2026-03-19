@@ -1,6 +1,7 @@
 package com.phaiffertech.platform.core.auth.dto;
 
 import com.phaiffertech.platform.core.tenant.domain.TenantThemeMode;
+import java.util.List;
 import java.util.UUID;
 import java.util.Set;
 
@@ -20,6 +21,7 @@ public record AuthenticatedUserResponse(
         boolean platformAdmin,
         String role,
         Set<String> roles,
-        Set<String> permissions
+        Set<String> permissions,
+        List<String> featureEntitlements
 ) {
 }
