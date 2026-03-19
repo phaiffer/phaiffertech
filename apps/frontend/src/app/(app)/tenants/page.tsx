@@ -1,14 +1,17 @@
 'use client';
 
 import { FormEvent, useEffect, useMemo, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { PermissionGuard } from '@/shared/auth/PermissionGuard';
 import { useAuth } from '@/shared/auth/use-auth';
 import { usePermissions } from '@/shared/auth/usePermissions';
 import { sharedInputClass, sharedInputLabelClass } from '@/shared/components/public-visual-system';
 import { StatusBadge } from '@/shared/dashboard/status-badge';
+import { setImpersonationBackupSession } from '@/shared/lib/session';
 import { resolvePageItems, resolveTotalItems } from '@/shared/lib/pagination';
 import { useModuleCatalog } from '@/shared/modules/use-module-catalog';
 import { featureFlagService, TenantFeatureFlag } from '@/shared/services/feature-flag-service';
+import { supportImpersonationService } from '@/shared/services/support-impersonation-service';
 import { tenantService, TenantUpsertInput, TenantUsageMetric } from '@/shared/services/tenant-service';
 import { PageResponse } from '@/shared/types/common';
 import { TenantThemeMode } from '@/shared/types/auth';
@@ -121,7 +124,8 @@ function formatTokenLabel(value: string) {
 }
 
 export default function TenantsPage() {
-  const { session } = useAuth();
+  const { session, signIn } = useAuth();
+  const router = useRouter();
   const { hasPermission } = usePermissions();
   const { modules, loading: modulesLoading, error: modulesError } = useModuleCatalog();
 
@@ -143,6 +147,10 @@ export default function TenantsPage() {
   const [usageMetrics, setUsageMetrics] = useState<TenantUsageMetric[]>([]);
   const [usageMetricsLoading, setUsageMetricsLoading] = useState(false);
   const [usageMetricsError, setUsageMetricsError] = useState<string | null>(null);
+  const [impersonationReason, setImpersonationReason] = useState('');
+  const [impersonationDurationMinutes, setImpersonationDurationMinutes] = useState(15);
+  const [impersonationSubmitting, setImpersonationSubmitting] = useState(false);
+  const [impersonationError, setImpersonationError] = useState<string | null>(null);
   const selectedPlanDetails = useMemo(
     () => resolvePlanDetails(form.planCode),
     [form.planCode]
@@ -275,12 +283,18 @@ export default function TenantsPage() {
       featureEntitlements: tenant.featureEntitlements ?? []
     });
     setFeatureEntitlementDraft('');
+    setImpersonationReason('');
+    setImpersonationDurationMinutes(15);
+    setImpersonationError(null);
   }
 
   function resetForm() {
     setEditingTenantId(null);
     setForm(emptyTenantForm);
     setFeatureEntitlementDraft('');
+    setImpersonationReason('');
+    setImpersonationDurationMinutes(15);
+    setImpersonationError(null);
   }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -376,6 +390,43 @@ export default function TenantsPage() {
 
   const tenants = resolvePageItems(pageData);
   const totalItems = resolveTotalItems(pageData);
+  const editingTenant = useMemo(
+    () => tenants.find((tenant) => tenant.id === editingTenantId) ?? null,
+    [editingTenantId, tenants]
+  );
+
+  async function handleStartImpersonation() {
+    if (!editingTenantId || !session) {
+      return;
+    }
+
+    const normalizedReason = impersonationReason.trim();
+    if (normalizedReason.length < 10) {
+      setImpersonationError('Support impersonation requires a reason with at least 10 characters.');
+      return;
+    }
+
+    setImpersonationSubmitting(true);
+    setImpersonationError(null);
+    try {
+      const tokenData = await supportImpersonationService.start({
+        targetTenantId: editingTenantId,
+        reason: normalizedReason,
+        durationMinutes: impersonationDurationMinutes
+      });
+
+      setImpersonationBackupSession(session);
+      signIn({
+        accessToken: tokenData.accessToken,
+        user: tokenData.user
+      });
+      router.push('/dashboard');
+    } catch (err) {
+      setImpersonationError((err as Error).message);
+    } finally {
+      setImpersonationSubmitting(false);
+    }
+  }
   const columns: DataTableColumn<Tenant>[] = [
     {
       key: 'tenant',
@@ -903,6 +954,68 @@ export default function TenantsPage() {
                         <p className="text-sm text-[color:var(--app-shell-muted)]">
                           No recent usage telemetry has been recorded for this tenant.
                         </p>
+                      )}
+                    </section>
+
+                    <section className="ui-surface-muted space-y-4 p-4 xl:col-span-2">
+                      <div>
+                        <p className="text-sm font-medium text-[color:var(--app-shell-heading)]">Support impersonation</p>
+                        <p className="mt-1 text-sm text-[color:var(--app-shell-muted)]">
+                          Start a time-boxed support session inside this tenant while keeping your original platform operator identity fully auditable.
+                        </p>
+                      </div>
+
+                      {session?.user.impersonation ? (
+                        <div className="ui-notice-warning">
+                          Exit the current support impersonation session before starting another one.
+                        </div>
+                      ) : editingTenant?.platformOwner ? (
+                        <div className="ui-notice-warning">
+                          Support impersonation is only available for customer tenants.
+                        </div>
+                      ) : (
+                        <>
+                          <label className="space-y-2">
+                            <span className={sharedInputLabelClass}>Reason</span>
+                            <textarea
+                              value={impersonationReason}
+                              onChange={(event) => setImpersonationReason(event.target.value)}
+                              className={`${sharedInputClass} min-h-28`}
+                              placeholder="Describe why support access is needed for this tenant."
+                            />
+                          </label>
+
+                          <label className="space-y-2">
+                            <span className={sharedInputLabelClass}>Access duration</span>
+                            <select
+                              value={impersonationDurationMinutes}
+                              onChange={(event) => setImpersonationDurationMinutes(Number(event.target.value))}
+                              className={sharedInputClass}
+                            >
+                              <option value={15}>15 minutes</option>
+                              <option value={30}>30 minutes</option>
+                              <option value={45}>45 minutes</option>
+                              <option value={60}>60 minutes</option>
+                            </select>
+                          </label>
+
+                          <div className="ui-notice-warning">
+                            The resulting session stays tenant-scoped, keeps your real operator identity on audit records, and expires automatically.
+                          </div>
+
+                          {impersonationError ? (
+                            <div className="ui-notice-error">{impersonationError}</div>
+                          ) : null}
+
+                          <button
+                            type="button"
+                            onClick={() => void handleStartImpersonation()}
+                            disabled={impersonationSubmitting}
+                            className="ui-primary-button"
+                          >
+                            {impersonationSubmitting ? 'Starting support access...' : 'Start support impersonation'}
+                          </button>
+                        </>
                       )}
                     </section>
                   </div>

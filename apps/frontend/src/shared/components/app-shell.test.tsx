@@ -10,6 +10,10 @@ vi.mock('@/shared/components/sidebar', () => ({
   Sidebar: () => <aside data-testid="sidebar" />
 }));
 
+vi.mock('@/shared/components/impersonation-banner', () => ({
+  ImpersonationBanner: () => null
+}));
+
 vi.mock('@/shared/platform/use-frontend-platform', () => ({
   useFrontendPlatform: () => ({
     user: {

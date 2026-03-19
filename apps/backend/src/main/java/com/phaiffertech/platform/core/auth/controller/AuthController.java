@@ -6,9 +6,11 @@ import com.phaiffertech.platform.core.auth.dto.AuthTokenResponse;
 import com.phaiffertech.platform.core.auth.dto.AuthenticatedUserResponse;
 import com.phaiffertech.platform.core.auth.dto.ChangePasswordRequest;
 import com.phaiffertech.platform.core.auth.dto.LoginRequest;
+import com.phaiffertech.platform.core.auth.dto.SupportImpersonationStartRequest;
 import com.phaiffertech.platform.shared.response.ApiResponse;
 import com.phaiffertech.platform.shared.security.JwtProperties;
 import com.phaiffertech.platform.shared.web.ClientIpResolver;
+import com.phaiffertech.platform.core.auth.service.SupportImpersonationService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
@@ -26,11 +28,18 @@ import org.springframework.web.bind.annotation.RestController;
 public class AuthController {
 
     private final AuthService authService;
+    private final SupportImpersonationService supportImpersonationService;
     private final LoginAttemptService loginAttemptService;
     private final JwtProperties jwtProperties;
 
-    public AuthController(AuthService authService, LoginAttemptService loginAttemptService, JwtProperties jwtProperties) {
+    public AuthController(
+            AuthService authService,
+            SupportImpersonationService supportImpersonationService,
+            LoginAttemptService loginAttemptService,
+            JwtProperties jwtProperties
+    ) {
         this.authService = authService;
+        this.supportImpersonationService = supportImpersonationService;
         this.loginAttemptService = loginAttemptService;
         this.jwtProperties = jwtProperties;
     }
@@ -114,6 +123,21 @@ public class AuthController {
     public ApiResponse<AuthenticatedUserResponse> me(HttpServletResponse httpServletResponse) {
         applyNoStore(httpServletResponse);
         return ApiResponse.success(authService.me());
+    }
+
+    @PostMapping("/impersonation/start")
+    public ApiResponse<AuthTokenResponse> startImpersonation(
+            @Valid @RequestBody SupportImpersonationStartRequest request,
+            HttpServletResponse httpServletResponse
+    ) {
+        applyNoStore(httpServletResponse);
+        return ApiResponse.success(supportImpersonationService.start(request));
+    }
+
+    @PostMapping("/impersonation/stop")
+    public ApiResponse<AuthTokenResponse> stopImpersonation(HttpServletResponse httpServletResponse) {
+        applyNoStore(httpServletResponse);
+        return ApiResponse.success(supportImpersonationService.stop());
     }
 
     private void writeRefreshTokenCookie(HttpServletResponse httpServletResponse, String refreshToken) {

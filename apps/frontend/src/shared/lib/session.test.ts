@@ -1,5 +1,16 @@
 import { describe, expect, it, vi } from 'vitest';
-import { SESSION_CHANGE_EVENT, clearSession, consumeAuthNotice, getSession, setAuthNotice, setSession } from '@/shared/lib/session';
+import {
+  SESSION_CHANGE_EVENT,
+  clearImpersonationBackupSession,
+  clearSession,
+  consumeAuthNotice,
+  getImpersonationBackupSession,
+  getSession,
+  restoreImpersonationBackupSession,
+  setAuthNotice,
+  setImpersonationBackupSession,
+  setSession
+} from '@/shared/lib/session';
 import { SessionState } from '@/shared/types/auth';
 
 const sessionFixture: SessionState = {
@@ -73,5 +84,24 @@ describe('session storage', () => {
 
     expect(consumeAuthNotice()).toBe('session-expired');
     expect(consumeAuthNotice()).toBeNull();
+  });
+
+  it('stores and restores the platform session backup used for impersonation', () => {
+    setImpersonationBackupSession(sessionFixture);
+
+    expect(getImpersonationBackupSession()).toEqual(sessionFixture);
+
+    clearSession();
+    expect(restoreImpersonationBackupSession()).toEqual(sessionFixture);
+    expect(getSession()).toEqual(sessionFixture);
+    expect(getImpersonationBackupSession()).toBeNull();
+  });
+
+  it('can clear the impersonation backup explicitly', () => {
+    setImpersonationBackupSession(sessionFixture);
+
+    clearImpersonationBackupSession();
+
+    expect(getImpersonationBackupSession()).toBeNull();
   });
 });

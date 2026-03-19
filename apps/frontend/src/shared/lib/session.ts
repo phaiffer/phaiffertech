@@ -1,6 +1,7 @@
 import { SessionState } from '@/shared/types/auth';
 
 const SESSION_KEY = 'platform.session';
+const IMPERSONATION_BACKUP_KEY = 'platform.impersonation.backup';
 const AUTH_NOTICE_KEY = 'platform.auth.notice';
 export const SESSION_CHANGE_EVENT = 'platform:session-changed';
 const AUTH_NOTICE_REASONS = ['signed-out', 'session-expired', 'tenant-mismatch', 'password-changed'] as const;
@@ -89,6 +90,57 @@ export function clearSession(): void {
 
   localStorage.removeItem(SESSION_KEY);
   notifySessionChange();
+}
+
+export function getImpersonationBackupSession(): SessionState | null {
+  if (!isBrowser()) {
+    return null;
+  }
+
+  const raw = localStorage.getItem(IMPERSONATION_BACKUP_KEY);
+  if (!raw) {
+    return null;
+  }
+
+  try {
+    const parsed = sanitizeSession(JSON.parse(raw));
+    if (!parsed) {
+      clearImpersonationBackupSession();
+      return null;
+    }
+
+    return parsed;
+  } catch {
+    clearImpersonationBackupSession();
+    return null;
+  }
+}
+
+export function setImpersonationBackupSession(session: SessionState): void {
+  if (!isBrowser()) {
+    return;
+  }
+
+  localStorage.setItem(IMPERSONATION_BACKUP_KEY, JSON.stringify(session));
+}
+
+export function clearImpersonationBackupSession(): void {
+  if (!isBrowser()) {
+    return;
+  }
+
+  localStorage.removeItem(IMPERSONATION_BACKUP_KEY);
+}
+
+export function restoreImpersonationBackupSession(): SessionState | null {
+  const backup = getImpersonationBackupSession();
+  if (!backup) {
+    return null;
+  }
+
+  clearImpersonationBackupSession();
+  setSession(backup);
+  return backup;
 }
 
 export function setAuthNotice(reason: AuthNoticeReason): void {

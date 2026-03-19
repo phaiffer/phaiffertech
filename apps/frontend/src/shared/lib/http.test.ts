@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { apiClient } from '@/shared/lib/http';
-import { consumeAuthNotice, getSession, setSession } from '@/shared/lib/session';
+import { consumeAuthNotice, getImpersonationBackupSession, getSession, setImpersonationBackupSession, setSession } from '@/shared/lib/session';
 import { SessionState } from '@/shared/types/auth';
 
 const sessionFixture: SessionState = {
@@ -110,5 +110,55 @@ describe('apiClient refresh flow', () => {
 
     expect(getSession()).toBeNull();
     expect(consumeAuthNotice()).toBe('tenant-mismatch');
+  });
+
+  it('restores the platform session backup instead of refreshing when impersonation expires', async () => {
+    const impersonatedSession: SessionState = {
+      accessToken: 'impersonated-token',
+      user: {
+        ...sessionFixture.user,
+        tenantId: 'tenant-2',
+        tenantName: 'Clinic North',
+        tenantCode: 'clinic-north',
+        platformOwner: false,
+        platformAdmin: false,
+        impersonation: {
+          sessionId: 'session-1',
+          sourceTenantId: 'tenant-1',
+          sourceTenantName: 'Default Tenant',
+          sourceTenantCode: 'default',
+          startedAt: '2026-03-09T00:00:00Z',
+          expiresAt: '2026-03-09T00:15:00Z'
+        }
+      }
+    };
+
+    setSession(impersonatedSession);
+    setImpersonationBackupSession(refreshedSession);
+    const assignMock = vi.fn();
+    Object.defineProperty(window, 'location', {
+      configurable: true,
+      value: {
+        ...window.location,
+        pathname: '/crm/contacts',
+        assign: assignMock
+      }
+    });
+
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(jsonResponse({
+      success: false,
+      code: 'UNAUTHORIZED',
+      message: 'Authentication is required.',
+      timestamp: '2026-03-09T00:00:03Z'
+    }, 401)));
+
+    await expect(apiClient.get('/protected-resource')).rejects.toMatchObject({
+      status: 401,
+      code: 'UNAUTHORIZED'
+    });
+
+    expect(getSession()).toEqual(refreshedSession);
+    expect(getImpersonationBackupSession()).toBeNull();
+    expect(assignMock).toHaveBeenCalledWith('/tenants');
   });
 });

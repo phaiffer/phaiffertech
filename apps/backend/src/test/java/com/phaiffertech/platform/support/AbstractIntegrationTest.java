@@ -353,6 +353,10 @@ public abstract class AbstractIntegrationTest extends IntegrationTestContainersC
         return setCookie;
     }
 
+    protected AuthSession authSession(String accessToken, String refreshCookie, String tenantId, String userId) {
+        return new AuthSession(accessToken, refreshCookie, tenantId, userId);
+    }
+
     private ResponseEntity<JsonNode> exchange(
             String path,
             HttpMethod method,

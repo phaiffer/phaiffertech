@@ -2,10 +2,14 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import TenantsPage from '@/app/(app)/tenants/page';
 import { featureFlagService } from '@/shared/services/feature-flag-service';
+import { supportImpersonationService } from '@/shared/services/support-impersonation-service';
 import { tenantService } from '@/shared/services/tenant-service';
 
-const { hasPermissionMock, currentUser } = vi.hoisted(() => ({
+const { hasPermissionMock, currentUser, signInMock, pushMock, setImpersonationBackupSessionMock } = vi.hoisted(() => ({
   hasPermissionMock: vi.fn<(permission: string) => boolean>(),
+  signInMock: vi.fn(),
+  pushMock: vi.fn(),
+  setImpersonationBackupSessionMock: vi.fn(),
   currentUser: {
     userId: 'user-1',
     email: 'admin@phaiffer.test',
@@ -28,8 +32,16 @@ const { hasPermissionMock, currentUser } = vi.hoisted(() => ({
 vi.mock('@/shared/auth/use-auth', () => ({
   useAuth: () => ({
     session: {
+      accessToken: 'platform-token',
       user: currentUser
-    }
+    },
+    signIn: signInMock
+  })
+}));
+
+vi.mock('next/navigation', () => ({
+  useRouter: () => ({
+    push: pushMock
   })
 }));
 
@@ -67,6 +79,17 @@ vi.mock('@/shared/services/feature-flag-service', () => ({
     setTenantOverride: vi.fn(),
     clearTenantOverride: vi.fn()
   }
+}));
+
+vi.mock('@/shared/services/support-impersonation-service', () => ({
+  supportImpersonationService: {
+    start: vi.fn(),
+    stop: vi.fn()
+  }
+}));
+
+vi.mock('@/shared/lib/session', () => ({
+  setImpersonationBackupSession: setImpersonationBackupSessionMock
 }));
 
 describe('TenantsPage access model', () => {
@@ -270,6 +293,84 @@ describe('TenantsPage access model', () => {
       expect(tenantService.update).toHaveBeenCalledWith('tenant-2', expect.objectContaining({
         featureEntitlements: ['beta.dashboard', 'usage.billing.preview']
       }));
+    });
+  });
+
+  it('starts support impersonation for the selected customer tenant', async () => {
+    vi.mocked(tenantService.list).mockResolvedValue({
+      items: [
+        {
+          id: 'tenant-2',
+          name: 'Clinic North',
+          code: 'clinic-north',
+          status: 'ACTIVE',
+          planCode: 'PRO',
+          featureEntitlements: [],
+          platformOwner: false,
+          logoUrl: null,
+          primaryColor: '#1e3a8a',
+          accentColor: '#0ea5e9',
+          defaultThemeMode: 'DARK',
+          allowUserThemeOverride: false,
+          contractedModules: ['CORE_PLATFORM', 'CRM']
+        }
+      ],
+      totalItems: 1,
+      totalPages: 1,
+      page: 0,
+      size: 20
+    });
+    vi.mocked(supportImpersonationService.start).mockResolvedValue({
+      accessToken: 'impersonated-token',
+      expiresInSeconds: 900,
+      user: {
+        ...currentUser,
+        tenantId: 'tenant-2',
+        tenantName: 'Clinic North',
+        tenantCode: 'clinic-north',
+        platformOwner: false,
+        platformAdmin: false,
+        impersonation: {
+          sessionId: 'session-1',
+          sourceTenantId: 'tenant-1',
+          sourceTenantName: 'PhaifferTech',
+          sourceTenantCode: 'default',
+          startedAt: '2026-03-19T12:00:00Z',
+          expiresAt: '2026-03-19T12:15:00Z'
+        }
+      }
+    });
+
+    render(<TenantsPage />);
+
+    expect(await screen.findByText('Clinic North')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Edit' }));
+    fireEvent.change(screen.getByPlaceholderText('Describe why support access is needed for this tenant.'), {
+      target: { value: 'Investigate CRM records for onboarding review' }
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Start support impersonation' }));
+
+    await waitFor(() => {
+      expect(supportImpersonationService.start).toHaveBeenCalledWith({
+        targetTenantId: 'tenant-2',
+        reason: 'Investigate CRM records for onboarding review',
+        durationMinutes: 15
+      });
+      expect(setImpersonationBackupSessionMock).toHaveBeenCalledWith({
+        accessToken: 'platform-token',
+        user: currentUser
+      });
+      expect(signInMock).toHaveBeenCalledWith({
+        accessToken: 'impersonated-token',
+        user: expect.objectContaining({
+          tenantId: 'tenant-2',
+          impersonation: expect.objectContaining({
+            sessionId: 'session-1'
+          })
+        })
+      });
+      expect(pushMock).toHaveBeenCalledWith('/dashboard');
     });
   });
 });

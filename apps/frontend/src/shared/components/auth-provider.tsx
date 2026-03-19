@@ -1,6 +1,15 @@
 'use client';
 
-import { SESSION_CHANGE_EVENT, clearAuthNotice, clearSession, getSession, setAuthNotice, setSession } from '@/shared/lib/session';
+import {
+  SESSION_CHANGE_EVENT,
+  clearAuthNotice,
+  clearImpersonationBackupSession,
+  clearSession,
+  getSession,
+  restoreImpersonationBackupSession,
+  setAuthNotice,
+  setSession
+} from '@/shared/lib/session';
 import { ApiClientError } from '@/shared/lib/http';
 import { logClientError, logClientInfo } from '@/shared/observability/client-logger';
 import { authService } from '@/shared/services/auth-service';
@@ -25,6 +34,16 @@ type AuthContextValue = {
 };
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
+
+function isExpiredImpersonationSession(session: SessionState | null): boolean {
+  const expiresAt = session?.user.impersonation?.expiresAt;
+  if (!expiresAt) {
+    return false;
+  }
+
+  const parsed = Date.parse(expiresAt);
+  return Number.isFinite(parsed) && parsed <= Date.now();
+}
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSessionState] = useState<SessionState | null>(null);
@@ -65,8 +84,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const storedSession = getSession();
 
       if (!storedSession) {
+        const restoredSession = restoreImpersonationBackupSession();
         if (isActive) {
-          setSessionState(null);
+          setSessionState(restoredSession);
+          setIsLoading(false);
+        }
+        return;
+      }
+
+      if (isExpiredImpersonationSession(storedSession)) {
+        const restoredSession = restoreImpersonationBackupSession();
+        if (!restoredSession) {
+          clearSession();
+        }
+
+        if (isActive) {
+          setSessionState(restoredSession);
           setIsLoading(false);
         }
         return;
@@ -86,14 +119,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           user
         };
 
+        if (!validatedSession.user.impersonation) {
+          clearImpersonationBackupSession();
+        }
         setSession(validatedSession);
         setSessionState(validatedSession);
       } catch {
-        clearSession();
+        const restoredSession = storedSession.user.impersonation
+          ? restoreImpersonationBackupSession()
+          : null;
+
+        if (!restoredSession) {
+          clearSession();
+          clearImpersonationBackupSession();
+        }
+
         if (!isActive) {
           return;
         }
-        setSessionState(null);
+        setSessionState(restoredSession);
       } finally {
         if (isActive) {
           setIsLoading(false);
@@ -110,6 +154,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signIn = useCallback((newSession: SessionState) => {
     clearAuthNotice();
+    if (!newSession.user.impersonation) {
+      clearImpersonationBackupSession();
+    }
     setSession(newSession);
     setSessionState(newSession);
   }, []);
@@ -123,11 +170,46 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       logRemoteLogoutFailure(error, null);
     } finally {
       setAuthNotice('signed-out');
+      clearImpersonationBackupSession();
       clearSession();
       setSessionState(null);
       router.push('/login');
     }
   }, [logRemoteLogoutFailure, router, session]);
+
+  useEffect(() => {
+    if (!session?.user.impersonation) {
+      return undefined;
+    }
+
+    const expiresAt = Date.parse(session.user.impersonation.expiresAt);
+    if (!Number.isFinite(expiresAt)) {
+      return undefined;
+    }
+
+    const restorePlatformSession = () => {
+      const restoredSession = restoreImpersonationBackupSession();
+      if (restoredSession) {
+        setSessionState(restoredSession);
+        router.push('/tenants');
+        return;
+      }
+
+      clearImpersonationBackupSession();
+      clearSession();
+      setSessionState(null);
+      router.push('/login');
+    };
+
+    const remainingMs = expiresAt - Date.now();
+    if (remainingMs <= 0) {
+      restorePlatformSession();
+      return undefined;
+    }
+
+    const timeoutId = window.setTimeout(restorePlatformSession, remainingMs);
+    return () => window.clearTimeout(timeoutId);
+  }, [router, session]);
 
   const value = useMemo<AuthContextValue>(() => ({
     session,

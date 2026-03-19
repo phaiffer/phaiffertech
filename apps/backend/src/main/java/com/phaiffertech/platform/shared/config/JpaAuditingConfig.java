@@ -18,7 +18,7 @@ public class JpaAuditingConfig {
         return () -> {
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
             if (authentication != null && authentication.getPrincipal() instanceof AuthenticatedUser user) {
-                return Optional.of(user.userId().toString());
+                return Optional.of(user.auditActorUserId().toString());
             }
             return Optional.of("system");
         };

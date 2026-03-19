@@ -9,6 +9,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
@@ -27,19 +28,32 @@ public class JwtService {
     public String generateAccessToken(AuthenticatedUser user) {
         Instant now = Instant.now();
         Instant expiresAt = now.plus(jwtProperties.getAccessMinutes(), ChronoUnit.MINUTES);
+        return generateAccessToken(user, expiresAt);
+    }
+
+    public String generateAccessToken(AuthenticatedUser user, Instant expiresAt) {
+        Instant now = Instant.now();
+        Map<String, Object> claims = new LinkedHashMap<>();
+        claims.put("tenantId", user.tenantId().toString());
+        claims.put("role", user.role());
+        claims.put("roles", user.roles());
+        claims.put("email", user.email());
+        claims.put("permissions", user.permissions());
+
+        if (user.impersonation() != null) {
+            claims.put("impersonationSessionId", user.impersonation().sessionId().toString());
+            claims.put("impersonationSourceTenantId", user.impersonation().sourceTenantId().toString());
+            claims.put("impersonationSourceUserId", user.impersonation().sourceUserId().toString());
+            claims.put("impersonationStartedAt", user.impersonation().startedAt().toString());
+            claims.put("impersonationExpiresAt", user.impersonation().expiresAt().toString());
+        }
 
         return Jwts.builder()
                 .issuer(jwtProperties.getIssuer())
                 .subject(user.userId().toString())
                 .issuedAt(Date.from(now))
                 .expiration(Date.from(expiresAt))
-                .claims(Map.of(
-                        "tenantId", user.tenantId().toString(),
-                        "role", user.role(),
-                        "roles", user.roles(),
-                        "email", user.email(),
-                        "permissions", user.permissions()
-                ))
+                .claims(claims)
                 .signWith(signingKey())
                 .compact();
     }
@@ -70,7 +84,8 @@ public class JwtService {
                 claims.get("email", String.class),
                 claims.get("role", String.class),
                 roles,
-                permissions
+                permissions,
+                extractImpersonation(claims)
         );
     }
 
@@ -101,5 +116,20 @@ public class JwtService {
         }
 
         return Set.copyOf(resolved);
+    }
+
+    private SupportImpersonationDetails extractImpersonation(Claims claims) {
+        String sessionId = claims.get("impersonationSessionId", String.class);
+        if (sessionId == null || sessionId.isBlank()) {
+            return null;
+        }
+
+        return new SupportImpersonationDetails(
+                UUID.fromString(sessionId),
+                UUID.fromString(claims.get("impersonationSourceTenantId", String.class)),
+                UUID.fromString(claims.get("impersonationSourceUserId", String.class)),
+                Instant.parse(claims.get("impersonationStartedAt", String.class)),
+                Instant.parse(claims.get("impersonationExpiresAt", String.class))
+        );
     }
 }

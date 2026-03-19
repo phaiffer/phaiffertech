@@ -7,6 +7,7 @@ import com.phaiffertech.platform.core.auth.dto.AuthTokenResponse;
 import com.phaiffertech.platform.core.auth.dto.AuthenticatedUserResponse;
 import com.phaiffertech.platform.core.auth.dto.ChangePasswordRequest;
 import com.phaiffertech.platform.core.auth.dto.LoginRequest;
+import com.phaiffertech.platform.core.auth.dto.SupportImpersonationContextResponse;
 import com.phaiffertech.platform.core.auth.mapper.AuthMapper;
 import com.phaiffertech.platform.core.auth.repository.RefreshTokenRepository;
 import com.phaiffertech.platform.core.iam.domain.UserTenant;
@@ -284,12 +285,14 @@ public class AuthService {
                 .orElseThrow(() -> new ResourceNotFoundException("Authenticated user not found."));
         Tenant tenant = tenantRepository.findById(authenticatedUser.tenantId())
                 .orElseThrow(() -> new ResourceNotFoundException("Authenticated tenant not found."));
+        SupportImpersonationContextResponse impersonation = resolveImpersonationContext(authenticatedUser);
 
         return AuthMapper.toAuthenticatedUserResponse(
                 user,
                 authenticatedUser,
                 tenant,
-                tenantEntitlementService.resolveEffectiveEntitlements(tenant.getId())
+                tenantEntitlementService.resolveEffectiveEntitlements(tenant.getId()),
+                impersonation
         );
     }
 
@@ -310,7 +313,8 @@ public class AuthService {
                 principal,
                 fullName,
                 tenant,
-                tenantEntitlementService.resolveEffectiveEntitlements(tenant.getId())
+                tenantEntitlementService.resolveEffectiveEntitlements(tenant.getId()),
+                resolveImpersonationContext(principal)
         );
 
         return new AuthSessionResult(
@@ -346,6 +350,17 @@ public class AuthService {
 
         activeTokens.forEach(token -> token.setRevokedAt(revokedAt));
         refreshTokenRepository.saveAll(activeTokens);
+    }
+
+    private SupportImpersonationContextResponse resolveImpersonationContext(AuthenticatedUser principal) {
+        if (!principal.isImpersonating()) {
+            return null;
+        }
+
+        Tenant sourceTenant = tenantRepository.findById(principal.impersonation().sourceTenantId())
+                .orElseThrow(() -> new ResourceNotFoundException("Impersonation source tenant not found."));
+
+        return AuthMapper.toSupportImpersonationContextResponse(principal.impersonation(), sourceTenant);
     }
 
     public record AuthSessionResult(AuthTokenResponse response, String refreshToken) {

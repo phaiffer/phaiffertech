@@ -2,6 +2,7 @@
 
 import { ReactNode, useMemo } from 'react';
 import { usePathname } from 'next/navigation';
+import { ImpersonationBanner } from '@/shared/components/impersonation-banner';
 import { Sidebar } from '@/shared/components/sidebar';
 import {
   sharedCompactTextClass,
@@ -93,6 +94,8 @@ export function AppShell({ children }: { children: ReactNode }) {
       <Sidebar />
 
       <div className="flex flex-1 flex-col">
+        <ImpersonationBanner tenantName={branding.scopeName} tenantCode={branding.tenantCode} />
+
         {/* Header */}
         <header className={`sticky top-0 z-20 ${sharedShellHeaderClass}`}>
           <div className="flex flex-col gap-5 px-6 py-5 lg:flex-row lg:items-start lg:justify-between lg:px-8">

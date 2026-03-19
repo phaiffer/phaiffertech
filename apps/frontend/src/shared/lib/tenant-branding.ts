@@ -85,6 +85,10 @@ export function getTenantWorkspaceLabel(user?: AuthenticatedUser | null) {
     return 'Platform workspace';
   }
 
+  if (user.impersonation) {
+    return 'Support session';
+  }
+
   return user.platformAdmin ? 'Platform control plane' : 'Tenant workspace';
 }
 

@@ -161,7 +161,11 @@ export function FrontendPlatformProvider({ children }: { children: ReactNode }) 
       visualProfile: resolvedBranding.visualProfile,
       workspace: {
         workspaceLabel: getTenantWorkspaceLabel(user),
-        accessLabel: canManagePlatformAdministration ? 'Platform owner tenant' : 'Contracted SaaS workspace',
+        accessLabel: user?.impersonation
+          ? 'Support impersonation'
+          : canManagePlatformAdministration
+            ? 'Platform owner tenant'
+            : 'Contracted SaaS workspace',
         isPlatformOwnerTenant,
         hasSystemAdminRole,
         hasFullPlatformVisibility: isPlatformOwnerTenant,

@@ -37,7 +37,8 @@ class AuthDtoRedactionTest {
                         "ADMIN",
                         Set.of("ADMIN"),
                         Set.of("tenant.read"),
-                        List.of("pet.full")
+                        List.of("pet.full"),
+                        null
                 )
         );
 

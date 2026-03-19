@@ -1,4 +1,11 @@
-import { AuthNoticeReason, clearSession, getSession, setAuthNotice, setSession } from '@/shared/lib/session';
+import {
+  AuthNoticeReason,
+  clearSession,
+  getSession,
+  restoreImpersonationBackupSession,
+  setAuthNotice,
+  setSession
+} from '@/shared/lib/session';
 import { logClientError, logClientInfo } from '@/shared/observability/client-logger';
 import { AuthTokenResponse, SessionState } from '@/shared/types/auth';
 import { ApiEnvelope, ApiErrorEnvelope } from '@/shared/types/common';
@@ -123,6 +130,10 @@ async function refreshSession(): Promise<SessionState | null> {
     return null;
   }
 
+  if (session.user.impersonation) {
+    return null;
+  }
+
   refreshSessionPromise = (async () => {
     try {
       const response = await performFetch('/auth/refresh', {
@@ -155,12 +166,26 @@ async function refreshSession(): Promise<SessionState | null> {
 }
 
 async function request<T>(path: string, options: RequestOptions = {}, allowRefresh = true): Promise<T> {
+  const currentSession = getSession();
   const response = await performFetch(path, options);
 
   if (!response.ok) {
     const payload = await parseErrorEnvelope(response);
+    let restoredFromImpersonation = false;
 
-    if (response.status === 401 && allowRefresh && !options.skipAuth) {
+    if (response.status === 401 && currentSession?.user.impersonation) {
+      const restoredSession = restoreImpersonationBackupSession();
+      if (!restoredSession) {
+        invalidateSession('session-expired');
+      } else if (typeof window !== 'undefined' && window.location.pathname !== '/tenants') {
+        restoredFromImpersonation = true;
+        window.location.assign('/tenants');
+      } else {
+        restoredFromImpersonation = true;
+      }
+    }
+
+    if (response.status === 401 && allowRefresh && !options.skipAuth && !currentSession?.user.impersonation) {
       const refreshedSession = await refreshSession();
       if (refreshedSession) {
         return request<T>(path, options, false);
@@ -171,7 +196,7 @@ async function request<T>(path: string, options: RequestOptions = {}, allowRefre
       invalidateSession('tenant-mismatch');
     }
 
-    if (response.status === 401) {
+    if (response.status === 401 && !restoredFromImpersonation) {
       invalidateSession('session-expired');
     }
 

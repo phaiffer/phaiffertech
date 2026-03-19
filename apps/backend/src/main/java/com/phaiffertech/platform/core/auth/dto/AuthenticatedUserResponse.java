@@ -22,6 +22,7 @@ public record AuthenticatedUserResponse(
         String role,
         Set<String> roles,
         Set<String> permissions,
-        List<String> featureEntitlements
+        List<String> featureEntitlements,
+        SupportImpersonationContextResponse impersonation
 ) {
 }

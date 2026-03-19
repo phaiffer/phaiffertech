@@ -13,8 +13,20 @@ public record AuthenticatedUser(
         String email,
         String role,
         Set<String> roles,
-        Set<String> permissions
+        Set<String> permissions,
+        SupportImpersonationDetails impersonation
 ) {
+    public AuthenticatedUser(
+            UUID userId,
+            UUID tenantId,
+            String email,
+            String role,
+            Set<String> roles,
+            Set<String> permissions
+    ) {
+        this(userId, tenantId, email, role, roles, permissions, null);
+    }
+
     public Collection<? extends GrantedAuthority> authorities() {
         var grantedAuthorities = new ArrayList<GrantedAuthority>();
         if (roles != null && !roles.isEmpty()) {
@@ -27,5 +39,15 @@ public record AuthenticatedUser(
             permissions.forEach(permission -> grantedAuthorities.add(new SimpleGrantedAuthority(permission)));
         }
         return grantedAuthorities;
+    }
+
+    public boolean isImpersonating() {
+        return impersonation != null;
+    }
+
+    public UUID auditActorUserId() {
+        return impersonation != null && impersonation.sourceUserId() != null
+                ? impersonation.sourceUserId()
+                : userId;
     }
 }

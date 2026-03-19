@@ -54,13 +54,14 @@ public class AuditLogService {
         }
 
         AuditRequestDetails requestDetails = resolveRequestDetails();
+        AuthenticatedUser currentUser = resolveCurrentUser();
         AuditLog auditLog = new AuditLog();
         auditLog.setTenantId(tenantId);
         auditLog.setUserId(userId);
         auditLog.setAction(action);
         auditLog.setEntity(entity);
         auditLog.setEntityId(entityId);
-        auditLog.setPayload(toJson(enrichPayload(payload, requestDetails)));
+        auditLog.setPayload(toJson(enrichPayload(payload, requestDetails, currentUser)));
         auditLog.setIpAddress(requestDetails.ipAddress());
 
         auditLogRepository.save(auditLog);
@@ -68,12 +69,17 @@ public class AuditLogService {
     }
 
     private UUID resolveCurrentUserId() {
+        AuthenticatedUser user = resolveCurrentUser();
+        return user == null ? null : user.auditActorUserId();
+    }
+
+    private AuthenticatedUser resolveCurrentUser() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !(authentication.getPrincipal() instanceof AuthenticatedUser user)) {
             return null;
         }
 
-        return user.userId();
+        return user;
     }
 
     private String toJson(Object payload) {
@@ -88,8 +94,8 @@ public class AuditLogService {
         }
     }
 
-    private Object enrichPayload(Object payload, AuditRequestDetails requestDetails) {
-        if (requestDetails.isEmpty()) {
+    private Object enrichPayload(Object payload, AuditRequestDetails requestDetails, AuthenticatedUser currentUser) {
+        if (requestDetails.isEmpty() && (currentUser == null || !currentUser.isImpersonating())) {
             return payload;
         }
 
@@ -113,6 +119,16 @@ public class AuditLogService {
 
         if (!auditContext.isEmpty()) {
             enrichedPayload.put("auditContext", auditContext);
+        }
+
+        if (currentUser != null && currentUser.isImpersonating()) {
+            Map<String, Object> impersonationContext = new LinkedHashMap<>();
+            impersonationContext.put("sessionId", currentUser.impersonation().sessionId());
+            impersonationContext.put("sourceTenantId", currentUser.impersonation().sourceTenantId());
+            impersonationContext.put("sourceUserId", currentUser.impersonation().sourceUserId());
+            impersonationContext.put("startedAt", currentUser.impersonation().startedAt());
+            impersonationContext.put("expiresAt", currentUser.impersonation().expiresAt());
+            enrichedPayload.put("supportImpersonation", impersonationContext);
         }
 
         return enrichedPayload.isEmpty() ? null : enrichedPayload;

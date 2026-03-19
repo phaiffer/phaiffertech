@@ -2,7 +2,7 @@ import React from 'react';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { AuthProvider, useAuth } from '@/shared/components/auth-provider';
-import { getSession, setSession } from '@/shared/lib/session';
+import { getImpersonationBackupSession, getSession, setImpersonationBackupSession, setSession } from '@/shared/lib/session';
 import { authService } from '@/shared/services/auth-service';
 import { SessionState } from '@/shared/types/auth';
 
@@ -206,5 +206,24 @@ describe('AuthProvider', () => {
 
     expect(getSession()).toBeNull();
     expect(pushMock).toHaveBeenCalledWith('/login');
+  });
+
+  it('signIn with a restored non-impersonated session clears any impersonation backup', async () => {
+    setImpersonationBackupSession(sessionFixture);
+
+    render(
+      <AuthProvider>
+        <AuthConsumer />
+      </AuthProvider>
+    );
+
+    await waitFor(() => {
+      expect(screen.getByTestId('loading').textContent).toBe('ready');
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: 'sign-in' }));
+
+    expect(getSession()).toEqual(sessionFixture);
+    expect(getImpersonationBackupSession()).toBeNull();
   });
 });
