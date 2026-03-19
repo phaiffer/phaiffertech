@@ -17,6 +17,64 @@ public class CrmDashboardRepository {
         this.jdbcTemplate = jdbcTemplate;
     }
 
+    public CrmDashboardSnapshot loadSummary(UUID tenantId, Instant referenceTime) {
+        return jdbcTemplate.queryForObject(
+                """
+                SELECT
+                    (SELECT COUNT(*) FROM crm_contacts WHERE tenant_id = ? AND deleted_at IS NULL) AS total_contacts,
+                    (SELECT COUNT(*) FROM crm_leads WHERE tenant_id = ? AND deleted_at IS NULL) AS total_leads,
+                    (SELECT COUNT(*) FROM crm_companies WHERE tenant_id = ? AND deleted_at IS NULL) AS total_companies,
+                    (
+                        SELECT COUNT(*)
+                        FROM crm_deals
+                        WHERE tenant_id = ?
+                          AND deleted_at IS NULL
+                          AND UPPER(status) NOT IN ('CLOSED', 'CLOSED_WON', 'CLOSED_LOST', 'WON', 'LOST')
+                    ) AS total_open_deals,
+                    (
+                        SELECT COALESCE(SUM(amount), 0)
+                        FROM crm_deals
+                        WHERE tenant_id = ?
+                          AND deleted_at IS NULL
+                          AND UPPER(status) NOT IN ('CLOSED', 'CLOSED_WON', 'CLOSED_LOST', 'WON', 'LOST')
+                    ) AS pipeline_value,
+                    (
+                        SELECT COUNT(*)
+                        FROM crm_tasks
+                        WHERE tenant_id = ?
+                          AND deleted_at IS NULL
+                          AND UPPER(status) <> 'DONE'
+                    ) AS pending_tasks,
+                    (
+                        SELECT COUNT(*)
+                        FROM crm_tasks
+                        WHERE tenant_id = ?
+                          AND deleted_at IS NULL
+                          AND due_date IS NOT NULL
+                          AND due_date < ?
+                          AND UPPER(status) <> 'DONE'
+                    ) AS overdue_tasks
+                """,
+                (rs, rowNum) -> new CrmDashboardSnapshot(
+                        rs.getLong("total_contacts"),
+                        rs.getLong("total_leads"),
+                        rs.getLong("total_companies"),
+                        rs.getLong("total_open_deals"),
+                        rs.getLong("pipeline_value"),
+                        rs.getLong("pending_tasks"),
+                        rs.getLong("overdue_tasks")
+                ),
+                tenantId,
+                tenantId,
+                tenantId,
+                tenantId,
+                tenantId,
+                tenantId,
+                tenantId,
+                Timestamp.from(referenceTime)
+        );
+    }
+
     public long countCompanies(UUID tenantId) {
         return count("SELECT COUNT(*) FROM crm_companies WHERE tenant_id = ? AND deleted_at IS NULL", tenantId);
     }
@@ -131,5 +189,16 @@ public class CrmDashboardRepository {
                 },
                 tenantId
         );
+    }
+
+    public record CrmDashboardSnapshot(
+            long totalContacts,
+            long totalLeads,
+            long totalCompanies,
+            long totalOpenDeals,
+            long pipelineValue,
+            long pendingTasks,
+            long overdueTasks
+    ) {
     }
 }

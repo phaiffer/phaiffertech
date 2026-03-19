@@ -14,8 +14,10 @@ import com.phaiffertech.platform.shared.contracts.module.ModuleSummaryCapability
 import com.phaiffertech.platform.shared.tenancy.TenantContext;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.UUID;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -47,23 +49,28 @@ public class PlatformDashboardService {
     public PlatformDashboardResponseDto summary() {
         UUID tenantId = TenantContext.getRequiredTenantId();
         var user = currentUserService.getRequiredUser();
+        Map<String, Boolean> moduleAvailability = resolveModuleAvailability(tenantId);
 
         List<DashboardModuleSummaryDto> modules = capabilities.stream()
                 .sorted(Comparator.comparing(ModuleSummaryCapability::moduleCode))
-                .filter(capability -> moduleAccessService.isModuleAvailable(tenantId, capability.moduleCode()))
+                .filter(capability -> moduleAvailability.getOrDefault(capability.moduleCode(), false))
                 .filter(capability -> canAccessCapability(user, capability))
                 .map(capability -> capability.summarize(tenantId))
                 .toList();
 
         return new PlatformDashboardResponseDto(
-                buildCoreSummary(tenantId, modules),
+                buildCoreSummary(moduleAvailability, tenantId, modules),
                 modules
         );
     }
 
-    private DashboardSectionDto buildCoreSummary(UUID tenantId, List<DashboardModuleSummaryDto> modules) {
-        long activeModules = Arrays.stream(PlatformModule.values())
-                .filter(module -> moduleAccessService.isModuleAvailable(tenantId, module.getCode()))
+    private DashboardSectionDto buildCoreSummary(
+            Map<String, Boolean> moduleAvailability,
+            UUID tenantId,
+            List<DashboardModuleSummaryDto> modules
+    ) {
+        long activeModules = moduleAvailability.values().stream()
+                .filter(Boolean::booleanValue)
                 .count();
         long attentionSignals = modules.stream()
                 .flatMap(module -> module.summaryCards().stream())
@@ -187,5 +194,12 @@ public class PlatformDashboardService {
         return requiredPermission == null
                 || requiredPermission.isBlank()
                 || permissionAuthorizationService.hasPermission(user, requiredPermission);
+    }
+
+    private Map<String, Boolean> resolveModuleAvailability(UUID tenantId) {
+        Map<String, Boolean> availability = new LinkedHashMap<>();
+        Arrays.stream(PlatformModule.values())
+                .forEach(module -> availability.put(module.getCode(), moduleAccessService.isModuleAvailable(tenantId, module.getCode())));
+        return availability;
     }
 }

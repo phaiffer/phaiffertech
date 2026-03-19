@@ -19,7 +19,7 @@ public class PetDashboardController {
     }
 
     @GetMapping("/summary")
-    @RequirePermission("pet.dashboard.read")
+    @RequirePermission(value = "pet.dashboard.read", entitlement = "pet.basic")
     public ApiResponse<PetDashboardSummaryResponse> summary() {
         return ApiResponse.success(petDashboardService.summary());
     }

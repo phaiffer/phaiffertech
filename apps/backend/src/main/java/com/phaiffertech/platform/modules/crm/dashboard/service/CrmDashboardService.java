@@ -36,33 +36,48 @@ public class CrmDashboardService {
     @Transactional(readOnly = true)
     public CrmDashboardSummaryResponse summary(UUID tenantId) {
         var now = java.time.Instant.now();
-        long totalContacts = repository.countContacts(tenantId);
-        long totalLeads = repository.countLeads(tenantId);
-        long totalCompanies = repository.countCompanies(tenantId);
-        long totalDeals = repository.countDeals(tenantId);
-        long pipelineValue = repository.sumOpenPipelineValue(tenantId);
-        long pendingTasks = repository.countPendingTasks(tenantId);
-        long overdueTasks = repository.countOverdueTasks(tenantId, now);
+        var snapshot = repository.loadSummary(tenantId, now);
         var dealsByStage = repository.countDealsByPipelineStage(tenantId);
         var leadsByStatus = repository.countLeadsByStatus(tenantId);
 
         return new CrmDashboardSummaryResponse(
-                totalContacts,
-                totalLeads,
-                totalCompanies,
-                totalDeals,
+                snapshot.totalContacts(),
+                snapshot.totalLeads(),
+                snapshot.totalCompanies(),
+                snapshot.totalOpenDeals(),
                 repository.countDealsByStatus(tenantId),
-                pendingTasks,
-                overdueTasks,
+                snapshot.pendingTasks(),
+                snapshot.overdueTasks(),
                 leadsByStatus,
                 List.of(
-                        new DashboardSummaryCardDto("contacts", "Contacts", totalContacts, null, "neutral", "/crm/contacts"),
-                        new DashboardSummaryCardDto("companies", "Companies", totalCompanies, null, "neutral", "/crm/companies"),
-                        new DashboardSummaryCardDto("leads", "Leads", totalLeads, null, "info", "/crm/leads"),
-                        new DashboardSummaryCardDto("active-deals", "Active Deals", totalDeals, null, totalDeals > 0 ? "active" : "neutral", "/crm/deals"),
-                        new DashboardSummaryCardDto("pipeline-value", "Pipeline Value (BRL)", pipelineValue, null, "info", "/crm/deals"),
-                        new DashboardSummaryCardDto("pending-tasks", "Pending Tasks", pendingTasks, null, pendingTasks > 0 ? "warn" : "ok", "/crm/tasks"),
-                        new DashboardSummaryCardDto("overdue-tasks", "Overdue Tasks", overdueTasks, null, overdueTasks > 0 ? "alert" : "ok", "/crm/tasks")
+                        new DashboardSummaryCardDto("contacts", "Contacts", snapshot.totalContacts(), null, "neutral", "/crm/contacts"),
+                        new DashboardSummaryCardDto("companies", "Companies", snapshot.totalCompanies(), null, "neutral", "/crm/companies"),
+                        new DashboardSummaryCardDto("leads", "Leads", snapshot.totalLeads(), null, "info", "/crm/leads"),
+                        new DashboardSummaryCardDto(
+                                "active-deals",
+                                "Active Deals",
+                                snapshot.totalOpenDeals(),
+                                null,
+                                snapshot.totalOpenDeals() > 0 ? "active" : "neutral",
+                                "/crm/deals"
+                        ),
+                        new DashboardSummaryCardDto("pipeline-value", "Pipeline Value (BRL)", snapshot.pipelineValue(), null, "info", "/crm/deals"),
+                        new DashboardSummaryCardDto(
+                                "pending-tasks",
+                                "Pending Tasks",
+                                snapshot.pendingTasks(),
+                                null,
+                                snapshot.pendingTasks() > 0 ? "warn" : "ok",
+                                "/crm/tasks"
+                        ),
+                        new DashboardSummaryCardDto(
+                                "overdue-tasks",
+                                "Overdue Tasks",
+                                snapshot.overdueTasks(),
+                                null,
+                                snapshot.overdueTasks() > 0 ? "alert" : "ok",
+                                "/crm/tasks"
+                        )
                 ),
                 List.of(
                         new DashboardSectionDto(

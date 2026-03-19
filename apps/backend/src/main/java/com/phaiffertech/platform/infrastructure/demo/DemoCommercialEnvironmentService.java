@@ -10,9 +10,11 @@ import com.phaiffertech.platform.core.module.domain.ModuleDefinition;
 import com.phaiffertech.platform.core.module.domain.TenantModule;
 import com.phaiffertech.platform.core.module.repository.ModuleDefinitionRepository;
 import com.phaiffertech.platform.core.module.repository.TenantModuleRepository;
+import com.phaiffertech.platform.core.tenant.entitlement.service.TenantEntitlementService;
 import com.phaiffertech.platform.core.tenant.domain.Tenant;
 import com.phaiffertech.platform.core.tenant.domain.TenantThemeMode;
 import com.phaiffertech.platform.core.tenant.repository.TenantRepository;
+import com.phaiffertech.platform.core.tenant.service.TenantModuleContractService;
 import com.phaiffertech.platform.core.user.domain.User;
 import com.phaiffertech.platform.core.user.repository.UserRepository;
 import jakarta.persistence.EntityManager;
@@ -129,6 +131,8 @@ public class DemoCommercialEnvironmentService {
         private final UserTenantRoleRepository userTenantRoleRepository;
         private final ModuleDefinitionRepository moduleDefinitionRepository;
         private final TenantModuleRepository tenantModuleRepository;
+        private final TenantModuleContractService tenantModuleContractService;
+        private final TenantEntitlementService tenantEntitlementService;
         private final PasswordEncoder passwordEncoder;
         private final JdbcTemplate jdbcTemplate;
         private final EntityManager entityManager;
@@ -142,6 +146,8 @@ public class DemoCommercialEnvironmentService {
                         UserTenantRoleRepository userTenantRoleRepository,
                         ModuleDefinitionRepository moduleDefinitionRepository,
                         TenantModuleRepository tenantModuleRepository,
+                        TenantModuleContractService tenantModuleContractService,
+                        TenantEntitlementService tenantEntitlementService,
                         PasswordEncoder passwordEncoder,
                         JdbcTemplate jdbcTemplate,
                         EntityManager entityManager) {
@@ -153,6 +159,8 @@ public class DemoCommercialEnvironmentService {
                 this.userTenantRoleRepository = userTenantRoleRepository;
                 this.moduleDefinitionRepository = moduleDefinitionRepository;
                 this.tenantModuleRepository = tenantModuleRepository;
+                this.tenantModuleContractService = tenantModuleContractService;
+                this.tenantEntitlementService = tenantEntitlementService;
                 this.passwordEncoder = passwordEncoder;
                 this.jdbcTemplate = jdbcTemplate;
                 this.entityManager = entityManager;
@@ -171,6 +179,8 @@ public class DemoCommercialEnvironmentService {
                 UserTenant userTenant = ensureUserTenant(tenant, user, tenantAdminRole);
                 ensureUserTenantRole(userTenant, tenantAdminRole);
                 enableModules(tenant.getId());
+                tenantModuleContractService.syncEffectiveModules(tenant.getId(), tenant.getPlanCode(), List.of());
+                tenantEntitlementService.syncManualEntitlements(tenant.getId(), tenant.getPlanCode(), List.of());
                 flushPersistenceState();
 
                 Tenant persistedTenant = tenant;
@@ -208,6 +218,7 @@ public class DemoCommercialEnvironmentService {
                 tenant.setDefaultThemeMode(TenantThemeMode.DARK);
                 tenant.setAllowUserThemeOverride(true);
                 tenant.setPlatformOwner(false);
+                tenant.setPlanCode("ENTERPRISE");
                 tenant.setDeletedAt(null);
                 return tenantRepository.saveAndFlush(tenant);
         }

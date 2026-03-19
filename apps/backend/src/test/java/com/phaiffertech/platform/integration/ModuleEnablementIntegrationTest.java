@@ -138,6 +138,32 @@ class ModuleEnablementIntegrationTest extends AbstractIntegrationTest {
     }
 
     @Test
+    void shouldBlockIotDashboardWhenEntitlementIsMissingEvenIfModuleAndPermissionAreEnabled() {
+        AuthSession session = createTenantSessionWithPermissions(
+                "tenant-iot-entitlement-blocked",
+                "tenant-iot-entitlement-blocked@example.test",
+                List.of("iot.dashboard.read"),
+                "IOT"
+        );
+
+        executeSql(
+                """
+                UPDATE tenant_feature_entitlements
+                SET enabled = FALSE
+                WHERE tenant_id = ?
+                  AND feature_key = 'iot.basic'
+                """,
+                session.tenantId()
+        );
+
+        ResponseEntity<JsonNode> response = get("/iot/dashboard/summary", session);
+
+        assertEquals(403, response.getStatusCode().value());
+        assertEquals("FORBIDDEN", requireBody(response).path("code").asText());
+        assertTrue(requireBody(response).path("message").asText().contains("iot.basic"));
+    }
+
+    @Test
     void shouldAggregateRecentModuleActivityIntoExecutiveDashboardSummary() {
         AuthSession session = createTenantAdminSession(
                 "tenant-executive-summary",

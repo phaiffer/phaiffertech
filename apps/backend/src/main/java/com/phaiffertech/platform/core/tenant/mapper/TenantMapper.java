@@ -9,7 +9,13 @@ public final class TenantMapper {
     private TenantMapper() {
     }
 
-    public static TenantResponse toResponse(Tenant tenant, List<String> contractedModules, List<String> featureEntitlements) {
+    public static TenantResponse toResponse(
+            Tenant tenant,
+            List<String> contractedModules,
+            List<String> featureEntitlements,
+            List<String> moduleOverrides,
+            List<String> effectiveFeatureEntitlements
+    ) {
         return new TenantResponse(
                 tenant.getId(),
                 tenant.getName(),
@@ -23,7 +29,9 @@ public final class TenantMapper {
                 tenant.getDefaultThemeMode(),
                 tenant.isAllowUserThemeOverride(),
                 contractedModules,
-                featureEntitlements
+                featureEntitlements,
+                moduleOverrides,
+                effectiveFeatureEntitlements
         );
     }
 }

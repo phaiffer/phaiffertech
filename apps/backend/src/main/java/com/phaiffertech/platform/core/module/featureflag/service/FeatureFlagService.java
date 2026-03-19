@@ -3,6 +3,7 @@ package com.phaiffertech.platform.core.module.featureflag.service;
 import com.phaiffertech.platform.core.module.featureflag.dto.FeatureFlagViewResponse;
 import com.phaiffertech.platform.core.module.featureflag.domain.FeatureFlag;
 import com.phaiffertech.platform.core.module.featureflag.repository.FeatureFlagRepository;
+import com.phaiffertech.platform.core.module.service.ModuleCatalogCacheService;
 import com.phaiffertech.platform.core.tenant.repository.TenantRepository;
 import com.phaiffertech.platform.core.tenant.service.PlatformAccessService;
 import com.phaiffertech.platform.core.audit.service.AuditLogService;
@@ -32,6 +33,7 @@ public class FeatureFlagService {
     private final PlatformAccessService platformAccessService;
     private final AuditLogService auditLogService;
     private final PlatformMetricsService platformMetricsService;
+    private final ModuleCatalogCacheService moduleCatalogCacheService;
     private final ConcurrentMap<FlagLookupKey, Optional<Boolean>> flagStateCache = new ConcurrentHashMap<>();
 
     public FeatureFlagService(
@@ -39,13 +41,15 @@ public class FeatureFlagService {
             TenantRepository tenantRepository,
             PlatformAccessService platformAccessService,
             AuditLogService auditLogService,
-            PlatformMetricsService platformMetricsService
+            PlatformMetricsService platformMetricsService,
+            ModuleCatalogCacheService moduleCatalogCacheService
     ) {
         this.featureFlagRepository = featureFlagRepository;
         this.tenantRepository = tenantRepository;
         this.platformAccessService = platformAccessService;
         this.auditLogService = auditLogService;
         this.platformMetricsService = platformMetricsService;
+        this.moduleCatalogCacheService = moduleCatalogCacheService;
     }
 
     @Transactional(readOnly = true)
@@ -101,6 +105,7 @@ public class FeatureFlagService {
         featureFlagRepository.save(featureFlag);
 
         invalidateCache(normalizedFlagKey, tenantId);
+        moduleCatalogCacheService.evict(tenantId);
         platformMetricsService.recordFeatureFlagMutation("upsert");
         auditLogService.logCurrentUserEvent(
                 tenantId,
@@ -139,6 +144,7 @@ public class FeatureFlagService {
         });
 
         invalidateCache(normalizedFlagKey, tenantId);
+        moduleCatalogCacheService.evict(tenantId);
     }
 
     private List<FeatureFlagViewResponse> listForTenantInternal(UUID tenantId) {
