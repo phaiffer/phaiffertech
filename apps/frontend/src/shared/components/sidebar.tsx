@@ -6,6 +6,12 @@ import { ReactNode, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/shared/auth/use-auth';
+import {
+  iotMonitorEntitlements,
+  petClinicalEntitlements,
+  petOperationalEntitlements,
+  petSubmoduleEntitlements
+} from '@/shared/entitlements/tenant-entitlements';
 import { useFrontendPlatform } from '@/shared/platform/use-frontend-platform';
 import { groupSidebarItems, SidebarGroup, filterSidebarItems } from '@/shared/platform/sidebar-navigation';
 
@@ -13,6 +19,7 @@ type SidebarItem = {
   href: string;
   label: string;
   anyOf?: string[];
+  anyEntitlements?: readonly string[];
   moduleCode?: 'CRM' | 'IOT' | 'PET';
   group: SidebarGroup;
   platformOnly?: boolean;
@@ -215,14 +222,14 @@ const items: SidebarItem[] = [
   { href: '/settings', label: 'Configurações', group: 'core', icon: IconSettings },
   
   // IoT
-  { href: '/iot/dashboard', label: 'Dashboard', anyOf: ['iot.dashboard.read'], moduleCode: 'IOT', group: 'iot', icon: IconGrid },
-  { href: '/iot/alarms', label: 'Alarmes', anyOf: ['iot.alarm.read'], moduleCode: 'IOT', group: 'iot', icon: IconBell },
-  { href: '/iot/observability', label: 'Observabilidade', anyOf: ['iot.report.read'], moduleCode: 'IOT', group: 'iot', icon: IconChart },
-  { href: '/iot/devices', label: 'Dispositivos', anyOf: ['iot.device.read'], moduleCode: 'IOT', group: 'iot', icon: IconDevice },
-  { href: '/iot/add-device', label: 'Adicionar Dispositivo', anyOf: ['iot.device.create'], moduleCode: 'IOT', group: 'iot', icon: IconPlus },
-  { href: '/iot/telemetry', label: 'Telemetria', anyOf: ['iot.telemetry.read'], moduleCode: 'IOT', group: 'iot', icon: IconWave },
-  { href: '/iot/registers', label: 'Registros', anyOf: ['iot.register.read'], moduleCode: 'IOT', group: 'iot', icon: IconList },
-  { href: '/iot/maintenance', label: 'Manutenção', anyOf: ['iot.maintenance.read'], moduleCode: 'IOT', group: 'iot', icon: IconTool },
+  { href: '/iot/dashboard', label: 'Dashboard', anyOf: ['iot.dashboard.read'], anyEntitlements: iotMonitorEntitlements, moduleCode: 'IOT', group: 'iot', icon: IconGrid },
+  { href: '/iot/alarms', label: 'Alarmes', anyOf: ['iot.alarm.read'], anyEntitlements: iotMonitorEntitlements, moduleCode: 'IOT', group: 'iot', icon: IconBell },
+  { href: '/iot/observability', label: 'Observabilidade', anyOf: ['iot.report.read'], anyEntitlements: iotMonitorEntitlements, moduleCode: 'IOT', group: 'iot', icon: IconChart },
+  { href: '/iot/devices', label: 'Dispositivos', anyOf: ['iot.device.read'], anyEntitlements: iotMonitorEntitlements, moduleCode: 'IOT', group: 'iot', icon: IconDevice },
+  { href: '/iot/add-device', label: 'Adicionar Dispositivo', anyOf: ['iot.device.create'], anyEntitlements: iotMonitorEntitlements, moduleCode: 'IOT', group: 'iot', icon: IconPlus },
+  { href: '/iot/telemetry', label: 'Telemetria', anyOf: ['iot.telemetry.read'], anyEntitlements: iotMonitorEntitlements, moduleCode: 'IOT', group: 'iot', icon: IconWave },
+  { href: '/iot/registers', label: 'Registros', anyOf: ['iot.register.read'], anyEntitlements: iotMonitorEntitlements, moduleCode: 'IOT', group: 'iot', icon: IconList },
+  { href: '/iot/maintenance', label: 'Manutenção', anyOf: ['iot.maintenance.read'], anyEntitlements: iotMonitorEntitlements, moduleCode: 'IOT', group: 'iot', icon: IconTool },
   
   // CRM
   { href: '/crm', label: 'Hub CRM', anyOf: crmOverviewPermissions, moduleCode: 'CRM', group: 'crm', icon: IconGrid },
@@ -232,11 +239,11 @@ const items: SidebarItem[] = [
   { href: '/crm/activity', label: 'Atividades', anyOf: ['crm.activity.read'], moduleCode: 'CRM', group: 'crm', icon: IconWave },
   
   // PetFlow
-  { href: '/pet', label: 'Hub Pet', anyOf: petOverviewPermissions, moduleCode: 'PET', group: 'pet', icon: IconGrid },
-  { href: '/pet/dashboard', label: 'Dashboard', anyOf: ['pet.dashboard.read'], moduleCode: 'PET', group: 'pet', icon: IconChart },
-  { href: '/pet/clients', label: 'Clientes', anyOf: ['pet.client.read'], moduleCode: 'PET', group: 'pet', icon: IconUsers },
-  { href: '/pet/appointments', label: 'Agendamentos', anyOf: ['pet.appointment.read'], moduleCode: 'PET', group: 'pet', icon: IconCalendar },
-  { href: '/pet/medical-records', label: 'Prontuários', anyOf: ['pet.medical-record.read', 'pet.vaccination.read', 'pet.prescription.read'], moduleCode: 'PET', group: 'pet', icon: IconHeart },
+  { href: '/pet', label: 'Hub Pet', anyOf: petOverviewPermissions, anyEntitlements: petSubmoduleEntitlements, moduleCode: 'PET', group: 'pet', icon: IconGrid },
+  { href: '/pet/dashboard', label: 'Dashboard', anyOf: ['pet.dashboard.read'], anyEntitlements: petSubmoduleEntitlements, moduleCode: 'PET', group: 'pet', icon: IconChart },
+  { href: '/pet/clients', label: 'Clientes', anyOf: ['pet.client.read'], anyEntitlements: petSubmoduleEntitlements, moduleCode: 'PET', group: 'pet', icon: IconUsers },
+  { href: '/pet/appointments', label: 'Agendamentos', anyOf: ['pet.appointment.read'], anyEntitlements: petOperationalEntitlements, moduleCode: 'PET', group: 'pet', icon: IconCalendar },
+  { href: '/pet/medical-records', label: 'Prontuários', anyOf: ['pet.medical-record.read', 'pet.vaccination.read', 'pet.prescription.read'], anyEntitlements: petClinicalEntitlements, moduleCode: 'PET', group: 'pet', icon: IconHeart },
 ];
 
 function isItemActive(pathname: string, href: string) {

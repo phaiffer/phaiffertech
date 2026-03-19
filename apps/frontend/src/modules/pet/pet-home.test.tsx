@@ -20,7 +20,8 @@ const { currentPlatformState, currentPermissions } = vi.hoisted(() => ({
       platformOwner: false,
       platformAdmin: false,
       role: 'TENANT_ADMIN',
-      permissions: []
+      permissions: [],
+      featureEntitlements: ['pet.aesthetics', 'pet.clinic', 'pet.retail', 'pet.veterinary']
     },
     theme: {
       mode: 'light',
@@ -91,6 +92,7 @@ import { petService } from '@/shared/services/pet-service';
 describe('PetHome', () => {
   beforeEach(() => {
     currentPermissions.splice(0, currentPermissions.length, 'pet.dashboard.read', 'pet.appointment.read', 'pet.medical-record.read');
+    currentPlatformState.user!.featureEntitlements = ['pet.aesthetics', 'pet.clinic', 'pet.retail', 'pet.veterinary'];
     vi.clearAllMocks();
   });
 
@@ -245,5 +247,40 @@ describe('PetHome', () => {
       loginVisualContext: { accentOpacity: 0.11, supportOpacity: 0.1, cardTintOpacity: 0.05, cardBorderOpacity: 0.16, brandMarkOpacity: 0.15 },
       illustrationPreset: 'clinical-care'
     };
+  });
+
+  it('filters veterinary features out of the workspace when the tenant contract only includes aesthetics and retail', async () => {
+    currentPermissions.splice(
+      0,
+      currentPermissions.length,
+      'pet.dashboard.read',
+      'pet.appointment.read',
+      'pet.medical-record.read',
+      'pet.product.read'
+    );
+    currentPlatformState.user!.featureEntitlements = ['pet.aesthetics', 'pet.retail'];
+
+    vi.mocked(petService.getDashboardSummary).mockResolvedValue({
+      totalClients: 12,
+      totalPets: 18,
+      appointmentsToday: 4,
+      upcomingAppointments: 6,
+      totalServices: 5,
+      lowStockProducts: 2,
+      pendingInvoices: 1,
+      summaryCards: [],
+      sections: []
+    });
+
+    render(<PetHome />);
+
+    await waitFor(() => {
+      expect(petService.getDashboardSummary).toHaveBeenCalledTimes(1);
+    });
+
+    expect(screen.getAllByText('Open appointments').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('Review products').length).toBeGreaterThan(0);
+    expect(screen.queryByText('Open medical records')).not.toBeInTheDocument();
+    expect(screen.queryByText('Review pet profiles')).not.toBeInTheDocument();
   });
 });

@@ -94,6 +94,17 @@ public class TenantEntitlementService {
     }
 
     @Transactional(readOnly = true)
+    public List<String> resolveEffectiveEntitlements(UUID tenantId) {
+        return tenantFeatureEntitlementRepository.findAllByTenantIdAndDeletedAtIsNullOrderByFeatureKeyAsc(tenantId).stream()
+                .filter(TenantFeatureEntitlement::isEnabled)
+                .map(TenantFeatureEntitlement::getFeatureKey)
+                .map(featureKey -> featureKey.toLowerCase(Locale.ROOT))
+                .distinct()
+                .sorted()
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
     public Map<UUID, List<String>> resolveManualEntitlements(Collection<UUID> tenantIds) {
         if (tenantIds.isEmpty()) {
             return Map.of();
@@ -155,11 +166,19 @@ public class TenantEntitlementService {
             return true;
         }
 
-        if (!grantedEntitlement.endsWith(".full")) {
+        if (matchesNamespaceGrant(grantedEntitlement, requiredEntitlement, ".full")) {
+            return true;
+        }
+
+        return matchesNamespaceGrant(grantedEntitlement, requiredEntitlement, ".basic");
+    }
+
+    private boolean matchesNamespaceGrant(String grantedEntitlement, String requiredEntitlement, String suffix) {
+        if (!grantedEntitlement.endsWith(suffix)) {
             return false;
         }
 
-        String namespace = grantedEntitlement.substring(0, grantedEntitlement.length() - ".full".length());
+        String namespace = grantedEntitlement.substring(0, grantedEntitlement.length() - suffix.length());
         return requiredEntitlement.startsWith(namespace + ".");
     }
 }

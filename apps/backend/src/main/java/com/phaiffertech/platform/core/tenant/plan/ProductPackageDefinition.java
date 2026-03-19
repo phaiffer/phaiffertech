@@ -3,24 +3,27 @@ package com.phaiffertech.platform.core.tenant.plan;
 import com.phaiffertech.platform.core.tenant.entitlement.TenantEntitlementKeys;
 import java.util.List;
 
-public enum PlanDefinition {
-    BASIC(
-            "BASIC",
-            List.of("CRM"),
-            List.of(TenantEntitlementKeys.CRM_BASIC)
+public enum ProductPackageDefinition {
+    PET_ONLY(
+            "PET_ONLY",
+            List.of("PET"),
+            TenantEntitlementKeys.PET_SUBMODULES
     ),
-    STANDARD(
-            "STANDARD",
-            List.of("CRM", "PET"),
-            List.of(TenantEntitlementKeys.CRM_FULL, TenantEntitlementKeys.PET_BASIC)
+    VET_PLUS(
+            "VET_PLUS",
+            List.of("PET"),
+            List.of(
+                    TenantEntitlementKeys.PET_CLINIC,
+                    TenantEntitlementKeys.PET_VETERINARY
+            )
     ),
-    PRO(
-            "PRO",
-            List.of("CRM", "PET", "IOT"),
-            List.of(TenantEntitlementKeys.CRM_FULL, TenantEntitlementKeys.PET_FULL, TenantEntitlementKeys.IOT_BASIC)
+    IOT_MONITOR(
+            "IOT_MONITOR",
+            List.of("IOT"),
+            List.of(TenantEntitlementKeys.IOT_BASIC)
     ),
-    ENTERPRISE(
-            "ENTERPRISE",
+    ENTERPRISE_FULL(
+            "ENTERPRISE_FULL",
             List.of("CRM", "PET", "IOT"),
             List.of(TenantEntitlementKeys.ANY)
     );
@@ -29,7 +32,7 @@ public enum PlanDefinition {
     private final List<String> defaultModules;
     private final List<String> defaultEntitlements;
 
-    PlanDefinition(String code, List<String> defaultModules, List<String> defaultEntitlements) {
+    ProductPackageDefinition(String code, List<String> defaultModules, List<String> defaultEntitlements) {
         this.code = code;
         this.defaultModules = List.copyOf(defaultModules);
         this.defaultEntitlements = List.copyOf(defaultEntitlements);

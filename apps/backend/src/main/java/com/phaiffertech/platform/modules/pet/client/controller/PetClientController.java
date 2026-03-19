@@ -1,5 +1,6 @@
 package com.phaiffertech.platform.modules.pet.client.controller;
 
+import com.phaiffertech.platform.core.tenant.entitlement.TenantEntitlementKeys;
 import com.phaiffertech.platform.modules.pet.client.dto.PetClientCreateRequest;
 import com.phaiffertech.platform.modules.pet.client.dto.PetClientResponse;
 import com.phaiffertech.platform.modules.pet.client.dto.PetClientUpdateRequest;
@@ -24,6 +25,12 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/v1/pet/clients")
+@RequirePermission(anyEntitlements = {
+        TenantEntitlementKeys.PET_AESTHETICS,
+        TenantEntitlementKeys.PET_CLINIC,
+        TenantEntitlementKeys.PET_RETAIL,
+        TenantEntitlementKeys.PET_VETERINARY
+})
 public class PetClientController {
 
     private final PetClientService service;

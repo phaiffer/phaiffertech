@@ -1,5 +1,6 @@
 package com.phaiffertech.platform.modules.pet.petprofile.controller;
 
+import com.phaiffertech.platform.core.tenant.entitlement.TenantEntitlementKeys;
 import com.phaiffertech.platform.modules.pet.petprofile.dto.PetProfileCreateRequest;
 import com.phaiffertech.platform.modules.pet.petprofile.dto.PetProfileResponse;
 import com.phaiffertech.platform.modules.pet.petprofile.dto.PetProfileUpdateRequest;
@@ -24,6 +25,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/v1/pet/pets")
+@RequirePermission(entitlement = TenantEntitlementKeys.PET_VETERINARY)
 public class PetProfileController {
 
     private final PetProfileService service;

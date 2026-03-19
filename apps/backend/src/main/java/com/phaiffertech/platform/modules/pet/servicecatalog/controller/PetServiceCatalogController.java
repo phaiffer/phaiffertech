@@ -1,5 +1,6 @@
 package com.phaiffertech.platform.modules.pet.servicecatalog.controller;
 
+import com.phaiffertech.platform.core.tenant.entitlement.TenantEntitlementKeys;
 import com.phaiffertech.platform.modules.pet.servicecatalog.dto.PetServiceCatalogCreateRequest;
 import com.phaiffertech.platform.modules.pet.servicecatalog.dto.PetServiceCatalogResponse;
 import com.phaiffertech.platform.modules.pet.servicecatalog.dto.PetServiceCatalogUpdateRequest;
@@ -23,6 +24,10 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/v1/pet/services")
+@RequirePermission(anyEntitlements = {
+        TenantEntitlementKeys.PET_AESTHETICS,
+        TenantEntitlementKeys.PET_CLINIC
+})
 public class PetServiceCatalogController {
 
     private final PetServiceCatalogService service;

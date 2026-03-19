@@ -1,5 +1,6 @@
 package com.phaiffertech.platform.modules.pet.professional.controller;
 
+import com.phaiffertech.platform.core.tenant.entitlement.TenantEntitlementKeys;
 import com.phaiffertech.platform.modules.pet.professional.dto.PetProfessionalCreateRequest;
 import com.phaiffertech.platform.modules.pet.professional.dto.PetProfessionalResponse;
 import com.phaiffertech.platform.modules.pet.professional.dto.PetProfessionalUpdateRequest;
@@ -23,6 +24,10 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/v1/pet/professionals")
+@RequirePermission(anyEntitlements = {
+        TenantEntitlementKeys.PET_AESTHETICS,
+        TenantEntitlementKeys.PET_CLINIC
+})
 public class PetProfessionalController {
 
     private final PetProfessionalService service;

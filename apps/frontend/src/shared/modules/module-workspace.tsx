@@ -57,6 +57,7 @@ export type ModuleWorkspaceAction = {
   description: string;
   permission?: string;
   anyOf?: string[];
+  anyEntitlements?: readonly string[];
   available?: boolean;
   restrictionTitle?: string;
   restrictionDescription?: string;

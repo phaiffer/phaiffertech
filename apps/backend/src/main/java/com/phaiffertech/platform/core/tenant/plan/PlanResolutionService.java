@@ -1,6 +1,7 @@
 package com.phaiffertech.platform.core.tenant.plan;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.Locale;
 import org.springframework.stereotype.Service;
 
@@ -31,6 +32,22 @@ public class PlanResolutionService {
                 .filter(planDefinition -> planDefinition.getCode().equals(normalizedCode))
                 .findFirst()
                 .orElseThrow(() -> new IllegalArgumentException("Unknown plan code: " + normalizedCode));
+    }
+
+    public ProductPackageDefinition resolveProductPackage(String packageCode) {
+        String normalizedCode = normalizeValue(packageCode);
+        if (normalizedCode == null) {
+            throw new IllegalArgumentException("Unknown product package: " + packageCode);
+        }
+
+        return Arrays.stream(ProductPackageDefinition.values())
+                .filter(productPackageDefinition -> productPackageDefinition.getCode().equals(normalizedCode))
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("Unknown product package: " + normalizedCode));
+    }
+
+    public List<ProductPackageDefinition> supportedProductPackages() {
+        return List.of(ProductPackageDefinition.values());
     }
 
     private String normalizeValue(String value) {

@@ -1,3 +1,4 @@
+import { hasAnyTenantEntitlement } from '@/shared/entitlements/tenant-entitlements';
 import { hasAnyPermission } from '@/shared/permissions/has-permission';
 import type {
   FrontendPlatformModules,
@@ -11,6 +12,7 @@ type SidebarItemBase = {
   href: string;
   label: string;
   anyOf?: string[];
+  anyEntitlements?: readonly string[];
   moduleCode?: 'CRM' | 'IOT' | 'PET';
   group: SidebarGroup;
   platformOnly?: boolean;
@@ -37,6 +39,10 @@ export function filterSidebarItems<T extends SidebarItemBase>(
     }
 
     if (item.moduleCode && !availableModuleCodes.has(item.moduleCode)) {
+      return false;
+    }
+
+    if (item.anyEntitlements && item.anyEntitlements.length > 0 && !hasAnyTenantEntitlement(context.user, item.anyEntitlements)) {
       return false;
     }
 

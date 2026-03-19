@@ -12,6 +12,7 @@ import com.phaiffertech.platform.core.auth.repository.RefreshTokenRepository;
 import com.phaiffertech.platform.core.iam.domain.UserTenant;
 import com.phaiffertech.platform.core.iam.repository.UserTenantRepository;
 import com.phaiffertech.platform.core.iam.service.TenantAuthorizationResolver;
+import com.phaiffertech.platform.core.tenant.entitlement.service.TenantEntitlementService;
 import com.phaiffertech.platform.core.tenant.domain.Tenant;
 import com.phaiffertech.platform.core.tenant.repository.TenantRepository;
 import com.phaiffertech.platform.core.user.domain.User;
@@ -49,6 +50,7 @@ public class AuthService {
     private final PlatformMetricsService platformMetricsService;
     private final UsageTelemetryService usageTelemetryService;
     private final FeatureFlagService featureFlagService;
+    private final TenantEntitlementService tenantEntitlementService;
     private final DemoAccessProperties demoAccessProperties;
 
     public AuthService(
@@ -66,6 +68,7 @@ public class AuthService {
             PlatformMetricsService platformMetricsService,
             UsageTelemetryService usageTelemetryService,
             FeatureFlagService featureFlagService,
+            TenantEntitlementService tenantEntitlementService,
             DemoAccessProperties demoAccessProperties
     ) {
         this.tenantRepository = tenantRepository;
@@ -82,6 +85,7 @@ public class AuthService {
         this.platformMetricsService = platformMetricsService;
         this.usageTelemetryService = usageTelemetryService;
         this.featureFlagService = featureFlagService;
+        this.tenantEntitlementService = tenantEntitlementService;
         this.demoAccessProperties = demoAccessProperties;
     }
 
@@ -281,7 +285,12 @@ public class AuthService {
         Tenant tenant = tenantRepository.findById(authenticatedUser.tenantId())
                 .orElseThrow(() -> new ResourceNotFoundException("Authenticated tenant not found."));
 
-        return AuthMapper.toAuthenticatedUserResponse(user, authenticatedUser, tenant);
+        return AuthMapper.toAuthenticatedUserResponse(
+                user,
+                authenticatedUser,
+                tenant,
+                tenantEntitlementService.resolveEffectiveEntitlements(tenant.getId())
+        );
     }
 
     private AuthSessionResult createTokenResponse(AuthenticatedUser principal, String fullName, Tenant tenant) {
@@ -297,7 +306,12 @@ public class AuthService {
         refreshTokenEntity.setExpiresAt(jwtService.getRefreshExpiration());
         refreshTokenRepository.save(refreshTokenEntity);
 
-        AuthenticatedUserResponse userResponse = AuthMapper.toAuthenticatedUserResponse(principal, fullName, tenant);
+        AuthenticatedUserResponse userResponse = AuthMapper.toAuthenticatedUserResponse(
+                principal,
+                fullName,
+                tenant,
+                tenantEntitlementService.resolveEffectiveEntitlements(tenant.getId())
+        );
 
         return new AuthSessionResult(
                 new AuthTokenResponse(

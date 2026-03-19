@@ -1,5 +1,6 @@
 package com.phaiffertech.platform.modules.pet.invoice.controller;
 
+import com.phaiffertech.platform.core.tenant.entitlement.TenantEntitlementKeys;
 import com.phaiffertech.platform.modules.pet.invoice.dto.PetInvoiceCreateRequest;
 import com.phaiffertech.platform.modules.pet.invoice.dto.PetInvoiceResponse;
 import com.phaiffertech.platform.modules.pet.invoice.dto.PetInvoiceUpdateRequest;
@@ -24,6 +25,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/v1/pet/invoices")
+@RequirePermission(entitlement = TenantEntitlementKeys.PET_RETAIL)
 public class PetInvoiceController {
 
     private final PetInvoiceService service;

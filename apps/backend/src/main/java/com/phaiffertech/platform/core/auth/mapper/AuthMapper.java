@@ -5,13 +5,19 @@ import com.phaiffertech.platform.core.tenant.domain.Tenant;
 import com.phaiffertech.platform.core.user.domain.User;
 import com.phaiffertech.platform.shared.domain.enums.RoleCode;
 import com.phaiffertech.platform.shared.security.AuthenticatedUser;
+import java.util.List;
 
 public final class AuthMapper {
 
     private AuthMapper() {
     }
 
-    public static AuthenticatedUserResponse toAuthenticatedUserResponse(User user, AuthenticatedUser principal, Tenant tenant) {
+    public static AuthenticatedUserResponse toAuthenticatedUserResponse(
+            User user,
+            AuthenticatedUser principal,
+            Tenant tenant,
+            List<String> featureEntitlements
+    ) {
         return new AuthenticatedUserResponse(
                 user.getId(),
                 user.getEmail(),
@@ -28,11 +34,17 @@ public final class AuthMapper {
                 isPlatformAdmin(principal, tenant),
                 principal.role(),
                 principal.roles(),
-                principal.permissions()
+                principal.permissions(),
+                featureEntitlements
         );
     }
 
-    public static AuthenticatedUserResponse toAuthenticatedUserResponse(AuthenticatedUser principal, String fullName, Tenant tenant) {
+    public static AuthenticatedUserResponse toAuthenticatedUserResponse(
+            AuthenticatedUser principal,
+            String fullName,
+            Tenant tenant,
+            List<String> featureEntitlements
+    ) {
         return new AuthenticatedUserResponse(
                 principal.userId(),
                 principal.email(),
@@ -49,7 +61,8 @@ public final class AuthMapper {
                 isPlatformAdmin(principal, tenant),
                 principal.role(),
                 principal.roles(),
-                principal.permissions()
+                principal.permissions(),
+                featureEntitlements
         );
     }
 

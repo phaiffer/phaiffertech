@@ -1,5 +1,6 @@
 package com.phaiffertech.platform.modules.pet.appointment.controller;
 
+import com.phaiffertech.platform.core.tenant.entitlement.TenantEntitlementKeys;
 import com.phaiffertech.platform.modules.pet.appointment.dto.PetAppointmentCreateRequest;
 import com.phaiffertech.platform.modules.pet.appointment.dto.PetAppointmentResponse;
 import com.phaiffertech.platform.modules.pet.appointment.dto.PetAppointmentUpdateRequest;
@@ -25,6 +26,10 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/v1/pet/appointments")
+@RequirePermission(anyEntitlements = {
+        TenantEntitlementKeys.PET_AESTHETICS,
+        TenantEntitlementKeys.PET_CLINIC
+})
 public class PetAppointmentController {
 
     private final PetAppointmentService service;

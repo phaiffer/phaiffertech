@@ -1,5 +1,6 @@
 package com.phaiffertech.platform.modules.pet.product.controller;
 
+import com.phaiffertech.platform.core.tenant.entitlement.TenantEntitlementKeys;
 import com.phaiffertech.platform.modules.pet.product.dto.PetProductCreateRequest;
 import com.phaiffertech.platform.modules.pet.product.dto.PetProductResponse;
 import com.phaiffertech.platform.modules.pet.product.dto.PetProductUpdateRequest;
@@ -23,6 +24,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/v1/pet/products")
+@RequirePermission(entitlement = TenantEntitlementKeys.PET_RETAIL)
 public class PetProductController {
 
     private final PetProductService service;

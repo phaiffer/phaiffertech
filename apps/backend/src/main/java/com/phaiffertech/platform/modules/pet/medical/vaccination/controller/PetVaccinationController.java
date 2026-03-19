@@ -1,5 +1,6 @@
 package com.phaiffertech.platform.modules.pet.medical.vaccination.controller;
 
+import com.phaiffertech.platform.core.tenant.entitlement.TenantEntitlementKeys;
 import com.phaiffertech.platform.modules.pet.medical.vaccination.dto.PetVaccinationCreateRequest;
 import com.phaiffertech.platform.modules.pet.medical.vaccination.dto.PetVaccinationResponse;
 import com.phaiffertech.platform.modules.pet.medical.vaccination.dto.PetVaccinationUpdateRequest;
@@ -24,6 +25,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/v1/pet/vaccinations")
+@RequirePermission(entitlement = TenantEntitlementKeys.PET_VETERINARY)
 public class PetVaccinationController {
 
     private final PetVaccinationService service;
