@@ -67,14 +67,14 @@ export function PetInventoryPage() {
   const productOptions = useMemo(() => {
     return [
       { value: '', label: 'Todos' },
-      ...products.map((item) => ({ value: item.id, label: `${item.name} (${item.stockQuantity})` }))
+      ...products.map((item) => ({ value: item.id, label: `${item.name} (${item.currentQuantity ?? item.stockQuantity})` }))
     ];
   }, [products]);
 
   const formProductOptions = useMemo(() => {
     return [
       { value: '', label: 'Selecione um produto' },
-      ...products.map((item) => ({ value: item.id, label: `${item.name} (${item.stockQuantity})` }))
+      ...products.map((item) => ({ value: item.id, label: `${item.name} (${item.currentQuantity ?? item.stockQuantity})` }))
     ];
   }, [products]);
 
@@ -218,7 +218,13 @@ export function PetInventoryPage() {
     },
     { key: 'movementType', header: 'Tipo', render: (item) => item.movementType },
     { key: 'quantity', header: 'Quantidade', render: (item) => String(item.quantity) },
-    { key: 'notes', header: 'Notas', render: (item) => item.notes ?? '-' },
+    { key: 'sourceType', header: 'Origem', render: (item) => item.sourceType },
+    { key: 'reason', header: 'Motivo', render: (item) => item.reason ?? item.notes ?? '-' },
+    {
+      key: 'balance',
+      header: 'Saldo',
+      render: (item) => `${item.quantityBefore} -> ${item.quantityAfter}`
+    },
     {
       key: 'actions',
       header: 'Ações',
@@ -253,7 +259,10 @@ export function PetInventoryPage() {
       fallback={<div className="ui-notice-warning">Você não possui permissão para visualizar o estoque.</div>}
     >
       <div className="space-y-5">
-        <PageTitle title="Pet Inventory" description="Movimentações de estoque com atualização do snapshot do produto." />
+        <PageTitle
+          title="Pet Inventory"
+          description="Ledger Pet compartilhado com origem operacional, motivo e saldo antes/depois de cada movimento."
+        />
 
         <div className="grid gap-3 ui-surface-panel p-4 md:grid-cols-[1fr_240px_160px_auto_auto]">
           <SearchBar value={searchInput} onChange={setSearchInput} placeholder="Tipo ou notas" />
@@ -287,7 +296,7 @@ export function PetInventoryPage() {
             <FormSelect label="Produto" value={productId} options={formProductOptions} onChange={setProductId} disabled={productsLookupUnavailable} />
             <FormSelect label="Tipo" value={movementType} options={formMovementTypeOptions} onChange={setMovementType} />
             <FormInput label="Quantidade" value={quantity} onChange={setQuantity} type="number" required />
-            <FormInput label="Notas" value={notes} onChange={setNotes} />
+            <FormInput label="Motivo / notas" value={notes} onChange={setNotes} />
 
             <div className="md:col-span-2 flex gap-2">
               {productsLookupUnavailable ? (

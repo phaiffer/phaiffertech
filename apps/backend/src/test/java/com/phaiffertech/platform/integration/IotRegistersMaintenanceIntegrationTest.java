@@ -194,6 +194,73 @@ class IotRegistersMaintenanceIntegrationTest extends AbstractIntegrationTest {
         assertTrue(requireBody(searchResponse).path("data").path("items").size() >= 1);
     }
 
+    @Test
+    void shouldUseSharedInventoryFoundationForIotPartsAndMaintenanceConsumption() {
+        AuthSession session = loginAsDefaultAdmin();
+        String marker = randomSearchMarker();
+        String deviceId = createDevice(session, marker);
+
+        ResponseEntity<JsonNode> createMaintenance = post("/iot/maintenance", Map.of(
+                "deviceId", deviceId,
+                "title", "Replace relay-" + marker,
+                "status", "PENDING",
+                "priority", "HIGH",
+                "assignedUserLabel", "Field Team " + marker
+        ), session);
+        assertEquals(200, createMaintenance.getStatusCode().value());
+        String maintenanceId = requireBody(createMaintenance).path("data").path("id").asText();
+
+        ResponseEntity<JsonNode> createPart = post("/iot/parts", Map.of(
+                "name", "Relay Module " + marker,
+                "sku", "RELAY-" + marker,
+                "category", "IOT_SPARE_PART",
+                "unitOfMeasure", "UNIT",
+                "currentQuantity", 12,
+                "minimumQuantity", 2,
+                "reorderPoint", 5,
+                "description", "Industrial relay stock"
+        ), session);
+        assertEquals(200, createPart.getStatusCode().value());
+        JsonNode part = requireBody(createPart).path("data");
+        String partId = part.path("id").asText();
+        assertEquals("IOT_SPARE_PART", part.path("category").asText());
+        assertEquals(12, part.path("currentQuantity").asInt());
+
+        ResponseEntity<JsonNode> consumePart = post("/iot/parts/" + partId + "/movements", Map.of(
+                "movementType", "OUT",
+                "quantity", 2,
+                "maintenanceId", maintenanceId,
+                "reason", "Relay replacement " + marker
+        ), session);
+        assertEquals(200, consumePart.getStatusCode().value());
+        JsonNode movement = requireBody(consumePart).path("data");
+        assertEquals("IOT_MAINTENANCE_CONSUMPTION", movement.path("sourceType").asText());
+        assertEquals(12, movement.path("quantityBefore").asInt());
+        assertEquals(10, movement.path("quantityAfter").asInt());
+
+        ResponseEntity<JsonNode> getPart = get("/iot/parts/" + partId, session);
+        assertEquals(200, getPart.getStatusCode().value());
+        assertEquals(10, requireBody(getPart).path("data").path("currentQuantity").asInt());
+
+        ResponseEntity<JsonNode> listMovements = get(
+                "/iot/parts/movements?page=0&size=20&partId=" + partId + "&search=" + marker,
+                session
+        );
+        assertEquals(200, listMovements.getStatusCode().value());
+        assertTrue(requireBody(listMovements).path("data").path("items").size() >= 1);
+
+        assertEquals(1, countRows(
+                "SELECT COUNT(*) FROM inventory_items WHERE tenant_id = ? AND sku = ? AND category = 'IOT_SPARE_PART' AND deleted_at IS NULL",
+                session.tenantId(),
+                ("RELAY-" + marker).toUpperCase()
+        ));
+        assertEquals(1, countRows(
+                "SELECT COUNT(*) FROM inventory_movements WHERE tenant_id = ? AND source_type = 'IOT_MAINTENANCE_CONSUMPTION' AND source_reference_id = ? AND deleted_at IS NULL",
+                session.tenantId(),
+                maintenanceId
+        ));
+    }
+
     private String createDevice(AuthSession session, String marker) {
         ResponseEntity<JsonNode> response = post("/iot/devices", Map.of(
                 "name", "Control-" + marker,

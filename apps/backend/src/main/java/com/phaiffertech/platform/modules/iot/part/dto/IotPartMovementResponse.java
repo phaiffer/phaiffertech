@@ -1,18 +1,17 @@
-package com.phaiffertech.platform.modules.pet.inventory.dto;
+package com.phaiffertech.platform.modules.iot.part.dto;
 
 import java.time.Instant;
 import java.util.UUID;
 
-public record PetInventoryMovementResponse(
+public record IotPartMovementResponse(
         UUID id,
-        UUID productId,
-        String productName,
-        String productSku,
+        UUID partId,
+        String partName,
+        String partSku,
         String movementType,
         Integer quantity,
         String sourceType,
         String reason,
-        String notes,
         Integer quantityBefore,
         Integer quantityAfter,
         Instant createdAt,

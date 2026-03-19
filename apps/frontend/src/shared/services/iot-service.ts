@@ -5,6 +5,8 @@ import {
   IotDashboardSummary,
   IotDevice,
   IotMaintenance,
+  IotPart,
+  IotPartMovement,
   IotRegister,
   IotReportSummary,
   IotTelemetryRecord
@@ -131,6 +133,26 @@ export type UpdateMaintenanceInput = {
   assignedUserLabel?: string;
 };
 
+export type CreatePartInput = {
+  name: string;
+  sku: string;
+  category?: string;
+  unitOfMeasure?: string;
+  currentQuantity: number;
+  minimumQuantity?: number;
+  reorderPoint?: number;
+  description?: string;
+};
+
+export type UpdatePartInput = CreatePartInput;
+
+export type CreatePartMovementInput = {
+  movementType: string;
+  quantity: number;
+  maintenanceId?: string;
+  reason?: string;
+};
+
 type DeviceFilters = {
   type?: string;
   status?: string;
@@ -165,6 +187,15 @@ type MaintenanceFilters = {
   priority?: string;
   startAt?: string;
   endAt?: string;
+};
+
+type PartFilters = {
+  category?: string;
+};
+
+type PartMovementFilters = {
+  partId?: string;
+  movementType?: string;
 };
 
 function queryString(
@@ -291,6 +322,35 @@ export const iotService = {
   deleteMaintenance: (id: string) => apiClient.delete<void>(`/iot/maintenance/${id}`),
 
   restoreMaintenance: (id: string) => apiClient.patch<IotMaintenance>(`/iot/maintenance/${id}/restore`),
+
+  listParts: (page = 0, size = 20, search = '', filters: PartFilters = {}) =>
+    apiClient.get<PageResponse<IotPart>>(
+      `/iot/parts?${queryString(page, size, search, {
+        category: filters.category
+      })}`
+    ),
+
+  getPart: (id: string) => apiClient.get<IotPart>(`/iot/parts/${id}`),
+
+  createPart: (input: CreatePartInput) => apiClient.post<IotPart>('/iot/parts', input),
+
+  updatePart: (id: string, input: UpdatePartInput) =>
+    apiClient.put<IotPart>(`/iot/parts/${id}`, input),
+
+  deletePart: (id: string) => apiClient.delete<void>(`/iot/parts/${id}`),
+
+  restorePart: (id: string) => apiClient.patch<IotPart>(`/iot/parts/${id}/restore`),
+
+  listPartMovements: (page = 0, size = 20, search = '', filters: PartMovementFilters = {}) =>
+    apiClient.get<PageResponse<IotPartMovement>>(
+      `/iot/parts/movements?${queryString(page, size, search, {
+        partId: filters.partId,
+        movementType: filters.movementType
+      })}`
+    ),
+
+  createPartMovement: (id: string, input: CreatePartMovementInput) =>
+    apiClient.post<IotPartMovement>(`/iot/parts/${id}/movements`, input),
 
   getDashboardSummary: () => apiClient.get<IotDashboardSummary>('/iot/dashboard/summary'),
 

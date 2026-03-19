@@ -1,20 +1,18 @@
-package com.phaiffertech.platform.modules.pet.product.dto;
+package com.phaiffertech.platform.modules.iot.part.dto;
 
-import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.UUID;
 
-public record PetProductResponse(
+public record IotPartResponse(
         UUID id,
         String name,
         String sku,
-        BigDecimal price,
         String category,
         String unitOfMeasure,
         Integer currentQuantity,
-        Integer stockQuantity,
         Integer minimumQuantity,
         Integer reorderPoint,
+        String description,
         Instant createdAt,
         Instant updatedAt
 ) {

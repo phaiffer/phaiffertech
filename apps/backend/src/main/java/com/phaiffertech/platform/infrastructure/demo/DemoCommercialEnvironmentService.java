@@ -331,11 +331,15 @@ public class DemoCommercialEnvironmentService {
                 deleteByTenant("pet_profiles", tenantId);
                 deleteByTenant("pet_clients", tenantId);
 
+                deleteByTenant("iot_parts", tenantId);
                 deleteByTenant("iot_maintenance", tenantId);
                 deleteByTenant("iot_alarms", tenantId);
                 deleteByTenant("iot_telemetry_records", tenantId);
                 deleteByTenant("iot_registers", tenantId);
                 deleteByTenant("iot_devices", tenantId);
+
+                deleteByTenant("inventory_movements", tenantId);
+                deleteByTenant("inventory_items", tenantId);
         }
 
         private void deleteByTenant(String tableName, UUID tenantId) {
@@ -1297,14 +1301,24 @@ public class DemoCommercialEnvironmentService {
                         BigDecimal price,
                         int stockQuantity,
                         Instant createdAt) {
+                UUID inventoryItemId = UUID.randomUUID();
+                insert(
+                                """
+                                                INSERT INTO inventory_items (
+                                                    id, tenant_id, name, sku, category, unit_of_measure, current_quantity,
+                                                    minimum_quantity, reorder_point, created_at, updated_at, created_by, updated_by
+                                                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                                                """,
+                                inventoryItemId, tenantId, name, sku, "PET_RETAIL_GOOD", "UNIT", stockQuantity,
+                                0, 5, ts(createdAt), ts(createdAt), SEED_ACTOR, SEED_ACTOR);
                 insert(
                                 """
                                                 INSERT INTO pet_products (
-                                                    id, tenant_id, name, sku, price, stock_quantity,
+                                                    id, tenant_id, name, sku, price, stock_quantity, inventory_item_id,
                                                     created_at, updated_at, created_by, updated_by
-                                                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                                                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                                                 """,
-                                id, tenantId, name, sku, price, stockQuantity,
+                                id, tenantId, name, sku, price, stockQuantity, inventoryItemId,
                                 ts(createdAt), ts(createdAt), SEED_ACTOR, SEED_ACTOR);
         }
 
@@ -1316,6 +1330,19 @@ public class DemoCommercialEnvironmentService {
                         int quantity,
                         String notes,
                         Instant createdAt) {
+                UUID inventoryItemId = jdbcTemplate.queryForObject(
+                                "SELECT inventory_item_id FROM pet_products WHERE id = ?",
+                                UUID.class,
+                                productId);
+                Integer currentQuantity = jdbcTemplate.queryForObject(
+                                "SELECT current_quantity FROM inventory_items WHERE id = ?",
+                                Integer.class,
+                                inventoryItemId);
+                boolean outbound = movementType != null && movementType.toUpperCase().startsWith("OUT");
+                String normalizedMovementType = outbound ? "OUT" : "IN";
+                int quantityBefore = outbound ? currentQuantity + quantity : currentQuantity - quantity;
+                int quantityAfter = currentQuantity;
+
                 insert(
                                 """
                                                 INSERT INTO pet_inventory_movements (
@@ -1324,6 +1351,16 @@ public class DemoCommercialEnvironmentService {
                                                 ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                                                 """,
                                 id, tenantId, productId, movementType, quantity, notes,
+                                ts(createdAt), ts(createdAt), SEED_ACTOR, SEED_ACTOR);
+                insert(
+                                """
+                                                INSERT INTO inventory_movements (
+                                                    id, tenant_id, inventory_item_id, movement_type, quantity, quantity_before, quantity_after,
+                                                    source_type, source_reference_id, reason, created_at, updated_at, created_by, updated_by
+                                                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                                                """,
+                                id, tenantId, inventoryItemId, normalizedMovementType, quantity, quantityBefore,
+                                quantityAfter, "MANUAL", productId, notes,
                                 ts(createdAt), ts(createdAt), SEED_ACTOR, SEED_ACTOR);
         }
 

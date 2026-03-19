@@ -23,7 +23,6 @@ public final class PetProductMapper implements BaseCrudMapper<
         entity.setName(request.name().trim());
         entity.setSku(normalizeSku(request.sku()));
         entity.setPrice(request.price());
-        entity.setStockQuantity(request.stockQuantity());
         return entity;
     }
 
@@ -32,7 +31,6 @@ public final class PetProductMapper implements BaseCrudMapper<
         entity.setName(request.name().trim());
         entity.setSku(normalizeSku(request.sku()));
         entity.setPrice(request.price());
-        entity.setStockQuantity(request.stockQuantity());
     }
 
     @Override
@@ -42,7 +40,12 @@ public final class PetProductMapper implements BaseCrudMapper<
                 entity.getName(),
                 entity.getSku(),
                 entity.getPrice(),
-                entity.getStockQuantity(),
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
                 entity.getCreatedAt(),
                 entity.getUpdatedAt()
         );

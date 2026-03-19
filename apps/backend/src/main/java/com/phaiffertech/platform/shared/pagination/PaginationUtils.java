@@ -18,6 +18,13 @@ public final class PaginationUtils {
         return PageRequest.of(page, size, sort);
     }
 
+    public static Pageable toPageableWithoutSort(PageRequestDto request) {
+        int page = request == null ? 0 : request.resolvedPage();
+        int size = request == null ? 20 : request.resolvedSize();
+
+        return PageRequest.of(page, size);
+    }
+
     public static <T> PageResponseDto<T> fromPage(Page<T> page) {
         return PageMapper.toResponse(page);
     }

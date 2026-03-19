@@ -7,6 +7,8 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.phaiffertech.platform.modules.iot.processing.AlarmEvaluator;
+import com.phaiffertech.platform.modules.iot.processing.DeviceStatusService;
 import com.phaiffertech.platform.modules.iot.telemetry.domain.IotTelemetryRecord;
 import com.phaiffertech.platform.modules.iot.telemetry.dto.IotTelemetryCreateRequest;
 import com.phaiffertech.platform.modules.iot.telemetry.dto.IotTelemetryResponse;
@@ -22,7 +24,6 @@ import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mapstruct.factory.Mappers;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mock;
@@ -45,12 +46,18 @@ class PostgresTelemetryStoreTest {
     @Captor
     private ArgumentCaptor<Pageable> pageableCaptor;
 
+    @Mock
+    private AlarmEvaluator alarmEvaluator;
+
+    @Mock
+    private DeviceStatusService deviceStatusService;
+
     private PostgresTelemetryStore store;
 
     @BeforeEach
     void setUp() {
-        IotTelemetryMapper mapper = Mappers.getMapper(IotTelemetryMapper.class);
-        store = new PostgresTelemetryStore(repository, mapper);
+        IotTelemetryMapper mapper = new IotTelemetryMapper();
+        store = new PostgresTelemetryStore(repository, mapper, List.of(alarmEvaluator), deviceStatusService);
     }
 
     @Test
@@ -95,6 +102,9 @@ class PostgresTelemetryStoreTest {
         assertEquals("sensor-a", response.metadata().get("source"));
         assertEquals(createdAt, response.createdAt());
         assertNotNull(response.recordedAt());
+
+        verify(alarmEvaluator).evaluate(persisted);
+        verify(deviceStatusService).refreshFromTelemetry(tenantId, deviceId, persisted.getRecordedAt());
     }
 
     @Test

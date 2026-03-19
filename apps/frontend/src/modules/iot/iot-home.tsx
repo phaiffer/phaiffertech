@@ -103,6 +103,15 @@ const iotWorkspaceActions: ModuleWorkspaceAction[] = [
     restrictionDescription: 'Field intervention flow becomes available when your workspace role can read IoT maintenance.'
   },
   {
+    href: '/iot/parts',
+    eyebrow: 'Inventory',
+    title: 'Manage parts',
+    description: 'Track spare parts and consumables with replenishment and maintenance consumption context.',
+    permission: 'iot.part.read',
+    restrictionTitle: 'Parts access required',
+    restrictionDescription: 'Inventory parts become available when your workspace role can read IoT parts.'
+  },
+  {
     href: '/iot/reports',
     eyebrow: 'Reporting',
     title: 'Open reports',

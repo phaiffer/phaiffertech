@@ -1,5 +1,7 @@
 package com.phaiffertech.platform.modules.iot.telemetry.service;
 
+import com.phaiffertech.platform.modules.iot.processing.AlarmEvaluator;
+import com.phaiffertech.platform.modules.iot.processing.DeviceStatusService;
 import com.phaiffertech.platform.modules.iot.processing.TelemetryReader;
 import com.phaiffertech.platform.modules.iot.processing.TelemetryWriter;
 import com.phaiffertech.platform.modules.iot.telemetry.dto.IotTelemetryCreateRequest;
@@ -12,6 +14,7 @@ import com.phaiffertech.platform.shared.pagination.PageRequestDto;
 import com.phaiffertech.platform.shared.pagination.PageResponseDto;
 import com.phaiffertech.platform.shared.pagination.PaginationUtils;
 import java.time.Instant;
+import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -25,6 +28,8 @@ public class PostgresTelemetryStore implements TelemetryWriter, TelemetryReader 
 
     private final IotTelemetryRecordRepository repository;
     private final IotTelemetryMapper mapper;
+    private final List<AlarmEvaluator> alarmEvaluators;
+    private final DeviceStatusService deviceStatusService;
 
     @Override
     @Transactional
@@ -36,6 +41,10 @@ public class PostgresTelemetryStore implements TelemetryWriter, TelemetryReader 
         }
 
         record = repository.save(record);
+        for (AlarmEvaluator alarmEvaluator : alarmEvaluators) {
+            alarmEvaluator.evaluate(record);
+        }
+        deviceStatusService.refreshFromTelemetry(tenantId, record.getDeviceId(), record.getRecordedAt());
         return mapper.toResponse(record);
     }
 

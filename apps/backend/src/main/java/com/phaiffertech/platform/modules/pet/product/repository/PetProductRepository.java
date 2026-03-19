@@ -14,7 +14,22 @@ import org.springframework.data.repository.query.Param;
 
 public interface PetProductRepository extends JpaRepository<PetProduct, UUID>, BaseTenantCrudRepository<PetProduct> {
 
-    long countByTenantIdAndStockQuantityLessThanEqual(UUID tenantId, int stockQuantityThreshold);
+    @Query(value = """
+            SELECT COUNT(*)
+            FROM pet_products p
+            JOIN inventory_items i ON i.id = p.inventory_item_id
+            WHERE p.tenant_id = :tenantId
+              AND p.deleted_at IS NULL
+              AND i.deleted_at IS NULL
+              AND i.current_quantity <= CASE
+                    WHEN i.reorder_point > 0 THEN i.reorder_point
+                    ELSE :defaultThreshold
+                  END
+            """, nativeQuery = true)
+    long countLowStockProducts(
+            @Param("tenantId") UUID tenantId,
+            @Param("defaultThreshold") int defaultThreshold
+    );
 
     @Query("""
             SELECT p
@@ -30,13 +45,13 @@ public interface PetProductRepository extends JpaRepository<PetProduct, UUID>, B
             Pageable pageable
     );
 
-    boolean existsBySkuAndTenantId(String sku, UUID tenantId);
-
-    boolean existsBySkuAndTenantIdAndIdNot(String sku, UUID tenantId, UUID id);
-
     Optional<PetProduct> findByIdAndTenantId(UUID id, UUID tenantId);
 
     List<PetProduct> findAllByTenantIdAndIdIn(UUID tenantId, Collection<UUID> ids);
+
+    Optional<PetProduct> findByInventoryItemIdAndTenantId(UUID inventoryItemId, UUID tenantId);
+
+    List<PetProduct> findAllByTenantIdAndInventoryItemIdIn(UUID tenantId, Collection<UUID> inventoryItemIds);
 
     @Query(value = """
             SELECT *

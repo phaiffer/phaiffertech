@@ -84,6 +84,35 @@ export type IotMaintenance = {
   updatedAt: string;
 };
 
+export type IotPart = {
+  id: string;
+  name: string;
+  sku: string;
+  category: string;
+  unitOfMeasure: string;
+  currentQuantity: number;
+  minimumQuantity: number;
+  reorderPoint: number;
+  description?: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type IotPartMovement = {
+  id: string;
+  partId: string;
+  partName?: string;
+  partSku?: string;
+  movementType: string;
+  quantity: number;
+  sourceType: string;
+  reason: string;
+  quantityBefore: number;
+  quantityAfter: number;
+  createdAt: string;
+  updatedAt: string;
+};
+
 export type IotDashboardSummary = {
   totalDevices: number;
   activeDevices: number;

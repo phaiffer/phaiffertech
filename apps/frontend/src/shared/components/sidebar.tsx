@@ -230,6 +230,7 @@ const items: SidebarItem[] = [
   { href: '/iot/telemetry', label: 'Telemetria', anyOf: ['iot.telemetry.read'], anyEntitlements: iotMonitorEntitlements, moduleCode: 'IOT', group: 'iot', icon: IconWave },
   { href: '/iot/registers', label: 'Registros', anyOf: ['iot.register.read'], anyEntitlements: iotMonitorEntitlements, moduleCode: 'IOT', group: 'iot', icon: IconList },
   { href: '/iot/maintenance', label: 'Manutenção', anyOf: ['iot.maintenance.read'], anyEntitlements: iotMonitorEntitlements, moduleCode: 'IOT', group: 'iot', icon: IconTool },
+  { href: '/iot/parts', label: 'Peças', anyOf: ['iot.part.read'], anyEntitlements: iotMonitorEntitlements, moduleCode: 'IOT', group: 'iot', icon: IconClipboard },
   
   // CRM
   { href: '/crm', label: 'Hub CRM', anyOf: crmOverviewPermissions, moduleCode: 'CRM', group: 'crm', icon: IconGrid },

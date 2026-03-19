@@ -534,6 +534,57 @@ class PetIntegrationTest extends AbstractIntegrationTest {
     }
 
     @Test
+    void shouldUseSharedInventoryFoundationForVeterinarySupplies() {
+        AuthSession session = loginAsDefaultAdmin();
+        String marker = randomSearchMarker();
+
+        ResponseEntity<JsonNode> createProduct = post("/pet/products", Map.of(
+                "name", "Clinical Supply " + marker,
+                "sku", "CLIN-" + marker,
+                "price", 89.50,
+                "stockQuantity", 9,
+                "category", "PET_VETERINARY_SUPPLY",
+                "unitOfMeasure", "DOSE",
+                "minimumQuantity", 2,
+                "reorderPoint", 6
+        ), session);
+        assertEquals(200, createProduct.getStatusCode().value());
+        JsonNode createdProduct = requireBody(createProduct).path("data");
+        String productId = createdProduct.path("id").asText();
+        assertEquals("PET_VETERINARY_SUPPLY", createdProduct.path("category").asText());
+        assertEquals("DOSE", createdProduct.path("unitOfMeasure").asText());
+        assertEquals(9, createdProduct.path("currentQuantity").asInt());
+
+        ResponseEntity<JsonNode> consumeSupply = post("/pet/inventory", Map.of(
+                "productId", productId,
+                "movementType", "OUT",
+                "quantity", 3,
+                "notes", "Clinical usage " + marker
+        ), session);
+        assertEquals(200, consumeSupply.getStatusCode().value());
+        JsonNode movement = requireBody(consumeSupply).path("data");
+        assertEquals("PET_CLINIC_CONSUMPTION", movement.path("sourceType").asText());
+        assertEquals(9, movement.path("quantityBefore").asInt());
+        assertEquals(6, movement.path("quantityAfter").asInt());
+
+        ResponseEntity<JsonNode> productAfterConsumption = get("/pet/products/" + productId, session);
+        assertEquals(200, productAfterConsumption.getStatusCode().value());
+        assertEquals(6, requireBody(productAfterConsumption).path("data").path("currentQuantity").asInt());
+        assertEquals(6, requireBody(productAfterConsumption).path("data").path("stockQuantity").asInt());
+
+        assertEquals(1, countRows(
+                "SELECT COUNT(*) FROM inventory_items WHERE tenant_id = ? AND sku = ? AND category = 'PET_VETERINARY_SUPPLY' AND deleted_at IS NULL",
+                session.tenantId(),
+                ("CLIN-" + marker).toUpperCase()
+        ));
+        assertEquals(1, countRows(
+                "SELECT COUNT(*) FROM inventory_movements WHERE tenant_id = ? AND source_type = 'PET_CLINIC_CONSUMPTION' AND source_reference_id = ? AND deleted_at IS NULL",
+                session.tenantId(),
+                productId
+        ));
+    }
+
+    @Test
     void shouldRestoreDeletedInventoryMovementAndReapplyStockOnce() {
         AuthSession session = loginAsDefaultAdmin();
         String marker = randomSearchMarker();
@@ -568,7 +619,7 @@ class PetIntegrationTest extends AbstractIntegrationTest {
         assertEquals(14, requireBody(productAfterRestore).path("data").path("stockQuantity").asInt());
 
         int activeCount = countRows(
-                "SELECT COUNT(*) FROM pet_inventory_movements WHERE id = ? AND deleted_at IS NULL",
+                "SELECT COUNT(*) FROM inventory_movements WHERE id = ? AND deleted_at IS NULL",
                 inventoryId
         );
         assertEquals(1, activeCount);

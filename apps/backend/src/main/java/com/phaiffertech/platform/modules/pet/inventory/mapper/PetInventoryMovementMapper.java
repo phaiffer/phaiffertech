@@ -52,7 +52,11 @@ public final class PetInventoryMovementMapper implements BaseCrudMapper<
                 productSku,
                 entity.getMovementType(),
                 entity.getQuantity(),
+                null,
                 entity.getNotes(),
+                entity.getNotes(),
+                null,
+                null,
                 entity.getCreatedAt(),
                 entity.getUpdatedAt()
         );

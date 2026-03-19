@@ -125,6 +125,10 @@ export type CreatePetProductInput = {
   sku: string;
   price: number;
   stockQuantity: number;
+  category?: string;
+  unitOfMeasure?: string;
+  minimumQuantity?: number;
+  reorderPoint?: number;
 };
 
 export type UpdatePetProductInput = CreatePetProductInput;

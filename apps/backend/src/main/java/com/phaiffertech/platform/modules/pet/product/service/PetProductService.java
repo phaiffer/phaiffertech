@@ -1,94 +1,205 @@
 package com.phaiffertech.platform.modules.pet.product.service;
 
 import com.phaiffertech.platform.core.audit.service.AuditableAction;
+import com.phaiffertech.platform.core.inventory.domain.InventoryItem;
+import com.phaiffertech.platform.core.inventory.domain.InventoryItemCategory;
+import com.phaiffertech.platform.core.inventory.domain.InventoryMovementSource;
+import com.phaiffertech.platform.core.inventory.service.InventoryItemService;
+import com.phaiffertech.platform.core.inventory.service.InventoryItemUpsertCommand;
 import com.phaiffertech.platform.modules.pet.product.domain.PetProduct;
 import com.phaiffertech.platform.modules.pet.product.dto.PetProductCreateRequest;
 import com.phaiffertech.platform.modules.pet.product.dto.PetProductResponse;
 import com.phaiffertech.platform.modules.pet.product.dto.PetProductUpdateRequest;
-import com.phaiffertech.platform.modules.pet.product.mapper.PetProductMapper;
 import com.phaiffertech.platform.modules.pet.product.repository.PetProductRepository;
 import com.phaiffertech.platform.shared.crud.BasePageQuery;
-import com.phaiffertech.platform.shared.crud.BaseTenantCrudService;
 import com.phaiffertech.platform.shared.domain.enums.AuditActionType;
+import com.phaiffertech.platform.shared.exception.ResourceNotFoundException;
 import com.phaiffertech.platform.shared.pagination.PageRequestDto;
 import com.phaiffertech.platform.shared.pagination.PageResponseDto;
+import com.phaiffertech.platform.shared.pagination.PaginationUtils;
+import com.phaiffertech.platform.shared.tenancy.TenantContext;
+import java.time.Instant;
+import java.util.Map;
 import java.util.UUID;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
-public class PetProductService extends BaseTenantCrudService<
-        PetProduct,
-        PetProductCreateRequest,
-        PetProductUpdateRequest,
-        PetProductResponse> {
+public class PetProductService {
 
     private final PetProductRepository repository;
+    private final InventoryItemService inventoryItemService;
 
-    public PetProductService(PetProductRepository repository) {
-        super(repository, repository, PetProductMapper.INSTANCE, "Pet product not found.");
+    public PetProductService(
+            PetProductRepository repository,
+            InventoryItemService inventoryItemService
+    ) {
         this.repository = repository;
-    }
-
-    @Override
-    public void beforeCreate(UUID tenantId, PetProductCreateRequest request, PetProduct entity) {
-        validateSkuUniqueness(tenantId, entity.getSku(), null);
-    }
-
-    @Override
-    public void beforeUpdate(UUID tenantId, PetProductUpdateRequest request, PetProduct entity) {
-        validateSkuUniqueness(tenantId, entity.getSku(), entity.getId());
+        this.inventoryItemService = inventoryItemService;
     }
 
     @Transactional
     @AuditableAction(action = AuditActionType.CREATE, entity = "pet_product")
     public PetProductResponse create(PetProductCreateRequest request) {
-        return doCreate(request);
+        UUID tenantId = currentTenantId();
+        InventoryItem item = inventoryItemService.createCatalogItem(
+                tenantId,
+                toInventoryCommand(request),
+                InventoryMovementSource.PET_PRODUCT_SYNC,
+                null,
+                "Initial balance registered from pet product catalog."
+        );
+
+        PetProduct entity = new PetProduct();
+        entity.setTenantId(tenantId);
+        entity.setName(request.name().trim());
+        entity.setSku(item.getSku());
+        entity.setPrice(request.price());
+        entity.setInventoryItemId(item.getId());
+
+        return toResponse(repository.save(entity), item);
     }
 
     @Transactional(readOnly = true)
     public PageResponseDto<PetProductResponse> list(PageRequestDto pageRequest) {
-        return doList(
-                pageRequest,
-                Sort.by(Sort.Direction.ASC, "name"),
-                (BasePageQuery query) -> repository.findAllByTenantIdAndSearch(
-                        currentTenantId(),
-                        query.search(),
-                        query.pageable()
-                )
+        UUID tenantId = currentTenantId();
+        BasePageQuery query = BasePageQuery.of(pageRequest, Sort.by(Sort.Direction.ASC, "name"));
+        Page<PetProduct> products = repository.findAllByTenantIdAndSearch(
+                tenantId,
+                query.search(),
+                query.pageable()
         );
+
+        Map<UUID, InventoryItem> itemsById = inventoryItemService.getAllByIds(
+                tenantId,
+                products.getContent().stream()
+                        .map(PetProduct::getInventoryItemId)
+                        .collect(Collectors.toSet())
+        ).stream().collect(Collectors.toMap(InventoryItem::getId, Function.identity()));
+
+        return PaginationUtils.fromPage(products.map(product -> toResponse(product, requireInventoryItem(product, itemsById))));
     }
 
     @Transactional(readOnly = true)
     public PetProductResponse getById(UUID id) {
-        return doGetById(id);
+        UUID tenantId = currentTenantId();
+        PetProduct product = getOrThrow(id, tenantId);
+        return toResponse(product, inventoryItemService.getOrThrow(product.getInventoryItemId(), tenantId));
     }
 
     @Transactional
     @AuditableAction(action = AuditActionType.UPDATE, entity = "pet_product")
     public PetProductResponse update(UUID id, PetProductUpdateRequest request) {
-        return doUpdate(id, request);
+        UUID tenantId = currentTenantId();
+        PetProduct product = getOrThrow(id, tenantId);
+        InventoryItem item = inventoryItemService.updateCatalogItem(
+                tenantId,
+                product.getInventoryItemId(),
+                toInventoryCommand(request),
+                InventoryMovementSource.PET_PRODUCT_SYNC,
+                product.getId(),
+                "Inventory balance synchronized from pet product catalog."
+        );
+
+        product.setName(request.name().trim());
+        product.setSku(item.getSku());
+        product.setPrice(request.price());
+
+        return toResponse(repository.save(product), item);
     }
 
     @Transactional
     @AuditableAction(action = AuditActionType.DELETE, entity = "pet_product")
     public void delete(UUID id) {
-        doSoftDelete(id);
+        UUID tenantId = currentTenantId();
+        PetProduct product = getOrThrow(id, tenantId);
+
+        inventoryItemService.softDelete(tenantId, product.getInventoryItemId());
+        product.setDeletedAt(Instant.now());
+        repository.save(product);
     }
 
     @Transactional
     @AuditableAction(action = AuditActionType.RESTORE, entity = "pet_product")
     public PetProductResponse restore(UUID id) {
-        return doRestore(id);
+        UUID tenantId = currentTenantId();
+        PetProduct product = repository.findByIdIncludingDeleted(id, tenantId)
+                .orElseThrow(() -> new ResourceNotFoundException("Pet product not found."));
+
+        product.setDeletedAt(null);
+        InventoryItem item = inventoryItemService.restore(tenantId, product.getInventoryItemId());
+        return toResponse(repository.save(product), item);
     }
 
-    private void validateSkuUniqueness(UUID tenantId, String sku, UUID currentId) {
-        boolean exists = currentId == null
-                ? repository.existsBySkuAndTenantId(sku, tenantId)
-                : repository.existsBySkuAndTenantIdAndIdNot(sku, tenantId, currentId);
-        if (exists) {
-            throw new IllegalArgumentException("Product SKU already exists for tenant.");
+    private PetProduct getOrThrow(UUID productId, UUID tenantId) {
+        return repository.findByIdAndTenantId(productId, tenantId)
+                .orElseThrow(() -> new ResourceNotFoundException("Pet product not found."));
+    }
+
+    private InventoryItemUpsertCommand toInventoryCommand(PetProductCreateRequest request) {
+        return new InventoryItemUpsertCommand(
+                request.name(),
+                request.sku(),
+                resolvePetCategory(request.category()),
+                request.unitOfMeasure(),
+                request.stockQuantity(),
+                request.minimumQuantity(),
+                request.reorderPoint()
+        );
+    }
+
+    private InventoryItemUpsertCommand toInventoryCommand(PetProductUpdateRequest request) {
+        return new InventoryItemUpsertCommand(
+                request.name(),
+                request.sku(),
+                resolvePetCategory(request.category()),
+                request.unitOfMeasure(),
+                request.stockQuantity(),
+                request.minimumQuantity(),
+                request.reorderPoint()
+        );
+    }
+
+    private InventoryItemCategory resolvePetCategory(String category) {
+        InventoryItemCategory resolved = category == null || category.isBlank()
+                ? InventoryItemCategory.PET_RETAIL_GOOD
+                : InventoryItemCategory.valueOf(category.trim().toUpperCase());
+        if (!resolved.isPetCategory()) {
+            throw new IllegalArgumentException("Pet product category must be a Pet inventory category.");
         }
+        return resolved;
+    }
+
+    private InventoryItem requireInventoryItem(PetProduct product, Map<UUID, InventoryItem> itemsById) {
+        InventoryItem item = itemsById.get(product.getInventoryItemId());
+        if (item == null) {
+            throw new ResourceNotFoundException("Inventory item not found for pet product.");
+        }
+        return item;
+    }
+
+    private PetProductResponse toResponse(PetProduct product, InventoryItem item) {
+        return new PetProductResponse(
+                product.getId(),
+                product.getName(),
+                product.getSku(),
+                product.getPrice(),
+                item.getCategory().name(),
+                item.getUnitOfMeasure(),
+                item.getCurrentQuantity(),
+                item.getCurrentQuantity(),
+                item.getMinimumQuantity(),
+                item.getReorderPoint(),
+                product.getCreatedAt(),
+                product.getUpdatedAt()
+        );
+    }
+
+    private UUID currentTenantId() {
+        return TenantContext.getRequiredTenantId();
     }
 }

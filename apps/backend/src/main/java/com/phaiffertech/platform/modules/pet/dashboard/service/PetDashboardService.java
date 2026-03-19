@@ -75,7 +75,7 @@ public class PetDashboardService {
         long upcomingAppointments = appointmentRepository
                 .countByTenantIdAndServiceIdIsNotNullAndProfessionalIdIsNotNullAndScheduledAtGreaterThanEqual(tenantId, now);
         long totalServices = serviceCatalogRepository.countByTenantId(tenantId);
-        long lowStockProducts = productRepository.countByTenantIdAndStockQuantityLessThanEqual(tenantId, LOW_STOCK_THRESHOLD);
+        long lowStockProducts = productRepository.countLowStockProducts(tenantId, LOW_STOCK_THRESHOLD);
         long pendingInvoices = invoiceRepository.countByTenantIdAndStatusIn(
                 tenantId,
                 List.of("ISSUED", "PENDING", "OVERDUE")

@@ -5,6 +5,7 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
 import java.math.BigDecimal;
+import java.util.UUID;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.Where;
 
@@ -23,8 +24,8 @@ public class PetProduct extends BaseTenantEntity {
     @Column(name = "price", nullable = false, precision = 10, scale = 2)
     private BigDecimal price = BigDecimal.ZERO;
 
-    @Column(name = "stock_quantity", nullable = false)
-    private Integer stockQuantity = 0;
+    @Column(name = "inventory_item_id", nullable = false)
+    private UUID inventoryItemId;
 
     public String getName() {
         return name;
@@ -50,11 +51,11 @@ public class PetProduct extends BaseTenantEntity {
         this.price = price;
     }
 
-    public Integer getStockQuantity() {
-        return stockQuantity;
+    public UUID getInventoryItemId() {
+        return inventoryItemId;
     }
 
-    public void setStockQuantity(Integer stockQuantity) {
-        this.stockQuantity = stockQuantity;
+    public void setInventoryItemId(UUID inventoryItemId) {
+        this.inventoryItemId = inventoryItemId;
     }
 }

@@ -147,7 +147,12 @@ export type PetProduct = {
   name: string;
   sku: string;
   price: number;
+  category: string;
+  unitOfMeasure: string;
+  currentQuantity: number;
   stockQuantity: number;
+  minimumQuantity: number;
+  reorderPoint: number;
   createdAt: string;
   updatedAt: string;
 };
@@ -159,7 +164,11 @@ export type PetInventoryMovement = {
   productSku?: string;
   movementType: string;
   quantity: number;
+  sourceType: string;
+  reason: string;
   notes?: string;
+  quantityBefore: number;
+  quantityAfter: number;
   createdAt: string;
   updatedAt: string;
 };

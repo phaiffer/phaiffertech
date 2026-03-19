@@ -10,6 +10,10 @@ public record PetProductCreateRequest(
         @NotBlank String name,
         @NotBlank String sku,
         @NotNull @DecimalMin("0.00") BigDecimal price,
-        @NotNull @Min(0) Integer stockQuantity
+        @NotNull @Min(0) Integer stockQuantity,
+        String category,
+        String unitOfMeasure,
+        @Min(0) Integer minimumQuantity,
+        @Min(0) Integer reorderPoint
 ) {
 }
