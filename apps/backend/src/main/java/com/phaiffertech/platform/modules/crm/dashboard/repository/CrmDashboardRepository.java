@@ -1,6 +1,7 @@
 package com.phaiffertech.platform.modules.crm.dashboard.repository;
 
 import java.time.Instant;
+import java.sql.Timestamp;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -60,7 +61,7 @@ public class CrmDashboardRepository {
                   AND UPPER(status) <> 'DONE'
                 """,
                 tenantId,
-                referenceTime
+                Timestamp.from(referenceTime)
         );
     }
 

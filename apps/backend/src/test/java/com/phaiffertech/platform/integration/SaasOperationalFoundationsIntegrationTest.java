@@ -130,6 +130,38 @@ class SaasOperationalFoundationsIntegrationTest extends AbstractIntegrationTest 
         ) > 0);
     }
 
+    @Test
+    void platformAdminShouldReadRecentTenantUsageMetrics() {
+        AuthSession tenantSession = createTenantAdminSession(
+                "tenant-usage-read",
+                "tenant-usage-read@example.test",
+                "CORE_PLATFORM",
+                "PET"
+        );
+        AuthSession platformAdmin = loginAsDefaultAdmin();
+
+        ResponseEntity<JsonNode> listResponse = get("/pet/clients?page=0&size=20", tenantSession);
+        assertEquals(200, listResponse.getStatusCode().value());
+
+        ResponseEntity<JsonNode> createResponse = post("/pet/clients", Map.of(
+                "name", "Usage Visibility Client",
+                "status", "ACTIVE"
+        ), tenantSession);
+        assertEquals(200, createResponse.getStatusCode().value());
+
+        ResponseEntity<JsonNode> metricsResponse = get(
+                "/tenants/" + tenantSession.tenantId() + "/usage-metrics?days=30&limit=10",
+                platformAdmin
+        );
+
+        assertEquals(200, metricsResponse.getStatusCode().value());
+        JsonNode metrics = requireBody(metricsResponse).path("data");
+        assertTrue(metrics.isArray());
+        assertTrue(metrics.size() >= 1);
+        assertTrue(containsMetric(metrics, "api.request", "pet"));
+        assertTrue(containsMetric(metrics, "entity.create", "pet_client"));
+    }
+
     private JsonNode findModule(JsonNode modules, String code) {
         for (JsonNode module : modules) {
             if (code.equals(module.path("code").asText())) {
@@ -137,5 +169,15 @@ class SaasOperationalFoundationsIntegrationTest extends AbstractIntegrationTest 
             }
         }
         throw new AssertionError("Module not found: " + code);
+    }
+
+    private boolean containsMetric(JsonNode metrics, String metricKey, String source) {
+        for (JsonNode metric : metrics) {
+            if (metricKey.equals(metric.path("metricKey").asText())
+                    && source.equals(metric.path("source").asText())) {
+                return true;
+            }
+        }
+        return false;
     }
 }

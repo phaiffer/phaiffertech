@@ -16,8 +16,19 @@ export type TenantUpsertInput = {
   featureEntitlements?: string[];
 };
 
+export type TenantUsageMetric = {
+  metricKey: string;
+  source: string;
+  quantity: number;
+  unit: string;
+  metricDate: string;
+  lastRecordedAt: string;
+};
+
 export const tenantService = {
   list: (page = 0, size = 20) => apiClient.get<PageResponse<Tenant>>(`/tenants?page=${page}&size=${size}`),
   create: (input: TenantUpsertInput) => apiClient.post<Tenant>('/tenants', input),
-  update: (tenantId: string, input: TenantUpsertInput) => apiClient.put<Tenant>(`/tenants/${tenantId}`, input)
+  update: (tenantId: string, input: TenantUpsertInput) => apiClient.put<Tenant>(`/tenants/${tenantId}`, input),
+  listUsageMetrics: (tenantId: string, days = 30, limit = 12) =>
+    apiClient.get<TenantUsageMetric[]>(`/tenants/${tenantId}/usage-metrics?days=${days}&limit=${limit}`)
 };
