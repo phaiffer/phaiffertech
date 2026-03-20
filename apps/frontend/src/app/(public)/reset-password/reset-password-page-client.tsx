@@ -38,6 +38,16 @@ export default function ResetPasswordPageClient({ token }: ResetPasswordPageClie
   const [invalidLink, setInvalidLink] = useState(token === null);
   const visualContext = useMemo(() => buildLoginVisualContext(), []);
 
+  function handleNewPasswordChange(value: string) {
+    setNewPassword(value);
+    setError(null);
+  }
+
+  function handleConfirmNewPasswordChange(value: string) {
+    setConfirmNewPassword(value);
+    setError(null);
+  }
+
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
@@ -131,10 +141,12 @@ export default function ResetPasswordPageClient({ token }: ResetPasswordPageClie
                       id="new-password"
                       type="password"
                       value={newPassword}
-                      onChange={(event) => setNewPassword(event.target.value)}
+                      onChange={(event) => handleNewPasswordChange(event.target.value)}
                       className={sharedInputClass}
                       minLength={8}
                       maxLength={72}
+                      autoComplete="new-password"
+                      disabled={submitting}
                       required
                     />
                   </div>
@@ -147,10 +159,12 @@ export default function ResetPasswordPageClient({ token }: ResetPasswordPageClie
                       id="confirm-new-password"
                       type="password"
                       value={confirmNewPassword}
-                      onChange={(event) => setConfirmNewPassword(event.target.value)}
+                      onChange={(event) => handleConfirmNewPasswordChange(event.target.value)}
                       className={sharedInputClass}
                       minLength={8}
                       maxLength={72}
+                      autoComplete="new-password"
+                      disabled={submitting}
                       required
                     />
                   </div>

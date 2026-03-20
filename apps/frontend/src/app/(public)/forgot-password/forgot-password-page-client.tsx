@@ -26,6 +26,18 @@ export default function ForgotPasswordPageClient() {
   const [success, setSuccess] = useState(false);
   const visualContext = useMemo(() => buildLoginVisualContext(tenantCode), [tenantCode]);
 
+  function handleTenantCodeChange(value: string) {
+    setTenantCode(value);
+    setError(null);
+    setSuccess(false);
+  }
+
+  function handleEmailChange(value: string) {
+    setEmail(value);
+    setError(null);
+    setSuccess(false);
+  }
+
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError(null);
@@ -84,9 +96,11 @@ export default function ForgotPasswordPageClient() {
                   id="tenant-code"
                   type="text"
                   value={tenantCode}
-                  onChange={(event) => setTenantCode(event.target.value)}
+                  onChange={(event) => handleTenantCodeChange(event.target.value)}
                   className={sharedInputClass}
                   placeholder="tenant-code"
+                  autoComplete="organization"
+                  disabled={submitting}
                   required
                 />
               </div>
@@ -99,9 +113,11 @@ export default function ForgotPasswordPageClient() {
                   id="email"
                   type="email"
                   value={email}
-                  onChange={(event) => setEmail(event.target.value)}
+                  onChange={(event) => handleEmailChange(event.target.value)}
                   className={sharedInputClass}
                   placeholder="name@company.com"
+                  autoComplete="email"
+                  disabled={submitting}
                   required
                 />
               </div>

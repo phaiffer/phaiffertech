@@ -145,6 +145,7 @@ export default function TenantsPage() {
   const [form, setForm] = useState<TenantUpsertInput>(emptyTenantForm);
   const [featureEntitlementDraft, setFeatureEntitlementDraft] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [tenantFeatureFlags, setTenantFeatureFlags] = useState<TenantFeatureFlag[]>([]);
   const [featureFlagsLoading, setFeatureFlagsLoading] = useState(false);
@@ -272,6 +273,8 @@ export default function TenantsPage() {
 
   function handleEdit(tenant: Tenant) {
     setEditingTenantId(tenant.id);
+    setError(null);
+    setSuccess(null);
     setForm({
       name: tenant.name,
       code: tenant.code,
@@ -298,6 +301,7 @@ export default function TenantsPage() {
     setEditingTenantId(null);
     setForm(emptyTenantForm);
     setFeatureEntitlementDraft('');
+    setError(null);
     setImpersonationReason('');
     setImpersonationDurationMinutes(15);
     setImpersonationError(null);
@@ -310,17 +314,27 @@ export default function TenantsPage() {
       return;
     }
 
+    setError(null);
+    setSuccess(null);
     setSubmitting(true);
     try {
       const payload = normalizeTenantInput(form);
+      let savedTenant: Tenant;
       if (editingTenantId) {
-        await tenantService.update(editingTenantId, payload);
+        savedTenant = await tenantService.update(editingTenantId, payload);
+        setSuccess(
+          `Tenant ${savedTenant.name} updated. Contracted modules, branding defaults, and admin overrides are now aligned.`
+        );
       } else {
-        await tenantService.create(payload);
+        savedTenant = await tenantService.create(payload);
+        setSuccess(
+          `Tenant ${savedTenant.name} created. Review plan defaults, feature entitlements, and rollout overrides before handoff.`
+        );
       }
       resetForm();
       await loadTenants(pageData.page);
     } catch (err) {
+      setSuccess(null);
       setError((err as Error).message);
     } finally {
       setSubmitting(false);
@@ -371,7 +385,9 @@ export default function TenantsPage() {
     try {
       await featureFlagService.setTenantOverride(editingTenantId, flagKey, enabled);
       await refreshFeatureFlags(editingTenantId);
+      setSuccess(`Feature flag ${flagKey} override updated for ${editingTenant?.name ?? 'the selected tenant'}.`);
     } catch (err) {
+      setSuccess(null);
       setFeatureFlagsError((err as Error).message);
     } finally {
       setSavingFeatureFlagKey(null);
@@ -387,7 +403,9 @@ export default function TenantsPage() {
     try {
       await featureFlagService.clearTenantOverride(editingTenantId, flagKey);
       await refreshFeatureFlags(editingTenantId);
+      setSuccess(`Feature flag ${flagKey} now follows the global default for ${editingTenant?.name ?? 'the selected tenant'}.`);
     } catch (err) {
+      setSuccess(null);
       setFeatureFlagsError((err as Error).message);
     } finally {
       setSavingFeatureFlagKey(null);
@@ -414,6 +432,7 @@ export default function TenantsPage() {
 
     setImpersonationSubmitting(true);
     setImpersonationError(null);
+    setSuccess(null);
     try {
       const tokenData = await supportImpersonationService.start({
         targetTenantId: editingTenantId,
@@ -575,6 +594,10 @@ export default function TenantsPage() {
             <div className="ui-notice-error">{error}</div>
           ) : null}
 
+          {success ? (
+            <div className="ui-notice-success">{success}</div>
+          ) : null}
+
           {modulesError ? (
             <div className="ui-notice-warning">{modulesError}</div>
           ) : null}
@@ -691,7 +714,7 @@ export default function TenantsPage() {
                       </span>
 
                       {modulesLoading ? (
-                        <span className="ui-notice-neutral">Loading module catalog...</span>
+                        <div className="ui-notice-neutral">Loading module catalog...</div>
                       ) : (
                         moduleOptions.map((moduleItem) => {
                           const includedByPlan = selectedPlanDetails.defaultModules.includes(moduleItem.code);
@@ -858,7 +881,7 @@ export default function TenantsPage() {
                     ) : null}
 
                     {featureFlagsLoading ? (
-                      <p className="text-sm text-[color:var(--app-shell-muted)]">Loading feature flags...</p>
+                      <div className="ui-notice-neutral">Loading feature flags...</div>
                     ) : tenantFeatureFlags.length > 0 ? (
                       <div className="space-y-3">
                         {tenantFeatureFlags.map((featureFlag) => {
@@ -926,7 +949,7 @@ export default function TenantsPage() {
                     ) : null}
 
                     {usageMetricsLoading ? (
-                      <p className="text-sm text-[color:var(--app-shell-muted)]">Loading recent usage metrics...</p>
+                      <div className="ui-notice-neutral">Loading recent usage metrics...</div>
                     ) : usageMetrics.length > 0 ? (
                       <div className="overflow-x-auto rounded-[var(--radius-xl)] border border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-panel)]">
                         <table className="min-w-full text-left text-sm">
@@ -988,7 +1011,8 @@ export default function TenantsPage() {
 
                     {session?.user.impersonation ? (
                       <div className="ui-notice-warning">
-                        Exit the current support impersonation session before starting another one.
+                        Support impersonation is already active for the current browser session. Exit from the top
+                        banner before starting a new support session.
                       </div>
                     ) : editingTenant?.platformOwner ? (
                       <div className="ui-notice-warning">
@@ -996,12 +1020,20 @@ export default function TenantsPage() {
                       </div>
                     ) : (
                       <>
+                        <div className="ui-notice-neutral">
+                          You are preparing support access for <strong>{editingTenant?.name}</strong> (
+                          {editingTenant?.code}). Exiting from the impersonation banner restores your original
+                          platform workspace automatically.
+                        </div>
+
                         <div className="grid gap-4 xl:grid-cols-[minmax(0,1.25fr)_minmax(0,0.75fr)]">
                           <FormTextarea
                             label="Reason"
                             value={impersonationReason}
                             onChange={setImpersonationReason}
+                            description="The reason becomes part of the auditable support-session record."
                             placeholder="Describe why support access is needed for this tenant."
+                            disabled={impersonationSubmitting}
                           />
 
                           <label className="space-y-2">
@@ -1009,6 +1041,7 @@ export default function TenantsPage() {
                             <select
                               value={impersonationDurationMinutes}
                               onChange={(event) => setImpersonationDurationMinutes(Number(event.target.value))}
+                              disabled={impersonationSubmitting}
                               className={sharedInputClass}
                             >
                               <option value={15}>15 minutes</option>
@@ -1016,6 +1049,9 @@ export default function TenantsPage() {
                               <option value={45}>45 minutes</option>
                               <option value={60}>60 minutes</option>
                             </select>
+                            <p className="text-xs leading-5 text-[color:var(--app-shell-muted)]">
+                              Short sessions reduce ambiguity and keep operator recovery simple.
+                            </p>
                           </label>
                         </div>
 
@@ -1047,7 +1083,7 @@ export default function TenantsPage() {
                   disabled={submitting}
                   className="ui-primary-button"
                 >
-                  {submitting ? 'Saving...' : editingTenantId ? 'Update tenant' : 'Create tenant'}
+                  {submitting ? 'Saving tenant...' : editingTenantId ? 'Update tenant' : 'Create tenant'}
                 </button>
               </div>
             </form>

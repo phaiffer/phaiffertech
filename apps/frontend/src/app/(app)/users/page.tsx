@@ -55,6 +55,7 @@ export default function UsersPage() {
   const [pageData, setPageData] = useState<PageResponse<PlatformUser>>(initialPage);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
   const [email, setEmail] = useState('');
@@ -81,13 +82,18 @@ export default function UsersPage() {
       return;
     }
 
+    setError(null);
+    setSuccess(null);
     setSubmitting(true);
     try {
-      await userService.create({ email, fullName, password, roleCode });
+      const createdUser = await userService.create({ email, fullName, password, roleCode });
       setEmail('');
       setFullName('');
       setPassword('');
       setRoleCode('OPERATOR');
+      setSuccess(
+        `User ${createdUser.fullName} created. Share the temporary password through a secure channel and ask the user to rotate it after the first sign-in.`
+      );
       await loadUsers(pageData.page);
     } catch (err) {
       setError((err as Error).message);
@@ -148,7 +154,7 @@ export default function UsersPage() {
   return (
     <PermissionGuard
       permission="USER_READ"
-      fallback={<div className="ui-notice-warning">Você não possui permissão para visualizar usuários.</div>}
+      fallback={<div className="ui-notice-warning">You do not have permission to view users.</div>}
     >
       <div className={sharedPageStackClass}>
         <PageTitle
@@ -195,12 +201,18 @@ export default function UsersPage() {
               title="Create workspace user"
               description="Keep temporary credentials and role assignment balanced so new access does not dominate the page visually."
             >
+              <div className="ui-notice-neutral mb-4">
+                Create access inside the current tenant, choose the initial role deliberately, and share the temporary
+                password only through an approved support channel.
+              </div>
+
               <form onSubmit={handleCreate} className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
                 <FormInput
                   label="Full name"
                   value={fullName}
                   onChange={setFullName}
                   placeholder="Operator One"
+                  disabled={submitting}
                   required
                 />
                 <FormInput
@@ -209,6 +221,7 @@ export default function UsersPage() {
                   onChange={setEmail}
                   type="email"
                   placeholder="operator@example.test"
+                  disabled={submitting}
                   required
                 />
                 <FormInput
@@ -216,6 +229,8 @@ export default function UsersPage() {
                   value={password}
                   onChange={setPassword}
                   placeholder="Create a secure password"
+                  description="This password is only shown here during creation, so hand it off securely."
+                  disabled={submitting}
                   required
                 />
                 <FormSelect
@@ -223,6 +238,8 @@ export default function UsersPage() {
                   value={roleCode}
                   options={roleOptions}
                   onChange={setRoleCode}
+                  description="Role scope stays constrained to the authenticated tenant boundary."
+                  disabled={submitting}
                 />
                 <div className="flex flex-wrap items-center gap-3 md:col-span-2 xl:col-span-4">
                   <button
@@ -240,6 +257,10 @@ export default function UsersPage() {
 
         {error ? (
           <div className="ui-notice-error">{error}</div>
+        ) : null}
+
+        {success ? (
+          <div className="ui-notice-success">{success}</div>
         ) : null}
 
         <DataTable

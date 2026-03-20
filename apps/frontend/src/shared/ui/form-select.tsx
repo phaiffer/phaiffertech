@@ -1,3 +1,4 @@
+import { useId } from 'react';
 import {
   sharedFieldGroupClass,
   sharedFieldHintClass,
@@ -31,13 +32,20 @@ export function FormSelect({
   className,
   wrapperClassName
 }: FormSelectProps) {
+  const selectId = useId();
+  const descriptionId = description ? `${selectId}-description` : undefined;
+
   return (
-    <label className={wrapperClassName ? `${sharedFieldGroupClass} ${wrapperClassName}` : sharedFieldGroupClass}>
-      <span className={sharedInputLabelClass}>{label}</span>
+    <div className={wrapperClassName ? `${sharedFieldGroupClass} ${wrapperClassName}` : sharedFieldGroupClass}>
+      <label htmlFor={selectId} className={sharedInputLabelClass}>
+        {label}
+      </label>
       <select
+        id={selectId}
         value={value}
         disabled={disabled}
         onChange={(event) => onChange(event.target.value)}
+        aria-describedby={descriptionId}
         className={className ? `${sharedInputClass} ${className}` : sharedInputClass}
       >
         {options.map((option) => (
@@ -46,7 +54,7 @@ export function FormSelect({
           </option>
         ))}
       </select>
-      {description ? <span className={sharedFieldHintClass}>{description}</span> : null}
-    </label>
+      {description ? <span id={descriptionId} className={sharedFieldHintClass}>{description}</span> : null}
+    </div>
   );
 }

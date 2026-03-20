@@ -65,6 +65,9 @@ export function ImpersonationBanner({ tenantName, tenantCode }: ImpersonationBan
             Original workspace: {impersonation.sourceTenantName} ({impersonation.sourceTenantCode}). Access expires{' '}
             {new Date(impersonation.expiresAt).toLocaleString()}.
           </p>
+          <p className="mt-1 text-sm text-[color:var(--app-shell-muted)]">
+            Exit support impersonation to restore the original platform workspace and operator context.
+          </p>
           {error ? (
             <p className="mt-2 text-sm text-red-700">{error}</p>
           ) : null}

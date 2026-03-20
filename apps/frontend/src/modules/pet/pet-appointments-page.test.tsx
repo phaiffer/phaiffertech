@@ -75,7 +75,7 @@ describe('PetAppointmentsPage', () => {
     ]));
   });
 
-  it('expõe diagnóstico de lookup degradado e usa labels enriquecidos para renderização', async () => {
+  it('shows degraded lookup diagnostics and enriched labels in the appointment table', async () => {
     render(<PetAppointmentsPage />);
 
     await waitFor(() => {
@@ -88,7 +88,7 @@ describe('PetAppointmentsPage', () => {
     expect(screen.getByText('Pet Example')).toBeInTheDocument();
     expect(screen.getByText('Dr Example')).toBeInTheDocument();
     expect(screen.getByText('Bath')).toBeInTheDocument();
-    expect(screen.getByText('PENDING')).toBeInTheDocument();
+    expect(screen.getByText('Pending')).toBeInTheDocument();
     expect(screen.getByText('Prontuários 0 | Vacinas 0 | Prescrições 0')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Iniciar atendimento' })).toHaveAttribute(
       'href',
