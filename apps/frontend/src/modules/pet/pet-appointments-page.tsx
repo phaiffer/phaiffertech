@@ -6,6 +6,7 @@ import {
   PetAppointmentsFilters,
   createPetAppointmentColumns
 } from '@/modules/pet/pet-appointments-sections';
+import { PetAppointmentsCalendar } from '@/modules/pet/pet-appointments-calendar';
 import { toDateTimeLocal, toIsoDate } from '@/modules/pet/pet-date-time';
 import {
   PetLookupFeedback,
@@ -43,6 +44,11 @@ const initialPage: PageResponse<PetAppointment> = {
 export function PetAppointmentsPage() {
   const { hasPermission } = usePermissions();
   const [pageData, setPageData] = useState<PageResponse<PetAppointment>>(initialPage);
+  const [calendarData, setCalendarData] = useState<PetAppointment[]>([]);
+  
+  const [viewMode, setViewMode] = useState<'list' | 'calendar'>('calendar');
+  const [currentMonth, setCurrentMonth] = useState(new Date());
+
   const [clients, setClients] = useState<PetClient[]>([]);
   const [profiles, setProfiles] = useState<PetProfile[]>([]);
   const [services, setServices] = useState<PetServiceCatalog[]>([]);
@@ -60,6 +66,7 @@ export function PetAppointmentsPage() {
   const [serviceFilterId, setServiceFilterId] = useState('');
   const [professionalFilterId, setProfessionalFilterId] = useState('');
 
+  const [isEditorOpen, setIsEditorOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [clientId, setClientId] = useState('');
   const [petId, setPetId] = useState('');
@@ -98,10 +105,7 @@ export function PetAppointmentsPage() {
   }, [clients]);
 
   const filteredProfiles = useMemo(() => {
-    if (!clientId) {
-      return profiles;
-    }
-
+    if (!clientId) return profiles;
     return profiles.filter((profile) => profile.clientId === clientId);
   }, [clientId, profiles]);
 
@@ -164,11 +168,7 @@ export function PetAppointmentsPage() {
       setClients(resolvePageItems(clientPage.value));
     } else {
       setClients([]);
-      issues.push({
-        key: 'clients',
-        label: 'Clientes',
-        message: resolvePetLookupIssue(clientPage.status === 'rejected' ? clientPage.reason : null)
-      });
+      issues.push({ key: 'clients', label: 'Clientes', message: resolvePetLookupIssue(clientPage.status === 'rejected' ? clientPage.reason : null) });
     }
 
     if (!canReadProfiles) {
@@ -178,11 +178,7 @@ export function PetAppointmentsPage() {
       setProfiles(resolvePageItems(profilePage.value));
     } else {
       setProfiles([]);
-      issues.push({
-        key: 'profiles',
-        label: 'Pets',
-        message: resolvePetLookupIssue(profilePage.status === 'rejected' ? profilePage.reason : null)
-      });
+      issues.push({ key: 'profiles', label: 'Pets', message: resolvePetLookupIssue(profilePage.status === 'rejected' ? profilePage.reason : null) });
     }
 
     if (!canReadServices) {
@@ -192,55 +188,65 @@ export function PetAppointmentsPage() {
       setServices(resolvePageItems(servicePage.value));
     } else {
       setServices([]);
-      issues.push({
-        key: 'services',
-        label: 'Serviços',
-        message: resolvePetLookupIssue(servicePage.status === 'rejected' ? servicePage.reason : null)
-      });
+      issues.push({ key: 'services', label: 'Serviços', message: resolvePetLookupIssue(servicePage.status === 'rejected' ? servicePage.reason : null) });
     }
 
     if (!canReadProfessionals) {
       setProfessionals([]);
-      issues.push({
-        key: 'professionals',
-        label: 'Profissionais',
-        message: resolvePetLookupIssue(null, 'pet.professional.read')
-      });
+      issues.push({ key: 'professionals', label: 'Profissionais', message: resolvePetLookupIssue(null, 'pet.professional.read') });
     } else if (professionalPage.status === 'fulfilled' && professionalPage.value) {
       setProfessionals(resolvePageItems(professionalPage.value));
     } else {
       setProfessionals([]);
-      issues.push({
-        key: 'professionals',
-        label: 'Profissionais',
-        message: resolvePetLookupIssue(professionalPage.status === 'rejected' ? professionalPage.reason : null)
-      });
+      issues.push({ key: 'professionals', label: 'Profissionais', message: resolvePetLookupIssue(professionalPage.status === 'rejected' ? professionalPage.reason : null) });
     }
 
     setLookupIssues(issues);
   }, [canReadClients, canReadProfessionals, canReadProfiles, canReadServices]);
 
-  const load = useCallback(async (
+  const loadData = useCallback(async (
     page: number,
     currentSearch: string,
     currentStatus: string,
     currentClientId: string,
     currentPetId: string,
     currentServiceId: string,
-    currentProfessionalId: string
+    currentProfessionalId: string,
+    mode: 'list' | 'calendar',
+    monthVal: Date
   ) => {
     setLoading(true);
     setError(null);
 
     try {
-      const result = await petService.listAppointments(page, pageSize, currentSearch, {
+      const isCalendar = mode === 'calendar';
+      
+      let scheduledFrom: string | undefined = undefined;
+      let scheduledTo: string | undefined = undefined;
+      
+      if (isCalendar) {
+        // Fetch entire month for calendar
+        const start = new Date(monthVal.getFullYear(), monthVal.getMonth(), 1);
+        const end = new Date(monthVal.getFullYear(), monthVal.getMonth() + 1, 0, 23, 59, 59);
+        scheduledFrom = start.toISOString();
+        scheduledTo = end.toISOString();
+      }
+
+      const result = await petService.listAppointments(isCalendar ? 0 : page, isCalendar ? 100 : pageSize, currentSearch, {
         status: currentStatus || undefined,
         clientId: currentClientId || undefined,
         petId: currentPetId || undefined,
         serviceId: currentServiceId || undefined,
-        professionalId: currentProfessionalId || undefined
+        professionalId: currentProfessionalId || undefined,
+        scheduledFrom,
+        scheduledTo
       });
-      setPageData(result);
+      
+      if (isCalendar) {
+        setCalendarData(resolvePageItems(result));
+      } else {
+        setPageData(result);
+      }
     } catch (err) {
       setError(err instanceof ApiClientError ? err.message : 'Erro ao carregar atendimentos.');
     } finally {
@@ -253,8 +259,8 @@ export function PetAppointmentsPage() {
   }, [loadReferences]);
 
   useEffect(() => {
-    load(0, search, statusFilter, clientFilterId, petFilterId, serviceFilterId, professionalFilterId);
-  }, [clientFilterId, load, petFilterId, professionalFilterId, search, serviceFilterId, statusFilter]);
+    loadData(0, search, statusFilter, clientFilterId, petFilterId, serviceFilterId, professionalFilterId, viewMode, currentMonth);
+  }, [clientFilterId, loadData, petFilterId, professionalFilterId, search, serviceFilterId, statusFilter, viewMode, currentMonth]);
 
   function resetForm() {
     setEditingId(null);
@@ -265,6 +271,15 @@ export function PetAppointmentsPage() {
     setScheduledAt('');
     setStatus('SCHEDULED');
     setNotes('');
+  }
+
+  function beginCreate(presetDate?: Date) {
+    resetForm();
+    if (presetDate) {
+      // Add timezone offset to match local time in datetime-local
+      setScheduledAt(toDateTimeLocal(presetDate.toISOString()));
+    }
+    setIsEditorOpen(true);
   }
 
   function beginEdit(appointment: PetAppointment) {
@@ -278,6 +293,12 @@ export function PetAppointmentsPage() {
     setNotes(appointment.notes ?? '');
     setSuccess(null);
     setError(null);
+    setIsEditorOpen(true);
+  }
+
+  function onCalendarEventClick(e: React.MouseEvent, apt: PetAppointment) {
+    e.stopPropagation();
+    beginEdit(apt);
   }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -317,8 +338,8 @@ export function PetAppointmentsPage() {
         setSuccess('Atendimento criado com sucesso.');
       }
 
-      resetForm();
-      await load(pageData.page, search, statusFilter, clientFilterId, petFilterId, serviceFilterId, professionalFilterId);
+      setIsEditorOpen(false);
+      await loadData(pageData.page, search, statusFilter, clientFilterId, petFilterId, serviceFilterId, professionalFilterId, viewMode, currentMonth);
     } catch (err) {
       setError(err instanceof ApiClientError ? err.message : 'Erro ao salvar atendimento.');
     } finally {
@@ -327,15 +348,14 @@ export function PetAppointmentsPage() {
   }
 
   async function handleConfirmDelete() {
-    if (!deleteCandidate) {
-      return;
-    }
+    if (!deleteCandidate) return;
 
     try {
       await petService.deleteAppointment(deleteCandidate.id);
       setDeleteCandidate(null);
+      setIsEditorOpen(false); // Close drawer if deleting from inside
       setSuccess('Atendimento removido com sucesso.');
-      await load(pageData.page, search, statusFilter, clientFilterId, petFilterId, serviceFilterId, professionalFilterId);
+      await loadData(pageData.page, search, statusFilter, clientFilterId, petFilterId, serviceFilterId, professionalFilterId, viewMode, currentMonth);
     } catch (err) {
       setError(err instanceof ApiClientError ? err.message : 'Erro ao excluir atendimento.');
     }
@@ -373,7 +393,25 @@ export function PetAppointmentsPage() {
       fallback={<div className="ui-notice-warning">Você não possui permissão para visualizar atendimentos.</div>}
     >
       <div className="space-y-5">
-        <PageTitle title="Pet Appointments" description="Agenda de atendimentos com filtros e gerenciamento completo." />
+        <PageTitle 
+           title="Pet Appointments" 
+           description="Agenda de atendimentos com filtros e gerenciamento completo." 
+           actions={
+             <div className="flex gap-2">
+                <button 
+                  onClick={() => setViewMode(viewMode === 'list' ? 'calendar' : 'list')}
+                  className="ui-secondary-button"
+                >
+                  Visualização: {viewMode === 'calendar' ? 'Calendário' : 'Lista'}
+                </button>
+                <PermissionGuard permission="pet.appointment.create">
+                  <button onClick={() => beginCreate()} className="ui-primary-button">
+                    Novo Atendimento
+                  </button>
+                </PermissionGuard>
+             </div>
+           }
+        />
 
         <PetAppointmentsFilters
           searchInput={searchInput}
@@ -410,67 +448,99 @@ export function PetAppointmentsPage() {
 
         <PetLookupFeedback issues={lookupIssues} />
 
-        <PetAppointmentForm
-          editingId={editingId}
-          onSubmit={handleSubmit}
-          clientId={clientId}
-          onClientIdChange={setClientId}
-          formClientOptions={formClientOptions}
-          clientsLookupUnavailable={clientsLookupUnavailable}
-          petId={petId}
-          onPetIdChange={setPetId}
-          formPetOptions={formPetOptions}
-          profilesLookupUnavailable={profilesLookupUnavailable}
-          serviceId={serviceId}
-          onServiceIdChange={setServiceId}
-          formServiceOptions={formServiceOptions}
-          servicesLookupUnavailable={servicesLookupUnavailable}
-          professionalId={professionalId}
-          onProfessionalIdChange={setProfessionalId}
-          formProfessionalOptions={formProfessionalOptions}
-          professionalsLookupUnavailable={professionalsLookupUnavailable}
-          scheduledAt={scheduledAt}
-          onScheduledAtChange={setScheduledAt}
-          status={status}
-          onStatusChange={setStatus}
-          notes={notes}
-          onNotesChange={setNotes}
-          submitting={submitting}
-          appointmentReferencesReady={appointmentReferencesReady}
-          onCancelEdit={resetForm}
-        />
-
         {error ? <div className="ui-notice-error">{error}</div> : null}
         {success ? <div className="ui-notice-success">{success}</div> : null}
 
-        <DataTable
-          columns={columns}
-          rows={rows}
-          getRowKey={(row) => row.id}
-          loading={loading}
-          loadingTitle="Carregando atendimentos"
-          loadingDescription="Preparando agenda, status clinicos e relacionamento com clientes, pets e profissionais."
-          emptyState={{
-            title: 'Nenhum atendimento agendado',
-            description: 'Crie o primeiro atendimento para iniciar a agenda operacional e clinica deste workspace.'
-          }}
-        />
+        {viewMode === 'calendar' ? (
+          <PetAppointmentsCalendar
+            appointments={calendarData}
+            currentMonth={currentMonth}
+            onMonthChange={setCurrentMonth}
+            onDateClick={(d) => beginCreate(d)}
+            onEventClick={onCalendarEventClick}
+          />
+        ) : (
+          <>
+            <DataTable
+              columns={columns}
+              rows={rows}
+              getRowKey={(row) => row.id}
+              loading={loading}
+              loadingTitle="Carregando atendimentos"
+              loadingDescription="Preparando agenda, status clinicos e relacionamento com clientes, pets e profissionais."
+              emptyState={{
+                title: 'Nenhum atendimento agendado',
+                description: 'Crie o primeiro atendimento para iniciar a agenda operacional e clinica deste workspace.'
+              }}
+            />
 
-        <Pagination
-          page={pageData.page}
-          totalPages={pageData.totalPages}
-          totalElements={totalItems}
-          onPageChange={(nextPage) =>
-            load(
-              nextPage,
-              search,
-              statusFilter,
-              clientFilterId,
-              petFilterId,
-              serviceFilterId,
-              professionalFilterId
-            )}
-        />
+            <Pagination
+              page={pageData.page}
+              totalPages={pageData.totalPages}
+              totalElements={totalItems}
+              onPageChange={(nextPage) =>
+                loadData(nextPage, search, statusFilter, clientFilterId, petFilterId, serviceFilterId, professionalFilterId, viewMode, currentMonth)
+              }
+            />
+          </>
+        )}
+
+        {/* SIDE DRAWER FOR APPOINTMENT */}
+        {isEditorOpen && (
+          <div className="fixed inset-0 z-50 flex justify-end bg-black/40 backdrop-blur-sm transition-opacity left-0 top-0">
+            <div className="w-full max-w-lg h-full overflow-y-auto bg-[color:var(--app-shell-surface)] p-[var(--space-6)] shadow-2xl animate-in slide-in-from-right duration-300 border-l border-[color:var(--app-shell-border)] relative">
+              <div className="mb-6 flex items-center justify-between">
+                 <div>
+                   <h2 className="text-xl font-bold tracking-tight text-[color:var(--app-shell-heading)]">
+                     {editingId ? 'Editar Atendimento' : 'Novo Atendimento'}
+                   </h2>
+                   <p className="text-sm mt-1 text-[color:var(--app-shell-muted)]">
+                     Preencha as informações clínicas e operacionais.
+                   </p>
+                 </div>
+                 <button 
+                   onClick={() => setIsEditorOpen(false)} 
+                   className="rounded-full p-2 text-[color:var(--app-shell-muted)] hover:bg-[color:var(--app-shell-panel-muted)] hover:text-[color:var(--app-shell-heading)]"
+                 >
+                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                 </button>
+              </div>
+
+              <div className="space-y-6 pb-20">
+                <PetAppointmentForm
+                  editingId={editingId}
+                  onSubmit={handleSubmit}
+                  clientId={clientId}
+                  onClientIdChange={setClientId}
+                  formClientOptions={formClientOptions}
+                  clientsLookupUnavailable={clientsLookupUnavailable}
+                  petId={petId}
+                  onPetIdChange={setPetId}
+                  formPetOptions={formPetOptions}
+                  profilesLookupUnavailable={profilesLookupUnavailable}
+                  serviceId={serviceId}
+                  onServiceIdChange={setServiceId}
+                  formServiceOptions={formServiceOptions}
+                  servicesLookupUnavailable={servicesLookupUnavailable}
+                  professionalId={professionalId}
+                  onProfessionalIdChange={setProfessionalId}
+                  formProfessionalOptions={formProfessionalOptions}
+                  professionalsLookupUnavailable={professionalsLookupUnavailable}
+                  scheduledAt={scheduledAt}
+                  onScheduledAtChange={setScheduledAt}
+                  status={status}
+                  onStatusChange={setStatus}
+                  notes={notes}
+                  onNotesChange={setNotes}
+                  submitting={submitting}
+                  appointmentReferencesReady={appointmentReferencesReady}
+                  onCancelEdit={() => setIsEditorOpen(false)}
+                />
+              </div>
+
+            </div>
+          </div>
+        )}
 
         <ConfirmDialog
           open={Boolean(deleteCandidate)}
