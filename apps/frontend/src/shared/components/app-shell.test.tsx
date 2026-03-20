@@ -71,7 +71,7 @@ describe('AppShell', () => {
       </AppShell>
     );
 
-    expect(screen.getByText('Tenant workspace')).toBeInTheDocument();
+    expect(screen.getAllByText('Tenant workspace').length).toBeGreaterThan(0);
     expect(screen.getByRole('heading', { name: 'Dashboard' })).toBeInTheDocument();
     expect(screen.getByText('Visão geral do workspace e módulos contratados.')).toBeInTheDocument();
     expect(screen.getByText('Active tenant')).toBeInTheDocument();

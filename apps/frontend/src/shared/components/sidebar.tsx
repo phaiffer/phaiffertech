@@ -2,7 +2,7 @@
 
 /* eslint-disable @next/next/no-img-element */
 
-import { ReactNode, useMemo, useState } from 'react';
+import { ReactNode, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/shared/auth/use-auth';
@@ -277,9 +277,9 @@ function SidebarCollapsibleGroup({
         id={`sidebar-group-${groupKey}`}
         aria-expanded={isOpen}
         onClick={onToggle}
-        className="mb-1 flex w-full items-center justify-between rounded px-2 py-1 text-left transition-colors hover:bg-white/5"
+        className="flex w-full items-center justify-between rounded-xl px-3 py-2 text-left transition-colors hover:bg-surface-inset"
       >
-        <span className="text-2xs font-semibold uppercase tracking-wider text-muted">
+        <span className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted">
           {title}
         </span>
         <IconChevronDown
@@ -288,7 +288,7 @@ function SidebarCollapsibleGroup({
           }`}
         />
       </button>
-      {isOpen && <div className="space-y-0.5">{children}</div>}
+      {isOpen && <div className="mt-1 space-y-1">{children}</div>}
     </div>
   );
 }
@@ -337,34 +337,48 @@ export function Sidebar() {
   // Accordion state: track which single group is open. Initialise to the active group.
   const [openGroup, setOpenGroup] = useState<SidebarGroup | null>(activeGroupKey);
 
+  useEffect(() => {
+    setOpenGroup(activeGroupKey);
+  }, [activeGroupKey]);
+
   function handleToggle(key: SidebarGroup) {
     setOpenGroup((prev) => (prev === key ? null : key));
   }
 
-  const getNeonClass = (code?: string) => {
-    if (code === 'IOT') return 'text-[color:var(--accent-iot)] drop-shadow-[0_0_8px_var(--accent-iot)]';
-    if (code === 'PET') return 'text-[color:var(--accent-pet)] drop-shadow-[0_0_8px_var(--accent-pet)]';
-    if (code === 'CRM') return 'text-[color:var(--accent-crm)] drop-shadow-[0_0_8px_var(--accent-crm)]';
-    return 'text-[color:var(--accent-core)] drop-shadow-[0_0_8px_var(--accent-core)]';
+  const resolveModuleAccent = (code?: string) => {
+    if (code === 'IOT') return 'var(--accent-iot)';
+    if (code === 'PET') return 'var(--accent-pet)';
+    if (code === 'CRM') return 'var(--accent-crm)';
+    return 'var(--accent-core)';
   };
 
   return (
-    <aside className="sticky top-0 flex h-screen w-64 flex-col border-r border-white/10 glass-surface">
+    <aside className="sticky top-0 flex h-screen w-72 flex-col border-r border-border bg-surface">
       {/* Brand Header */}
-      <div className="border-b border-white/10 px-4 py-6 flex flex-col items-center justify-center gap-3">
-        <img
-          src="/PhaifferTech_logo.png"
-          alt="Phaiffer Tech"
-          className="h-8 w-auto object-contain drop-shadow-[0_0_10px_rgba(0,180,216,0.5)]"
-        />
-        <div className="w-full rounded bg-white/5 py-1 text-center border border-white/10">
-          <p className="truncate text-xs font-semibold text-accent tracking-widest uppercase">{branding.scopeName}</p>
+      <div className="border-b border-border px-4 py-5">
+        <div className="flex items-center gap-3">
+          <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-border bg-surface-inset p-2 shadow-xs">
+            <img
+              src="/PhaifferTech_logo.png"
+              alt="Phaiffer Tech"
+              className="h-full w-full object-contain"
+            />
+          </div>
+          <div className="min-w-0">
+            <p className="truncate text-sm font-semibold text-foreground">PhaifferTech</p>
+            <p className="truncate text-[11px] font-medium uppercase tracking-[0.18em] text-muted">Software & Data</p>
+          </div>
+        </div>
+        <div className="mt-4 rounded-2xl border border-border bg-surface-inset px-3 py-3 shadow-xs">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[color:var(--app-shell-muted)]">Workspace</p>
+          <p className="mt-1 truncate text-sm font-semibold text-foreground">{branding.scopeName}</p>
+          <p className="mt-1 truncate text-xs text-[color:var(--app-shell-muted)]">{workspace.accessLabel}</p>
         </div>
       </div>
 
       {/* Navigation */}
       <nav className="flex-1 overflow-y-auto px-3 py-4">
-        <div className="space-y-4">
+        <div className="space-y-5">
           {groupedItems.map((group) => (
             <SidebarCollapsibleGroup
               key={group.key}
@@ -376,18 +390,28 @@ export function Sidebar() {
               {group.items.map((item) => {
                 const active = isItemActive(pathname, item.href);
                 const Icon = item.icon;
+                const accent = resolveModuleAccent(item.moduleCode);
 
                 return (
                   <Link
                     key={item.href}
                     href={item.href}
-                    className={`group flex items-center gap-2.5 rounded-lg px-2 py-2 text-sm transition-all duration-300 ${
+                    className={`group flex items-center gap-3 rounded-xl border px-3 py-2.5 text-sm transition-all duration-200 ${
                       active
-                        ? 'bg-white/10 text-foreground font-medium border border-white/5'
-                        : 'text-muted hover:bg-white/5 hover:text-foreground'
+                        ? 'border-border bg-[color:var(--accent-muted)] text-foreground shadow-xs'
+                        : 'border-transparent text-muted hover:border-border hover:bg-surface-inset hover:text-foreground'
                     }`}
                   >
-                    <Icon className={`h-4 w-4 flex-shrink-0 transition-all duration-300 ${active ? getNeonClass(item.moduleCode) : 'group-hover:' + getNeonClass(item.moduleCode)}`} />
+                    <span
+                      className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg border border-border bg-surface shadow-xs transition-colors"
+                      style={active ? {
+                        borderColor: `color-mix(in srgb, ${accent} 24%, var(--border))`,
+                        backgroundColor: `color-mix(in srgb, ${accent} 10%, var(--surface-inset))`,
+                        color: accent
+                      } : undefined}
+                    >
+                      <Icon className="h-4 w-4" />
+                    </span>
                     <span className="truncate">{item.label}</span>
                   </Link>
                 );
@@ -399,14 +423,19 @@ export function Sidebar() {
 
       {/* User Section */}
       <div className="border-t border-border p-4">
-        <div className="mb-3">
-          <p className="truncate text-sm font-medium text-foreground">{user?.fullName}</p>
-          <p className="truncate text-2xs text-muted">{user?.email}</p>
+        <div className="mb-4 flex items-center gap-3 rounded-2xl border border-border bg-surface-inset px-3 py-3 shadow-xs">
+          <div className="flex h-10 w-10 items-center justify-center rounded-full border border-border bg-surface text-sm font-semibold text-foreground">
+            {getInitials(user?.fullName)}
+          </div>
+          <div className="min-w-0">
+            <p className="truncate text-sm font-medium text-foreground">{user?.fullName}</p>
+            <p className="truncate text-[11px] text-muted">{user?.email}</p>
+          </div>
         </div>
         <button
           type="button"
           onClick={() => void signOut()}
-          className="flex w-full items-center justify-center gap-2 rounded-lg border border-border bg-surface px-3 py-2 text-sm text-muted shadow-xs transition-colors hover:border-destructive hover:bg-destructive-muted hover:text-destructive hover:shadow-sm"
+          className="flex w-full items-center justify-center gap-2 rounded-xl border border-border bg-surface px-3 py-2.5 text-sm text-muted shadow-xs transition-colors hover:border-destructive hover:bg-destructive-muted hover:text-destructive hover:shadow-sm"
         >
           <IconLogout className="h-4 w-4" />
           <span>Sair</span>

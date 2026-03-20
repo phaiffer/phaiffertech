@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation';
 import { ImpersonationBanner } from '@/shared/components/impersonation-banner';
 import { Sidebar } from '@/shared/components/sidebar';
 import {
+  appShellContentContainerClass,
   sharedCompactTextClass,
   sharedEyebrowClass,
   sharedShellHeaderClass
@@ -98,28 +99,29 @@ export function AppShell({ children }: { children: ReactNode }) {
 
         {/* Header */}
         <header className={`sticky top-0 z-20 ${sharedShellHeaderClass}`}>
-          <div className="flex flex-col gap-5 px-6 py-5 lg:flex-row lg:items-start lg:justify-between lg:px-8">
-            <div>
+          <div className={`${appShellContentContainerClass} flex flex-col gap-4 px-6 py-4 lg:px-8 xl:flex-row xl:items-start xl:justify-between`}>
+            <div className="max-w-3xl">
               <p className={`${sharedEyebrowClass} text-[11px]`}>{workspace.workspaceLabel}</p>
-              <h1 className="mt-2 text-2xl font-semibold tracking-tight text-foreground">
+              <h1 className="mt-2 text-[1.75rem] font-semibold tracking-tight text-foreground sm:text-[2rem]">
                 {headerMeta.label}
               </h1>
-              <p className={`mt-2 max-w-3xl ${sharedCompactTextClass}`}>{headerMeta.description}</p>
+              <p className={`mt-3 max-w-3xl ${sharedCompactTextClass}`}>{headerMeta.description}</p>
             </div>
-            <div className="w-full max-w-md rounded-2xl border border-border bg-surface px-4 py-4 shadow-xs">
+            <div className="w-full max-w-[26rem] rounded-3xl border border-border bg-surface px-4 py-4 shadow-xs lg:px-5">
               <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[color:var(--app-shell-muted)]">
                 Active tenant
               </p>
               <p className="mt-2 text-base font-semibold text-foreground">{branding.scopeName}</p>
-              <div className="mt-3 flex flex-wrap gap-2">
-                <span className="inline-flex items-center rounded-full border border-border bg-surface-inset px-3 py-1 text-xs font-medium text-[color:var(--app-shell-text)]">
+              <p className="mt-1 text-sm text-[color:var(--app-shell-muted)]">{workspace.accessLabel}</p>
+              <div className="mt-4 flex flex-wrap gap-2">
+                <span className="inline-flex items-center rounded-full border border-border bg-surface-inset px-3 py-1.5 text-xs font-medium text-[color:var(--app-shell-text)]">
                   {branding.tenantCode ? branding.tenantCode : 'platform-workspace'}
                 </span>
-                <span className="inline-flex items-center rounded-full border border-[color:var(--tenant-accent)] bg-[color:var(--tenant-accent-soft)] px-3 py-1 text-xs font-medium text-foreground">
-                  {workspace.accessLabel}
-                </span>
-                <span className="inline-flex items-center rounded-full border border-border bg-surface-inset px-3 py-1 text-xs font-medium text-[color:var(--app-shell-text)]">
+                <span className="inline-flex items-center rounded-full border border-[color:var(--tenant-accent)] bg-[color:var(--tenant-accent-soft)] px-3 py-1.5 text-xs font-medium text-foreground">
                   {modules.contractedProducts.length} contracted module{modules.contractedProducts.length === 1 ? '' : 's'}
+                </span>
+                <span className="inline-flex items-center rounded-full border border-border bg-surface-inset px-3 py-1.5 text-xs font-medium text-[color:var(--app-shell-text)]">
+                  {workspace.canManagePlatformAdministration ? 'Platform administration' : 'Tenant workspace'}
                 </span>
               </div>
             </div>
@@ -127,8 +129,8 @@ export function AppShell({ children }: { children: ReactNode }) {
         </header>
 
         {/* Main Content */}
-        <main className="flex-1 px-6 py-8 lg:px-8">
-          <div className="mx-auto w-full max-w-7xl">{children}</div>
+        <main className="flex-1 px-6 py-6 lg:px-8 lg:py-8">
+          <div className={appShellContentContainerClass}>{children}</div>
         </main>
       </div>
     </div>

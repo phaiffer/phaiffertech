@@ -4,6 +4,7 @@ import { ApiClientError } from '@/shared/lib/http';
 import { authService } from '@/shared/services/auth-service';
 import type { AuthenticatedUser } from '@/shared/types/auth';
 import { FormInput } from '@/shared/ui/form-input';
+import { PageSection } from '@/shared/ui/page-section';
 
 type AccountSecurityPanelProps = {
   user: AuthenticatedUser | null;
@@ -56,17 +57,13 @@ export function AccountSecurityPanel({ user }: AccountSecurityPanelProps) {
   }
 
   return (
-    <section className="ui-surface-panel p-5">
-      <div className="mb-5">
-        <h2 className="text-base font-semibold text-[color:var(--app-shell-heading)]">Account Security</h2>
-        <p className="mt-1 text-sm text-[color:var(--app-shell-muted)]">
-          Keep the current authenticated workspace coherent while rotating credentials from inside the platform.
-        </p>
-      </div>
-
-      <div className="grid gap-4 xl:grid-cols-[0.9fr,1.1fr]">
+    <PageSection
+      title="Account Security"
+      description="Keep the current authenticated workspace coherent while rotating credentials from inside the platform."
+    >
+      <div className="grid gap-5 xl:grid-cols-[minmax(0,0.82fr)_minmax(0,1.18fr)]">
         <div className="space-y-3">
-          <div className="ui-surface-muted p-4">
+          <div className="ui-surface-muted p-4 lg:p-5">
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--app-shell-muted)]">
               Active Account
             </p>
@@ -125,6 +122,6 @@ export function AccountSecurityPanel({ user }: AccountSecurityPanelProps) {
           </button>
         </form>
       </div>
-    </section>
+    </PageSection>
   );
 }

@@ -4,6 +4,7 @@ import { FormEvent, useEffect, useMemo, useState } from 'react';
 import { PermissionGuard } from '@/shared/auth/PermissionGuard';
 import { useAuth } from '@/shared/auth/use-auth';
 import { usePermissions } from '@/shared/auth/usePermissions';
+import { sharedPageStackClass } from '@/shared/components/public-visual-system';
 import { StatusBadge } from '@/shared/dashboard/status-badge';
 import { resolveTotalItems } from '@/shared/lib/pagination';
 import { userService } from '@/shared/services/user-service';
@@ -12,6 +13,7 @@ import { PlatformUser } from '@/shared/types/user';
 import { DataTable, DataTableColumn } from '@/shared/ui/data-table';
 import { FormInput } from '@/shared/ui/form-input';
 import { FormSelect } from '@/shared/ui/form-select';
+import { PageSection } from '@/shared/ui/page-section';
 import { PageTitle } from '@/shared/ui/page-title';
 import { Pagination } from '@/shared/ui/pagination';
 
@@ -148,60 +150,93 @@ export default function UsersPage() {
       permission="USER_READ"
       fallback={<div className="ui-notice-warning">Você não possui permissão para visualizar usuários.</div>}
     >
-      <div className="space-y-5">
+      <div className={sharedPageStackClass}>
         <PageTitle
+          eyebrow="Access control"
           title="Users"
           description="Tenant-scoped user administration with clearer role, workspace, and access signals."
         />
 
-        <div className="ui-notice-neutral">
-          The current list is scoped to <strong>{workspaceLabel}</strong> and uses the active tenant context from your authenticated workspace.
-        </div>
-
-        <PermissionGuard permission="USER_WRITE">
-          <form
-            onSubmit={handleCreate}
-            className="grid gap-3 ui-surface-panel p-4 md:grid-cols-4"
+        <div className="grid gap-5 xl:grid-cols-[minmax(0,0.82fr)_minmax(0,1.18fr)]">
+          <PageSection
+            tone="muted"
+            title="Tenant scope"
+            description="Keep access administration anchored to the authenticated workspace before expanding into deeper role policies."
           >
-            <FormInput
-              label="Full name"
-              value={fullName}
-              onChange={setFullName}
-              placeholder="Operator One"
-              required
-            />
-            <FormInput
-              label="Email"
-              value={email}
-              onChange={setEmail}
-              type="email"
-              placeholder="operator@example.test"
-              required
-            />
-            <FormInput
-              label="Temporary password"
-              value={password}
-              onChange={setPassword}
-              placeholder="Create a secure password"
-              required
-            />
-            <FormSelect
-              label="Role"
-              value={roleCode}
-              options={roleOptions}
-              onChange={setRoleCode}
-            />
-            <div className="md:col-span-4 flex gap-2">
-              <button
-                type="submit"
-                disabled={submitting}
-                className="ui-primary-button"
-              >
-                {submitting ? 'Saving user...' : 'Create user'}
-              </button>
+            <div className="space-y-4">
+              <div className="ui-notice-neutral">
+                The current list is scoped to <strong>{workspaceLabel}</strong> and uses the active tenant context from your authenticated workspace.
+              </div>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div className="ui-surface-panel p-4">
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--app-shell-muted)]">
+                    Workspace
+                  </p>
+                  <p className="mt-2 text-base font-semibold text-[color:var(--app-shell-heading)]">{workspaceLabel}</p>
+                  <p className="mt-1 text-sm text-[color:var(--app-shell-muted)]">{workspaceCode}</p>
+                </div>
+                <div className="ui-surface-panel p-4">
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--app-shell-muted)]">
+                    Available roles
+                  </p>
+                  <p className="mt-2 text-base font-semibold text-[color:var(--app-shell-heading)]">
+                    {availableRoles.length} roles
+                  </p>
+                  <p className="mt-1 text-sm text-[color:var(--app-shell-muted)]">
+                    Tenant-safe role options for this workspace context.
+                  </p>
+                </div>
+              </div>
             </div>
-          </form>
-        </PermissionGuard>
+          </PageSection>
+
+          <PermissionGuard permission="USER_WRITE">
+            <PageSection
+              title="Create workspace user"
+              description="Keep temporary credentials and role assignment balanced so new access does not dominate the page visually."
+            >
+              <form onSubmit={handleCreate} className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+                <FormInput
+                  label="Full name"
+                  value={fullName}
+                  onChange={setFullName}
+                  placeholder="Operator One"
+                  required
+                />
+                <FormInput
+                  label="Email"
+                  value={email}
+                  onChange={setEmail}
+                  type="email"
+                  placeholder="operator@example.test"
+                  required
+                />
+                <FormInput
+                  label="Temporary password"
+                  value={password}
+                  onChange={setPassword}
+                  placeholder="Create a secure password"
+                  required
+                />
+                <FormSelect
+                  label="Role"
+                  value={roleCode}
+                  options={roleOptions}
+                  onChange={setRoleCode}
+                />
+                <div className="flex flex-wrap items-center gap-3 md:col-span-2 xl:col-span-4">
+                  <button
+                    type="submit"
+                    disabled={submitting}
+                    className="ui-primary-button"
+                  >
+                    {submitting ? 'Saving user...' : 'Create user'}
+                  </button>
+                </div>
+              </form>
+            </PageSection>
+          </PermissionGuard>
+        </div>
 
         {error ? (
           <div className="ui-notice-error">{error}</div>

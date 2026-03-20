@@ -63,7 +63,11 @@ export function PublicSiteShell({ children }: PublicSiteShellProps) {
   const localeSwitchLabel = nextLocale === 'en-US' ? 'EN' : 'PT';
 
   const navLinkClass = (active: boolean) =>
-    `text-sm font-medium transition-colors ${active ? 'text-accent' : 'text-muted hover:text-foreground'}`;
+    `inline-flex h-10 items-center rounded-full px-3 text-sm font-medium transition-colors ${
+      active
+        ? 'bg-accent-muted text-foreground'
+        : 'text-muted hover:bg-surface-inset hover:text-foreground'
+    }`;
 
   const localeButtonClass = publicCompactButtonClass;
 
@@ -85,7 +89,7 @@ export function PublicSiteShell({ children }: PublicSiteShellProps) {
 
       {/* Header */}
       <header className={`sticky top-0 z-40 ${publicChromeSurfaceClass}`}>
-        <div className={`${publicSiteContainerClass} flex items-center justify-between py-5`}>
+        <div className={`${publicSiteContainerClass} flex items-center justify-between py-4`}>
           {/* Logo */}
           <Link href="/" className="group inline-flex items-center gap-3">
             <div className={`${publicCardSurfaceClass} flex h-11 w-11 items-center justify-center overflow-hidden p-1.5`}>
@@ -109,8 +113,8 @@ export function PublicSiteShell({ children }: PublicSiteShellProps) {
           </Link>
 
           {/* Desktop Navigation */}
-          <div className="hidden items-center gap-6 lg:flex">
-            <nav className="flex items-center gap-6">
+          <div className="hidden items-center gap-4 lg:flex">
+            <nav className="flex items-center gap-2">
               {navigationItems.map((item) => (
                 <Link key={item.href} href={item.href} className={navLinkClass(item.active)}>
                   {item.label}
@@ -139,8 +143,8 @@ export function PublicSiteShell({ children }: PublicSiteShellProps) {
         </div>
 
         {/* Mobile Navigation */}
-        <div className={`${publicSiteContainerClass} pb-5 lg:hidden`}>
-          <nav className="flex gap-4 overflow-x-auto whitespace-nowrap">
+        <div className={`${publicSiteContainerClass} pb-4 lg:hidden`}>
+          <nav className="flex gap-2 overflow-x-auto whitespace-nowrap">
             {navigationItems.map((item) => (
               <Link key={item.href} href={item.href} className={navLinkClass(item.active)}>
                 {item.label}
@@ -173,7 +177,7 @@ export function PublicSiteShell({ children }: PublicSiteShellProps) {
 
       {/* Footer */}
       <footer className="relative z-10 border-t border-border bg-surface">
-        <div className={`${publicSiteContainerClass} grid gap-10 py-16 lg:grid-cols-4`}>
+        <div className={`${publicSiteContainerClass} grid gap-10 py-14 lg:grid-cols-4`}>
           {/* Brand Column */}
           <div className="lg:col-span-1">
             <p className="text-lg font-semibold text-foreground">PhaifferTech</p>

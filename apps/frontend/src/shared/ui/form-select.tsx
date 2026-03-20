@@ -1,4 +1,9 @@
-import { sharedInputClass, sharedInputLabelClass } from '@/shared/components/public-visual-system';
+import {
+  sharedFieldGroupClass,
+  sharedFieldHintClass,
+  sharedInputClass,
+  sharedInputLabelClass
+} from '@/shared/components/public-visual-system';
 
 type FormSelectOption = {
   value: string;
@@ -11,17 +16,29 @@ type FormSelectProps = {
   options: FormSelectOption[];
   onChange: (value: string) => void;
   disabled?: boolean;
+  description?: string;
+  className?: string;
+  wrapperClassName?: string;
 };
 
-export function FormSelect({ label, value, options, onChange, disabled = false }: FormSelectProps) {
+export function FormSelect({
+  label,
+  value,
+  options,
+  onChange,
+  disabled = false,
+  description,
+  className,
+  wrapperClassName
+}: FormSelectProps) {
   return (
-    <label className="block">
+    <label className={wrapperClassName ? `${sharedFieldGroupClass} ${wrapperClassName}` : sharedFieldGroupClass}>
       <span className={sharedInputLabelClass}>{label}</span>
       <select
         value={value}
         disabled={disabled}
         onChange={(event) => onChange(event.target.value)}
-        className={sharedInputClass}
+        className={className ? `${sharedInputClass} ${className}` : sharedInputClass}
       >
         {options.map((option) => (
           <option key={option.value} value={option.value}>
@@ -29,6 +46,7 @@ export function FormSelect({ label, value, options, onChange, disabled = false }
           </option>
         ))}
       </select>
+      {description ? <span className={sharedFieldHintClass}>{description}</span> : null}
     </label>
   );
 }

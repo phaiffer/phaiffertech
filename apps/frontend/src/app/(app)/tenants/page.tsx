@@ -5,7 +5,11 @@ import { useRouter } from 'next/navigation';
 import { PermissionGuard } from '@/shared/auth/PermissionGuard';
 import { useAuth } from '@/shared/auth/use-auth';
 import { usePermissions } from '@/shared/auth/usePermissions';
-import { sharedInputClass, sharedInputLabelClass } from '@/shared/components/public-visual-system';
+import {
+  sharedInputClass,
+  sharedInputLabelClass,
+  sharedPageStackClass
+} from '@/shared/components/public-visual-system';
 import { StatusBadge } from '@/shared/dashboard/status-badge';
 import { setImpersonationBackupSession } from '@/shared/lib/session';
 import { resolvePageItems, resolveTotalItems } from '@/shared/lib/pagination';
@@ -17,6 +21,8 @@ import { PageResponse } from '@/shared/types/common';
 import { TenantThemeMode } from '@/shared/types/auth';
 import { Tenant } from '@/shared/types/tenant';
 import { DataTable, DataTableColumn } from '@/shared/ui/data-table';
+import { FormTextarea } from '@/shared/ui/form-textarea';
+import { PageSection } from '@/shared/ui/page-section';
 import { PageTitle } from '@/shared/ui/page-title';
 import { Pagination } from '@/shared/ui/pagination';
 
@@ -558,8 +564,9 @@ export default function TenantsPage() {
           Tenant administration is restricted to platform owner administrators.
         </div>
       ) : (
-        <div className="space-y-6">
+        <div className={sharedPageStackClass}>
           <PageTitle
+            eyebrow="Platform administration"
             title="Tenants"
             description="Manage contracted modules, tenant branding and experience defaults from the platform owner workspace."
           />
@@ -572,418 +579,430 @@ export default function TenantsPage() {
             <div className="ui-notice-warning">{modulesError}</div>
           ) : null}
 
-          <section className="ui-surface-panel p-5">
-            <div className="mb-5 flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">
-              <div>
-                <h2 className="text-base font-semibold text-[color:var(--app-shell-heading)]">
-                  {editingTenantId ? 'Update tenant experience' : 'Create tenant workspace'}
-                </h2>
-                <p className="mt-1 text-sm text-[color:var(--app-shell-muted)]">
-                  Core platform access stays active by default. Contracted products and branding remain controlled here.
-                </p>
-              </div>
-              {editingTenantId ? (
-                <button
-                  type="button"
-                  onClick={resetForm}
-                  className="ui-secondary-button"
-                >
-                  Cancel edit
-                </button>
-              ) : null}
-            </div>
+          <PageSection
+            title={editingTenantId ? 'Update tenant experience' : 'Create tenant workspace'}
+            description="Core platform access stays active by default. Contracted products and branding remain controlled here."
+            actions={editingTenantId ? (
+              <button
+                type="button"
+                onClick={resetForm}
+                className="ui-secondary-button"
+              >
+                Cancel edit
+              </button>
+            ) : undefined}
+          >
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <div className="grid gap-5 xl:grid-cols-[minmax(0,1.18fr)_minmax(0,0.82fr)]">
+                <div className="space-y-5">
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <label className="space-y-2">
+                      <span className={sharedInputLabelClass}>Tenant name</span>
+                      <input
+                        value={form.name}
+                        onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))}
+                        className={sharedInputClass}
+                        placeholder="PhaifferTech Clinic Network"
+                        required
+                      />
+                    </label>
 
-            <form onSubmit={handleSubmit} className="grid gap-4 lg:grid-cols-2">
-              <label className="space-y-2">
-                <span className={sharedInputLabelClass}>Tenant name</span>
-                <input
-                  value={form.name}
-                  onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))}
-                  className={sharedInputClass}
-                  placeholder="PhaifferTech Clinic Network"
-                  required
-                />
-              </label>
+                    <label className="space-y-2">
+                      <span className={sharedInputLabelClass}>Tenant code</span>
+                      <input
+                        value={form.code}
+                        onChange={(event) => setForm((current) => ({ ...current, code: event.target.value }))}
+                        className={sharedInputClass}
+                        placeholder="tenant-code"
+                        required
+                      />
+                    </label>
 
-              <label className="space-y-2">
-                <span className={sharedInputLabelClass}>Tenant code</span>
-                <input
-                  value={form.code}
-                  onChange={(event) => setForm((current) => ({ ...current, code: event.target.value }))}
-                  className={sharedInputClass}
-                  placeholder="tenant-code"
-                  required
-                />
-              </label>
-
-              <label className="space-y-2 lg:col-span-2">
-                <span className={sharedInputLabelClass}>Plan</span>
-                <select
-                  value={form.planCode ?? 'BASIC'}
-                  onChange={(event) => setForm((current) => ({ ...current, planCode: event.target.value }))}
-                  className={sharedInputClass}
-                >
-                  {PLAN_CODES.map((code) => (
-                    <option key={code} value={code}>{code}</option>
-                  ))}
-                </select>
-                <div className="ui-surface-muted space-y-2 rounded-2xl px-4 py-3 text-sm">
-                  <p className="font-medium text-[color:var(--app-shell-heading)]">
-                    Plan defines default modules and features.
-                  </p>
-                  <div className="flex flex-wrap gap-2">
-                    {selectedPlanDetails.defaultModules.map((moduleCode) => (
-                      <span
-                        key={`plan-module-${moduleCode}`}
-                        className="inline-flex items-center rounded-full border border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-panel)] px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-[color:var(--app-shell-text)]"
-                      >
-                        {moduleCode}
-                      </span>
-                    ))}
+                    <label className="space-y-2 md:col-span-2">
+                      <span className={sharedInputLabelClass}>Logo URL</span>
+                      <input
+                        value={form.logoUrl ?? ''}
+                        onChange={(event) => setForm((current) => ({ ...current, logoUrl: event.target.value }))}
+                        className={sharedInputClass}
+                        placeholder="/branding/tenant-logo.png"
+                      />
+                    </label>
                   </div>
-                  <div className="flex flex-wrap gap-2">
-                    {selectedPlanDetails.defaultEntitlements.map((featureKey) => (
-                      <span
-                        key={`plan-entitlement-${featureKey}`}
-                        className="inline-flex items-center rounded-full border border-[color:var(--tenant-accent)] bg-[color:var(--tenant-accent-soft)] px-2.5 py-1 text-[11px] font-semibold text-[color:var(--app-shell-heading)]"
-                      >
-                        {featureKey}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              </label>
 
-              <div className="space-y-3 lg:col-span-2">
-                <div>
-                  <p className="text-sm font-medium text-[color:var(--app-shell-heading)]">Feature entitlements</p>
-                  <p className="mt-1 text-sm text-[color:var(--app-shell-muted)]">
-                    Plan and commercial capability grants stay separate from contracted modules and rollout flags.
-                  </p>
-                </div>
+                  <div className="ui-surface-muted space-y-4 p-4 lg:p-5">
+                    <div>
+                      <p className="text-sm font-medium text-[color:var(--app-shell-heading)]">Feature entitlements</p>
+                      <p className="mt-1 text-sm text-[color:var(--app-shell-muted)]">
+                        Plan and commercial capability grants stay separate from contracted modules and rollout flags.
+                      </p>
+                    </div>
 
-                <div className="flex flex-col gap-3 lg:flex-row">
-                  <input
-                    value={featureEntitlementDraft}
-                    onChange={(event) => setFeatureEntitlementDraft(event.target.value)}
-                    className={sharedInputClass}
-                    placeholder="beta.dashboard"
-                  />
-                  <button
-                    type="button"
-                    onClick={addFeatureEntitlement}
-                    className="ui-secondary-button"
-                  >
-                    Add entitlement
-                  </button>
-                </div>
-
-                <div className="flex flex-wrap gap-2">
-                  {(form.featureEntitlements ?? []).length > 0 ? (
-                    form.featureEntitlements?.map((featureKey) => (
+                    <div className="flex flex-col gap-3 lg:flex-row lg:items-end">
+                      <label className="flex-1 space-y-2">
+                        <span className={sharedInputLabelClass}>Entitlement key</span>
+                        <input
+                          value={featureEntitlementDraft}
+                          onChange={(event) => setFeatureEntitlementDraft(event.target.value)}
+                          className={sharedInputClass}
+                          placeholder="beta.dashboard"
+                        />
+                      </label>
                       <button
-                        key={featureKey}
                         type="button"
-                        onClick={() => removeFeatureEntitlement(featureKey)}
-                        className="inline-flex items-center gap-2 rounded-full border border-[color:var(--tenant-accent)] bg-[color:var(--tenant-accent-soft)] px-3 py-2 text-xs font-semibold text-[color:var(--app-shell-heading)]"
+                        onClick={addFeatureEntitlement}
+                        className="ui-secondary-button"
                       >
-                        <span>{featureKey}</span>
-                        <span className="text-[color:var(--app-shell-muted)]">Remove</span>
+                        Add entitlement
                       </button>
-                    ))
-                  ) : (
-                    <span className="text-sm text-[color:var(--app-shell-muted)]">
-                      No custom feature entitlements configured for this tenant.
-                    </span>
-                  )}
-                </div>
-              </div>
+                    </div>
 
-              <label className="space-y-2 lg:col-span-2">
-                <span className={sharedInputLabelClass}>Logo URL</span>
-                <input
-                  value={form.logoUrl ?? ''}
-                  onChange={(event) => setForm((current) => ({ ...current, logoUrl: event.target.value }))}
-                  className={sharedInputClass}
-                  placeholder="/branding/tenant-logo.png"
-                />
-              </label>
+                    <div className="flex flex-wrap gap-2">
+                      {(form.featureEntitlements ?? []).length > 0 ? (
+                        form.featureEntitlements?.map((featureKey) => (
+                          <button
+                            key={featureKey}
+                            type="button"
+                            onClick={() => removeFeatureEntitlement(featureKey)}
+                            className="inline-flex items-center gap-2 rounded-full border border-[color:var(--tenant-accent)] bg-[color:var(--tenant-accent-soft)] px-3 py-2 text-xs font-semibold text-[color:var(--app-shell-heading)]"
+                          >
+                            <span>{featureKey}</span>
+                            <span className="text-[color:var(--app-shell-muted)]">Remove</span>
+                          </button>
+                        ))
+                      ) : (
+                        <span className="text-sm text-[color:var(--app-shell-muted)]">
+                          No custom feature entitlements configured for this tenant.
+                        </span>
+                      )}
+                    </div>
+                  </div>
 
-              <label className="space-y-2">
-                <span className={sharedInputLabelClass}>Primary color</span>
-                <div className="flex items-center gap-3">
-                  <input
-                    type="color"
-                    value={form.primaryColor ?? '#0f172a'}
-                    onChange={(event) => setForm((current) => ({ ...current, primaryColor: event.target.value }))}
-                    className="h-12 w-16 rounded-xl border border-[color:var(--app-shell-border)] bg-transparent shadow-xs"
-                  />
-                  <input
-                    value={form.primaryColor ?? ''}
-                    onChange={(event) => setForm((current) => ({ ...current, primaryColor: event.target.value }))}
-                    className={sharedInputClass}
-                    placeholder="#0f172a"
-                  />
-                </div>
-              </label>
+                  <div className="ui-surface-muted space-y-4 p-4 lg:p-5">
+                    <div>
+                      <p className="text-sm font-medium text-[color:var(--app-shell-heading)]">Contracted modules</p>
+                      <p className="mt-1 text-sm text-[color:var(--app-shell-muted)]">
+                        CORE_PLATFORM remains active for every tenant. Modules included by the selected plan stay enabled, and additional products remain explicit overrides.
+                      </p>
+                    </div>
 
-              <label className="space-y-2">
-                <span className={sharedInputLabelClass}>Accent color</span>
-                <div className="flex items-center gap-3">
-                  <input
-                    type="color"
-                    value={form.accentColor ?? '#2563eb'}
-                    onChange={(event) => setForm((current) => ({ ...current, accentColor: event.target.value }))}
-                    className="h-12 w-16 rounded-xl border border-[color:var(--app-shell-border)] bg-transparent shadow-xs"
-                  />
-                  <input
-                    value={form.accentColor ?? ''}
-                    onChange={(event) => setForm((current) => ({ ...current, accentColor: event.target.value }))}
-                    className={sharedInputClass}
-                    placeholder="#2563eb"
-                  />
-                </div>
-              </label>
+                    <div className="flex flex-wrap gap-3">
+                      <span className="inline-flex items-center rounded-full border border-[color:var(--tenant-accent)] bg-[color:var(--tenant-accent-soft)] px-3 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--app-shell-heading)]">
+                        CORE_PLATFORM
+                      </span>
 
-              <label className="space-y-2">
-                <span className={sharedInputLabelClass}>Default theme</span>
-                <select
-                  value={form.defaultThemeMode}
-                  onChange={(event) =>
-                    setForm((current) => ({
-                      ...current,
-                      defaultThemeMode: event.target.value as TenantThemeMode
-                    }))}
-                  className={sharedInputClass}
-                >
-                  <option value="SYSTEM">System</option>
-                  <option value="LIGHT">Light</option>
-                  <option value="DARK">Dark</option>
-                </select>
-              </label>
-
-              <label className="ui-surface-muted flex items-center gap-3 px-4 py-3 text-sm text-[color:var(--app-shell-text)]">
-                <input
-                  type="checkbox"
-                  checked={form.allowUserThemeOverride}
-                  onChange={(event) =>
-                    setForm((current) => ({
-                      ...current,
-                      allowUserThemeOverride: event.target.checked
-                    }))}
-                  className="h-4 w-4 rounded border-[color:var(--app-shell-border)]"
-                />
-                Allow user theme override
-              </label>
-
-              <div className="space-y-3 lg:col-span-2">
-                <div>
-                  <p className="text-sm font-medium text-[color:var(--app-shell-heading)]">Contracted modules</p>
-                  <p className="mt-1 text-sm text-[color:var(--app-shell-muted)]">
-                    CORE_PLATFORM remains active for every tenant. Modules included by the selected plan stay enabled, and additional products remain explicit overrides.
-                  </p>
+                      {modulesLoading ? (
+                        <span className="ui-notice-neutral">Loading module catalog...</span>
+                      ) : (
+                        moduleOptions.map((moduleItem) => {
+                          const includedByPlan = selectedPlanDetails.defaultModules.includes(moduleItem.code);
+                          const checked = effectiveSelectedModules.includes(moduleItem.code);
+                          return (
+                            <label
+                              key={moduleItem.code}
+                              className={[
+                                'inline-flex cursor-pointer items-center gap-2 rounded-full border px-3 py-2 text-xs font-semibold uppercase tracking-[0.16em] transition',
+                                checked
+                                  ? 'border-[color:var(--tenant-accent)] bg-[color:var(--tenant-accent-soft)] text-[color:var(--app-shell-heading)]'
+                                  : 'border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-panel-muted)] text-[color:var(--app-shell-text)]'
+                              ].join(' ')}
+                            >
+                              <input
+                                type="checkbox"
+                                checked={checked}
+                                disabled={includedByPlan}
+                                onChange={() => toggleModule(moduleItem.code)}
+                                className="h-4 w-4 rounded border-[color:var(--app-shell-border)]"
+                              />
+                              {moduleItem.code}
+                              {includedByPlan ? <span className="text-[10px] text-[color:var(--app-shell-muted)]">Included by plan</span> : null}
+                            </label>
+                          );
+                        })
+                      )}
+                    </div>
+                  </div>
                 </div>
 
-                <div className="flex flex-wrap gap-3">
-                  <span className="inline-flex items-center rounded-full border border-[color:var(--tenant-accent)] bg-[color:var(--tenant-accent-soft)] px-3 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--app-shell-heading)]">
-                    CORE_PLATFORM
-                  </span>
+                <div className="space-y-5">
+                  <div className="ui-surface-muted space-y-4 p-4 lg:p-5">
+                    <label className="space-y-2">
+                      <span className={sharedInputLabelClass}>Plan</span>
+                      <select
+                        value={form.planCode ?? 'BASIC'}
+                        onChange={(event) => setForm((current) => ({ ...current, planCode: event.target.value }))}
+                        className={sharedInputClass}
+                      >
+                        {PLAN_CODES.map((code) => (
+                          <option key={code} value={code}>{code}</option>
+                        ))}
+                      </select>
+                    </label>
 
-                  {modulesLoading ? (
-                    <span className="ui-notice-neutral">Loading module catalog...</span>
-                  ) : (
-                    moduleOptions.map((moduleItem) => {
-                      const includedByPlan = selectedPlanDetails.defaultModules.includes(moduleItem.code);
-                      const checked = effectiveSelectedModules.includes(moduleItem.code);
-                      return (
-                        <label
-                          key={moduleItem.code}
-                          className={[
-                            'inline-flex cursor-pointer items-center gap-2 rounded-full border px-3 py-2 text-xs font-semibold uppercase tracking-[0.16em] transition',
-                            checked
-                              ? 'border-[color:var(--tenant-accent)] bg-[color:var(--tenant-accent-soft)] text-[color:var(--app-shell-heading)]'
-                              : 'border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-panel-muted)] text-[color:var(--app-shell-text)]'
-                          ].join(' ')}
-                        >
-                          <input
-                            type="checkbox"
-                            checked={checked}
-                            disabled={includedByPlan}
-                            onChange={() => toggleModule(moduleItem.code)}
-                            className="h-4 w-4 rounded border-[color:var(--app-shell-border)]"
-                          />
-                          {moduleItem.code}
-                          {includedByPlan ? <span className="text-[10px] text-[color:var(--app-shell-muted)]">Included by plan</span> : null}
-                        </label>
-                      );
-                    })
-                  )}
+                    <div className="ui-surface-panel space-y-2 px-4 py-4 text-sm">
+                      <p className="font-medium text-[color:var(--app-shell-heading)]">
+                        Plan defines default modules and features.
+                      </p>
+                      <div className="flex flex-wrap gap-2">
+                        {selectedPlanDetails.defaultModules.map((moduleCode) => (
+                          <span
+                            key={`plan-module-${moduleCode}`}
+                            className="inline-flex items-center rounded-full border border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-panel)] px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-[color:var(--app-shell-text)]"
+                          >
+                            {moduleCode}
+                          </span>
+                        ))}
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        {selectedPlanDetails.defaultEntitlements.map((featureKey) => (
+                          <span
+                            key={`plan-entitlement-${featureKey}`}
+                            className="inline-flex items-center rounded-full border border-[color:var(--tenant-accent)] bg-[color:var(--tenant-accent-soft)] px-2.5 py-1 text-[11px] font-semibold text-[color:var(--app-shell-heading)]"
+                          >
+                            {featureKey}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="ui-surface-muted space-y-4 p-4 lg:p-5">
+                    <div>
+                      <p className="text-sm font-medium text-[color:var(--app-shell-heading)]">Branding defaults</p>
+                      <p className="mt-1 text-sm text-[color:var(--app-shell-muted)]">
+                        Keep branding controlled so tenant identity stays visible without overriding the shared platform structure.
+                      </p>
+                    </div>
+
+                    <label className="space-y-2">
+                      <span className={sharedInputLabelClass}>Primary color</span>
+                      <div className="flex items-center gap-3">
+                        <input
+                          type="color"
+                          value={form.primaryColor ?? '#0f172a'}
+                          onChange={(event) => setForm((current) => ({ ...current, primaryColor: event.target.value }))}
+                          className="h-12 w-16 rounded-xl border border-[color:var(--app-shell-border)] bg-transparent shadow-xs"
+                        />
+                        <input
+                          value={form.primaryColor ?? ''}
+                          onChange={(event) => setForm((current) => ({ ...current, primaryColor: event.target.value }))}
+                          className={sharedInputClass}
+                          placeholder="#0f172a"
+                        />
+                      </div>
+                    </label>
+
+                    <label className="space-y-2">
+                      <span className={sharedInputLabelClass}>Accent color</span>
+                      <div className="flex items-center gap-3">
+                        <input
+                          type="color"
+                          value={form.accentColor ?? '#2563eb'}
+                          onChange={(event) => setForm((current) => ({ ...current, accentColor: event.target.value }))}
+                          className="h-12 w-16 rounded-xl border border-[color:var(--app-shell-border)] bg-transparent shadow-xs"
+                        />
+                        <input
+                          value={form.accentColor ?? ''}
+                          onChange={(event) => setForm((current) => ({ ...current, accentColor: event.target.value }))}
+                          className={sharedInputClass}
+                          placeholder="#2563eb"
+                        />
+                      </div>
+                    </label>
+
+                    <label className="space-y-2">
+                      <span className={sharedInputLabelClass}>Default theme</span>
+                      <select
+                        value={form.defaultThemeMode}
+                        onChange={(event) =>
+                          setForm((current) => ({
+                            ...current,
+                            defaultThemeMode: event.target.value as TenantThemeMode
+                          }))}
+                        className={sharedInputClass}
+                      >
+                        <option value="SYSTEM">System</option>
+                        <option value="LIGHT">Light</option>
+                        <option value="DARK">Dark</option>
+                      </select>
+                    </label>
+
+                    <label className="ui-surface-panel flex items-center gap-3 px-4 py-3 text-sm text-[color:var(--app-shell-text)]">
+                      <input
+                        type="checkbox"
+                        checked={form.allowUserThemeOverride}
+                        onChange={(event) =>
+                          setForm((current) => ({
+                            ...current,
+                            allowUserThemeOverride: event.target.checked
+                          }))}
+                        className="h-4 w-4 rounded border-[color:var(--app-shell-border)]"
+                      />
+                      Allow user theme override
+                    </label>
+                  </div>
                 </div>
               </div>
 
               {editingTenantId ? (
-                <div className="space-y-4 lg:col-span-2">
-                  <div className="grid gap-4 xl:grid-cols-2">
-                    <section className="ui-surface-muted space-y-3 p-4">
-                      <div>
-                        <p className="text-sm font-medium text-[color:var(--app-shell-heading)]">Feature flags</p>
-                        <p className="mt-1 text-sm text-[color:var(--app-shell-muted)]">
-                          Rollout controls sit on top of contracts. A disabled flag can still block a contracted module.
-                        </p>
-                      </div>
+                <div className="grid gap-4 xl:grid-cols-2">
+                  <section className="ui-surface-muted space-y-3 p-4 lg:p-5">
+                    <div>
+                      <p className="text-sm font-medium text-[color:var(--app-shell-heading)]">Feature flags</p>
+                      <p className="mt-1 text-sm text-[color:var(--app-shell-muted)]">
+                        Rollout controls sit on top of contracts. A disabled flag can still block a contracted module.
+                      </p>
+                    </div>
 
-                      {featureFlagsError ? (
-                        <div className="ui-notice-warning">{featureFlagsError}</div>
-                      ) : null}
+                    {featureFlagsError ? (
+                      <div className="ui-notice-warning">{featureFlagsError}</div>
+                    ) : null}
 
-                      {featureFlagsLoading ? (
-                        <p className="text-sm text-[color:var(--app-shell-muted)]">Loading feature flags...</p>
-                      ) : tenantFeatureFlags.length > 0 ? (
-                        <div className="space-y-3">
-                          {tenantFeatureFlags.map((featureFlag) => {
-                            const isSaving = savingFeatureFlagKey === featureFlag.key;
-                            return (
-                              <div
-                                key={featureFlag.key}
-                                className="flex flex-col gap-3 rounded-xl border border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-panel)] p-3"
-                              >
-                                <div className="flex items-center justify-between gap-3">
-                                  <div>
-                                    <p className="text-sm font-semibold text-[color:var(--app-shell-heading)]">
-                                      {featureFlag.key}
-                                    </p>
-                                    <p className="text-xs text-[color:var(--app-shell-muted)]">
-                                      {featureFlag.scope === 'TENANT' ? 'Tenant override active' : 'Using global rollout'}
-                                    </p>
-                                  </div>
-                                  <StatusBadge status={featureFlag.enabled ? 'active' : 'warn'} />
+                    {featureFlagsLoading ? (
+                      <p className="text-sm text-[color:var(--app-shell-muted)]">Loading feature flags...</p>
+                    ) : tenantFeatureFlags.length > 0 ? (
+                      <div className="space-y-3">
+                        {tenantFeatureFlags.map((featureFlag) => {
+                          const isSaving = savingFeatureFlagKey === featureFlag.key;
+                          return (
+                            <div
+                              key={featureFlag.key}
+                              className="flex flex-col gap-3 rounded-2xl border border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-panel)] p-4"
+                            >
+                              <div className="flex items-center justify-between gap-3">
+                                <div>
+                                  <p className="text-sm font-semibold text-[color:var(--app-shell-heading)]">
+                                    {featureFlag.key}
+                                  </p>
+                                  <p className="text-xs text-[color:var(--app-shell-muted)]">
+                                    {featureFlag.scope === 'TENANT' ? 'Tenant override active' : 'Using global rollout'}
+                                  </p>
                                 </div>
-
-                                <div className="flex flex-wrap items-center gap-3">
-                                  <label className="ui-surface-panel inline-flex items-center gap-2 rounded-full px-3 py-2 text-sm text-[color:var(--app-shell-text)]">
-                                    <input
-                                      type="checkbox"
-                                      checked={featureFlag.enabled}
-                                      disabled={isSaving}
-                                      onChange={(event) => void handleFeatureFlagToggle(featureFlag.key, event.target.checked)}
-                                      className="h-4 w-4 rounded border-[color:var(--app-shell-border)]"
-                                    />
-                                    Enable for this tenant
-                                  </label>
-                                  {featureFlag.scope === 'TENANT' ? (
-                                    <button
-                                      type="button"
-                                      disabled={isSaving}
-                                      onClick={() => void handleFeatureFlagReset(featureFlag.key)}
-                                      className="ui-secondary-button"
-                                    >
-                                      Use global default
-                                    </button>
-                                  ) : null}
-                                </div>
+                                <StatusBadge status={featureFlag.enabled ? 'active' : 'warn'} />
                               </div>
-                            );
-                          })}
-                        </div>
-                      ) : (
-                        <p className="text-sm text-[color:var(--app-shell-muted)]">
-                          No feature flags available for tenant override.
-                        </p>
-                      )}
-                    </section>
 
-                    <section className="ui-surface-muted space-y-3 p-4">
-                      <div>
-                        <p className="text-sm font-medium text-[color:var(--app-shell-heading)]">Usage telemetry</p>
-                        <p className="mt-1 text-sm text-[color:var(--app-shell-muted)]">
-                          Read-only daily aggregates from successful logins, API requests, and auditable entity creation.
-                        </p>
+                              <div className="flex flex-wrap items-center gap-3">
+                                <label className="ui-surface-panel inline-flex items-center gap-2 rounded-full px-3 py-2 text-sm text-[color:var(--app-shell-text)]">
+                                  <input
+                                    type="checkbox"
+                                    checked={featureFlag.enabled}
+                                    disabled={isSaving}
+                                    onChange={(event) => void handleFeatureFlagToggle(featureFlag.key, event.target.checked)}
+                                    className="h-4 w-4 rounded border-[color:var(--app-shell-border)]"
+                                  />
+                                  Enable for this tenant
+                                </label>
+                                {featureFlag.scope === 'TENANT' ? (
+                                  <button
+                                    type="button"
+                                    disabled={isSaving}
+                                    onClick={() => void handleFeatureFlagReset(featureFlag.key)}
+                                    className="ui-secondary-button"
+                                  >
+                                    Use global default
+                                  </button>
+                                ) : null}
+                              </div>
+                            </div>
+                          );
+                        })}
                       </div>
+                    ) : (
+                      <p className="text-sm text-[color:var(--app-shell-muted)]">
+                        No feature flags available for tenant override.
+                      </p>
+                    )}
+                  </section>
 
-                      {usageMetricsError ? (
-                        <div className="ui-notice-warning">{usageMetricsError}</div>
-                      ) : null}
+                  <section className="ui-surface-muted space-y-3 p-4 lg:p-5">
+                    <div>
+                      <p className="text-sm font-medium text-[color:var(--app-shell-heading)]">Usage telemetry</p>
+                      <p className="mt-1 text-sm text-[color:var(--app-shell-muted)]">
+                        Read-only daily aggregates from successful logins, API requests, and auditable entity creation.
+                      </p>
+                    </div>
 
-                      {usageMetricsLoading ? (
-                        <p className="text-sm text-[color:var(--app-shell-muted)]">Loading recent usage metrics...</p>
-                      ) : usageMetrics.length > 0 ? (
-                        <div className="overflow-x-auto">
-                          <table className="min-w-full text-left text-sm">
-                            <thead>
-                              <tr className="border-b border-[color:var(--app-shell-border)] text-xs uppercase tracking-[0.16em] text-[color:var(--app-shell-muted)]">
-                                <th className="px-3 py-2 font-semibold">Source</th>
-                                <th className="px-3 py-2 font-semibold">Quantity</th>
-                                <th className="px-3 py-2 font-semibold">Last active day</th>
-                                <th className="px-3 py-2 font-semibold">Last updated</th>
+                    {usageMetricsError ? (
+                      <div className="ui-notice-warning">{usageMetricsError}</div>
+                    ) : null}
+
+                    {usageMetricsLoading ? (
+                      <p className="text-sm text-[color:var(--app-shell-muted)]">Loading recent usage metrics...</p>
+                    ) : usageMetrics.length > 0 ? (
+                      <div className="overflow-x-auto rounded-[var(--radius-xl)] border border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-panel)]">
+                        <table className="min-w-full text-left text-sm">
+                          <thead>
+                            <tr className="border-b border-[color:var(--app-shell-border)] text-xs uppercase tracking-[0.16em] text-[color:var(--app-shell-muted)]">
+                              <th className="px-4 py-3 font-semibold">Source</th>
+                              <th className="px-4 py-3 font-semibold">Quantity</th>
+                              <th className="px-4 py-3 font-semibold">Last active day</th>
+                              <th className="px-4 py-3 font-semibold">Last updated</th>
+                            </tr>
+                          </thead>
+                          {usageMetricGroups.map((group) => (
+                            <tbody key={group.metricKey}>
+                              <tr className="border-b border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-panel-muted)]">
+                                <th
+                                  colSpan={4}
+                                  className="px-4 py-3 text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--app-shell-heading)]"
+                                >
+                                  {formatTokenLabel(group.metricKey)}
+                                </th>
                               </tr>
-                            </thead>
-                            {usageMetricGroups.map((group) => (
-                              <tbody key={group.metricKey}>
-                                <tr className="border-b border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-panel)]">
-                                  <th
-                                    colSpan={4}
-                                    className="px-3 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--app-shell-heading)]"
-                                  >
-                                    {formatTokenLabel(group.metricKey)}
-                                  </th>
+                              {group.items.map((metric) => (
+                                <tr
+                                  key={`${metric.metricKey}-${metric.source}-${metric.metricDate}`}
+                                  className="border-b border-[color:var(--app-shell-border)] last:border-b-0"
+                                >
+                                  <td className="px-4 py-3 text-[color:var(--app-shell-text)]">
+                                    {formatTokenLabel(metric.source)}
+                                  </td>
+                                  <td className="px-4 py-3 text-[color:var(--app-shell-text)]">
+                                    {metric.quantity} {metric.unit}
+                                  </td>
+                                  <td className="px-4 py-3 text-[color:var(--app-shell-text)]">
+                                    {metric.metricDate}
+                                  </td>
+                                  <td className="px-4 py-3 text-[color:var(--app-shell-text)]">
+                                    {new Date(metric.lastRecordedAt).toLocaleString()}
+                                  </td>
                                 </tr>
-                                {group.items.map((metric) => (
-                                  <tr
-                                    key={`${metric.metricKey}-${metric.source}-${metric.metricDate}`}
-                                    className="border-b border-[color:var(--app-shell-border)] last:border-b-0"
-                                  >
-                                    <td className="px-3 py-2 text-[color:var(--app-shell-text)]">
-                                      {formatTokenLabel(metric.source)}
-                                    </td>
-                                    <td className="px-3 py-2 text-[color:var(--app-shell-text)]">
-                                      {metric.quantity} {metric.unit}
-                                    </td>
-                                    <td className="px-3 py-2 text-[color:var(--app-shell-text)]">
-                                      {metric.metricDate}
-                                    </td>
-                                    <td className="px-3 py-2 text-[color:var(--app-shell-text)]">
-                                      {new Date(metric.lastRecordedAt).toLocaleString()}
-                                    </td>
-                                  </tr>
-                                ))}
-                              </tbody>
-                            ))}
-                          </table>
-                        </div>
-                      ) : (
-                        <p className="text-sm text-[color:var(--app-shell-muted)]">
-                          No recent usage telemetry has been recorded for this tenant.
-                        </p>
-                      )}
-                    </section>
-
-                    <section className="ui-surface-muted space-y-4 p-4 xl:col-span-2">
-                      <div>
-                        <p className="text-sm font-medium text-[color:var(--app-shell-heading)]">Support impersonation</p>
-                        <p className="mt-1 text-sm text-[color:var(--app-shell-muted)]">
-                          Start a time-boxed support session inside this tenant while keeping your original platform operator identity fully auditable.
-                        </p>
+                              ))}
+                            </tbody>
+                          ))}
+                        </table>
                       </div>
+                    ) : (
+                      <p className="text-sm text-[color:var(--app-shell-muted)]">
+                        No recent usage telemetry has been recorded for this tenant.
+                      </p>
+                    )}
+                  </section>
 
-                      {session?.user.impersonation ? (
-                        <div className="ui-notice-warning">
-                          Exit the current support impersonation session before starting another one.
-                        </div>
-                      ) : editingTenant?.platformOwner ? (
-                        <div className="ui-notice-warning">
-                          Support impersonation is only available for customer tenants.
-                        </div>
-                      ) : (
-                        <>
-                          <label className="space-y-2">
-                            <span className={sharedInputLabelClass}>Reason</span>
-                            <textarea
-                              value={impersonationReason}
-                              onChange={(event) => setImpersonationReason(event.target.value)}
-                              className={`${sharedInputClass} min-h-28`}
-                              placeholder="Describe why support access is needed for this tenant."
-                            />
-                          </label>
+                  <section className="ui-surface-muted space-y-4 p-4 lg:p-5 xl:col-span-2">
+                    <div>
+                      <p className="text-sm font-medium text-[color:var(--app-shell-heading)]">Support impersonation</p>
+                      <p className="mt-1 text-sm text-[color:var(--app-shell-muted)]">
+                        Start a time-boxed support session inside this tenant while keeping your original platform operator identity fully auditable.
+                      </p>
+                    </div>
+
+                    {session?.user.impersonation ? (
+                      <div className="ui-notice-warning">
+                        Exit the current support impersonation session before starting another one.
+                      </div>
+                    ) : editingTenant?.platformOwner ? (
+                      <div className="ui-notice-warning">
+                        Support impersonation is only available for customer tenants.
+                      </div>
+                    ) : (
+                      <>
+                        <div className="grid gap-4 xl:grid-cols-[minmax(0,1.25fr)_minmax(0,0.75fr)]">
+                          <FormTextarea
+                            label="Reason"
+                            value={impersonationReason}
+                            onChange={setImpersonationReason}
+                            placeholder="Describe why support access is needed for this tenant."
+                          />
 
                           <label className="space-y-2">
                             <span className={sharedInputLabelClass}>Access duration</span>
@@ -998,31 +1017,31 @@ export default function TenantsPage() {
                               <option value={60}>60 minutes</option>
                             </select>
                           </label>
+                        </div>
 
-                          <div className="ui-notice-warning">
-                            The resulting session stays tenant-scoped, keeps your real operator identity on audit records, and expires automatically.
-                          </div>
+                        <div className="ui-notice-warning">
+                          The resulting session stays tenant-scoped, keeps your real operator identity on audit records, and expires automatically.
+                        </div>
 
-                          {impersonationError ? (
-                            <div className="ui-notice-error">{impersonationError}</div>
-                          ) : null}
+                        {impersonationError ? (
+                          <div className="ui-notice-error">{impersonationError}</div>
+                        ) : null}
 
-                          <button
-                            type="button"
-                            onClick={() => void handleStartImpersonation()}
-                            disabled={impersonationSubmitting}
-                            className="ui-primary-button"
-                          >
-                            {impersonationSubmitting ? 'Starting support access...' : 'Start support impersonation'}
-                          </button>
-                        </>
-                      )}
-                    </section>
-                  </div>
+                        <button
+                          type="button"
+                          onClick={() => void handleStartImpersonation()}
+                          disabled={impersonationSubmitting}
+                          className="ui-primary-button"
+                        >
+                          {impersonationSubmitting ? 'Starting support access...' : 'Start support impersonation'}
+                        </button>
+                      </>
+                    )}
+                  </section>
                 </div>
               ) : null}
 
-              <div className="flex items-center gap-3 lg:col-span-2">
+              <div className="flex flex-wrap items-center gap-3 border-t border-border pt-5">
                 <button
                   type="submit"
                   disabled={submitting}
@@ -1032,7 +1051,7 @@ export default function TenantsPage() {
                 </button>
               </div>
             </form>
-          </section>
+          </PageSection>
 
           <DataTable
             columns={columns}
