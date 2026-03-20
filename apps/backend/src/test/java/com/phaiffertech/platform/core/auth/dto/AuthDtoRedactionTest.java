@@ -15,6 +15,12 @@ class AuthDtoRedactionTest {
     void shouldRedactSensitiveFieldsInDtoToStringRepresentations() {
         LoginRequest loginRequest = new LoginRequest("default", "admin@local.test", "Admin@123");
         ChangePasswordRequest changePasswordRequest = new ChangePasswordRequest("Admin@123", "NewAdmin@123", "NewAdmin@123");
+        PasswordResetRequest passwordResetRequest = new PasswordResetRequest("default", "admin@local.test");
+        PasswordResetConfirmRequest passwordResetConfirmRequest = new PasswordResetConfirmRequest(
+                "raw-reset-token",
+                "NewAdmin@123",
+                "NewAdmin@123"
+        );
         RefreshRequest refreshRequest = new RefreshRequest("refresh-token");
         LogoutRequest logoutRequest = new LogoutRequest("refresh-token");
         AuthTokenResponse authTokenResponse = new AuthTokenResponse(
@@ -44,6 +50,8 @@ class AuthDtoRedactionTest {
 
         assertTrue(loginRequest.toString().contains("[REDACTED]"));
         assertTrue(changePasswordRequest.toString().contains("[REDACTED]"));
+        assertTrue(passwordResetRequest.toString().contains("[REDACTED]"));
+        assertTrue(passwordResetConfirmRequest.toString().contains("[REDACTED]"));
         assertTrue(refreshRequest.toString().contains("[REDACTED]"));
         assertTrue(logoutRequest.toString().contains("[REDACTED]"));
         assertTrue(authTokenResponse.toString().contains("[REDACTED]"));
@@ -51,6 +59,9 @@ class AuthDtoRedactionTest {
         assertFalse(loginRequest.toString().contains("Admin@123"));
         assertFalse(loginRequest.toString().contains("admin@local.test"));
         assertFalse(changePasswordRequest.toString().contains("NewAdmin@123"));
+        assertFalse(passwordResetRequest.toString().contains("admin@local.test"));
+        assertFalse(passwordResetConfirmRequest.toString().contains("raw-reset-token"));
+        assertFalse(passwordResetConfirmRequest.toString().contains("NewAdmin@123"));
         assertFalse(refreshRequest.toString().contains("refresh-token"));
         assertFalse(logoutRequest.toString().contains("refresh-token"));
         assertFalse(authTokenResponse.toString().contains("access-token"));

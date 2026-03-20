@@ -45,7 +45,7 @@ public class AuthService {
     private final JwtService jwtService;
     private final JwtProperties jwtProperties;
     private final RefreshTokenRepository refreshTokenRepository;
-    private final RefreshTokenHashService refreshTokenHashService;
+    private final TokenHashService tokenHashService;
     private final CurrentUserService currentUserService;
     private final AuditLogService auditLogService;
     private final PlatformMetricsService platformMetricsService;
@@ -63,7 +63,7 @@ public class AuthService {
             JwtService jwtService,
             JwtProperties jwtProperties,
             RefreshTokenRepository refreshTokenRepository,
-            RefreshTokenHashService refreshTokenHashService,
+            TokenHashService tokenHashService,
             CurrentUserService currentUserService,
             AuditLogService auditLogService,
             PlatformMetricsService platformMetricsService,
@@ -80,7 +80,7 @@ public class AuthService {
         this.jwtService = jwtService;
         this.jwtProperties = jwtProperties;
         this.refreshTokenRepository = refreshTokenRepository;
-        this.refreshTokenHashService = refreshTokenHashService;
+        this.tokenHashService = tokenHashService;
         this.currentUserService = currentUserService;
         this.auditLogService = auditLogService;
         this.platformMetricsService = platformMetricsService;
@@ -173,7 +173,7 @@ public class AuthService {
 
     @Transactional
     public AuthSessionResult refresh(String refreshToken) {
-        String tokenHash = refreshTokenHashService.hash(refreshToken);
+        String tokenHash = tokenHashService.hash(refreshToken);
 
         RefreshToken storedToken = refreshTokenRepository.findByTokenHashAndRevokedAtIsNull(tokenHash)
                 .orElseThrow(() -> new ForbiddenOperationException("Refresh token is invalid."));
@@ -223,7 +223,7 @@ public class AuthService {
 
     @Transactional
     public void logout(String refreshToken) {
-        String tokenHash = refreshTokenHashService.hash(refreshToken);
+        String tokenHash = tokenHashService.hash(refreshToken);
 
         RefreshToken storedToken = refreshTokenRepository.findByTokenHashAndRevokedAtIsNull(tokenHash)
                 .orElseThrow(() -> new ForbiddenOperationException("Refresh token is invalid."));
@@ -305,7 +305,7 @@ public class AuthService {
         RefreshToken refreshTokenEntity = new RefreshToken();
         refreshTokenEntity.setTenantId(principal.tenantId());
         refreshTokenEntity.setUserId(principal.userId());
-        refreshTokenEntity.setTokenHash(refreshTokenHashService.hash(refreshToken));
+        refreshTokenEntity.setTokenHash(tokenHashService.hash(refreshToken));
         refreshTokenEntity.setExpiresAt(jwtService.getRefreshExpiration());
         refreshTokenRepository.save(refreshTokenEntity);
 
@@ -329,7 +329,8 @@ public class AuthService {
 
     // Refresh-token revocation is the current server-side credential invalidation control point.
     // Access tokens stay valid until expiry because they are stateless in the existing architecture.
-    private int revokeAllActiveRefreshTokensForUser(UUID userId) {
+    @Transactional
+    public int revokeAllActiveRefreshTokensForUser(UUID userId) {
         Instant revokedAt = Instant.now();
         var activeTokens = refreshTokenRepository.findAllByUserIdAndRevokedAtIsNull(userId);
         if (activeTokens.isEmpty()) {

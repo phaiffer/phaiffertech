@@ -18,6 +18,18 @@ spring:
     baseline-on-migrate: true
   jackson:
     default-property-inclusion: non_null
+  mail:
+    host: ${MAIL_HOST:localhost}
+    port: ${MAIL_PORT:1025}
+    username: ${MAIL_USERNAME:}
+    password: ${MAIL_PASSWORD:}
+    properties:
+      mail:
+        smtp:
+          auth: ${MAIL_SMTP_AUTH:false}
+          starttls:
+            enable: ${MAIL_SMTP_STARTTLS_ENABLE:false}
+            required: ${MAIL_SMTP_STARTTLS_REQUIRED:false}
 
 server:
   port: ${PORT:${SERVER_PORT:8080}}
@@ -90,6 +102,9 @@ app:
       enabled: ${APP_SECURITY_BRUTEFORCE_ENABLED:true}
       max-attempts: ${APP_SECURITY_BRUTEFORCE_MAX_ATTEMPTS:5}
       lock-minutes: ${APP_SECURITY_BRUTEFORCE_LOCK_MINUTES:15}
+    password-reset:
+      token-expiry-minutes: ${APP_PASSWORD_RESET_EXPIRY_MINUTES:30}
+      reset-url-base: ${APP_PASSWORD_RESET_URL_BASE:http://localhost:3000/reset-password}
   rate-limit:
     enabled: ${APP_RATE_LIMIT_ENABLED:true}
     auth-per-minute: ${APP_RATE_LIMIT_AUTH_PER_MINUTE:10}
@@ -118,3 +133,7 @@ app:
       user-email: ${APP_BOOTSTRAP_MASTER_ADMIN_EMAIL:sysadmin@phaiffer.tech}
       user-password: ${APP_BOOTSTRAP_MASTER_ADMIN_PASSWORD:}
       full-name: ${APP_BOOTSTRAP_MASTER_ADMIN_FULL_NAME:System Administrator}
+  notification:
+    mail:
+      from-address: ${APP_NOTIFICATION_MAIL_FROM_ADDRESS:noreply@phaiffertech.local}
+      from-name: ${APP_NOTIFICATION_MAIL_FROM_NAME:PhaifferTech Platform}

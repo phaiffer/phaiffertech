@@ -4,7 +4,7 @@ const SESSION_KEY = 'platform.session';
 const IMPERSONATION_BACKUP_KEY = 'platform.impersonation.backup';
 const AUTH_NOTICE_KEY = 'platform.auth.notice';
 export const SESSION_CHANGE_EVENT = 'platform:session-changed';
-const AUTH_NOTICE_REASONS = ['signed-out', 'session-expired', 'tenant-mismatch', 'password-changed'] as const;
+const AUTH_NOTICE_REASONS = ['signed-out', 'session-expired', 'tenant-mismatch', 'password-changed', 'password-reset'] as const;
 
 export type AuthNoticeReason = (typeof AUTH_NOTICE_REASONS)[number];
 

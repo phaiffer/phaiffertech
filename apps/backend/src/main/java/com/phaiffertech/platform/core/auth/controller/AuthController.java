@@ -6,7 +6,10 @@ import com.phaiffertech.platform.core.auth.dto.AuthTokenResponse;
 import com.phaiffertech.platform.core.auth.dto.AuthenticatedUserResponse;
 import com.phaiffertech.platform.core.auth.dto.ChangePasswordRequest;
 import com.phaiffertech.platform.core.auth.dto.LoginRequest;
+import com.phaiffertech.platform.core.auth.dto.PasswordResetConfirmRequest;
+import com.phaiffertech.platform.core.auth.dto.PasswordResetRequest;
 import com.phaiffertech.platform.core.auth.dto.SupportImpersonationStartRequest;
+import com.phaiffertech.platform.core.auth.service.PasswordResetService;
 import com.phaiffertech.platform.shared.response.ApiResponse;
 import com.phaiffertech.platform.shared.security.JwtProperties;
 import com.phaiffertech.platform.shared.web.ClientIpResolver;
@@ -28,17 +31,20 @@ import org.springframework.web.bind.annotation.RestController;
 public class AuthController {
 
     private final AuthService authService;
+    private final PasswordResetService passwordResetService;
     private final SupportImpersonationService supportImpersonationService;
     private final LoginAttemptService loginAttemptService;
     private final JwtProperties jwtProperties;
 
     public AuthController(
             AuthService authService,
+            PasswordResetService passwordResetService,
             SupportImpersonationService supportImpersonationService,
             LoginAttemptService loginAttemptService,
             JwtProperties jwtProperties
     ) {
         this.authService = authService;
+        this.passwordResetService = passwordResetService;
         this.supportImpersonationService = supportImpersonationService;
         this.loginAttemptService = loginAttemptService;
         this.jwtProperties = jwtProperties;
@@ -115,6 +121,27 @@ public class AuthController {
     ) {
         applyNoStore(httpServletResponse);
         authService.changePassword(request);
+        clearRefreshTokenCookie(httpServletResponse);
+        return ApiResponse.success(null);
+    }
+
+    @PostMapping("/request-password-reset")
+    public ApiResponse<Void> requestPasswordReset(
+            @Valid @RequestBody PasswordResetRequest request,
+            HttpServletResponse httpServletResponse
+    ) {
+        applyNoStore(httpServletResponse);
+        passwordResetService.requestPasswordReset(request);
+        return ApiResponse.success(null);
+    }
+
+    @PostMapping("/confirm-password-reset")
+    public ApiResponse<Void> confirmPasswordReset(
+            @Valid @RequestBody PasswordResetConfirmRequest request,
+            HttpServletResponse httpServletResponse
+    ) {
+        applyNoStore(httpServletResponse);
+        passwordResetService.confirmPasswordReset(request);
         clearRefreshTokenCookie(httpServletResponse);
         return ApiResponse.success(null);
     }

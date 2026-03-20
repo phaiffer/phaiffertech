@@ -7,6 +7,18 @@ spring:
       maximum-pool-size: ${SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE:5}
       minimum-idle: ${SPRING_DATASOURCE_HIKARI_MINIMUM_IDLE:0}
       connection-timeout: ${SPRING_DATASOURCE_HIKARI_CONNECTION_TIMEOUT_MS:10000}
+  mail:
+    host: ${MAIL_HOST}
+    port: ${MAIL_PORT:587}
+    username: ${MAIL_USERNAME:}
+    password: ${MAIL_PASSWORD:}
+    properties:
+      mail:
+        smtp:
+          auth: ${MAIL_SMTP_AUTH:true}
+          starttls:
+            enable: ${MAIL_SMTP_STARTTLS_ENABLE:true}
+            required: ${MAIL_SMTP_STARTTLS_REQUIRED:true}
 
 management:
   endpoint:
@@ -36,6 +48,9 @@ app:
     public-endpoints:
       docs-enabled: ${APP_SECURITY_PUBLIC_DOCS_ENABLED:false}
       observability-enabled: ${APP_SECURITY_PUBLIC_OBSERVABILITY_ENABLED:false}
+    password-reset:
+      token-expiry-minutes: ${APP_PASSWORD_RESET_EXPIRY_MINUTES:30}
+      reset-url-base: ${APP_PASSWORD_RESET_URL_BASE}
   demo:
     assisted:
       enabled: ${APP_DEMO_ASSISTED_ENABLED:false}
@@ -52,6 +67,10 @@ app:
       user-email: ${APP_BOOTSTRAP_MASTER_ADMIN_EMAIL:sysadmin@phaiffer.tech}
       user-password: ${APP_BOOTSTRAP_MASTER_ADMIN_PASSWORD:}
       full-name: ${APP_BOOTSTRAP_MASTER_ADMIN_FULL_NAME:System Administrator}
+  notification:
+    mail:
+      from-address: ${APP_NOTIFICATION_MAIL_FROM_ADDRESS}
+      from-name: ${APP_NOTIFICATION_MAIL_FROM_NAME:PhaifferTech Platform}
 
 logging:
   level:

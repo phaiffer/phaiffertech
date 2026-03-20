@@ -3,10 +3,30 @@ logging:
     org.springframework.security: INFO
     org.hibernate.SQL: DEBUG
 
+spring:
+  mail:
+    host: ${MAIL_HOST:localhost}
+    port: ${MAIL_PORT:1025}
+    properties:
+      mail:
+        smtp:
+          auth: false
+          starttls:
+            enable: false
+            required: false
+
 app:
+  security:
+    password-reset:
+      token-expiry-minutes: ${APP_PASSWORD_RESET_EXPIRY_MINUTES:30}
+      reset-url-base: ${APP_PASSWORD_RESET_URL_BASE:http://localhost:3000/reset-password}
   demo:
     commercial:
       enabled: ${APP_DEMO_COMMERCIAL_ENABLED:true}
       user-email: ${APP_DEMO_COMMERCIAL_USER_EMAIL:demo@phaiffertech.local}
       user-password: ${APP_DEMO_COMMERCIAL_USER_PASSWORD:Demo@123}
       user-full-name: ${APP_DEMO_COMMERCIAL_USER_FULL_NAME:PhaifferTech Demo Operator}
+  notification:
+    mail:
+      from-address: ${APP_NOTIFICATION_MAIL_FROM_ADDRESS:noreply@phaiffertech.local}
+      from-name: ${APP_NOTIFICATION_MAIL_FROM_NAME:PhaifferTech Platform}
