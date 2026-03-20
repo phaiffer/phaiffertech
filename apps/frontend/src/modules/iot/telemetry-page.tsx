@@ -2,33 +2,33 @@
 
 import { FormEvent, useCallback, useEffect, useMemo, useState } from 'react';
 import { PermissionGuard } from '@/shared/auth/PermissionGuard';
+import { DashboardContextCardGrid } from '@/shared/dashboard/dashboard-context-card-grid';
 import { ApiClientError } from '@/shared/lib/http';
 import { resolvePageItems, resolveTotalItems } from '@/shared/lib/pagination';
+import { DataTable, DataTableColumn } from '@/shared/ui/data-table';
 import { Pagination } from '@/shared/ui/pagination';
 import { iotService } from '@/shared/services/iot-service';
 import { PageResponse } from '@/shared/types/common';
 import { IotDevice, IotRegister, IotTelemetryRecord } from '@/shared/types/iot';
 import {
-    Chip,
-    DeviceIcon,
-    IotDataTable,
-    IotDataTableHead,
-    IotDateTimeField,
-    IotEmptyState,
-    IotHeroAside,
-    IotModulePage,
-    IotMiniTrend,
-    IotNotice,
-    IotPageHeader,
+  Chip,
+  DeviceIcon,
+  IotDateTimeField,
+  IotEmptyState,
+  IotHeroAside,
+  IotModulePage,
+  IotMiniTrend,
+  IotNotice,
+  IotPageHeader,
   IotPanel,
   IotPrimaryButton,
-    IotSecondaryButton,
-    IotSelectField,
-    IotStatusPill,
-    IotSupportCard,
-    IotTableStateRow,
-    IotTextField,
-    WaveIcon
+  IotSecondaryButton,
+  IotSelectField,
+  IotStatusPill,
+  IotSupportCard,
+  IotTextField,
+  IotTextareaField,
+  WaveIcon
 } from '@/modules/iot/iot-chrome';
 import {
   buildDemoDevicesFromReal,
@@ -426,6 +426,121 @@ export function IotTelemetryPage() {
   const recentRows = [...visibleRows]
     .sort((left, right) => new Date(right.recordedAt).getTime() - new Date(left.recordedAt).getTime())
     .slice(0, 5);
+  const contextCards = [
+    {
+      key: 'iot-telemetry-mode',
+      label: 'Stream mode',
+      value: useDemoMode ? 'Assistido' : 'Fluxo real',
+      description: useDemoMode
+        ? 'The telemetry stream remains demonstrable even while the integration feed is unavailable.'
+        : 'Incoming telemetry is tied to the real device and register inventory.',
+      tone: 'accent' as const
+    },
+    {
+      key: 'iot-telemetry-coverage',
+      label: 'Current coverage',
+      value: `${devicesInFlow} dispositivos / ${uniqueMetrics} métricas`,
+      description: 'Device and metric coverage stay explicit so the stream reads as an operational workspace instead of an isolated table.',
+      tone: 'neutral' as const
+    },
+    {
+      key: 'iot-telemetry-window',
+      label: 'Collection window',
+      value: startAt || endAt ? 'Filtered interval' : 'Current operational window',
+      description: recentRows.length > 0
+        ? 'Recent pulses are visible in the highlighted stream cards and the main telemetry table below.'
+        : 'Adjust filters or ingest a manual reading to repopulate the visible collection window.',
+      tone: recentRows.length > 0 ? 'primary' as const : 'neutral' as const
+    }
+  ];
+  const findRegister = (record: DisplayTelemetry) => displayRegisters.find((entry) => entry.id === record.registerId);
+  const resolveRecordMapping = (record: DisplayTelemetry, register?: IotRegister) => (
+    parseModbusMapping(
+      register?.code,
+      record.metricName,
+      register?.name,
+      register?.dataType,
+      record.unit
+    )
+  );
+  const telemetryColumns: DataTableColumn<DisplayTelemetry>[] = [
+    {
+      key: 'device',
+      header: 'Dispositivo',
+      render: (record) => (
+        <div>
+          <p className="font-medium text-[color:var(--app-shell-heading)]">
+            {record.deviceName ?? resolveDeviceLabel(displayDevices, record.deviceId)}
+          </p>
+          <p className="mt-1 text-sm text-[color:var(--app-shell-muted)]">
+            {record.registerName ?? resolveRegisterLabel(displayRegisters, record.registerId)}
+          </p>
+        </div>
+      )
+    },
+    {
+      key: 'mapping',
+      header: 'Mapeamento',
+      render: (record) => {
+        const register = findRegister(record);
+        const mapping = resolveRecordMapping(record, register);
+
+        return (
+          <div className="flex flex-wrap gap-2">
+            <IotStatusPill label={mapping.functionCode} tone="cyan" />
+            <IotStatusPill label={mapping.registerAddress} tone="neutral" />
+          </div>
+        );
+      }
+    },
+    {
+      key: 'metric',
+      header: 'Métrica',
+      render: (record) => {
+        const register = findRegister(record);
+        const quality = resolveQuality(record, register);
+
+        return (
+          <div>
+            <p className="font-medium text-[color:var(--app-shell-heading)]">{record.metricName}</p>
+            <div className="mt-2 flex flex-wrap items-center gap-2">
+              <IotStatusPill
+                label={`${record.metricValue}${record.unit ? ` ${record.unit}` : ''}`}
+                tone={resolveQualityTone(quality)}
+              />
+              <IotStatusPill
+                label={resolveTelemetryQualityLabel(quality)}
+                tone={resolveQualityTone(quality)}
+              />
+            </div>
+          </div>
+        );
+      }
+    },
+    {
+      key: 'register',
+      header: 'Registrador',
+      render: (record) => {
+        const register = findRegister(record);
+
+        return (
+          <div>
+            <p className="font-medium text-[color:var(--app-shell-heading)]">
+              {record.registerName ?? resolveRegisterLabel(displayRegisters, record.registerId)}
+            </p>
+            <p className="mt-1 text-sm text-[color:var(--app-shell-muted)]">
+              {register?.name ?? 'Sem registrador específico'}
+            </p>
+          </div>
+        );
+      }
+    },
+    {
+      key: 'collectedAt',
+      header: 'Coletado em',
+      render: (record) => <span className="text-[color:var(--app-shell-muted)]">{formatDateTime(record.recordedAt)}</span>
+    }
+  ];
 
   return (
     <PermissionGuard
@@ -470,42 +585,48 @@ export function IotTelemetryPage() {
 
         {success ? <IotNotice title="Ingestão concluída" description={success} tone="green" /> : null}
 
+        <DashboardContextCardGrid cards={contextCards} />
+
         <IotPanel
           title="Filtros de stream"
           description="Refine o fluxo por ativo, registrador, métrica ou janela de coleta."
         >
-          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-            <IotTextField
-              label="Busca"
-              value={searchInput}
-              onChange={setSearchInput}
-              placeholder="Métrica, unidade ou ativo"
-            />
-            <IotSelectField label="Dispositivo" value={deviceFilterId} onChange={setDeviceFilterId} options={deviceOptions} />
-            <IotSelectField label="Registrador" value={registerFilterId} onChange={setRegisterFilterId} options={registerOptions} />
-            <IotTextField
-              label="Métrica"
-              value={metricFilter}
-              onChange={setMetricFilter}
-              placeholder="temperatura / corrente / energia"
-            />
-            <IotDateTimeField label="De" value={startAt} onChange={setStartAt} />
-            <IotDateTimeField label="Até" value={endAt} onChange={setEndAt} />
-            <div className="flex items-end gap-3 xl:col-span-2">
-              <IotPrimaryButton onClick={() => setSearch(searchInput)}>Aplicar filtros</IotPrimaryButton>
-              <IotSecondaryButton
-                onClick={() => {
-                  setSearchInput('');
-                  setSearch('');
-                  setDeviceFilterId('');
-                  setRegisterFilterId('');
-                  setMetricFilter('');
-                  setStartAt('');
-                  setEndAt('');
-                }}
-              >
-                Limpar
-              </IotSecondaryButton>
+          <div className="space-y-4">
+            <div className="grid gap-4 xl:grid-cols-[minmax(0,1.3fr)_minmax(0,0.95fr)_minmax(0,0.95fr)_minmax(0,0.9fr)] xl:items-end">
+              <IotTextField
+                label="Busca"
+                value={searchInput}
+                onChange={setSearchInput}
+                placeholder="Métrica, unidade ou ativo"
+              />
+              <IotSelectField label="Dispositivo" value={deviceFilterId} onChange={setDeviceFilterId} options={deviceOptions} />
+              <IotSelectField label="Registrador" value={registerFilterId} onChange={setRegisterFilterId} options={registerOptions} />
+              <IotTextField
+                label="Métrica"
+                value={metricFilter}
+                onChange={setMetricFilter}
+                placeholder="temperatura / corrente / energia"
+              />
+            </div>
+            <div className="grid gap-4 xl:grid-cols-[minmax(0,0.9fr)_minmax(0,0.9fr)_auto] xl:items-end">
+              <IotDateTimeField label="De" value={startAt} onChange={setStartAt} />
+              <IotDateTimeField label="Até" value={endAt} onChange={setEndAt} />
+              <div className="flex flex-wrap items-center gap-3">
+                <IotPrimaryButton onClick={() => setSearch(searchInput)}>Aplicar filtros</IotPrimaryButton>
+                <IotSecondaryButton
+                  onClick={() => {
+                    setSearchInput('');
+                    setSearch('');
+                    setDeviceFilterId('');
+                    setRegisterFilterId('');
+                    setMetricFilter('');
+                    setStartAt('');
+                    setEndAt('');
+                  }}
+                >
+                  Limpar
+                </IotSecondaryButton>
+              </div>
             </div>
           </div>
         </IotPanel>
@@ -574,7 +695,7 @@ export function IotTelemetryPage() {
                 <IotTextField label="Valor" value={metricValue} onChange={setMetricValue} type="number" required />
                 <IotTextField label="Unidade" value={unit} onChange={setUnit} />
                 <IotDateTimeField label="Coletado em" value={recordedAt} onChange={setRecordedAt} />
-                <IotTextField
+                <IotTextareaField
                   label="Metadata (JSON)"
                   value={metadataRaw}
                   onChange={setMetadataRaw}
@@ -622,73 +743,18 @@ export function IotTelemetryPage() {
           title="Tabela de telemetria"
           description="Leitura densa para operação, com contexto de ativo, registrador, mapeamento e qualidade."
         >
-          <IotDataTable>
-              <thead className="border-b border-border bg-surface-inset/80">
-                <tr>
-                  {['Dispositivo', 'Registrador', 'Mapeamento', 'Métrica', 'Valor', 'Qualidade', 'Coletado em'].map((header) => (
-                    <IotDataTableHead key={header}>
-                      {header}
-                    </IotDataTableHead>
-                  ))}
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border/70 text-sm text-foreground">
-                {loading ? (
-                  <IotTableStateRow
-                    colSpan={7}
-                    title="Sincronizando o stream"
-                    description="Consolidando as leituras recentes, o mapeamento Modbus e a qualidade dos pontos."
-                  />
-                ) : visibleRows.length === 0 ? (
-                  <IotTableStateRow
-                    colSpan={7}
-                    title="Nenhum ponto nesta janela"
-                    description="Ajuste os filtros ou use o modo assistido para manter a leitura contínua da operação."
-                    tone="amber"
-                  />
-                ) : (
-                  visibleRows.map((record) => {
-                    const register = displayRegisters.find((entry) => entry.id === record.registerId);
-                    const mapping = parseModbusMapping(
-                      register?.code,
-                      record.metricName,
-                      register?.name,
-                      register?.dataType,
-                      record.unit
-                    );
-                    const quality = resolveQuality(record, register);
-
-                    return (
-                      <tr key={record.id} className="transition-colors hover:bg-surface-inset/40">
-                        <td className="px-4 py-4 text-foreground">
-                          {record.deviceName ?? resolveDeviceLabel(displayDevices, record.deviceId)}
-                        </td>
-                        <td className="px-4 py-4 text-foreground">
-                          {record.registerName ?? resolveRegisterLabel(displayRegisters, record.registerId)}
-                        </td>
-                        <td className="px-4 py-4">
-                          <div className="flex flex-wrap gap-2">
-                            <IotStatusPill label={mapping.functionCode} tone="cyan" />
-                            <IotStatusPill label={mapping.registerAddress} tone="neutral" />
-                          </div>
-                        </td>
-                        <td className="px-4 py-4 text-foreground">{record.metricName}</td>
-                        <td className="px-4 py-4">
-                          <IotStatusPill
-                            label={`${record.metricValue}${record.unit ? ` ${record.unit}` : ''}`}
-                            tone={resolveQualityTone(quality)}
-                          />
-                        </td>
-                        <td className="px-4 py-4">
-                          <IotStatusPill label={resolveTelemetryQualityLabel(quality)} tone={resolveQualityTone(quality)} />
-                        </td>
-                        <td className="px-4 py-4 text-muted">{formatDateTime(record.recordedAt)}</td>
-                      </tr>
-                    );
-                  })
-                )}
-              </tbody>
-          </IotDataTable>
+          <DataTable
+            columns={telemetryColumns}
+            rows={visibleRows}
+            getRowKey={(record) => record.id}
+            loading={loading}
+            loadingTitle="Sincronizando o stream"
+            loadingDescription="Consolidando as leituras recentes, o mapeamento Modbus e a qualidade dos pontos."
+            emptyState={{
+              title: 'Nenhum ponto nesta janela',
+              description: 'Ajuste os filtros ou use o modo assistido para manter a leitura contínua da operação.'
+            }}
+          />
         </IotPanel>
 
         {!useDemoMode ? (

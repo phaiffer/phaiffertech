@@ -1,6 +1,13 @@
 'use client';
 
 import { FormEvent, useCallback, useEffect, useState } from 'react';
+import {
+  sharedCompactTextClass,
+  sharedFilterToolbarClass,
+  sharedFormActionsClass,
+  sharedInlineActionsClass,
+  sharedPageStackClass
+} from '@/shared/components/public-visual-system';
 import { ApiClientError } from '@/shared/lib/http';
 import { resolvePageItems, resolveTotalItems } from '@/shared/lib/pagination';
 import { petService } from '@/shared/services/pet-service';
@@ -12,6 +19,7 @@ import { ConfirmDialog } from '@/shared/ui/confirm-dialog';
 import { DataTable, DataTableColumn } from '@/shared/ui/data-table';
 import { FormInput } from '@/shared/ui/form-input';
 import { FormSelect } from '@/shared/ui/form-select';
+import { PageSection } from '@/shared/ui/page-section';
 import { PageTitle } from '@/shared/ui/page-title';
 import { Pagination } from '@/shared/ui/pagination';
 import { SearchBar } from '@/shared/ui/search-bar';
@@ -36,6 +44,13 @@ const initialPage: PageResponse<PetClient> = {
   page: 0,
   size: pageSize
 };
+
+function formatDateTime(value: string) {
+  return new Intl.DateTimeFormat('pt-BR', {
+    dateStyle: 'short',
+    timeStyle: 'short'
+  }).format(new Date(value));
+}
 
 export function PetClientsPage() {
   const [pageData, setPageData] = useState<PageResponse<PetClient>>(initialPage);
@@ -158,27 +173,38 @@ export function PetClientsPage() {
 
   const rows = resolvePageItems(pageData);
   const totalItems = resolveTotalItems(pageData);
+  const activeFilterCount = [search, statusFilter].filter(Boolean).length;
 
   const columns: DataTableColumn<PetClient>[] = [
     {
-      key: 'name',
-      header: 'Nome',
-      render: (client) => client.name ?? client.fullName ?? '-'
+      key: 'profile',
+      header: 'Cliente',
+      render: (client) => (
+        <div>
+          <p className="font-medium text-[color:var(--app-shell-heading)]">{client.name ?? client.fullName ?? '-'}</p>
+          <p className={`mt-1 ${sharedCompactTextClass}`}>Documento: {client.document ?? 'Não informado'}</p>
+        </div>
+      )
     },
     {
-      key: 'email',
-      header: 'Email',
-      render: (client) => client.email ?? '-'
-    },
-    {
-      key: 'phone',
-      header: 'Telefone',
-      render: (client) => client.phone ?? '-'
+      key: 'contact',
+      header: 'Contato',
+      render: (client) => (
+        <div>
+          <p className="font-medium text-[color:var(--app-shell-heading)]">{client.email ?? 'Sem email cadastrado'}</p>
+          <p className={`mt-1 ${sharedCompactTextClass}`}>{client.phone ?? 'Sem telefone informado'}</p>
+        </div>
+      )
     },
     {
       key: 'address',
-      header: 'Endereço',
-      render: (client) => client.address ?? '-'
+      header: 'Endereço e atualização',
+      render: (client) => (
+        <div>
+          <p className="font-medium text-[color:var(--app-shell-heading)]">{client.address ?? 'Sem endereço informado'}</p>
+          <p className={`mt-1 ${sharedCompactTextClass}`}>Atualizado em {formatDateTime(client.updatedAt)}</p>
+        </div>
+      )
     },
     {
       key: 'status',
@@ -189,7 +215,7 @@ export function PetClientsPage() {
       key: 'actions',
       header: 'Ações',
       render: (client) => (
-        <div className="flex gap-2">
+        <div className={sharedInlineActionsClass}>
           <PermissionGuard permission="pet.client.update">
             <button
               type="button"
@@ -219,84 +245,125 @@ export function PetClientsPage() {
       permission="pet.client.read"
       fallback={<div className="ui-notice-warning">Você não possui permissão para visualizar clientes.</div>}
     >
-      <div className="space-y-5">
-        <PageTitle title="Pet Clients" description="Gestão de clientes do módulo PET com busca, paginação e soft delete." />
+      <div className={sharedPageStackClass}>
+        <PageTitle
+          eyebrow="PetFlow workspace"
+          title="Clients"
+          description="Gestão de clientes do módulo PET com busca, edição rápida e uma composição alinhada ao restante das áreas consolidadas da plataforma."
+        />
 
-        <div className="grid gap-3 ui-surface-panel p-4 md:grid-cols-[1fr_180px_auto_auto]">
-          <SearchBar value={searchInput} onChange={setSearchInput} placeholder="Nome, email, telefone, endereço" />
-          <FormSelect label="Status" value={statusFilter} options={statusOptions} onChange={setStatusFilter} />
-          <button
-            type="button"
-            onClick={() => setSearch(searchInput)}
-            className="ui-primary-button"
-          >
-            Buscar
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              setSearchInput('');
-              setSearch('');
-              setStatusFilter('');
-            }}
-            className="ui-secondary-button"
-          >
-            Limpar
-          </button>
-        </div>
-
-        <PermissionGuard permission={editingId ? 'pet.client.update' : 'pet.client.create'}>
-          <form onSubmit={handleSubmit} className="grid gap-3 ui-surface-panel p-4 md:grid-cols-2">
-            <FormInput label="Nome" value={name} onChange={setName} required />
-            <FormInput label="Email" value={email} onChange={setEmail} type="email" />
-            <FormInput label="Telefone" value={phone} onChange={setPhone} />
-            <FormInput label="Documento" value={document} onChange={setDocument} />
-            <FormInput label="Endereço" value={address} onChange={setAddress} />
-            <FormSelect label="Status" value={status} options={formStatusOptions} onChange={setStatus} />
-
-            <div className="md:col-span-2 flex gap-2">
+        <PageSection
+          tone="muted"
+          title="Client filters"
+          description="Refine the client directory by search and lifecycle status without compressing controls into an uneven toolbar."
+        >
+          <div className={sharedFilterToolbarClass}>
+            <div className="grid gap-3 xl:grid-cols-[minmax(0,1.45fr)_220px] xl:items-end">
+              <SearchBar
+                value={searchInput}
+                onChange={setSearchInput}
+                placeholder="Nome, email, telefone, endereço"
+              />
+              <FormSelect label="Status" value={statusFilter} options={statusOptions} onChange={setStatusFilter} />
+            </div>
+            <div className={sharedFormActionsClass}>
               <button
-                type="submit"
-                disabled={submitting}
+                type="button"
+                onClick={() => setSearch(searchInput)}
                 className="ui-primary-button"
               >
-                {submitting ? 'Salvando...' : editingId ? 'Atualizar cliente' : 'Criar cliente'}
+                Buscar
               </button>
-              {editingId ? (
-                <button
-                  type="button"
-                  onClick={resetForm}
-                  className="ui-secondary-button"
-                >
-                  Cancelar edição
-                </button>
-              ) : null}
+              <button
+                type="button"
+                onClick={() => {
+                  setSearchInput('');
+                  setSearch('');
+                  setStatusFilter('');
+                }}
+                className="ui-secondary-button"
+              >
+                Limpar
+              </button>
+              <p className="text-sm text-[color:var(--app-shell-muted)]">
+                {activeFilterCount > 0
+                  ? `${activeFilterCount} filtro(s) ativos na visão de clientes.`
+                  : 'Sem filtros ativos na base de clientes.'}
+              </p>
             </div>
-          </form>
+          </div>
+        </PageSection>
+
+        <PermissionGuard permission={editingId ? 'pet.client.update' : 'pet.client.create'}>
+          <PageSection
+            title={editingId ? 'Edit client' : 'Register client'}
+            description="Keep identity, contact data, and operational status grouped so inline editing stays fast without overpowering the page."
+          >
+            <form onSubmit={handleSubmit} className="space-y-5">
+              <div className="grid gap-4 xl:grid-cols-2">
+                <FormInput label="Nome" value={name} onChange={setName} required />
+                <FormSelect label="Status" value={status} options={formStatusOptions} onChange={setStatus} />
+                <FormInput label="Email" value={email} onChange={setEmail} type="email" />
+                <FormInput label="Telefone" value={phone} onChange={setPhone} />
+                <FormInput label="Documento" value={document} onChange={setDocument} />
+                <div className="hidden xl:block" />
+                <FormInput label="Endereço" value={address} onChange={setAddress} wrapperClassName="xl:col-span-2" />
+              </div>
+
+              <div className={sharedFormActionsClass}>
+                <button
+                  type="submit"
+                  disabled={submitting}
+                  className="ui-primary-button"
+                >
+                  {submitting ? 'Salvando...' : editingId ? 'Atualizar cliente' : 'Criar cliente'}
+                </button>
+                {editingId ? (
+                  <button
+                    type="button"
+                    onClick={resetForm}
+                    className="ui-secondary-button"
+                  >
+                    Cancelar edição
+                  </button>
+                ) : null}
+              </div>
+            </form>
+          </PageSection>
         </PermissionGuard>
 
         {error ? <div className="ui-notice-error">{error}</div> : null}
         {success ? <div className="ui-notice-success">{success}</div> : null}
 
-        <DataTable
-          columns={columns}
-          rows={rows}
-          getRowKey={(row) => row.id}
-          loading={loading}
-          loadingTitle="Carregando clientes"
-          loadingDescription="Preparando a base de clientes do PetFlow com status e dados operacionais."
-          emptyState={{
-            title: 'Nenhum cliente cadastrado',
-            description: 'Crie o primeiro cliente para iniciar os cadastros clinicos e operacionais do PetFlow.'
-          }}
-        />
+        <PageSection
+          title="Client directory"
+          description="The listing keeps contact data, address context, and lifecycle status readable across denser operational tables."
+          actions={(
+            <p className="text-sm text-[color:var(--app-shell-muted)]">Total {totalItems} client(s)</p>
+          )}
+        >
+          <div className="space-y-5">
+            <DataTable
+              columns={columns}
+              rows={rows}
+              getRowKey={(row) => row.id}
+              loading={loading}
+              loadingTitle="Carregando clientes"
+              loadingDescription="Preparando a base de clientes do PetFlow com status e dados operacionais."
+              emptyState={{
+                title: 'Nenhum cliente cadastrado',
+                description: 'Crie o primeiro cliente para iniciar os cadastros clinicos e operacionais do PetFlow.'
+              }}
+            />
 
-        <Pagination
-          page={pageData.page}
-          totalPages={pageData.totalPages}
-          totalElements={totalItems}
-          onPageChange={(nextPage) => load(nextPage, search, statusFilter)}
-        />
+            <Pagination
+              page={pageData.page}
+              totalPages={pageData.totalPages}
+              totalElements={totalItems}
+              onPageChange={(nextPage) => load(nextPage, search, statusFilter)}
+            />
+          </div>
+        </PageSection>
 
         <ConfirmDialog
           open={Boolean(deleteCandidate)}

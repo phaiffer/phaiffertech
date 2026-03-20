@@ -3,7 +3,31 @@
 import Link from 'next/link';
 import type { CSSProperties, ReactNode } from 'react';
 import { useId } from 'react';
+import {
+  sharedCompactButtonClass,
+  sharedCompactTextClass,
+  sharedEyebrowClass,
+  sharedFieldGroupClass,
+  sharedInputClass,
+  sharedInputLabelClass,
+  sharedMutedSurfaceClass,
+  sharedPageHeaderBodyClass,
+  sharedPageHeaderClass,
+  sharedPageStackClass,
+  sharedPageTitleClass,
+  sharedPrimaryButtonClass,
+  sharedSectionHeaderClass,
+  sharedSectionHeadingClass,
+  sharedSectionSurfaceClass,
+  sharedSecondaryButtonClass,
+  sharedSupportingTextClass,
+  sharedTextareaClass
+} from '@/shared/components/public-visual-system';
 import { resolveVisualProfile, withAlpha } from '@/shared/lib/visual-profile';
+import {
+  workspaceMutedSurfaceStyle,
+  workspacePanelSurfaceStyle
+} from '@/shared/modules/module-workspace-visual';
 import { useFrontendPlatform } from '@/shared/platform/use-frontend-platform';
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -64,7 +88,7 @@ export function IotModulePage({
   } as CSSProperties;
 
   return (
-    <div className={cn('space-y-6', className)} style={style} data-iot-profile={visualProfile.key}>
+    <div className={cn(sharedPageStackClass, className)} style={style} data-iot-profile={visualProfile.key}>
       {children}
     </div>
   );
@@ -200,23 +224,19 @@ export function IotPageHeader({
   aside?: ReactNode;
 }) {
   return (
-    <section className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
-      <div className="flex-1">
-        {eyebrow && (
-          <p className="mb-2 text-xs font-medium uppercase tracking-wider text-accent">
-            {eyebrow}
-          </p>
-        )}
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-          <div className="max-w-2xl">
-            <h1 className="text-2xl font-semibold text-foreground">{title}</h1>
-            <p className="mt-2 text-sm text-muted">{description}</p>
+    <section className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_minmax(300px,0.36fr)] xl:items-start">
+      <div>
+        <div className={sharedPageHeaderClass}>
+          <div className={sharedPageHeaderBodyClass}>
+            {eyebrow ? <p className={sharedEyebrowClass}>{eyebrow}</p> : null}
+            <h1 className={eyebrow ? `mt-3 ${sharedPageTitleClass}` : sharedPageTitleClass}>{title}</h1>
+            <p className={`mt-3 max-w-3xl ${sharedSupportingTextClass}`}>{description}</p>
           </div>
-          {action && <div className="shrink-0">{action}</div>}
+          {action ? <div className="flex flex-wrap items-center gap-3">{action}</div> : null}
         </div>
-        {chips && <div className="mt-4 flex flex-wrap gap-2">{chips}</div>}
+        {chips ? <div className="mt-5 flex flex-wrap gap-2.5">{chips}</div> : null}
       </div>
-      {aside && <div className="w-full lg:w-72">{aside}</div>}
+      {aside ? <div>{aside}</div> : null}
     </section>
   );
 }
@@ -233,13 +253,13 @@ export function IotHeroAside({
   items: Array<{ label: string; value: string; tone?: Tone }>;
 }) {
   return (
-    <div className="rounded-xl border border-border bg-surface p-4">
-      <p className="mb-3 text-2xs font-medium uppercase tracking-wider text-muted">{title}</p>
-      <div className="space-y-2">
+    <div className={`${sharedMutedSurfaceClass} p-4 lg:p-5`} style={workspaceMutedSurfaceStyle}>
+      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--tenant-accent)]">{title}</p>
+      <div className="mt-4 space-y-2.5">
         {items.map((item) => (
           <div
             key={`${item.label}-${item.value}`}
-            className="flex items-center justify-between rounded-lg border border-border/70 bg-surface-inset px-3 py-2.5"
+            className="flex items-center justify-between rounded-2xl border border-border/70 bg-surface px-3.5 py-3"
           >
             <p className="text-xs text-muted">{item.label}</p>
             <div className="flex items-center gap-2">
@@ -268,7 +288,7 @@ export function IotSupportCard({
   className?: string;
 }) {
   return (
-    <div className={cn('rounded-lg border border-border bg-surface-inset p-4', className)}>
+    <div className={cn(`${sharedMutedSurfaceClass} p-4`, className)} style={workspaceMutedSurfaceStyle}>
       {children}
     </div>
   );
@@ -298,14 +318,14 @@ export function IotMetricCard({
   icon?: ReactNode;
 }) {
   return (
-    <div className="rounded-xl border border-border bg-surface p-4">
+    <div className={`${sharedMutedSurfaceClass} p-5`} style={workspaceMutedSurfaceStyle}>
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted">{label}</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted">{label}</p>
           <p className="mt-3 text-3xl font-semibold tabular-nums text-foreground">{value}</p>
         </div>
         {icon ? (
-          <span className={cn('rounded-lg p-2', toneBg[tone], toneText[tone])}>
+          <span className={cn('rounded-xl p-2.5', toneBg[tone], toneText[tone])}>
             {icon}
           </span>
         ) : null}
@@ -313,7 +333,7 @@ export function IotMetricCard({
       {footnote || status ? (
         <div className="mt-3 flex flex-wrap items-center gap-2">
           {status ? <IotStatusPill label={status} tone={tone} /> : null}
-          {footnote ? <p className="text-xs leading-5 text-muted">{footnote}</p> : null}
+          {footnote ? <p className={sharedCompactTextClass}>{footnote}</p> : null}
         </div>
       ) : null}
       {detailTitle || detailDescription ? (
@@ -344,11 +364,11 @@ export function IotPanel({
   className?: string;
 }) {
   return (
-    <section className={cn('rounded-xl border border-border bg-surface p-5', className)}>
-      <div className="mb-5 flex flex-col gap-2 border-b border-border/70 pb-4 sm:flex-row sm:items-center sm:justify-between">
+    <section className={cn(sharedSectionSurfaceClass, className)} style={workspacePanelSurfaceStyle}>
+      <div className={cn(sharedSectionHeaderClass, 'mb-5 border-b border-border/70 pb-4')}>
         <div>
-          <h2 className="text-base font-semibold text-foreground">{title}</h2>
-          {description && <p className="mt-1 text-sm text-muted">{description}</p>}
+          <h2 className={sharedSectionHeadingClass}>{title}</h2>
+          {description ? <p className={`mt-1 ${sharedCompactTextClass}`}>{description}</p> : null}
         </div>
         {action && <div className="shrink-0">{action}</div>}
       </div>
@@ -393,7 +413,7 @@ export function IotNotice({
   action?: ReactNode;
 }) {
   return (
-    <div className={cn('rounded-lg border p-4', toneBorder[tone], toneBg[tone])}>
+    <div className={cn('rounded-2xl border px-4 py-4 lg:px-5', toneBorder[tone], toneBg[tone])}>
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <p className="text-sm font-medium text-foreground">{title}</p>
@@ -421,7 +441,7 @@ export function IotEmptyState({
   compact?: boolean;
 }) {
   return (
-    <div className={cn('rounded-lg border', compact ? 'p-4' : 'p-5', toneBorder[tone], toneBg[tone])}>
+    <div className={cn('rounded-2xl border', compact ? 'p-4' : 'px-5 py-5', toneBorder[tone], toneBg[tone])}>
       <div className="flex items-start gap-3">
         <span className={cn('mt-0.5 h-2 w-2 rounded-full', toneText[tone], 'bg-current')} />
         <div>
@@ -455,14 +475,14 @@ export function IotTableStateRow({
 
 export function IotDataTable({ children }: { children: ReactNode }) {
   return (
-    <div className="overflow-hidden rounded-xl border border-border bg-surface">
-      <table className="min-w-full">{children}</table>
+    <div className="overflow-x-auto rounded-[var(--radius-2xl)] border border-[color:var(--app-shell-border)] bg-[color:var(--surface-1)] shadow-xs">
+      <table className="min-w-full divide-y divide-[color:var(--app-shell-border)]">{children}</table>
     </div>
   );
 }
 
 export function IotDataTableHeader({ children }: { children: ReactNode }) {
-  return <thead className="border-b border-border bg-surface-inset/80">{children}</thead>;
+  return <thead className="bg-[color:var(--surface-2)]">{children}</thead>;
 }
 
 export function IotDataTableHead({
@@ -473,7 +493,12 @@ export function IotDataTableHead({
   className?: string;
 }) {
   return (
-    <th className={cn('px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.18em] text-muted', className)}>
+    <th
+      className={cn(
+        'px-5 py-3.5 text-left text-[11px] font-semibold uppercase tracking-[0.18em] text-[color:var(--app-shell-muted)]',
+        className
+      )}
+    >
       {children}
     </th>
   );
@@ -490,7 +515,7 @@ export function IotInlineActionButton({
     <button
       type="button"
       onClick={onClick}
-      className="rounded-lg border border-border bg-surface-inset px-3 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-foreground transition-colors hover:border-accent hover:text-accent"
+      className={sharedCompactButtonClass}
     >
       {children}
     </button>
@@ -508,7 +533,7 @@ export function IotInlineDangerButton({
     <button
       type="button"
       onClick={onClick}
-      className="rounded-lg border border-destructive/30 bg-destructive-muted px-3 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-destructive transition-colors hover:border-destructive/50"
+      className="inline-flex h-9 items-center justify-center rounded-xl border border-destructive/30 bg-destructive-muted px-3 text-xs font-medium text-destructive transition-colors duration-200 hover:border-destructive/50"
     >
       {children}
     </button>
@@ -523,7 +548,7 @@ export function IotActionButton({ href, children }: { href: string; children: Re
   return (
     <Link
       href={href}
-      className="inline-flex items-center justify-center rounded-lg bg-accent px-4 py-2 text-sm font-medium text-accent-foreground transition-opacity hover:opacity-90"
+      className={sharedPrimaryButtonClass}
     >
       {children}
     </Link>
@@ -546,7 +571,7 @@ export function IotPrimaryButton({
       type={type}
       onClick={onClick}
       disabled={disabled}
-      className="inline-flex items-center justify-center rounded-lg bg-foreground px-4 py-2 text-sm font-medium text-background transition-opacity hover:opacity-90 disabled:opacity-50"
+      className={`${sharedPrimaryButtonClass} disabled:translate-y-0 disabled:opacity-50`}
     >
       {children}
     </button>
@@ -556,17 +581,20 @@ export function IotPrimaryButton({
 export function IotSecondaryButton({
   type = 'button',
   onClick,
+  disabled,
   children,
 }: {
   type?: 'button' | 'submit';
   onClick?: () => void;
+  disabled?: boolean;
   children: ReactNode;
 }) {
   return (
     <button
       type={type}
       onClick={onClick}
-      className="inline-flex items-center justify-center rounded-lg border border-border bg-surface px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-surface-inset"
+      disabled={disabled}
+      className={`${sharedSecondaryButtonClass} disabled:translate-y-0 disabled:opacity-60`}
     >
       {children}
     </button>
@@ -587,10 +615,10 @@ export function IotTabButton({
       type="button"
       onClick={onClick}
       className={cn(
-        'rounded-lg px-3 py-1.5 text-sm font-medium transition-colors',
+        sharedCompactButtonClass,
         active
-          ? 'bg-accent-muted text-accent'
-          : 'text-muted hover:bg-surface-inset hover:text-foreground'
+          ? 'border-[color:var(--tenant-accent)] bg-[color:var(--tenant-accent-soft)] text-[color:var(--tenant-accent)]'
+          : undefined
       )}
     >
       {label}
@@ -622,17 +650,17 @@ export function IotTextField({
   type = 'text',
 }: FieldProps) {
   return (
-    <label className="block">
-      <span className="mb-1.5 block text-sm font-medium text-foreground">{label}</span>
+    <label className={sharedFieldGroupClass}>
+      <span className={sharedInputLabelClass}>{label}</span>
       <input
         type={type}
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
         required={required}
-        className="w-full rounded-lg border border-border bg-surface-inset px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground outline-none transition-colors focus:border-accent focus:ring-1 focus:ring-accent"
+        className={sharedInputClass}
       />
-      {helper && <span className="mt-1.5 block text-xs text-muted">{helper}</span>}
+      {helper ? <span className="text-xs leading-5 text-muted">{helper}</span> : null}
     </label>
   );
 }
@@ -645,16 +673,16 @@ export function IotTextareaField({
   helper,
 }: FieldProps) {
   return (
-    <label className="block">
-      <span className="mb-1.5 block text-sm font-medium text-foreground">{label}</span>
+    <label className={sharedFieldGroupClass}>
+      <span className={sharedInputLabelClass}>{label}</span>
       <textarea
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
         rows={4}
-        className="w-full rounded-lg border border-border bg-surface-inset px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground outline-none transition-colors focus:border-accent focus:ring-1 focus:ring-accent"
+        className={sharedTextareaClass}
       />
-      {helper && <span className="mt-1.5 block text-xs text-muted">{helper}</span>}
+      {helper ? <span className="text-xs leading-5 text-muted">{helper}</span> : null}
     </label>
   );
 }
@@ -667,12 +695,12 @@ export function IotSelectField({
   helper,
 }: FieldProps & { options: Array<{ value: string; label: string }> }) {
   return (
-    <label className="block">
-      <span className="mb-1.5 block text-sm font-medium text-foreground">{label}</span>
+    <label className={sharedFieldGroupClass}>
+      <span className={sharedInputLabelClass}>{label}</span>
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full rounded-lg border border-border bg-surface-inset px-3 py-2.5 text-sm text-foreground outline-none transition-colors focus:border-accent focus:ring-1 focus:ring-accent"
+        className={sharedInputClass}
       >
         {options.map((option) => (
           <option key={option.value} value={option.value}>
@@ -680,7 +708,7 @@ export function IotSelectField({
           </option>
         ))}
       </select>
-      {helper && <span className="mt-1.5 block text-xs text-muted">{helper}</span>}
+      {helper ? <span className="text-xs leading-5 text-muted">{helper}</span> : null}
     </label>
   );
 }
@@ -742,11 +770,11 @@ export function IotMiniTrend({
     }).format(value);
 
   return (
-    <div className="rounded-xl border border-border bg-surface p-4">
+    <div className={`${sharedMutedSurfaceClass} p-4`} style={workspaceMutedSurfaceStyle}>
       <div className="mb-4 flex items-start justify-between gap-4">
         <div>
-          <p className="text-sm font-medium text-foreground">{title}</p>
-          <p className="mt-1 text-xs text-muted">Pulso recente da operacao</p>
+          <p className={sharedSectionHeadingClass}>{title}</p>
+          <p className={`mt-1 ${sharedCompactTextClass}`}>Pulso recente da operacao</p>
         </div>
         <div className="text-right">
           <p className="text-2xl font-semibold tabular-nums text-foreground">{formatValue(currentValue)}</p>
@@ -829,11 +857,12 @@ export function IotSurfaceLink({
   return (
     <Link
       href={href}
-      className="group flex flex-col rounded-xl border border-border bg-surface p-4 transition-colors hover:border-accent hover:bg-surface-inset"
+      className={`group flex flex-col ${sharedMutedSurfaceClass} p-4 transition-colors hover:border-[color:var(--tenant-accent)]`}
+      style={workspaceMutedSurfaceStyle}
     >
-      <p className="text-sm font-medium text-foreground group-hover:text-accent">{title}</p>
-      <p className="mt-1 text-xs text-muted">{description}</p>
-      <div className="mt-3 flex items-center gap-1 text-xs font-medium text-accent">
+      <p className="text-sm font-medium text-foreground group-hover:text-[color:var(--tenant-accent)]">{title}</p>
+      <p className={`mt-2 ${sharedCompactTextClass}`}>{description}</p>
+      <div className="mt-4 flex items-center gap-1 text-xs font-medium text-[color:var(--tenant-accent)]">
         <span>Acessar</span>
         <svg className="h-3 w-3 transition-transform group-hover:translate-x-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
           <path d="m9 18 6-6-6-6" />
