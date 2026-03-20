@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useCallback, useEffect, useState } from 'react';
+import { sharedPageStackClass } from '@/shared/components/public-visual-system';
 import { crmService } from '@/shared/services/crm-service';
 import { ApiClientError } from '@/shared/lib/http';
 import { resolvePageItems, resolveTotalItems } from '@/shared/lib/pagination';
@@ -9,6 +10,7 @@ import { CrmCompany, CrmContact, CrmLead } from '@/shared/types/crm';
 import { PageResponse } from '@/shared/types/common';
 import { DataTable, DataTableColumn } from '@/shared/ui/data-table';
 import { FormSelect } from '@/shared/ui/form-select';
+import { PageSection } from '@/shared/ui/page-section';
 import { PageTitle } from '@/shared/ui/page-title';
 import { Pagination } from '@/shared/ui/pagination';
 import { SearchBar } from '@/shared/ui/search-bar';
@@ -247,80 +249,87 @@ export function CrmLeadsPage() {
       permission="crm.lead.read"
       fallback={<div className="ui-notice-warning">Você não possui permissão para visualizar leads.</div>}
     >
-      <div className="space-y-5">
+      <div className={sharedPageStackClass}>
         <PageTitle
+          eyebrow="CRM workspace"
           title="CRM Leads"
           description="Listagem de leads com filtros, paginação e controle de permissões."
+          actions={(
+            <PermissionGuard permission="crm.lead.create">
+              <Link
+                href="/crm/leads/new"
+                className="ui-primary-button"
+              >
+                Novo lead
+              </Link>
+            </PermissionGuard>
+          )}
         />
 
-        <div className="grid gap-3 ui-surface-panel p-4 md:grid-cols-[1fr_180px_180px_220px_220px_auto_auto]">
-          <SearchBar
-            value={searchInput}
-            onChange={setSearchInput}
-            placeholder="Nome, email, origem"
-          />
-          <FormSelect
-            label="Status"
-            value={statusFilter}
-            options={statusOptions}
-            onChange={setStatusFilter}
-          />
-          <FormSelect
-            label="Origem"
-            value={sourceFilter}
-            options={sourceOptions}
-            onChange={setSourceFilter}
-          />
-          <FormSelect
-            label="Company"
-            value={companyFilterId}
-            options={companyOptions}
-            onChange={(value) => {
-              setCompanyFilterId(value);
-              setContactFilterId('');
-            }}
-            disabled={loadingCompanies}
-          />
-          <FormSelect
-            label="Contato"
-            value={contactFilterId}
-            options={contactOptions}
-            onChange={setContactFilterId}
-            disabled={loadingContacts}
-          />
-          <button
-            type="button"
-            onClick={() => setSearch(searchInput)}
-            className="ui-primary-button"
-          >
-            Buscar
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              setSearchInput('');
-              setSearch('');
-              setStatusFilter('');
-              setSourceFilter('');
-              setCompanyFilterId('');
-              setContactFilterId('');
-            }}
-            className="ui-secondary-button"
-          >
-            Limpar
-          </button>
-        </div>
-
-        <div className="flex justify-end">
-          <PermissionGuard permission="crm.lead.create">
-            <Link
-              href="/crm/leads/new"
+        <PageSection
+          tone="muted"
+          title="Lead filters"
+          description="Refine the commercial queue by status, source, and relationship context without squeezing controls into uneven widths."
+        >
+          <div className="grid gap-3 xl:grid-cols-[minmax(0,1.4fr)_repeat(4,minmax(0,0.85fr))_auto_auto] xl:items-end">
+            <SearchBar
+              label="Search"
+              value={searchInput}
+              onChange={setSearchInput}
+              placeholder="Nome, email, origem"
+            />
+            <FormSelect
+              label="Status"
+              value={statusFilter}
+              options={statusOptions}
+              onChange={setStatusFilter}
+            />
+            <FormSelect
+              label="Origem"
+              value={sourceFilter}
+              options={sourceOptions}
+              onChange={setSourceFilter}
+            />
+            <FormSelect
+              label="Company"
+              value={companyFilterId}
+              options={companyOptions}
+              onChange={(value) => {
+                setCompanyFilterId(value);
+                setContactFilterId('');
+              }}
+              disabled={loadingCompanies}
+            />
+            <FormSelect
+              label="Contato"
+              value={contactFilterId}
+              options={contactOptions}
+              onChange={setContactFilterId}
+              disabled={loadingContacts}
+            />
+            <button
+              type="button"
+              onClick={() => setSearch(searchInput)}
               className="ui-primary-button"
             >
-              Novo lead
-            </Link>
-          </PermissionGuard>
-        </div>
+              Buscar
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setSearchInput('');
+                setSearch('');
+                setStatusFilter('');
+                setSourceFilter('');
+                setCompanyFilterId('');
+                setContactFilterId('');
+              }}
+              className="ui-secondary-button"
+            >
+              Limpar
+            </button>
+          </div>
+        </PageSection>
 
         {error ? (
           <div className="ui-notice-error">{error}</div>

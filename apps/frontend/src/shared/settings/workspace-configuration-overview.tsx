@@ -1,15 +1,16 @@
 'use client';
 
-import type { ReactNode } from 'react';
+import { sharedPageStackClass } from '@/shared/components/public-visual-system';
 import { StatusBadge } from '@/shared/dashboard/status-badge';
 import { useFrontendPlatform } from '@/shared/platform/use-frontend-platform';
 import { AccountSecurityPanel } from '@/shared/settings/account-security-panel';
 import { buildWorkspaceConfigurationOverview, type WorkspaceConfigurationField } from '@/shared/settings/workspace-configuration';
+import { PageSection } from '@/shared/ui/page-section';
 import { PageTitle } from '@/shared/ui/page-title';
 
 function FieldCard({ field }: { field: WorkspaceConfigurationField }) {
   return (
-    <div className="ui-surface-muted p-4">
+    <div className="ui-surface-muted p-4 lg:p-5">
       <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--app-shell-muted)]">
         {field.label}
       </p>
@@ -19,26 +20,6 @@ function FieldCard({ field }: { field: WorkspaceConfigurationField }) {
       </div>
       <p className="mt-2 text-sm text-[color:var(--app-shell-muted)]">{field.description}</p>
     </div>
-  );
-}
-
-function SectionCard({
-  title,
-  description,
-  children
-}: {
-  title: string;
-  description: string;
-  children: ReactNode;
-}) {
-  return (
-    <section className="ui-surface-panel p-5">
-      <div className="mb-5">
-        <h2 className="text-base font-semibold text-[color:var(--app-shell-heading)]">{title}</h2>
-        <p className="mt-1 text-sm text-[color:var(--app-shell-muted)]">{description}</p>
-      </div>
-      {children}
-    </section>
   );
 }
 
@@ -53,22 +34,20 @@ export function WorkspaceConfigurationOverview() {
   const overview = buildWorkspaceConfigurationOverview(platform);
 
   return (
-    <div className="space-y-6">
-      <PageTitle title="Workspace Configuration" description={overview.pageDescription} />
+    <div className={sharedPageStackClass}>
+      <PageTitle eyebrow="Settings" title="Workspace Configuration" description={overview.pageDescription} />
 
-      <div className="grid gap-4 xl:grid-cols-[1.2fr,0.8fr]">
-        <section
-          className="ui-surface-panel p-5"
+      <div className="grid gap-5 xl:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)]">
+        <PageSection
+          title={overview.identityTitle}
+          description={overview.identityDescription}
+          className="p-5 lg:p-6"
           style={platform.branding.style}
         >
           <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[color:var(--tenant-accent)]">
             {overview.identityEyebrow}
           </p>
-          <div className="mt-3 flex items-start justify-between gap-4">
-            <div>
-              <h2 className="text-xl font-semibold text-[color:var(--app-shell-heading)]">{overview.identityTitle}</h2>
-              <p className="mt-2 max-w-2xl text-sm text-[color:var(--app-shell-muted)]">{overview.identityDescription}</p>
-            </div>
+          <div className="mt-4 flex justify-end">
             <div className="rounded-full border border-[color:var(--tenant-accent)] bg-[color:var(--tenant-accent-soft)] px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-[color:var(--tenant-accent)]">
               {overview.planFields[2].value}
             </div>
@@ -79,9 +58,9 @@ export function WorkspaceConfigurationOverview() {
               <FieldCard key={field.label} field={field} />
             ))}
           </div>
-        </section>
+        </PageSection>
 
-        <SectionCard
+        <PageSection
           title="Plan and Status"
           description="Keep the current workspace contract, readiness, and visibility model explicit before exposing future editing flows."
         >
@@ -90,11 +69,11 @@ export function WorkspaceConfigurationOverview() {
               <FieldCard key={field.label} field={field} />
             ))}
           </div>
-        </SectionCard>
+        </PageSection>
       </div>
 
-      <div className="grid gap-4 xl:grid-cols-[1.1fr,0.9fr]">
-        <SectionCard title="Branding Preview" description={overview.brandingDescription}>
+      <div className="grid gap-5 xl:grid-cols-[minmax(0,1.12fr)_minmax(0,0.88fr)]">
+        <PageSection title="Branding Preview" description={overview.brandingDescription}>
           <div className="grid gap-4 xl:grid-cols-[1.2fr,0.8fr]" style={platform.branding.style}>
             <div className="ui-surface-muted p-5">
               <div className="flex items-center gap-4">
@@ -141,18 +120,18 @@ export function WorkspaceConfigurationOverview() {
               ))}
             </div>
           </div>
-        </SectionCard>
+        </PageSection>
 
-        <SectionCard title="Theme Policy" description={overview.themeDescription}>
+        <PageSection title="Theme Policy" description={overview.themeDescription}>
           <div className="grid gap-3">
             {overview.themeFields.map((field) => (
               <FieldCard key={field.label} field={field} />
             ))}
           </div>
-        </SectionCard>
+        </PageSection>
       </div>
 
-      <SectionCard title="Contracted Modules" description={overview.modulesDescription}>
+      <PageSection title="Contracted Modules" description={overview.modulesDescription}>
         {platform.modules.error ? (
           <div className="ui-notice-error">{platform.modules.error}</div>
         ) : platform.modules.loading ? (
@@ -204,7 +183,7 @@ export function WorkspaceConfigurationOverview() {
         )}
 
         <p className="mt-5 text-sm text-[color:var(--app-shell-muted)]">{overview.coreAccessNote}</p>
-      </SectionCard>
+      </PageSection>
 
       <AccountSecurityPanel user={platform.user} />
     </div>

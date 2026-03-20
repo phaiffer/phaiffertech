@@ -1,46 +1,46 @@
 import {
   sharedFieldGroupClass,
   sharedFieldHintClass,
-  sharedInputClass,
-  sharedInputLabelClass
+  sharedInputLabelClass,
+  sharedTextareaClass
 } from '@/shared/components/public-visual-system';
 
-type FormInputProps = {
+type FormTextareaProps = {
   label: string;
   value: string;
   onChange: (value: string) => void;
   placeholder?: string;
-  type?: string;
   required?: boolean;
   disabled?: boolean;
+  rows?: number;
   description?: string;
   className?: string;
   wrapperClassName?: string;
 };
 
-export function FormInput({
+export function FormTextarea({
   label,
   value,
   onChange,
   placeholder,
-  type = 'text',
   required = false,
   disabled = false,
+  rows = 4,
   description,
   className,
   wrapperClassName
-}: FormInputProps) {
+}: FormTextareaProps) {
   return (
     <label className={wrapperClassName ? `${sharedFieldGroupClass} ${wrapperClassName}` : sharedFieldGroupClass}>
       <span className={sharedInputLabelClass}>{label}</span>
-      <input
-        type={type}
+      <textarea
         value={value}
         onChange={(event) => onChange(event.target.value)}
         placeholder={placeholder}
         required={required}
         disabled={disabled}
-        className={className ? `${sharedInputClass} ${className}` : sharedInputClass}
+        rows={rows}
+        className={className ? `${sharedTextareaClass} ${className}` : sharedTextareaClass}
       />
       {description ? <span className={sharedFieldHintClass}>{description}</span> : null}
     </label>

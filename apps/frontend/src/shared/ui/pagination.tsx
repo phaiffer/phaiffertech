@@ -10,14 +10,14 @@ export function Pagination({ page, totalPages, totalElements, onPageChange }: Pa
   const canNext = page + 1 < totalPages;
 
   return (
-    <div className="flex flex-col gap-3 rounded-[var(--radius-xl)] border border-[color:var(--app-shell-border)] bg-[color:var(--surface-1)] px-[var(--space-4)] py-[var(--space-3)] shadow-xs sm:flex-row sm:items-center sm:justify-between">
+    <div className="flex flex-col gap-3 rounded-[var(--radius-2xl)] border border-[color:var(--app-shell-border)] bg-[color:var(--surface-1)] px-[var(--space-4)] py-[var(--space-3)] shadow-xs sm:flex-row sm:items-center sm:justify-between">
       <p className="text-[length:var(--font-size-sm)] text-[color:var(--app-shell-muted)]">Total: {totalElements}</p>
       <div className="flex flex-wrap items-center gap-[var(--space-2)]">
         <button
           type="button"
           disabled={!canPrevious}
           onClick={() => onPageChange(page - 1)}
-          className="ui-secondary-button min-w-[7.5rem]"
+          className="ui-secondary-button min-w-[6.5rem]"
         >
           Anterior
         </button>
@@ -28,7 +28,7 @@ export function Pagination({ page, totalPages, totalElements, onPageChange }: Pa
           type="button"
           disabled={!canNext}
           onClick={() => onPageChange(page + 1)}
-          className="ui-secondary-button min-w-[7.5rem]"
+          className="ui-secondary-button min-w-[6.5rem]"
         >
           Próxima
         </button>

@@ -46,7 +46,7 @@ export function WebsiteSection({ id, tone = 'default', children }: WebsiteSectio
         tone === 'muted' ? 'bg-surface-inset' : ''
       }`}
     >
-      <div className={`${publicSiteContainerClass} py-16 lg:py-24`}>{children}</div>
+      <div className={`${publicSiteContainerClass} py-14 lg:py-20`}>{children}</div>
     </section>
   );
 }
@@ -75,7 +75,7 @@ export function WebsiteSectionHeading({ eyebrow, title, description }: WebsiteSe
   return (
     <div className="max-w-xl">
       {eyebrow && <p className={publicEyebrowClass}>{eyebrow}</p>}
-      <h2 className={eyebrow ? publicSectionTitleClass : 'text-3xl font-semibold tracking-tight text-foreground sm:text-4xl'}>
+      <h2 className={eyebrow ? publicSectionTitleClass : 'text-2xl font-semibold tracking-tight text-foreground sm:text-3xl'}>
         {title}
       </h2>
       <p className={publicSectionSupportingTextClass}>{description}</p>
@@ -85,9 +85,9 @@ export function WebsiteSectionHeading({ eyebrow, title, description }: WebsiteSe
 
 export function WebsiteStatStrip({ items }: WebsiteStatStripProps) {
   return (
-    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+    <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
       {items.map((item) => (
-        <div key={`${item.value}-${item.label}`} className={`${publicCardSurfaceClass} p-6`}>
+        <div key={`${item.value}-${item.label}`} className={`${publicCardSurfaceClass} p-7`}>
           <div className="mb-4 h-1 w-8 rounded-full bg-accent" />
           <p className="text-2xl font-semibold tracking-tight text-foreground">{item.value}</p>
           <p className="mt-3 text-xs font-medium uppercase tracking-wider text-muted">{item.label}</p>
@@ -100,11 +100,11 @@ export function WebsiteStatStrip({ items }: WebsiteStatStripProps) {
 
 export function WebsiteCardGrid({ items }: WebsiteCardGridProps) {
   return (
-    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+    <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
       {items.map((item) => (
         <article
           key={`${item.eyebrow}-${item.title}`}
-          className={`${publicInteractiveCardSurfaceClass} group flex flex-col justify-between p-6`}
+          className={`${publicInteractiveCardSurfaceClass} group flex h-full flex-col justify-between p-7`}
         >
           <div className="mb-4 h-1 w-8 rounded-full bg-border transition-colors group-hover:bg-accent" />
           <p className={publicEyebrowClass}>{item.eyebrow}</p>
@@ -133,11 +133,11 @@ export function WebsiteCardGrid({ items }: WebsiteCardGridProps) {
 
 export function WebsiteArticleGrid({ items, ctaLabel }: WebsiteArticleGridProps) {
   return (
-    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+    <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
       {items.map((item) => (
         <article
           key={item.slug}
-          className={`${publicInteractiveCardSurfaceClass} group flex flex-col justify-between p-6`}
+          className={`${publicInteractiveCardSurfaceClass} group flex h-full flex-col justify-between p-7`}
         >
           <div className="mb-4 h-1 w-8 rounded-full bg-border transition-colors group-hover:bg-accent" />
           <div className="flex items-center justify-between gap-4">

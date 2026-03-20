@@ -30,7 +30,7 @@ export function PublicCtaSection({
   secondaryCtaHref,
 }: PublicCtaSectionProps) {
   return (
-    <section className="border-t border-border py-16 lg:py-24">
+    <section className="border-t border-border py-14 lg:py-20">
       <div className={publicSiteContainerClass}>
         <div className={publicSectionLayoutClass}>
           <div className={publicHeadingColumnClass}>
@@ -38,10 +38,10 @@ export function PublicCtaSection({
             <h2 className={publicSectionTitleClass}>{title}</h2>
           </div>
 
-          <div className={`${publicHighlightSurfaceClass} p-6 lg:p-8`}>
-            <p className="text-base leading-relaxed text-foreground">{description}</p>
+          <div className={`${publicHighlightSurfaceClass} p-7 lg:p-8`}>
+            <p className="max-w-2xl text-base leading-7 text-foreground">{description}</p>
 
-            <div className="mt-6 flex flex-wrap gap-4">
+            <div className="mt-6 flex flex-wrap gap-3">
               <Link href={primaryCtaHref} className={publicPrimaryButtonClass}>
                 {primaryCtaLabel}
               </Link>

@@ -3,15 +3,17 @@
 import { FormEvent, useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { sharedInputClass, sharedInputLabelClass } from '@/shared/components/public-visual-system';
 import { crmService } from '@/shared/services/crm-service';
 import { ApiClientError } from '@/shared/lib/http';
 import { resolvePageItems } from '@/shared/lib/pagination';
 import { CrmCompany, CrmContact } from '@/shared/types/crm';
 import { FormInput } from '@/shared/ui/form-input';
 import { FormSelect } from '@/shared/ui/form-select';
+import { FormTextarea } from '@/shared/ui/form-textarea';
+import { PageSection } from '@/shared/ui/page-section';
 import { PageTitle } from '@/shared/ui/page-title';
 import { PermissionGuard } from '@/shared/auth/PermissionGuard';
+import { sharedPageStackClass } from '@/shared/components/public-visual-system';
 
 const statusOptions = [
   { value: 'NEW', label: 'NEW' },
@@ -207,58 +209,67 @@ export function LeadFormPage({ leadId }: LeadFormPageProps) {
       permission={requiredPermission}
       fallback={<div className="ui-notice-warning">Você não possui permissão para esta ação.</div>}
     >
-      <div className="space-y-5">
-        <PageTitle title={title} description="Formulário de cadastro/edição de lead CRM." />
-
-        <div className="flex justify-end">
-          <Link href="/crm/leads" className="ui-secondary-button">
-            Voltar para listagem
-          </Link>
-        </div>
+      <div className={sharedPageStackClass}>
+        <PageTitle
+          eyebrow="CRM workspace"
+          title={title}
+          description="Formulário de cadastro/edição de lead CRM."
+          actions={(
+            <Link href="/crm/leads" className="ui-secondary-button">
+              Voltar para listagem
+            </Link>
+          )}
+        />
 
         {loading ? (
-          <div className="ui-surface-panel px-4 py-6 text-sm text-[color:var(--app-shell-muted)]">Carregando lead...</div>
+          <PageSection>
+            <div className="text-sm text-[color:var(--app-shell-muted)]">Carregando lead...</div>
+          </PageSection>
         ) : (
-          <form onSubmit={handleSubmit} className="grid gap-3 ui-surface-panel p-4 md:grid-cols-2">
-            <FormInput label="Nome" value={name} onChange={setName} required />
-            <FormInput label="Email" value={email} onChange={setEmail} type="email" />
-            <FormInput label="Telefone" value={phone} onChange={setPhone} />
-            <FormInput label="Origem" value={source} onChange={setSource} />
-            <FormSelect
-              label="Company relacionada"
-              value={companyId}
-              options={companyOptions}
-              onChange={handleCompanyChange}
-              disabled={loadingCompanies}
-            />
-            <FormSelect
-              label="Contato relacionado"
-              value={contactId}
-              options={contactOptions}
-              onChange={setContactId}
-              disabled={loadingContacts}
-            />
-            <FormSelect label="Status" value={status} options={statusOptions} onChange={setStatus} />
-            <label className="block text-sm md:col-span-2">
-              <span className={sharedInputLabelClass}>Observações comerciais</span>
-              <textarea
-                value={notes}
-                onChange={(event) => setNotes(event.target.value)}
-                rows={4}
-                className={`${sharedInputClass} min-h-28 resize-y`}
+          <PageSection
+            title={isEdit ? 'Lead details' : 'Lead capture'}
+            description="Keep the company, contact, and commercial context aligned so future CRM drill-down pages inherit a stable composition."
+          >
+            <form onSubmit={handleSubmit} className="grid gap-4 xl:grid-cols-2">
+              <FormInput label="Nome" value={name} onChange={setName} required />
+              <FormInput label="Email" value={email} onChange={setEmail} type="email" />
+              <FormInput label="Telefone" value={phone} onChange={setPhone} />
+              <FormInput label="Origem" value={source} onChange={setSource} />
+              <FormSelect
+                label="Company relacionada"
+                value={companyId}
+                options={companyOptions}
+                onChange={handleCompanyChange}
+                disabled={loadingCompanies}
               />
-            </label>
+              <FormSelect
+                label="Contato relacionado"
+                value={contactId}
+                options={contactOptions}
+                onChange={setContactId}
+                disabled={loadingContacts}
+              />
+              <FormSelect label="Status" value={status} options={statusOptions} onChange={setStatus} />
+              <div className="hidden xl:block" />
+              <FormTextarea
+                label="Observações comerciais"
+                value={notes}
+                onChange={setNotes}
+                rows={4}
+                wrapperClassName="xl:col-span-2"
+              />
 
-            <div className="md:col-span-2 flex gap-2">
-              <button
-                type="submit"
-                disabled={submitting}
-                className="ui-primary-button"
-              >
-                {submitting ? 'Salvando...' : isEdit ? 'Atualizar lead' : 'Criar lead'}
-              </button>
-            </div>
-          </form>
+              <div className="flex flex-wrap items-center gap-3 xl:col-span-2">
+                <button
+                  type="submit"
+                  disabled={submitting}
+                  className="ui-primary-button"
+                >
+                  {submitting ? 'Salvando...' : isEdit ? 'Atualizar lead' : 'Criar lead'}
+                </button>
+              </div>
+            </form>
+          </PageSection>
         )}
 
         {error ? <div className="ui-notice-error">{error}</div> : null}

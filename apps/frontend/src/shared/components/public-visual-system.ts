@@ -17,18 +17,18 @@ export const sharedShellHeaderClass = 'border-b border-border bg-background/80 b
 export const sharedEyebrowClass = 'text-xs font-semibold uppercase tracking-[0.22em] text-accent';
 
 export const sharedHeroTitleClass =
-  'text-4xl font-semibold tracking-tight text-foreground sm:text-5xl lg:text-6xl';
+  'text-4xl font-semibold tracking-[-0.03em] text-foreground sm:text-5xl lg:text-[3.5rem] lg:leading-[1.02]';
 
 export const sharedPageTitleClass =
-  'text-3xl font-semibold tracking-tight text-foreground sm:text-4xl';
+  'text-2xl font-semibold tracking-tight text-foreground sm:text-3xl';
 
-export const sharedSectionHeadingClass = 'text-base font-semibold tracking-tight text-foreground';
+export const sharedSectionHeadingClass = 'text-lg font-semibold tracking-tight text-foreground';
 
 export const sharedCardTitleClass = 'text-lg font-semibold tracking-tight text-foreground';
 
-export const sharedBodyTextClass = 'text-base leading-8 text-muted';
+export const sharedBodyTextClass = 'text-base leading-7 text-muted sm:text-lg sm:leading-8';
 
-export const sharedSupportingTextClass = 'text-sm leading-6 text-muted sm:text-base sm:leading-7';
+export const sharedSupportingTextClass = 'text-sm leading-6 text-muted sm:text-[15px] sm:leading-7';
 
 export const sharedCompactTextClass = 'text-sm leading-6 text-muted';
 
@@ -44,24 +44,51 @@ export const sharedMutedSurfaceClass = 'rounded-2xl border border-border bg-surf
 export const sharedDashedSurfaceClass =
   'rounded-2xl border border-dashed border-border bg-surface-inset';
 
+export const sharedPageStackClass = 'space-y-6 xl:space-y-8';
+
+export const sharedPageHeaderClass = 'flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between';
+
+export const sharedPageHeaderBodyClass = 'max-w-3xl';
+
+export const sharedSectionSurfaceClass = 'ui-surface-panel rounded-3xl p-5 lg:p-6';
+
+export const sharedMutedSectionSurfaceClass = 'ui-surface-muted rounded-3xl p-4 lg:p-5';
+
+export const sharedSectionHeaderClass =
+  'mb-5 flex flex-col gap-2 lg:flex-row lg:items-start lg:justify-between';
+
+export const sharedFilterToolbarClass = 'grid gap-3 rounded-3xl border border-border bg-surface p-4 shadow-xs xl:gap-4';
+
+export const sharedFieldGroupClass = 'space-y-2';
+
+export const sharedFormActionsClass = 'flex flex-wrap items-center gap-3 pt-1';
+
+export const sharedInlineActionsClass = 'flex flex-wrap items-center gap-2';
+
+export const sharedFieldHintClass = 'text-xs leading-5 text-muted';
+
 export const sharedPrimaryButtonClass =
-  'inline-flex items-center justify-center rounded-lg bg-foreground px-5 py-2.5 text-sm font-medium text-background shadow-sm transition-all duration-200 hover:opacity-90 hover:shadow-md';
+  'inline-flex h-11 items-center justify-center rounded-xl bg-foreground px-4 py-2 text-sm font-medium text-background shadow-xs transition-all duration-200 hover:-translate-y-px hover:opacity-95 hover:shadow-sm';
 
 export const sharedSecondaryButtonClass =
-  'inline-flex items-center justify-center rounded-lg border border-border bg-surface px-5 py-2.5 text-sm font-medium text-foreground shadow-xs transition-all duration-200 hover:border-accent hover:bg-accent-muted hover:shadow-sm';
+  'inline-flex h-11 items-center justify-center rounded-xl border border-border bg-surface px-4 py-2 text-sm font-medium text-foreground shadow-xs transition-all duration-200 hover:border-accent hover:bg-accent-muted hover:shadow-sm';
 
 export const sharedCompactButtonClass =
-  'inline-flex items-center justify-center rounded-lg border border-border bg-surface px-3 py-1.5 text-xs font-medium text-muted shadow-xs transition-colors duration-200 hover:border-accent hover:text-foreground';
+  'inline-flex h-9 items-center justify-center rounded-xl border border-border bg-surface px-3 text-xs font-medium text-muted shadow-xs transition-colors duration-200 hover:border-accent hover:text-foreground';
 
 export const sharedInputLabelClass =
-  'mb-2 block text-sm font-medium tracking-[0.01em] text-foreground';
+  'mb-1.5 block text-sm font-medium tracking-[0.01em] text-foreground';
 
 export const sharedInputClass =
-  'w-full rounded-xl border border-border bg-surface-inset px-4 py-3 text-sm text-foreground shadow-xs outline-none transition-[border-color,box-shadow,background-color] duration-200 placeholder:text-muted-foreground focus:border-[color:var(--tenant-accent)] focus:bg-surface focus:ring-2 focus:ring-[color:var(--tenant-accent-soft)] disabled:cursor-not-allowed disabled:border-border disabled:bg-surface-inset disabled:text-muted';
+  'w-full min-h-11 rounded-xl border border-border bg-surface-inset px-3.5 py-2.5 text-sm leading-5 text-foreground shadow-xs outline-none transition-[border-color,box-shadow,background-color] duration-200 placeholder:text-muted-foreground focus:border-[color:var(--tenant-accent)] focus:bg-surface focus:ring-2 focus:ring-[color:var(--tenant-accent-soft)] disabled:cursor-not-allowed disabled:border-border disabled:bg-surface-inset disabled:text-muted';
 
-export const publicSiteContainerClass = 'mx-auto w-full max-w-7xl px-6 lg:px-8';
+export const sharedTextareaClass = `${sharedInputClass} min-h-32 resize-y py-3`;
 
-export const publicSectionLayoutClass = 'grid gap-12 lg:grid-cols-[0.8fr_1.2fr] lg:items-start';
+export const appShellContentContainerClass = 'mx-auto w-full max-w-[1600px]';
+
+export const publicSiteContainerClass = 'mx-auto w-full max-w-[1180px] px-6 lg:px-8';
+
+export const publicSectionLayoutClass = 'grid gap-8 lg:grid-cols-[minmax(0,0.72fr)_minmax(0,1fr)] lg:items-start lg:gap-12 xl:gap-14';
 
 export const publicHeadingColumnClass = 'lg:sticky lg:top-28';
 

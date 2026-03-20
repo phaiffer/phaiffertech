@@ -93,7 +93,7 @@ describe('Sidebar', () => {
     const { container, getByText } = render(<Sidebar />);
 
     // Group labels are now buttons — all are always in the DOM
-    expect(getByText('PhaifferTech')).toBeTruthy();
+    expect(container.textContent).toContain('PhaifferTech');
     expect(getByText('Platform')).toBeTruthy();
     expect(getByText('CRM')).toBeTruthy();
     expect(getByText('PetFlow')).toBeTruthy();

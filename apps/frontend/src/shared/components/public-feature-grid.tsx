@@ -31,7 +31,7 @@ export function PublicFeatureGrid({
 }: PublicFeatureGridProps) {
   return (
     <section id={id} className="border-t border-border bg-surface-inset">
-      <div className={`${publicSiteContainerClass} py-16 lg:py-24`}>
+      <div className={`${publicSiteContainerClass} py-14 lg:py-20`}>
         <div className={publicSectionLayoutClass}>
           <div className={publicHeadingColumnClass}>
             {eyebrowLabel && <p className={publicEyebrowClass}>{eyebrowLabel}</p>}
@@ -39,11 +39,11 @@ export function PublicFeatureGrid({
             <p className={publicSectionSupportingTextClass}>{description}</p>
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {items.map((item) => (
               <div
                 key={`${item.eyebrow}-${item.title}`}
-                className={`${publicInteractiveCardSurfaceClass} group p-6`}
+                className={`${publicInteractiveCardSurfaceClass} group h-full p-7`}
               >
                 <div className="mb-4 h-1 w-8 rounded-full bg-border transition-colors group-hover:bg-accent" />
                 <p className={publicEyebrowClass}>{item.eyebrow}</p>
