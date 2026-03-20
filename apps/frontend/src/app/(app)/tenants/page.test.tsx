@@ -195,13 +195,15 @@ describe('TenantsPage access model', () => {
           status: 'ACTIVE',
           planCode: 'PRO',
           featureEntitlements: ['beta.dashboard'],
+          effectiveFeatureEntitlements: ['crm.full', 'pet.full', 'beta.dashboard'],
           platformOwner: false,
           logoUrl: null,
           primaryColor: '#1e3a8a',
           accentColor: '#0ea5e9',
           defaultThemeMode: 'DARK',
           allowUserThemeOverride: false,
-          contractedModules: ['CORE_PLATFORM', 'CRM']
+          contractedModules: ['CORE_PLATFORM', 'CRM'],
+          moduleOverrides: ['CRM']
         }
       ],
       totalItems: 1,
@@ -236,6 +238,47 @@ describe('TenantsPage access model', () => {
 
     expect(await screen.findByText('crm.enabled')).toBeInTheDocument();
     expect(screen.getByText('Api Request')).toBeInTheDocument();
+    expect(screen.getByText('Tracked signals')).toBeInTheDocument();
+    expect(screen.getByText('Observed activity')).toBeInTheDocument();
+  });
+
+  it('shows plan baseline, manual overrides, and effective access when editing a tenant', async () => {
+    vi.mocked(tenantService.list).mockResolvedValue({
+      items: [
+        {
+          id: 'tenant-2',
+          name: 'Clinic North',
+          code: 'clinic-north',
+          status: 'ACTIVE',
+          planCode: 'BASIC',
+          featureEntitlements: ['usage.billing.preview'],
+          effectiveFeatureEntitlements: ['crm.basic', 'usage.billing.preview'],
+          platformOwner: false,
+          logoUrl: null,
+          primaryColor: '#1e3a8a',
+          accentColor: '#0ea5e9',
+          defaultThemeMode: 'DARK',
+          allowUserThemeOverride: false,
+          contractedModules: ['CORE_PLATFORM', 'CRM', 'PET'],
+          moduleOverrides: ['PET']
+        }
+      ],
+      totalItems: 1,
+      totalPages: 1,
+      page: 0,
+      size: 20
+    });
+
+    render(<TenantsPage />);
+
+    expect(await screen.findByText('Clinic North')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Edit' }));
+
+    expect(screen.getAllByText('Plan baseline').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('Manual module overrides').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('Effective access').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('usage.billing.preview').length).toBeGreaterThan(0);
   });
 
   it('submits normalized feature entitlements when updating a tenant', async () => {
