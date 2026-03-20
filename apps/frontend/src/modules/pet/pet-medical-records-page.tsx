@@ -83,6 +83,14 @@ export function PetMedicalRecordsPage() {
   const [appointmentContextLoading, setAppointmentContextLoading] = useState(false);
   const [appointmentContextError, setAppointmentContextError] = useState<string | null>(null);
   const [clinicalTimeline, setClinicalTimeline] = useState<PetClinicalTimeline | null>(null);
+
+  const [activeTab, setActiveTab] = useState<'timeline' | 'records' | 'vaccinations' | 'prescriptions'>(() => {
+    if (hasPermission('pet.medical-record.read')) return 'timeline';
+    if (hasAnyPermission(petMedicalRecordPermissions)) return 'records';
+    if (hasAnyPermission(petVaccinationPermissions)) return 'vaccinations';
+    if (hasAnyPermission(petPrescriptionPermissions)) return 'prescriptions';
+    return 'timeline';
+  });
   const [clinicalTimelineLoading, setClinicalTimelineLoading] = useState(false);
   const [clinicalTimelineError, setClinicalTimelineError] = useState<string | null>(null);
 
@@ -824,7 +832,42 @@ export function PetMedicalRecordsPage() {
         {error ? <div className="ui-notice-error">{error}</div> : null}
         {success ? <div className="ui-notice-success">{success}</div> : null}
 
-        {canReadMedicalRecords ? (
+        <div className="flex flex-wrap gap-2 border-b border-border mt-2 mb-6">
+          {canReadMedicalRecords && (
+            <button
+              onClick={() => setActiveTab('timeline')}
+              className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${activeTab === 'timeline' ? 'border-primary text-primary' : 'border-transparent text-muted hover:text-foreground'}`}
+            >
+              Visão Geral
+            </button>
+          )}
+          {canAccessMedicalRecords && (
+            <button
+              onClick={() => setActiveTab('records')}
+              className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${activeTab === 'records' ? 'border-primary text-primary' : 'border-transparent text-muted hover:text-foreground'}`}
+            >
+              Prontuários
+            </button>
+          )}
+          {canAccessVaccinations && (
+            <button
+              onClick={() => setActiveTab('vaccinations')}
+              className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${activeTab === 'vaccinations' ? 'border-primary text-primary' : 'border-transparent text-muted hover:text-foreground'}`}
+            >
+              Vacinas
+            </button>
+          )}
+          {canAccessPrescriptions && (
+            <button
+              onClick={() => setActiveTab('prescriptions')}
+              className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${activeTab === 'prescriptions' ? 'border-primary text-primary' : 'border-transparent text-muted hover:text-foreground'}`}
+            >
+              Prescrições
+            </button>
+          )}
+        </div>
+
+        {activeTab === 'timeline' && canReadMedicalRecords ? (
           <PetClinicalTimelineSection
             data={clinicalTimeline}
             loading={clinicalTimelineLoading}
@@ -833,7 +876,7 @@ export function PetMedicalRecordsPage() {
           />
         ) : null}
 
-        {canAccessMedicalRecords ? (
+        {activeTab === 'records' && canAccessMedicalRecords ? (
           <PetMedicalRecordSection
             editingId={editingRecordId}
             onSubmit={handleSubmitRecord}
@@ -864,7 +907,7 @@ export function PetMedicalRecordsPage() {
           />
         ) : null}
 
-        {canAccessVaccinations ? (
+        {activeTab === 'vaccinations' && canAccessVaccinations ? (
           <PetVaccinationSection
             editingId={editingVaccinationId}
             onSubmit={handleSubmitVaccination}
@@ -892,7 +935,7 @@ export function PetMedicalRecordsPage() {
           />
         ) : null}
 
-        {canAccessPrescriptions ? (
+        {activeTab === 'prescriptions' && canAccessPrescriptions ? (
           <PetPrescriptionSection
             editingId={editingPrescriptionId}
             onSubmit={handleSubmitPrescription}
