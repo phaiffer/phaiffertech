@@ -2,15 +2,24 @@
 
 import { FormEvent, useCallback, useEffect, useState } from 'react';
 import { PermissionGuard } from '@/shared/auth/PermissionGuard';
+import {
+  sharedFilterToolbarClass,
+  sharedFormActionsClass,
+  sharedInlineActionsClass,
+  sharedPageStackClass
+} from '@/shared/components/public-visual-system';
+import { MetricGrid } from '@/shared/dashboard/metric-grid';
 import { ApiClientError } from '@/shared/lib/http';
 import { resolvePageItems, resolveTotalItems } from '@/shared/lib/pagination';
 import { petService } from '@/shared/services/pet-service';
 import { PageResponse } from '@/shared/types/common';
+import { DashboardSummaryCard } from '@/shared/types/dashboard';
 import { PetProduct } from '@/shared/types/pet';
 import { ConfirmDialog } from '@/shared/ui/confirm-dialog';
 import { DataTable, DataTableColumn } from '@/shared/ui/data-table';
 import { FormInput } from '@/shared/ui/form-input';
 import { FormSelect } from '@/shared/ui/form-select';
+import { PageSection } from '@/shared/ui/page-section';
 import { PageTitle } from '@/shared/ui/page-title';
 import { Pagination } from '@/shared/ui/pagination';
 import { SearchBar } from '@/shared/ui/search-bar';
@@ -26,8 +35,8 @@ const initialPage: PageResponse<PetProduct> = {
 };
 
 const categoryOptions = [
-  { value: 'PET_RETAIL_GOOD', label: 'Produto pet retail' },
-  { value: 'PET_VETERINARY_SUPPLY', label: 'Insumo veterinário' }
+  { value: 'PET_RETAIL_GOOD', label: 'Pet retail product' },
+  { value: 'PET_VETERINARY_SUPPLY', label: 'Veterinary supply' }
 ];
 
 export function PetProductsPage() {
@@ -59,14 +68,14 @@ export function PetProductsPage() {
       const result = await petService.listProducts(page, pageSize, currentSearch);
       setPageData(result);
     } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : 'Erro ao carregar produtos.');
+      setError(err instanceof ApiClientError ? err.message : 'Unable to load PetFlow products.');
     } finally {
       setLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    load(0, search);
+    void load(0, search);
   }, [load, search]);
 
   function resetForm() {
@@ -81,6 +90,15 @@ export function PetProductsPage() {
     setReorderPoint('5');
   }
 
+  function scrollToProductForm() {
+    document.getElementById('pet-product-form-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  function beginCreateProduct() {
+    resetForm();
+    scrollToProductForm();
+  }
+
   function beginEdit(item: PetProduct) {
     setEditingId(item.id);
     setName(item.name);
@@ -93,6 +111,7 @@ export function PetProductsPage() {
     setReorderPoint(String(item.reorderPoint));
     setError(null);
     setSuccess(null);
+    scrollToProductForm();
   }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -111,7 +130,7 @@ export function PetProductsPage() {
       parsedMinimum < 0 ||
       parsedReorderPoint < parsedMinimum
     ) {
-      setError('Informe preço, estoque e parâmetros de reposição válidos.');
+      setError('Enter valid price, stock, and replenishment parameters.');
       return;
     }
 
@@ -132,15 +151,15 @@ export function PetProductsPage() {
       };
       if (editingId) {
         await petService.updateProduct(editingId, payload);
-        setSuccess('Produto atualizado com sucesso.');
+        setSuccess('Product updated successfully.');
       } else {
         await petService.createProduct(payload);
-        setSuccess('Produto criado com sucesso.');
+        setSuccess('Product created successfully.');
       }
       resetForm();
       await load(pageData.page, search);
     } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : 'Erro ao salvar produto.');
+      setError(err instanceof ApiClientError ? err.message : 'Unable to save the product.');
     } finally {
       setSubmitting(false);
     }
@@ -154,45 +173,96 @@ export function PetProductsPage() {
     try {
       await petService.deleteProduct(deleteCandidate.id);
       setDeleteCandidate(null);
-      setSuccess('Produto removido com sucesso.');
+      setSuccess('Product removed successfully.');
       await load(pageData.page, search);
     } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : 'Erro ao excluir produto.');
+      setError(err instanceof ApiClientError ? err.message : 'Unable to delete the selected product.');
     }
   }
 
   const rows = resolvePageItems(pageData);
   const totalItems = resolveTotalItems(pageData);
+  const activeFilterCount = [search].filter(Boolean).length;
+  const lowStockCount = rows.filter((item) => item.currentQuantity <= item.reorderPoint).length;
+  const totalVisibleUnits = rows.reduce((total, item) => total + item.currentQuantity, 0);
+  const summaryCards: DashboardSummaryCard[] = [
+    {
+      key: 'products-in-scope',
+      label: 'Products in scope',
+      value: totalItems,
+      trend: activeFilterCount > 0
+        ? 'Results reflect the current catalog search.'
+        : 'Full product catalog for this workspace.'
+    },
+    {
+      key: 'visible-stock-units',
+      label: 'Visible stock',
+      value: totalVisibleUnits,
+      trend: 'Units currently visible in the product view.'
+    },
+    {
+      key: 'low-stock-products',
+      label: 'Low stock on page',
+      value: lowStockCount,
+      trend: 'Products already at or below the replenishment point.'
+    },
+    {
+      key: 'product-filters',
+      label: 'Active filters',
+      value: activeFilterCount,
+      trend: activeFilterCount > 0
+        ? 'The catalog is narrowed to a specific search slice.'
+        : 'No filters are limiting the current view.'
+    }
+  ];
 
   const columns: DataTableColumn<PetProduct>[] = [
-    { key: 'name', header: 'Produto', render: (item) => item.name },
-    { key: 'sku', header: 'SKU', render: (item) => item.sku },
+    {
+      key: 'product',
+      header: 'Product',
+      render: (item) => (
+        <div>
+          <p className="font-medium text-[color:var(--app-shell-heading)]">{item.name}</p>
+          <p className="mt-1 text-sm text-[color:var(--app-shell-muted)]">SKU {item.sku}</p>
+        </div>
+      )
+    },
     {
       key: 'category',
-      header: 'Categoria',
-      render: (item) => item.category === 'PET_VETERINARY_SUPPLY' ? 'Veterinário' : 'Retail'
+      header: 'Category',
+      render: (item) => item.category === 'PET_VETERINARY_SUPPLY' ? 'Veterinary supply' : 'Retail product'
     },
     {
       key: 'price',
-      header: 'Preço',
+      header: 'Price',
       render: (item) => item.price.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
     },
-    { key: 'unitOfMeasure', header: 'Unid.', render: (item) => item.unitOfMeasure },
-    { key: 'currentQuantity', header: 'Atual', render: (item) => String(item.currentQuantity ?? item.stockQuantity) },
-    { key: 'minimumQuantity', header: 'Mínimo', render: (item) => String(item.minimumQuantity) },
-    { key: 'reorderPoint', header: 'Reposição', render: (item) => String(item.reorderPoint) },
+    {
+      key: 'inventory',
+      header: 'Inventory',
+      render: (item) => (
+        <div>
+          <p className="font-medium text-[color:var(--app-shell-heading)]">
+            {item.currentQuantity} {item.unitOfMeasure}
+          </p>
+          <p className="mt-1 text-sm text-[color:var(--app-shell-muted)]">
+            Min {item.minimumQuantity} • Reorder at {item.reorderPoint}
+          </p>
+        </div>
+      )
+    },
     {
       key: 'actions',
-      header: 'Ações',
+      header: 'Actions',
       render: (item) => (
-        <div className="flex gap-2">
+        <div className={sharedInlineActionsClass}>
           <PermissionGuard permission="pet.product.update">
             <button
               type="button"
               onClick={() => beginEdit(item)}
               className="ui-inline-button"
             >
-              Editar
+              Edit
             </button>
           </PermissionGuard>
           <PermissionGuard permission="pet.product.delete">
@@ -201,7 +271,7 @@ export function PetProductsPage() {
               onClick={() => setDeleteCandidate(item)}
               className="ui-inline-danger-button"
             >
-              Excluir
+              Delete
             </button>
           </PermissionGuard>
         </div>
@@ -212,77 +282,143 @@ export function PetProductsPage() {
   return (
     <PermissionGuard
       permission="pet.product.read"
-      fallback={<div className="ui-notice-warning">Você não possui permissão para visualizar produtos.</div>}
+      fallback={<div className="ui-notice-warning">You do not have permission to view PetFlow products.</div>}
     >
-      <div className="space-y-5">
+      <div className={sharedPageStackClass}>
         <PageTitle
+          eyebrow="PetFlow workspace"
           title="Pet Products"
-          description="Catálogo Pet sobre a base compartilhada de estoque, com categoria, unidade e parâmetros de reposição."
+          description="A more complete product and stock surface for demos, onboarding, and day-to-day replenishment conversations."
+          actions={(
+            <PermissionGuard permission="pet.product.create">
+              <button type="button" onClick={beginCreateProduct} className="ui-primary-button">
+                Add product
+              </button>
+            </PermissionGuard>
+          )}
         />
 
-        <div className="grid gap-3 ui-surface-panel p-4 md:grid-cols-[1fr_auto_auto]">
-          <SearchBar value={searchInput} onChange={setSearchInput} placeholder="Nome ou SKU" />
-          <button
-            type="button"
-            onClick={() => setSearch(searchInput)}
-            className="ui-primary-button"
-          >
-            Buscar
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              setSearchInput('');
-              setSearch('');
-            }}
-            className="ui-secondary-button"
-          >
-            Limpar
-          </button>
-        </div>
+        <MetricGrid cards={summaryCards} columns="md:grid-cols-2 xl:grid-cols-4" />
 
-        <PermissionGuard permission={editingId ? 'pet.product.update' : 'pet.product.create'}>
-          <form onSubmit={handleSubmit} className="grid gap-3 ui-surface-panel p-4 md:grid-cols-2 lg:grid-cols-3">
-            <FormInput label="Nome" value={name} onChange={setName} required />
-            <FormInput label="SKU" value={sku} onChange={setSku} required />
-            <FormSelect label="Categoria" value={category} options={categoryOptions} onChange={setCategory} />
-            <FormInput label="Preço" value={price} onChange={setPrice} type="number" required />
-            <FormInput label="Quantidade atual" value={stockQuantity} onChange={setStockQuantity} type="number" required />
-            <FormInput label="Unidade" value={unitOfMeasure} onChange={setUnitOfMeasure} required />
-            <FormInput label="Quantidade mínima" value={minimumQuantity} onChange={setMinimumQuantity} type="number" required />
-            <FormInput label="Ponto de reposição" value={reorderPoint} onChange={setReorderPoint} type="number" required />
-
-            <div className="md:col-span-2 lg:col-span-3 flex gap-2">
+        <PageSection
+          tone="muted"
+          title="Product filters"
+          description="Refine the catalog by name or SKU while keeping the entry surface balanced for first-time and demo users."
+        >
+          <div className={sharedFilterToolbarClass}>
+            <div className="grid gap-3 xl:grid-cols-[minmax(0,1.45fr)] xl:items-end">
+              <SearchBar
+                label="Search"
+                value={searchInput}
+                onChange={setSearchInput}
+                placeholder="Product name or SKU"
+              />
+            </div>
+            <div className={sharedFormActionsClass}>
               <button
-                type="submit"
-                disabled={submitting}
+                type="button"
+                onClick={() => setSearch(searchInput)}
                 className="ui-primary-button"
               >
-                {submitting ? 'Salvando...' : editingId ? 'Atualizar produto' : 'Criar produto'}
+                Search
               </button>
-              {editingId ? (
-                <button
-                  type="button"
-                  onClick={resetForm}
-                  className="ui-secondary-button"
-                >
-                  Cancelar edição
-                </button>
-              ) : null}
+              <button
+                type="button"
+                onClick={() => {
+                  setSearchInput('');
+                  setSearch('');
+                }}
+                className="ui-secondary-button"
+              >
+                Clear
+              </button>
+              <p className="text-sm text-[color:var(--app-shell-muted)]">
+                {activeFilterCount > 0
+                  ? 'Search is focusing the inventory conversation.'
+                  : 'No filters are active. Showing the broader catalog.'}
+              </p>
             </div>
-          </form>
+          </div>
+        </PageSection>
+
+        <PermissionGuard permission={editingId ? 'pet.product.update' : 'pet.product.create'}>
+          <div id="pet-product-form-section">
+            <PageSection
+              title={editingId ? 'Edit product' : 'Create product'}
+              description="Group commercial and replenishment inputs so the catalog feels operational instead of schema-driven."
+            >
+              <form onSubmit={handleSubmit} className="space-y-5">
+                <div className="grid gap-4 xl:grid-cols-2 2xl:grid-cols-3">
+                  <FormInput label="Name" value={name} onChange={setName} required />
+                  <FormInput label="SKU" value={sku} onChange={setSku} required />
+                  <FormSelect label="Category" value={category} options={categoryOptions} onChange={setCategory} />
+                  <FormInput label="Price" value={price} onChange={setPrice} type="number" required />
+                  <FormInput label="Current quantity" value={stockQuantity} onChange={setStockQuantity} type="number" required />
+                  <FormInput label="Unit of measure" value={unitOfMeasure} onChange={setUnitOfMeasure} required />
+                  <FormInput label="Minimum quantity" value={minimumQuantity} onChange={setMinimumQuantity} type="number" required />
+                  <FormInput label="Reorder point" value={reorderPoint} onChange={setReorderPoint} type="number" required />
+                </div>
+
+                <div className={sharedFormActionsClass}>
+                  <button
+                    type="submit"
+                    disabled={submitting}
+                    className="ui-primary-button"
+                  >
+                    {submitting ? 'Saving...' : editingId ? 'Update product' : 'Create product'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={resetForm}
+                    className="ui-secondary-button"
+                  >
+                    {editingId ? 'Cancel edit' : 'Reset form'}
+                  </button>
+                </div>
+              </form>
+            </PageSection>
+          </div>
         </PermissionGuard>
 
         {error ? <div className="ui-notice-error">{error}</div> : null}
         {success ? <div className="ui-notice-success">{success}</div> : null}
 
-        <DataTable columns={columns} rows={rows} getRowKey={(row) => row.id} loading={loading} emptyMessage="Nenhum produto encontrado." />
-        <Pagination page={pageData.page} totalPages={pageData.totalPages} totalElements={totalItems} onPageChange={(page) => load(page, search)} />
+        <PageSection
+          title="Product catalog"
+          description="The listing keeps category, pricing, and replenishment signals easier to scan during demos and operational reviews."
+          actions={<p className="text-sm text-[color:var(--app-shell-muted)]">Total {totalItems} product(s)</p>}
+        >
+          <div className="space-y-5">
+            <DataTable
+              columns={columns}
+              rows={rows}
+              getRowKey={(row) => row.id}
+              loading={loading}
+              loadingTitle="Loading products"
+              loadingDescription="Preparing the product catalog with inventory and replenishment context."
+              emptyState={{
+                title: 'No products found',
+                description: activeFilterCount > 0
+                  ? 'Adjust the search or add a product to complete the catalog for demos and operations.'
+                  : 'Create the first product to make stock, services, and invoicing flows feel more complete.',
+                action: (
+                  <PermissionGuard permission="pet.product.create">
+                    <button type="button" onClick={beginCreateProduct} className="ui-primary-button">
+                      Create first product
+                    </button>
+                  </PermissionGuard>
+                )
+              }}
+            />
+
+            <Pagination page={pageData.page} totalPages={pageData.totalPages} totalElements={totalItems} onPageChange={(page) => void load(page, search)} />
+          </div>
+        </PageSection>
 
         <ConfirmDialog
           open={deleteCandidate !== null}
-          title="Excluir produto?"
-          description={deleteCandidate ? `O produto "${deleteCandidate.name}" será removido.` : undefined}
+          title="Delete product?"
+          description={deleteCandidate ? `The product "${deleteCandidate.name}" will be removed from the catalog.` : undefined}
           onConfirm={handleConfirmDelete}
           onCancel={() => setDeleteCandidate(null)}
         />
