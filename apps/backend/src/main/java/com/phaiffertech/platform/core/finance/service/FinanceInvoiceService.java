@@ -5,6 +5,8 @@ import com.phaiffertech.platform.core.finance.domain.FinanceInvoice;
 import com.phaiffertech.platform.core.finance.domain.FinanceInvoiceStatus;
 import com.phaiffertech.platform.core.finance.domain.FinanceSourceModule;
 import com.phaiffertech.platform.core.finance.dto.FinanceInvoiceResponse;
+import com.phaiffertech.platform.core.finance.fiscal.domain.TenantFiscalProfile;
+import com.phaiffertech.platform.core.finance.fiscal.service.TenantFiscalProfileService;
 import com.phaiffertech.platform.core.finance.repository.FinanceInvoiceRepository;
 import com.phaiffertech.platform.core.finance.repository.FinancePaymentRepository;
 import com.phaiffertech.platform.shared.contracts.finance.FinanceReferenceCapability;
@@ -35,15 +37,18 @@ public class FinanceInvoiceService {
     private final FinanceInvoiceRepository repository;
     private final FinancePaymentRepository paymentRepository;
     private final FinanceReferenceResolverService referenceResolverService;
+    private final TenantFiscalProfileService tenantFiscalProfileService;
 
     public FinanceInvoiceService(
             FinanceInvoiceRepository repository,
             FinancePaymentRepository paymentRepository,
-            FinanceReferenceResolverService referenceResolverService
+            FinanceReferenceResolverService referenceResolverService,
+            TenantFiscalProfileService tenantFiscalProfileService
     ) {
         this.repository = repository;
         this.paymentRepository = paymentRepository;
         this.referenceResolverService = referenceResolverService;
+        this.tenantFiscalProfileService = tenantFiscalProfileService;
     }
 
     @Transactional
@@ -214,6 +219,7 @@ public class FinanceInvoiceService {
         invoice.setDocumentSeries(normalizeOptionalText(command.documentSeries()));
         invoice.setDocumentNumber(normalizeOptionalText(command.documentNumber()));
         invoice.setFiscalDocumentType(normalizeOptionalText(command.fiscalDocumentType()));
+        applyFiscalReadinessDefaults(invoice, tenantId);
 
         if (FinanceInvoiceStatus.CANCELED.equals(requestedStatus)) {
             invoice.setStatus(FinanceInvoiceStatus.CANCELED);
@@ -232,6 +238,39 @@ public class FinanceInvoiceService {
 
         invoice.setStatus(FinanceInvoiceStatus.DRAFT);
         invoice.setIssuedAt(null);
+    }
+
+    private void applyFiscalReadinessDefaults(FinanceInvoice invoice, UUID tenantId) {
+        tenantFiscalProfileService.findByTenantId(tenantId)
+                .ifPresent(profile -> applyFiscalProfileSnapshot(invoice, profile));
+
+        if (isBlank(invoice.getRecipientLegalName())) {
+            invoice.setRecipientLegalName(normalizeOptionalText(invoice.getCounterpartyName()));
+        }
+    }
+
+    private void applyFiscalProfileSnapshot(FinanceInvoice invoice, TenantFiscalProfile profile) {
+        if (isBlank(invoice.getFiscalProviderCode())) {
+            invoice.setFiscalProviderCode(normalizeUppercaseCode(profile.getProviderCode()));
+        }
+        if (isBlank(invoice.getIssuerLegalName())) {
+            invoice.setIssuerLegalName(normalizeOptionalText(profile.getIssuerLegalName()));
+        }
+        if (isBlank(invoice.getIssuerDocumentType())) {
+            invoice.setIssuerDocumentType(normalizeUppercaseCode(profile.getIssuerDocumentType()));
+        }
+        if (isBlank(invoice.getIssuerDocumentNumber())) {
+            invoice.setIssuerDocumentNumber(normalizeOptionalText(profile.getIssuerDocumentNumber()));
+        }
+        if (isBlank(invoice.getIssuerStateRegistration())) {
+            invoice.setIssuerStateRegistration(normalizeOptionalText(profile.getIssuerStateRegistration()));
+        }
+        if (isBlank(invoice.getIssuerMunicipalRegistration())) {
+            invoice.setIssuerMunicipalRegistration(normalizeOptionalText(profile.getIssuerMunicipalRegistration()));
+        }
+        if (isBlank(invoice.getIssuerTaxRegimeCode())) {
+            invoice.setIssuerTaxRegimeCode(normalizeUppercaseCode(profile.getIssuerTaxRegimeCode()));
+        }
     }
 
     private FinanceReferenceCapability.ReferenceDescriptor resolveCounterparty(UUID tenantId, FinanceInvoiceUpsertCommand command) {
@@ -318,6 +357,11 @@ public class FinanceInvoiceService {
         return normalized;
     }
 
+    private String normalizeUppercaseCode(String value) {
+        String normalized = normalizeOptionalText(value);
+        return normalized == null ? null : normalized.toUpperCase();
+    }
+
     private String joinNonBlank(String separator, String left, String right) {
         String normalizedLeft = normalizeOptionalText(left);
         String normalizedRight = normalizeOptionalText(right);
@@ -328,5 +372,9 @@ public class FinanceInvoiceService {
             return normalizedLeft;
         }
         return normalizedLeft + separator + normalizedRight;
+    }
+
+    private boolean isBlank(String value) {
+        return value == null || value.isBlank();
     }
 }

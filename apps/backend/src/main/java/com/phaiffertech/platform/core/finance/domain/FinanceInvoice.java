@@ -86,6 +86,45 @@ public class FinanceInvoice extends BaseTenantEntity {
     @Column(name = "fiscal_payload_reference", length = 120)
     private String fiscalPayloadReference;
 
+    @Column(name = "fiscal_provider_code", length = 40)
+    private String fiscalProviderCode;
+
+    @Column(name = "issuer_legal_name", length = 160)
+    private String issuerLegalName;
+
+    @Column(name = "issuer_document_type", length = 20)
+    private String issuerDocumentType;
+
+    @Column(name = "issuer_document_number", length = 32)
+    private String issuerDocumentNumber;
+
+    @Column(name = "issuer_state_registration", length = 40)
+    private String issuerStateRegistration;
+
+    @Column(name = "issuer_municipal_registration", length = 40)
+    private String issuerMunicipalRegistration;
+
+    @Column(name = "issuer_tax_regime_code", length = 40)
+    private String issuerTaxRegimeCode;
+
+    @Column(name = "recipient_legal_name", length = 160)
+    private String recipientLegalName;
+
+    @Column(name = "recipient_document_type", length = 20)
+    private String recipientDocumentType;
+
+    @Column(name = "recipient_document_number", length = 32)
+    private String recipientDocumentNumber;
+
+    @Column(name = "recipient_state_registration", length = 40)
+    private String recipientStateRegistration;
+
+    @Column(name = "recipient_municipal_registration", length = 40)
+    private String recipientMunicipalRegistration;
+
+    @Column(name = "recipient_email", length = 160)
+    private String recipientEmail;
+
     public FinanceSourceModule getSourceModule() {
         return sourceModule;
     }
@@ -260,5 +299,109 @@ public class FinanceInvoice extends BaseTenantEntity {
 
     public void setFiscalPayloadReference(String fiscalPayloadReference) {
         this.fiscalPayloadReference = fiscalPayloadReference;
+    }
+
+    public String getFiscalProviderCode() {
+        return fiscalProviderCode;
+    }
+
+    public void setFiscalProviderCode(String fiscalProviderCode) {
+        this.fiscalProviderCode = fiscalProviderCode;
+    }
+
+    public String getIssuerLegalName() {
+        return issuerLegalName;
+    }
+
+    public void setIssuerLegalName(String issuerLegalName) {
+        this.issuerLegalName = issuerLegalName;
+    }
+
+    public String getIssuerDocumentType() {
+        return issuerDocumentType;
+    }
+
+    public void setIssuerDocumentType(String issuerDocumentType) {
+        this.issuerDocumentType = issuerDocumentType;
+    }
+
+    public String getIssuerDocumentNumber() {
+        return issuerDocumentNumber;
+    }
+
+    public void setIssuerDocumentNumber(String issuerDocumentNumber) {
+        this.issuerDocumentNumber = issuerDocumentNumber;
+    }
+
+    public String getIssuerStateRegistration() {
+        return issuerStateRegistration;
+    }
+
+    public void setIssuerStateRegistration(String issuerStateRegistration) {
+        this.issuerStateRegistration = issuerStateRegistration;
+    }
+
+    public String getIssuerMunicipalRegistration() {
+        return issuerMunicipalRegistration;
+    }
+
+    public void setIssuerMunicipalRegistration(String issuerMunicipalRegistration) {
+        this.issuerMunicipalRegistration = issuerMunicipalRegistration;
+    }
+
+    public String getIssuerTaxRegimeCode() {
+        return issuerTaxRegimeCode;
+    }
+
+    public void setIssuerTaxRegimeCode(String issuerTaxRegimeCode) {
+        this.issuerTaxRegimeCode = issuerTaxRegimeCode;
+    }
+
+    public String getRecipientLegalName() {
+        return recipientLegalName;
+    }
+
+    public void setRecipientLegalName(String recipientLegalName) {
+        this.recipientLegalName = recipientLegalName;
+    }
+
+    public String getRecipientDocumentType() {
+        return recipientDocumentType;
+    }
+
+    public void setRecipientDocumentType(String recipientDocumentType) {
+        this.recipientDocumentType = recipientDocumentType;
+    }
+
+    public String getRecipientDocumentNumber() {
+        return recipientDocumentNumber;
+    }
+
+    public void setRecipientDocumentNumber(String recipientDocumentNumber) {
+        this.recipientDocumentNumber = recipientDocumentNumber;
+    }
+
+    public String getRecipientStateRegistration() {
+        return recipientStateRegistration;
+    }
+
+    public void setRecipientStateRegistration(String recipientStateRegistration) {
+        this.recipientStateRegistration = recipientStateRegistration;
+    }
+
+    public String getRecipientMunicipalRegistration() {
+        return recipientMunicipalRegistration;
+    }
+
+    public void setRecipientMunicipalRegistration(String recipientMunicipalRegistration) {
+        this.recipientMunicipalRegistration = recipientMunicipalRegistration;
+    }
+
+    public String getRecipientEmail() {
+        return recipientEmail;
+    }
+
+    public void setRecipientEmail(String recipientEmail) {
+        this.recipientEmail = recipientEmail;
     }
 }
