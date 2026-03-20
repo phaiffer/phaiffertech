@@ -60,12 +60,12 @@ export function PetAppointmentsCalendar({
 
   function getStatusColorClass(status: string) {
     const s = status.toUpperCase();
-    if (s === 'COMPLETED') return 'bg-emerald-100 text-emerald-800 border-emerald-200';
-    if (s === 'SCHEDULED') return 'bg-blue-100 text-blue-800 border-blue-200';
-    if (s === 'CONFIRMED') return 'bg-indigo-100 text-indigo-800 border-indigo-200';
-    if (s === 'IN_PROGRESS') return 'bg-amber-100 text-amber-800 border-amber-200';
-    if (s === 'CANCELED' || s === 'NO_SHOW') return 'bg-red-100 text-red-800 border-red-200 line-through';
-    return 'bg-gray-100 text-gray-800 border-gray-200';
+    if (s === 'COMPLETED') return 'border-success/30 bg-success-muted text-success';
+    if (s === 'SCHEDULED') return 'border-info/30 bg-info-muted text-info';
+    if (s === 'CONFIRMED') return 'border-accent/30 bg-accent-muted text-accent';
+    if (s === 'IN_PROGRESS') return 'border-warning/30 bg-warning-muted text-warning';
+    if (s === 'CANCELED' || s === 'NO_SHOW') return 'border-danger/30 bg-danger-muted text-danger line-through';
+    return 'border-border bg-surface-inset text-muted';
   }
 
   const weekdays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];

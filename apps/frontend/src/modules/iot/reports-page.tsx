@@ -114,10 +114,10 @@ export function IotReportsPage() {
     const perf = [];
     const thru = [];
     for (let i = 0; i < 10; i++) {
-        const d = new Date(now.getTime() - (9 - i) * 10 * 60000);
-        const label = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-        perf.push({ label, value: 70 + Math.floor(i * 1.5) + Math.floor(Math.random() * 5) });
-        thru.push({ label, value: 72 + i * 12 + Math.floor(Math.random() * 10) });
+      const d = new Date(now.getTime() - (9 - i) * 10 * 60000);
+      const label = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      perf.push({ label, value: 70 + Math.floor(i * 1.5) + Math.floor(Math.random() * 5) });
+      thru.push({ label, value: 72 + i * 12 + Math.floor(Math.random() * 10) });
     }
     return { initialPerformance: perf, initialThroughput: thru };
   }, [timeRange]); // recalculate line chart base when swapping time ranges to fake a new loading slice

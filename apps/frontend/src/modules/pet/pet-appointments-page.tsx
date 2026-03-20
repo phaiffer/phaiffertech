@@ -30,6 +30,7 @@ import { ConfirmDialog } from '@/shared/ui/confirm-dialog';
 import { DataTable } from '@/shared/ui/data-table';
 import { PageTitle } from '@/shared/ui/page-title';
 import { Pagination } from '@/shared/ui/pagination';
+import { sharedPageStackClass } from '@/shared/components/public-visual-system';
 
 const pageSize = 10;
 
@@ -392,7 +393,7 @@ export function PetAppointmentsPage() {
       permission="pet.appointment.read"
       fallback={<div className="ui-notice-warning">Você não possui permissão para visualizar atendimentos.</div>}
     >
-      <div className="space-y-5">
+      <div className={sharedPageStackClass}>
         <PageTitle 
            title="Pet Appointments" 
            description="Agenda de atendimentos com filtros e gerenciamento completo." 
@@ -487,23 +488,23 @@ export function PetAppointmentsPage() {
 
         {/* SIDE DRAWER FOR APPOINTMENT */}
         {isEditorOpen && (
-          <div className="fixed inset-0 z-50 flex justify-end bg-black/40 backdrop-blur-sm transition-opacity left-0 top-0">
-            <div className="w-full max-w-lg h-full overflow-y-auto bg-[color:var(--app-shell-surface)] p-[var(--space-6)] shadow-2xl animate-in slide-in-from-right duration-300 border-l border-[color:var(--app-shell-border)] relative">
+          <div className="fixed inset-0 z-50 flex justify-end bg-black/40 backdrop-blur-sm">
+            <div className="w-full max-w-lg h-full overflow-y-auto ui-surface-panel p-6 shadow-2xl animate-in slide-in-from-right duration-300 border-l border-border relative">
               <div className="mb-6 flex items-center justify-between">
-                 <div>
-                   <h2 className="text-xl font-bold tracking-tight text-[color:var(--app-shell-heading)]">
-                     {editingId ? 'Editar Atendimento' : 'Novo Atendimento'}
-                   </h2>
-                   <p className="text-sm mt-1 text-[color:var(--app-shell-muted)]">
-                     Preencha as informações clínicas e operacionais.
-                   </p>
-                 </div>
-                 <button 
-                   onClick={() => setIsEditorOpen(false)} 
-                   className="rounded-full p-2 text-[color:var(--app-shell-muted)] hover:bg-[color:var(--app-shell-panel-muted)] hover:text-[color:var(--app-shell-heading)]"
-                 >
-                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
-                 </button>
+                <div>
+                  <h2 className="text-xl font-semibold tracking-tight text-foreground">
+                    {editingId ? 'Editar Atendimento' : 'Novo Atendimento'}
+                  </h2>
+                  <p className="text-sm mt-1 text-muted">
+                    Preencha as informações clínicas e operacionais.
+                  </p>
+                </div>
+                <button
+                  onClick={() => setIsEditorOpen(false)}
+                  className="rounded-full p-2 text-muted hover:bg-surface-inset hover:text-foreground transition-colors duration-200"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                </button>
               </div>
 
               <div className="space-y-6 pb-20">
@@ -537,7 +538,6 @@ export function PetAppointmentsPage() {
                   onCancelEdit={() => setIsEditorOpen(false)}
                 />
               </div>
-
             </div>
           </div>
         )}

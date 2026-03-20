@@ -128,7 +128,7 @@ export function PetClinicalTimelineSection({
 
   return (
     <PageSection
-      title="Clinical Timeline"
+      title="Linha do Tempo Clínica"
       description="Leitura consolidada do historico recente por pet e atendimento."
       contentClassName="space-y-4"
     >
@@ -593,7 +593,7 @@ export function PetMedicalRecordSection({
 }: PetMedicalRecordSectionProps) {
   return (
     <PageSection
-      title="Medical Records"
+      title="Prontuários"
       description="Histórico clínico e evoluções por pet."
       contentClassName="space-y-5"
     >
@@ -722,7 +722,7 @@ export function PetVaccinationSection({
 }: PetVaccinationSectionProps) {
   return (
     <PageSection
-      title="Vaccinations"
+      title="Vacinações"
       description="Controle de aplicações e próximos reforços."
       contentClassName="space-y-5"
     >

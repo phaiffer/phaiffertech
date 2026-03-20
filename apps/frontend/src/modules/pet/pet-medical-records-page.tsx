@@ -836,7 +836,7 @@ export function PetMedicalRecordsPage() {
           {canReadMedicalRecords && (
             <button
               onClick={() => setActiveTab('timeline')}
-              className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${activeTab === 'timeline' ? 'border-primary text-primary' : 'border-transparent text-muted hover:text-foreground'}`}
+              className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors duration-200 ${activeTab === 'timeline' ? 'border-accent text-accent' : 'border-transparent text-muted hover:text-foreground'}`}
             >
               Visão Geral
             </button>
@@ -844,7 +844,7 @@ export function PetMedicalRecordsPage() {
           {canAccessMedicalRecords && (
             <button
               onClick={() => setActiveTab('records')}
-              className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${activeTab === 'records' ? 'border-primary text-primary' : 'border-transparent text-muted hover:text-foreground'}`}
+              className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors duration-200 ${activeTab === 'records' ? 'border-accent text-accent' : 'border-transparent text-muted hover:text-foreground'}`}
             >
               Prontuários
             </button>
@@ -852,7 +852,7 @@ export function PetMedicalRecordsPage() {
           {canAccessVaccinations && (
             <button
               onClick={() => setActiveTab('vaccinations')}
-              className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${activeTab === 'vaccinations' ? 'border-primary text-primary' : 'border-transparent text-muted hover:text-foreground'}`}
+              className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors duration-200 ${activeTab === 'vaccinations' ? 'border-accent text-accent' : 'border-transparent text-muted hover:text-foreground'}`}
             >
               Vacinas
             </button>
@@ -860,7 +860,7 @@ export function PetMedicalRecordsPage() {
           {canAccessPrescriptions && (
             <button
               onClick={() => setActiveTab('prescriptions')}
-              className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${activeTab === 'prescriptions' ? 'border-primary text-primary' : 'border-transparent text-muted hover:text-foreground'}`}
+              className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors duration-200 ${activeTab === 'prescriptions' ? 'border-accent text-accent' : 'border-transparent text-muted hover:text-foreground'}`}
             >
               Prescrições
             </button>
