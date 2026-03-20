@@ -354,5 +354,5 @@ export const iotService = {
 
   getDashboardSummary: () => apiClient.get<IotDashboardSummary>('/iot/dashboard/summary'),
 
-  getReportSummary: () => apiClient.get<IotReportSummary>('/iot/reports/summary')
+  getReportSummary: (range?: string) => apiClient.get<IotReportSummary>(`/iot/reports/summary${range ? `?range=${range}` : ''}`)
 };

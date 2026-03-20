@@ -560,37 +560,43 @@ export function buildDemoMaintenanceRecords(devices: IotDevice[]): DemoMaintenan
   ];
 }
 
-export function buildDemoReportSummary(): IotReportSummary {
+export function buildDemoReportSummary(timeRange: string = '24h'): IotReportSummary {
+  const multiplier = timeRange === '30d' ? 30 : timeRange === '7d' ? 7 : 1;
+  const hour = new Date().getHours() + 1;
+  const jitter = Math.floor(Math.random() * 5); // 0 to 4 slight variation
+  const baseTelemetry = 1240 * multiplier + (hour * 15) + jitter;
+  const maintenanceScale = timeRange === '30d' ? 14 : timeRange === '7d' ? 4 : 2;
+
   return {
     totalDevices: 3,
     totalRegisters: 26,
-    telemetryPointsLast24h: 1240,
+    telemetryPointsLast24h: baseTelemetry,
     openAlarms: 1,
-    pendingMaintenance: 2,
+    pendingMaintenance: maintenanceScale,
     devicesByStatus: {
       ONLINE: 1,
       ALERT: 1,
       OFFLINE: 1
     },
     telemetryByMetric: {
-      temperatura: 320,
-      pressao: 260,
-      corrente: 180,
-      energia: 480
+      temperatura: 320 * multiplier,
+      pressao: 260 * multiplier,
+      corrente: 180 * multiplier,
+      energia: 480 * multiplier
     },
     alarmsByStatus: {
       OPEN: 1,
-      ACKNOWLEDGED: 1,
-      RESOLVED: 1
+      ACKNOWLEDGED: 1 * multiplier,
+      RESOLVED: (1 + jitter) * multiplier
     },
     alarmsBySeverity: {
       HIGH: 1,
-      MEDIUM: 1,
-      LOW: 1
+      MEDIUM: multiplier,
+      LOW: (1 + jitter) * multiplier
     },
     maintenanceByStatus: {
-      PENDING: 2,
-      COMPLETED: 6
+      PENDING: maintenanceScale,
+      COMPLETED: (6 + jitter) * multiplier
     },
     generatedAt: new Date().toISOString()
   };
