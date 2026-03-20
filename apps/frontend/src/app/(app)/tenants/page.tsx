@@ -6,10 +6,12 @@ import { PermissionGuard } from '@/shared/auth/PermissionGuard';
 import { useAuth } from '@/shared/auth/use-auth';
 import { usePermissions } from '@/shared/auth/usePermissions';
 import {
+  sharedCompactTextClass,
   sharedInputClass,
   sharedInputLabelClass,
   sharedPageStackClass
 } from '@/shared/components/public-visual-system';
+import { MetricGrid } from '@/shared/dashboard/metric-grid';
 import { StatusBadge } from '@/shared/dashboard/status-badge';
 import { setImpersonationBackupSession } from '@/shared/lib/session';
 import { resolvePageItems, resolveTotalItems } from '@/shared/lib/pagination';
@@ -19,6 +21,7 @@ import { supportImpersonationService } from '@/shared/services/support-impersona
 import { tenantService, TenantUpsertInput, TenantUsageMetric } from '@/shared/services/tenant-service';
 import { PageResponse } from '@/shared/types/common';
 import { TenantThemeMode } from '@/shared/types/auth';
+import { DashboardSummaryCard } from '@/shared/types/dashboard';
 import { Tenant } from '@/shared/types/tenant';
 import { DataTable, DataTableColumn } from '@/shared/ui/data-table';
 import { FormTextarea } from '@/shared/ui/form-textarea';
@@ -127,6 +130,25 @@ function formatTokenLabel(value: string) {
     .filter(Boolean)
     .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
     .join(' ');
+}
+
+function resolveManualModuleOverrides(tenant: Tenant) {
+  return tenant.moduleOverrides
+    ?? tenant.contractedModules.filter((moduleCode) => (
+      moduleCode !== 'CORE_PLATFORM'
+      && !resolvePlanDetails(tenant.planCode).defaultModules.includes(moduleCode)
+    ));
+}
+
+function resolveEffectiveEntitlements(tenant: Tenant) {
+  if (tenant.effectiveFeatureEntitlements && tenant.effectiveFeatureEntitlements.length > 0) {
+    return tenant.effectiveFeatureEntitlements;
+  }
+
+  return Array.from(new Set([
+    ...resolvePlanDetails(tenant.planCode).defaultEntitlements,
+    ...(tenant.featureEntitlements ?? [])
+  ]));
 }
 
 export default function TenantsPage() {
@@ -418,6 +440,90 @@ export default function TenantsPage() {
     () => tenants.find((tenant) => tenant.id === editingTenantId) ?? null,
     [editingTenantId, tenants]
   );
+  const tenantSummaryCards = useMemo<DashboardSummaryCard[]>(() => {
+    const tenantsInScope = tenants.length;
+    const tenantsWithOverrides = tenants.filter((tenant) => resolveManualModuleOverrides(tenant).length > 0).length;
+    const tenantsWithCustomEntitlements = tenants.filter((tenant) => (tenant.featureEntitlements ?? []).length > 0).length;
+    const enterpriseAccessTenants = tenants.filter((tenant) => resolveEffectiveEntitlements(tenant).includes('*')).length;
+
+    return [
+      {
+        key: 'tenant-count',
+        label: 'Tenants in scope',
+        value: totalItems,
+        trend: tenantsInScope < totalItems
+          ? 'Pagination is active. Current cards summarize the full result size.'
+          : 'Current platform tenant count in this view.'
+      },
+      {
+        key: 'tenant-overrides',
+        label: 'Manual module overrides',
+        value: tenantsWithOverrides,
+        trend: 'Tenants extending plan defaults with additional module access.'
+      },
+      {
+        key: 'tenant-entitlements',
+        label: 'Custom entitlements',
+        value: tenantsWithCustomEntitlements,
+        trend: 'Tenants with extra commercial access beyond the plan baseline.'
+      },
+      {
+        key: 'tenant-enterprise',
+        label: 'Full access tenants',
+        value: enterpriseAccessTenants,
+        trend: 'Tenants whose effective entitlements currently include wildcard access.'
+      }
+    ];
+  }, [tenants, totalItems]);
+  const editingTenantPlanDetails = useMemo(
+    () => editingTenant ? resolvePlanDetails(editingTenant.planCode) : null,
+    [editingTenant]
+  );
+  const editingTenantManualModuleOverrides = useMemo(
+    () => editingTenant ? resolveManualModuleOverrides(editingTenant) : [],
+    [editingTenant]
+  );
+  const editingTenantEffectiveModules = useMemo(
+    () => editingTenant ? resolveEffectiveModuleSelection(editingTenant.planCode, editingTenantManualModuleOverrides) : [],
+    [editingTenant, editingTenantManualModuleOverrides]
+  );
+  const editingTenantEffectiveEntitlements = useMemo(
+    () => editingTenant ? resolveEffectiveEntitlements(editingTenant) : [],
+    [editingTenant]
+  );
+  const usageSummaryCards = useMemo<DashboardSummaryCard[]>(() => {
+    const totalQuantity = usageMetrics.reduce((sum, metric) => sum + metric.quantity, 0);
+    const trackedSignals = new Set(usageMetrics.map((metric) => metric.metricKey)).size;
+    const activeSources = new Set(usageMetrics.map((metric) => metric.source)).size;
+    const recentDays = new Set(usageMetrics.map((metric) => metric.metricDate)).size;
+
+    return [
+      {
+        key: 'usage-total-quantity',
+        label: 'Observed activity',
+        value: totalQuantity,
+        trend: 'Aggregated quantity across the currently visible telemetry rows.'
+      },
+      {
+        key: 'usage-signals',
+        label: 'Tracked signals',
+        value: trackedSignals,
+        trend: 'Distinct operational metric families recorded for this tenant.'
+      },
+      {
+        key: 'usage-sources',
+        label: 'Active sources',
+        value: activeSources,
+        trend: 'Modules or channels currently generating usage telemetry.'
+      },
+      {
+        key: 'usage-days',
+        label: 'Observed days',
+        value: recentDays,
+        trend: 'Distinct days represented in the telemetry sample.'
+      }
+    ];
+  }, [usageMetrics]);
 
   async function handleStartImpersonation() {
     if (!editingTenantId || !session) {
@@ -470,12 +576,15 @@ export default function TenantsPage() {
     },
     {
       key: 'plan',
-      header: 'Plan',
+      header: 'Contract',
       render: (tenant) => (
         <div className="space-y-2">
           <span className="text-sm font-medium text-[color:var(--app-shell-heading)]">
             {tenant.planCode ?? '-'}
           </span>
+          <p className={sharedCompactTextClass}>
+            Plan modules {resolvePlanDetails(tenant.planCode).defaultModules.length} • Manual overrides {resolveManualModuleOverrides(tenant).length}
+          </p>
           <div className="flex flex-wrap gap-1.5">
             {(tenant.featureEntitlements ?? []).length > 0 ? (
               tenant.featureEntitlements?.map((featureKey) => (
@@ -492,6 +601,11 @@ export default function TenantsPage() {
               </span>
             )}
           </div>
+          <p className={sharedCompactTextClass}>
+            Effective access {resolveEffectiveEntitlements(tenant).includes('*')
+              ? 'includes wildcard access'
+              : `${resolveEffectiveEntitlements(tenant).length} entitlement signal(s)`}
+          </p>
         </div>
       )
     },
@@ -534,17 +648,24 @@ export default function TenantsPage() {
     },
     {
       key: 'modules',
-      header: 'Modules',
+      header: 'Effective modules',
       render: (tenant) => (
-        <div className="flex flex-wrap gap-2">
-          {tenant.contractedModules.map((moduleCode) => (
-            <span
-              key={`${tenant.id}-${moduleCode}`}
-              className="inline-flex items-center rounded-full border border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-panel-muted)] px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-[color:var(--app-shell-text)]"
-            >
-              {moduleCode}
-            </span>
-          ))}
+        <div className="space-y-2">
+          <div className="flex flex-wrap gap-2">
+            {tenant.contractedModules.map((moduleCode) => (
+              <span
+                key={`${tenant.id}-${moduleCode}`}
+                className="inline-flex items-center rounded-full border border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-panel-muted)] px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-[color:var(--app-shell-text)]"
+              >
+                {moduleCode}
+              </span>
+            ))}
+          </div>
+          <p className={sharedCompactTextClass}>
+            {resolveManualModuleOverrides(tenant).length > 0
+              ? `Manual override modules: ${resolveManualModuleOverrides(tenant).join(', ')}`
+              : 'No manual module overrides'}
+          </p>
         </div>
       )
     },
@@ -587,8 +708,10 @@ export default function TenantsPage() {
           <PageTitle
             eyebrow="Platform administration"
             title="Tenants"
-            description="Manage contracted modules, tenant branding and experience defaults from the platform owner workspace."
+            description="Manage contracted modules, plan baselines, commercial overrides, and tenant experience defaults from the platform owner workspace."
           />
+
+          <MetricGrid cards={tenantSummaryCards} columns="md:grid-cols-2 xl:grid-cols-4" />
 
           {error ? (
             <div className="ui-notice-error">{error}</div>
@@ -786,6 +909,87 @@ export default function TenantsPage() {
                         ))}
                       </div>
                     </div>
+
+                    <div className="ui-surface-panel space-y-4 px-4 py-4 text-sm">
+                      <div>
+                        <p className="font-medium text-[color:var(--app-shell-heading)]">
+                          Contract preview
+                        </p>
+                        <p className="mt-1 text-[color:var(--app-shell-muted)]">
+                          Separate the commercial baseline from manual overrides before saving the tenant contract.
+                        </p>
+                      </div>
+
+                      <div>
+                        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--app-shell-muted)]">
+                          Plan baseline
+                        </p>
+                        <div className="mt-2 flex flex-wrap gap-2">
+                          {selectedPlanDetails.defaultModules.map((moduleCode) => (
+                            <span
+                              key={`preview-plan-module-${moduleCode}`}
+                              className="inline-flex items-center rounded-full border border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-panel-muted)] px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-[color:var(--app-shell-text)]"
+                            >
+                              {moduleCode}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div>
+                        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--app-shell-muted)]">
+                          Manual module overrides
+                        </p>
+                        {(form.contractedModules ?? []).length > 0 ? (
+                          <div className="mt-2 flex flex-wrap gap-2">
+                            {form.contractedModules.map((moduleCode) => (
+                              <span
+                                key={`preview-manual-module-${moduleCode}`}
+                                className="inline-flex items-center rounded-full border border-[color:var(--tenant-accent)] bg-[color:var(--tenant-accent-soft)] px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-[color:var(--app-shell-heading)]"
+                              >
+                                {moduleCode}
+                              </span>
+                            ))}
+                          </div>
+                        ) : (
+                          <p className="mt-2 text-[color:var(--app-shell-muted)]">
+                            No manual module overrides selected.
+                          </p>
+                        )}
+                      </div>
+
+                      <div>
+                        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--app-shell-muted)]">
+                          Effective access
+                        </p>
+                        <div className="mt-2 flex flex-wrap gap-2">
+                          {effectiveSelectedModules.map((moduleCode) => (
+                            <span
+                              key={`preview-effective-module-${moduleCode}`}
+                              className="inline-flex items-center rounded-full border border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-panel)] px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-[color:var(--app-shell-text)]"
+                            >
+                              {moduleCode}
+                            </span>
+                          ))}
+                        </div>
+                        <div className="mt-2 flex flex-wrap gap-2">
+                          {form.featureEntitlements && form.featureEntitlements.length > 0 ? (
+                            form.featureEntitlements.map((featureKey) => (
+                              <span
+                                key={`preview-feature-${featureKey}`}
+                                className="inline-flex items-center rounded-full border border-[color:var(--tenant-accent)] bg-[color:var(--tenant-accent-soft)] px-2.5 py-1 text-[11px] font-semibold text-[color:var(--app-shell-heading)]"
+                              >
+                                {featureKey}
+                              </span>
+                            ))
+                          ) : (
+                            <span className="text-[color:var(--app-shell-muted)]">
+                              No custom feature entitlement overrides.
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
                   </div>
 
                   <div className="ui-surface-muted space-y-4 p-4 lg:p-5">
@@ -868,6 +1072,120 @@ export default function TenantsPage() {
 
               {editingTenantId ? (
                 <div className="grid gap-4 xl:grid-cols-2">
+                  <section className="ui-surface-muted space-y-4 p-4 lg:p-5 xl:col-span-2">
+                    <div>
+                      <p className="text-sm font-medium text-[color:var(--app-shell-heading)]">Contract review</p>
+                      <p className="mt-1 text-sm text-[color:var(--app-shell-muted)]">
+                        Review the tenant baseline, manual overrides, effective entitlements, and observed usage before approving the contract state.
+                      </p>
+                    </div>
+
+                    <div className="grid gap-4 xl:grid-cols-3">
+                      <div className="rounded-2xl border border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-panel)] p-4">
+                        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--app-shell-muted)]">
+                          Plan baseline
+                        </p>
+                        <p className="mt-2 text-sm font-semibold text-[color:var(--app-shell-heading)]">
+                          {editingTenant?.planCode ?? 'No plan assigned'}
+                        </p>
+                        <div className="mt-3 flex flex-wrap gap-2">
+                          {(editingTenantPlanDetails?.defaultModules ?? []).map((moduleCode) => (
+                            <span
+                              key={`editing-plan-module-${moduleCode}`}
+                              className="inline-flex items-center rounded-full border border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-panel-muted)] px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-[color:var(--app-shell-text)]"
+                            >
+                              {moduleCode}
+                            </span>
+                          ))}
+                        </div>
+                        <div className="mt-2 flex flex-wrap gap-2">
+                          {(editingTenantPlanDetails?.defaultEntitlements ?? []).map((featureKey) => (
+                            <span
+                              key={`editing-plan-entitlement-${featureKey}`}
+                              className="inline-flex items-center rounded-full border border-[color:var(--tenant-accent)] bg-[color:var(--tenant-accent-soft)] px-2.5 py-1 text-[11px] font-semibold text-[color:var(--app-shell-heading)]"
+                            >
+                              {featureKey}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div className="rounded-2xl border border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-panel)] p-4">
+                        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--app-shell-muted)]">
+                          Manual module overrides
+                        </p>
+                        {editingTenantManualModuleOverrides.length > 0 ? (
+                          <div className="mt-3 flex flex-wrap gap-2">
+                            {editingTenantManualModuleOverrides.map((moduleCode) => (
+                              <span
+                                key={`editing-manual-module-${moduleCode}`}
+                                className="inline-flex items-center rounded-full border border-[color:var(--tenant-accent)] bg-[color:var(--tenant-accent-soft)] px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-[color:var(--app-shell-heading)]"
+                              >
+                                {moduleCode}
+                              </span>
+                            ))}
+                          </div>
+                        ) : (
+                          <p className="mt-3 text-sm text-[color:var(--app-shell-muted)]">
+                            No manual module overrides are active for this tenant.
+                          </p>
+                        )}
+
+                        <p className="mt-4 text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--app-shell-muted)]">
+                          Custom entitlements
+                        </p>
+                        <div className="mt-2 flex flex-wrap gap-2">
+                          {(editingTenant?.featureEntitlements ?? []).length > 0 ? (
+                            editingTenant?.featureEntitlements?.map((featureKey) => (
+                              <span
+                                key={`editing-feature-${featureKey}`}
+                                className="inline-flex items-center rounded-full border border-[color:var(--tenant-accent)] bg-[color:var(--tenant-accent-soft)] px-2.5 py-1 text-[11px] font-semibold text-[color:var(--app-shell-heading)]"
+                              >
+                                {featureKey}
+                              </span>
+                            ))
+                          ) : (
+                            <span className="text-sm text-[color:var(--app-shell-muted)]">
+                              No custom entitlements applied.
+                            </span>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="rounded-2xl border border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-panel)] p-4">
+                        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--app-shell-muted)]">
+                          Effective access
+                        </p>
+                        <div className="mt-3 flex flex-wrap gap-2">
+                          {editingTenantEffectiveModules.map((moduleCode) => (
+                            <span
+                              key={`editing-effective-module-${moduleCode}`}
+                              className="inline-flex items-center rounded-full border border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-panel-muted)] px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-[color:var(--app-shell-text)]"
+                            >
+                              {moduleCode}
+                            </span>
+                          ))}
+                        </div>
+                        <div className="mt-2 flex flex-wrap gap-2">
+                          {editingTenantEffectiveEntitlements.length > 0 ? (
+                            editingTenantEffectiveEntitlements.map((featureKey) => (
+                              <span
+                                key={`editing-effective-feature-${featureKey}`}
+                                className="inline-flex items-center rounded-full border border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-panel-muted)] px-2.5 py-1 text-[11px] font-semibold text-[color:var(--app-shell-text)]"
+                              >
+                                {featureKey}
+                              </span>
+                            ))
+                          ) : (
+                            <span className="text-sm text-[color:var(--app-shell-muted)]">
+                              No effective entitlement signals returned by the backend.
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </section>
+
                   <section className="ui-surface-muted space-y-3 p-4 lg:p-5">
                     <div>
                       <p className="text-sm font-medium text-[color:var(--app-shell-heading)]">Feature flags</p>
@@ -940,7 +1258,7 @@ export default function TenantsPage() {
                     <div>
                       <p className="text-sm font-medium text-[color:var(--app-shell-heading)]">Usage telemetry</p>
                       <p className="mt-1 text-sm text-[color:var(--app-shell-muted)]">
-                        Read-only daily aggregates from successful logins, API requests, and auditable entity creation.
+                        Read-only daily aggregates from successful logins, API requests, and auditable entity creation. Use this to explain what the tenant is actually consuming today.
                       </p>
                     </div>
 
@@ -951,7 +1269,9 @@ export default function TenantsPage() {
                     {usageMetricsLoading ? (
                       <div className="ui-notice-neutral">Loading recent usage metrics...</div>
                     ) : usageMetrics.length > 0 ? (
-                      <div className="overflow-x-auto rounded-[var(--radius-xl)] border border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-panel)]">
+                      <>
+                        <MetricGrid cards={usageSummaryCards} columns="md:grid-cols-2 xl:grid-cols-4" />
+                        <div className="overflow-x-auto rounded-[var(--radius-xl)] border border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-panel)]">
                         <table className="min-w-full text-left text-sm">
                           <thead>
                             <tr className="border-b border-[color:var(--app-shell-border)] text-xs uppercase tracking-[0.16em] text-[color:var(--app-shell-muted)]">
@@ -993,7 +1313,8 @@ export default function TenantsPage() {
                             </tbody>
                           ))}
                         </table>
-                      </div>
+                        </div>
+                      </>
                     ) : (
                       <p className="text-sm text-[color:var(--app-shell-muted)]">
                         No recent usage telemetry has been recorded for this tenant.
