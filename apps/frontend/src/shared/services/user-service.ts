@@ -9,7 +9,17 @@ export type CreateUserInput = {
   roleCode?: string;
 };
 
+export type UpdateUserInput = {
+  email?: string;
+  fullName?: string;
+  password?: string;
+  roleCode?: string;
+  active?: boolean;
+};
+
 export const userService = {
   list: (page = 0, size = 20) => apiClient.get<PageResponse<PlatformUser>>(`/users?page=${page}&size=${size}`),
-  create: (input: CreateUserInput) => apiClient.post<PlatformUser>('/users', input)
+  create: (input: CreateUserInput) => apiClient.post<PlatformUser>('/users', input),
+  update: (id: string, input: UpdateUserInput) => apiClient.put<PlatformUser>(`/users/${id}`, input),
+  delete: (id: string) => apiClient.delete<void>(`/users/${id}`)
 };

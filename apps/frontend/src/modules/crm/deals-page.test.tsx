@@ -50,18 +50,30 @@ describe('CrmDealsPage', () => {
     crmServiceMock.listDeals.mockResolvedValue(createPageResponse([]));
   });
 
-  it('shows guided setup actions when deals cannot yet be created safely', async () => {
+  it('shows guided setup actions when pipeline stages are missing', async () => {
     render(<CrmDealsPage />);
 
     await waitFor(() => {
       expect(crmServiceMock.listDeals).toHaveBeenCalledTimes(1);
     });
 
+    // We changed the component to render the Kanban Board, and if no stages exist it gives this prompt:
     expect(
-      screen.getByText('Deals are easier to create after the workspace has at least one company and one pipeline stage.')
+      screen.getByText('The Kanban board requires at least one pipeline stage to be configured.')
     ).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Open companies' })).toHaveAttribute('href', '/crm/companies');
-    expect(screen.getByRole('link', { name: 'Open pipeline' })).toHaveAttribute('href', '/crm/pipeline');
-    expect(screen.getByRole('button', { name: 'Create first deal' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Configure pipeline stages' })).toHaveAttribute('href', '/crm/pipeline');
+  });
+  
+  it('renders kanban board when stages and deals exist', async () => {
+    // Return mock data for stages and deals
+    crmServiceMock.listPipelineStages.mockResolvedValue(createPageResponse([{ id: 's1', name: 'Prospecting', position: 1, colorHex: '#fff' }]));
+    crmServiceMock.listDeals.mockResolvedValue(createPageResponse([{ id: 'd1', title: 'Deal One', pipelineStageId: 's1', status: 'OPEN', currency: 'USD', amount: 5000 }]));
+    
+    render(<CrmDealsPage />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Prospecting')).toBeInTheDocument();
+      expect(screen.getByText('Deal One')).toBeInTheDocument();
+    });
   });
 });

@@ -7,7 +7,6 @@ import {
   sharedCompactTextClass,
   sharedFilterToolbarClass,
   sharedFormActionsClass,
-  sharedInlineActionsClass,
   sharedPageStackClass
 } from '@/shared/components/public-visual-system';
 import { StatusBadge } from '@/shared/dashboard/status-badge';
@@ -19,7 +18,6 @@ import { CrmCompany, CrmContact, CrmDeal, CrmLead, CrmPipelineStage } from '@/sh
 import { PageResponse } from '@/shared/types/common';
 import { DashboardSummaryCard } from '@/shared/types/dashboard';
 import { ConfirmDialog } from '@/shared/ui/confirm-dialog';
-import { DataTable, DataTableColumn } from '@/shared/ui/data-table';
 import { DateInput } from '@/shared/ui/date-input';
 import { FormInput } from '@/shared/ui/form-input';
 import { FormSelect } from '@/shared/ui/form-select';
@@ -28,7 +26,7 @@ import { PageTitle } from '@/shared/ui/page-title';
 import { Pagination } from '@/shared/ui/pagination';
 import { SearchBar } from '@/shared/ui/search-bar';
 
-const pageSize = 10;
+const pageSize = 50; // Increased for broader Kanban board view
 const statusOptions = [
   { value: '', label: 'All' },
   { value: 'OPEN', label: 'OPEN' },
@@ -50,9 +48,13 @@ export function CrmDealsPage() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [deleteCandidate, setDeleteCandidate] = useState<CrmDeal | null>(null);
 
+  // Kanban & Drawer State
+  const [isEditorOpen, setIsEditorOpen] = useState(false);
+  const [isDragUpdating, setIsDragUpdating] = useState(false);
+
   const [searchInput, setSearchInput] = useState('');
   const [search, setSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState('');
+  const [statusFilter, setStatusFilter] = useState('OPEN'); // Default open deals for kanban
   const [companyFilterId, setCompanyFilterId] = useState('');
 
   const [title, setTitle] = useState('');
@@ -85,7 +87,7 @@ export function CrmDealsPage() {
       setCompanies(resolvePageItems(companiesPage));
       setContacts(resolvePageItems(contactsPage));
       setLeads(resolvePageItems(leadsPage));
-      setStages(resolvePageItems(stagesPage));
+      setStages(resolvePageItems(stagesPage).sort((a, b) => a.position - b.position));
     } catch (err) {
       setError(err instanceof ApiClientError ? err.message : 'Unable to load deal dependencies for the CRM workspace.');
     }
@@ -121,6 +123,26 @@ export function CrmDealsPage() {
     setExpectedCloseDate('');
   }
 
+  function beginCreateDeal() {
+    resetForm();
+    setIsEditorOpen(true);
+  }
+
+  function beginEditDeal(row: CrmDeal) {
+    setEditingId(row.id);
+    setTitle(row.title);
+    setDescription(row.description ?? '');
+    setAmount(row.amount ? String(row.amount) : '');
+    setCurrency(row.currency);
+    setStatus(row.status);
+    setCompanyId(row.companyId);
+    setPipelineStageId(row.pipelineStageId);
+    setContactId(row.contactId ?? '');
+    setLeadId(row.leadId ?? '');
+    setExpectedCloseDate(row.expectedCloseDate ?? '');
+    setIsEditorOpen(true);
+  }
+
   async function handleSubmit() {
     if (!companyId || !pipelineStageId || !title.trim()) {
       setError('Title, company, and pipeline stage are required.');
@@ -148,6 +170,7 @@ export function CrmDealsPage() {
       } else {
         await crmService.createDeal(payload);
       }
+      setIsEditorOpen(false);
       resetForm();
       await load(pageData.page, search, statusFilter, companyFilterId);
     } catch (err) {
@@ -162,10 +185,52 @@ export function CrmDealsPage() {
     try {
       await crmService.deleteDeal(deleteCandidate.id);
       setDeleteCandidate(null);
+      setIsEditorOpen(false);
       await load(pageData.page, search, statusFilter, companyFilterId);
     } catch (err) {
       setError(err instanceof ApiClientError ? err.message : 'Unable to delete the selected deal.');
     }
+  }
+
+  async function handleDropDeal(e: React.DragEvent, stageId: string) {
+    e.preventDefault();
+    const dealId = e.dataTransfer.getData('dealId');
+    if (!dealId || isDragUpdating) return;
+    
+    const deal = rows.find(d => d.id === dealId);
+    if (!deal || deal.pipelineStageId === stageId) return;
+
+    // Optimistic local update could be implemented here, but simple refresh is often sufficient for small ops
+    setIsDragUpdating(true);
+    try {
+      const payload: UpdateDealInput = {
+        title: deal.title,
+        description: deal.description ?? undefined,
+        amount: String(deal.amount) ? Number(deal.amount) : undefined,
+        currency: deal.currency,
+        status: deal.status,
+        companyId: deal.companyId,
+        pipelineStageId: stageId,
+        contactId: deal.contactId ?? undefined,
+        leadId: deal.leadId ?? undefined,
+        expectedCloseDate: deal.expectedCloseDate ?? undefined
+      };
+      
+      await crmService.updateDeal(dealId, payload);
+      await load(pageData.page, search, statusFilter, companyFilterId);
+    } catch (err) {
+      setError(err instanceof ApiClientError ? err.message : 'Unable to move deal.');
+    } finally {
+      setIsDragUpdating(false);
+    }
+  }
+
+  function handleDragStart(e: React.DragEvent, dealId: string) {
+    e.dataTransfer.setData('dealId', dealId);
+  }
+
+  function handleDragOver(e: React.DragEvent) {
+    e.preventDefault(); // Necessary to allow dropping
   }
 
   const activeFilterCount = [search, statusFilter, companyFilterId].filter(Boolean).length;
@@ -175,7 +240,6 @@ export function CrmDealsPage() {
   const contactOptions = [{ value: '', label: 'No linked contact' }, ...contacts.map((item) => ({ value: item.id, label: `${item.firstName} ${item.lastName ?? ''}`.trim() }))];
   const leadOptions = [{ value: '', label: 'No linked lead' }, ...leads.map((item) => ({ value: item.id, label: item.name }))];
   const companyName = (id?: string) => companies.find((item) => item.id === id)?.name ?? '-';
-  const stageName = (id?: string) => stages.find((item) => item.id === id)?.name ?? '-';
 
   const rows = resolvePageItems(pageData);
   const totalItems = resolveTotalItems(pageData);
@@ -185,130 +249,48 @@ export function CrmDealsPage() {
       key: 'deals-in-scope',
       label: 'Deals in scope',
       value: totalItems,
-      trend: activeFilterCount > 0
-        ? 'Results reflect the current commercial filters.'
-        : 'Full deal list for this CRM workspace.'
+      trend: 'Total matching deals currently tracked on the board.'
     },
     {
       key: 'open-deals-on-page',
-      label: 'Open on page',
+      label: 'Open deals',
       value: openDealsOnPage,
-      trend: 'Visible opportunities still moving through the pipeline.'
+      trend: 'Opportunities still active within this page view.'
     },
     {
       key: 'pipeline-stages-ready',
       label: 'Stages ready',
       value: stages.length,
-      trend: 'Pipeline stages currently available for qualification and forecast.'
+      trend: 'Configured steps for the opportunity lifecycle.'
     },
     {
       key: 'deal-filters',
       label: 'Active filters',
       value: activeFilterCount,
       trend: activeFilterCount > 0
-        ? 'The workspace is focused on a narrower pipeline slice.'
-        : 'No filters are limiting the current opportunity view.'
+        ? 'The board is narrowed by active commercial filters.'
+        : 'Showing the broader default opportunity list.'
     }
   ];
 
-  function scrollToDealForm() {
-    document.getElementById('deal-form-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  }
-
-  function beginCreateDeal() {
-    resetForm();
-    scrollToDealForm();
-  }
-
   function formatDealAmount(row: CrmDeal) {
-    if (!row.amount) {
-      return 'No amount defined';
-    }
-
+    if (!row.amount) return 'No amount defined';
     try {
-      return new Intl.NumberFormat('en-US', {
-        style: 'currency',
-        currency: row.currency
-      }).format(row.amount);
+      return new Intl.NumberFormat('en-US', { style: 'currency', currency: row.currency }).format(row.amount);
     } catch {
       return `${row.currency} ${row.amount}`;
     }
   }
 
-  const columns: DataTableColumn<CrmDeal>[] = [
-    {
-      key: 'deal',
-      header: 'Deal',
-      render: (row) => (
-        <div>
-          <p className="font-medium text-[color:var(--app-shell-heading)]">{row.title}</p>
-          <p className={`mt-1 ${sharedCompactTextClass}`}>{row.description ?? 'No commercial summary recorded yet'}</p>
-        </div>
-      )
-    },
-    {
-      key: 'account',
-      header: 'Account',
-      render: (row) => (
-        <div>
-          <p className="font-medium text-[color:var(--app-shell-heading)]">{companyName(row.companyId)}</p>
-          <p className={`mt-1 ${sharedCompactTextClass}`}>Stage: {stageName(row.pipelineStageId)}</p>
-        </div>
-      )
-    },
-    {
-      key: 'forecast',
-      header: 'Forecast',
-      render: (row) => (
-        <div>
-          <p className="font-medium text-[color:var(--app-shell-heading)]">{formatDealAmount(row)}</p>
-          <p className={`mt-1 ${sharedCompactTextClass}`}>
-            {row.expectedCloseDate ? `Expected close: ${row.expectedCloseDate}` : 'No expected close date'}
-          </p>
-        </div>
-      )
-    },
-    { key: 'status', header: 'Lifecycle', render: (row) => <StatusBadge status={row.status} /> },
-    {
-      key: 'actions',
-      header: 'Actions',
-      render: (row) => (
-        <div className={sharedInlineActionsClass}>
-          <PermissionGuard permission="crm.deal.update">
-            <button
-              type="button"
-              onClick={() => {
-                setEditingId(row.id);
-                setTitle(row.title);
-                setDescription(row.description ?? '');
-                setAmount(row.amount ? String(row.amount) : '');
-                setCurrency(row.currency);
-                setStatus(row.status);
-                setCompanyId(row.companyId);
-                setPipelineStageId(row.pipelineStageId);
-                setContactId(row.contactId ?? '');
-                setLeadId(row.leadId ?? '');
-                setExpectedCloseDate(row.expectedCloseDate ?? '');
-                scrollToDealForm();
-              }}
-              className="ui-inline-button"
-            >
-              Edit
-            </button>
-          </PermissionGuard>
-          <PermissionGuard permission="crm.deal.delete">
-            <button
-              type="button"
-              onClick={() => setDeleteCandidate(row)}
-              className="ui-inline-danger-button"
-            >
-              Delete
-            </button>
-          </PermissionGuard>
-        </div>
-      )
-    }
-  ];
+  // Kanban view data shaping
+  const columnsData = stages.map(stage => ({
+    stage,
+    deals: rows.filter(r => r.pipelineStageId === stage.id)
+  }));
+  const uncategorizedDeals = rows.filter(r => !stages.some(s => s.id === r.pipelineStageId));
+  if (uncategorizedDeals.length > 0) {
+    columnsData.push({ stage: { id: '', name: 'Uncategorized', position: 99, color: '#475569' } as any, deals: uncategorizedDeals });
+  }
 
   return (
     <PermissionGuard
@@ -318,8 +300,8 @@ export function CrmDealsPage() {
       <div className={sharedPageStackClass}>
         <PageTitle
           eyebrow="CRM workspace"
-          title="CRM Deals"
-          description="Opportunity management with clearer pipeline context, stronger first-step guidance, and a layout that feels more consistent during demos."
+          title="Deals Pipeline"
+          description="Drag-and-drop opportunity management. Keep track of deal lifecycles visually and streamline interactions without leaving the board."
           actions={(
             <PermissionGuard permission="crm.deal.create">
               <button type="button" onClick={beginCreateDeal} className="ui-primary-button">
@@ -333,8 +315,8 @@ export function CrmDealsPage() {
 
         <PageSection
           tone="muted"
-          title="Deal filters"
-          description="Focus the pipeline by search, lifecycle stage, and account context while keeping the toolbar balanced and readable."
+          title="Board filters"
+          description="Focus the pipeline by search, lifecycle stage, and account context while keeping the board easily readable."
         >
           <div className={sharedFilterToolbarClass}>
             <div className="grid gap-3 xl:grid-cols-[minmax(0,1.45fr)_220px_260px] xl:items-end">
@@ -366,105 +348,179 @@ export function CrmDealsPage() {
               </button>
               <p className="text-sm text-[color:var(--app-shell-muted)]">
                 {activeFilterCount > 0
-                  ? `${activeFilterCount} active filter(s) focusing the commercial pipeline.`
-                  : 'No active filters. Showing the broader opportunity list.'}
+                  ? `${activeFilterCount} filter(s) updating the board view.`
+                  : 'No active filters.'}
               </p>
             </div>
           </div>
         </PageSection>
 
-        <PermissionGuard permission={editingId ? 'crm.deal.update' : 'crm.deal.create'}>
-          <div id="deal-form-section">
-            <PageSection
-              title={editingId ? 'Edit deal' : 'Create deal'}
-              description="Keep pipeline essentials together so sales, onboarding, and demo users always know the next record required to move the opportunity forward."
-              actions={<p className="text-sm text-[color:var(--app-shell-muted)]">{editingId ? 'Editing an existing opportunity' : 'Ready for a new opportunity record'}</p>}
-            >
-              <div className="space-y-5">
-                {companies.length === 0 || stages.length === 0 ? (
-                  <div className="ui-notice-neutral">
-                    Deals are easier to create after the workspace has at least one company and one pipeline stage.
-                    <div className="mt-3 flex flex-wrap gap-2">
-                      <Link href="/crm/companies" className="ui-secondary-button">
-                        Open companies
-                      </Link>
-                      <Link href="/crm/pipeline" className="ui-secondary-button">
-                        Open pipeline
-                      </Link>
-                    </div>
-                  </div>
-                ) : null}
-
-                <div className="grid gap-4 xl:grid-cols-2">
-                  <FormInput label="Title" value={title} onChange={setTitle} required />
-                  <FormInput label="Commercial summary" value={description} onChange={setDescription} />
-                  <FormInput label="Amount" value={amount} onChange={setAmount} type="number" />
-                  <FormInput label="Currency" value={currency} onChange={setCurrency} />
-                  <FormSelect label="Status" value={status} options={formStatusOptions} onChange={setStatus} />
-                  <DateInput label="Expected close date" value={expectedCloseDate} onChange={setExpectedCloseDate} />
-                  <FormSelect label="Company" value={companyId} options={companyOptions} onChange={setCompanyId} />
-                  <FormSelect label="Pipeline stage" value={pipelineStageId} options={stageOptions} onChange={setPipelineStageId} />
-                  <FormSelect label="Primary contact" value={contactId} options={contactOptions} onChange={setContactId} />
-                  <FormSelect label="Source lead" value={leadId} options={leadOptions} onChange={setLeadId} />
-                </div>
-
-                <div className={sharedFormActionsClass}>
-                  <button
-                    type="button"
-                    disabled={saving || !title.trim()}
-                    onClick={() => void handleSubmit()}
-                    className="ui-primary-button"
-                  >
-                    {saving ? 'Saving...' : editingId ? 'Update deal' : 'Create deal'}
-                  </button>
-                  <button type="button" onClick={resetForm} className="ui-secondary-button">
-                    {editingId ? 'Cancel edit' : 'Reset form'}
-                  </button>
-                </div>
-              </div>
-            </PageSection>
-          </div>
-        </PermissionGuard>
-
         {error ? <div className="ui-notice-error">{error}</div> : null}
 
-        <PageSection
-          title="Deal pipeline"
-          description="The opportunity table keeps account, forecast, and lifecycle details readable without falling back to an older, denser layout."
-          actions={<p className="text-sm text-[color:var(--app-shell-muted)]">Total {totalItems} deal(s)</p>}
-        >
-          <div className="space-y-5">
-            <DataTable
-              columns={columns}
-              rows={rows}
-              getRowKey={(row) => row.id}
-              loading={loading}
-              loadingTitle="Loading deals"
-              loadingDescription="Preparing opportunity data with account, pipeline, and forecast context."
-              emptyState={{
-                title: 'No deals found',
-                description: activeFilterCount > 0
-                  ? 'Adjust the filters or create a new opportunity to keep the pipeline moving.'
-                  : 'Create the first deal to start tracking pipeline movement for this workspace.',
-                action: (
-                  <PermissionGuard permission="crm.deal.create">
-                    <button type="button" onClick={beginCreateDeal} className="ui-primary-button">
-                      Create first deal
-                    </button>
-                  </PermissionGuard>
-                )
-              }}
-            />
+        {/* KANBAN BOARD SECTION */}
+        <div className="mt-8 flex gap-6 overflow-x-auto pb-8 pt-2">
+          {loading && rows.length === 0 ? (
+            <div className="w-full text-center py-20 text-[color:var(--app-shell-muted)]">
+              Loading pipeline data...
+            </div>
+          ) : stages.length === 0 && !loading ? (
+             <div className="ui-notice-neutral w-full">
+               The Kanban board requires at least one pipeline stage to be configured.
+               <div className="mt-3 flex gap-2">
+                 <Link href="/crm/pipeline" className="ui-secondary-button">Configure pipeline stages</Link>
+               </div>
+             </div>
+          ) : (
+            columnsData.map(({ stage, deals }) => (
+              <div 
+                key={stage.id || 'uncat'}
+                className="flex min-w-[320px] max-w-[320px] shrink-0 flex-col rounded-xl bg-[color:var(--app-shell-panel-muted)] p-3 border border-[color:var(--app-shell-border)]"
+                onDragOver={handleDragOver}
+                onDrop={(e) => stage.id ? handleDropDeal(e, stage.id) : undefined}
+              >
+                <div className="mb-4 flex items-center justify-between px-1">
+                  <div className="flex items-center gap-2">
+                    <div className="h-3 w-3 rounded-full" style={{ backgroundColor: stage.color || '#94a3b8' }} />
+                    <h3 className="font-semibold text-[color:var(--app-shell-heading)] uppercase tracking-wider text-sm">{stage.name}</h3>
+                  </div>
+                  <span className="rounded-full bg-[color:var(--app-shell-surface)] border border-[color:var(--app-shell-border)] px-2.5 py-0.5 text-xs font-medium text-[color:var(--app-shell-muted)]">
+                    {deals.length}
+                  </span>
+                </div>
+                
+                <div className="flex flex-col gap-3 min-h-[150px]">
+                  {deals.map(deal => (
+                    <div 
+                      key={deal.id}
+                      draggable={!isDragUpdating}
+                      onDragStart={(e) => handleDragStart(e, deal.id)}
+                      onClick={() => beginEditDeal(deal)}
+                      className="group cursor-grab active:cursor-grabbing rounded-lg border border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-surface)] p-4 shadow-sm hover:border-blue-500/40 hover:shadow-md transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+                      tabIndex={0}
+                      role="button"
+                    >
+                      <div className="mb-3 flex items-start justify-between gap-2">
+                        <p className="font-semibold leading-tight text-[color:var(--app-shell-heading)] line-clamp-2">{deal.title}</p>
+                        {deal.status !== 'OPEN' && <StatusBadge status={deal.status} />}
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <p className="text-sm font-medium text-[color:var(--app-shell-muted)] flex items-center gap-1.5 line-clamp-1">
+                           <svg className="w-4 h-4 opacity-70" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1v1H9V7zm5 0h1v1h-1V7zm-5 4h1v1H9v-1zm5 0h1v1h-1v-1zm-3 4H2v5h12v-5z" /></svg>
+                           {companyName(deal.companyId)}
+                        </p>
+                        
+                        <div className="flex items-center justify-between text-sm pt-2 border-t border-[color:var(--app-shell-border)]">
+                          <span className="font-semibold text-emerald-600 dark:text-emerald-400">
+                            {formatDealAmount(deal)}
+                          </span>
+                          <span className={`text-xs ${new Date(deal.expectedCloseDate || '2099') < new Date() ? 'text-red-500 font-medium' : 'text-[color:var(--app-shell-muted)]'}`}>
+                            {deal.expectedCloseDate ? new Date(deal.expectedCloseDate).toLocaleDateString() : 'No date'}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                  {deals.length === 0 && (
+                     <div className="flex h-24 items-center justify-center rounded-lg border-2 border-dashed border-[color:var(--app-shell-border)] bg-transparent">
+                        <span className="text-sm text-[color:var(--app-shell-muted)] opacity-60">Drop deals here</span>
+                     </div>
+                  )}
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+        
+        {pageData.totalPages > 1 && (
+           <Pagination page={pageData.page} totalPages={pageData.totalPages} totalElements={totalItems} onPageChange={(nextPage) => void load(nextPage, search, statusFilter, companyFilterId)} />
+        )}
 
-            <Pagination page={pageData.page} totalPages={pageData.totalPages} totalElements={totalItems} onPageChange={(nextPage) => void load(nextPage, search, statusFilter, companyFilterId)} />
+        {/* SIDE DRAWER MODAL FOR DEAL CREATION/EDITING */}
+        {isEditorOpen && (
+          <div className="fixed inset-0 z-50 flex justify-end bg-black/40 backdrop-blur-sm transition-opacity">
+            <div className="w-full max-w-xl h-full overflow-y-auto bg-[color:var(--app-shell-surface)] p-[var(--space-6)] shadow-2xl animate-in slide-in-from-right duration-300 border-l border-[color:var(--app-shell-border)]">
+              <div className="mb-8 flex items-center justify-between">
+                 <div>
+                   <h2 className="text-2xl font-bold tracking-tight text-[color:var(--app-shell-heading)]">
+                     {editingId ? 'Edit deal' : 'Create deal'}
+                   </h2>
+                   <p className="text-sm mt-1 text-[color:var(--app-shell-muted)]">
+                     {editingId ? 'Update opportunity details and forecast.' : 'Add a new opportunity to the pipeline.'}
+                   </p>
+                 </div>
+                 <button 
+                   onClick={() => setIsEditorOpen(false)} 
+                   className="rounded-full p-2 text-[color:var(--app-shell-muted)] hover:bg-[color:var(--app-shell-panel-muted)] hover:text-[color:var(--app-shell-heading)] focus:outline-none focus:ring-2 focus:ring-blue-500"
+                   aria-label="Close panel"
+                 >
+                   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                 </button>
+              </div>
+
+              <div className="space-y-6">
+                <PermissionGuard permission={editingId ? 'crm.deal.update' : 'crm.deal.create'} fallback={<div className="ui-notice-error">Missing permissions to save this deal.</div>}>
+                  <form className="space-y-6 flex flex-col h-full" onSubmit={(e) => { e.preventDefault(); void handleSubmit(); }}>
+                    
+                    <div className="grid gap-5 sm:grid-cols-2">
+                      <div className="sm:col-span-2">
+                        <FormInput label="Deal title" placeholder="e.g. Enterprise License Expansion" value={title} onChange={setTitle} required />
+                      </div>
+                      
+                      <div className="sm:col-span-2">
+                        <FormInput label="Commercial summary" value={description} onChange={setDescription} />
+                      </div>
+
+                      <FormSelect label="Company" value={companyId} options={companyOptions} onChange={setCompanyId} />
+                      <FormSelect label="Pipeline stage" value={pipelineStageId} options={stageOptions} onChange={setPipelineStageId} />
+                      
+                      <FormInput label="Amount" value={amount} onChange={setAmount} type="number" />
+                      <FormSelect label="Currency" value={currency} options={[{value: 'BRL', label: 'BRL'}, {value: 'USD', label: 'USD'}, {value: 'EUR', label: 'EUR'}]} onChange={setCurrency} />
+                      
+                      <DateInput label="Expected close date" value={expectedCloseDate} onChange={setExpectedCloseDate} />
+                      <FormSelect label="Status" value={status} options={formStatusOptions} onChange={setStatus} />
+                      
+                      <div className="sm:col-span-2 pt-4 border-t border-[color:var(--app-shell-border)] grid gap-5 sm:grid-cols-2">
+                         <h3 className="sm:col-span-2 text-sm font-semibold uppercase tracking-wider text-[color:var(--app-shell-muted)]">Optional Linkages</h3>
+                         <FormSelect label="Primary contact" value={contactId} options={contactOptions} onChange={setContactId} />
+                         <FormSelect label="Source lead" value={leadId} options={leadOptions} onChange={setLeadId} />
+                      </div>
+                    </div>
+
+                    <div className="mt-8 pt-6 border-t border-[color:var(--app-shell-border)] flex flex-wrap items-center justify-between gap-4">
+                      <div className="flex gap-3">
+                        <button
+                          type="submit"
+                          disabled={saving || !title.trim() || !companyId || !pipelineStageId}
+                          className="ui-primary-button"
+                        >
+                          {saving ? 'Saving...' : editingId ? 'Save changes' : 'Add to board'}
+                        </button>
+                        <button type="button" onClick={() => setIsEditorOpen(false)} className="ui-secondary-button">
+                          Cancel
+                        </button>
+                      </div>
+                      
+                      {editingId && (
+                        <PermissionGuard permission="crm.deal.delete">
+                           <button type="button" onClick={() => setDeleteCandidate(rows.find(r => r.id === editingId) || null)} className="text-red-600 hover:text-red-700 font-medium text-sm px-3 py-2 rounded-md hover:bg-red-50 dark:hover:bg-red-950/30">
+                             Delete deal
+                           </button>
+                        </PermissionGuard>
+                      )}
+                    </div>
+                  </form>
+                </PermissionGuard>
+              </div>
+            </div>
           </div>
-        </PageSection>
+        )}
 
         <ConfirmDialog
           open={Boolean(deleteCandidate)}
-          title="Delete deal"
-          description={deleteCandidate ? `Delete ${deleteCandidate.title} from the pipeline?` : undefined}
-          confirmLabel="Delete"
+          title="Delete opportunity"
+          description={deleteCandidate ? `Are you sure you want to permanently remove "${deleteCandidate.title}" from the pipeline? This action cannot be undone.` : undefined}
+          confirmLabel="Delete forever"
           onCancel={() => setDeleteCandidate(null)}
           onConfirm={() => void handleDelete()}
         />

@@ -20,7 +20,7 @@ const { hasPermissionMock, currentUser, signInMock, pushMock, setImpersonationBa
     tenantLogoUrl: null,
     tenantPrimaryColor: '#0f172a',
     tenantAccentColor: '#2563eb',
-    tenantDefaultThemeMode: 'SYSTEM',
+    tenantDefaultThemeMode: 'SYSTEM' as 'SYSTEM',
     tenantAllowUserThemeOverride: true,
     platformOwner: true,
     platformAdmin: true,
