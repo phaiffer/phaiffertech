@@ -370,9 +370,9 @@ export function Sidebar() {
           </div>
         </div>
         <div className="mt-4 rounded-2xl border border-border bg-surface-inset px-3 py-3 shadow-xs">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[color:var(--app-shell-muted)]">Workspace</p>
+          <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted">Workspace</p>
           <p className="mt-1 truncate text-sm font-semibold text-foreground">{branding.scopeName}</p>
-          <p className="mt-1 truncate text-xs text-[color:var(--app-shell-muted)]">{workspace.accessLabel}</p>
+          <p className="mt-1 truncate text-xs text-muted">{workspace.accessLabel}</p>
         </div>
       </div>
 

@@ -43,6 +43,10 @@ const config: Config = {
           DEFAULT: 'var(--destructive)',
           muted: 'var(--destructive-muted)',
         },
+        danger: {
+          DEFAULT: 'var(--destructive)',
+          muted: 'var(--destructive-muted)',
+        },
         info: {
           DEFAULT: 'var(--info)',
           muted: 'var(--info-muted)',

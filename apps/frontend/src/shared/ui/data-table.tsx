@@ -46,8 +46,8 @@ export function DataTable<T>({
       >
         <div className="mx-auto flex max-w-2xl flex-col items-center gap-3 text-center">
           <div>
-            <p className="text-sm font-semibold text-[color:var(--app-shell-heading)]">{title}</p>
-            <p className="mt-1 text-sm text-[color:var(--app-shell-muted)]">{description}</p>
+            <p className="text-sm font-semibold text-foreground">{title}</p>
+            <p className="mt-1 text-sm text-muted">{description}</p>
           </div>
           {action ? <div>{action}</div> : null}
         </div>
@@ -56,21 +56,21 @@ export function DataTable<T>({
   );
 
   return (
-    <div className="overflow-x-auto rounded-[var(--radius-2xl)] border border-[color:var(--app-shell-border)] bg-[color:var(--surface-1)] shadow-xs">
-      <table className="min-w-full divide-y divide-[color:var(--app-shell-border)]">
-        <thead className="bg-[color:var(--surface-2)]">
+    <div className="overflow-x-auto rounded-2xl border border-border bg-surface shadow-xs">
+      <table className="min-w-full divide-y divide-border">
+        <thead className="bg-surface-inset">
           <tr>
             {columns.map((column) => (
               <th
                 key={column.key}
-                className={`px-5 py-3.5 text-left text-[11px] font-semibold uppercase tracking-[0.18em] text-[color:var(--app-shell-muted)] ${column.className ?? ''}`}
+                className={`px-5 py-3.5 text-left text-[11px] font-semibold uppercase tracking-[0.18em] text-muted ${column.className ?? ''}`}
               >
                 {column.header}
               </th>
             ))}
           </tr>
         </thead>
-        <tbody className="divide-y divide-[color:var(--app-shell-border)] text-[length:var(--font-size-sm)] text-[color:var(--app-shell-text)]">
+        <tbody className="divide-y divide-border text-sm text-foreground">
           {loading ? (
             renderStateRow(loadingTitle, loadingDescription)
           ) : rows.length === 0 ? (
@@ -83,7 +83,7 @@ export function DataTable<T>({
             rows.map((row) => (
               <tr
                 key={getRowKey(row)}
-                className="align-top transition-colors duration-200 hover:bg-[color:var(--accent-muted)]"
+                className="align-top transition-colors duration-200 hover:bg-accent-muted"
               >
                 {columns.map((column) => (
                   <td

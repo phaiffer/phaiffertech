@@ -86,6 +86,17 @@ export const sharedTextareaClass = `${sharedInputClass} min-h-32 resize-y py-3`;
 
 export const appShellContentContainerClass = 'mx-auto w-full max-w-[1600px]';
 
+/* ─── Drawer (Slide-out panel) ─────────────────────────────────────────── */
+
+export const sharedDrawerContainerClass =
+  'w-full max-w-lg h-full overflow-y-auto ui-surface-panel p-6 shadow-2xl animate-in slide-in-from-right duration-300 border-l border-border relative';
+
+export const sharedDrawerHeaderClass = 'mb-6 flex items-center justify-between'
+
+export const sharedDrawerOverlayClass = 'fixed inset-0 z-50 flex justify-end bg-black/40 backdrop-blur-sm';
+
+
+
 export const publicSiteContainerClass = 'mx-auto w-full max-w-[1180px] px-6 lg:px-8';
 
 export const publicSectionLayoutClass = 'grid gap-8 lg:grid-cols-[minmax(0,0.72fr)_minmax(0,1fr)] lg:items-start lg:gap-12 xl:gap-14';
