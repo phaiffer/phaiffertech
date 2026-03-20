@@ -1,3 +1,4 @@
+import { useId } from 'react';
 import {
   sharedFieldGroupClass,
   sharedFieldHintClass,
@@ -30,19 +31,26 @@ export function FormInput({
   className,
   wrapperClassName
 }: FormInputProps) {
+  const inputId = useId();
+  const descriptionId = description ? `${inputId}-description` : undefined;
+
   return (
-    <label className={wrapperClassName ? `${sharedFieldGroupClass} ${wrapperClassName}` : sharedFieldGroupClass}>
-      <span className={sharedInputLabelClass}>{label}</span>
+    <div className={wrapperClassName ? `${sharedFieldGroupClass} ${wrapperClassName}` : sharedFieldGroupClass}>
+      <label htmlFor={inputId} className={sharedInputLabelClass}>
+        {label}
+      </label>
       <input
+        id={inputId}
         type={type}
         value={value}
         onChange={(event) => onChange(event.target.value)}
         placeholder={placeholder}
         required={required}
         disabled={disabled}
+        aria-describedby={descriptionId}
         className={className ? `${sharedInputClass} ${className}` : sharedInputClass}
       />
-      {description ? <span className={sharedFieldHintClass}>{description}</span> : null}
-    </label>
+      {description ? <span id={descriptionId} className={sharedFieldHintClass}>{description}</span> : null}
+    </div>
   );
 }

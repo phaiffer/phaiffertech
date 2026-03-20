@@ -1,5 +1,5 @@
 import { FormEvent, useState } from 'react';
-import { clearSession, setAuthNotice } from '@/shared/lib/session';
+import { clearImpersonationBackupSession, clearSession, setAuthNotice } from '@/shared/lib/session';
 import { ApiClientError } from '@/shared/lib/http';
 import { authService } from '@/shared/services/auth-service';
 import type { AuthenticatedUser } from '@/shared/types/auth';
@@ -44,6 +44,7 @@ export function AccountSecurityPanel({ user }: AccountSecurityPanelProps) {
         confirmNewPassword
       });
       setAuthNotice('password-changed');
+      clearImpersonationBackupSession();
       clearSession();
     } catch (err) {
       if (err instanceof ApiClientError) {
@@ -80,11 +81,13 @@ export function AccountSecurityPanel({ user }: AccountSecurityPanelProps) {
           </div>
 
           <div className="ui-notice-warning">
-            Updating the password signs out the current browser and revokes active refresh sessions for the user.
+            Updating the password signs out this browser, clears any restored support-session backup, and revokes
+            active refresh sessions for the user.
           </div>
 
           <div className="ui-notice-neutral">
-            Self-service password recovery stays out of scope until notification delivery and reset-token infrastructure are productized.
+            If this browser session is no longer available, use the public forgot-password flow from the login screen
+            to request a reset link safely.
           </div>
         </div>
 
@@ -98,6 +101,7 @@ export function AccountSecurityPanel({ user }: AccountSecurityPanelProps) {
             value={currentPassword}
             onChange={setCurrentPassword}
             type="password"
+            description="Confirm the current credential before rotating access."
             required
           />
 
@@ -106,6 +110,7 @@ export function AccountSecurityPanel({ user }: AccountSecurityPanelProps) {
             value={newPassword}
             onChange={setNewPassword}
             type="password"
+            description="Use a new credential that is different from the current password."
             required
           />
 

@@ -32,19 +32,19 @@ vi.mock('@/shared/services/user-service', () => ({
 }));
 
 describe('UsersPage authorization', () => {
-  it('nao chama userService.list sem USER_READ', async () => {
+  it('does not call userService.list without USER_READ', async () => {
     hasPermissionMock.mockImplementation(() => false);
 
     render(<UsersPage />);
 
     await waitFor(() => {
-      expect(screen.getByText('Você não possui permissão para visualizar usuários.')).toBeInTheDocument();
+      expect(screen.getByText('You do not have permission to view users.')).toBeInTheDocument();
     });
 
     expect(userService.list).not.toHaveBeenCalled();
   });
 
-  it('carrega a lista sem expor o formulario quando so existe USER_READ', async () => {
+  it('loads the list without exposing the form when only USER_READ is available', async () => {
     hasPermissionMock.mockImplementation((permission) => permission === 'USER_READ');
     vi.mocked(userService.list).mockResolvedValue({
       items: [

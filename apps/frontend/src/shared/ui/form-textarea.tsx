@@ -1,3 +1,4 @@
+import { useId } from 'react';
 import {
   sharedFieldGroupClass,
   sharedFieldHintClass,
@@ -30,19 +31,26 @@ export function FormTextarea({
   className,
   wrapperClassName
 }: FormTextareaProps) {
+  const textareaId = useId();
+  const descriptionId = description ? `${textareaId}-description` : undefined;
+
   return (
-    <label className={wrapperClassName ? `${sharedFieldGroupClass} ${wrapperClassName}` : sharedFieldGroupClass}>
-      <span className={sharedInputLabelClass}>{label}</span>
+    <div className={wrapperClassName ? `${sharedFieldGroupClass} ${wrapperClassName}` : sharedFieldGroupClass}>
+      <label htmlFor={textareaId} className={sharedInputLabelClass}>
+        {label}
+      </label>
       <textarea
+        id={textareaId}
         value={value}
         onChange={(event) => onChange(event.target.value)}
         placeholder={placeholder}
         required={required}
         disabled={disabled}
         rows={rows}
+        aria-describedby={descriptionId}
         className={className ? `${sharedTextareaClass} ${className}` : sharedTextareaClass}
       />
-      {description ? <span className={sharedFieldHintClass}>{description}</span> : null}
-    </label>
+      {description ? <span id={descriptionId} className={sharedFieldHintClass}>{description}</span> : null}
+    </div>
   );
 }

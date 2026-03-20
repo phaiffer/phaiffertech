@@ -1,7 +1,13 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { AccountSecurityPanel } from '@/shared/settings/account-security-panel';
-import { consumeAuthNotice, getSession, setSession } from '@/shared/lib/session';
+import {
+  consumeAuthNotice,
+  getImpersonationBackupSession,
+  getSession,
+  setImpersonationBackupSession,
+  setSession
+} from '@/shared/lib/session';
 import { authService } from '@/shared/services/auth-service';
 import type { SessionState } from '@/shared/types/auth';
 
@@ -42,6 +48,7 @@ describe('AccountSecurityPanel', () => {
 
   it('updates the password and invalidates the local session', async () => {
     vi.mocked(authService.changePassword).mockResolvedValue(undefined);
+    setImpersonationBackupSession(sessionFixture);
 
     render(<AccountSecurityPanel user={sessionFixture.user} />);
 
@@ -59,6 +66,7 @@ describe('AccountSecurityPanel', () => {
     });
 
     expect(getSession()).toBeNull();
+    expect(getImpersonationBackupSession()).toBeNull();
     expect(consumeAuthNotice()).toBe('password-changed');
   });
 

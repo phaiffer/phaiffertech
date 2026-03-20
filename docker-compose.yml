@@ -22,6 +22,16 @@ services:
     networks:
       - platform-net
 
+  mailhog:
+    image: mailhog/mailhog:v1.0.1
+    container_name: platform-mailhog
+    restart: unless-stopped
+    ports:
+      - "${MAILHOG_SMTP_PORT:-1025}:1025"
+      - "${MAILHOG_UI_PORT:-8025}:8025"
+    networks:
+      - platform-net
+
   backend:
     build:
       context: .
@@ -31,6 +41,8 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+      mailhog:
+        condition: service_started
     environment:
       SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-dev}
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-platform_db}
@@ -89,18 +101,6 @@ services:
         condition: service_healthy
     ports:
       - "${ADMINER_PORT:-8081}:8080"
-    networks:
-      - platform-net
-
-  mailhog:
-    image: mailhog/mailhog:v1.0.1
-    container_name: platform-mailhog
-    restart: unless-stopped
-    profiles:
-      - tools
-    ports:
-      - "${MAILHOG_SMTP_PORT:-1025}:1025"
-      - "${MAILHOG_UI_PORT:-8025}:8025"
     networks:
       - platform-net
 
