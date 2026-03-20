@@ -28,6 +28,8 @@ import {
 } from '@/modules/pet/pet-lookup-feedback';
 import { PermissionGuard } from '@/shared/auth/PermissionGuard';
 import { usePermissions } from '@/shared/auth/usePermissions';
+import { sharedPageStackClass } from '@/shared/components/public-visual-system';
+import { DashboardContextCardGrid } from '@/shared/dashboard/dashboard-context-card-grid';
 import { ApiClientError } from '@/shared/lib/http';
 import { resolvePageItems } from '@/shared/lib/pagination';
 import { petService } from '@/shared/services/pet-service';
@@ -696,6 +698,40 @@ export function PetMedicalRecordsPage() {
   const appointmentContextDescription = appointmentContext
     ? `Fluxo vinculado ao atendimento ${appointmentContext.serviceName} de ${appointmentContext.petName ?? appointmentContext.petId} com ${appointmentContext.professionalName ?? appointmentContext.professionalId}.`
     : null;
+  const accessibleWorkflowCount = [canAccessMedicalRecords, canAccessVaccinations, canAccessPrescriptions].filter(Boolean).length;
+  const contextCards = [
+    {
+      key: 'pet-clinical-context',
+      label: 'Clinical context',
+      value: appointmentContext
+        ? appointmentContext.serviceName
+        : petFilterId
+          ? 'Pet selected'
+          : 'Free review',
+      description: appointmentContext
+        ? `Atendimento ativo para ${appointmentContext.petName ?? appointmentContext.petId}.`
+        : clinicalTimelineReady
+          ? 'A timeline e os registros estão focados no pet selecionado.'
+          : 'Selecione um pet ou abra um atendimento para ancorar a revisão clínica.',
+      tone: 'accent' as const
+    },
+    {
+      key: 'pet-workflows',
+      label: 'Workflow access',
+      value: `${accessibleWorkflowCount} de 3`,
+      description: 'Medical records, vaccinations, and prescriptions stay explicit even when permissions expose only part of the workspace.',
+      tone: 'neutral' as const
+    },
+    {
+      key: 'pet-lookups',
+      label: 'Reference readiness',
+      value: lookupIssues.length === 0 ? 'Ready' : 'Attention required',
+      description: lookupIssues.length === 0
+        ? 'Pet and professional lookups are loaded for the visible workflows.'
+        : `${lookupIssues.length} fonte(s) de referência precisam de atenção nesta tela clínica.`,
+      tone: lookupIssues.length === 0 ? 'primary' as const : 'neutral' as const
+    }
+  ];
 
   const medicalRecordColumns = useMemo(() => createPetMedicalRecordColumns({
     pets,
@@ -724,8 +760,19 @@ export function PetMedicalRecordsPage() {
 
   return (
     <PermissionGuard anyOf={petMedicalRoutePermissions} fallback={<PetMedicalPageFallback />}>
-      <div className="space-y-5">
-        <PageTitle title="Medical Records" description="Prontuários, vacinações e prescrições do módulo PET." />
+      <div className={sharedPageStackClass}>
+        <PageTitle
+          eyebrow="PetFlow workspace"
+          title="Clinical records"
+          description="Prontuários, vacinações e prescrições do módulo PET organizados como um único workspace clínico, sem alterar regras, permissões ou contratos já existentes."
+          actions={appointmentContext ? (
+            <Link href="/pet/medical-records" className="ui-secondary-button">
+              Ver histórico completo
+            </Link>
+          ) : undefined}
+        />
+
+        <DashboardContextCardGrid cards={contextCards} />
 
         <PetMedicalFilters
           searchInput={searchInput}
@@ -763,12 +810,6 @@ export function PetMedicalRecordsPage() {
               {' '}com {appointmentContext.professionalName ?? appointmentContext.professionalId} em{' '}
               {new Date(appointmentContext.scheduledAt).toLocaleString('pt-BR')}.
             </div>
-            <Link
-              href="/pet/medical-records"
-              className="mt-2 inline-flex text-sm font-medium text-accent transition-colors duration-200 hover:text-foreground"
-            >
-              Ver histórico completo
-            </Link>
           </div>
         ) : null}
 

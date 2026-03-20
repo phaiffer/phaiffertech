@@ -3,6 +3,7 @@
 import { FormEvent, useCallback, useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { PermissionGuard } from '@/shared/auth/PermissionGuard';
+import { DashboardContextCardGrid } from '@/shared/dashboard/dashboard-context-card-grid';
 import { StatusBadge } from '@/shared/dashboard/status-badge';
 import { ApiClientError } from '@/shared/lib/http';
 import { resolvePageItems, resolveTotalItems } from '@/shared/lib/pagination';
@@ -14,20 +15,21 @@ import { PageResponse } from '@/shared/types/common';
 import { IotDevice } from '@/shared/types/iot';
 import {
   Chip,
-    DeviceIcon,
-    IotActionButton,
-    IotHeroAside,
-    IotInlineActionButton,
-    IotInlineDangerButton,
-    IotModulePage,
-    IotNotice,
-    IotPageHeader,
-    IotPanel,
+  DeviceIcon,
+  IotActionButton,
+  IotHeroAside,
+  IotInlineActionButton,
+  IotInlineDangerButton,
+  IotModulePage,
+  IotNotice,
+  IotPageHeader,
+  IotPanel,
   IotPrimaryButton,
   IotSecondaryButton,
   IotSelectField,
-    IotTabButton,
-    IotTextField
+  IotTabButton,
+  IotTextField,
+  IotTextareaField
 } from '@/modules/iot/iot-chrome';
 import { buildDemoDevicesFromReal, getOperationalProfile } from '@/modules/iot/iot-demo-data';
 import { formatDateTime, resolveDeviceStatusLabel, resolveDeviceTypeLabel } from '@/modules/iot/iot-utils';
@@ -168,6 +170,33 @@ export function IotDevicesPage() {
   const onlineCount = visibleRows.filter((device) => device.status === 'ONLINE').length;
   const offlineCount = visibleRows.filter((device) => device.status === 'OFFLINE').length;
   const attentionCount = visibleRows.filter((device) => device.status !== 'ONLINE').length;
+  const contextCards = [
+    {
+      key: 'iot-device-mode',
+      label: 'Workspace mode',
+      value: shouldUseDemo ? 'Assistido' : 'Integracao ativa',
+      description: shouldUseDemo
+        ? 'The fleet stays explorable even when the integration is unavailable.'
+        : 'Real device data is flowing through the operational inventory.',
+      tone: 'accent' as const
+    },
+    {
+      key: 'iot-device-fleet',
+      label: 'Fleet slice',
+      value: `${visibleRows.length} ativos exibidos`,
+      description: 'Current filters and pagination keep the visible fleet slice explicit before deeper edits happen.',
+      tone: 'neutral' as const
+    },
+    {
+      key: 'iot-device-editor',
+      label: 'Editing state',
+      value: editingDevice ? editingDevice.name : 'No active edit',
+      description: editingDevice
+        ? 'The selected device stays pinned in the edit form below.'
+        : 'Open a fleet row to adjust one device without losing the table context.',
+      tone: editingDevice ? 'primary' as const : 'neutral' as const
+    }
+  ];
   const profileByDeviceId = useMemo(
     () => new Map(visibleRows.map((device, index) => [device.id, getOperationalProfile(device, index)])),
     [visibleRows]
@@ -381,20 +410,24 @@ export function IotDevicesPage() {
           <IotNotice title="Operação concluída" description={success} tone="green" />
         ) : null}
 
+        <DashboardContextCardGrid cards={contextCards} />
+
         <IotPanel
           title="Filtros operacionais"
           description="Refine a frota por nome, tipo e status sem sair do fluxo operacional da apresentação."
         >
-          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
-            <IotTextField
-              label="Busca"
-              value={searchInput}
-              onChange={setSearchInput}
-              placeholder="Nome, ID técnico ou localização"
-            />
-            <IotSelectField label="Tipo" value={typeFilter} onChange={setTypeFilter} options={typeOptions} />
-            <IotSelectField label="Status" value={statusFilter} onChange={setStatusFilter} options={statusOptions} />
-            <div className="flex items-end gap-3">
+          <div className="space-y-4">
+            <div className="grid gap-4 xl:grid-cols-[minmax(0,1.5fr)_minmax(0,0.85fr)_minmax(0,0.85fr)] xl:items-end">
+              <IotTextField
+                label="Busca"
+                value={searchInput}
+                onChange={setSearchInput}
+                placeholder="Nome, ID técnico ou localização"
+              />
+              <IotSelectField label="Tipo" value={typeFilter} onChange={setTypeFilter} options={typeOptions} />
+              <IotSelectField label="Status" value={statusFilter} onChange={setStatusFilter} options={statusOptions} />
+            </div>
+            <div className="flex flex-wrap items-center gap-3">
               <IotPrimaryButton onClick={() => setSearch(searchInput)}>Aplicar filtros</IotPrimaryButton>
               <IotSecondaryButton
                 onClick={() => {
@@ -406,8 +439,6 @@ export function IotDevicesPage() {
               >
                 Limpar
               </IotSecondaryButton>
-            </div>
-            <div className="flex items-end gap-3">
               <IotTabButton
                 label={`Ativos (${onlineCount})`}
                 active={statusFilter === 'ONLINE'}
@@ -428,7 +459,7 @@ export function IotDevicesPage() {
             description="A edição permanece conectada ao contrato real do módulo IoT, sem alterar a estrutura consolidada."
           >
             <form onSubmit={handleUpdate} className="space-y-5">
-              <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+              <div className="grid gap-4 xl:grid-cols-2">
                 <IotTextField label="Nome" value={name} onChange={setName} />
                 <IotTextField label="Identificador" value={identifier} onChange={setIdentifier} />
                 <IotSelectField label="Tipo" value={type} onChange={setType} options={editableTypeOptions} />
@@ -439,7 +470,12 @@ export function IotDevicesPage() {
                   onChange={setStatus}
                   options={editableStatusOptions}
                 />
-                <IotTextField label="Descrição" value={description} onChange={setDescription} />
+                <IotTextareaField
+                  label="Descrição"
+                  value={description}
+                  onChange={setDescription}
+                  placeholder="Contexto operacional, área de instalação ou observações da frota"
+                />
               </div>
               <div className="flex gap-3">
                 <IotPrimaryButton type="submit" disabled={submitting}>

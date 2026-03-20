@@ -2,7 +2,14 @@
 
 import Link from 'next/link';
 import { useCallback, useEffect, useState } from 'react';
-import { sharedPageStackClass } from '@/shared/components/public-visual-system';
+import {
+  sharedCompactTextClass,
+  sharedFilterToolbarClass,
+  sharedFormActionsClass,
+  sharedInlineActionsClass,
+  sharedPageStackClass
+} from '@/shared/components/public-visual-system';
+import { StatusBadge } from '@/shared/dashboard/status-badge';
 import { crmService } from '@/shared/services/crm-service';
 import { ApiClientError } from '@/shared/lib/http';
 import { resolvePageItems, resolveTotalItems } from '@/shared/lib/pagination';
@@ -40,6 +47,13 @@ const initialPage: PageResponse<CrmLead> = {
   page: 0,
   size: pageSize
 };
+
+function formatDateTime(value: string) {
+  return new Intl.DateTimeFormat('pt-BR', {
+    dateStyle: 'short',
+    timeStyle: 'short'
+  }).format(new Date(value));
+}
 
 export function CrmLeadsPage() {
   const [pageData, setPageData] = useState<PageResponse<CrmLead>>(initialPage);
@@ -184,43 +198,62 @@ export function CrmLeadsPage() {
     const contact = contacts.find((item) => item.id === contactId);
     return contact ? `${contact.firstName} ${contact.lastName ?? ''}`.trim() : '-';
   };
+  const activeFilterCount = [search, statusFilter, sourceFilter, companyFilterId, contactFilterId].filter(Boolean).length;
 
   const columns: DataTableColumn<CrmLead>[] = [
     {
-      key: 'name',
-      header: 'Nome',
-      render: (lead) => lead.name
+      key: 'lead',
+      header: 'Lead',
+      render: (lead) => (
+        <div>
+          <p className="font-medium text-[color:var(--app-shell-heading)]">{lead.name}</p>
+          <p className={`mt-1 ${sharedCompactTextClass}`}>
+            {lead.email ?? 'Sem email'}
+            {lead.phone ? ` • ${lead.phone}` : ''}
+          </p>
+        </div>
+      )
     },
     {
       key: 'source',
       header: 'Origem',
-      render: (lead) => lead.source ?? '-'
+      render: (lead) => (
+        <div>
+          <p className="font-medium text-[color:var(--app-shell-heading)]">{lead.source ?? 'Sem origem definida'}</p>
+          <p className={`mt-1 ${sharedCompactTextClass}`}>Atualizado em {formatDateTime(lead.updatedAt)}</p>
+        </div>
+      )
     },
     {
-      key: 'company',
-      header: 'Company',
-      render: (lead) => companyName(lead.companyId)
-    },
-    {
-      key: 'contact',
-      header: 'Contato',
-      render: (lead) => contactName(lead.contactId)
-    },
-    {
-      key: 'email',
-      header: 'Email',
-      render: (lead) => lead.email ?? '-'
+      key: 'relationship',
+      header: 'Relacionamento',
+      render: (lead) => (
+        <div>
+          <p className="font-medium text-[color:var(--app-shell-heading)]">{companyName(lead.companyId)}</p>
+          <p className={`mt-1 ${sharedCompactTextClass}`}>Contato: {contactName(lead.contactId)}</p>
+        </div>
+      )
     },
     {
       key: 'status',
       header: 'Status',
-      render: (lead) => lead.status
+      render: (lead) => <StatusBadge status={lead.status} />
+    },
+    {
+      key: 'lifecycle',
+      header: 'Lifecycle',
+      render: (lead) => (
+        <div>
+          <p className="font-medium text-[color:var(--app-shell-heading)]">Criado em {formatDateTime(lead.createdAt)}</p>
+          <p className={`mt-1 ${sharedCompactTextClass}`}>Última revisão {formatDateTime(lead.updatedAt)}</p>
+        </div>
+      )
     },
     {
       key: 'actions',
       header: 'Ações',
       render: (lead) => (
-        <div className="flex gap-2">
+        <div className={sharedInlineActionsClass}>
           <PermissionGuard permission="crm.lead.update">
             <Link
               href={`/crm/leads/${lead.id}`}
@@ -271,63 +304,72 @@ export function CrmLeadsPage() {
           title="Lead filters"
           description="Refine the commercial queue by status, source, and relationship context without squeezing controls into uneven widths."
         >
-          <div className="grid gap-3 xl:grid-cols-[minmax(0,1.4fr)_repeat(4,minmax(0,0.85fr))_auto_auto] xl:items-end">
-            <SearchBar
-              label="Search"
-              value={searchInput}
-              onChange={setSearchInput}
-              placeholder="Nome, email, origem"
-            />
-            <FormSelect
-              label="Status"
-              value={statusFilter}
-              options={statusOptions}
-              onChange={setStatusFilter}
-            />
-            <FormSelect
-              label="Origem"
-              value={sourceFilter}
-              options={sourceOptions}
-              onChange={setSourceFilter}
-            />
-            <FormSelect
-              label="Company"
-              value={companyFilterId}
-              options={companyOptions}
-              onChange={(value) => {
-                setCompanyFilterId(value);
-                setContactFilterId('');
-              }}
-              disabled={loadingCompanies}
-            />
-            <FormSelect
-              label="Contato"
-              value={contactFilterId}
-              options={contactOptions}
-              onChange={setContactFilterId}
-              disabled={loadingContacts}
-            />
-            <button
-              type="button"
-              onClick={() => setSearch(searchInput)}
-              className="ui-primary-button"
-            >
-              Buscar
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setSearchInput('');
-                setSearch('');
-                setStatusFilter('');
-                setSourceFilter('');
-                setCompanyFilterId('');
-                setContactFilterId('');
-              }}
-              className="ui-secondary-button"
-            >
-              Limpar
-            </button>
+          <div className={sharedFilterToolbarClass}>
+            <div className="grid gap-3 xl:grid-cols-[minmax(0,1.45fr)_repeat(4,minmax(0,0.82fr))] xl:items-end">
+              <SearchBar
+                label="Search"
+                value={searchInput}
+                onChange={setSearchInput}
+                placeholder="Nome, email, origem"
+              />
+              <FormSelect
+                label="Status"
+                value={statusFilter}
+                options={statusOptions}
+                onChange={setStatusFilter}
+              />
+              <FormSelect
+                label="Origem"
+                value={sourceFilter}
+                options={sourceOptions}
+                onChange={setSourceFilter}
+              />
+              <FormSelect
+                label="Company"
+                value={companyFilterId}
+                options={companyOptions}
+                onChange={(value) => {
+                  setCompanyFilterId(value);
+                  setContactFilterId('');
+                }}
+                disabled={loadingCompanies}
+              />
+              <FormSelect
+                label="Contato"
+                value={contactFilterId}
+                options={contactOptions}
+                onChange={setContactFilterId}
+                disabled={loadingContacts}
+              />
+            </div>
+            <div className={sharedFormActionsClass}>
+              <button
+                type="button"
+                onClick={() => setSearch(searchInput)}
+                className="ui-primary-button"
+              >
+                Buscar
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setSearchInput('');
+                  setSearch('');
+                  setStatusFilter('');
+                  setSourceFilter('');
+                  setCompanyFilterId('');
+                  setContactFilterId('');
+                }}
+                className="ui-secondary-button"
+              >
+                Limpar
+              </button>
+              <p className="text-sm text-[color:var(--app-shell-muted)]">
+                {activeFilterCount > 0
+                  ? `${activeFilterCount} filtro(s) ativos na fila comercial.`
+                  : 'Sem filtros ativos no momento.'}
+              </p>
+            </div>
           </div>
         </PageSection>
 
@@ -335,20 +377,32 @@ export function CrmLeadsPage() {
           <div className="ui-notice-error">{error}</div>
         ) : null}
 
-        <DataTable
-          columns={columns}
-          rows={rows}
-          getRowKey={(row) => row.id}
-          loading={loading}
-          emptyMessage="Nenhum lead encontrado."
-        />
+        <PageSection
+          title="Lead queue"
+          description="The filtered table keeps relationship context, lifecycle timing, and action controls readable without overloading a single row."
+          actions={(
+            <p className="text-sm text-[color:var(--app-shell-muted)]">
+              Total {totalItems} lead(s)
+            </p>
+          )}
+        >
+          <div className="space-y-5">
+            <DataTable
+              columns={columns}
+              rows={rows}
+              getRowKey={(row) => row.id}
+              loading={loading}
+              emptyMessage="Nenhum lead encontrado."
+            />
 
-        <Pagination
-          page={pageData.page}
-          totalPages={pageData.totalPages}
-          totalElements={totalItems}
-          onPageChange={(nextPage) => load(nextPage, search, statusFilter, sourceFilter, companyFilterId, contactFilterId)}
-        />
+            <Pagination
+              page={pageData.page}
+              totalPages={pageData.totalPages}
+              totalElements={totalItems}
+              onPageChange={(nextPage) => load(nextPage, search, statusFilter, sourceFilter, companyFilterId, contactFilterId)}
+            />
+          </div>
+        </PageSection>
 
         <ConfirmDialog
           open={Boolean(deleteCandidate)}

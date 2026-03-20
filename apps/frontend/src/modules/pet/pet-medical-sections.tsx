@@ -6,9 +6,9 @@ import { resolvePetLookupLabel } from '@/modules/pet/pet-lookup-feedback';
 import { PermissionGuard } from '@/shared/auth/PermissionGuard';
 import {
   sharedCompactTextClass,
-  sharedInputClass,
-  sharedInputLabelClass,
-  sharedSectionHeadingClass
+  sharedFilterToolbarClass,
+  sharedFormActionsClass,
+  sharedInlineActionsClass
 } from '@/shared/components/public-visual-system';
 import { resolvePageItems, resolveTotalItems } from '@/shared/lib/pagination';
 import { PageResponse } from '@/shared/types/common';
@@ -25,7 +25,9 @@ import { DataTable, DataTableColumn } from '@/shared/ui/data-table';
 import { DateTimeInput } from '@/shared/ui/datetime-input';
 import { FormInput } from '@/shared/ui/form-input';
 import { FormSelect } from '@/shared/ui/form-select';
+import { FormTextarea } from '@/shared/ui/form-textarea';
 import { Pagination } from '@/shared/ui/pagination';
+import { PageSection } from '@/shared/ui/page-section';
 import { SearchBar } from '@/shared/ui/search-bar';
 
 export type PetSelectOption = {
@@ -125,12 +127,11 @@ export function PetClinicalTimelineSection({
   const hiddenCount = data ? Math.max(data.totalEvents - events.length, 0) : 0;
 
   return (
-    <section className="space-y-4 ui-surface-panel p-4">
-      <div>
-        <h3 className={sharedSectionHeadingClass}>Clinical Timeline</h3>
-        <p className={sharedCompactTextClass}>Leitura consolidada do historico recente por pet e atendimento.</p>
-      </div>
-
+    <PageSection
+      title="Clinical Timeline"
+      description="Leitura consolidada do historico recente por pet e atendimento."
+      contentClassName="space-y-4"
+    >
       {!ready ? (
         <div className="ui-notice-neutral">
           Selecione um pet ou abra um atendimento para visualizar a timeline clinica consolidada.
@@ -172,13 +173,13 @@ export function PetClinicalTimelineSection({
           Nenhum evento clinico encontrado para o contexto atual.
         </div>
       ) : null}
-    </section>
+    </PageSection>
   );
 }
 
 function ClinicalTimelineEventCard({ event }: { event: PetClinicalTimelineEvent }) {
   return (
-    <article className="ui-surface-muted p-4">
+    <article className="ui-surface-muted rounded-2xl p-4 lg:p-5">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="space-y-2">
           <div className="flex flex-wrap items-center gap-2">
@@ -214,20 +215,30 @@ type TextAreaFieldProps = {
   value: string;
   onChange: (value: string) => void;
   required?: boolean;
+  wrapperClassName?: string;
+  rows?: number;
+  description?: string;
 };
 
-function TextAreaField({ label, value, onChange, required = false }: TextAreaFieldProps) {
+function TextAreaField({
+  label,
+  value,
+  onChange,
+  required = false,
+  wrapperClassName,
+  rows = 4,
+  description
+}: TextAreaFieldProps) {
   return (
-    <label className="block text-sm">
-      <span className={sharedInputLabelClass}>{label}</span>
-      <textarea
-        value={value}
-        onChange={(event) => onChange(event.target.value)}
-        required={required}
-        rows={3}
-        className={`${sharedInputClass} min-h-24 resize-y`}
-      />
-    </label>
+    <FormTextarea
+      label={label}
+      value={value}
+      onChange={onChange}
+      required={required}
+      rows={rows}
+      wrapperClassName={wrapperClassName}
+      description={description}
+    />
   );
 }
 
@@ -263,33 +274,59 @@ export function PetMedicalFilters({
   onClear
 }: PetMedicalFiltersProps) {
   return (
-    <div className="grid gap-3 ui-surface-panel p-4 md:grid-cols-[1fr_240px_240px_auto_auto]">
-      <SearchBar value={searchInput} onChange={onSearchInputChange} placeholder="Descrição, diagnóstico, medicação ou vacina" />
-      <FormSelect label="Pet" value={petFilterId} options={petOptions} onChange={onPetFilterIdChange} disabled={petLookupUnavailable} />
-      {showProfessionalFilter ? (
-        <FormSelect
-          label="Profissional"
-          value={professionalFilterId}
-          options={professionalOptions}
-          onChange={onProfessionalFilterIdChange}
-          disabled={professionalsLookupUnavailable}
-        />
-      ) : null}
-      <button
-        type="button"
-        onClick={onSearch}
-        className="ui-primary-button"
-      >
-        Buscar
-      </button>
-      <button
-        type="button"
-        onClick={onClear}
-        className="ui-secondary-button"
-      >
-        Limpar
-      </button>
-    </div>
+    <PageSection
+      tone="muted"
+      title="Clinical filters"
+      description="Refine the shared clinical workspace by pet, professional, and text search without collapsing the controls into a crowded toolbar."
+    >
+      <div className={sharedFilterToolbarClass}>
+        <div
+          className={
+            showProfessionalFilter
+              ? 'grid gap-3 xl:grid-cols-[minmax(0,1.4fr)_240px_240px] xl:items-end'
+              : 'grid gap-3 xl:grid-cols-[minmax(0,1.4fr)_240px] xl:items-end'
+          }
+        >
+          <SearchBar
+            value={searchInput}
+            onChange={onSearchInputChange}
+            placeholder="Descrição, diagnóstico, medicação ou vacina"
+          />
+          <FormSelect
+            label="Pet"
+            value={petFilterId}
+            options={petOptions}
+            onChange={onPetFilterIdChange}
+            disabled={petLookupUnavailable}
+          />
+          {showProfessionalFilter ? (
+            <FormSelect
+              label="Profissional"
+              value={professionalFilterId}
+              options={professionalOptions}
+              onChange={onProfessionalFilterIdChange}
+              disabled={professionalsLookupUnavailable}
+            />
+          ) : null}
+        </div>
+        <div className={sharedFormActionsClass}>
+          <button
+            type="button"
+            onClick={onSearch}
+            className="ui-primary-button"
+          >
+            Buscar
+          </button>
+          <button
+            type="button"
+            onClick={onClear}
+            className="ui-secondary-button"
+          >
+            Limpar
+          </button>
+        </div>
+      </div>
+    </PageSection>
   );
 }
 
@@ -340,7 +377,7 @@ export function createPetMedicalRecordColumns({
       key: 'actions',
       header: 'Ações',
       render: (item) => (
-        <div className="flex gap-2">
+        <div className={sharedInlineActionsClass}>
           <PermissionGuard permission="pet.medical-record.update">
             <button
               type="button"
@@ -400,7 +437,7 @@ export function createPetVaccinationColumns({
       key: 'actions',
       header: 'Ações',
       render: (item) => (
-        <div className="flex gap-2">
+        <div className={sharedInlineActionsClass}>
           <PermissionGuard permission="pet.vaccination.update">
             <button
               type="button"
@@ -472,7 +509,7 @@ export function createPetPrescriptionColumns({
       key: 'actions',
       header: 'Ações',
       render: (item) => (
-        <div className="flex gap-2">
+        <div className={sharedInlineActionsClass}>
           <PermissionGuard permission="pet.prescription.update">
             <button
               type="button"
@@ -555,68 +592,80 @@ export function PetMedicalRecordSection({
   onPageChange
 }: PetMedicalRecordSectionProps) {
   return (
-    <section className="space-y-4 ui-surface-panel p-4">
-      <div>
-        <h3 className={sharedSectionHeadingClass}>Medical Records</h3>
-        <p className={sharedCompactTextClass}>Histórico clínico e evoluções por pet.</p>
-      </div>
-
+    <PageSection
+      title="Medical Records"
+      description="Histórico clínico e evoluções por pet."
+      contentClassName="space-y-5"
+    >
       <PermissionGuard permission={editingId ? 'pet.medical-record.update' : 'pet.medical-record.create'}>
-        <form onSubmit={onSubmit} className="grid gap-3 md:grid-cols-2">
-          <FormSelect
-            label="Pet"
-            value={petId}
-            options={formPetOptions}
-            onChange={onPetIdChange}
-            disabled={petLookupUnavailable || lockPetSelection}
-          />
-          <FormSelect
-            label="Profissional"
-            value={professionalId}
-            options={formProfessionalOptions}
-            onChange={onProfessionalIdChange}
-            disabled={professionalsLookupUnavailable || lockProfessionalSelection}
-          />
-          <TextAreaField label="Descrição" value={description} onChange={onDescriptionChange} required />
-          <TextAreaField label="Diagnóstico" value={diagnosis} onChange={onDiagnosisChange} />
-          <TextAreaField label="Tratamento" value={treatment} onChange={onTreatmentChange} />
+        <div className="ui-surface-muted rounded-2xl p-4 lg:p-5">
+          <form onSubmit={onSubmit} className="grid gap-4 xl:grid-cols-2">
+            <FormSelect
+              label="Pet"
+              value={petId}
+              options={formPetOptions}
+              onChange={onPetIdChange}
+              disabled={petLookupUnavailable || lockPetSelection}
+            />
+            <FormSelect
+              label="Profissional"
+              value={professionalId}
+              options={formProfessionalOptions}
+              onChange={onProfessionalIdChange}
+              disabled={professionalsLookupUnavailable || lockProfessionalSelection}
+            />
+            <TextAreaField
+              label="Descrição"
+              value={description}
+              onChange={onDescriptionChange}
+              required
+              wrapperClassName="xl:col-span-2"
+              rows={4}
+            />
+            <TextAreaField label="Diagnóstico" value={diagnosis} onChange={onDiagnosisChange} rows={4} />
+            <TextAreaField label="Tratamento" value={treatment} onChange={onTreatmentChange} rows={4} />
 
-          <div className="md:col-span-2 flex gap-2">
-            {appointmentContextDescription ? (
-              <div className="w-full ui-notice-info">
-                {appointmentContextDescription}
+            <div className="space-y-3 xl:col-span-2">
+              {appointmentContextDescription ? (
+                <div className="ui-notice-info">
+                  {appointmentContextDescription}
+                </div>
+              ) : null}
+              {!formReady ? (
+                <div className="ui-notice-warning">
+                  O formulário de prontuário depende das referências de pets e profissionais.
+                </div>
+              ) : null}
+              <div className={sharedFormActionsClass}>
+                <button
+                  type="submit"
+                  disabled={submitting || !formReady}
+                  className="ui-primary-button"
+                >
+                  {submitting ? 'Salvando...' : editingId ? 'Atualizar prontuário' : 'Criar prontuário'}
+                </button>
+                {editingId ? (
+                  <button
+                    type="button"
+                    onClick={onCancelEdit}
+                    className="ui-secondary-button"
+                  >
+                    Cancelar edição
+                  </button>
+                ) : null}
               </div>
-            ) : null}
-            {!formReady ? (
-              <div className="w-full ui-notice-warning">
-                O formulário de prontuário depende das referências de pets e profissionais.
-              </div>
-            ) : null}
-            <button
-              type="submit"
-              disabled={submitting || !formReady}
-              className="ui-primary-button"
-            >
-              {submitting ? 'Salvando...' : editingId ? 'Atualizar prontuário' : 'Criar prontuário'}
-            </button>
-            {editingId ? (
-              <button
-                type="button"
-                onClick={onCancelEdit}
-                className="ui-secondary-button"
-              >
-                Cancelar edição
-              </button>
-            ) : null}
-          </div>
-        </form>
+            </div>
+          </form>
+        </div>
       </PermissionGuard>
 
       <PermissionGuard permission="pet.medical-record.read">
-        <DataTable columns={columns} rows={resolvePageItems(pageData)} getRowKey={(row) => row.id} loading={loading} emptyMessage="Nenhum prontuário encontrado." />
-        <Pagination page={pageData.page} totalPages={pageData.totalPages} totalElements={resolveTotalItems(pageData)} onPageChange={onPageChange} />
+        <div className="space-y-4">
+          <DataTable columns={columns} rows={resolvePageItems(pageData)} getRowKey={(row) => row.id} loading={loading} emptyMessage="Nenhum prontuário encontrado." />
+          <Pagination page={pageData.page} totalPages={pageData.totalPages} totalElements={resolveTotalItems(pageData)} onPageChange={onPageChange} />
+        </div>
       </PermissionGuard>
-    </section>
+    </PageSection>
   );
 }
 
@@ -672,62 +721,67 @@ export function PetVaccinationSection({
   onPageChange
 }: PetVaccinationSectionProps) {
   return (
-    <section className="space-y-4 ui-surface-panel p-4">
-      <div>
-        <h3 className={sharedSectionHeadingClass}>Vaccinations</h3>
-        <p className={sharedCompactTextClass}>Controle de aplicações e próximos reforços.</p>
-      </div>
-
+    <PageSection
+      title="Vaccinations"
+      description="Controle de aplicações e próximos reforços."
+      contentClassName="space-y-5"
+    >
       <PermissionGuard permission={editingId ? 'pet.vaccination.update' : 'pet.vaccination.create'}>
-        <form onSubmit={onSubmit} className="grid gap-3 md:grid-cols-2">
-          <FormSelect
-            label="Pet"
-            value={petId}
-            options={formPetOptions}
-            onChange={onPetIdChange}
-            disabled={petLookupUnavailable || lockPetSelection}
-          />
-          <FormInput label="Vacina" value={vaccineName} onChange={onVaccineNameChange} required />
-          <DateTimeInput label="Aplicada em" value={appliedAt} onChange={onAppliedAtChange} required />
-          <DateTimeInput label="Próximo reforço" value={nextDueAt} onChange={onNextDueAtChange} />
-          <TextAreaField label="Notas" value={notes} onChange={onNotesChange} />
+        <div className="ui-surface-muted rounded-2xl p-4 lg:p-5">
+          <form onSubmit={onSubmit} className="grid gap-4 xl:grid-cols-2">
+            <FormSelect
+              label="Pet"
+              value={petId}
+              options={formPetOptions}
+              onChange={onPetIdChange}
+              disabled={petLookupUnavailable || lockPetSelection}
+            />
+            <FormInput label="Vacina" value={vaccineName} onChange={onVaccineNameChange} required />
+            <DateTimeInput label="Aplicada em" value={appliedAt} onChange={onAppliedAtChange} required />
+            <DateTimeInput label="Próximo reforço" value={nextDueAt} onChange={onNextDueAtChange} />
+            <TextAreaField label="Notas" value={notes} onChange={onNotesChange} wrapperClassName="xl:col-span-2" />
 
-          <div className="md:col-span-2 flex gap-2">
-            {appointmentContextDescription ? (
-              <div className="w-full ui-notice-info">
-                {appointmentContextDescription}
+            <div className="space-y-3 xl:col-span-2">
+              {appointmentContextDescription ? (
+                <div className="ui-notice-info">
+                  {appointmentContextDescription}
+                </div>
+              ) : null}
+              {!formReady ? (
+                <div className="ui-notice-warning">
+                  O formulário de vacinação depende da referência de pets.
+                </div>
+              ) : null}
+              <div className={sharedFormActionsClass}>
+                <button
+                  type="submit"
+                  disabled={submitting || !formReady}
+                  className="ui-primary-button"
+                >
+                  {submitting ? 'Salvando...' : editingId ? 'Atualizar vacinação' : 'Criar vacinação'}
+                </button>
+                {editingId ? (
+                  <button
+                    type="button"
+                    onClick={onCancelEdit}
+                    className="ui-secondary-button"
+                  >
+                    Cancelar edição
+                  </button>
+                ) : null}
               </div>
-            ) : null}
-            {!formReady ? (
-              <div className="w-full ui-notice-warning">
-                O formulário de vacinação depende da referência de pets.
-              </div>
-            ) : null}
-            <button
-              type="submit"
-              disabled={submitting || !formReady}
-              className="ui-primary-button"
-            >
-              {submitting ? 'Salvando...' : editingId ? 'Atualizar vacinação' : 'Criar vacinação'}
-            </button>
-            {editingId ? (
-              <button
-                type="button"
-                onClick={onCancelEdit}
-                className="ui-secondary-button"
-              >
-                Cancelar edição
-              </button>
-            ) : null}
-          </div>
-        </form>
+            </div>
+          </form>
+        </div>
       </PermissionGuard>
 
       <PermissionGuard permission="pet.vaccination.read">
-        <DataTable columns={columns} rows={resolvePageItems(pageData)} getRowKey={(row) => row.id} loading={loading} emptyMessage="Nenhuma vacinação encontrada." />
-        <Pagination page={pageData.page} totalPages={pageData.totalPages} totalElements={resolveTotalItems(pageData)} onPageChange={onPageChange} />
+        <div className="space-y-4">
+          <DataTable columns={columns} rows={resolvePageItems(pageData)} getRowKey={(row) => row.id} loading={loading} emptyMessage="Nenhuma vacinação encontrada." />
+          <Pagination page={pageData.page} totalPages={pageData.totalPages} totalElements={resolveTotalItems(pageData)} onPageChange={onPageChange} />
+        </div>
       </PermissionGuard>
-    </section>
+    </PageSection>
   );
 }
 
@@ -789,70 +843,78 @@ export function PetPrescriptionSection({
   onPageChange
 }: PetPrescriptionSectionProps) {
   return (
-    <section className="space-y-4 ui-surface-panel p-4">
-      <div>
-        <h3 className={sharedSectionHeadingClass}>Prescriptions</h3>
-        <p className={sharedCompactTextClass}>Prescrições vinculadas ao histórico do atendimento.</p>
-      </div>
-
+    <PageSection
+      title="Prescriptions"
+      description="Prescrições vinculadas ao histórico do atendimento."
+      contentClassName="space-y-5"
+    >
       <PermissionGuard permission={editingId ? 'pet.prescription.update' : 'pet.prescription.create'}>
-        <form onSubmit={onSubmit} className="grid gap-3 md:grid-cols-2">
-          <FormSelect
-            label="Pet"
-            value={petId}
-            options={formPetOptions}
-            onChange={onPetIdChange}
-            disabled={petLookupUnavailable || lockPetSelection}
-          />
-          <FormSelect
-            label="Profissional"
-            value={professionalId}
-            options={formProfessionalOptions}
-            onChange={onProfessionalIdChange}
-            disabled={professionalsLookupUnavailable || lockProfessionalSelection}
-          />
-          <FormInput label="Medicamento" value={medication} onChange={onMedicationChange} required />
-          <FormInput label="Dosagem" value={dosage} onChange={onDosageChange} />
-          <div className="md:col-span-2">
-            <TextAreaField label="Instruções" value={instructions} onChange={onInstructionsChange} />
-          </div>
+        <div className="ui-surface-muted rounded-2xl p-4 lg:p-5">
+          <form onSubmit={onSubmit} className="grid gap-4 xl:grid-cols-2">
+            <FormSelect
+              label="Pet"
+              value={petId}
+              options={formPetOptions}
+              onChange={onPetIdChange}
+              disabled={petLookupUnavailable || lockPetSelection}
+            />
+            <FormSelect
+              label="Profissional"
+              value={professionalId}
+              options={formProfessionalOptions}
+              onChange={onProfessionalIdChange}
+              disabled={professionalsLookupUnavailable || lockProfessionalSelection}
+            />
+            <FormInput label="Medicamento" value={medication} onChange={onMedicationChange} required />
+            <FormInput label="Dosagem" value={dosage} onChange={onDosageChange} />
+            <TextAreaField
+              label="Instruções"
+              value={instructions}
+              onChange={onInstructionsChange}
+              wrapperClassName="xl:col-span-2"
+            />
 
-          <div className="md:col-span-2 flex gap-2">
-            {appointmentContextDescription ? (
-              <div className="w-full ui-notice-info">
-                {appointmentContextDescription}
+            <div className="space-y-3 xl:col-span-2">
+              {appointmentContextDescription ? (
+                <div className="ui-notice-info">
+                  {appointmentContextDescription}
+                </div>
+              ) : null}
+              {!formReady ? (
+                <div className="ui-notice-warning">
+                  O formulário de prescrição depende das referências de pets e profissionais.
+                </div>
+              ) : null}
+              <div className={sharedFormActionsClass}>
+                <button
+                  type="submit"
+                  disabled={submitting || !formReady}
+                  className="ui-primary-button"
+                >
+                  {submitting ? 'Salvando...' : editingId ? 'Atualizar prescrição' : 'Criar prescrição'}
+                </button>
+                {editingId ? (
+                  <button
+                    type="button"
+                    onClick={onCancelEdit}
+                    className="ui-secondary-button"
+                  >
+                    Cancelar edição
+                  </button>
+                ) : null}
               </div>
-            ) : null}
-            {!formReady ? (
-              <div className="w-full ui-notice-warning">
-                O formulário de prescrição depende das referências de pets e profissionais.
-              </div>
-            ) : null}
-            <button
-              type="submit"
-              disabled={submitting || !formReady}
-              className="ui-primary-button"
-            >
-              {submitting ? 'Salvando...' : editingId ? 'Atualizar prescrição' : 'Criar prescrição'}
-            </button>
-            {editingId ? (
-              <button
-                type="button"
-                onClick={onCancelEdit}
-                className="ui-secondary-button"
-              >
-                Cancelar edição
-              </button>
-            ) : null}
-          </div>
-        </form>
+            </div>
+          </form>
+        </div>
       </PermissionGuard>
 
       <PermissionGuard permission="pet.prescription.read">
-        <DataTable columns={columns} rows={resolvePageItems(pageData)} getRowKey={(row) => row.id} loading={loading} emptyMessage="Nenhuma prescrição encontrada." />
-        <Pagination page={pageData.page} totalPages={pageData.totalPages} totalElements={resolveTotalItems(pageData)} onPageChange={onPageChange} />
+        <div className="space-y-4">
+          <DataTable columns={columns} rows={resolvePageItems(pageData)} getRowKey={(row) => row.id} loading={loading} emptyMessage="Nenhuma prescrição encontrada." />
+          <Pagination page={pageData.page} totalPages={pageData.totalPages} totalElements={resolveTotalItems(pageData)} onPageChange={onPageChange} />
+        </div>
       </PermissionGuard>
-    </section>
+    </PageSection>
   );
 }
 

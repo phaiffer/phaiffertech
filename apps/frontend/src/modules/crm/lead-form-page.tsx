@@ -3,6 +3,11 @@
 import { FormEvent, useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import {
+  sharedCompactTextClass,
+  sharedFormActionsClass,
+  sharedPageStackClass
+} from '@/shared/components/public-visual-system';
 import { crmService } from '@/shared/services/crm-service';
 import { ApiClientError } from '@/shared/lib/http';
 import { resolvePageItems } from '@/shared/lib/pagination';
@@ -13,7 +18,6 @@ import { FormTextarea } from '@/shared/ui/form-textarea';
 import { PageSection } from '@/shared/ui/page-section';
 import { PageTitle } from '@/shared/ui/page-title';
 import { PermissionGuard } from '@/shared/auth/PermissionGuard';
-import { sharedPageStackClass } from '@/shared/components/public-visual-system';
 
 const statusOptions = [
   { value: 'NEW', label: 'NEW' },
@@ -163,6 +167,8 @@ export function LeadFormPage({ leadId }: LeadFormPageProps) {
       label: `${contact.firstName} ${contact.lastName ?? ''}`.trim()
     }))
   ], [contacts, loadingContacts]);
+  const selectedCompanyLabel = companyOptions.find((option) => option.value === companyId)?.label ?? 'Sem company vinculada';
+  const selectedContactLabel = contactOptions.find((option) => option.value === contactId)?.label ?? 'Nenhum contato relacionado';
 
   function handleCompanyChange(nextCompanyId: string) {
     setCompanyId(nextCompanyId);
@@ -226,50 +232,90 @@ export function LeadFormPage({ leadId }: LeadFormPageProps) {
             <div className="text-sm text-[color:var(--app-shell-muted)]">Carregando lead...</div>
           </PageSection>
         ) : (
-          <PageSection
-            title={isEdit ? 'Lead details' : 'Lead capture'}
-            description="Keep the company, contact, and commercial context aligned so future CRM drill-down pages inherit a stable composition."
-          >
-            <form onSubmit={handleSubmit} className="grid gap-4 xl:grid-cols-2">
-              <FormInput label="Nome" value={name} onChange={setName} required />
-              <FormInput label="Email" value={email} onChange={setEmail} type="email" />
-              <FormInput label="Telefone" value={phone} onChange={setPhone} />
-              <FormInput label="Origem" value={source} onChange={setSource} />
-              <FormSelect
-                label="Company relacionada"
-                value={companyId}
-                options={companyOptions}
-                onChange={handleCompanyChange}
-                disabled={loadingCompanies}
-              />
-              <FormSelect
-                label="Contato relacionado"
-                value={contactId}
-                options={contactOptions}
-                onChange={setContactId}
-                disabled={loadingContacts}
-              />
-              <FormSelect label="Status" value={status} options={statusOptions} onChange={setStatus} />
-              <div className="hidden xl:block" />
-              <FormTextarea
-                label="Observações comerciais"
-                value={notes}
-                onChange={setNotes}
-                rows={4}
-                wrapperClassName="xl:col-span-2"
-              />
+          <>
+            <PageSection
+              tone="muted"
+              title="Workflow context"
+              description="Keep the commercial mode, relationship links, and downstream CRM context explicit before editing the lead payload itself."
+            >
+              <div className="grid gap-4 xl:grid-cols-2">
+                <div className="ui-surface-muted p-4 lg:p-5">
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--tenant-accent)]">
+                    Record mode
+                  </p>
+                  <p className="mt-3 text-base font-semibold text-[color:var(--app-shell-heading)]">
+                    {isEdit ? 'Updating an existing lead' : 'Creating a new lead'}
+                  </p>
+                  <p className={`mt-2 ${sharedCompactTextClass}`}>
+                    Keep qualification, relationship context, and notes aligned so list and detail pages read the same way across the CRM workspace.
+                  </p>
+                </div>
 
-              <div className="flex flex-wrap items-center gap-3 xl:col-span-2">
-                <button
-                  type="submit"
-                  disabled={submitting}
-                  className="ui-primary-button"
-                >
-                  {submitting ? 'Salvando...' : isEdit ? 'Atualizar lead' : 'Criar lead'}
-                </button>
+                <div className="ui-surface-muted p-4 lg:p-5">
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--tenant-accent)]">
+                    Current relationship
+                  </p>
+                  <p className="mt-3 text-base font-semibold text-[color:var(--app-shell-heading)]">
+                    {selectedCompanyLabel}
+                  </p>
+                  <p className={`mt-2 ${sharedCompactTextClass}`}>Contact: {selectedContactLabel}</p>
+                </div>
               </div>
-            </form>
-          </PageSection>
+            </PageSection>
+
+            <PageSection
+              title={isEdit ? 'Lead details' : 'Lead capture'}
+              description="Group the core identity fields, relationship selectors, and sales notes so the form stays dense without feeling cramped."
+            >
+              <form onSubmit={handleSubmit} className="space-y-6">
+                <div className="grid gap-4 xl:grid-cols-2">
+                  <FormInput label="Nome" value={name} onChange={setName} required />
+                  <FormSelect label="Status" value={status} options={statusOptions} onChange={setStatus} />
+                  <FormInput label="Email" value={email} onChange={setEmail} type="email" />
+                  <FormInput label="Telefone" value={phone} onChange={setPhone} />
+                  <FormInput label="Origem" value={source} onChange={setSource} />
+                  <div className="hidden xl:block" />
+                </div>
+
+                <div className="grid gap-4 xl:grid-cols-2">
+                  <FormSelect
+                    label="Company relacionada"
+                    value={companyId}
+                    options={companyOptions}
+                    onChange={handleCompanyChange}
+                    disabled={loadingCompanies}
+                    description="A seleção da company mantém o vínculo comercial e redefine a lista de contatos disponíveis."
+                  />
+                  <FormSelect
+                    label="Contato relacionado"
+                    value={contactId}
+                    options={contactOptions}
+                    onChange={setContactId}
+                    disabled={loadingContacts}
+                    description="O contato acompanha a company selecionada quando houver relacionamento comercial definido."
+                  />
+                </div>
+
+                <FormTextarea
+                  label="Observações comerciais"
+                  value={notes}
+                  onChange={setNotes}
+                  rows={5}
+                  description="Use este campo para registrar o contexto comercial que precisa sobreviver entre a captura, a qualificação e a conversão."
+                />
+
+                <div className={sharedFormActionsClass}>
+                  <button
+                    type="submit"
+                    disabled={submitting}
+                    className="ui-primary-button"
+                  >
+                    {submitting ? 'Salvando...' : isEdit ? 'Atualizar lead' : 'Criar lead'}
+                  </button>
+                </div>
+              </form>
+            </PageSection>
+          </>
         )}
 
         {error ? <div className="ui-notice-error">{error}</div> : null}

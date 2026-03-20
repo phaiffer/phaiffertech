@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { PermissionGuard } from '@/shared/auth/PermissionGuard';
+import { DashboardContextCardGrid } from '@/shared/dashboard/dashboard-context-card-grid';
 import { ApiClientError } from '@/shared/lib/http';
 import { resolvePageItems } from '@/shared/lib/pagination';
 import { iotService } from '@/shared/services/iot-service';
@@ -257,6 +258,29 @@ export function IotDashboardPage() {
         .map(([key, value]) => `${key} ${value}`)
         .join(' / ')
     : '--';
+  const contextCards = snapshot ? [
+    {
+      key: 'iot-availability',
+      label: 'Availability posture',
+      value: availability,
+      description: 'Fleet availability stays explicit before alarm and maintenance pressure compete for attention.',
+      tone: 'accent' as const
+    },
+    {
+      key: 'iot-heartbeat',
+      label: 'Heartbeat window',
+      value: `${heartbeatFresh} fresh / ${heartbeatAttention} attention`,
+      description: 'Keep recent heartbeat coverage and stale-device pressure visible in the same operational band.',
+      tone: heartbeatAttention > 0 ? 'primary' as const : 'neutral' as const
+    },
+    {
+      key: 'iot-severity',
+      label: 'Alarm severity mix',
+      value: severityMix || 'Sem alarmes abertos',
+      description: 'Open severity distribution remains in view so the dashboard feels connected to incident ownership.',
+      tone: 'neutral' as const
+    }
+  ] : [];
 
   return (
     <PermissionGuard
@@ -299,6 +323,8 @@ export function IotDashboardPage() {
             tone="amber"
           />
         )}
+
+        {snapshot ? <DashboardContextCardGrid cards={contextCards} /> : null}
 
         {!loading && !error && !hasOperationalData ? (
           <>
