@@ -1,6 +1,8 @@
 package com.phaiffertech.platform.shared.security;
 
 import com.phaiffertech.platform.core.auth.config.DemoAccessProperties;
+import com.phaiffertech.platform.core.auth.config.PasswordResetProperties;
+import com.phaiffertech.platform.core.notification.config.NotificationMailProperties;
 import com.phaiffertech.platform.infrastructure.bootstrap.MasterAdminBootstrapProperties;
 import com.phaiffertech.platform.shared.config.CorsProperties;
 import io.jsonwebtoken.io.Decoders;
@@ -19,6 +21,8 @@ public class ProductionConfigurationValidator {
     private final JwtProperties jwtProperties;
     private final CorsProperties corsProperties;
     private final DemoAccessProperties demoAccessProperties;
+    private final PasswordResetProperties passwordResetProperties;
+    private final NotificationMailProperties notificationMailProperties;
     private final MasterAdminBootstrapProperties masterAdminBootstrapProperties;
 
     public ProductionConfigurationValidator(
@@ -26,12 +30,16 @@ public class ProductionConfigurationValidator {
             JwtProperties jwtProperties,
             CorsProperties corsProperties,
             DemoAccessProperties demoAccessProperties,
+            PasswordResetProperties passwordResetProperties,
+            NotificationMailProperties notificationMailProperties,
             MasterAdminBootstrapProperties masterAdminBootstrapProperties
     ) {
         this.environment = environment;
         this.jwtProperties = jwtProperties;
         this.corsProperties = corsProperties;
         this.demoAccessProperties = demoAccessProperties;
+        this.passwordResetProperties = passwordResetProperties;
+        this.notificationMailProperties = notificationMailProperties;
         this.masterAdminBootstrapProperties = masterAdminBootstrapProperties;
     }
 
@@ -49,6 +57,7 @@ public class ProductionConfigurationValidator {
             validateJwtSecret();
             validateRefreshCookiePolicy();
             validateCorsOrigins();
+            validatePasswordResetDelivery();
         }
 
         if (masterAdminBootstrapProperties.isEnabled() && !masterAdminBootstrapProperties.hasRequiredCredentials()) {
@@ -117,5 +126,11 @@ public class ProductionConfigurationValidator {
                 throw new IllegalStateException("Production CORS origins cannot use a wildcard when credentials are enabled.");
             }
         }
+    }
+
+    private void validatePasswordResetDelivery() {
+        requireNonBlank("spring.mail.host", environment.getProperty("spring.mail.host"));
+        requireNonBlank("app.security.password-reset.reset-url-base", passwordResetProperties.getResetUrlBase());
+        requireNonBlank("app.notification.mail.from-address", notificationMailProperties.getFromAddress());
     }
 }

@@ -13,6 +13,17 @@ export type ChangePasswordInput = {
   confirmNewPassword: string;
 };
 
+export type PasswordResetRequestInput = {
+  tenantCode: string;
+  email: string;
+};
+
+export type PasswordResetConfirmInput = {
+  token: string;
+  newPassword: string;
+  confirmNewPassword: string;
+};
+
 export const authService = {
   login: (input: LoginInput) =>
     apiClient.post<AuthTokenResponse>('/auth/login', {
@@ -36,6 +47,19 @@ export const authService = {
       newPassword: input.newPassword,
       confirmNewPassword: input.confirmNewPassword
     }),
+
+  requestPasswordReset: (input: PasswordResetRequestInput) =>
+    apiClient.post<void>('/auth/request-password-reset', {
+      tenantCode: input.tenantCode,
+      email: input.email
+    }, { skipAuth: true }),
+
+  confirmPasswordReset: (input: PasswordResetConfirmInput) =>
+    apiClient.post<void>('/auth/confirm-password-reset', {
+      token: input.token,
+      newPassword: input.newPassword,
+      confirmNewPassword: input.confirmNewPassword
+    }, { skipAuth: true }),
 
   me: () => apiClient.get<AuthenticatedUser>('/auth/me')
 };

@@ -6,11 +6,11 @@ import java.security.NoSuchAlgorithmException;
 import org.springframework.stereotype.Service;
 
 @Service
-public class RefreshTokenHashService {
+public class TokenHashService {
 
     public String hash(String token) {
         if (token == null || token.isBlank()) {
-            throw new IllegalArgumentException("Refresh token cannot be empty.");
+            throw new IllegalArgumentException("Token cannot be empty.");
         }
 
         try {

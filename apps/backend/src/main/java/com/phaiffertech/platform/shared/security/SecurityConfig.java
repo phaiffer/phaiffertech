@@ -139,6 +139,8 @@ public class SecurityConfig {
                 "/api/v1/auth/login",
                 "/api/v1/auth/demo-login",
                 "/api/v1/auth/refresh",
+                "/api/v1/auth/request-password-reset",
+                "/api/v1/auth/confirm-password-reset",
                 "/api/v1/health",
                 "/actuator/health",
                 "/actuator/health/**"

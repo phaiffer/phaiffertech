@@ -1,6 +1,8 @@
 package com.phaiffertech.platform.shared.security;
 
 import com.phaiffertech.platform.core.auth.config.DemoAccessProperties;
+import com.phaiffertech.platform.core.auth.config.PasswordResetProperties;
+import com.phaiffertech.platform.core.notification.config.NotificationMailProperties;
 import com.phaiffertech.platform.infrastructure.bootstrap.MasterAdminBootstrapProperties;
 import com.phaiffertech.platform.shared.config.CorsProperties;
 import java.util.List;
@@ -22,6 +24,8 @@ class ProductionConfigurationValidatorTest {
                 jwtProperties,
                 validCorsProperties(),
                 new DemoAccessProperties(),
+                validPasswordResetProperties(),
+                validNotificationMailProperties(),
                 new MasterAdminBootstrapProperties()
         );
 
@@ -39,6 +43,8 @@ class ProductionConfigurationValidatorTest {
                 jwtProperties,
                 corsProperties,
                 new DemoAccessProperties(),
+                validPasswordResetProperties(),
+                validNotificationMailProperties(),
                 new MasterAdminBootstrapProperties()
         );
 
@@ -55,6 +61,8 @@ class ProductionConfigurationValidatorTest {
                 jwtProperties,
                 validCorsProperties(),
                 new DemoAccessProperties(),
+                validPasswordResetProperties(),
+                validNotificationMailProperties(),
                 new MasterAdminBootstrapProperties()
         );
 
@@ -68,6 +76,8 @@ class ProductionConfigurationValidatorTest {
                 validJwtProperties(),
                 validCorsProperties(),
                 new DemoAccessProperties(),
+                validPasswordResetProperties(),
+                validNotificationMailProperties(),
                 new MasterAdminBootstrapProperties()
         );
 
@@ -80,6 +90,7 @@ class ProductionConfigurationValidatorTest {
         environment.withProperty("spring.datasource.url", "jdbc:postgresql://db.internal:5432/platform");
         environment.withProperty("spring.datasource.username", "platform");
         environment.withProperty("spring.datasource.password", "secret-value");
+        environment.withProperty("spring.mail.host", "smtp.internal");
         return environment;
     }
 
@@ -98,5 +109,19 @@ class ProductionConfigurationValidatorTest {
         CorsProperties corsProperties = new CorsProperties();
         corsProperties.setAllowedOrigins(List.of("https://console.phaiffertech.com"));
         return corsProperties;
+    }
+
+    private PasswordResetProperties validPasswordResetProperties() {
+        PasswordResetProperties passwordResetProperties = new PasswordResetProperties();
+        passwordResetProperties.setTokenExpiryMinutes(30);
+        passwordResetProperties.setResetUrlBase("https://app.phaiffertech.com/reset-password");
+        return passwordResetProperties;
+    }
+
+    private NotificationMailProperties validNotificationMailProperties() {
+        NotificationMailProperties notificationMailProperties = new NotificationMailProperties();
+        notificationMailProperties.setFromAddress("noreply@phaiffertech.com");
+        notificationMailProperties.setFromName("PhaifferTech Platform");
+        return notificationMailProperties;
     }
 }

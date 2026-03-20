@@ -1,13 +1,10 @@
 'use client';
 
-import { FormEvent, useEffect, useMemo, useState } from 'react';
+import { FormEvent, useMemo, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { AuthNoticeReason, consumeAuthNotice } from '@/shared/lib/session';
-import { authService } from '@/shared/services/auth-service';
 import { ApiClientError } from '@/shared/lib/http';
-import { useAuth } from '@/shared/hooks/use-auth';
+import { authService } from '@/shared/services/auth-service';
 import {
   buildLoginVisualContext,
   publicPrimaryButtonClass,
@@ -19,84 +16,15 @@ import {
 import { usePublicSite } from '@/shared/public/public-site-provider';
 import { getPublicSiteMessages } from '@/shared/public/public-site-messages';
 
-type LoginPageClientProps = {
-  nextPath: string;
-};
-
-export default function LoginPageClient({ nextPath }: LoginPageClientProps) {
-  const router = useRouter();
+export default function ForgotPasswordPageClient() {
   const { locale } = usePublicSite();
-  const t = getPublicSiteMessages(locale).login;
-  const { isAuthenticated, isLoading, signIn } = useAuth();
-  const demoAssistedEnabled = process.env.NEXT_PUBLIC_DEMO_ASSISTED_ENABLED === 'true';
-
+  const t = getPublicSiteMessages(locale).forgotPassword;
   const [tenantCode, setTenantCode] = useState('');
   const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [noticeReason, setNoticeReason] = useState<AuthNoticeReason | null>(null);
+  const [success, setSuccess] = useState(false);
   const visualContext = useMemo(() => buildLoginVisualContext(tenantCode), [tenantCode]);
-  const notice = useMemo(() => {
-    if (!noticeReason) {
-      return null;
-    }
-
-    if (noticeReason === 'signed-out') {
-      return t.signedOutNotice;
-    }
-
-    if (noticeReason === 'session-expired') {
-      return t.sessionExpiredNotice;
-    }
-
-    if (noticeReason === 'tenant-mismatch') {
-      return t.tenantMismatchNotice;
-    }
-
-    if (noticeReason === 'password-reset') {
-      return t.passwordResetNotice;
-    }
-
-    return t.passwordChangedNotice;
-  }, [noticeReason, t]);
-
-  useEffect(() => {
-    const authNotice = consumeAuthNotice();
-    if (authNotice) {
-      setNoticeReason(authNotice);
-    }
-  }, []);
-
-  useEffect(() => {
-    if (!isLoading && isAuthenticated) {
-      router.replace(nextPath);
-    }
-  }, [isAuthenticated, isLoading, nextPath, router]);
-
-  async function handleUseDemo() {
-    setError(null);
-    setSubmitting(true);
-
-    try {
-      const tokenData = await authService.demoLogin();
-
-      signIn({
-        accessToken: tokenData.accessToken,
-        user: tokenData.user,
-      });
-
-      router.replace(nextPath);
-    } catch (err) {
-      if (err instanceof ApiClientError) {
-        setError(err.message);
-      } else {
-        setError(t.errorFallback);
-      }
-    } finally {
-      setSubmitting(false);
-    }
-  }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -104,18 +32,11 @@ export default function LoginPageClient({ nextPath }: LoginPageClientProps) {
     setSubmitting(true);
 
     try {
-      const tokenData = await authService.login({
+      await authService.requestPasswordReset({
         tenantCode,
-        email,
-        password,
+        email
       });
-
-      signIn({
-        accessToken: tokenData.accessToken,
-        user: tokenData.user,
-      });
-
-      router.replace(nextPath);
+      setSuccess(true);
     } catch (err) {
       if (err instanceof ApiClientError) {
         setError(err.message);
@@ -148,10 +69,7 @@ export default function LoginPageClient({ nextPath }: LoginPageClientProps) {
             <span className="text-lg font-semibold tracking-tight">PhaifferTech</span>
           </Link>
 
-          <section
-            className={`${sharedPanelSurfaceClass} p-7 sm:p-8`}
-            style={visualContext.cardStyle}
-          >
+          <section className={`${sharedPanelSurfaceClass} p-7 sm:p-8`} style={visualContext.cardStyle}>
             <div className="mb-6">
               <h1 className="text-2xl font-semibold tracking-tight text-foreground">{t.title}</h1>
               <p className={`mt-2 ${sharedCompactTextClass}`}>{t.description}</p>
@@ -188,45 +106,7 @@ export default function LoginPageClient({ nextPath }: LoginPageClientProps) {
                 />
               </div>
 
-              <div>
-                <label htmlFor="password" className={sharedInputLabelClass}>
-                  {t.passwordLabel}
-                </label>
-                <input
-                  id="password"
-                  type="password"
-                  value={password}
-                  onChange={(event) => setPassword(event.target.value)}
-                  className={sharedInputClass}
-                  required
-                />
-              </div>
-
-              <div className="flex items-center justify-between gap-4 text-sm">
-                <Link
-                  href="/forgot-password"
-                  className="transition-colors hover:text-foreground"
-                  style={{ color: 'var(--tenant-accent)' }}
-                >
-                  {t.forgotPasswordLabel}
-                </Link>
-                {demoAssistedEnabled ? (
-                  <button
-                    type="button"
-                    onClick={handleUseDemo}
-                    disabled={submitting}
-                    className="text-sm text-muted transition-colors hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50"
-                  >
-                    {t.demoActionLabel}
-                  </button>
-                ) : null}
-              </div>
-
-              {notice ? (
-                <div className="ui-notice-info">
-                  {notice}
-                </div>
-              ) : null}
+              {success ? <div className="ui-notice-info">{t.successNotice}</div> : null}
 
               {error ? (
                 <div className="rounded-lg border border-destructive/30 bg-destructive-muted px-3 py-2.5 text-sm text-destructive">
@@ -243,6 +123,12 @@ export default function LoginPageClient({ nextPath }: LoginPageClientProps) {
                 {submitting ? t.loadingLabel : t.submitLabel}
               </button>
             </form>
+
+            <div className="mt-5 text-sm text-muted">
+              <Link href="/login" className="transition-colors hover:text-foreground" style={{ color: 'var(--tenant-accent)' }}>
+                {t.backToLoginLabel}
+              </Link>
+            </div>
           </section>
         </div>
       </main>

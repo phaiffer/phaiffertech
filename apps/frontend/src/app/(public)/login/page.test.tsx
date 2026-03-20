@@ -3,7 +3,7 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import LoginPage from '@/app/(public)/login/page';
 import { AuthProvider } from '@/shared/components/auth-provider';
-import { getSession } from '@/shared/lib/session';
+import { getSession, setAuthNotice } from '@/shared/lib/session';
 import { PublicSiteProvider } from '@/shared/public/public-site-provider';
 import { authService } from '@/shared/services/auth-service';
 import { AuthTokenResponse } from '@/shared/types/auth';
@@ -24,8 +24,11 @@ vi.mock('@/shared/services/auth-service', () => ({
   authService: {
     login: vi.fn(),
     demoLogin: vi.fn(),
+    requestPasswordReset: vi.fn(),
+    confirmPasswordReset: vi.fn(),
     refresh: vi.fn(),
     logout: vi.fn(),
+    changePassword: vi.fn(),
     me: vi.fn()
   }
 }));
@@ -132,9 +135,23 @@ describe('LoginPage', () => {
     });
 
     expect(screen.getByLabelText('Company or tenant')).toHaveValue('');
-    expect(screen.getByLabelText('Email')).toHaveValue('');
+   expect(screen.getByLabelText('Email')).toHaveValue('');
     expect(screen.getByLabelText('Password')).toHaveValue('');
-    expect(screen.getByRole('link', { name: 'Forgot your password?' })).toHaveAttribute('href', '/contact');
+    expect(screen.getByRole('link', { name: 'Forgot your password?' })).toHaveAttribute('href', '/forgot-password');
     expect(navigationMocks.replaceMock).toHaveBeenCalledWith('/dashboard');
+  });
+
+  it('renders the password reset notice on the next login screen', async () => {
+    setAuthNotice('password-reset');
+
+    render(
+      <PublicSiteProvider>
+        <AuthProvider>
+          <LoginPage />
+        </AuthProvider>
+      </PublicSiteProvider>
+    );
+
+    expect(await screen.findByText('Password reset successfully. Sign in again with the new credential.')).toBeInTheDocument();
   });
 });

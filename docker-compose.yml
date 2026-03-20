@@ -41,6 +41,14 @@ services:
       APP_SECURITY_JWT_REFRESH_DAYS: ${APP_SECURITY_JWT_REFRESH_DAYS:-7}
       APP_CORS_ALLOWED_ORIGINS: ${APP_CORS_ALLOWED_ORIGINS:-http://localhost:3000}
       APP_TENANT_HEADER: ${APP_TENANT_HEADER:-X-Tenant-Id}
+      APP_PASSWORD_RESET_URL_BASE: ${APP_PASSWORD_RESET_URL_BASE:-http://localhost:3000/reset-password}
+      APP_NOTIFICATION_MAIL_FROM_ADDRESS: ${APP_NOTIFICATION_MAIL_FROM_ADDRESS:-noreply@phaiffertech.local}
+      APP_NOTIFICATION_MAIL_FROM_NAME: ${APP_NOTIFICATION_MAIL_FROM_NAME:-PhaifferTech Platform}
+      MAIL_HOST: ${MAIL_HOST:-mailhog}
+      MAIL_PORT: ${MAIL_PORT:-1025}
+      MAIL_SMTP_AUTH: ${MAIL_SMTP_AUTH:-false}
+      MAIL_SMTP_STARTTLS_ENABLE: ${MAIL_SMTP_STARTTLS_ENABLE:-false}
+      MAIL_SMTP_STARTTLS_REQUIRED: ${MAIL_SMTP_STARTTLS_REQUIRED:-false}
     healthcheck:
       test: [ "CMD-SHELL", "curl -fsS http://127.0.0.1:8080/actuator/health >/dev/null || exit 1" ]
       interval: 10s
@@ -81,6 +89,18 @@ services:
         condition: service_healthy
     ports:
       - "${ADMINER_PORT:-8081}:8080"
+    networks:
+      - platform-net
+
+  mailhog:
+    image: mailhog/mailhog:v1.0.1
+    container_name: platform-mailhog
+    restart: unless-stopped
+    profiles:
+      - tools
+    ports:
+      - "${MAILHOG_SMTP_PORT:-1025}:1025"
+      - "${MAILHOG_UI_PORT:-8025}:8025"
     networks:
       - platform-net
 
