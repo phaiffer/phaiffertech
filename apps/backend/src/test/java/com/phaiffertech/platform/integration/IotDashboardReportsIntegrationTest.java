@@ -66,7 +66,8 @@ class IotDashboardReportsIntegrationTest extends AbstractIntegrationTest {
         assertEquals(200, dashboard.getStatusCode().value());
         JsonNode dashboardData = requireBody(dashboard).path("data");
         assertEquals(2, dashboardData.path("totalDevices").asInt());
-        assertEquals(0, dashboardData.path("activeDevices").asInt());
+        // Devices with fresh telemetry remain operationally active even when an open alarm elevates them to ALERT.
+        assertEquals(1, dashboardData.path("activeDevices").asInt());
         assertEquals(1, dashboardData.path("offlineDevices").asInt());
         assertTrue(dashboardData.path("totalAlarmsOpen").asInt() >= 1);
         assertTrue(dashboardData.path("telemetryPointsLast24h").asInt() >= 2);
