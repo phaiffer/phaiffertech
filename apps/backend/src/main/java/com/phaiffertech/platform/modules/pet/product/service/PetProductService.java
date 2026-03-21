@@ -165,11 +165,17 @@ public class PetProductService {
     }
 
     private InventoryItemCategory resolvePetCategory(String category) {
-        InventoryItemCategory resolved = category == null || category.isBlank()
-                ? InventoryItemCategory.PET_RETAIL_GOOD
-                : InventoryItemCategory.valueOf(category.trim().toUpperCase());
+        if (category == null || category.isBlank()) {
+            return InventoryItemCategory.PET_RETAIL_GOOD;
+        }
+        InventoryItemCategory resolved;
+        try {
+            resolved = InventoryItemCategory.valueOf(category.trim().toUpperCase());
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException("Invalid category. Valid pet values are: PET_RETAIL_GOOD, PET_VETERINARY_SUPPLY");
+        }
         if (!resolved.isPetCategory()) {
-            throw new IllegalArgumentException("Pet product category must be a Pet inventory category.");
+            throw new IllegalArgumentException("Invalid category. Valid pet values are: PET_RETAIL_GOOD, PET_VETERINARY_SUPPLY");
         }
         return resolved;
     }

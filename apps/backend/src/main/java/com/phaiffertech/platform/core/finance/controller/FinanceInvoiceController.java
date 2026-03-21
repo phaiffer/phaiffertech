@@ -87,6 +87,17 @@ public class FinanceInvoiceController {
         ));
     }
 
+    private FinanceInvoiceStatus resolveInvoiceStatus(String status) {
+        if (status == null || status.isBlank()) {
+            return null;
+        }
+        try {
+            return FinanceInvoiceStatus.valueOf(status.trim().toUpperCase());
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException("Invalid invoice status. Valid values are: DRAFT, ISSUED, PAID, CANCELED");
+        }
+    }
+
     private FinanceInvoiceUpsertCommand toCommand(FinanceInvoiceCreateRequest request) {
         return new FinanceInvoiceUpsertCommand(
                 request.sourceModule() == null || request.sourceModule().isBlank() ? null : FinanceSourceModule.valueOf(request.sourceModule().trim().toUpperCase()),
@@ -96,7 +107,7 @@ public class FinanceInvoiceController {
                 request.businessContextType(),
                 request.businessContextId(),
                 request.description(),
-                request.status() == null || request.status().isBlank() ? null : FinanceInvoiceStatus.valueOf(request.status().trim().toUpperCase()),
+                resolveInvoiceStatus(request.status()),
                 request.currency(),
                 request.totalAmount(),
                 request.issuedAt(),
@@ -116,7 +127,7 @@ public class FinanceInvoiceController {
                 request.businessContextType(),
                 request.businessContextId(),
                 request.description(),
-                request.status() == null || request.status().isBlank() ? null : FinanceInvoiceStatus.valueOf(request.status().trim().toUpperCase()),
+                resolveInvoiceStatus(request.status()),
                 request.currency(),
                 request.totalAmount(),
                 request.issuedAt(),

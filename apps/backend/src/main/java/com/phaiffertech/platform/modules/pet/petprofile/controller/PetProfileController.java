@@ -24,7 +24,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/api/v1/pet/pets")
+@RequestMapping({"/api/v1/pet/pets", "/api/v1/pet/profiles"})
 @RequirePermission(entitlement = TenantEntitlementKeys.PET_VETERINARY)
 public class PetProfileController {
 

@@ -238,9 +238,14 @@ public class IotPartService {
         if (category == null || category.isBlank()) {
             return null;
         }
-        InventoryItemCategory resolved = InventoryItemCategory.valueOf(category.trim().toUpperCase());
+        InventoryItemCategory resolved;
+        try {
+            resolved = InventoryItemCategory.valueOf(category.trim().toUpperCase());
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException("Invalid category. Valid IoT values are: IOT_SPARE_PART, IOT_CONSUMABLE");
+        }
         if (!resolved.isIotCategory()) {
-            throw new IllegalArgumentException("IoT part category must be an IoT inventory category.");
+            throw new IllegalArgumentException("Invalid category. Valid IoT values are: IOT_SPARE_PART, IOT_CONSUMABLE");
         }
         return resolved;
     }
