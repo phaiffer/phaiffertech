@@ -20,7 +20,7 @@ type SidebarItem = {
   label: string;
   anyOf?: string[];
   anyEntitlements?: readonly string[];
-  moduleCode?: 'CRM' | 'IOT' | 'PET';
+  moduleCode?: 'CRM' | 'IOT' | 'PET' | 'FINANCE';
   group: SidebarGroup;
   platformOnly?: boolean;
   icon: (props: { className?: string }) => ReactNode;
@@ -166,6 +166,43 @@ function IconHeart({ className }: { className?: string }) {
   );
 }
 
+function IconBanknote({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+      <rect x="2" y="6" width="20" height="12" rx="2" />
+      <circle cx="12" cy="12" r="2.5" />
+      <path d="M6 12h.01M18 12h.01" />
+    </svg>
+  );
+}
+
+function IconReceipt({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+      <path d="M4 2v20l3-2 2 2 3-2 3 2 2-2 3 2V2l-3 2-2-2-3 2-3-2-2 2Z" />
+      <path d="M8 10h8M8 14h4" />
+    </svg>
+  );
+}
+
+function IconArrowLeftRight({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+      <path d="M8 3 4 7l4 4M4 7h16M16 21l4-4-4-4M20 17H4" />
+    </svg>
+  );
+}
+
+function IconBox({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+      <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
+      <polyline points="3.27,6.96 12,12.01 20.73,6.96" />
+      <line x1="12" y1="22.08" x2="12" y2="12" />
+    </svg>
+  );
+}
+
 function IconLogout({ className }: { className?: string }) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
@@ -216,11 +253,18 @@ const petOverviewPermissions = [
 ];
 
 const items: SidebarItem[] = [
+  // Platform / Workspace
   { href: '/dashboard', label: 'Overview', group: 'core', icon: IconGrid },
   { href: '/users', label: 'Usuários', anyOf: ['USER_READ'], group: 'core', icon: IconUsers },
-  { href: '/tenants', label: 'Tenants', anyOf: ['TENANT_READ'], group: 'core', platformOnly: true, icon: IconBuilding },
+  { href: '/tenants', label: 'Workspaces', anyOf: ['TENANT_READ'], group: 'core', platformOnly: true, icon: IconBuilding },
+  { href: '/inventory', label: 'Inventory', anyOf: ['pet.inventory.read', 'iot.part.read'], group: 'core', icon: IconBox },
   { href: '/settings', label: 'Configurações', group: 'core', icon: IconSettings },
-  
+
+  // Finance (platform foundation)
+  { href: '/finance/invoices', label: 'Faturas', anyOf: ['finance.invoice.read'], group: 'finance', icon: IconReceipt },
+  { href: '/finance/payments', label: 'Pagamentos', anyOf: ['finance.payment.read'], group: 'finance', icon: IconBanknote },
+  { href: '/finance/cash', label: 'Fluxo de Caixa', anyOf: ['finance.cash-movement.read'], group: 'finance', icon: IconArrowLeftRight },
+
   // IoT
   { href: '/iot/dashboard', label: 'Dashboard', anyOf: ['iot.dashboard.read'], anyEntitlements: iotMonitorEntitlements, moduleCode: 'IOT', group: 'iot', icon: IconGrid },
   { href: '/iot/alarms', label: 'Alarmes', anyOf: ['iot.alarm.read'], anyEntitlements: iotMonitorEntitlements, moduleCode: 'IOT', group: 'iot', icon: IconBell },
@@ -231,14 +275,14 @@ const items: SidebarItem[] = [
   { href: '/iot/registers', label: 'Registros', anyOf: ['iot.register.read'], anyEntitlements: iotMonitorEntitlements, moduleCode: 'IOT', group: 'iot', icon: IconList },
   { href: '/iot/maintenance', label: 'Manutenção', anyOf: ['iot.maintenance.read'], anyEntitlements: iotMonitorEntitlements, moduleCode: 'IOT', group: 'iot', icon: IconTool },
   { href: '/iot/parts', label: 'Peças', anyOf: ['iot.part.read'], anyEntitlements: iotMonitorEntitlements, moduleCode: 'IOT', group: 'iot', icon: IconClipboard },
-  
+
   // CRM
   { href: '/crm', label: 'Hub CRM', anyOf: crmOverviewPermissions, moduleCode: 'CRM', group: 'crm', icon: IconGrid },
   { href: '/crm/dashboard', label: 'Dashboard', anyOf: ['crm.dashboard.read'], moduleCode: 'CRM', group: 'crm', icon: IconChart },
   { href: '/crm/tasks', label: 'Tarefas', anyOf: ['crm.task.read'], moduleCode: 'CRM', group: 'crm', icon: IconClipboard },
   { href: '/crm/notes', label: 'Notas', anyOf: ['crm.note.read'], moduleCode: 'CRM', group: 'crm', icon: IconNote },
   { href: '/crm/activity', label: 'Atividades', anyOf: ['crm.activity.read'], moduleCode: 'CRM', group: 'crm', icon: IconWave },
-  
+
   // PetFlow
   { href: '/pet', label: 'Hub Pet', anyOf: petOverviewPermissions, anyEntitlements: petSubmoduleEntitlements, moduleCode: 'PET', group: 'pet', icon: IconGrid },
   { href: '/pet/dashboard', label: 'Dashboard', anyOf: ['pet.dashboard.read'], anyEntitlements: petSubmoduleEntitlements, moduleCode: 'PET', group: 'pet', icon: IconChart },
@@ -349,6 +393,7 @@ export function Sidebar() {
     if (code === 'IOT') return 'var(--accent-iot)';
     if (code === 'PET') return 'var(--accent-pet)';
     if (code === 'CRM') return 'var(--accent-crm)';
+    if (code === 'FINANCE') return 'var(--accent-core)';
     return 'var(--accent-core)';
   };
 
