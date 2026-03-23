@@ -17,9 +17,10 @@ Use this checklist before marking a backend deployment as ready.
 ## Startup
 
 - the backend starts without configuration validation failures
-- Flyway completes successfully
+- Flyway completes successfully (check migration version at `/actuator/health/readiness`)
 - no repeated authentication, cookie, or CORS errors appear in startup logs
 - no repeated OTLP export errors appear unless tracing was intentionally enabled
+- `make smoke` (or equivalent curl calls) passes against the target host
 
 ## Health
 
@@ -45,6 +46,7 @@ Use this checklist before marking a backend deployment as ready.
 - a platform admin can log in successfully
 - a tenant admin can load their dashboard successfully
 - at least one permission-protected module endpoint still returns `403` for a user without permission
+- the `default` tenant demo records from migration V46 are acknowledged or cleaned up (see operations-runbook for cleanup SQL)
 
 ## Logs
 
