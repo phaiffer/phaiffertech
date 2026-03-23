@@ -1,4 +1,5 @@
 -- Optional CRM sample seed for local development.
+-- Includes contacts, leads, tasks (with overdue examples), and deals.
 
 INSERT INTO crm_contacts (
     id,
@@ -134,4 +135,48 @@ WHERE t.code = 'default'
       FROM crm_leads l
       WHERE l.tenant_id = t.id
         AND l.email = 'beta@lead.local'
+  );
+
+INSERT INTO crm_tasks (
+    id, tenant_id, title, description,
+    status, priority, due_date,
+    related_type, related_id,
+    created_by, updated_by
+)
+SELECT
+    'd1111111-0000-0000-0000-000000000001',
+    t.id,
+    'Follow up on Acme contract signature',
+    'Contract was sent 3 weeks ago – no confirmation received.',
+    'OPEN', 'HIGH', NOW() - INTERVAL '7 days',
+    'LEAD', '66666666-0000-0000-0000-000000000001',
+    'seed', 'seed'
+FROM tenants t
+WHERE t.code = 'default'
+  AND EXISTS (SELECT 1 FROM crm_leads l WHERE l.id = '66666666-0000-0000-0000-000000000001')
+  AND NOT EXISTS (
+      SELECT 1 FROM crm_tasks tk
+      WHERE tk.id = 'd1111111-0000-0000-0000-000000000001'
+  );
+
+INSERT INTO crm_tasks (
+    id, tenant_id, title, description,
+    status, priority, due_date,
+    related_type, related_id,
+    created_by, updated_by
+)
+SELECT
+    'd1111111-0000-0000-0000-000000000003',
+    t.id,
+    'Send proposal to Phaiffer Labs',
+    'New product tier discussed in last meeting.',
+    'OPEN', 'MEDIUM', NOW() + INTERVAL '5 days',
+    'CONTACT', '55555555-0000-0000-0000-000000000002',
+    'seed', 'seed'
+FROM tenants t
+WHERE t.code = 'default'
+  AND EXISTS (SELECT 1 FROM crm_contacts c WHERE c.id = '55555555-0000-0000-0000-000000000002')
+  AND NOT EXISTS (
+      SELECT 1 FROM crm_tasks tk
+      WHERE tk.id = 'd1111111-0000-0000-0000-000000000003'
   );
