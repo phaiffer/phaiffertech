@@ -7,8 +7,11 @@ This runbook covers the minimum operational procedures for the current platform 
 - local startup
 - backend deployment preparation
 - password reset
+- password reset local QA with MailHog
+- support impersonation
 - tenant creation
 - health validation
+- default tenant demo data
 - log inspection
 - troubleshooting login, CORS, and module access issues
 
@@ -31,10 +34,21 @@ make db-shell
 Validate the backend summary and readiness endpoints:
 
 ```bash
+make smoke
+```
+
+Or manually:
+
+```bash
 curl -fsS http://localhost:8080/api/v1/health
 curl -fsS http://localhost:8080/actuator/health
 curl -fsS http://localhost:8080/actuator/health/readiness
 ```
+
+> **MailHog warning**: The local stack starts MailHog on port 8025 (`http://localhost:8025`) to capture
+> outgoing emails without delivering them. MailHog must never be exposed on a publicly reachable network
+> interface in staging or demo environments. Any password reset link or notification email sent while
+> MailHog is active is readable by anyone who can reach port 8025.
 
 ## Backend Deployment Preparation
 
@@ -89,6 +103,73 @@ WHERE user_id = (SELECT id FROM users WHERE email = 'user@example.com')
 
 3. Ask the user to sign in again with the new password.
 
+## Local QA: Password Reset with MailHog
+
+Use this flow to verify the end-to-end password reset path in a local environment.
+
+Prerequisites:
+
+- local stack running (`make up`)
+- MailHog UI accessible at `http://localhost:8025`
+- a user account exists with a known email and tenant code
+
+Steps:
+
+1. Open the forgot-password page in the frontend (`http://localhost:3000/forgot-password`).
+2. Enter the user email and submit. The page should show a generic success message regardless of whether the email exists.
+3. Open MailHog at `http://localhost:8025` and locate the reset email. The email subject and body contain a password reset link.
+4. Copy the reset link from the email body and open it in the browser. The link points to `http://localhost:3000/reset-password?token=<token>`.
+5. Enter and confirm the new password on the reset form and submit.
+6. Verify the following:
+   - the form shows a success confirmation
+   - logging in with the old password fails
+   - logging in with the new password succeeds
+
+If no email appears in MailHog:
+
+- check that `MAIL_HOST=localhost` and `MAIL_PORT=1025` are set in `.env`
+- confirm the backend environment shows `MAIL_HOST=mailhog` (Docker Compose overrides the host)
+- check backend logs for mail delivery errors with `make logs-backend`
+
+If the reset link returns an error:
+
+- confirm `APP_PASSWORD_RESET_URL_BASE=http://localhost:3000/reset-password` is set
+- tokens expire after `APP_PASSWORD_RESET_EXPIRY_MINUTES` (default: 30 minutes)
+- each token is single-use; requesting a new reset invalidates the previous token
+
+## Support Impersonation
+
+Platform admins can impersonate a tenant user to diagnose access or permission issues without requiring the user's password.
+
+**When to use**:
+
+- a tenant admin reports an access problem that cannot be reproduced with the platform admin account
+- a support operator needs to verify the effective entitlements and module visibility from the tenant perspective
+- post-incident access verification after a permission change
+
+**How it works**:
+
+1. The platform admin calls `POST /api/v1/auth/impersonate` with the target tenant ID, user ID, and a reason string.
+2. The response returns a short-lived access token scoped to the target user's tenant and permissions.
+3. All actions taken with that token are recorded in the audit log with an `impersonation` context that includes the session ID and originating admin ID.
+4. The impersonation session is ended by calling `POST /api/v1/auth/impersonate/stop` or by letting the token expire.
+
+**Security constraints**:
+
+- only `PLATFORM_ADMIN` role can start an impersonation session
+- impersonated sessions remain bound to the target tenant — they cannot cross tenant boundaries
+- impersonation sessions appear in the `support_impersonation_sessions` table and in the `audit_logs` table
+- impersonated actions are visually flagged in the `/me` response with `supportImpersonation` context
+
+**Audit check SQL**:
+
+```sql
+SELECT session_id, admin_user_id, target_tenant_id, target_user_id, reason, started_at, ended_at
+FROM support_impersonation_sessions
+ORDER BY started_at DESC
+LIMIT 20;
+```
+
 ## Create a Tenant
 
 Tenant creation is currently an authenticated platform-admin operation through `POST /api/v1/tenants`.
@@ -129,6 +210,23 @@ Expected production behavior:
 - health endpoints are publicly reachable only for the health path family
 - health responses do not expose sensitive internal details in `prod`
 - readiness includes database and migration state
+
+## Default Tenant Demo Data
+
+The initial Flyway migration (V5) creates a tenant with code `default` in every environment. A later migration (V46) seeds representative demo records into that tenant — finance invoices, inventory items, CRM tasks, and IoT alarms — to support dashboard and alert surface demonstrations.
+
+In a production environment this demo data is present in the database but is not accessible through normal application flows because no user is assigned to the `default` tenant by default (user creation is explicitly excluded from V5 and only happens via the `dev`-profile `DevelopmentDataSeeder`). The `default` tenant exists and has enabled modules, but it has no active users.
+
+If you want to remove the demo records from a production database after initial migration:
+
+```sql
+-- Remove V46 demo enrichment records from the default tenant
+-- Safe to run multiple times (deletes by fixed UUIDs)
+DELETE FROM iot_alarms       WHERE id IN ('bbbbbbb1-0000-0000-0000-000000000002', 'bbbbbbb1-0000-0000-0000-000000000003');
+DELETE FROM crm_tasks        WHERE id IN ('d1111111-0000-0000-0000-000000000001', 'd1111111-0000-0000-0000-000000000002', 'd1111111-0000-0000-0000-000000000003');
+DELETE FROM inventory_items  WHERE id IN ('e1111111-0000-0000-0000-000000000001', 'e1111111-0000-0000-0000-000000000002', 'e1111111-0000-0000-0000-000000000003');
+DELETE FROM finance_invoices WHERE id IN ('f1111111-0000-0000-0000-000000000001', 'f1111111-0000-0000-0000-000000000002', 'f1111111-0000-0000-0000-000000000003', 'f1111111-0000-0000-0000-000000000004');
+```
 
 ## Check Logs
 

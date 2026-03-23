@@ -12,7 +12,7 @@ IOT_SEED_SQL := infra/docker/sql/iot-seed.sql
 
 .PHONY: help up down restart rebuild status logs logs-follow logs-backend logs-frontend logs-db docker-build docker-reset-db \
 	build test test-backend test-integration test-unit test-pet test-iot lint clean backend frontend install-backend install-frontend \
-	package-backend package-frontend db-shell migrate seed crm-seed pet-seed iot-seed logs-all swagger verify \
+	package-backend package-frontend db-shell migrate seed crm-seed pet-seed iot-seed logs-all swagger smoke verify \
 	ci metrics logs-json observability-up observability-down terraform-init terraform-plan terraform-legacy-init terraform-legacy-plan \
 	validate-iot-suite validate-iot-live simulate-iot-demo simulate-iot-test
 
@@ -125,6 +125,19 @@ pet-seed: ## Seed sample PET data for local development
 iot-seed: ## Seed sample IoT data for local development
 	@test -f $(IOT_SEED_SQL) || (echo "Missing $(IOT_SEED_SQL)" && exit 1)
 	$(COMPOSE_RAW) exec -T postgres sh -c 'PGPASSWORD="$${POSTGRES_PASSWORD:-platform_pass}" psql -v ON_ERROR_STOP=1 -h 127.0.0.1 -U "$${POSTGRES_USER:-platform_user}" -d "$${POSTGRES_DB:-platform_db}"' < $(IOT_SEED_SQL)
+
+smoke: ## Run quick post-startup health validation against the local stack
+	@echo "=== Smoke validation — local stack ==="
+	@echo "--- /api/v1/health ---"
+	@curl -fsS http://localhost:$${BACKEND_PORT:-8080}/api/v1/health | python3 -m json.tool 2>/dev/null || curl -fsS http://localhost:$${BACKEND_PORT:-8080}/api/v1/health
+	@echo ""
+	@echo "--- /actuator/health/readiness ---"
+	@curl -fsS http://localhost:$${BACKEND_PORT:-8080}/actuator/health/readiness | python3 -m json.tool 2>/dev/null || curl -fsS http://localhost:$${BACKEND_PORT:-8080}/actuator/health/readiness
+	@echo ""
+	@echo "--- /actuator/health/liveness ---"
+	@curl -fsS http://localhost:$${BACKEND_PORT:-8080}/actuator/health/liveness | python3 -m json.tool 2>/dev/null || curl -fsS http://localhost:$${BACKEND_PORT:-8080}/actuator/health/liveness
+	@echo ""
+	@echo "=== Smoke validation complete ==="
 
 swagger: ## Print Swagger URL
 	@echo "Swagger UI: http://localhost:$${BACKEND_PORT:-8080}/swagger-ui.html"
