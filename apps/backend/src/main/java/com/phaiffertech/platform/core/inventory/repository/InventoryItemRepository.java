@@ -45,4 +45,13 @@ public interface InventoryItemRepository extends JpaRepository<InventoryItem, UU
             @Param("id") UUID id,
             @Param("tenantId") UUID tenantId
     );
+
+    @Query("""
+            SELECT COUNT(i)
+            FROM InventoryItem i
+            WHERE i.tenantId = :tenantId
+              AND i.minimumQuantity > 0
+              AND i.currentQuantity <= i.minimumQuantity
+            """)
+    long countLowStockItems(@Param("tenantId") UUID tenantId);
 }

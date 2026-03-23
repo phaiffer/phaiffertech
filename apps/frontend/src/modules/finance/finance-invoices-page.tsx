@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useCallback, useEffect, useState } from 'react';
 import {
   sharedCompactTextClass,
@@ -10,6 +11,7 @@ import { StatusBadge } from '@/shared/dashboard/status-badge';
 import { ApiClientError } from '@/shared/lib/http';
 import { resolvePageItems, resolveTotalItems } from '@/shared/lib/pagination';
 import { financeService } from '@/shared/services/finance-service';
+import { notificationService } from '@/shared/services/notification-service';
 import { PageResponse } from '@/shared/types/common';
 import { FinanceInvoice } from '@/shared/types/finance';
 import { DataTable, DataTableColumn } from '@/shared/ui/data-table';
@@ -128,6 +130,7 @@ export function FinanceInvoicesPage() {
   const [pageData, setPageData] = useState<PageResponse<FinanceInvoice>>(initialPage);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [overdueCount, setOverdueCount] = useState(0);
 
   const [statusFilter, setStatusFilter] = useState('');
   const [sourceModuleFilter, setSourceModuleFilter] = useState('');
@@ -155,6 +158,16 @@ export function FinanceInvoicesPage() {
     void load(0, statusFilter, sourceModuleFilter);
   }, [load, statusFilter, sourceModuleFilter]);
 
+  useEffect(() => {
+    notificationService.getSummary().then((summary) => {
+      const overdueItem = summary.items.find((i) => i.key === 'finance-overdue-invoices');
+      if (overdueItem) {
+        const match = overdueItem.title.match(/^\d+/);
+        setOverdueCount(match ? parseInt(match[0], 10) : 0);
+      }
+    }).catch(() => { /* non-critical */ });
+  }, []);
+
   const rows = resolvePageItems(pageData);
   const totalItems = resolveTotalItems(pageData);
 
@@ -165,6 +178,27 @@ export function FinanceInvoicesPage() {
         eyebrow="Finance"
         description="Visão consolidada de todas as faturas geradas pela plataforma."
       />
+
+      {overdueCount > 0 && (
+        <div className="flex items-start gap-3 rounded-2xl border border-destructive/30 bg-destructive/5 px-5 py-4">
+          <span className="mt-0.5 h-2 w-2 flex-shrink-0 rounded-full bg-destructive" />
+          <div>
+            <p className="text-sm font-semibold text-destructive">
+              {overdueCount} fatura{overdueCount === 1 ? '' : 's'} em atraso
+            </p>
+            <p className="mt-0.5 text-xs text-destructive/80">
+              Faturas emitidas com vencimento ultrapassado precisam de acompanhamento de pagamento.{' '}
+              <Link
+                href="?status=ISSUED"
+                className="font-semibold underline underline-offset-2"
+                onClick={() => setStatusFilter('ISSUED')}
+              >
+                Ver faturas emitidas
+              </Link>
+            </p>
+          </div>
+        </div>
+      )}
 
       <PageSection title="Filtros">
         <div className={`${sharedFilterToolbarClass} sm:grid-cols-2`}>

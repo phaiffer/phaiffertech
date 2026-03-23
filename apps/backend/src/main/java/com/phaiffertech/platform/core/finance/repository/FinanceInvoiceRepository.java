@@ -70,4 +70,6 @@ public interface FinanceInvoiceRepository extends JpaRepository<FinanceInvoice, 
     Optional<FinanceInvoice> findLockedByIdAndTenantId(@Param("id") UUID id, @Param("tenantId") UUID tenantId);
 
     long countByTenantIdAndSourceModuleAndStatusIn(UUID tenantId, FinanceSourceModule sourceModule, Collection<FinanceInvoiceStatus> statuses);
+
+    long countByTenantIdAndStatusInAndDueAtBefore(UUID tenantId, Collection<FinanceInvoiceStatus> statuses, java.time.Instant cutoff);
 }

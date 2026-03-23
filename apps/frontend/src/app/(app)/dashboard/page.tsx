@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { DashboardContextCardGrid } from '@/shared/dashboard/dashboard-context-card-grid';
 import { DashboardQuickActions } from '@/shared/dashboard/dashboard-quick-actions';
 import { DashboardSection } from '@/shared/dashboard/dashboard-section';
+import { OperationalAlertsPanel } from '@/shared/dashboard/operational-alerts-panel';
 import {
   buildDashboardExperienceCopy,
   getAccessibleWorkspaceModules,
@@ -253,6 +254,8 @@ export default function DashboardPage() {
       <PageTitle title="Executive Dashboard" description={experience.description} />
 
       <DashboardContextCardGrid cards={contextCards} />
+
+      <OperationalAlertsPanel />
 
       <DashboardQuickActions
         title={experience.actionsTitle}
