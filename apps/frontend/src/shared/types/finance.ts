@@ -40,6 +40,20 @@ export type FinanceInvoice = {
   updatedAt: string;
 };
 
+export type FinancePayment = {
+  id: string;
+  invoiceId: string;
+  status: string;
+  method: string;
+  amount: number;
+  currency: string;
+  paidAt?: string | null;
+  referenceCode?: string | null;
+  notes?: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
 export type FinanceCashMovement = {
   id: string;
   invoiceId?: string | null;

@@ -6,14 +6,14 @@ import type {
   FrontendPlatformWorkspace
 } from '@/shared/platform/frontend-platform.types';
 
-export type SidebarGroup = 'core' | 'iot' | 'crm' | 'pet';
+export type SidebarGroup = 'core' | 'finance' | 'iot' | 'crm' | 'pet';
 
 type SidebarItemBase = {
   href: string;
   label: string;
   anyOf?: string[];
   anyEntitlements?: readonly string[];
-  moduleCode?: 'CRM' | 'IOT' | 'PET';
+  moduleCode?: 'CRM' | 'IOT' | 'PET' | 'FINANCE';
   group: SidebarGroup;
   platformOnly?: boolean;
 };
@@ -58,17 +58,19 @@ export function groupSidebarItems<T extends SidebarItemBase>(
   items: T[],
   canManagePlatformAdministration: boolean
 ) {
-  const groupOrder: SidebarGroup[] = ['core', 'crm', 'pet', 'iot'];
+  const groupOrder: SidebarGroup[] = ['core', 'finance', 'crm', 'pet', 'iot'];
 
   return groupOrder
     .map((group) => {
       const title = group === 'core'
         ? (canManagePlatformAdministration ? 'Platform' : 'Workspace')
-        : group === 'crm'
-          ? 'CRM'
-          : group === 'pet'
-            ? 'PetFlow'
-            : 'IoT System';
+        : group === 'finance'
+          ? 'Finance'
+          : group === 'crm'
+            ? 'Relationships'
+            : group === 'pet'
+              ? 'PetFlow'
+              : 'IoT System';
 
       return {
         key: group,

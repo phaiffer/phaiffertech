@@ -4,7 +4,6 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { PermissionGuard } from '@/shared/auth/PermissionGuard';
 import {
-  sharedCompactTextClass,
   sharedFilterToolbarClass,
   sharedFormActionsClass,
   sharedPageStackClass
@@ -14,7 +13,9 @@ import { MetricGrid } from '@/shared/dashboard/metric-grid';
 import { ApiClientError } from '@/shared/lib/http';
 import { resolvePageItems, resolveTotalItems } from '@/shared/lib/pagination';
 import { crmService, CreateDealInput, UpdateDealInput } from '@/shared/services/crm-service';
+import { financeService } from '@/shared/services/finance-service';
 import { CrmCompany, CrmContact, CrmDeal, CrmLead, CrmPipelineStage } from '@/shared/types/crm';
+import { FinanceInvoice } from '@/shared/types/finance';
 import { PageResponse } from '@/shared/types/common';
 import { DashboardSummaryCard } from '@/shared/types/dashboard';
 import { ConfirmDialog } from '@/shared/ui/confirm-dialog';
@@ -26,7 +27,7 @@ import { PageTitle } from '@/shared/ui/page-title';
 import { Pagination } from '@/shared/ui/pagination';
 import { SearchBar } from '@/shared/ui/search-bar';
 
-const pageSize = 50; // Increased for broader Kanban board view
+const pageSize = 50;
 const statusOptions = [
   { value: '', label: 'All' },
   { value: 'OPEN', label: 'OPEN' },
@@ -36,25 +37,48 @@ const statusOptions = [
 const formStatusOptions = statusOptions.filter((option) => option.value);
 const initialPage: PageResponse<CrmDeal> = { items: [], totalItems: 0, totalPages: 0, page: 0, size: pageSize };
 
+/* ─── Finance status helpers ─────────────────────────────────────────────── */
+
+function resolveFinanceStatus(invoice: FinanceInvoice | undefined): { label: string; className: string } {
+  if (!invoice) return { label: 'No invoice', className: 'text-[color:var(--app-shell-muted)]' };
+  if (invoice.status === 'PAID') return { label: 'Payment completed', className: 'text-emerald-600 dark:text-emerald-400' };
+  if (invoice.status === 'ISSUED') return { label: 'Awaiting payment', className: 'text-amber-600 dark:text-amber-400' };
+  if (invoice.status === 'DRAFT') return { label: 'Draft invoice', className: 'text-blue-600 dark:text-blue-400' };
+  if (invoice.status === 'CANCELED') return { label: 'Invoice canceled', className: 'text-[color:var(--app-shell-muted)] line-through' };
+  return { label: 'Invoice pending', className: 'text-[color:var(--app-shell-muted)]' };
+}
+
+function formatCurrency(amount: number, currency: string) {
+  try {
+    return new Intl.NumberFormat('en-US', { style: 'currency', currency }).format(amount);
+  } catch {
+    return `${currency} ${amount}`;
+  }
+}
+
+/* ─── Component ──────────────────────────────────────────────────────────── */
+
 export function CrmDealsPage() {
   const [pageData, setPageData] = useState<PageResponse<CrmDeal>>(initialPage);
   const [companies, setCompanies] = useState<CrmCompany[]>([]);
   const [contacts, setContacts] = useState<CrmContact[]>([]);
   const [leads, setLeads] = useState<CrmLead[]>([]);
   const [stages, setStages] = useState<CrmPipelineStage[]>([]);
+  const [invoicesByDealId, setInvoicesByDealId] = useState<Map<string, FinanceInvoice>>(new Map());
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [generatingInvoice, setGeneratingInvoice] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [deleteCandidate, setDeleteCandidate] = useState<CrmDeal | null>(null);
 
-  // Kanban & Drawer State
+  // Kanban & Drawer state
   const [isEditorOpen, setIsEditorOpen] = useState(false);
   const [isDragUpdating, setIsDragUpdating] = useState(false);
 
   const [searchInput, setSearchInput] = useState('');
   const [search, setSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState('OPEN'); // Default open deals for kanban
+  const [statusFilter, setStatusFilter] = useState('OPEN');
   const [companyFilterId, setCompanyFilterId] = useState('');
 
   const [title, setTitle] = useState('');
@@ -93,6 +117,21 @@ export function CrmDealsPage() {
     }
   }
 
+  async function loadInvoices() {
+    try {
+      const invoicesPage = await financeService.listInvoices(0, 200, { sourceModule: 'CRM' });
+      const map = new Map<string, FinanceInvoice>();
+      for (const invoice of (invoicesPage.items ?? [])) {
+        if (invoice.businessContextId) {
+          map.set(invoice.businessContextId, invoice);
+        }
+      }
+      setInvoicesByDealId(map);
+    } catch {
+      // Finance context is non-critical — silently ignore errors
+    }
+  }
+
   async function load(page: number, currentSearch: string, currentStatus: string, currentCompanyId: string) {
     setLoading(true);
     setError(null);
@@ -102,6 +141,7 @@ export function CrmDealsPage() {
         companyId: currentCompanyId || undefined
       });
       setPageData(result);
+      await loadInvoices();
     } catch (err) {
       setError(err instanceof ApiClientError ? err.message : 'Unable to load CRM deals.');
     } finally {
@@ -192,15 +232,37 @@ export function CrmDealsPage() {
     }
   }
 
+  async function handleGenerateInvoice(deal: CrmDeal) {
+    if (generatingInvoice) return;
+    setGeneratingInvoice(true);
+    setError(null);
+    try {
+      const company = companies.find((c) => c.id === deal.companyId);
+      await financeService.createInvoice({
+        sourceModule: 'CRM',
+        businessContextType: 'CRM.DEAL',
+        businessContextId: deal.id,
+        description: deal.title,
+        currency: deal.currency,
+        totalAmount: deal.amount ?? 0,
+        counterpartyName: company?.name
+      });
+      await loadInvoices();
+    } catch (err) {
+      setError(err instanceof ApiClientError ? err.message : 'Unable to generate invoice for this deal.');
+    } finally {
+      setGeneratingInvoice(false);
+    }
+  }
+
   async function handleDropDeal(e: React.DragEvent, stageId: string) {
     e.preventDefault();
     const dealId = e.dataTransfer.getData('dealId');
     if (!dealId || isDragUpdating) return;
-    
+
     const deal = rows.find(d => d.id === dealId);
     if (!deal || deal.pipelineStageId === stageId) return;
 
-    // Optimistic local update could be implemented here, but simple refresh is often sufficient for small ops
     setIsDragUpdating(true);
     try {
       const payload: UpdateDealInput = {
@@ -215,7 +277,7 @@ export function CrmDealsPage() {
         leadId: deal.leadId ?? undefined,
         expectedCloseDate: deal.expectedCloseDate ?? undefined
       };
-      
+
       await crmService.updateDeal(dealId, payload);
       await load(pageData.page, search, statusFilter, companyFilterId);
     } catch (err) {
@@ -230,7 +292,7 @@ export function CrmDealsPage() {
   }
 
   function handleDragOver(e: React.DragEvent) {
-    e.preventDefault(); // Necessary to allow dropping
+    e.preventDefault();
   }
 
   const activeFilterCount = [search, statusFilter, companyFilterId].filter(Boolean).length;
@@ -275,21 +337,16 @@ export function CrmDealsPage() {
 
   function formatDealAmount(row: CrmDeal) {
     if (!row.amount) return 'No amount defined';
-    try {
-      return new Intl.NumberFormat('en-US', { style: 'currency', currency: row.currency }).format(row.amount);
-    } catch {
-      return `${row.currency} ${row.amount}`;
-    }
+    return formatCurrency(row.amount, row.currency);
   }
 
-  // Kanban view data shaping
   const columnsData = stages.map(stage => ({
     stage,
     deals: rows.filter(r => r.pipelineStageId === stage.id)
   }));
   const uncategorizedDeals = rows.filter(r => !stages.some(s => s.id === r.pipelineStageId));
   if (uncategorizedDeals.length > 0) {
-    columnsData.push({ stage: { id: '', name: 'Uncategorized', position: 99, color: '#475569' } as any, deals: uncategorizedDeals });
+    columnsData.push({ stage: { id: '', name: 'Uncategorized', position: 99, color: '#475569' } as CrmPipelineStage, deals: uncategorizedDeals });
   }
 
   return (
@@ -357,22 +414,22 @@ export function CrmDealsPage() {
 
         {error ? <div className="ui-notice-error">{error}</div> : null}
 
-        {/* KANBAN BOARD SECTION */}
+        {/* KANBAN BOARD */}
         <div className="mt-8 flex gap-6 overflow-x-auto pb-8 pt-2">
           {loading && rows.length === 0 ? (
             <div className="w-full text-center py-20 text-[color:var(--app-shell-muted)]">
               Loading pipeline data...
             </div>
           ) : stages.length === 0 && !loading ? (
-             <div className="ui-notice-neutral w-full">
-               The Kanban board requires at least one pipeline stage to be configured.
-               <div className="mt-3 flex gap-2">
-                 <Link href="/crm/pipeline" className="ui-secondary-button">Configure pipeline stages</Link>
-               </div>
-             </div>
+            <div className="ui-notice-neutral w-full">
+              The Kanban board requires at least one pipeline stage to be configured.
+              <div className="mt-3 flex gap-2">
+                <Link href="/crm/pipeline" className="ui-secondary-button">Configure pipeline stages</Link>
+              </div>
+            </div>
           ) : (
             columnsData.map(({ stage, deals }) => (
-              <div 
+              <div
                 key={stage.id || 'uncat'}
                 className="flex min-w-[320px] max-w-[320px] shrink-0 flex-col rounded-xl bg-[color:var(--app-shell-panel-muted)] p-3 border border-[color:var(--app-shell-border)]"
                 onDragOver={handleDragOver}
@@ -387,104 +444,184 @@ export function CrmDealsPage() {
                     {deals.length}
                   </span>
                 </div>
-                
+
                 <div className="flex flex-col gap-3 min-h-[150px]">
-                  {deals.map(deal => (
-                    <div 
-                      key={deal.id}
-                      draggable={!isDragUpdating}
-                      onDragStart={(e) => handleDragStart(e, deal.id)}
-                      onClick={() => beginEditDeal(deal)}
-                      className="group cursor-grab active:cursor-grabbing rounded-lg border border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-surface)] p-4 shadow-sm hover:border-blue-500/40 hover:shadow-md transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
-                      tabIndex={0}
-                      role="button"
-                    >
-                      <div className="mb-3 flex items-start justify-between gap-2">
-                        <p className="font-semibold leading-tight text-[color:var(--app-shell-heading)] line-clamp-2">{deal.title}</p>
-                        {deal.status !== 'OPEN' && <StatusBadge status={deal.status} />}
-                      </div>
-                      
-                      <div className="space-y-2">
-                        <p className="text-sm font-medium text-[color:var(--app-shell-muted)] flex items-center gap-1.5 line-clamp-1">
-                           <svg className="w-4 h-4 opacity-70" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1v1H9V7zm5 0h1v1h-1V7zm-5 4h1v1H9v-1zm5 0h1v1h-1v-1zm-3 4H2v5h12v-5z" /></svg>
-                           {companyName(deal.companyId)}
-                        </p>
-                        
-                        <div className="flex items-center justify-between text-sm pt-2 border-t border-[color:var(--app-shell-border)]">
-                          <span className="font-semibold text-emerald-600 dark:text-emerald-400">
-                            {formatDealAmount(deal)}
-                          </span>
-                          <span className={`text-xs ${new Date(deal.expectedCloseDate || '2099') < new Date() ? 'text-red-500 font-medium' : 'text-[color:var(--app-shell-muted)]'}`}>
-                            {deal.expectedCloseDate ? new Date(deal.expectedCloseDate).toLocaleDateString() : 'No date'}
-                          </span>
+                  {deals.map(deal => {
+                    const invoice = invoicesByDealId.get(deal.id);
+                    const fs = resolveFinanceStatus(invoice);
+                    return (
+                      <div
+                        key={deal.id}
+                        draggable={!isDragUpdating}
+                        onDragStart={(e) => handleDragStart(e, deal.id)}
+                        onClick={() => beginEditDeal(deal)}
+                        className="group cursor-grab active:cursor-grabbing rounded-lg border border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-surface)] p-4 shadow-sm hover:border-blue-500/40 hover:shadow-md transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+                        tabIndex={0}
+                        role="button"
+                      >
+                        <div className="mb-3 flex items-start justify-between gap-2">
+                          <p className="font-semibold leading-tight text-[color:var(--app-shell-heading)] line-clamp-2">{deal.title}</p>
+                          {deal.status !== 'OPEN' && <StatusBadge status={deal.status} />}
+                        </div>
+
+                        <div className="space-y-2">
+                          <p className="text-sm font-medium text-[color:var(--app-shell-muted)] flex items-center gap-1.5 line-clamp-1">
+                            <svg className="w-4 h-4 opacity-70" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1v1H9V7zm5 0h1v1h-1V7zm-5 4h1v1H9v-1zm5 0h1v1h-1v-1zm-3 4H2v5h12v-5z" /></svg>
+                            {companyName(deal.companyId)}
+                          </p>
+
+                          <div className="flex items-center justify-between text-sm pt-2 border-t border-[color:var(--app-shell-border)]">
+                            <span className="font-semibold text-emerald-600 dark:text-emerald-400">
+                              {formatDealAmount(deal)}
+                            </span>
+                            <span className={`text-xs ${new Date(deal.expectedCloseDate || '2099') < new Date() ? 'text-red-500 font-medium' : 'text-[color:var(--app-shell-muted)]'}`}>
+                              {deal.expectedCloseDate ? new Date(deal.expectedCloseDate).toLocaleDateString() : 'No date'}
+                            </span>
+                          </div>
+
+                          {/* Finance status indicator */}
+                          <div className="flex items-center gap-1 pt-1.5">
+                            <svg className="w-3 h-3 opacity-60 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" /></svg>
+                            <span className={`text-[11px] font-medium ${fs.className}`}>{fs.label}</span>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                   {deals.length === 0 && (
-                     <div className="flex h-24 items-center justify-center rounded-lg border-2 border-dashed border-[color:var(--app-shell-border)] bg-transparent">
-                        <span className="text-sm text-[color:var(--app-shell-muted)] opacity-60">Drop deals here</span>
-                     </div>
+                    <div className="flex h-24 items-center justify-center rounded-lg border-2 border-dashed border-[color:var(--app-shell-border)] bg-transparent">
+                      <span className="text-sm text-[color:var(--app-shell-muted)] opacity-60">Drop deals here</span>
+                    </div>
                   )}
                 </div>
               </div>
             ))
           )}
         </div>
-        
+
         {pageData.totalPages > 1 && (
-           <Pagination page={pageData.page} totalPages={pageData.totalPages} totalElements={totalItems} onPageChange={(nextPage) => void load(nextPage, search, statusFilter, companyFilterId)} />
+          <Pagination page={pageData.page} totalPages={pageData.totalPages} totalElements={totalItems} onPageChange={(nextPage) => void load(nextPage, search, statusFilter, companyFilterId)} />
         )}
 
-        {/* SIDE DRAWER MODAL FOR DEAL CREATION/EDITING */}
+        {/* SIDE DRAWER */}
         {isEditorOpen && (
           <div className="fixed inset-0 z-50 flex justify-end bg-black/40 backdrop-blur-sm transition-opacity">
             <div className="w-full max-w-xl h-full overflow-y-auto bg-[color:var(--app-shell-surface)] p-[var(--space-6)] shadow-2xl animate-in slide-in-from-right duration-300 border-l border-[color:var(--app-shell-border)]">
               <div className="mb-8 flex items-center justify-between">
-                 <div>
-                   <h2 className="text-2xl font-bold tracking-tight text-[color:var(--app-shell-heading)]">
-                     {editingId ? 'Edit deal' : 'Create deal'}
-                   </h2>
-                   <p className="text-sm mt-1 text-[color:var(--app-shell-muted)]">
-                     {editingId ? 'Update opportunity details and forecast.' : 'Add a new opportunity to the pipeline.'}
-                   </p>
-                 </div>
-                 <button 
-                   onClick={() => setIsEditorOpen(false)} 
-                   className="rounded-full p-2 text-[color:var(--app-shell-muted)] hover:bg-[color:var(--app-shell-panel-muted)] hover:text-[color:var(--app-shell-heading)] focus:outline-none focus:ring-2 focus:ring-blue-500"
-                   aria-label="Close panel"
-                 >
-                   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
-                 </button>
+                <div>
+                  <h2 className="text-2xl font-bold tracking-tight text-[color:var(--app-shell-heading)]">
+                    {editingId ? 'Edit deal' : 'Create deal'}
+                  </h2>
+                  <p className="text-sm mt-1 text-[color:var(--app-shell-muted)]">
+                    {editingId ? 'Update opportunity details and forecast.' : 'Add a new opportunity to the pipeline.'}
+                  </p>
+                </div>
+                <button
+                  onClick={() => setIsEditorOpen(false)}
+                  className="rounded-full p-2 text-[color:var(--app-shell-muted)] hover:bg-[color:var(--app-shell-panel-muted)] hover:text-[color:var(--app-shell-heading)] focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  aria-label="Close panel"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                </button>
               </div>
 
               <div className="space-y-6">
                 <PermissionGuard permission={editingId ? 'crm.deal.update' : 'crm.deal.create'} fallback={<div className="ui-notice-error">Missing permissions to save this deal.</div>}>
                   <form className="space-y-6 flex flex-col h-full" onSubmit={(e) => { e.preventDefault(); void handleSubmit(); }}>
-                    
+
                     <div className="grid gap-5 sm:grid-cols-2">
                       <div className="sm:col-span-2">
                         <FormInput label="Deal title" placeholder="e.g. Enterprise License Expansion" value={title} onChange={setTitle} required />
                       </div>
-                      
+
                       <div className="sm:col-span-2">
                         <FormInput label="Commercial summary" value={description} onChange={setDescription} />
                       </div>
 
                       <FormSelect label="Company" value={companyId} options={companyOptions} onChange={setCompanyId} />
                       <FormSelect label="Pipeline stage" value={pipelineStageId} options={stageOptions} onChange={setPipelineStageId} />
-                      
+
                       <FormInput label="Amount" value={amount} onChange={setAmount} type="number" />
-                      <FormSelect label="Currency" value={currency} options={[{value: 'BRL', label: 'BRL'}, {value: 'USD', label: 'USD'}, {value: 'EUR', label: 'EUR'}]} onChange={setCurrency} />
-                      
+                      <FormSelect label="Currency" value={currency} options={[{ value: 'BRL', label: 'BRL' }, { value: 'USD', label: 'USD' }, { value: 'EUR', label: 'EUR' }]} onChange={setCurrency} />
+
                       <DateInput label="Expected close date" value={expectedCloseDate} onChange={setExpectedCloseDate} />
                       <FormSelect label="Status" value={status} options={formStatusOptions} onChange={setStatus} />
-                      
+
                       <div className="sm:col-span-2 pt-4 border-t border-[color:var(--app-shell-border)] grid gap-5 sm:grid-cols-2">
-                         <h3 className="sm:col-span-2 text-sm font-semibold uppercase tracking-wider text-[color:var(--app-shell-muted)]">Optional Linkages</h3>
-                         <FormSelect label="Primary contact" value={contactId} options={contactOptions} onChange={setContactId} />
-                         <FormSelect label="Source lead" value={leadId} options={leadOptions} onChange={setLeadId} />
+                        <h3 className="sm:col-span-2 text-sm font-semibold uppercase tracking-wider text-[color:var(--app-shell-muted)]">Optional Linkages</h3>
+                        <FormSelect label="Primary contact" value={contactId} options={contactOptions} onChange={setContactId} />
+                        <FormSelect label="Source lead" value={leadId} options={leadOptions} onChange={setLeadId} />
                       </div>
+
+                      {/* Finance section — visible only when editing an existing deal */}
+                      {editingId && (() => {
+                        const deal = rows.find(r => r.id === editingId);
+                        const invoice = invoicesByDealId.get(editingId);
+                        const fs = resolveFinanceStatus(invoice);
+                        return (
+                          <div className="sm:col-span-2 pt-4 border-t border-[color:var(--app-shell-border)] space-y-3">
+                            <div className="flex items-center justify-between">
+                              <h3 className="text-sm font-semibold uppercase tracking-wider text-[color:var(--app-shell-muted)]">Finance</h3>
+                              {invoice && (
+                                <Link
+                                  href="/finance/invoices"
+                                  className="text-xs text-blue-600 dark:text-blue-400 hover:underline"
+                                  onClick={() => setIsEditorOpen(false)}
+                                >
+                                  View in Finance →
+                                </Link>
+                              )}
+                            </div>
+
+                            {invoice ? (
+                              <div className="rounded-xl border border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-panel-muted)] p-4 space-y-2">
+                                <div className="flex items-center justify-between">
+                                  <span className={`text-sm font-medium ${fs.className}`}>{fs.label}</span>
+                                  {invoice.totalAmount > 0 && (
+                                    <span className="text-sm font-semibold text-[color:var(--app-shell-heading)]">
+                                      {formatCurrency(invoice.totalAmount, invoice.currency)}
+                                    </span>
+                                  )}
+                                </div>
+                                {invoice.outstandingAmount > 0 && invoice.status !== 'PAID' && (
+                                  <p className="text-xs text-[color:var(--app-shell-muted)]">
+                                    Outstanding: {formatCurrency(invoice.outstandingAmount, invoice.currency)}
+                                  </p>
+                                )}
+                                {invoice.paidAt && (
+                                  <p className="text-xs text-emerald-600 dark:text-emerald-400">
+                                    Paid on {new Date(invoice.paidAt).toLocaleDateString()}
+                                  </p>
+                                )}
+                              </div>
+                            ) : (
+                              <div className="rounded-xl border border-dashed border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-panel-muted)] p-4 space-y-3">
+                                {deal?.amount ? (
+                                  <>
+                                    <p className="text-sm text-[color:var(--app-shell-muted)]">
+                                      No invoice yet for this deal.
+                                    </p>
+                                    <PermissionGuard permission="finance.invoice.create">
+                                      <button
+                                        type="button"
+                                        disabled={generatingInvoice}
+                                        onClick={() => deal && void handleGenerateInvoice(deal)}
+                                        className="ui-secondary-button text-sm"
+                                      >
+                                        {generatingInvoice ? 'Generating...' : 'Generate invoice'}
+                                      </button>
+                                    </PermissionGuard>
+                                  </>
+                                ) : (
+                                  <p className="text-sm text-[color:var(--app-shell-muted)]">
+                                    Set a deal amount to enable invoice generation.
+                                  </p>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })()}
                     </div>
 
                     <div className="mt-8 pt-6 border-t border-[color:var(--app-shell-border)] flex flex-wrap items-center justify-between gap-4">
@@ -500,12 +637,12 @@ export function CrmDealsPage() {
                           Cancel
                         </button>
                       </div>
-                      
+
                       {editingId && (
                         <PermissionGuard permission="crm.deal.delete">
-                           <button type="button" onClick={() => setDeleteCandidate(rows.find(r => r.id === editingId) || null)} className="text-red-600 hover:text-red-700 font-medium text-sm px-3 py-2 rounded-md hover:bg-red-50 dark:hover:bg-red-950/30">
-                             Delete deal
-                           </button>
+                          <button type="button" onClick={() => setDeleteCandidate(rows.find(r => r.id === editingId) || null)} className="text-red-600 hover:text-red-700 font-medium text-sm px-3 py-2 rounded-md hover:bg-red-50 dark:hover:bg-red-950/30">
+                            Delete deal
+                          </button>
                         </PermissionGuard>
                       )}
                     </div>
