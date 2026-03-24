@@ -6,6 +6,7 @@ import com.phaiffertech.platform.core.finance.repository.FinanceInvoiceRepositor
 import com.phaiffertech.platform.modules.pet.appointment.repository.PetAppointmentRepository;
 import com.phaiffertech.platform.modules.pet.client.repository.PetClientRepository;
 import com.phaiffertech.platform.modules.pet.dashboard.dto.PetDashboardSummaryResponse;
+import com.phaiffertech.platform.modules.pet.dashboard.dto.PetInsightsSummaryResponse;
 import com.phaiffertech.platform.modules.pet.medical.record.repository.PetMedicalRecordRepository;
 import com.phaiffertech.platform.modules.pet.petprofile.repository.PetProfileRepository;
 import com.phaiffertech.platform.modules.pet.product.repository.PetProductRepository;
@@ -149,6 +150,72 @@ public class PetDashboardService {
                         )
                 )
         );
+    }
+
+    @Transactional(readOnly = true)
+    public PetInsightsSummaryResponse insights() {
+        return insights(TenantContext.getRequiredTenantId());
+    }
+
+    @Transactional(readOnly = true)
+    public PetInsightsSummaryResponse insights(UUID tenantId) {
+        Instant now = Instant.now();
+        LocalDate today = LocalDate.now(ZoneOffset.UTC);
+        LocalDate firstOfThisMonth = today.withDayOfMonth(1);
+        LocalDate firstOfLastMonth = firstOfThisMonth.minusMonths(1);
+        Instant startOfThisMonth = firstOfThisMonth.atStartOfDay().toInstant(ZoneOffset.UTC);
+        Instant startOfLastMonth = firstOfLastMonth.atStartOfDay().toInstant(ZoneOffset.UTC);
+
+        long newClientsThisMonth = clientRepository.countNewClientsByPeriod(tenantId, startOfThisMonth, now);
+        long newClientsLastMonth = clientRepository.countNewClientsByPeriod(tenantId, startOfLastMonth, startOfThisMonth);
+
+        List<DashboardCountMetricDto> topServices = appointmentRepository
+                .findTopServicesByAppointmentCount(tenantId)
+                .stream()
+                .filter(row -> row[1] != null)
+                .map(row -> new DashboardCountMetricDto(
+                        String.valueOf(row[0]),
+                        String.valueOf(row[1]),
+                        ((Number) row[2]).longValue()
+                ))
+                .toList();
+
+        List<DashboardCountMetricDto> speciesMix = petProfileRepository
+                .countSpeciesByTenant(tenantId)
+                .stream()
+                .filter(row -> row[0] != null)
+                .map(row -> new DashboardCountMetricDto(
+                        String.valueOf(row[0]).toLowerCase(),
+                        capitalize(String.valueOf(row[0])),
+                        ((Number) row[1]).longValue()
+                ))
+                .toList();
+
+        List<DashboardCountMetricDto> appointmentsByStatus = appointmentRepository
+                .countAppointmentsByStatus(tenantId)
+                .stream()
+                .filter(row -> row[0] != null)
+                .map(row -> new DashboardCountMetricDto(
+                        String.valueOf(row[0]).toLowerCase(),
+                        capitalize(String.valueOf(row[0])),
+                        ((Number) row[1]).longValue()
+                ))
+                .toList();
+
+        return new PetInsightsSummaryResponse(
+                newClientsThisMonth,
+                newClientsLastMonth,
+                topServices,
+                speciesMix,
+                appointmentsByStatus
+        );
+    }
+
+    private String capitalize(String value) {
+        if (value == null || value.isBlank()) {
+            return value;
+        }
+        return Character.toUpperCase(value.charAt(0)) + value.substring(1).toLowerCase();
     }
 
     private String truncate(String value, int maxLength) {

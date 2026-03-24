@@ -36,6 +36,17 @@ public interface PetProfileRepository extends JpaRepository<PetProfile, UUID>, B
 
     Optional<PetProfile> findByIdAndTenantId(UUID id, UUID tenantId);
 
+    @Query(value = """
+            SELECT p.species, COUNT(*)
+            FROM pet_profiles p
+            WHERE p.tenant_id = :tenantId
+              AND p.deleted_at IS NULL
+            GROUP BY p.species
+            ORDER BY COUNT(*) DESC
+            LIMIT 5
+            """, nativeQuery = true)
+    List<Object[]> countSpeciesByTenant(@Param("tenantId") UUID tenantId);
+
     List<PetProfile> findAllByTenantIdAndIdIn(UUID tenantId, Collection<UUID> ids);
 
     @Query(value = """

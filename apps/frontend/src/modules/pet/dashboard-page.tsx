@@ -41,23 +41,23 @@ export function PetDashboardPage() {
   const contextCards = summary ? [
     {
       key: 'pet-coverage',
-      label: 'Care base',
+      label: 'Customer base',
       value: `${summary.totalClients} clients / ${summary.totalPets} pets`,
-      description: 'Keep owner and patient coverage readable before moving into bookings and clinical workflows.',
+      description: 'Client and pet coverage stay visible before moving into bookings and care workflows.',
       tone: 'accent' as const
     },
     {
       key: 'pet-agenda',
-      label: 'Schedule rhythm',
+      label: 'Service rhythm',
       value: `${summary.appointmentsToday} today / ${summary.upcomingAppointments} upcoming`,
-      description: 'Daily and near-term appointment load should stay visible before deeper queue work takes over.',
+      description: 'Daily and near-term appointment load stays visible before deeper queue work takes over.',
       tone: 'neutral' as const
     },
     {
       key: 'pet-attention',
       label: 'Operational attention',
       value: `${summary.lowStockProducts} low stock / ${summary.pendingInvoices} invoices`,
-      description: 'Clinical delivery, inventory, and billing pressure are intentionally kept in the same overview band.',
+      description: 'Inventory and billing pressure are kept in the same overview band for pet business operators.',
       tone: summary.lowStockProducts > 0 || summary.pendingInvoices > 0 ? 'primary' as const : 'neutral' as const
     }
   ] : [];
@@ -71,7 +71,7 @@ export function PetDashboardPage() {
         <PageTitle
           eyebrow="PetFlow workspace"
           title="Operational dashboard"
-          description="Visão clínica e comercial com agenda, prontuários recentes e filas operacionais organizada com o mesmo ritmo visual das áreas administrativas e públicas já consolidadas."
+          description="Appointments, inventory, billing, and recent care records — the core operational signals for your pet business."
         />
 
         {loading ? <div className="ui-notice-neutral">Carregando dashboard...</div> : null}
@@ -82,7 +82,7 @@ export function PetDashboardPage() {
             <DashboardContextCardGrid cards={contextCards} />
 
             <PageSection
-              title="Clinic pulse"
+              title="Operations pulse"
               description="Scan the consolidated KPI row first, then move into the highlighted operational sections below."
             >
               <MetricGrid cards={summary.summaryCards} columns="md:grid-cols-2 xl:grid-cols-4" />
@@ -101,7 +101,7 @@ export function PetDashboardPage() {
         ) : !loading && !error ? (
           <EmptyStateCard
             title="No PetFlow activity yet"
-            description="Register the first client, patient, service, and appointment so this dashboard can surface schedule load, recent records, and the operational queue."
+            description="Register the first client, pet, service, and appointment so this dashboard can surface schedule load, recent records, and the operational queue."
             actionLabel="Open PetFlow workspace"
             href="/pet"
           />
