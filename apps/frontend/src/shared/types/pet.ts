@@ -54,6 +54,13 @@ export type PetAppointment = {
   clientPlanId?: string;
   planSessionConsumed?: boolean;
   planRemainingSessions?: number | null;
+  // Payment summary fields — computed at response time, not stored.
+  extrasAmount?: number | null;
+  extrasDescription?: string | null;
+  // planCovered: true when the base service is covered by the associated plan session.
+  planCovered?: boolean;
+  // finalAmountDue: computed checkout total. planCovered -> extrasAmount only, else servicePrice + extrasAmount.
+  finalAmountDue?: number;
 };
 
 export type PetServiceCatalog = {

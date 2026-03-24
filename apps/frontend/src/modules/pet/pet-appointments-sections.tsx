@@ -158,6 +158,10 @@ type PetAppointmentFormProps = {
   onStatusChange: (value: string) => void;
   notes: string;
   onNotesChange: (value: string) => void;
+  extrasAmount: string;
+  onExtrasAmountChange: (value: string) => void;
+  extrasDescription: string;
+  onExtrasDescriptionChange: (value: string) => void;
   submitting: boolean;
   appointmentReferencesReady: boolean;
   onCancelEdit: () => void;
@@ -188,6 +192,10 @@ export function PetAppointmentForm({
   onStatusChange,
   notes,
   onNotesChange,
+  extrasAmount,
+  onExtrasAmountChange,
+  extrasDescription,
+  onExtrasDescriptionChange,
   submitting,
   appointmentReferencesReady,
   onCancelEdit
@@ -208,6 +216,8 @@ export function PetAppointmentForm({
         <DateTimeInput label="Date & time" value={scheduledAt} onChange={onScheduledAtChange} required />
         <FormSelect label="Status" value={status} options={petAppointmentFormStatusOptions} onChange={onStatusChange} />
         <FormInput label="Notes" value={notes} onChange={onNotesChange} />
+        <FormInput label="Extras amount" value={extrasAmount} onChange={onExtrasAmountChange} type="number" placeholder="0.00" />
+        <FormInput label="Extras description" value={extrasDescription} onChange={onExtrasDescriptionChange} placeholder="e.g. Pet taxi + nail trim" />
 
         <div className="md:col-span-3 flex gap-2">
           {!appointmentReferencesReady ? (
@@ -297,6 +307,29 @@ export function createPetAppointmentColumns({
           >
             {isLow ? '⚠' : '✓'} {remaining} left
           </span>
+        );
+      }
+    },
+    {
+      key: 'payment',
+      header: 'Payment',
+      render: (appointment) => {
+        const due = appointment.finalAmountDue;
+        if (due == null) {
+          return <span className="text-xs text-[color:var(--app-shell-muted)]">—</span>;
+        }
+        return (
+          <div>
+            <div className="text-xs font-medium">
+              {appointment.planCovered ? (
+                <span className="text-emerald-700">Plan covered</span>
+              ) : null}
+              {' '}R$ {due.toFixed(2)}
+            </div>
+            {appointment.extrasDescription ? (
+              <div className="text-xs text-[color:var(--app-shell-muted)]">{appointment.extrasDescription}</div>
+            ) : null}
+          </div>
         );
       }
     },

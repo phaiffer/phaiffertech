@@ -76,6 +76,8 @@ export function PetAppointmentsPage() {
   const [scheduledAt, setScheduledAt] = useState('');
   const [status, setStatus] = useState('SCHEDULED');
   const [notes, setNotes] = useState('');
+  const [extrasAmount, setExtrasAmount] = useState('');
+  const [extrasDescription, setExtrasDescription] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
   const [deleteCandidate, setDeleteCandidate] = useState<PetAppointment | null>(null);
@@ -273,6 +275,8 @@ export function PetAppointmentsPage() {
     setScheduledAt('');
     setStatus('SCHEDULED');
     setNotes('');
+    setExtrasAmount('');
+    setExtrasDescription('');
   }
 
   function beginCreate(presetDate?: Date) {
@@ -293,6 +297,8 @@ export function PetAppointmentsPage() {
     setScheduledAt(toDateTimeLocal(appointment.scheduledAt));
     setStatus(appointment.status);
     setNotes(appointment.notes ?? '');
+    setExtrasAmount(appointment.extrasAmount != null ? String(appointment.extrasAmount) : '');
+    setExtrasDescription(appointment.extrasDescription ?? '');
     setSuccess(null);
     setError(null);
     setIsEditorOpen(true);
@@ -321,6 +327,7 @@ export function PetAppointmentsPage() {
     setError(null);
     setSuccess(null);
 
+    const parsedExtrasAmount = extrasAmount ? parseFloat(extrasAmount) : undefined;
     const payload = {
       clientId,
       petId,
@@ -328,7 +335,9 @@ export function PetAppointmentsPage() {
       professionalId,
       scheduledAt: isoScheduledAt,
       status,
-      notes: notes || undefined
+      notes: notes || undefined,
+      extrasAmount: parsedExtrasAmount,
+      extrasDescription: extrasDescription || undefined
     };
 
     try {
@@ -540,6 +549,10 @@ export function PetAppointmentsPage() {
                   onStatusChange={setStatus}
                   notes={notes}
                   onNotesChange={setNotes}
+                  extrasAmount={extrasAmount}
+                  onExtrasAmountChange={setExtrasAmount}
+                  extrasDescription={extrasDescription}
+                  onExtrasDescriptionChange={setExtrasDescription}
                   submitting={submitting}
                   appointmentReferencesReady={appointmentReferencesReady}
                   onCancelEdit={() => setIsEditorOpen(false)}

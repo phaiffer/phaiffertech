@@ -17,6 +17,9 @@ public record PetAppointmentUpdateRequest(
         // Optional price override. If null, service price is auto-populated from the catalog.
         BigDecimal servicePrice,
         // Optional: associate this appointment with a client plan for session tracking.
-        UUID clientPlanId
+        UUID clientPlanId,
+        // Optional extras (e.g. pet taxi, grooming add-ons).
+        BigDecimal extrasAmount,
+        String extrasDescription
 ) {
 }
