@@ -478,27 +478,33 @@ const websiteContent: Record<PublicLocale, WebsiteContent> = {
           footer: 'Best fit: industrial monitoring, field assets, infrastructure operations and telemetry-heavy use cases.'
         }
       ],
-      fitTitle: 'Why the portfolio matters together',
+      fitTitle: 'Built for the way pet businesses actually work',
       fitDescription:
-        'The product story is stronger when the public site explains how the shared platform reduces duplication while keeping domain ownership explicit.',
+        'Whether you run a clinic, a grooming salon, a pet shop, or a hybrid operation, PetFlow adapts to your workflow without requiring a separate system for each business type.',
       fit: [
         {
-          eyebrow: 'Shared governance',
-          title: 'One foundation for access, tenancy and module enablement',
+          eyebrow: 'Veterinary clinic',
+          title: 'Appointments, care records, and billing in one place',
           description:
-            'Products do not reinvent the basics of SaaS governance every time a domain expands.'
+            'Manage patient scheduling, medical history, vaccinations, prescriptions, and invoice follow-through from a single workspace.'
         },
         {
-          eyebrow: 'Explicit boundaries',
-          title: 'Different products without hidden coupling',
+          eyebrow: 'Grooming / banho e tosa',
+          title: 'Service bookings, pet profiles, and payment tracking',
           description:
-            'Cross-module integration is capability-driven, which keeps the portfolio scalable and technically explainable.'
+            'Set up your service menu, assign groomers, track each pet visit, and follow through on billing without switching between tools.'
         },
         {
-          eyebrow: 'Future growth',
-          title: 'Prepared for commercial, operational and research evolution',
+          eyebrow: 'Pet shop',
+          title: 'Product catalog, inventory, and retail operations',
           description:
-            'The portfolio can grow without forcing a redesign of the platform narrative each time a module matures.'
+            'Manage SKUs, pricing, stock levels, and reorder signals alongside client and appointment workflows — all in PetFlow.'
+        },
+        {
+          eyebrow: 'Hybrid operation',
+          title: 'One system for services, care, products, and sales',
+          description:
+            'Combine services, products, care records, and billing in a single workspace for businesses that do more than one thing.'
         }
       ]
     },
@@ -1161,27 +1167,33 @@ const websiteContent: Record<PublicLocale, WebsiteContent> = {
           footer: 'Melhor aderência: monitoramento industrial, ativos de campo, infraestrutura e contextos de telemetria intensa.'
         }
       ],
-      fitTitle: 'Por que o portfólio faz sentido junto',
+      fitTitle: 'Feito para o jeito que negócios pet realmente funcionam',
       fitDescription:
-        'A história do portfólio fica mais forte quando o site explica como a plataforma compartilhada reduz duplicação sem diluir ownership dos domínios.',
+        'Seja uma clínica, um pet shop, um salão de banho e tosa ou uma operação híbrida, o PetFlow adapta ao seu fluxo sem precisar de um sistema diferente para cada modelo.',
       fit: [
         {
-          eyebrow: 'Governança compartilhada',
-          title: 'Uma base para acesso, tenancy e enablement modular',
+          eyebrow: 'Clínica veterinária',
+          title: 'Agendamentos, prontuários e faturamento em um só lugar',
           description:
-            'Os produtos não reinventam do zero os elementos centrais de governança SaaS a cada expansão de domínio.'
+            'Gerencie agenda, histórico médico, vacinas, prescrições e cobrança a partir de um único workspace.'
         },
         {
-          eyebrow: 'Fronteiras explícitas',
-          title: 'Produtos diferentes sem acoplamento escondido',
+          eyebrow: 'Banho e tosa / grooming',
+          title: 'Agendamento de serviços, perfil do pet e controle financeiro',
           description:
-            'A integração cross-module é orientada por capabilities, o que mantém o portfólio escalável e tecnicamente explicável.'
+            'Configure o menu de serviços, atribua profissionais, acompanhe cada visita e feche a cobrança sem trocar de ferramenta.'
         },
         {
-          eyebrow: 'Crescimento futuro',
-          title: 'Preparado para evolução comercial, operacional e acadêmica',
+          eyebrow: 'Pet shop',
+          title: 'Catálogo de produtos, estoque e operação de varejo',
           description:
-            'O portfólio pode crescer sem exigir uma reinvenção da narrativa da plataforma a cada novo passo.'
+            'Gerencie SKUs, preços, níveis de estoque e pontos de reposição integrados aos fluxos de clientes e atendimentos.'
+        },
+        {
+          eyebrow: 'Operação híbrida',
+          title: 'Um sistema para serviços, cuidados, produtos e vendas',
+          description:
+            'Combine serviços, produtos, prontuários e faturamento em um único workspace para negócios que fazem mais de uma coisa.'
         }
       ]
     },

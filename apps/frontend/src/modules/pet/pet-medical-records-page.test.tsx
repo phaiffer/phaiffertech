@@ -286,8 +286,9 @@ describe('PetMedicalRecordsPage', () => {
       'href',
       '/pet/medical-records'
     );
-    expect(screen.getByText(/Fluxo vinculado ao atendimento Consulta clínica de Nina com Dr Example\./)).toBeInTheDocument();
+    expect(screen.getByText('Atendimento ativo para Nina.')).toBeInTheDocument();
 
+    fireEvent.click(screen.getByRole('button', { name: 'Prontuários' }));
     fireEvent.change(screen.getByLabelText('Descrição'), { target: { value: 'Observação inicial' } });
     fireEvent.click(screen.getByRole('button', { name: 'Criar prontuário' }));
 

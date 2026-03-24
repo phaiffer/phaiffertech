@@ -95,7 +95,7 @@ describe('Sidebar', () => {
     // Group labels are now buttons — all are always in the DOM
     expect(container.textContent).toContain('PhaifferTech');
     expect(getByText('Platform')).toBeTruthy();
-    expect(getByText('CRM')).toBeTruthy();
+    expect(getByText('Relationships')).toBeTruthy();
     expect(getByText('PetFlow')).toBeTruthy();
 
     // Active route is /crm/tasks, so CRM group auto-expands — its links should be present

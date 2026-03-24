@@ -27,7 +27,7 @@ import { SearchBar } from '@/shared/ui/search-bar';
 const pageSize = 10;
 
 const statusOptions = [
-  { value: '', label: 'Todos' },
+  { value: '', label: 'All' },
   { value: 'ACTIVE', label: 'ACTIVE' },
   { value: 'INACTIVE', label: 'INACTIVE' }
 ];
@@ -82,7 +82,7 @@ export function PetClientsPage() {
       });
       setPageData(result);
     } catch (err) {
-      const message = err instanceof ApiClientError ? err.message : 'Erro ao carregar clientes.';
+      const message = err instanceof ApiClientError ? err.message : 'Unable to load clients.';
       setError(message);
     } finally {
       setLoading(false);
@@ -132,7 +132,7 @@ export function PetClientsPage() {
           address: address || undefined,
           status
         });
-        setSuccess('Cliente atualizado com sucesso.');
+        setSuccess('Client updated.');
       } else {
         await petService.createClient({
           name,
@@ -142,13 +142,13 @@ export function PetClientsPage() {
           address: address || undefined,
           status
         });
-        setSuccess('Cliente criado com sucesso.');
+        setSuccess('Client added.');
       }
 
       resetForm();
       await load(pageData.page, search, statusFilter);
     } catch (err) {
-      const message = err instanceof ApiClientError ? err.message : 'Erro ao salvar cliente.';
+      const message = err instanceof ApiClientError ? err.message : 'Unable to save client.';
       setError(message);
     } finally {
       setSubmitting(false);
@@ -163,10 +163,10 @@ export function PetClientsPage() {
     try {
       await petService.deleteClient(deleteCandidate.id);
       setDeleteCandidate(null);
-      setSuccess('Cliente removido com sucesso.');
+      setSuccess('Client removed.');
       await load(pageData.page, search, statusFilter);
     } catch (err) {
-      const message = err instanceof ApiClientError ? err.message : 'Erro ao excluir cliente.';
+      const message = err instanceof ApiClientError ? err.message : 'Unable to delete client.';
       setError(message);
     }
   }
@@ -175,6 +175,10 @@ export function PetClientsPage() {
   const totalItems = resolveTotalItems(pageData);
   const activeFilterCount = [search, statusFilter].filter(Boolean).length;
 
+  function scrollToClientForm() {
+    globalThis.document.getElementById('pet-client-form-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
   const columns: DataTableColumn<PetClient>[] = [
     {
       key: 'profile',
@@ -182,27 +186,27 @@ export function PetClientsPage() {
       render: (client) => (
         <div>
           <p className="font-medium text-[color:var(--app-shell-heading)]">{client.name ?? client.fullName ?? '-'}</p>
-          <p className={`mt-1 ${sharedCompactTextClass}`}>Documento: {client.document ?? 'Não informado'}</p>
+          <p className={`mt-1 ${sharedCompactTextClass}`}>Document: {client.document ?? 'Not provided'}</p>
         </div>
       )
     },
     {
       key: 'contact',
-      header: 'Contato',
+      header: 'Contact',
       render: (client) => (
         <div>
-          <p className="font-medium text-[color:var(--app-shell-heading)]">{client.email ?? 'Sem email cadastrado'}</p>
-          <p className={`mt-1 ${sharedCompactTextClass}`}>{client.phone ?? 'Sem telefone informado'}</p>
+          <p className="font-medium text-[color:var(--app-shell-heading)]">{client.email ?? 'No email'}</p>
+          <p className={`mt-1 ${sharedCompactTextClass}`}>{client.phone ?? 'No phone'}</p>
         </div>
       )
     },
     {
       key: 'address',
-      header: 'Endereço e atualização',
+      header: 'Address & updated',
       render: (client) => (
         <div>
-          <p className="font-medium text-[color:var(--app-shell-heading)]">{client.address ?? 'Sem endereço informado'}</p>
-          <p className={`mt-1 ${sharedCompactTextClass}`}>Atualizado em {formatDateTime(client.updatedAt)}</p>
+          <p className="font-medium text-[color:var(--app-shell-heading)]">{client.address ?? 'No address'}</p>
+          <p className={`mt-1 ${sharedCompactTextClass}`}>Updated {formatDateTime(client.updatedAt)}</p>
         </div>
       )
     },
@@ -213,7 +217,7 @@ export function PetClientsPage() {
     },
     {
       key: 'actions',
-      header: 'Ações',
+      header: 'Actions',
       render: (client) => (
         <div className={sharedInlineActionsClass}>
           <PermissionGuard permission="pet.client.update">
@@ -222,7 +226,7 @@ export function PetClientsPage() {
               onClick={() => beginEdit(client)}
               className="ui-inline-button"
             >
-              Editar
+              Edit
             </button>
           </PermissionGuard>
 
@@ -232,7 +236,7 @@ export function PetClientsPage() {
               onClick={() => setDeleteCandidate(client)}
               className="ui-inline-danger-button"
             >
-              Excluir
+              Delete
             </button>
           </PermissionGuard>
         </div>
@@ -243,13 +247,13 @@ export function PetClientsPage() {
   return (
     <PermissionGuard
       permission="pet.client.read"
-      fallback={<div className="ui-notice-warning">Você não possui permissão para visualizar clientes.</div>}
+      fallback={<div className="ui-notice-warning">You do not have permission to view clients.</div>}
     >
       <div className={sharedPageStackClass}>
         <PageTitle
           eyebrow="PetFlow workspace"
-          title="Clients"
-          description="Gestão de clientes do módulo PET com busca, edição rápida e uma composição alinhada ao restante das áreas consolidadas da plataforma."
+          title="Client Base"
+          description="Capture pet owners and contact context before moving into pets, appointments, and billing."
         />
 
         <PageSection
@@ -295,41 +299,43 @@ export function PetClientsPage() {
         </PageSection>
 
         <PermissionGuard permission={editingId ? 'pet.client.update' : 'pet.client.create'}>
-          <PageSection
-            title={editingId ? 'Edit client' : 'Register client'}
-            description="Keep identity, contact data, and operational status grouped so inline editing stays fast without overpowering the page."
-          >
-            <form onSubmit={handleSubmit} className="space-y-5">
-              <div className="grid gap-4 xl:grid-cols-2">
-                <FormInput label="Nome" value={name} onChange={setName} required />
-                <FormSelect label="Status" value={status} options={formStatusOptions} onChange={setStatus} />
-                <FormInput label="Email" value={email} onChange={setEmail} type="email" />
-                <FormInput label="Telefone" value={phone} onChange={setPhone} />
-                <FormInput label="Documento" value={document} onChange={setDocument} />
-                <div className="hidden xl:block" />
-                <FormInput label="Endereço" value={address} onChange={setAddress} wrapperClassName="xl:col-span-2" />
-              </div>
+          <div id="pet-client-form-section">
+            <PageSection
+              title={editingId ? 'Edit client' : 'Add or update client'}
+              description="Keep the customer record ready for pet registration, scheduling, and follow-up."
+            >
+              <form onSubmit={handleSubmit} className="space-y-5">
+                <div className="grid gap-4 xl:grid-cols-2">
+                  <FormInput label="Name" value={name} onChange={setName} required />
+                  <FormSelect label="Status" value={status} options={formStatusOptions} onChange={setStatus} />
+                  <FormInput label="Email" value={email} onChange={setEmail} type="email" />
+                  <FormInput label="Phone" value={phone} onChange={setPhone} />
+                  <FormInput label="Document" value={document} onChange={setDocument} />
+                  <div className="hidden xl:block" />
+                  <FormInput label="Address" value={address} onChange={setAddress} wrapperClassName="xl:col-span-2" />
+                </div>
 
-              <div className={sharedFormActionsClass}>
-                <button
-                  type="submit"
-                  disabled={submitting}
-                  className="ui-primary-button"
-                >
-                  {submitting ? 'Salvando...' : editingId ? 'Atualizar cliente' : 'Criar cliente'}
-                </button>
-                {editingId ? (
+                <div className={sharedFormActionsClass}>
                   <button
-                    type="button"
-                    onClick={resetForm}
-                    className="ui-secondary-button"
+                    type="submit"
+                    disabled={submitting}
+                    className="ui-primary-button"
                   >
-                    Cancelar edição
+                    {submitting ? 'Saving...' : editingId ? 'Update client' : 'Add client'}
                   </button>
-                ) : null}
-              </div>
-            </form>
-          </PageSection>
+                  {editingId ? (
+                    <button
+                      type="button"
+                      onClick={resetForm}
+                      className="ui-secondary-button"
+                    >
+                      Cancel
+                    </button>
+                  ) : null}
+                </div>
+              </form>
+            </PageSection>
+          </div>
         </PermissionGuard>
 
         {error ? <div className="ui-notice-error">{error}</div> : null}
@@ -337,7 +343,7 @@ export function PetClientsPage() {
 
         <PageSection
           title="Client directory"
-          description="The listing keeps contact data, address context, and lifecycle status readable across denser operational tables."
+          description="This is the first step in the PetFlow story and the base for pets, visits, and billing."
           actions={(
             <p className="text-sm text-[color:var(--app-shell-muted)]">Total {totalItems} client(s)</p>
           )}
@@ -348,11 +354,18 @@ export function PetClientsPage() {
               rows={rows}
               getRowKey={(row) => row.id}
               loading={loading}
-              loadingTitle="Carregando clientes"
-              loadingDescription="Preparando a base de clientes do PetFlow com status e dados operacionais."
+              loadingTitle="Loading clients"
+              loadingDescription="Preparing the client base for this PetFlow workspace."
               emptyState={{
-                title: 'Nenhum cliente cadastrado',
-                description: 'Crie o primeiro cliente para iniciar os cadastros clinicos e operacionais do PetFlow.'
+                title: 'No clients yet',
+                description: 'Create the first client to unlock pet profiles and the rest of the PetFlow flow.',
+                action: (
+                  <PermissionGuard permission="pet.client.create">
+                    <button type="button" onClick={scrollToClientForm} className="ui-primary-button">
+                      Create first client
+                    </button>
+                  </PermissionGuard>
+                )
               }}
             />
 
@@ -367,9 +380,9 @@ export function PetClientsPage() {
 
         <ConfirmDialog
           open={Boolean(deleteCandidate)}
-          title="Excluir cliente"
-          description={deleteCandidate ? `Confirma a exclusão de ${deleteCandidate.name ?? deleteCandidate.fullName ?? 'cliente'}?` : undefined}
-          confirmLabel="Excluir"
+          title="Remove client?"
+          description={deleteCandidate ? `"${deleteCandidate.name ?? deleteCandidate.fullName ?? 'This client'}" will be removed from this workspace.` : undefined}
+          confirmLabel="Remove"
           onCancel={() => setDeleteCandidate(null)}
           onConfirm={handleConfirmDelete}
         />

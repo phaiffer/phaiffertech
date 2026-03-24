@@ -140,14 +140,14 @@ describe('PetHome', () => {
 
     expect(screen.getByRole('heading', { name: 'Clinic North · PetFlow' })).toBeInTheDocument();
     expect(screen.getByText('Pet Clinic')).toBeInTheDocument();
-    expect(screen.getByText('Open appointments')).toBeInTheDocument();
+    expect(screen.getByText('Book appointments')).toBeInTheDocument();
     expect(screen.getByText('Open medical records')).toBeInTheDocument();
     expect(screen.getByText('Review products')).toBeInTheDocument();
     expect(screen.getAllByText("Review today's appointments").length).toBeGreaterThan(0);
     expect(screen.getByText('Product access required')).toBeInTheDocument();
     expect(screen.queryByRole('link', { name: /review products/i })).not.toBeInTheDocument();
-    expect(screen.getByText('Clinical Operating Context')).toBeInTheDocument();
-    expect(screen.getByText('Clinic Snapshot')).toBeInTheDocument();
+    expect(screen.getByText('Business Snapshot')).toBeInTheDocument();
+    expect(screen.getByText('Live Operations')).toBeInTheDocument();
     expect(screen.getByText('Clinical Feed')).toBeInTheDocument();
   }, 10000);
 
@@ -170,11 +170,11 @@ describe('PetHome', () => {
       expect(petService.getDashboardSummary).toHaveBeenCalledTimes(1);
     });
 
-    expect(screen.getByText('PetFlow Onboarding')).toBeInTheDocument();
-    expect(screen.getByText('Set up the PetFlow workspace')).toBeInTheDocument();
-    expect(screen.getByText(/does not have the first clinic entities in place yet/i)).toBeInTheDocument();
-    expect(screen.getAllByText('Register first client').length).toBeGreaterThan(0);
-    expect(screen.getAllByText('Open appointments').length).toBeGreaterThan(0);
+    expect(screen.getByText('PetFlow Setup')).toBeInTheDocument();
+    expect(screen.getByText('Set up your PetFlow workspace')).toBeInTheDocument();
+    expect(screen.getByText(/start with clients and pets/i)).toBeInTheDocument();
+    expect(screen.getAllByText('Start with clients').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('Book appointments').length).toBeGreaterThan(0);
   });
 
   it('keeps PetFlow metrics capability-aware when dashboard permission is missing', () => {
@@ -185,7 +185,7 @@ describe('PetHome', () => {
     expect(petService.getDashboardSummary).not.toHaveBeenCalled();
     expect(screen.getAllByText('Dashboard visibility required').length).toBeGreaterThan(0);
     expect(screen.getAllByText('No Permission').length).toBeGreaterThan(0);
-    expect(screen.getByText(/clinic snapshot requires `pet.dashboard.read`/i)).toBeInTheDocument();
+    expect(screen.getByText(/operations snapshot requires `pet.dashboard.read`/i)).toBeInTheDocument();
   });
 
   it('adapts the workspace copy when the resolved profile is pet grooming', async () => {
@@ -228,8 +228,8 @@ describe('PetHome', () => {
 
     expect(screen.getByText('Pet Grooming')).toBeInTheDocument();
     expect(screen.getByText('PetFlow Grooming Workspace')).toBeInTheDocument();
-    expect(screen.getByText('Service Operating Context')).toBeInTheDocument();
-    expect(screen.getByText('Service Snapshot')).toBeInTheDocument();
+    expect(screen.getByText('Business Snapshot')).toBeInTheDocument();
+    expect(screen.getByText('Live Service Snapshot')).toBeInTheDocument();
 
     currentPlatformState.visualProfile = {
       key: 'pet-clinic',
@@ -278,7 +278,7 @@ describe('PetHome', () => {
       expect(petService.getDashboardSummary).toHaveBeenCalledTimes(1);
     });
 
-    expect(screen.getAllByText('Open appointments').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('Book appointments').length).toBeGreaterThan(0);
     expect(screen.getAllByText('Review products').length).toBeGreaterThan(0);
     expect(screen.queryByText('Open medical records')).not.toBeInTheDocument();
     expect(screen.queryByText('Review pet profiles')).not.toBeInTheDocument();

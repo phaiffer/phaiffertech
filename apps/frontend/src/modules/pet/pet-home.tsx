@@ -91,10 +91,10 @@ function getPetWorkspaceActions(mode: PetWorkspaceMode): ModuleWorkspaceAction[]
     {
       href: '/pet/dashboard',
       eyebrow: 'Overview',
-      title: 'Open dashboard',
+      title: 'See operations overview',
       description: grooming
-        ? 'Review service throughput, today bookings, and the current operational backlog.'
-        : 'Review clinic throughput, today appointments, and the current commercial backlog.',
+        ? 'Open the live service picture before moving into billing follow-through and insights.'
+        : 'Open the live operating picture before moving into billing follow-through and insights.',
       permission: 'pet.dashboard.read',
       anyEntitlements: petSubmoduleEntitlements,
       restrictionTitle: 'Dashboard permission required',
@@ -103,8 +103,8 @@ function getPetWorkspaceActions(mode: PetWorkspaceMode): ModuleWorkspaceAction[]
     {
       href: '/pet/clients',
       eyebrow: grooming ? 'Reception' : 'Front desk',
-      title: 'Manage clients',
-      description: 'Work through the client base attached to the current tenant workspace.',
+      title: 'Review clients',
+      description: 'Start the PetFlow story with customer records and reliable contact context.',
       permission: 'pet.client.read',
       anyEntitlements: petSubmoduleEntitlements,
       restrictionTitle: 'Client access required',
@@ -115,8 +115,8 @@ function getPetWorkspaceActions(mode: PetWorkspaceMode): ModuleWorkspaceAction[]
       eyebrow: grooming ? 'Care' : 'Clinical',
       title: 'Review pet profiles',
       description: grooming
-        ? 'Inspect pet identity, service notes, and linked customer context.'
-        : 'Inspect patient identity, species, breed, and linked customer context.',
+        ? 'Add each pet after the client so services and care notes stay attached to the right customer.'
+        : 'Add each pet after the client so appointments and care history stay attached to the right patient.',
       permission: 'pet.profile.read',
       anyEntitlements: petClinicalEntitlements,
       restrictionTitle: 'Pet profile access required',
@@ -125,10 +125,10 @@ function getPetWorkspaceActions(mode: PetWorkspaceMode): ModuleWorkspaceAction[]
     {
       href: '/pet/appointments',
       eyebrow: grooming ? 'Schedule' : 'Clinical',
-      title: 'Open appointments',
+      title: 'Book appointments',
       description: grooming
-        ? 'Handle bookings, service assignment, and attendance flow for the current workspace.'
-        : 'Handle scheduling, service assignment, and clinical attendance flow.',
+        ? 'Turn customer and pet records into bookable services and a visible daily queue.'
+        : 'Turn client and pet records into scheduled care and a visible daily queue.',
       permission: 'pet.appointment.read',
       anyEntitlements: petOperationalEntitlements,
       restrictionTitle: 'Appointment access required',
@@ -137,8 +137,8 @@ function getPetWorkspaceActions(mode: PetWorkspaceMode): ModuleWorkspaceAction[]
     {
       href: '/pet/services',
       eyebrow: grooming ? 'Service menu' : 'Commercial',
-      title: 'Inspect services',
-      description: 'Review the service catalog currently sold through this workspace.',
+      title: 'Review services',
+      description: 'Keep the sellable service menu ready before bookings go live.',
       permission: 'pet.service.read',
       anyEntitlements: petOperationalEntitlements,
       restrictionTitle: 'Service access required',
@@ -147,7 +147,7 @@ function getPetWorkspaceActions(mode: PetWorkspaceMode): ModuleWorkspaceAction[]
     {
       href: '/pet/professionals',
       eyebrow: grooming ? 'Operations' : 'Clinical',
-      title: 'Review professionals',
+      title: 'Review team',
       description: grooming
         ? 'Keep groomers, attendants, and operational staff visible for the current tenant.'
         : 'Keep the medical and operational team context visible for the current tenant.',
@@ -181,7 +181,7 @@ function getPetWorkspaceActions(mode: PetWorkspaceMode): ModuleWorkspaceAction[]
     {
       href: '/pet/inventory',
       eyebrow: 'Inventory',
-      title: 'Track inventory',
+      title: 'Review stock',
       description: 'Follow stock movement and operational traceability for tenant inventory.',
       permission: 'pet.inventory.read',
       anyEntitlements: petRetailEntitlements,
@@ -191,8 +191,8 @@ function getPetWorkspaceActions(mode: PetWorkspaceMode): ModuleWorkspaceAction[]
     {
       href: '/pet/invoices',
       eyebrow: 'Billing',
-      title: 'Open invoices',
-      description: 'Review invoice issuance and pending payment signals for current clients.',
+      title: 'Manage billing',
+      description: 'Show how completed work becomes invoices, payment follow-through, and finance visibility.',
       permission: 'pet.invoice.read',
       anyEntitlements: petRetailEntitlements,
       restrictionTitle: 'Invoice access required',
@@ -201,10 +201,10 @@ function getPetWorkspaceActions(mode: PetWorkspaceMode): ModuleWorkspaceAction[]
     {
       href: '/pet/insights',
       eyebrow: 'Business insights',
-      title: 'View business insights',
+      title: 'See business insights',
       description: grooming
-        ? 'Service performance, client growth, and pet mix — operational intelligence for the current pet business.'
-        : 'Service performance, client growth, and appointment patterns — operational intelligence for the current pet business.',
+        ? 'Review client growth, service mix, and pet trends from your business data.'
+        : 'Review client growth, service mix, and appointment patterns from your business data.',
       permission: 'pet.dashboard.read',
       anyEntitlements: petSubmoduleEntitlements,
       restrictionTitle: 'Dashboard access required',
@@ -280,25 +280,25 @@ function getPetWorkspaceCopy(mode: PetWorkspaceMode): PetWorkspaceCopy {
       overviewUpcomingDescription: 'Near-term service bookings already queued for the current tenant.',
       attentionLabel: 'Operations queue',
       attentionDescription: 'Inventory and billing signals that still need action in this workspace.',
-      contextTitle: 'Service Operating Context',
-      contextDescription: 'Keep service rhythm, customer coverage, and operational attention readable before entering deeper PetFlow flows.',
-      snapshotTitle: 'Service Snapshot',
-      snapshotDescription: 'Keep a compact view of booked service flow and operational attention before navigating into deeper PetFlow surfaces.',
+      contextTitle: 'Business Snapshot',
+      contextDescription: 'See where your customer base, service schedule, and operational attention stand before diving into each area.',
+      snapshotTitle: 'Live Service Snapshot',
+      snapshotDescription: 'Scan the current service picture here, then continue into billing and business insights.',
       restrictedTitle: 'Service summary restricted',
       restrictedDescription: 'This PetFlow workspace is available, but the service snapshot requires `pet.dashboard.read`. Continue through the permitted client, schedule, and care flows below.',
       loadingTitle: 'Loading PetFlow summary',
       loadingDescription: 'Collecting the latest service and operational overview for this tenant workspace.',
-      errorGuidanceTitle: 'Keep the service workspace moving',
-      errorGuidanceDescription: 'Use the permitted PetFlow flows below while the summary feed recovers.',
+      errorGuidanceTitle: 'Keep moving with PetFlow',
+      errorGuidanceDescription: 'Use the PetFlow flows below while the summary feed recovers.',
       onboardingEyebrow: 'PetFlow Setup',
-      onboardingTitle: 'Set up the PetFlow service workspace',
-      onboardingDescription: 'This tenant does not have the first PetFlow service records in place yet. Work through the checklist below to establish clients, pet profiles, and booked services.',
-      emptyActivityTitle: 'No recent PetFlow service activity yet',
-      emptyActivityDescription: 'The workspace already has PetFlow records, but the summary returned no compact recent service activity block right now.',
-      emptyGuidanceTitle: 'Keep working the PetFlow workspace',
-      emptyGuidanceDescription: 'Continue through the core PetFlow flows below while the next service signal is still building.',
-      emptySummaryTitle: 'No PetFlow summary available',
-      emptySummaryDescription: 'No PetFlow operational data was returned for the current tenant workspace.',
+      onboardingTitle: 'Set up your PetFlow workspace',
+      onboardingDescription: 'Start with clients and pets, add your services and team, then schedule appointments and track billing.',
+      emptyActivityTitle: 'No recent service activity yet',
+      emptyActivityDescription: 'PetFlow records exist, but there is no compact live service activity to show right now.',
+      emptyGuidanceTitle: 'Keep going with PetFlow',
+      emptyGuidanceDescription: 'Use the flows below while activity builds up in your workspace.',
+      emptySummaryTitle: 'No operating snapshot available',
+      emptySummaryDescription: 'PetFlow did not return a live operations snapshot for this workspace yet.',
       moduleSurfaceDescription: 'Scheduling, care, commercial, and inventory flows stay bounded to the active tenant contract.'
     };
   }
@@ -311,25 +311,25 @@ function getPetWorkspaceCopy(mode: PetWorkspaceMode): PetWorkspaceCopy {
     overviewUpcomingDescription: 'Near-term appointments already queued for the current pet business.',
     attentionLabel: 'Attention queue',
     attentionDescription: 'Commercial and inventory signals that still need action in this workspace.',
-    contextTitle: 'Business Operating Context',
-    contextDescription: 'Keep service rhythm, customer coverage, and operational attention readable before entering deeper PetFlow flows.',
-    snapshotTitle: 'Operations Snapshot',
-    snapshotDescription: 'Keep a compact view of business throughput and commercial pressure before navigating into the deeper PetFlow surfaces.',
+    contextTitle: 'Business Snapshot',
+    contextDescription: 'See where your customer base, service schedule, and operational attention stand before diving into each area.',
+    snapshotTitle: 'Live Operations',
+    snapshotDescription: 'Scan the current operating picture here, then continue into billing and business insights.',
     restrictedTitle: 'Operations summary restricted',
     restrictedDescription: 'This PetFlow workspace is available, but the operations snapshot requires `pet.dashboard.read`. Continue through the permitted client, appointment, and care flows below.',
     loadingTitle: 'Loading PetFlow summary',
     loadingDescription: 'Collecting the latest operations and commercial overview for this pet business workspace.',
-    errorGuidanceTitle: 'Keep the pet business workspace moving',
-    errorGuidanceDescription: 'Use the permitted PetFlow flows below while the summary feed recovers.',
+    errorGuidanceTitle: 'Keep moving with PetFlow',
+    errorGuidanceDescription: 'Use the PetFlow flows below while the summary feed recovers.',
     onboardingEyebrow: 'PetFlow Setup',
-    onboardingTitle: 'Set up the PetFlow workspace',
-    onboardingDescription: 'This tenant does not have the first records in place yet. Work through the checklist below to establish clients, pet profiles, and appointment flow.',
-    emptyActivityTitle: 'No recent PetFlow activity yet',
-    emptyActivityDescription: 'The workspace already has PetFlow records, but the summary returned no compact recent activity block right now.',
-    emptyGuidanceTitle: 'Keep working the PetFlow workspace',
-    emptyGuidanceDescription: 'Continue through the core PetFlow flows below while the next business signal is still building.',
-    emptySummaryTitle: 'No PetFlow summary available',
-    emptySummaryDescription: 'No PetFlow operational data was returned for the current pet business workspace.',
+    onboardingTitle: 'Set up your PetFlow workspace',
+    onboardingDescription: 'Start with clients and pets, add your services and team, then schedule appointments and track billing.',
+    emptyActivityTitle: 'No recent operating activity yet',
+    emptyActivityDescription: 'PetFlow records exist, but there is no compact live activity block to show right now.',
+    emptyGuidanceTitle: 'Keep going with PetFlow',
+    emptyGuidanceDescription: 'Use the flows below while activity builds up in your workspace.',
+    emptySummaryTitle: 'No operating snapshot available',
+    emptySummaryDescription: 'PetFlow did not return a live operations snapshot for this workspace yet.',
     moduleSurfaceDescription: 'Services, products, care, and billing flows stay bounded to the active tenant contract.'
   };
 }
@@ -425,10 +425,10 @@ function resolvePetPrimaryAction(actions: ModuleWorkspaceAction[], summary: PetD
 
   if (firstUse) {
     return {
-      title: mode === 'grooming' ? 'Register first client' : 'Register first client',
+      title: 'Start with clients',
       description: mode === 'grooming'
-        ? 'Start the service workspace by creating the first client and pet profile.'
-        : 'Start the clinic workspace by creating the first client and patient profile.',
+        ? 'Register the first client, then add a pet profile to start your PetFlow setup.'
+        : 'Register the first client, then add a pet profile to start your PetFlow setup.',
       href: resolvePetActionHref(actions, '/pet/clients', fallbackAction.href)
     } satisfies PetPrimaryAction;
   }
@@ -443,7 +443,7 @@ function resolvePetPrimaryAction(actions: ModuleWorkspaceAction[], summary: PetD
 
   if ((summary?.pendingInvoices ?? 0) > 0) {
     return {
-      title: 'Review pending invoices',
+      title: 'Review pending billing',
       description: `${summary?.pendingInvoices ?? 0} invoice(s) still need billing follow-through in PetFlow.`,
       href: resolvePetActionHref(actions, '/pet/invoices', fallbackAction.href)
     } satisfies PetPrimaryAction;
@@ -458,10 +458,10 @@ function resolvePetPrimaryAction(actions: ModuleWorkspaceAction[], summary: PetD
   }
 
   return {
-    title: 'Open PetFlow dashboard',
+    title: 'See operations overview',
     description: mode === 'grooming'
-      ? 'Review service throughput, upcoming visits, and the operational backlog.'
-      : 'Review clinic throughput, recent records, and the current operational backlog.',
+      ? 'Review live throughput, operational attention, and the next story to show in insights.'
+      : 'Review live throughput, operational attention, and the next story to show in insights.',
     href: resolvePetActionHref(actions, '/pet/dashboard', fallbackAction.href)
   } satisfies PetPrimaryAction;
 }
@@ -525,8 +525,26 @@ export function PetHome() {
 
       if (firstUse && action.href === '/pet/appointments') {
         const capability = notConfiguredCapability({
-          title: 'Appointment flow not configured yet',
-          description: 'Create the first clients and pet profiles before appointment scheduling can surface live clinic workload.'
+          title: 'Appointment flow needs a little setup first',
+          description: 'Create clients and pet profiles, then confirm services and professionals before booking the first visit.'
+        });
+
+        return { ...action, capability, status: capability.status };
+      }
+
+      if (firstUse && action.href === '/pet/invoices') {
+        const capability = notConfiguredCapability({
+          title: 'Billing starts after the first booked visit',
+          description: 'Issue the first invoice after an appointment or service is ready so payment follow-through feels real in the demo.'
+        });
+
+        return { ...action, capability, status: capability.status };
+      }
+
+      if (firstUse && action.href === '/pet/insights') {
+        const capability = notConfiguredCapability({
+          title: 'Insights light up after the first operating cycle',
+          description: 'Clients, pets, appointments, and billing data turn this page into a stronger closing moment.'
         });
 
         return { ...action, capability, status: capability.status };
@@ -555,11 +573,15 @@ export function PetHome() {
   const themePolicy = platform.theme.canOverride
     ? `${getAppThemeModeLabel(platform.theme.tenantDefaultMode)} with user override`
     : `${getAppThemeModeLabel(platform.theme.tenantDefaultMode)} tenant-managed`;
-  const setupGuidance = buildPetGuidanceSteps(actionStates, ['/pet/clients', '/pet/pets', '/pet/appointments']);
-  const restrictedGuidance = buildPetGuidanceSteps(actionStates, ['/pet/appointments', '/pet/medical-records', '/pet/invoices']);
+  const setupGuidance = buildPetGuidanceSteps(actionStates, ['/pet/clients', '/pet/pets', '/pet/appointments', '/pet/invoices', '/pet/insights']);
+  const restrictedGuidance = buildPetGuidanceSteps(actionStates, ['/pet/clients', '/pet/pets', '/pet/appointments', '/pet/invoices']);
   const primaryAction = useMemo(
     () => resolvePetPrimaryAction(actionStates, summary, firstUse, petMode),
     [actionStates, firstUse, petMode, summary]
+  );
+  const insightsHref = useMemo(
+    () => resolvePetActionHref(actionStates, '/pet/insights', primaryAction?.href ?? '/pet/insights'),
+    [actionStates, primaryAction]
   );
   const pulseCards = useMemo(() => {
     if (!summary) {
@@ -762,8 +784,8 @@ export function PetHome() {
       />
 
       <ModuleWorkspaceQuickActionGrid
-        title="Workspace Actions"
-        description="Open the PetFlow surfaces currently permitted in the tenant role and keep restricted clinical or billing flows explicit."
+        title="PetFlow"
+        description="Walk through clients, pets, appointments, billing, and insights to get the most from your workspace."
         actions={actionStates}
         emptyTitle="No PetFlow actions available"
         emptyDescription="This tenant has the PetFlow module enabled, but the current user does not have PetFlow read permissions yet."
@@ -779,7 +801,14 @@ export function PetHome() {
       <ModuleWorkspaceSection
         title={petCopy.snapshotTitle}
         description={petCopy.snapshotDescription}
-        action={primaryAction ? (
+        action={canReadDashboard ? (
+          <Link
+            href={insightsHref}
+            className="inline-flex text-sm font-semibold text-[color:var(--tenant-accent)]"
+          >
+            Open business insights
+          </Link>
+        ) : primaryAction ? (
           <Link
             href={primaryAction.href}
             className="inline-flex text-sm font-semibold text-[color:var(--tenant-accent)]"

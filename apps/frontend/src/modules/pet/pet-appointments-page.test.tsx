@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { PetAppointmentsPage } from '@/modules/pet/pet-appointments-page';
 
@@ -82,20 +82,27 @@ describe('PetAppointmentsPage', () => {
       expect(petServiceMock.listAppointments).toHaveBeenCalledTimes(1);
     });
 
-    expect(screen.getByText('Algumas referências do módulo Pet não estão disponíveis.')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'View: Calendar' }));
+
+    expect(screen.getByText('Some PetFlow references are not yet available.')).toBeInTheDocument();
     expect(screen.getByText(/pet\.client\.read/)).toBeInTheDocument();
-    expect(screen.getByText('Owner Example')).toBeInTheDocument();
-    expect(screen.getByText('Pet Example')).toBeInTheDocument();
-    expect(screen.getByText('Dr Example')).toBeInTheDocument();
-    expect(screen.getByText('Bath')).toBeInTheDocument();
-    expect(screen.getByText('Pending')).toBeInTheDocument();
-    expect(screen.getByText('Prontuários 0 | Vacinas 0 | Prescrições 0')).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Iniciar atendimento' })).toHaveAttribute(
-      'href',
-      '/pet/medical-records?appointmentId=appointment-1'
-    );
+    await waitFor(() => {
+      expect(screen.getByText('Owner Example')).toBeInTheDocument();
+      expect(screen.getByText('Pet Example')).toBeInTheDocument();
+      expect(screen.getByText('Dr Example')).toBeInTheDocument();
+      expect(screen.getByText('Bath')).toBeInTheDocument();
+      expect(screen.getByText('Pending')).toBeInTheDocument();
+      expect(screen.getByText('Records 0 | Vaccines 0 | Prescriptions 0')).toBeInTheDocument();
+      expect(screen.getByRole('link', { name: 'Start visit' })).toHaveAttribute(
+        'href',
+        '/pet/medical-records?appointmentId=appointment-1'
+      );
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: 'Book appointment' }));
+
     expect(
-      screen.getByText('O formulário depende de clientes, pets, serviços e profissionais carregados para funcionar corretamente.')
+      screen.getByText('Appointments need clients, pet profiles, services, and professionals available first. Load or create those records, then return here to book the visit.')
     ).toBeInTheDocument();
   });
 });

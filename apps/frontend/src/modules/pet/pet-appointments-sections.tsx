@@ -19,7 +19,7 @@ export type PetSelectOption = {
 };
 
 export const petAppointmentStatusOptions: PetSelectOption[] = [
-  { value: '', label: 'Todos' },
+  { value: '', label: 'All' },
   { value: 'SCHEDULED', label: 'SCHEDULED' },
   { value: 'CONFIRMED', label: 'CONFIRMED' },
   { value: 'IN_PROGRESS', label: 'IN_PROGRESS' },
@@ -48,8 +48,8 @@ function resolveAppointmentCareState(appointment: PetAppointment) {
 
 function resolveAppointmentCareActionLabel(appointment: PetAppointment) {
   return resolveAppointmentCareState(appointment) === 'PENDING'
-    ? 'Iniciar atendimento'
-    : 'Continuar atendimento';
+    ? 'Start visit'
+    : 'Continue visit';
 }
 
 type PetAppointmentsFiltersProps = {
@@ -103,11 +103,11 @@ export function PetAppointmentsFilters({
 }: PetAppointmentsFiltersProps) {
   return (
     <div className="grid gap-3 ui-surface-panel p-4 md:grid-cols-[1fr_180px_220px_220px_220px_220px_auto_auto]">
-      <SearchBar value={searchInput} onChange={onSearchInputChange} placeholder="Serviço, status, notas" />
+      <SearchBar value={searchInput} onChange={onSearchInputChange} placeholder="Service, status, notes" />
       <FormSelect label="Status" value={statusFilter} options={petAppointmentStatusOptions} onChange={onStatusFilterChange} />
-      <FormSelect label="Cliente" value={clientFilterId} options={clientOptions} onChange={onClientFilterIdChange} disabled={clientsLookupUnavailable} />
+      <FormSelect label="Client" value={clientFilterId} options={clientOptions} onChange={onClientFilterIdChange} disabled={clientsLookupUnavailable} />
       <FormSelect label="Pet" value={petFilterId} options={petOptions} onChange={onPetFilterIdChange} disabled={profilesLookupUnavailable} />
-      <FormSelect label="Serviço" value={serviceFilterId} options={serviceOptions} onChange={onServiceFilterIdChange} disabled={servicesLookupUnavailable} />
+      <FormSelect label="Service" value={serviceFilterId} options={serviceOptions} onChange={onServiceFilterIdChange} disabled={servicesLookupUnavailable} />
       <FormSelect
         label="Profissional"
         value={professionalFilterId}
@@ -120,14 +120,14 @@ export function PetAppointmentsFilters({
         onClick={onSearch}
         className="ui-primary-button"
       >
-        Buscar
+        Search
       </button>
       <button
         type="button"
         onClick={onClear}
         className="ui-secondary-button"
       >
-        Limpar
+        Clear
       </button>
     </div>
   );
@@ -195,24 +195,24 @@ export function PetAppointmentForm({
   return (
     <PermissionGuard permission={editingId ? 'pet.appointment.update' : 'pet.appointment.create'}>
       <form onSubmit={onSubmit} className="grid gap-3 ui-surface-panel p-4 md:grid-cols-3">
-        <FormSelect label="Cliente" value={clientId} options={formClientOptions} onChange={onClientIdChange} disabled={clientsLookupUnavailable} />
+        <FormSelect label="Client" value={clientId} options={formClientOptions} onChange={onClientIdChange} disabled={clientsLookupUnavailable} />
         <FormSelect label="Pet" value={petId} options={formPetOptions} onChange={onPetIdChange} disabled={profilesLookupUnavailable} />
-        <FormSelect label="Serviço" value={serviceId} options={formServiceOptions} onChange={onServiceIdChange} disabled={servicesLookupUnavailable} />
+        <FormSelect label="Service" value={serviceId} options={formServiceOptions} onChange={onServiceIdChange} disabled={servicesLookupUnavailable} />
         <FormSelect
-          label="Profissional"
+          label="Professional"
           value={professionalId}
           options={formProfessionalOptions}
           onChange={onProfessionalIdChange}
           disabled={professionalsLookupUnavailable}
         />
-        <DateTimeInput label="Data e hora" value={scheduledAt} onChange={onScheduledAtChange} required />
+        <DateTimeInput label="Date & time" value={scheduledAt} onChange={onScheduledAtChange} required />
         <FormSelect label="Status" value={status} options={petAppointmentFormStatusOptions} onChange={onStatusChange} />
-        <FormInput label="Notas" value={notes} onChange={onNotesChange} />
+        <FormInput label="Notes" value={notes} onChange={onNotesChange} />
 
         <div className="md:col-span-3 flex gap-2">
           {!appointmentReferencesReady ? (
             <div className="w-full ui-notice-warning">
-              O formulário depende de clientes, pets, serviços e profissionais carregados para funcionar corretamente.
+              Appointments need clients, pet profiles, services, and professionals available first. Load or create those records, then return here to book the visit.
             </div>
           ) : null}
           <button
@@ -220,7 +220,7 @@ export function PetAppointmentForm({
             disabled={submitting || !appointmentReferencesReady}
             className="ui-primary-button"
           >
-            {submitting ? 'Salvando...' : editingId ? 'Atualizar atendimento' : 'Criar atendimento'}
+            {submitting ? 'Saving...' : editingId ? 'Update appointment' : 'Book appointment'}
           </button>
           {editingId ? (
             <button
@@ -228,7 +228,7 @@ export function PetAppointmentForm({
               onClick={onCancelEdit}
               className="ui-secondary-button"
             >
-              Cancelar edição
+              Cancel
             </button>
           ) : null}
         </div>
@@ -261,13 +261,13 @@ export function createPetAppointmentColumns({
   return [
     {
       key: 'serviceName',
-      header: 'Serviço',
+      header: 'Service',
       render: (appointment) => appointment.serviceName
     },
     {
       key: 'scheduledAt',
-      header: 'Agendado para',
-      render: (appointment) => new Date(appointment.scheduledAt).toLocaleString('pt-BR')
+      header: 'Scheduled',
+      render: (appointment) => new Date(appointment.scheduledAt).toLocaleString()
     },
     {
       key: 'status',
@@ -276,7 +276,7 @@ export function createPetAppointmentColumns({
     },
     {
       key: 'careState',
-      header: 'Fluxo clínico',
+      header: 'Care',
       render: (appointment) => {
         const medicalRecordCount = appointment.medicalRecordCount ?? 0;
         const vaccinationCount = appointment.vaccinationCount ?? 0;
@@ -288,7 +288,7 @@ export function createPetAppointmentColumns({
               <StatusBadge status={resolveAppointmentCareState(appointment)} />
             </div>
             <div className="text-xs text-[color:var(--app-shell-muted)]">
-              Prontuários {medicalRecordCount} | Vacinas {vaccinationCount} | Prescrições {prescriptionCount}
+              Records {medicalRecordCount} | Vaccines {vaccinationCount} | Prescriptions {prescriptionCount}
             </div>
           </div>
         );
@@ -296,7 +296,7 @@ export function createPetAppointmentColumns({
     },
     {
       key: 'client',
-      header: 'Cliente',
+      header: 'Client',
       render: (appointment) => {
         if (appointment.clientName) {
           return appointment.clientName;
@@ -306,7 +306,7 @@ export function createPetAppointmentColumns({
           clients,
           appointment.clientId,
           (client) => client.name ?? client.fullName,
-          'Cliente',
+          'Client',
           clientsLookupUnavailable
         );
       }
@@ -320,20 +320,20 @@ export function createPetAppointmentColumns({
     },
     {
       key: 'professional',
-      header: 'Profissional',
+      header: 'Professional',
       render: (appointment) =>
         appointment.professionalName ??
         resolvePetLookupLabel(
           professionals,
           appointment.professionalId,
           (professional) => professional.name,
-          'Profissional',
+          'Professional',
           professionalsLookupUnavailable
         )
     },
     {
       key: 'actions',
-      header: 'Ações',
+      header: 'Actions',
       render: (appointment) => (
         <div className="flex gap-2">
           <PermissionGuard permission="pet.appointment.update">
@@ -342,7 +342,7 @@ export function createPetAppointmentColumns({
               onClick={() => onEdit(appointment)}
               className="ui-inline-button"
             >
-              Editar
+              Edit
             </button>
           </PermissionGuard>
 
@@ -352,7 +352,7 @@ export function createPetAppointmentColumns({
               onClick={() => onDelete(appointment)}
               className="ui-inline-danger-button"
             >
-              Excluir
+              Delete
             </button>
           </PermissionGuard>
 

@@ -50,14 +50,14 @@ export function PetProfessionalsPage() {
       const result = await petService.listProfessionals(page, pageSize, currentSearch);
       setPageData(result);
     } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : 'Erro ao carregar profissionais.');
+      setError(err instanceof ApiClientError ? err.message : 'Unable to load team members.');
     } finally {
       setLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    load(0, search);
+    void load(0, search);
   }, [load, search]);
 
   function resetForm() {
@@ -97,16 +97,16 @@ export function PetProfessionalsPage() {
 
       if (editingId) {
         await petService.updateProfessional(editingId, payload);
-        setSuccess('Profissional atualizado com sucesso.');
+        setSuccess('Professional updated.');
       } else {
         await petService.createProfessional(payload);
-        setSuccess('Profissional criado com sucesso.');
+        setSuccess('Professional added.');
       }
 
       resetForm();
       await load(pageData.page, search);
     } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : 'Erro ao salvar profissional.');
+      setError(err instanceof ApiClientError ? err.message : 'Unable to save professional.');
     } finally {
       setSubmitting(false);
     }
@@ -120,10 +120,10 @@ export function PetProfessionalsPage() {
     try {
       await petService.deleteProfessional(deleteCandidate.id);
       setDeleteCandidate(null);
-      setSuccess('Profissional removido com sucesso.');
+      setSuccess('Professional removed.');
       await load(pageData.page, search);
     } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : 'Erro ao excluir profissional.');
+      setError(err instanceof ApiClientError ? err.message : 'Unable to delete professional.');
     }
   }
 
@@ -131,13 +131,13 @@ export function PetProfessionalsPage() {
   const totalItems = resolveTotalItems(pageData);
 
   const columns: DataTableColumn<PetProfessional>[] = [
-    { key: 'name', header: 'Nome', render: (item) => item.name },
-    { key: 'specialty', header: 'Especialidade', render: (item) => item.specialty ?? '-' },
+    { key: 'name', header: 'Name', render: (item) => item.name },
+    { key: 'specialty', header: 'Specialty', render: (item) => item.specialty ?? '-' },
     { key: 'email', header: 'Email', render: (item) => item.email ?? '-' },
-    { key: 'phone', header: 'Telefone', render: (item) => item.phone ?? '-' },
+    { key: 'phone', header: 'Phone', render: (item) => item.phone ?? '-' },
     {
       key: 'actions',
-      header: 'Ações',
+      header: 'Actions',
       render: (item) => (
         <div className="flex gap-2">
           <PermissionGuard permission="pet.professional.update">
@@ -146,7 +146,7 @@ export function PetProfessionalsPage() {
               onClick={() => beginEdit(item)}
               className="ui-inline-button"
             >
-              Editar
+              Edit
             </button>
           </PermissionGuard>
           <PermissionGuard permission="pet.professional.delete">
@@ -155,7 +155,7 @@ export function PetProfessionalsPage() {
               onClick={() => setDeleteCandidate(item)}
               className="ui-inline-danger-button"
             >
-              Excluir
+              Delete
             </button>
           </PermissionGuard>
         </div>
@@ -166,19 +166,23 @@ export function PetProfessionalsPage() {
   return (
     <PermissionGuard
       permission="pet.professional.read"
-      fallback={<div className="ui-notice-warning">Você não possui permissão para visualizar profissionais.</div>}
+      fallback={<div className="ui-notice-warning">You do not have permission to view team members.</div>}
     >
       <div className="space-y-5">
-        <PageTitle title="Pet Professionals" description="Equipe clínica e operacional vinculada ao tenant atual." />
+        <PageTitle
+          eyebrow="PetFlow workspace"
+          title="Team Members"
+          description="Clinicians, groomers, and operational staff linked to this pet business workspace."
+        />
 
         <div className="grid gap-3 ui-surface-panel p-4 md:grid-cols-[1fr_auto_auto]">
-          <SearchBar value={searchInput} onChange={setSearchInput} placeholder="Nome, especialidade, licença ou contato" />
+          <SearchBar value={searchInput} onChange={setSearchInput} placeholder="Name, specialty, license or contact" />
           <button
             type="button"
             onClick={() => setSearch(searchInput)}
             className="ui-primary-button"
           >
-            Buscar
+            Search
           </button>
           <button
             type="button"
@@ -188,16 +192,16 @@ export function PetProfessionalsPage() {
             }}
             className="ui-secondary-button"
           >
-            Limpar
+            Clear
           </button>
         </div>
 
         <PermissionGuard permission={editingId ? 'pet.professional.update' : 'pet.professional.create'}>
           <form onSubmit={handleSubmit} className="grid gap-3 ui-surface-panel p-4 md:grid-cols-2">
-            <FormInput label="Nome" value={name} onChange={setName} required />
-            <FormInput label="Especialidade" value={specialty} onChange={setSpecialty} />
-            <FormInput label="Licença" value={licenseNumber} onChange={setLicenseNumber} />
-            <FormInput label="Telefone" value={phone} onChange={setPhone} />
+            <FormInput label="Name" value={name} onChange={setName} required />
+            <FormInput label="Specialty" value={specialty} onChange={setSpecialty} />
+            <FormInput label="License number" value={licenseNumber} onChange={setLicenseNumber} />
+            <FormInput label="Phone" value={phone} onChange={setPhone} />
             <FormInput label="Email" value={email} onChange={setEmail} type="email" />
 
             <div className="md:col-span-2 flex gap-2">
@@ -206,7 +210,7 @@ export function PetProfessionalsPage() {
                 disabled={submitting}
                 className="ui-primary-button"
               >
-                {submitting ? 'Salvando...' : editingId ? 'Atualizar profissional' : 'Criar profissional'}
+                {submitting ? 'Saving...' : editingId ? 'Update professional' : 'Add professional'}
               </button>
               {editingId ? (
                 <button
@@ -214,7 +218,7 @@ export function PetProfessionalsPage() {
                   onClick={resetForm}
                   className="ui-secondary-button"
                 >
-                  Cancelar edição
+                  Cancel
                 </button>
               ) : null}
             </div>
@@ -224,13 +228,13 @@ export function PetProfessionalsPage() {
         {error ? <div className="ui-notice-error">{error}</div> : null}
         {success ? <div className="ui-notice-success">{success}</div> : null}
 
-        <DataTable columns={columns} rows={rows} getRowKey={(row) => row.id} loading={loading} emptyMessage="Nenhum profissional encontrado." />
+        <DataTable columns={columns} rows={rows} getRowKey={(row) => row.id} loading={loading} emptyMessage="No team members found. Add the first professional to enable appointment assignments." />
         <Pagination page={pageData.page} totalPages={pageData.totalPages} totalElements={totalItems} onPageChange={(page) => load(page, search)} />
 
         <ConfirmDialog
           open={deleteCandidate !== null}
-          title="Excluir profissional?"
-          description={deleteCandidate ? `O profissional "${deleteCandidate.name}" será removido.` : undefined}
+          title="Remove team member?"
+          description={deleteCandidate ? `"${deleteCandidate.name}" will be removed from this workspace.` : undefined}
           onConfirm={handleConfirmDelete}
           onCancel={() => setDeleteCandidate(null)}
         />
