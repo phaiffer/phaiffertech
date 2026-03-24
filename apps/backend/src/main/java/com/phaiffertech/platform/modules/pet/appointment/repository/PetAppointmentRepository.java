@@ -35,6 +35,28 @@ public interface PetAppointmentRepository extends JpaRepository<PetAppointment, 
 
     List<PetAppointment> findAllByTenantIdAndIdIn(UUID tenantId, Collection<UUID> ids);
 
+    @Query(value = """
+            SELECT a.service_id::text, a.service_name, COUNT(*)
+            FROM pet_appointments a
+            WHERE a.tenant_id = :tenantId
+              AND a.deleted_at IS NULL
+              AND a.service_id IS NOT NULL
+            GROUP BY a.service_id, a.service_name
+            ORDER BY COUNT(*) DESC
+            LIMIT 5
+            """, nativeQuery = true)
+    List<Object[]> findTopServicesByAppointmentCount(@Param("tenantId") UUID tenantId);
+
+    @Query(value = """
+            SELECT a.status, COUNT(*)
+            FROM pet_appointments a
+            WHERE a.tenant_id = :tenantId
+              AND a.deleted_at IS NULL
+            GROUP BY a.status
+            ORDER BY COUNT(*) DESC
+            """, nativeQuery = true)
+    List<Object[]> countAppointmentsByStatus(@Param("tenantId") UUID tenantId);
+
     @Query("""
             SELECT a
             FROM PetAppointment a

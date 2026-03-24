@@ -5,6 +5,7 @@ import {
   PetClinicalTimeline,
   PetClient,
   PetDashboardSummary,
+  PetInsightsSummary,
   PetInvoice,
   PetInvoicePayment,
   PetInventoryMovement,
@@ -480,5 +481,7 @@ export const petService = {
 
   restoreInvoice: (id: string) => apiClient.patch<PetInvoice>(`/pet/invoices/${id}/restore`),
 
-  getDashboardSummary: () => apiClient.get<PetDashboardSummary>('/pet/dashboard/summary')
+  getDashboardSummary: () => apiClient.get<PetDashboardSummary>('/pet/dashboard/summary'),
+
+  getInsightsSummary: () => apiClient.get<PetInsightsSummary>('/pet/dashboard/insights')
 };

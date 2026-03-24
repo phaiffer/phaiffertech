@@ -2,6 +2,7 @@ package com.phaiffertech.platform.modules.pet.dashboard.controller;
 
 import com.phaiffertech.platform.core.tenant.entitlement.TenantEntitlementKeys;
 import com.phaiffertech.platform.modules.pet.dashboard.dto.PetDashboardSummaryResponse;
+import com.phaiffertech.platform.modules.pet.dashboard.dto.PetInsightsSummaryResponse;
 import com.phaiffertech.platform.modules.pet.dashboard.service.PetDashboardService;
 import com.phaiffertech.platform.shared.response.ApiResponse;
 import com.phaiffertech.platform.shared.security.RequirePermission;
@@ -29,5 +30,11 @@ public class PetDashboardController {
     @RequirePermission("pet.dashboard.read")
     public ApiResponse<PetDashboardSummaryResponse> summary() {
         return ApiResponse.success(petDashboardService.summary());
+    }
+
+    @GetMapping("/insights")
+    @RequirePermission("pet.dashboard.read")
+    public ApiResponse<PetInsightsSummaryResponse> insights() {
+        return ApiResponse.success(petDashboardService.insights());
     }
 }

@@ -1,4 +1,4 @@
-import { DashboardSection, DashboardSummaryCard } from '@/shared/types/dashboard';
+import { DashboardCountMetric, DashboardSection, DashboardSummaryCard } from '@/shared/types/dashboard';
 
 export type PetClient = {
   id: string;
@@ -217,4 +217,12 @@ export type PetDashboardSummary = {
   pendingInvoices: number;
   summaryCards: DashboardSummaryCard[];
   sections: DashboardSection[];
+};
+
+export type PetInsightsSummary = {
+  newClientsThisMonth: number;
+  newClientsLastMonth: number;
+  topServices: DashboardCountMetric[];
+  speciesMix: DashboardCountMetric[];
+  appointmentsByStatus: DashboardCountMetric[];
 };

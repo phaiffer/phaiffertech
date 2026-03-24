@@ -2,6 +2,7 @@ package com.phaiffertech.platform.modules.pet.client.repository;
 
 import com.phaiffertech.platform.modules.pet.client.domain.PetClient;
 import com.phaiffertech.platform.shared.crud.BaseTenantCrudRepository;
+import java.time.Instant;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
@@ -15,6 +16,13 @@ import org.springframework.data.repository.query.Param;
 public interface PetClientRepository extends JpaRepository<PetClient, UUID>, BaseTenantCrudRepository<PetClient> {
 
     long countByTenantIdAndDeletedAtIsNull(UUID tenantId);
+
+    @Query("SELECT COUNT(c) FROM PetClient c WHERE c.tenantId = :tenantId AND c.createdAt >= :from AND c.createdAt < :to AND c.deletedAt IS NULL")
+    long countNewClientsByPeriod(
+            @Param("tenantId") UUID tenantId,
+            @Param("from") Instant from,
+            @Param("to") Instant to
+    );
 
     @Query("""
             SELECT c

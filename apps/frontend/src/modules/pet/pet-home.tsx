@@ -197,6 +197,18 @@ function getPetWorkspaceActions(mode: PetWorkspaceMode): ModuleWorkspaceAction[]
       anyEntitlements: petRetailEntitlements,
       restrictionTitle: 'Invoice access required',
       restrictionDescription: 'Billing signals appear here when your workspace role can read PetFlow invoices.'
+    },
+    {
+      href: '/pet/insights',
+      eyebrow: 'Business insights',
+      title: 'View business insights',
+      description: grooming
+        ? 'Service performance, client growth, and pet mix — operational intelligence for the current pet business.'
+        : 'Service performance, client growth, and appointment patterns — operational intelligence for the current pet business.',
+      permission: 'pet.dashboard.read',
+      anyEntitlements: petSubmoduleEntitlements,
+      restrictionTitle: 'Dashboard access required',
+      restrictionDescription: 'Business insights become available when your workspace role includes PetFlow dashboard access.'
     }
   ];
 }
@@ -295,30 +307,30 @@ function getPetWorkspaceCopy(mode: PetWorkspaceMode): PetWorkspaceCopy {
     heroEyebrow: 'PetFlow Workspace',
     overviewAppointmentsLabel: 'Appointments today',
     overviewAppointmentsDescription: 'Scheduled attendances expected during the current operating day.',
-    overviewUpcomingLabel: 'Upcoming care',
-    overviewUpcomingDescription: 'Near-term appointments already queued for the current tenant.',
+    overviewUpcomingLabel: 'Upcoming bookings',
+    overviewUpcomingDescription: 'Near-term appointments already queued for the current pet business.',
     attentionLabel: 'Attention queue',
     attentionDescription: 'Commercial and inventory signals that still need action in this workspace.',
-    contextTitle: 'Clinical Operating Context',
-    contextDescription: 'Keep care rhythm, patient coverage, and operational attention readable before entering deeper PetFlow flows.',
-    snapshotTitle: 'Clinic Snapshot',
-    snapshotDescription: 'Keep a compact view of clinical throughput and commercial pressure before navigating into the deeper PetFlow surfaces.',
-    restrictedTitle: 'Clinic summary restricted',
-    restrictedDescription: 'This PetFlow workspace is available, but the clinic snapshot requires `pet.dashboard.read`. Continue through the permitted client, appointment, and medical flows below.',
+    contextTitle: 'Business Operating Context',
+    contextDescription: 'Keep service rhythm, customer coverage, and operational attention readable before entering deeper PetFlow flows.',
+    snapshotTitle: 'Operations Snapshot',
+    snapshotDescription: 'Keep a compact view of business throughput and commercial pressure before navigating into the deeper PetFlow surfaces.',
+    restrictedTitle: 'Operations summary restricted',
+    restrictedDescription: 'This PetFlow workspace is available, but the operations snapshot requires `pet.dashboard.read`. Continue through the permitted client, appointment, and care flows below.',
     loadingTitle: 'Loading PetFlow summary',
-    loadingDescription: 'Collecting the latest clinic and commercial overview for this tenant workspace.',
-    errorGuidanceTitle: 'Keep the clinic workspace moving',
+    loadingDescription: 'Collecting the latest operations and commercial overview for this pet business workspace.',
+    errorGuidanceTitle: 'Keep the pet business workspace moving',
     errorGuidanceDescription: 'Use the permitted PetFlow flows below while the summary feed recovers.',
-    onboardingEyebrow: 'PetFlow Onboarding',
+    onboardingEyebrow: 'PetFlow Setup',
     onboardingTitle: 'Set up the PetFlow workspace',
-    onboardingDescription: 'This tenant does not have the first clinic entities in place yet. Work through the checklist below to establish clients, patient records, and appointment flow.',
+    onboardingDescription: 'This tenant does not have the first records in place yet. Work through the checklist below to establish clients, pet profiles, and appointment flow.',
     emptyActivityTitle: 'No recent PetFlow activity yet',
-    emptyActivityDescription: 'The workspace already has PetFlow records, but the summary returned no compact recent clinic activity block right now.',
+    emptyActivityDescription: 'The workspace already has PetFlow records, but the summary returned no compact recent activity block right now.',
     emptyGuidanceTitle: 'Keep working the PetFlow workspace',
-    emptyGuidanceDescription: 'Continue through the core PetFlow flows below while the next clinic signal is still building.',
+    emptyGuidanceDescription: 'Continue through the core PetFlow flows below while the next business signal is still building.',
     emptySummaryTitle: 'No PetFlow summary available',
-    emptySummaryDescription: 'No PetFlow dashboard data was returned for the current tenant workspace.',
-    moduleSurfaceDescription: 'Clinical, commercial, and medical flows stay bounded to the active tenant contract.'
+    emptySummaryDescription: 'No PetFlow operational data was returned for the current pet business workspace.',
+    moduleSurfaceDescription: 'Services, products, care, and billing flows stay bounded to the active tenant contract.'
   };
 }
 
@@ -356,22 +368,18 @@ function buildPetContextCards({
   return [
     {
       key: 'pet-throughput',
-      label: mode === 'grooming' ? 'Service rhythm' : 'Care rhythm',
+      label: 'Service rhythm',
       value: throughputValue,
       description: firstUse
         ? 'The workspace is still establishing the first scheduled services, pet profiles, and customer cadence.'
-        : mode === 'grooming'
-          ? 'Daily bookings and near-term visits stay visible before drilling into service schedules and customer records.'
-          : 'Daily appointments and near-term care stay visible before drilling into clinic schedules and patient records.',
+        : 'Daily appointments and near-term bookings stay visible before drilling into the service schedule and customer records.',
       tone: 'accent'
     },
     {
       key: 'pet-coverage',
-      label: mode === 'grooming' ? 'Customer coverage' : 'Patient coverage',
+      label: 'Customer base',
       value: coverageValue,
-      description: mode === 'grooming'
-        ? 'Client and pet visibility keep reception, groomers, and service history aligned inside the same workspace.'
-        : 'Client and patient visibility keep clinical intake, attendance, and medical follow-through aligned in the same workspace.',
+      description: 'Client and pet visibility keep reception, staff, and service history aligned inside the same pet business workspace.',
       tone: 'primary'
     },
     {
