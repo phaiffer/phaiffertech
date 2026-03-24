@@ -29,7 +29,7 @@ type RankedQuickAction = DashboardQuickAction & {
 };
 
 const demoTenantCodes = new Set(['phaiffertech-demo', 'demo-clinic']);
-const executiveModuleOrder = ['CRM', 'PET', 'IOT'];
+const executiveModuleOrder = ['PET', 'CRM', 'IOT'];
 
 function findSummaryCard(summary: DashboardModuleSummary, key: string) {
   return summary.summaryCards.find((card) => card.key === key);

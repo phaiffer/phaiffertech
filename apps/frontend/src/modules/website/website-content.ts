@@ -165,19 +165,19 @@ const websiteContent: Record<PublicLocale, WebsiteContent> = {
         title:
           'PhaifferTech.',
         description:
-          'The company combines product execution, platform engineering and research-oriented thinking to design scalable SaaS foundations, industrial and clinical operational systems, and data-intensive architectures without losing architectural discipline.',
-        primaryCta: { label: 'Explore the platform', href: '/platform' },
-        secondaryCta: { label: 'See engineering direction', href: '/engineering' }
+          'The company combines product execution and platform engineering to deliver PetFlow — operational software for veterinary and pet-service environments — on a modular SaaS foundation built with architectural discipline and future expansion in mind.',
+        primaryCta: { label: 'Explore PetFlow', href: '/products' },
+        secondaryCta: { label: 'See the platform', href: '/platform' }
       },
-      signalTitle: 'A platform narrative that matches the real codebase',
+      signalTitle: 'PetFlow is the commercial focus. The platform is the foundation.',
       signalDescription:
-        'The public layer now reflects the actual maturity of the repository: modular products, explicit architecture boundaries and a serious engineering direction.',
+        'PhaifferTech is currently channelling its commercial execution into PetFlow — a focused operational product for the pet-service and veterinary sector, built on a modular platform ready for future expansion.',
       signals: [
         {
-          value: '3',
-          label: 'Products on one foundation',
+          value: 'PetFlow',
+          label: 'Primary commercial product',
           description:
-            'CRM, IoT System and PetFlow share cross-cutting capabilities instead of isolated stacks.'
+            'Scheduling, clinical records and inventory for veterinary and pet-service operations, delivered on a shared platform foundation.'
         },
         {
           value: 'Data',
@@ -192,30 +192,30 @@ const websiteContent: Record<PublicLocale, WebsiteContent> = {
             'The platform supports commercial product work, postgraduate studies and future research continuity.'
         }
       ],
-      productsTitle: 'Products with different operational scopes, one shared platform',
+      productsTitle: 'PetFlow — the current commercial focus. A platform ready for more.',
       productsDescription:
-        'PhaifferTech is not presenting disconnected experiments. Each product line extends the same platform posture: shared governance, modular enablement and explicit architectural boundaries.',
+        'PhaifferTech is currently focused on PetFlow as its primary commercial product. The broader platform also includes CRM and IoT capabilities that extend the same architectural foundation when the time is right.',
       products: [
         {
-          eyebrow: 'Commercial control',
-          title: 'CRM / Operational Hub',
-          description:
-            'Commercial structure, operational coordination and future cross-module follow-up on a shared CRM core.',
-          bullets: ['Companies, contacts, leads and deals', 'Tasks, notes and activity', 'Prepared for canonical references across products']
-        },
-        {
-          eyebrow: 'Clinical operations',
+          eyebrow: 'Clinical operations · now available',
           title: 'PetFlow',
           description:
             'Scheduling, care continuity, inventory and clinical workflow for veterinary and pet-service operations.',
           bullets: ['Appointments connected to medical workflow', 'Clinical timeline by pet and appointment', 'Operational contracts already aligned front to back']
         },
         {
-          eyebrow: 'Industrial / field operations',
+          eyebrow: 'Commercial foundation',
+          title: 'CRM / Operational Hub',
+          description:
+            'Commercial structure and operational coordination on a shared CRM core, available as a platform foundation for connected workflows.',
+          bullets: ['Companies, contacts, leads and deals', 'Tasks, notes and activity', 'Prepared for canonical references across products']
+        },
+        {
+          eyebrow: 'Industrial / field operations · future phase',
           title: 'IoT System',
           description:
-            'Telemetry, device management, alarms, dashboards and operational storytelling for industrial and infrastructure contexts.',
-          bullets: ['Device, telemetry and reporting modules', 'Capability-based executive dashboard', 'Validation scripts and demo-ready operational flow']
+            'Telemetry, device management, alarms and dashboards for industrial and infrastructure contexts — preserved on the platform for future commercial deployment.',
+          bullets: ['Device, telemetry and reporting modules', 'Capability-based executive dashboard', 'Platform-ready for future activation']
         }
       ],
       expertiseTitle: 'Authority built on engineering depth, not on generic buzzwords',
@@ -271,11 +271,11 @@ const websiteContent: Record<PublicLocale, WebsiteContent> = {
         }
       ],
       cta: {
-        eyebrow: 'Positioning with substance',
-        title: 'Use the public layer to explain the platform before opening the protected operation.',
+        eyebrow: 'PetFlow is ready',
+        title: 'Operational software for veterinary and pet-service environments — available now.',
         description:
-          'The website is now structured to support conversations about architecture, product direction, applied research and platform access without pretending scale that does not exist.',
-        primaryCta: { label: 'Read the platform overview', href: '/platform' },
+          'PetFlow brings scheduling, clinical records and inventory into a single operational system. Built on a platform that is ready to grow without architectural compromise.',
+        primaryCta: { label: 'Explore PetFlow', href: '/products' },
         secondaryCta: { label: 'Open platform access', href: '/login' }
       }
     },
@@ -319,9 +319,9 @@ const websiteContent: Record<PublicLocale, WebsiteContent> = {
       direction: [
         {
           eyebrow: 'Product',
-          title: 'Grow modular SaaS products from one platform core',
+          title: 'PetFlow as the commercial focus, a platform ready for more',
           description:
-            'CRM, PetFlow and IoT System evolve as real products with explicit boundaries and shared platform services.'
+            'PetFlow is the current primary product. CRM and IoT System remain part of the platform, positioned for future commercial phases as the business expands.'
         },
         {
           eyebrow: 'Engineering',
@@ -416,48 +416,36 @@ const websiteContent: Record<PublicLocale, WebsiteContent> = {
         'The value of the platform is not that every product does the same thing. It is that they can evolve under the same architectural discipline.',
       modules: [
         {
+          eyebrow: 'PetFlow · primary product',
+          title: 'Clinical and operational workflows for pet care environments',
+          description:
+            'PetFlow connects appointments with medical workflow, inventory and a consolidated clinical timeline — the current commercial focus of the platform.'
+        },
+        {
           eyebrow: 'CRM',
           title: 'Commercial structure and future transversal coordination',
           description:
             'CRM handles companies, contacts, leads, deals, tasks, notes and activity while preparing for future cross-product coordination.'
         },
         {
-          eyebrow: 'PetFlow',
-          title: 'Clinical and operational workflows for pet care environments',
-          description:
-            'PetFlow already connects appointments with medical workflow, inventory and a consolidated clinical timeline.'
-        },
-        {
-          eyebrow: 'IoT System',
+          eyebrow: 'IoT System · future phase',
           title: 'Operational telemetry and industrial monitoring',
           description:
-            'IoT System supports devices, telemetry, alarms, reporting and operational storytelling on top of the shared platform.'
+            'IoT System supports devices, telemetry, alarms, reporting and operational storytelling on top of the shared platform — preserved for future commercial deployment.'
         }
       ]
     },
     products: {
       eyebrow: 'Products',
-      title: 'Product lines built with business clarity and architectural realism.',
+      title: 'PetFlow is available now. The platform is built for more.',
       description:
-        'PhaifferTech presents its products as operational systems with actual scope, not as inflated slogans. Each one is positioned by value, domain fit and architectural maturity.',
+        'PhaifferTech currently focuses its commercial execution on PetFlow — operational software for veterinary and pet-service environments. CRM and IoT System are part of the same platform foundation, ready for their own phases.',
       products: [
         {
-          eyebrow: 'Industrial / infrastructure',
-          title: 'IoT System',
-          description:
-            'Operational visibility for telemetry-driven environments with devices, alarms, reports and dashboard narratives that are already useful for demos and evolution.',
-          bullets: [
-            'Devices, telemetry and alarm flows',
-            'Operational validation scripts and demo narrative',
-            'Platform-aligned dashboards and module guards'
-          ],
-          footer: 'Best fit: industrial monitoring, field assets, infrastructure operations and telemetry-heavy use cases.'
-        },
-        {
-          eyebrow: 'Clinical / service operations',
+          eyebrow: 'Clinical / service operations · now available',
           title: 'PetFlow',
           description:
-            'A veterinary and pet-service operational module covering intake, scheduling, clinical context, inventory and care continuity.',
+            'A veterinary and pet-service operational system covering intake, scheduling, clinical context, inventory and care continuity.',
           bullets: [
             'Appointments linked to medical workflow',
             'Clinical timeline by pet and appointment',
@@ -469,13 +457,25 @@ const websiteContent: Record<PublicLocale, WebsiteContent> = {
           eyebrow: 'Commercial / coordination',
           title: 'CRM / Operational Hub',
           description:
-            'The CRM covers core commercial structure today and is being prepared to become a transversal relationship and follow-up layer for the platform ecosystem.',
+            'The CRM covers core commercial structure and is being prepared to become a transversal relationship and follow-up layer for the platform ecosystem.',
           bullets: [
             'Companies, contacts, leads and deals',
             'Tasks, notes and activity with canonical references',
             'Prepared for future CRM ↔ product integration'
           ],
           footer: 'Best fit: commercial operation, follow-up, post-sale coordination and platform-wide account visibility.'
+        },
+        {
+          eyebrow: 'Industrial / infrastructure · future phase',
+          title: 'IoT System',
+          description:
+            'Operational visibility for telemetry-driven environments with devices, alarms, reports and dashboards — preserved on the platform and ready for future commercial activation.',
+          bullets: [
+            'Devices, telemetry and alarm flows',
+            'Operational validation scripts and demo narrative',
+            'Platform-aligned dashboards and module guards'
+          ],
+          footer: 'Best fit: industrial monitoring, field assets, infrastructure operations and telemetry-heavy use cases.'
         }
       ],
       fitTitle: 'Why the portfolio matters together',
@@ -848,19 +848,19 @@ const websiteContent: Record<PublicLocale, WebsiteContent> = {
         title:
           'PhaifferTech',
         description:
-          'A empresa combina execução de produto, platform engineering e raciocínio orientado à pesquisa para desenhar fundações SaaS escaláveis, sistemas operacionais industriais e clínicos, e arquiteturas intensivas em dados sem perder disciplina arquitetural.',
-        primaryCta: { label: 'Explorar a plataforma', href: '/platform' },
-        secondaryCta: { label: 'Ver direção de engineering', href: '/engineering' }
+          'A empresa combina execução de produto e platform engineering para entregar o PetFlow — software operacional para o setor veterinário e pet-service — sobre uma fundação SaaS modular construída com disciplina arquitetural e expansão futura em mente.',
+        primaryCta: { label: 'Explorar o PetFlow', href: '/products' },
+        secondaryCta: { label: 'Ver a plataforma', href: '/platform' }
       },
-      signalTitle: 'Uma narrativa pública compatível com o código real',
+      signalTitle: 'PetFlow é o foco comercial. A plataforma é a fundação.',
       signalDescription:
-        'A camada pública agora reflete a maturidade real do repositório: produtos modulares, fronteiras arquiteturais explícitas e uma direção séria de engenharia.',
+        'A PhaifferTech está concentrando sua execução comercial no PetFlow — produto operacional focado no setor veterinário e pet-service, construído sobre uma plataforma modular pronta para crescer.',
       signals: [
         {
-          value: '3',
-          label: 'Produtos na mesma fundação',
+          value: 'PetFlow',
+          label: 'Produto comercial principal',
           description:
-            'CRM, IoT System e PetFlow compartilham capabilities transversais em vez de stacks isoladas.'
+            'Agenda, prontuários clínicos e estoque para operações veterinárias e pet-service, entregues sobre uma fundação de plataforma compartilhada.'
         },
         {
           value: 'Dados',
@@ -875,30 +875,30 @@ const websiteContent: Record<PublicLocale, WebsiteContent> = {
             'A plataforma suporta produto comercial, pós-graduação e continuidade futura de pesquisa.'
         }
       ],
-      productsTitle: 'Produtos com escopos operacionais diferentes, uma plataforma compartilhada',
+      productsTitle: 'PetFlow — foco comercial atual. Uma plataforma pronta para mais.',
       productsDescription:
-        'A PhaifferTech não apresenta experimentos desconectados. Cada linha de produto estende a mesma postura de plataforma: governança compartilhada, habilitação modular e fronteiras arquiteturais explícitas.',
+        'A PhaifferTech está concentrada no PetFlow como produto comercial principal. A plataforma inclui também CRM e IoT System sobre a mesma fundação arquitetural, prontos para suas próprias fases comerciais.',
       products: [
         {
-          eyebrow: 'Controle comercial',
-          title: 'CRM / Operational Hub',
-          description:
-            'Estrutura comercial, coordenação operacional e futura camada transversal de acompanhamento sobre um núcleo compartilhado de CRM.',
-          bullets: ['Companies, contacts, leads e deals', 'Tasks, notes e activity', 'Preparado para referências canônicas entre produtos']
-        },
-        {
-          eyebrow: 'Operação clínica',
+          eyebrow: 'Operação clínica · disponível agora',
           title: 'PetFlow',
           description:
             'Agenda, continuidade de atendimento, inventory e medical workflow para operações veterinárias e pet-service.',
           bullets: ['Appointments conectados ao medical workflow', 'Timeline clínica por pet e appointment', 'Contratos operacionais já alinhados entre backend e frontend']
         },
         {
-          eyebrow: 'Operação industrial / de campo',
+          eyebrow: 'Fundação comercial',
+          title: 'CRM / Operational Hub',
+          description:
+            'Estrutura comercial e coordenação operacional sobre um núcleo compartilhado de CRM, disponível como fundação de plataforma para fluxos conectados.',
+          bullets: ['Companies, contacts, leads e deals', 'Tasks, notes e activity', 'Preparado para referências canônicas entre produtos']
+        },
+        {
+          eyebrow: 'Operação industrial / de campo · fase futura',
           title: 'IoT System',
           description:
-            'Telemetria, device management, alarmes, dashboards e narrativa operacional para contextos industriais e de infraestrutura.',
-          bullets: ['Módulos de devices, telemetry e reports', 'Dashboard executivo por capabilities', 'Fluxo operacional validado e pronto para demo']
+            'Telemetria, device management, alarmes e dashboards para contextos industriais e de infraestrutura — preservado na plataforma para ativação comercial futura.',
+          bullets: ['Módulos de devices, telemetry e alarms', 'Dashboard executivo por capabilities', 'Pronto para plataforma, aguardando fase comercial']
         }
       ],
       expertiseTitle: 'Autoridade construída sobre profundidade técnica, não sobre buzzwords',
@@ -954,11 +954,11 @@ const websiteContent: Record<PublicLocale, WebsiteContent> = {
         }
       ],
       cta: {
-        eyebrow: 'Posicionamento com substância',
-        title: 'Use a camada pública para explicar a plataforma antes de abrir a operação protegida.',
+        eyebrow: 'PetFlow está disponível',
+        title: 'Software operacional para veterinários e pet-service — disponível agora.',
         description:
-          'O site agora está estruturado para sustentar conversas sobre arquitetura, direção de produto, pesquisa aplicada e acesso à plataforma sem fingir uma escala que não existe.',
-        primaryCta: { label: 'Ler visão da plataforma', href: '/platform' },
+          'O PetFlow reúne agenda, prontuários clínicos e estoque em um único sistema operacional. Construído sobre uma plataforma pronta para crescer sem comprometer a arquitetura.',
+        primaryCta: { label: 'Explorar o PetFlow', href: '/products' },
         secondaryCta: { label: 'Abrir acesso à plataforma', href: '/login' }
       }
     },
@@ -1002,9 +1002,9 @@ const websiteContent: Record<PublicLocale, WebsiteContent> = {
       direction: [
         {
           eyebrow: 'Produto',
-          title: 'Expandir produtos SaaS modulares a partir de um núcleo de plataforma',
+          title: 'PetFlow como foco comercial, uma plataforma pronta para mais',
           description:
-            'CRM, PetFlow e IoT System evoluem como produtos reais com fronteiras explícitas e serviços compartilhados.'
+            'O PetFlow é o produto principal atual. CRM e IoT System fazem parte da plataforma e estão posicionados para fases comerciais futuras à medida que o negócio cresce.'
         },
         {
           eyebrow: 'Engineering',
@@ -1099,48 +1099,36 @@ const websiteContent: Record<PublicLocale, WebsiteContent> = {
         'O valor da plataforma não é fazer tudo igual. É permitir evolução sob a mesma disciplina arquitetural.',
       modules: [
         {
+          eyebrow: 'PetFlow · produto principal',
+          title: 'Fluxos clínicos e operacionais para o setor pet',
+          description:
+            'O PetFlow conecta appointments ao medical workflow, inventory e uma timeline clínica consolidada — foco comercial atual da plataforma.'
+        },
+        {
           eyebrow: 'CRM',
           title: 'Estrutura comercial e futura coordenação transversal',
           description:
             'O CRM já cobre companies, contacts, leads, deals, tasks, notes e activity enquanto se prepara para coordenação cross-product.'
         },
         {
-          eyebrow: 'PetFlow',
-          title: 'Fluxos clínicos e operacionais para o setor pet',
-          description:
-            'O PetFlow já conecta appointments ao medical workflow, inventory e uma timeline clínica consolidada.'
-        },
-        {
-          eyebrow: 'IoT System',
+          eyebrow: 'IoT System · fase futura',
           title: 'Telemetria operacional e monitoramento industrial',
           description:
-            'O IoT System suporta devices, telemetry, alarms, reporting e narrativa operacional sobre a mesma plataforma.'
+            'O IoT System suporta devices, telemetry, alarms, reporting e narrativa operacional sobre a mesma plataforma — preservado para ativação comercial futura.'
         }
       ]
     },
     products: {
       eyebrow: 'Produtos',
-      title: 'Linhas de produto construídas com clareza de negócio e realismo arquitetural.',
+      title: 'PetFlow disponível agora. A plataforma está pronta para mais.',
       description:
-        'A PhaifferTech apresenta seus produtos como sistemas operacionais com escopo real, não como slogans inflados. Cada um é posicionado por valor, aderência ao domínio e maturidade arquitetural.',
+        'A PhaifferTech concentra sua execução comercial no PetFlow — software operacional para o setor veterinário e pet-service. CRM e IoT System fazem parte da mesma fundação de plataforma, prontos para suas próprias fases.',
       products: [
         {
-          eyebrow: 'Industrial / infraestrutura',
-          title: 'IoT System',
-          description:
-            'Visibilidade operacional para ambientes guiados por telemetria com devices, alarmes, reports e narrativas de dashboard úteis para demo e evolução.',
-          bullets: [
-            'Fluxos de devices, telemetry e alarms',
-            'Scripts de validação operacional e narrativa de demo',
-            'Dashboards e guards alinhados à plataforma'
-          ],
-          footer: 'Melhor aderência: monitoramento industrial, ativos de campo, infraestrutura e contextos de telemetria intensa.'
-        },
-        {
-          eyebrow: 'Clínico / serviços',
+          eyebrow: 'Clínico / serviços · disponível agora',
           title: 'PetFlow',
           description:
-            'Módulo operacional veterinário e pet-service cobrindo intake, agenda, contexto clínico, inventory e continuidade de atendimento.',
+            'Sistema operacional veterinário e pet-service cobrindo intake, agenda, contexto clínico, inventory e continuidade de atendimento.',
           bullets: [
             'Appointments conectados ao medical workflow',
             'Timeline clínica por pet e appointment',
@@ -1152,13 +1140,25 @@ const websiteContent: Record<PublicLocale, WebsiteContent> = {
           eyebrow: 'Comercial / coordenação',
           title: 'CRM / Operational Hub',
           description:
-            'O CRM cobre hoje a estrutura comercial central e está sendo preparado para virar camada transversal de relacionamento e acompanhamento do ecossistema.',
+            'O CRM cobre a estrutura comercial central e está sendo preparado para virar camada transversal de relacionamento e acompanhamento do ecossistema.',
           bullets: [
             'Companies, contacts, leads e deals',
             'Tasks, notes e activity com referências canônicas',
             'Preparado para futuras integrações CRM ↔ produtos'
           ],
           footer: 'Melhor aderência: operação comercial, follow-up, coordenação pós-venda e visibilidade de contas entre produtos.'
+        },
+        {
+          eyebrow: 'Industrial / infraestrutura · fase futura',
+          title: 'IoT System',
+          description:
+            'Visibilidade operacional para ambientes guiados por telemetria com devices, alarmes e dashboards — preservado na plataforma para ativação comercial futura.',
+          bullets: [
+            'Fluxos de devices, telemetry e alarms',
+            'Scripts de validação operacional e narrativa de demo',
+            'Dashboards e guards alinhados à plataforma'
+          ],
+          footer: 'Melhor aderência: monitoramento industrial, ativos de campo, infraestrutura e contextos de telemetria intensa.'
         }
       ],
       fitTitle: 'Por que o portfólio faz sentido junto',

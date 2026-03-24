@@ -16,9 +16,8 @@ describe('WebsiteHomePage', () => {
 
     expect(await screen.findByRole('heading', { name: /PhaifferTech\./i })).toBeInTheDocument();
     expect(screen.getByText('IoT System')).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Explore the platform' })).toHaveAttribute(
-      'href',
-      '/platform'
-    );
+    const petflowLinks = screen.getAllByRole('link', { name: 'Explore PetFlow' });
+    expect(petflowLinks.length).toBeGreaterThan(0);
+    expect(petflowLinks[0]).toHaveAttribute('href', '/products');
   });
 });

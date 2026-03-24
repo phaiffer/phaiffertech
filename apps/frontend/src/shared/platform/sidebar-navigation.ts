@@ -58,7 +58,7 @@ export function groupSidebarItems<T extends SidebarItemBase>(
   items: T[],
   canManagePlatformAdministration: boolean
 ) {
-  const groupOrder: SidebarGroup[] = ['core', 'finance', 'crm', 'pet', 'iot'];
+  const groupOrder: SidebarGroup[] = ['core', 'finance', 'pet', 'crm', 'iot'];
 
   return groupOrder
     .map((group) => {
