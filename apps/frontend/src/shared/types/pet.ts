@@ -46,6 +46,14 @@ export type PetAppointment = {
   prescriptionCount?: number;
   createdAt: string;
   updatedAt: string;
+  // Price snapshot from the service catalog at booking time.
+  servicePrice?: number;
+  // Reserved for future commission calculation. Null until commission model exists.
+  commissionAmount?: number;
+  // Plan integration fields — null/false when appointment is not plan-based.
+  clientPlanId?: string;
+  planSessionConsumed?: boolean;
+  planRemainingSessions?: number | null;
 };
 
 export type PetServiceCatalog = {
@@ -225,4 +233,14 @@ export type PetInsightsSummary = {
   topServices: DashboardCountMetric[];
   speciesMix: DashboardCountMetric[];
   appointmentsByStatus: DashboardCountMetric[];
+};
+
+export type ClientPlan = {
+  id: string;
+  clientId: string;
+  planName: string;
+  totalSessions: number;
+  usedSessions: number;
+  remainingSessions: number;
+  expiresAt?: string | null;
 };

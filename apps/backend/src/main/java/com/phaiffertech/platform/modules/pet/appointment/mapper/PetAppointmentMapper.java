@@ -27,6 +27,10 @@ public final class PetAppointmentMapper implements BaseCrudMapper<
         appointment.setScheduledAt(request.scheduledAt());
         appointment.setStatus(resolveStatus(request.status()));
         appointment.setNotes(request.notes());
+        // servicePrice may be null here; hydrateAndValidateRelations will set it from catalog if so.
+        appointment.setServicePrice(request.servicePrice());
+        // Plan association — optional. planSessionConsumed defaults to false.
+        appointment.setClientPlanId(request.clientPlanId());
         return appointment;
     }
 
@@ -39,11 +43,17 @@ public final class PetAppointmentMapper implements BaseCrudMapper<
         entity.setScheduledAt(request.scheduledAt());
         entity.setStatus(resolveStatus(request.status()));
         entity.setNotes(request.notes());
+        // servicePrice may be null here; hydrateAndValidateRelations will set it from catalog if so.
+        entity.setServicePrice(request.servicePrice());
+        // Plan association — allows changing or removing the plan on an appointment.
+        // Note: if a session was already consumed (planSessionConsumed=true), changing the plan
+        // does NOT refund the session; that is managed at the service layer.
+        entity.setClientPlanId(request.clientPlanId());
     }
 
     @Override
     public PetAppointmentResponse toResponse(PetAppointment appointment) {
-        return toResponse(appointment, null, null, null, 0, 0, 0);
+        return toResponse(appointment, null, null, null, 0, 0, 0, null);
     }
 
     public PetAppointmentResponse toResponse(
@@ -53,7 +63,8 @@ public final class PetAppointmentMapper implements BaseCrudMapper<
             String professionalName,
             int medicalRecordCount,
             int vaccinationCount,
-            int prescriptionCount
+            int prescriptionCount,
+            Integer planRemainingSessions
     ) {
         return new PetAppointmentResponse(
                 appointment.getId(),
@@ -72,7 +83,12 @@ public final class PetAppointmentMapper implements BaseCrudMapper<
                 vaccinationCount,
                 prescriptionCount,
                 appointment.getCreatedAt(),
-                appointment.getUpdatedAt()
+                appointment.getUpdatedAt(),
+                appointment.getServicePrice(),
+                appointment.getCommissionAmount(),
+                appointment.getClientPlanId(),
+                appointment.isPlanSessionConsumed(),
+                planRemainingSessions
         );
     }
 

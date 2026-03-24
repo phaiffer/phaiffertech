@@ -275,6 +275,32 @@ export function createPetAppointmentColumns({
       render: (appointment) => <StatusBadge status={appointment.status} />
     },
     {
+      key: 'planSessions',
+      header: 'Plan',
+      render: (appointment) => {
+        if (!appointment.clientPlanId) {
+          return <span className="text-xs text-[color:var(--app-shell-muted)]">One-time</span>;
+        }
+        const remaining = appointment.planRemainingSessions;
+        if (remaining == null) {
+          return <span className="text-xs text-[color:var(--app-shell-muted)]">Plan</span>;
+        }
+        const isLow = remaining <= 2;
+        return (
+          <span
+            title={`Plan sessions remaining: ${remaining}`}
+            className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ${
+              isLow
+                ? 'bg-amber-100 text-amber-800'
+                : 'bg-emerald-100 text-emerald-800'
+            }`}
+          >
+            {isLow ? '⚠' : '✓'} {remaining} left
+          </span>
+        );
+      }
+    },
+    {
       key: 'careState',
       header: 'Care',
       render: (appointment) => {
