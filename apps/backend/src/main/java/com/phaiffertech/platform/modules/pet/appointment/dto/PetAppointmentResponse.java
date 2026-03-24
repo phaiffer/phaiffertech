@@ -30,6 +30,15 @@ public record PetAppointmentResponse(
         UUID clientPlanId,
         boolean planSessionConsumed,
         // Null when no plan is linked. Populated from the plan state at response time.
-        Integer planRemainingSessions
+        Integer planRemainingSessions,
+        // Payment summary fields.
+        // extrasAmount: additional charges beyond the base service.
+        BigDecimal extrasAmount,
+        // extrasDescription: human-readable label for the extras.
+        String extrasDescription,
+        // planCovered: true when the base service is covered by the associated plan session.
+        boolean planCovered,
+        // finalAmountDue: computed checkout total. planCovered -> extrasAmount only, else servicePrice + extrasAmount.
+        BigDecimal finalAmountDue
 ) {
 }

@@ -5,6 +5,7 @@ import com.phaiffertech.platform.modules.pet.appointment.dto.PetAppointmentCreat
 import com.phaiffertech.platform.modules.pet.appointment.dto.PetAppointmentResponse;
 import com.phaiffertech.platform.modules.pet.appointment.dto.PetAppointmentUpdateRequest;
 import com.phaiffertech.platform.shared.crud.BaseCrudMapper;
+import java.math.BigDecimal;
 
 public final class PetAppointmentMapper implements BaseCrudMapper<
         PetAppointment,
@@ -31,6 +32,9 @@ public final class PetAppointmentMapper implements BaseCrudMapper<
         appointment.setServicePrice(request.servicePrice());
         // Plan association — optional. planSessionConsumed defaults to false.
         appointment.setClientPlanId(request.clientPlanId());
+        // Extras — optional.
+        appointment.setExtrasAmount(request.extrasAmount());
+        appointment.setExtrasDescription(request.extrasDescription());
         return appointment;
     }
 
@@ -46,9 +50,10 @@ public final class PetAppointmentMapper implements BaseCrudMapper<
         // servicePrice may be null here; hydrateAndValidateRelations will set it from catalog if so.
         entity.setServicePrice(request.servicePrice());
         // Plan association — allows changing or removing the plan on an appointment.
-        // Note: if a session was already consumed (planSessionConsumed=true), changing the plan
-        // does NOT refund the session; that is managed at the service layer.
         entity.setClientPlanId(request.clientPlanId());
+        // Extras — allow updating or removing.
+        entity.setExtrasAmount(request.extrasAmount());
+        entity.setExtrasDescription(request.extrasDescription());
     }
 
     @Override
@@ -66,6 +71,13 @@ public final class PetAppointmentMapper implements BaseCrudMapper<
             int prescriptionCount,
             Integer planRemainingSessions
     ) {
+        boolean planCovered = appointment.getClientPlanId() != null && appointment.isPlanSessionConsumed();
+        BigDecimal extras = appointment.getExtrasAmount() != null ? appointment.getExtrasAmount() : BigDecimal.ZERO;
+        BigDecimal base = planCovered
+                ? BigDecimal.ZERO
+                : (appointment.getServicePrice() != null ? appointment.getServicePrice() : BigDecimal.ZERO);
+        BigDecimal finalAmountDue = base.add(extras);
+
         return new PetAppointmentResponse(
                 appointment.getId(),
                 appointment.getClientId(),
@@ -88,7 +100,11 @@ public final class PetAppointmentMapper implements BaseCrudMapper<
                 appointment.getCommissionAmount(),
                 appointment.getClientPlanId(),
                 appointment.isPlanSessionConsumed(),
-                planRemainingSessions
+                planRemainingSessions,
+                appointment.getExtrasAmount(),
+                appointment.getExtrasDescription(),
+                planCovered,
+                finalAmountDue
         );
     }
 

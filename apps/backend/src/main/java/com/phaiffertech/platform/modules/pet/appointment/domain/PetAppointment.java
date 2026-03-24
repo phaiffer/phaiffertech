@@ -59,6 +59,14 @@ public class PetAppointment extends BaseTenantEntity {
     @Column(name = "plan_session_consumed", nullable = false)
     private boolean planSessionConsumed = false;
 
+    // Optional extra charges beyond the base service (e.g. pet taxi, grooming add-ons).
+    @Column(name = "extras_amount", precision = 10, scale = 2)
+    private BigDecimal extrasAmount;
+
+    // Human-readable label for the extras (e.g. "Pet taxi + nail trim").
+    @Column(name = "extras_description", columnDefinition = "text")
+    private String extrasDescription;
+
     public UUID getClientId() {
         return clientId;
     }
@@ -153,5 +161,21 @@ public class PetAppointment extends BaseTenantEntity {
 
     public void setPlanSessionConsumed(boolean planSessionConsumed) {
         this.planSessionConsumed = planSessionConsumed;
+    }
+
+    public BigDecimal getExtrasAmount() {
+        return extrasAmount;
+    }
+
+    public void setExtrasAmount(BigDecimal extrasAmount) {
+        this.extrasAmount = extrasAmount;
+    }
+
+    public String getExtrasDescription() {
+        return extrasDescription;
+    }
+
+    public void setExtrasDescription(String extrasDescription) {
+        this.extrasDescription = extrasDescription;
     }
 }

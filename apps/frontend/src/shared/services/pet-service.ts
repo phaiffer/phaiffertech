@@ -82,6 +82,9 @@ export type CreatePetAppointmentInput = {
   servicePrice?: number;
   // Optional: associate with a client plan for session tracking.
   clientPlanId?: string;
+  // Optional extras beyond the base service (e.g. pet taxi, grooming add-ons).
+  extrasAmount?: number;
+  extrasDescription?: string;
 };
 
 export type UpdatePetAppointmentInput = {
@@ -96,6 +99,9 @@ export type UpdatePetAppointmentInput = {
   servicePrice?: number;
   // Optional: associate with a client plan for session tracking.
   clientPlanId?: string;
+  // Optional extras beyond the base service (e.g. pet taxi, grooming add-ons).
+  extrasAmount?: number;
+  extrasDescription?: string;
 };
 
 export type CreatePetMedicalRecordInput = {
