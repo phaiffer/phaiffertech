@@ -4,6 +4,7 @@ import {
   PetAppointment,
   PetClinicalTimeline,
   PetClient,
+  ClientPlan,
   PetDashboardSummary,
   PetInsightsSummary,
   PetInvoice,
@@ -77,6 +78,10 @@ export type CreatePetAppointmentInput = {
   scheduledAt: string;
   status?: string;
   notes?: string;
+  // Optional: override the auto-populated service catalog price.
+  servicePrice?: number;
+  // Optional: associate with a client plan for session tracking.
+  clientPlanId?: string;
 };
 
 export type UpdatePetAppointmentInput = {
@@ -87,6 +92,10 @@ export type UpdatePetAppointmentInput = {
   scheduledAt: string;
   status: string;
   notes?: string;
+  // Optional: override the auto-populated service catalog price.
+  servicePrice?: number;
+  // Optional: associate with a client plan for session tracking.
+  clientPlanId?: string;
 };
 
 export type CreatePetMedicalRecordInput = {
@@ -483,5 +492,21 @@ export const petService = {
 
   getDashboardSummary: () => apiClient.get<PetDashboardSummary>('/pet/dashboard/summary'),
 
-  getInsightsSummary: () => apiClient.get<PetInsightsSummary>('/pet/dashboard/insights')
+  getInsightsSummary: () => apiClient.get<PetInsightsSummary>('/pet/dashboard/insights'),
+
+  // -- Client Plans --
+  listClientPlans: (clientId?: string, page = 0, size = 20) =>
+    apiClient.get<PageResponse<ClientPlan>>(
+      `/pet/plans?${queryString(page, size, '', { clientId })}`
+    ),
+
+  getClientPlan: (id: string) => apiClient.get<ClientPlan>(`/pet/plans/${id}`),
+
+  createClientPlan: (input: { clientId: string; planName: string; totalSessions: number; expiresAt?: string }) =>
+    apiClient.post<ClientPlan>('/pet/plans', input),
+
+  updateClientPlan: (id: string, input: { planName: string; totalSessions: number; expiresAt?: string }) =>
+    apiClient.put<ClientPlan>(`/pet/plans/${id}`, input),
+
+  deleteClientPlan: (id: string) => apiClient.delete<void>(`/pet/plans/${id}`)
 };

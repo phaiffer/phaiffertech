@@ -19,6 +19,8 @@ import com.phaiffertech.platform.modules.pet.petprofile.domain.PetProfile;
 import com.phaiffertech.platform.modules.pet.petprofile.repository.PetProfileRepository;
 import com.phaiffertech.platform.modules.pet.professional.domain.PetProfessional;
 import com.phaiffertech.platform.modules.pet.professional.repository.PetProfessionalRepository;
+import com.phaiffertech.platform.modules.pet.plan.domain.ClientPlan;
+import com.phaiffertech.platform.modules.pet.plan.repository.ClientPlanRepository;
 import com.phaiffertech.platform.modules.pet.servicecatalog.domain.PetServiceCatalog;
 import com.phaiffertech.platform.modules.pet.servicecatalog.repository.PetServiceCatalogRepository;
 import com.phaiffertech.platform.shared.crud.BasePageQuery;
@@ -31,6 +33,7 @@ import com.phaiffertech.platform.shared.metrics.PlatformMetricsService;
 import com.phaiffertech.platform.shared.pagination.PageRequestDto;
 import com.phaiffertech.platform.shared.pagination.PageResponseDto;
 import com.phaiffertech.platform.shared.pagination.PaginationUtils;
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.Collection;
 import java.util.Map;
@@ -58,6 +61,7 @@ public class PetAppointmentService extends BaseTenantCrudService<
     private final PetVaccinationRepository petVaccinationRepository;
     private final PetPrescriptionRepository petPrescriptionRepository;
     private final PlatformMetricsService platformMetricsService;
+    private final ClientPlanRepository clientPlanRepository;
 
     public PetAppointmentService(
             PetAppointmentRepository repository,
@@ -68,7 +72,8 @@ public class PetAppointmentService extends BaseTenantCrudService<
             PetMedicalRecordRepository petMedicalRecordRepository,
             PetVaccinationRepository petVaccinationRepository,
             PetPrescriptionRepository petPrescriptionRepository,
-            PlatformMetricsService platformMetricsService
+            PlatformMetricsService platformMetricsService,
+            ClientPlanRepository clientPlanRepository
     ) {
         super(repository, repository, PetAppointmentMapper.INSTANCE, "Pet appointment not found.");
         this.repository = repository;
@@ -80,16 +85,25 @@ public class PetAppointmentService extends BaseTenantCrudService<
         this.petVaccinationRepository = petVaccinationRepository;
         this.petPrescriptionRepository = petPrescriptionRepository;
         this.platformMetricsService = platformMetricsService;
+        this.clientPlanRepository = clientPlanRepository;
     }
 
     @Override
     public void beforeCreate(UUID tenantId, PetAppointmentCreateRequest request, PetAppointment entity) {
-        hydrateAndValidateRelations(tenantId, request.clientId(), request.petId(), request.serviceId(), request.professionalId(), entity);
+        hydrateAndValidateRelations(tenantId, request.clientId(), request.petId(), request.serviceId(), request.professionalId(), request.servicePrice(), entity);
+        // Validate plan if provided; do not consume session at creation time.
+        if (request.clientPlanId() != null) {
+            validatePlanForClient(tenantId, request.clientPlanId(), request.clientId());
+        }
     }
 
     @Override
     public void beforeUpdate(UUID tenantId, PetAppointmentUpdateRequest request, PetAppointment entity) {
-        hydrateAndValidateRelations(tenantId, request.clientId(), request.petId(), request.serviceId(), request.professionalId(), entity);
+        hydrateAndValidateRelations(tenantId, request.clientId(), request.petId(), request.serviceId(), request.professionalId(), request.servicePrice(), entity);
+        // Validate plan if provided.
+        if (request.clientPlanId() != null) {
+            validatePlanForClient(tenantId, request.clientPlanId(), request.clientId());
+        }
     }
 
     @Transactional
@@ -166,7 +180,10 @@ public class PetAppointmentService extends BaseTenantCrudService<
         ensureLinkedClinicalEntriesAllowUpdate(tenantId, entity, request);
 
         PetAppointmentMapper.INSTANCE.updateEntity(entity, request);
-        hydrateAndValidateRelations(tenantId, request.clientId(), request.petId(), request.serviceId(), request.professionalId(), entity);
+        hydrateAndValidateRelations(tenantId, request.clientId(), request.petId(), request.serviceId(), request.professionalId(), request.servicePrice(), entity);
+
+        // Consume a plan session when appointment transitions to COMPLETED for the first time.
+        tryConsumePlanSession(tenantId, entity);
 
         return toValidatedResponse(repository.save(entity), tenantId);
     }
@@ -209,6 +226,7 @@ public class PetAppointmentService extends BaseTenantCrudService<
             UUID petId,
             UUID serviceId,
             UUID professionalId,
+            BigDecimal requestedServicePrice,
             PetAppointment entity
     ) {
         petClientRepository.findByIdAndTenantId(clientId, tenantId)
@@ -230,10 +248,21 @@ public class PetAppointmentService extends BaseTenantCrudService<
         entity.setServiceId(serviceCatalog.getId());
         entity.setServiceName(serviceCatalog.getName());
         entity.setProfessionalId(professional.getId());
+
+        // Price snapshot: use caller-supplied override if present; otherwise snapshot from catalog.
+        if (requestedServicePrice != null) {
+            entity.setServicePrice(requestedServicePrice);
+        } else {
+            entity.setServicePrice(serviceCatalog.getPrice());
+        }
+
+        // Commission amount is null until a professional commission model is established (future phase).
+        entity.setCommissionAmount(null);
     }
 
     private PetAppointmentResponse toValidatedResponse(PetAppointment appointment, UUID tenantId) {
         validateContractIntegrity(appointment);
+        Integer planRemaining = resolvePlanRemainingSessions(tenantId, appointment.getClientPlanId());
         return PetAppointmentMapper.INSTANCE.toResponse(
                 appointment,
                 resolveClientName(petClientRepository.findByIdAndTenantId(appointment.getClientId(), tenantId).orElse(null)),
@@ -241,8 +270,18 @@ public class PetAppointmentService extends BaseTenantCrudService<
                 resolveProfessionalName(petProfessionalRepository.findByIdAndTenantId(appointment.getProfessionalId(), tenantId).orElse(null)),
                 Math.toIntExact(petMedicalRecordRepository.countByTenantIdAndAppointmentId(tenantId, appointment.getId())),
                 Math.toIntExact(petVaccinationRepository.countByTenantIdAndAppointmentId(tenantId, appointment.getId())),
-                Math.toIntExact(petPrescriptionRepository.countByTenantIdAndAppointmentId(tenantId, appointment.getId()))
+                Math.toIntExact(petPrescriptionRepository.countByTenantIdAndAppointmentId(tenantId, appointment.getId())),
+                planRemaining
         );
+    }
+
+    private Integer resolvePlanRemainingSessions(UUID tenantId, UUID clientPlanId) {
+        if (clientPlanId == null) {
+            return null;
+        }
+        return clientPlanRepository.findByIdAndTenantId(clientPlanId, tenantId)
+                .map(ClientPlan::getRemainingSessions)
+                .orElse(null);
     }
 
     private PetAppointmentResponse toValidatedResponse(
@@ -255,6 +294,8 @@ public class PetAppointmentService extends BaseTenantCrudService<
             Map<UUID, Integer> prescriptionCounts
     ) {
         validateContractIntegrity(appointment);
+        UUID tenantId = currentTenantId();
+        Integer planRemaining = resolvePlanRemainingSessions(tenantId, appointment.getClientPlanId());
         return PetAppointmentMapper.INSTANCE.toResponse(
                 appointment,
                 clientNames.get(appointment.getClientId()),
@@ -262,7 +303,8 @@ public class PetAppointmentService extends BaseTenantCrudService<
                 professionalNames.get(appointment.getProfessionalId()),
                 medicalRecordCounts.getOrDefault(appointment.getId(), 0),
                 vaccinationCounts.getOrDefault(appointment.getId(), 0),
-                prescriptionCounts.getOrDefault(appointment.getId(), 0)
+                prescriptionCounts.getOrDefault(appointment.getId(), 0),
+                planRemaining
         );
     }
 
@@ -272,6 +314,51 @@ public class PetAppointmentService extends BaseTenantCrudService<
                     "Pet appointment data is inconsistent with the current contract and requires remediation."
             );
         }
+    }
+
+    /**
+     * Validates that the plan belongs to the tenant and to the specified client.
+     * Does NOT consume a session — that happens only on COMPLETED transition.
+     */
+    private void validatePlanForClient(UUID tenantId, UUID planId, UUID clientId) {
+        ClientPlan plan = clientPlanRepository.findByIdAndTenantId(planId, tenantId)
+                .orElseThrow(() -> new ResourceNotFoundException("Client plan not found for tenant."));
+        if (!plan.getClientId().equals(clientId)) {
+            throw new ConflictOperationException("Client plan does not belong to the informed client.");
+        }
+        if (plan.getExpiresAt() != null && plan.getExpiresAt().toInstant().isBefore(java.time.Instant.now())) {
+            throw new ConflictOperationException("Client plan has expired and cannot be used.");
+        }
+    }
+
+    /**
+     * Consumes one session from the linked plan when the appointment status is COMPLETED.
+     * The planSessionConsumed flag prevents double-consumption on repeated identical updates.
+     */
+    private void tryConsumePlanSession(UUID tenantId, PetAppointment entity) {
+        if (entity.getClientPlanId() == null) {
+            return;
+        }
+        if (entity.isPlanSessionConsumed()) {
+            // Session already consumed — idempotent guard.
+            return;
+        }
+        if (!"COMPLETED".equals(entity.getStatus())) {
+            return;
+        }
+
+        ClientPlan plan = clientPlanRepository.findByIdAndTenantId(entity.getClientPlanId(), tenantId)
+                .orElseThrow(() -> new ResourceNotFoundException("Client plan not found for tenant when consuming session."));
+
+        if (plan.getRemainingSessions() <= 0) {
+            throw new ConflictOperationException(
+                    "Client plan has no remaining sessions. Cannot complete a plan-based appointment.");
+        }
+
+        plan.setUsedSessions(plan.getUsedSessions() + 1);
+        clientPlanRepository.save(plan);
+
+        entity.setPlanSessionConsumed(true);
     }
 
     private Map<UUID, String> loadClientNames(UUID tenantId, Collection<UUID> ids) {

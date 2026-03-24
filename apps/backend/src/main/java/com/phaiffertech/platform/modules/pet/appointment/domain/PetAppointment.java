@@ -4,6 +4,7 @@ import com.phaiffertech.platform.shared.domain.base.BaseTenantEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.UUID;
 import org.hibernate.annotations.SQLDelete;
@@ -38,6 +39,25 @@ public class PetAppointment extends BaseTenantEntity {
 
     @Column(name = "notes", columnDefinition = "text")
     private String notes;
+
+    // Price snapshot from service catalog at booking time.
+    // Preserved across service price changes after the appointment is booked.
+    @Column(name = "service_price", precision = 10, scale = 2)
+    private BigDecimal servicePrice;
+
+    // Reserved for future commission calculation.
+    // Null until a professional commission model is established.
+    @Column(name = "commission_amount", precision = 10, scale = 2)
+    private BigDecimal commissionAmount;
+
+    // Optional reference to the client plan used for this appointment.
+    // Null for one-time paid appointments.
+    @Column(name = "client_plan_id")
+    private UUID clientPlanId;
+
+    // Guards against double session consumption when the appointment is updated to COMPLETED multiple times.
+    @Column(name = "plan_session_consumed", nullable = false)
+    private boolean planSessionConsumed = false;
 
     public UUID getClientId() {
         return clientId;
@@ -101,5 +121,37 @@ public class PetAppointment extends BaseTenantEntity {
 
     public void setNotes(String notes) {
         this.notes = notes;
+    }
+
+    public BigDecimal getServicePrice() {
+        return servicePrice;
+    }
+
+    public void setServicePrice(BigDecimal servicePrice) {
+        this.servicePrice = servicePrice;
+    }
+
+    public BigDecimal getCommissionAmount() {
+        return commissionAmount;
+    }
+
+    public void setCommissionAmount(BigDecimal commissionAmount) {
+        this.commissionAmount = commissionAmount;
+    }
+
+    public UUID getClientPlanId() {
+        return clientPlanId;
+    }
+
+    public void setClientPlanId(UUID clientPlanId) {
+        this.clientPlanId = clientPlanId;
+    }
+
+    public boolean isPlanSessionConsumed() {
+        return planSessionConsumed;
+    }
+
+    public void setPlanSessionConsumed(boolean planSessionConsumed) {
+        this.planSessionConsumed = planSessionConsumed;
     }
 }

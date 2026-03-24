@@ -86,6 +86,8 @@ class PetIntegrationTest extends AbstractIntegrationTest {
         assertEquals("Pet " + marker, requireBody(createAppointment).path("data").path("petName").asText());
         assertEquals("Professional " + marker, requireBody(createAppointment).path("data").path("professionalName").asText());
         String appointmentId = requireBody(createAppointment).path("data").path("id").asText();
+        // Phase 24B: verify service price snapshot was captured from the service catalog at booking time.
+        assertEquals(89.90, requireBody(createAppointment).path("data").path("servicePrice").asDouble(), 0.01);
 
         ResponseEntity<JsonNode> getPetResponse = get("/pet/pets/" + petId, session);
         assertEquals(200, getPetResponse.getStatusCode().value());
