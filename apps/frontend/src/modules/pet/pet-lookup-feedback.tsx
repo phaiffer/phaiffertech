@@ -19,10 +19,9 @@ export function PetLookupFeedback({ issues }: PetLookupFeedbackProps) {
 
   return (
     <div className="ui-notice-warning">
-      <p className="font-medium">Algumas referências do módulo Pet não estão disponíveis.</p>
+      <p className="font-medium">Some PetFlow references are not yet available.</p>
       <p className="mt-1 text-current/90">
-        A listagem continua funcional, mas filtros, rótulos e formulários podem ficar limitados até a referência ser
-        carregada.
+        The list remains usable, but filters and forms depend on clients, pets, services, and professionals being loaded.
       </p>
       <ul className="mt-2 list-disc space-y-1 pl-5 text-current/90">
         {issues.map((issue) => (
@@ -37,10 +36,10 @@ export function PetLookupFeedback({ issues }: PetLookupFeedbackProps) {
 
 export function resolvePetLookupIssue(error: unknown, requiredPermission?: string) {
   if (requiredPermission) {
-    return `A referência exige a permissão ${requiredPermission}.`;
+    return `This reference requires the ${requiredPermission} permission.`;
   }
 
-  return error instanceof ApiClientError ? error.message : 'Não foi possível carregar esta referência agora.';
+  return error instanceof ApiClientError ? error.message : 'Unable to load this reference right now.';
 }
 
 export function resolvePetLookupLabel<T extends { id: string }>(
@@ -57,5 +56,5 @@ export function resolvePetLookupLabel<T extends { id: string }>(
     return label;
   }
 
-  return unavailable ? `${fallbackLabel} indisponível (${id})` : id;
+  return unavailable ? `${fallbackLabel} unavailable (${id})` : id;
 }

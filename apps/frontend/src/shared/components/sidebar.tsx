@@ -284,11 +284,14 @@ const items: SidebarItem[] = [
   { href: '/crm/activity', label: 'Atividades', anyOf: ['crm.activity.read'], moduleCode: 'CRM', group: 'crm', icon: IconWave },
 
   // PetFlow
-  { href: '/pet', label: 'Hub Pet', anyOf: petOverviewPermissions, anyEntitlements: petSubmoduleEntitlements, moduleCode: 'PET', group: 'pet', icon: IconGrid },
+  { href: '/pet', label: 'PetFlow Home', anyOf: petOverviewPermissions, anyEntitlements: petSubmoduleEntitlements, moduleCode: 'PET', group: 'pet', icon: IconGrid },
   { href: '/pet/dashboard', label: 'Dashboard', anyOf: ['pet.dashboard.read'], anyEntitlements: petSubmoduleEntitlements, moduleCode: 'PET', group: 'pet', icon: IconChart },
-  { href: '/pet/clients', label: 'Clientes', anyOf: ['pet.client.read'], anyEntitlements: petSubmoduleEntitlements, moduleCode: 'PET', group: 'pet', icon: IconUsers },
-  { href: '/pet/appointments', label: 'Agendamentos', anyOf: ['pet.appointment.read'], anyEntitlements: petOperationalEntitlements, moduleCode: 'PET', group: 'pet', icon: IconCalendar },
-  { href: '/pet/medical-records', label: 'Prontuários', anyOf: ['pet.medical-record.read', 'pet.vaccination.read', 'pet.prescription.read'], anyEntitlements: petClinicalEntitlements, moduleCode: 'PET', group: 'pet', icon: IconHeart },
+  { href: '/pet/clients', label: 'Clients', anyOf: ['pet.client.read'], anyEntitlements: petSubmoduleEntitlements, moduleCode: 'PET', group: 'pet', icon: IconUsers },
+  { href: '/pet/pets', label: 'Pets', anyOf: ['pet.profile.read'], anyEntitlements: petClinicalEntitlements, moduleCode: 'PET', group: 'pet', icon: IconHeart },
+  { href: '/pet/appointments', label: 'Appointments', anyOf: ['pet.appointment.read'], anyEntitlements: petOperationalEntitlements, moduleCode: 'PET', group: 'pet', icon: IconCalendar },
+  { href: '/pet/invoices', label: 'Billing', anyOf: ['pet.invoice.read'], anyEntitlements: petSubmoduleEntitlements, moduleCode: 'PET', group: 'pet', icon: IconReceipt },
+  { href: '/pet/insights', label: 'Insights', anyOf: ['pet.dashboard.read'], anyEntitlements: petSubmoduleEntitlements, moduleCode: 'PET', group: 'pet', icon: IconChart },
+  { href: '/pet/medical-records', label: 'Medical Records', anyOf: ['pet.medical-record.read', 'pet.vaccination.read', 'pet.prescription.read'], anyEntitlements: petClinicalEntitlements, moduleCode: 'PET', group: 'pet', icon: IconHeart },
 ];
 
 function isItemActive(pathname: string, href: string) {

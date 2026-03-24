@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { FormEvent, useCallback, useEffect, useMemo, useState } from 'react';
 import { PermissionGuard } from '@/shared/auth/PermissionGuard';
 import { usePermissions } from '@/shared/auth/usePermissions';
@@ -634,14 +635,14 @@ export function PetInvoicesPage() {
     {
       key: 'actions',
       header: 'Actions',
-      render: (item) => (
+          render: (item) => (
         <div className={sharedInlineActionsClass}>
           <button
             type="button"
             onClick={() => reviewInvoice(item)}
             className="ui-inline-button"
           >
-            Review finance
+            View finance record
           </button>
           <PermissionGuard permission="pet.invoice.update">
             {item.status !== 'PAID' ? (
@@ -687,14 +688,21 @@ export function PetInvoicesPage() {
       <div className={sharedPageStackClass}>
         <PageTitle
           eyebrow="PetFlow finance"
-          title="Pet Invoices"
-          description="Make invoice lifecycle, payment visibility, and tenant-level cash impact easier to explain during real operations and demos."
+          title="Billing & Invoices"
+          description="Show how PetFlow services become invoices, payments, and finance visibility."
           actions={(
-            <PermissionGuard permission="pet.invoice.create">
-              <button type="button" onClick={beginCreateInvoice} className="ui-primary-button">
-                Create invoice
-              </button>
-            </PermissionGuard>
+            <div className="flex flex-wrap gap-2">
+              <PermissionGuard permission="pet.invoice.create">
+                <button type="button" onClick={beginCreateInvoice} className="ui-primary-button">
+                  Issue invoice
+                </button>
+              </PermissionGuard>
+              <PermissionGuard permission="pet.dashboard.read">
+                <Link href="/pet/insights" className="ui-secondary-button">
+                  Open business insights
+                </Link>
+              </PermissionGuard>
+            </div>
           )}
         />
 
@@ -784,8 +792,8 @@ export function PetInvoicesPage() {
 
         <div id="pet-invoice-form-section">
           <PageSection
-            title={editingId ? 'Adjust invoice lifecycle' : 'Issue a PetFlow invoice'}
-            description="Keep the customer-facing document, linked finance record, and expected cash collection aligned from the start."
+            title={editingId ? 'Update invoice' : 'Issue invoice'}
+            description="Connect the service delivered, customer charge, and finance record in one step."
           >
             <PermissionGuard permission={editingId ? 'pet.invoice.update' : 'pet.invoice.create'}>
               <form onSubmit={handleSubmit} className="space-y-5">
@@ -848,7 +856,7 @@ export function PetInvoicesPage() {
                     disabled={submitting || clientsLookupUnavailable}
                     className="ui-primary-button"
                   >
-                    {submitting ? 'Saving invoice...' : editingId ? 'Update invoice' : 'Create invoice'}
+                    {submitting ? 'Saving invoice...' : editingId ? 'Update invoice' : 'Issue invoice'}
                   </button>
                   {editingId ? (
                     <button
@@ -866,8 +874,8 @@ export function PetInvoicesPage() {
         </div>
 
         <PageSection
-          title="Invoice workspace"
-          description="Use the table to review lifecycle status, outstanding balance, and the finance document linked to each PetFlow invoice."
+          title="Billing pipeline"
+          description="Review invoice status, open balance, and the finance record behind each PetFlow charge."
         >
           <DataTable
             columns={columns}
@@ -877,11 +885,11 @@ export function PetInvoicesPage() {
             loadingTitle="Loading invoice operations"
             loadingDescription="Preparing the latest PetFlow invoice lifecycle and payment posture for this tenant."
             emptyState={{
-              title: 'No invoices recorded yet',
-              description: 'Create the first invoice to make payment expectations, due dates, and finance visibility tangible for the team.',
+              title: 'No invoices yet',
+              description: 'Issue the first invoice after an appointment or service so the finance story becomes visible.',
               action: hasPermission('pet.invoice.create') ? (
                 <button type="button" onClick={beginCreateInvoice} className="ui-primary-button">
-                  Create first invoice
+                  Issue first invoice
                 </button>
               ) : undefined
             }}
@@ -899,8 +907,8 @@ export function PetInvoicesPage() {
         {reviewedInvoice ? (
           <div id="pet-invoice-finance-section">
             <PageSection
-              title="Operational finance review"
-              description="Tie invoice status, payment history, and linked cash movements together before the issue turns into a support or collection problem."
+              title="Linked finance view"
+              description="Use this panel to explain invoice status, payments, and cash movements without leaving PetFlow."
               actions={(
                 <button
                   type="button"
@@ -910,7 +918,7 @@ export function PetInvoicesPage() {
                   }}
                   className="ui-secondary-button"
                 >
-                  Close review
+                  Close finance view
                 </button>
               )}
             >

@@ -84,9 +84,9 @@ export function PetInsightsPage() {
     >
       <div className={sharedPageStackClass}>
         <PageTitle
-          eyebrow="PetFlow"
+          eyebrow="PetFlow business"
           title="Business Insights"
-          description="Operational visibility built on your pet business data — service performance, client growth, and appointment patterns."
+          description="Operational intelligence built from your PetFlow data — client growth, service mix, pet mix, and appointment patterns."
         />
 
         {loading ? <div className="ui-notice-neutral">Loading insights...</div> : null}
@@ -95,7 +95,7 @@ export function PetInsightsPage() {
         {insights && hasData ? (
           <>
             <PageSection
-              title="Client Growth"
+              title="Client growth"
               description="New clients registered in the current and previous calendar month."
             >
               <ClientGrowthPanel
@@ -105,7 +105,7 @@ export function PetInsightsPage() {
             </PageSection>
 
             <PageSection
-              title="Service Performance"
+              title="Top services"
               description="Top services by total appointment volume across all time."
             >
               <SimpleBarChart
@@ -118,7 +118,7 @@ export function PetInsightsPage() {
             <div className="grid gap-5 xl:grid-cols-2">
               {insights.speciesMix.length > 0 ? (
                 <PageSection
-                  title="Pet Mix"
+                  title="Pet mix"
                   description="Distribution of pet profiles by species."
                 >
                   <SimpleBarChart
@@ -131,7 +131,7 @@ export function PetInsightsPage() {
 
               {insights.appointmentsByStatus.length > 0 ? (
                 <PageSection
-                  title="Appointment Status"
+                  title="Appointment status"
                   description="Breakdown of all appointments by their current status."
                 >
                   <SimpleBarChart
@@ -145,9 +145,9 @@ export function PetInsightsPage() {
           </>
         ) : !loading && !error ? (
           <EmptyStateCard
-            title="No insights data yet"
-            description="Register clients, pets, services, and appointments so this page can surface service performance, growth signals, and operational patterns."
-            actionLabel="Open PetFlow workspace"
+            title="Insights appear after the first operating cycle"
+            description="Add a client, register a pet, book an appointment, and issue an invoice. This page will turn that activity into growth and service signals."
+            actionLabel="Start your first cycle"
             href="/pet"
           />
         ) : null}

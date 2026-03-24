@@ -26,7 +26,7 @@ const initialPage: PageResponse<PetProfile> = {
 };
 
 const genderOptions = [
-  { value: '', label: 'Não informado' },
+  { value: '', label: 'Not specified' },
   { value: 'MALE', label: 'MALE' },
   { value: 'FEMALE', label: 'FEMALE' }
 ];
@@ -58,7 +58,7 @@ export function PetProfilesPage() {
 
   const clientOptions = useMemo(() => {
     return [
-      { value: '', label: 'Todos' },
+      { value: '', label: 'All' },
       ...clients.map((client) => ({
         value: client.id,
         label: client.name ?? client.fullName ?? client.id
@@ -68,7 +68,7 @@ export function PetProfilesPage() {
 
   const formClientOptions = useMemo(() => {
     return [
-      { value: '', label: 'Selecione um cliente' },
+      { value: '', label: 'Select a client' },
       ...clients.map((client) => ({
         value: client.id,
         label: client.name ?? client.fullName ?? client.id
@@ -94,7 +94,7 @@ export function PetProfilesPage() {
       });
       setPageData(result);
     } catch (err) {
-      const message = err instanceof ApiClientError ? err.message : 'Erro ao carregar pets.';
+      const message = err instanceof ApiClientError ? err.message : 'Unable to load pet profiles.';
       setError(message);
     } finally {
       setLoading(false);
@@ -172,16 +172,16 @@ export function PetProfilesPage() {
     try {
       if (editingId) {
         await petService.updateProfile(editingId, payload);
-        setSuccess('Pet atualizado com sucesso.');
+        setSuccess('Pet profile updated.');
       } else {
         await petService.createProfile(payload);
-        setSuccess('Pet criado com sucesso.');
+        setSuccess('Pet profile added.');
       }
 
       resetForm();
       await load(pageData.page, search, clientFilterId);
     } catch (err) {
-      const message = err instanceof ApiClientError ? err.message : 'Erro ao salvar pet.';
+      const message = err instanceof ApiClientError ? err.message : 'Unable to save pet profile.';
       setError(message);
     } finally {
       setSubmitting(false);
@@ -196,16 +196,20 @@ export function PetProfilesPage() {
     try {
       await petService.deleteProfile(deleteCandidate.id);
       setDeleteCandidate(null);
-      setSuccess('Pet removido com sucesso.');
+      setSuccess('Pet profile removed.');
       await load(pageData.page, search, clientFilterId);
     } catch (err) {
-      const message = err instanceof ApiClientError ? err.message : 'Erro ao excluir pet.';
+      const message = err instanceof ApiClientError ? err.message : 'Unable to delete pet profile.';
       setError(message);
     }
   }
 
   const rows = resolvePageItems(pageData);
   const totalItems = resolveTotalItems(pageData);
+
+  function scrollToProfileForm() {
+    document.getElementById('pet-profile-form-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
 
   const columns: DataTableColumn<PetProfile>[] = [
     {
@@ -247,7 +251,7 @@ export function PetProfilesPage() {
               onClick={() => beginEdit(profile)}
               className="ui-inline-button"
             >
-              Editar
+              Edit
             </button>
           </PermissionGuard>
 
@@ -257,7 +261,7 @@ export function PetProfilesPage() {
               onClick={() => setDeleteCandidate(profile)}
               className="ui-inline-danger-button"
             >
-              Excluir
+              Delete
             </button>
           </PermissionGuard>
         </div>
@@ -268,20 +272,24 @@ export function PetProfilesPage() {
   return (
     <PermissionGuard
       permission="pet.profile.read"
-      fallback={<div className="ui-notice-warning">Você não possui permissão para visualizar perfis de pet.</div>}
+      fallback={<div className="ui-notice-warning">You do not have permission to view pet profiles.</div>}
     >
       <div className="space-y-5">
-        <PageTitle title="Pet Profiles" description="Cadastro de pets vinculados aos clientes do tenant atual." />
+        <PageTitle
+          eyebrow="PetFlow workspace"
+          title="Pet Profiles"
+          description="Register each pet under a client so appointments, care history, and billing stay connected."
+        />
 
         <div className="grid gap-3 ui-surface-panel p-4 md:grid-cols-[1fr_260px_auto_auto]">
-          <SearchBar value={searchInput} onChange={setSearchInput} placeholder="Nome, espécie, raça" />
-          <FormSelect label="Cliente" value={clientFilterId} options={clientOptions} onChange={setClientFilterId} />
+          <SearchBar value={searchInput} onChange={setSearchInput} placeholder="Name, species, breed" />
+          <FormSelect label="Client" value={clientFilterId} options={clientOptions} onChange={setClientFilterId} />
           <button
             type="button"
             onClick={() => setSearch(searchInput)}
             className="ui-primary-button"
           >
-            Buscar
+            Search
           </button>
           <button
             type="button"
@@ -292,22 +300,22 @@ export function PetProfilesPage() {
             }}
             className="ui-secondary-button"
           >
-            Limpar
+            Clear
           </button>
         </div>
 
         <PermissionGuard permission={editingId ? 'pet.profile.update' : 'pet.profile.create'}>
-          <form onSubmit={handleSubmit} className="grid gap-3 ui-surface-panel p-4 md:grid-cols-3">
-            <FormSelect label="Cliente" value={clientId} options={formClientOptions} onChange={setClientId} />
-            <FormInput label="Nome" value={name} onChange={setName} required />
-            <FormInput label="Espécie" value={species} onChange={setSpecies} required />
-            <FormInput label="Raça" value={breed} onChange={setBreed} />
-            <FormInput label="Data de nascimento" value={birthDate} onChange={setBirthDate} type="date" />
-            <FormSelect label="Gênero" value={gender} options={genderOptions} onChange={setGender} />
-            <FormInput label="Peso (kg)" value={weight} onChange={setWeight} />
-            <FormInput label="Cor" value={color} onChange={setColor} />
+          <form id="pet-profile-form-section" onSubmit={handleSubmit} className="grid gap-3 ui-surface-panel p-4 md:grid-cols-3">
+            <FormSelect label="Client" value={clientId} options={formClientOptions} onChange={setClientId} />
+            <FormInput label="Name" value={name} onChange={setName} required />
+            <FormInput label="Species" value={species} onChange={setSpecies} required />
+            <FormInput label="Breed" value={breed} onChange={setBreed} />
+            <FormInput label="Birth date" value={birthDate} onChange={setBirthDate} type="date" />
+            <FormSelect label="Gender" value={gender} options={genderOptions} onChange={setGender} />
+            <FormInput label="Weight (kg)" value={weight} onChange={setWeight} />
+            <FormInput label="Color" value={color} onChange={setColor} />
             <div className="md:col-span-2">
-              <FormInput label="Notas" value={notes} onChange={setNotes} />
+              <FormInput label="Notes" value={notes} onChange={setNotes} />
             </div>
 
             <div className="md:col-span-3 flex gap-2">
@@ -316,7 +324,7 @@ export function PetProfilesPage() {
                 disabled={submitting}
                 className="ui-primary-button"
               >
-                {submitting ? 'Salvando...' : editingId ? 'Atualizar pet' : 'Criar pet'}
+                {submitting ? 'Saving...' : editingId ? 'Update pet profile' : 'Add pet profile'}
               </button>
               {editingId ? (
                 <button
@@ -324,7 +332,7 @@ export function PetProfilesPage() {
                   onClick={resetForm}
                   className="ui-secondary-button"
                 >
-                  Cancelar edição
+                  Cancel
                 </button>
               ) : null}
             </div>
@@ -339,11 +347,18 @@ export function PetProfilesPage() {
           rows={rows}
           getRowKey={(row) => row.id}
           loading={loading}
-          loadingTitle="Carregando pets"
-          loadingDescription="Preparando os perfis de pets vinculados aos clientes do tenant atual."
+          loadingTitle="Loading pet profiles"
+          loadingDescription="Preparing pet profiles linked to clients in this workspace."
           emptyState={{
-            title: 'Nenhum pet cadastrado',
-            description: 'Cadastre o primeiro pet para começar a organizar atendimentos e historico clinico.'
+            title: 'No pet profiles yet',
+            description: 'Add the first pet after creating a client so appointments and care records have the right patient.',
+            action: (
+              <PermissionGuard permission="pet.profile.create">
+                <button type="button" onClick={scrollToProfileForm} className="ui-primary-button">
+                  Create first pet profile
+                </button>
+              </PermissionGuard>
+            )
           }}
         />
 
@@ -356,9 +371,9 @@ export function PetProfilesPage() {
 
         <ConfirmDialog
           open={Boolean(deleteCandidate)}
-          title="Excluir pet"
-          description={deleteCandidate ? `Confirma a exclusão de ${deleteCandidate.name}?` : undefined}
-          confirmLabel="Excluir"
+          title="Remove pet profile?"
+          description={deleteCandidate ? `"${deleteCandidate.name}" will be removed from this workspace.` : undefined}
+          confirmLabel="Remove"
           onCancel={() => setDeleteCandidate(null)}
           onConfirm={handleConfirmDelete}
         />

@@ -84,10 +84,11 @@ export function PetAppointmentsPage() {
   const canReadProfiles = hasPermission('pet.profile.read');
   const canReadServices = hasPermission('pet.service.read');
   const canReadProfessionals = hasPermission('pet.professional.read');
+  const canCreateAppointments = hasPermission('pet.appointment.create');
 
   const clientOptions = useMemo(() => {
     return [
-      { value: '', label: 'Todos' },
+      { value: '', label: 'All' },
       ...clients.map((client) => ({
         value: client.id,
         label: client.name ?? client.fullName ?? client.id
@@ -97,7 +98,7 @@ export function PetAppointmentsPage() {
 
   const formClientOptions = useMemo(() => {
     return [
-      { value: '', label: 'Selecione um cliente' },
+      { value: '', label: 'Select a client' },
       ...clients.map((client) => ({
         value: client.id,
         label: client.name ?? client.fullName ?? client.id
@@ -112,42 +113,42 @@ export function PetAppointmentsPage() {
 
   const petOptions = useMemo(() => {
     return [
-      { value: '', label: 'Todos' },
+      { value: '', label: 'All' },
       ...profiles.map((profile) => ({ value: profile.id, label: profile.name }))
     ];
   }, [profiles]);
 
   const serviceOptions = useMemo(() => {
     return [
-      { value: '', label: 'Todos' },
+      { value: '', label: 'All' },
       ...services.map((service) => ({ value: service.id, label: service.name }))
     ];
   }, [services]);
 
   const professionalOptions = useMemo(() => {
     return [
-      { value: '', label: 'Todos' },
+      { value: '', label: 'All' },
       ...professionals.map((professional) => ({ value: professional.id, label: professional.name }))
     ];
   }, [professionals]);
 
   const formPetOptions = useMemo(() => {
     return [
-      { value: '', label: 'Selecione um pet' },
+      { value: '', label: 'Select a pet' },
       ...filteredProfiles.map((profile) => ({ value: profile.id, label: profile.name }))
     ];
   }, [filteredProfiles]);
 
   const formServiceOptions = useMemo(() => {
     return [
-      { value: '', label: 'Selecione um serviço' },
+      { value: '', label: 'Select a service' },
       ...services.map((service) => ({ value: service.id, label: service.name }))
     ];
   }, [services]);
 
   const formProfessionalOptions = useMemo(() => {
     return [
-      { value: '', label: 'Selecione um profissional' },
+      { value: '', label: 'Select a professional' },
       ...professionals.map((professional) => ({ value: professional.id, label: professional.name }))
     ];
   }, [professionals]);
@@ -249,7 +250,7 @@ export function PetAppointmentsPage() {
         setPageData(result);
       }
     } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : 'Erro ao carregar atendimentos.');
+      setError(err instanceof ApiClientError ? err.message : 'Unable to load appointments.');
     } finally {
       setLoading(false);
     }
@@ -306,13 +307,13 @@ export function PetAppointmentsPage() {
     event.preventDefault();
 
     if (!clientId || !petId || !serviceId || !professionalId) {
-      setError('Selecione cliente, pet, serviço e profissional para o atendimento.');
+      setError('Select client, pet, service, and professional to book the appointment.');
       return;
     }
 
     const isoScheduledAt = toIsoDate(scheduledAt);
     if (!isoScheduledAt) {
-      setError('Informe data e hora do atendimento.');
+      setError('Please provide the appointment date and time.');
       return;
     }
 
@@ -333,16 +334,16 @@ export function PetAppointmentsPage() {
     try {
       if (editingId) {
         await petService.updateAppointment(editingId, payload);
-        setSuccess('Atendimento atualizado com sucesso.');
+        setSuccess('Appointment updated.');
       } else {
         await petService.createAppointment(payload);
-        setSuccess('Atendimento criado com sucesso.');
+        setSuccess('Appointment booked.');
       }
 
       setIsEditorOpen(false);
       await loadData(pageData.page, search, statusFilter, clientFilterId, petFilterId, serviceFilterId, professionalFilterId, viewMode, currentMonth);
     } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : 'Erro ao salvar atendimento.');
+      setError(err instanceof ApiClientError ? err.message : 'Unable to save appointment.');
     } finally {
       setSubmitting(false);
     }
@@ -355,10 +356,10 @@ export function PetAppointmentsPage() {
       await petService.deleteAppointment(deleteCandidate.id);
       setDeleteCandidate(null);
       setIsEditorOpen(false); // Close drawer if deleting from inside
-      setSuccess('Atendimento removido com sucesso.');
+      setSuccess('Appointment removed.');
       await loadData(pageData.page, search, statusFilter, clientFilterId, petFilterId, serviceFilterId, professionalFilterId, viewMode, currentMonth);
     } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : 'Erro ao excluir atendimento.');
+      setError(err instanceof ApiClientError ? err.message : 'Unable to delete appointment.');
     }
   }
 
@@ -391,23 +392,24 @@ export function PetAppointmentsPage() {
   return (
     <PermissionGuard
       permission="pet.appointment.read"
-      fallback={<div className="ui-notice-warning">Você não possui permissão para visualizar atendimentos.</div>}
+      fallback={<div className="ui-notice-warning">You do not have permission to view appointments.</div>}
     >
       <div className={sharedPageStackClass}>
         <PageTitle 
-           title="Pet Appointments" 
-           description="Agenda de atendimentos com filtros e gerenciamento completo." 
+           title="Appointment Schedule" 
+           description="Book visits, assign services, and create the operating story that later surfaces in billing and insights." 
            actions={
              <div className="flex gap-2">
                 <button 
+                  type="button"
                   onClick={() => setViewMode(viewMode === 'list' ? 'calendar' : 'list')}
                   className="ui-secondary-button"
                 >
-                  Visualização: {viewMode === 'calendar' ? 'Calendário' : 'Lista'}
+                  View: {viewMode === 'calendar' ? 'Calendar' : 'List'}
                 </button>
                 <PermissionGuard permission="pet.appointment.create">
-                  <button onClick={() => beginCreate()} className="ui-primary-button">
-                    Novo Atendimento
+                  <button type="button" onClick={() => beginCreate()} className="ui-primary-button">
+                    Book appointment
                   </button>
                 </PermissionGuard>
              </div>
@@ -467,11 +469,16 @@ export function PetAppointmentsPage() {
               rows={rows}
               getRowKey={(row) => row.id}
               loading={loading}
-              loadingTitle="Carregando atendimentos"
-              loadingDescription="Preparando agenda, status clinicos e relacionamento com clientes, pets e profissionais."
+              loadingTitle="Loading appointments"
+              loadingDescription="Preparing the appointment schedule with client, pet, and professional context."
               emptyState={{
-                title: 'Nenhum atendimento agendado',
-                description: 'Crie o primeiro atendimento para iniciar a agenda operacional e clinica deste workspace.'
+                title: 'No appointments yet',
+                description: 'Book the first appointment after clients, pet profiles, services, and professionals are ready.',
+                action: canCreateAppointments ? (
+                  <button type="button" onClick={() => beginCreate()} className="ui-primary-button">
+                    Book first appointment
+                  </button>
+                ) : undefined
               }}
             />
 
@@ -493,10 +500,10 @@ export function PetAppointmentsPage() {
               <div className="mb-6 flex items-center justify-between">
                 <div>
                   <h2 className="text-xl font-semibold tracking-tight text-foreground">
-                    {editingId ? 'Editar Atendimento' : 'Novo Atendimento'}
+                    {editingId ? 'Edit appointment' : 'Book appointment'}
                   </h2>
                   <p className="text-sm mt-1 text-muted">
-                    Preencha as informações clínicas e operacionais.
+                    Connect client, pet, service, and professional in one operational step.
                   </p>
                 </div>
                 <button
@@ -544,9 +551,9 @@ export function PetAppointmentsPage() {
 
         <ConfirmDialog
           open={Boolean(deleteCandidate)}
-          title="Excluir atendimento"
-          description={deleteCandidate ? `Confirma a exclusão do atendimento ${deleteCandidate.serviceName}?` : undefined}
-          confirmLabel="Excluir"
+          title="Remove appointment?"
+          description={deleteCandidate ? `The appointment for "${deleteCandidate.serviceName}" will be removed.` : undefined}
+          confirmLabel="Remove"
           onCancel={() => setDeleteCandidate(null)}
           onConfirm={handleConfirmDelete}
         />

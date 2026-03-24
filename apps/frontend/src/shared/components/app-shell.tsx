@@ -37,7 +37,7 @@ function resolveHeaderMeta(pathname: string, platformAdmin?: boolean) {
   if (pathname.startsWith('/pet')) {
     return {
       label: 'PetFlow',
-      description: 'Workflows clínicos e operacionais para o segmento veterinário.',
+      description: 'Appointments, care, billing, and business insights for pet businesses.',
     };
   }
 

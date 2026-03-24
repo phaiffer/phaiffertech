@@ -21,11 +21,11 @@ export function WebsiteProductsPage() {
           fit: 'Fit',
           nextStep: 'Próximo passo',
           ctaTitle:
-            'Saia do posicionamento público para a validação protegida de produto.',
+            'Pronto para ver o PetFlow em ação?',
           ctaDescription:
-            'Use o site institucional para entender empresa e plataforma. Use o ambiente autenticado quando o próximo passo for demo, acesso ou validação operacional.',
-          ctaPrimary: 'Abrir acesso à plataforma',
-          ctaSecondary: 'Ler direção de pesquisa'
+            'O PetFlow está operacional e aceitando os primeiros clientes. Entre em contato para agendar uma demonstração ou solicitar acesso direto para o seu negócio.',
+          ctaPrimary: 'Solicitar acesso',
+          ctaSecondary: 'Fale conosco'
         }
       : {
           platform: 'Platform',
@@ -34,11 +34,11 @@ export function WebsiteProductsPage() {
           fit: 'Fit',
           nextStep: 'Next step',
           ctaTitle:
-            'Move from public positioning to protected product validation.',
+            'Ready to see PetFlow in action?',
           ctaDescription:
-            'Use the institutional site to understand the company and the platform. Use the authenticated environment when the next step is demo, access or operational validation.',
-          ctaPrimary: 'Open platform access',
-          ctaSecondary: 'Read research direction'
+            'PetFlow is operational and accepting early customers. Reach out to schedule a walkthrough or request direct access for your pet business.',
+          ctaPrimary: 'Request access',
+          ctaSecondary: 'Contact us'
         };
 
   return (
@@ -76,7 +76,7 @@ export function WebsiteProductsPage() {
         primaryCtaLabel={labels.ctaPrimary}
         primaryCtaHref="/login"
         secondaryCtaLabel={labels.ctaSecondary}
-        secondaryCtaHref="/research"
+        secondaryCtaHref="/contact"
       />
     </>
   );

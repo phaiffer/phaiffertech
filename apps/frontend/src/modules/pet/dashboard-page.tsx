@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { sharedPageStackClass } from '@/shared/components/public-visual-system';
 import { DashboardContextCardGrid } from '@/shared/dashboard/dashboard-context-card-grid';
@@ -69,9 +70,14 @@ export function PetDashboardPage() {
     >
       <div className={sharedPageStackClass}>
         <PageTitle
-          eyebrow="PetFlow workspace"
-          title="Operational dashboard"
-          description="Appointments, inventory, billing, and recent care records — the core operational signals for your pet business."
+          eyebrow="PetFlow overview"
+          title="Operations Overview"
+          description="See appointments, billing pressure, inventory attention, and recent care in one business view."
+          actions={(
+            <Link href="/pet/insights" className="ui-secondary-button">
+              Open business insights
+            </Link>
+          )}
         />
 
         {loading ? <div className="ui-notice-neutral">Carregando dashboard...</div> : null}
@@ -82,8 +88,8 @@ export function PetDashboardPage() {
             <DashboardContextCardGrid cards={contextCards} />
 
             <PageSection
-              title="Operations pulse"
-              description="Scan the consolidated KPI row first, then move into the highlighted operational sections below."
+              title="Daily operations pulse"
+              description="Use this view to explain what is happening now, then finish the story with Business Insights."
             >
               <MetricGrid cards={summary.summaryCards} columns="md:grid-cols-2 xl:grid-cols-4" />
             </PageSection>
@@ -100,9 +106,9 @@ export function PetDashboardPage() {
           </>
         ) : !loading && !error ? (
           <EmptyStateCard
-            title="No PetFlow activity yet"
-            description="Register the first client, pet, service, and appointment so this dashboard can surface schedule load, recent records, and the operational queue."
-            actionLabel="Open PetFlow workspace"
+            title="Start the first PetFlow cycle"
+            description="Register a client, add a pet profile, book an appointment, and issue the first invoice to light up this overview."
+            actionLabel="Open PetFlow setup"
             href="/pet"
           />
         ) : null}

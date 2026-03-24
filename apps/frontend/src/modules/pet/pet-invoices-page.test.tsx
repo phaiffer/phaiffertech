@@ -140,14 +140,14 @@ describe('PetInvoicesPage', () => {
     expect(screen.getByText('Open balance')).toBeInTheDocument();
     expect(screen.getAllByText('Ana Costa').length).toBeGreaterThan(0);
 
-    fireEvent.click(screen.getByRole('button', { name: 'Review finance' }));
+    fireEvent.click(screen.getByRole('button', { name: 'View finance record' }));
 
     await waitFor(() => {
       expect(financeServiceMock.getInvoice).toHaveBeenCalledWith('finance-1');
       expect(financeServiceMock.listCashMovements).toHaveBeenCalledWith(0, 8, { invoiceId: 'finance-1' });
     });
 
-    expect(screen.getByText('Operational finance review')).toBeInTheDocument();
+    expect(screen.getByText('Linked finance view')).toBeInTheDocument();
     expect(screen.getByText('Linked finance document')).toBeInTheDocument();
     expect(screen.getByText('Cash movement visibility')).toBeInTheDocument();
     expect(screen.getByText('PIX payment received')).toBeInTheDocument();
