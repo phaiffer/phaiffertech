@@ -71,7 +71,7 @@ export function PetAppointmentsCalendar({
   const weekdays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
   return (
-    <div className="ui-surface-panel p-4 overflow-hidden flex flex-col h-full min-h-[600px]">
+    <div className="ui-surface-panel p-4 flex flex-col h-full min-h-[600px]">
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-xl font-bold text-[color:var(--app-shell-heading)]">
           {currentMonth.toLocaleDateString('default', { month: 'long', year: 'numeric' })}
@@ -88,7 +88,8 @@ export function PetAppointmentsCalendar({
         </div>
       </div>
 
-      <div className="grid grid-cols-7 gap-px bg-[color:var(--app-shell-border)] border border-[color:var(--app-shell-border)] rounded-md overflow-hidden flex-1">
+      <div className="overflow-x-auto -mx-4 px-4 flex-1">
+      <div className="grid grid-cols-7 gap-px bg-[color:var(--app-shell-border)] border border-[color:var(--app-shell-border)] rounded-md overflow-hidden min-w-[560px]">
         {weekdays.map((day) => (
           <div key={day} className="bg-[color:var(--app-shell-surface-muted)] py-2 text-center text-xs font-semibold text-[color:var(--app-shell-muted)] uppercase tracking-wider">
             {day}
@@ -144,6 +145,7 @@ export function PetAppointmentsCalendar({
             </div>
           );
         })}
+      </div>
       </div>
     </div>
   );
