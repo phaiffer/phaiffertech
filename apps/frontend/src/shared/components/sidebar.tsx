@@ -401,7 +401,7 @@ export function Sidebar() {
   };
 
   return (
-    <aside className="sticky top-0 flex h-screen w-72 flex-col border-r border-border bg-surface">
+    <aside className="sticky top-0 hidden h-screen w-72 flex-col border-r border-border bg-surface lg:flex">
       {/* Brand Header */}
       <div className="border-b border-border px-4 py-5">
         <div className="flex items-center gap-3">
