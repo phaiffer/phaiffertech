@@ -62,7 +62,7 @@ const crmWorkspaceActions: ModuleWorkspaceAction[] = [
     href: '/crm/contacts',
     eyebrow: 'Records',
     title: 'Review contacts',
-    description: 'Inspect the people currently linked to the tenant commercial workspace.',
+    description: 'Inspect the people currently linked to this commercial workspace.',
     permission: 'crm.contact.read',
     restrictionTitle: 'Contact access required',
     restrictionDescription: 'Contact records stay hidden until your workspace role includes CRM contact access.'
@@ -89,7 +89,7 @@ const crmWorkspaceActions: ModuleWorkspaceAction[] = [
     href: '/crm/pipeline',
     eyebrow: 'Pipeline',
     title: 'Inspect stages',
-    description: 'Keep stage order, defaults, and commercial flow visible for the tenant.',
+    description: 'Keep stage order, defaults, and commercial flow visible for the workspace.',
     permission: 'crm.pipeline.read',
     restrictionTitle: 'Pipeline access required',
     restrictionDescription: 'Pipeline stages remain unavailable until your workspace role can read CRM pipeline stages.'
@@ -116,7 +116,7 @@ const crmWorkspaceActions: ModuleWorkspaceAction[] = [
     href: '/crm/activity',
     eyebrow: 'Signals',
     title: 'Check activity',
-    description: 'Read the recent audit trail for commercial work happening in the current tenant.',
+    description: 'Read the recent audit trail for commercial work happening in the current workspace.',
     permission: 'crm.activity.read',
     restrictionTitle: 'Activity access required',
     restrictionDescription: 'The activity feed becomes available when your workspace role can read CRM activity.'
@@ -129,7 +129,7 @@ function resolveCrmWorkspaceDescription(scopeName: string, workspaceLabel: strin
   }
 
   if (hasSystemAdminRole) {
-    return `This CRM workspace remains tenant-scoped to ${scopeName} while an internal support role is active in the current session.`;
+    return `This CRM workspace is scoped to ${scopeName} while an internal support role is active in the current session.`;
   }
 
   return `Commercial records, follow-up, and opportunity management are scoped to ${scopeName} through the current ${workspaceLabel.toLowerCase()}.`;
@@ -266,7 +266,7 @@ function resolveCrmPrimaryAction(actions: ModuleWorkspaceAction[], summary: CrmD
   if ((summary?.totalDeals ?? 0) > 0) {
     return {
       title: 'Open deals pipeline',
-      description: `${summary?.totalDeals ?? 0} active deal(s) are still moving through the tenant pipeline.`,
+      description: `${summary?.totalDeals ?? 0} active deal(s) are still moving through the workspace pipeline.`,
       href: resolveActionHref(actions, '/crm/deals', fallbackAction.href)
     } satisfies CrmPrimaryAction;
   }
@@ -361,7 +361,7 @@ export function CrmHome() {
     });
   const themePolicy = platform.theme.canOverride
     ? `${getAppThemeModeLabel(platform.theme.tenantDefaultMode)} with user override`
-    : `${getAppThemeModeLabel(platform.theme.tenantDefaultMode)} tenant-managed`;
+    : `${getAppThemeModeLabel(platform.theme.tenantDefaultMode)} workspace-managed`;
   const fallbackGuidance = buildCrmGuidanceSteps(actionStates, ['/crm/companies', '/crm/contacts', '/crm/leads']);
   const restrictedGuidance = buildCrmGuidanceSteps(actionStates, ['/crm/companies', '/crm/tasks', '/crm/notes']);
   const primaryAction = useMemo(
@@ -461,9 +461,9 @@ export function CrmHome() {
           <ModuleWorkspaceFactList
             facts={[
               {
-                label: 'Tenant code',
+                label: 'Workspace code',
                 value: platform.branding.tenantCode ?? 'Not assigned',
-                description: 'Stable tenant identifier for this CRM workspace.'
+                description: 'Stable workspace identifier for CRM.'
               },
               {
                 label: 'Role context',
@@ -475,7 +475,7 @@ export function CrmHome() {
               {
                 label: 'Module surface',
                 value: 'Contracted CRM workspace',
-                description: 'Only tenant-contracted CRM routes remain exposed from this landing page.',
+                description: 'Only contracted CRM routes remain exposed from this landing page.',
                 status: 'active'
               },
               {
@@ -494,12 +494,12 @@ export function CrmHome() {
           {
             label: 'Workspace scope',
             value: platform.branding.scopeName,
-            description: 'Commercial records remain anchored to the active tenant workspace.'
+            description: 'Commercial records remain anchored to the active workspace.'
           },
           {
             label: 'Total contacts',
             value: canReadDashboard ? resolveOverviewValue(summary?.totalContacts) : '--',
-            description: 'Contacts currently tracked inside this CRM tenant surface.',
+            description: 'Contacts currently tracked inside this CRM workspace.',
             status: !canReadDashboard ? 'no permission' : summary && firstUse ? 'setup required' : null,
             capability: !canReadDashboard
               ? permissionCapability({
@@ -526,7 +526,7 @@ export function CrmHome() {
               : summary && firstUse
                 ? notConfiguredCapability({
                     title: 'Pipeline not configured yet',
-                    description: 'Lead and deal flow start after the first commercial records are created in this tenant workspace.'
+                    description: 'Lead and deal flow start after the first commercial records are created in this workspace.'
                   })
                 : undefined
           },
@@ -569,12 +569,12 @@ export function CrmHome() {
         description="Open the CRM surfaces permitted in the current role and keep restricted flows explicit when access boundaries apply."
         actions={actionStates}
         emptyTitle="No CRM actions available"
-        emptyDescription="This tenant has the CRM module enabled, but the current user does not have CRM read permissions yet."
+        emptyDescription="This workspace has the CRM module enabled, but the current user does not have CRM read permissions yet."
       />
 
       <ModuleWorkspaceSection
         title="Commercial Operating Context"
-        description="Keep the current pipeline stance, follow-up pressure, and tenant boundary readable before entering deeper CRM screens."
+        description="Keep the current pipeline stance, follow-up pressure, and workspace boundary readable before entering deeper CRM screens."
       >
         <DashboardContextCardGrid cards={contextCards} />
       </ModuleWorkspaceSection>
@@ -608,7 +608,7 @@ export function CrmHome() {
           <ModuleWorkspaceState
             tone="neutral"
             title="Loading CRM summary"
-            description="Collecting the latest commercial overview for this tenant workspace."
+            description="Collecting the latest commercial overview for this workspace."
           />
         ) : error ? (
           <div className="space-y-4">
@@ -623,7 +623,7 @@ export function CrmHome() {
           <GettingStartedChecklist
             eyebrow="CRM Onboarding"
             title="Set up the CRM workspace"
-            description="This tenant does not have the first CRM records in place yet. Work through the checklist below to establish companies, contacts, and the first pipeline signals."
+            description="This workspace does not have the first CRM records in place yet. Work through the checklist below to establish companies, contacts, and the first pipeline signals."
             steps={fallbackGuidance}
           />
         ) : summary ? (
@@ -649,7 +649,7 @@ export function CrmHome() {
         ) : (
           <EmptyStateCard
             title="No CRM summary available"
-            description="No CRM dashboard data was returned for the current tenant workspace."
+            description="No CRM dashboard data was returned for the current workspace."
             actionLabel={primaryAction?.title}
             href={primaryAction?.href}
           />

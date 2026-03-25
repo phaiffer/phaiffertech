@@ -137,7 +137,7 @@ function resolveIotWorkspaceDescription(scopeName: string, workspaceLabel: strin
   }
 
   if (hasSystemAdminRole) {
-    return `This IoT workspace stays tenant-scoped to ${scopeName} while an internal support role is active in the current session.`;
+    return `This IoT workspace is scoped to ${scopeName} while an internal support role is active in the current session.`;
   }
 
   return `Industrial telemetry, alarms, and maintenance flows remain scoped to ${scopeName} through the current ${workspaceLabel.toLowerCase()}.`;
@@ -145,14 +145,14 @@ function resolveIotWorkspaceDescription(scopeName: string, workspaceLabel: strin
 
 function resolveWorkspaceMode(platformOwner: boolean, systemAdmin: boolean) {
   if (platformOwner) {
-    return 'Platform-owner tenant';
+    return 'Platform owner';
   }
 
   if (systemAdmin) {
     return 'Internal support session';
   }
 
-  return 'Customer tenant';
+  return 'Customer workspace';
 }
 
 function resolveIotTone(status?: string | null) {
@@ -364,7 +364,7 @@ export function IotHome() {
   const primaryAction = resolveIotPrimaryAction(availableActions, summary, firstUse, canReadDashboard);
   const themePolicy = platform.theme.canOverride
     ? `${getAppThemeModeLabel(platform.theme.tenantDefaultMode)} with user override`
-    : `${getAppThemeModeLabel(platform.theme.tenantDefaultMode)} tenant-managed`;
+    : `${getAppThemeModeLabel(platform.theme.tenantDefaultMode)} workspace-managed`;
   const setupGuidance = buildIotGuidanceSteps(actionStates, ['/iot/add-device', '/iot/devices', '/iot/registers']);
   const restrictedGuidance = buildIotGuidanceSteps(actionStates, ['/iot/devices', '/iot/alarms', '/iot/telemetry']);
 
@@ -422,7 +422,7 @@ export function IotHome() {
         chips={
           <>
             <Chip label="Workspace" value={platform.workspace.workspaceLabel} tone="cyan" icon={<DashboardIcon />} />
-            <Chip label="Tenant" value={platform.branding.tenantCode ?? platform.branding.scopeName} tone="amber" icon={<FactoryIcon />} />
+            <Chip label="Code" value={platform.branding.tenantCode ?? platform.branding.scopeName} tone="amber" icon={<FactoryIcon />} />
             <Chip label="Theme" value={getAppThemeModeLabel(platform.theme.tenantDefaultMode)} tone="green" icon={<WaveIcon />} />
             <Chip label="Actions" value={availableActions.length} tone="neutral" icon={<PlugIcon />} />
           </>
@@ -467,7 +467,7 @@ export function IotHome() {
                   ? 'Workspace access is available, but live pulse data is restricted.'
                   : firstUse
                     ? 'The workspace is ready for onboarding, but connected operations have not started yet.'
-                    : 'The landing page is tracking fleet, alarms, and maintenance for the current tenant scope.'}
+                    : 'The landing page is tracking fleet, alarms, and maintenance for the current workspace.'}
               </p>
               <p className="mt-2 text-sm text-muted">
                 {platform.branding.scopeName} stays in {resolveWorkspaceMode(
@@ -564,12 +564,12 @@ export function IotHome() {
 
       <IotPanel
         title="Workspace Actions"
-        description="Open the IoT surfaces currently contracted for the tenant and allowed for the active user."
+        description="Open the IoT surfaces currently contracted for this workspace and allowed for the active user."
       >
         {actionStates.length === 0 ? (
           <IotEmptyState
             title="No IoT actions available"
-            description="The IoT module is enabled for this tenant, but the current user does not have IoT read permissions yet."
+            description="The IoT module is enabled for this workspace, but the current user does not have IoT read permissions yet."
             tone="amber"
           />
         ) : (
@@ -642,7 +642,7 @@ export function IotHome() {
           <GettingStartedChecklist
             eyebrow="IoT Onboarding"
             title="Set up the IoT workspace"
-            description="This tenant does not have connected assets or live telemetry yet. Work through the checklist below to onboard devices, mappings, and the first operational signals."
+            description="This workspace does not have connected assets or live telemetry yet. Work through the checklist below to onboard devices, mappings, and the first operational signals."
             steps={setupGuidance.map((action) => ({
               key: action.href,
               eyebrow: action.eyebrow,
@@ -679,7 +679,7 @@ export function IotHome() {
               <IotMetricCard
                 label="Total fleet"
                 value={summary.totalDevices}
-                footnote="Connected assets currently attached to the tenant IoT workspace."
+                footnote="Connected assets currently attached to this IoT workspace."
                 tone="neutral"
                 icon={<FactoryIcon />}
               />
@@ -711,7 +711,7 @@ export function IotHome() {
               <div className="space-y-4">
                 <IotEmptyState
                   title="No recent operational items"
-                  description="The current IoT dashboard summary returned no recent-item activity block for this tenant. Continue through the permitted workspace flows below."
+                  description="The current IoT dashboard summary returned no recent-item activity block for this workspace. Continue through the permitted workspace flows below."
                   tone="neutral"
                 />
                 <div className="grid gap-4 md:grid-cols-3">
@@ -733,7 +733,7 @@ export function IotHome() {
           <div className="space-y-4">
             <IotEmptyState
               title="No IoT summary available"
-              description="No IoT dashboard data was returned for the current tenant workspace."
+              description="No IoT dashboard data was returned for the current workspace."
               tone="neutral"
             />
             <div className="grid gap-4 md:grid-cols-3">

@@ -43,7 +43,7 @@ function resolveHeaderMeta(pathname: string, platformAdmin?: boolean) {
 
   if (pathname.startsWith('/tenants')) {
     return {
-      label: 'Tenants',
+      label: 'Workspaces',
       description: 'Administração de organizações e módulos contratados.',
     };
   }
@@ -51,7 +51,7 @@ function resolveHeaderMeta(pathname: string, platformAdmin?: boolean) {
   if (pathname.startsWith('/users')) {
     return {
       label: 'Usuários',
-      description: 'Gestão de acesso, permissões e roles por tenant.',
+      description: 'Gestão de acesso, permissões e roles por workspace.',
     };
   }
 
@@ -121,7 +121,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                   {modules.contractedProducts.length} contracted module{modules.contractedProducts.length === 1 ? '' : 's'}
                 </span>
                 <span className="inline-flex items-center rounded-full border border-border bg-surface-inset px-3 py-1.5 text-xs font-medium text-[color:var(--app-shell-text)]">
-                  {workspace.canManagePlatformAdministration ? 'Platform administration' : 'Tenant workspace'}
+                  {workspace.canManagePlatformAdministration ? 'Platform administration' : 'Workspace'}
                 </span>
               </div>
             </div>

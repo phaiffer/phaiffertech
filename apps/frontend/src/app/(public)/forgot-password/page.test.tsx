@@ -27,7 +27,7 @@ describe('ForgotPasswordPage', () => {
       </PublicSiteProvider>
     );
 
-    fireEvent.change(screen.getByLabelText('Company or tenant'), { target: { value: 'default' } });
+    fireEvent.change(screen.getByLabelText('Company or workspace'), { target: { value: 'default' } });
     fireEvent.change(screen.getByLabelText('Email'), { target: { value: 'admin@local.test' } });
     fireEvent.click(screen.getByRole('button', { name: 'Send reset link' }));
 
@@ -38,6 +38,6 @@ describe('ForgotPasswordPage', () => {
       });
     });
 
-    expect(screen.getByText('If an account matches this tenant and email, we will send a reset link shortly.')).toBeInTheDocument();
+    expect(screen.getByText('If an account matches this workspace and email, we will send a reset link shortly.')).toBeInTheDocument();
   });
 });

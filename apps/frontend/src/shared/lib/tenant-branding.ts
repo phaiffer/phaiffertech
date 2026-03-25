@@ -89,7 +89,7 @@ export function getTenantWorkspaceLabel(user?: AuthenticatedUser | null) {
     return 'Support session';
   }
 
-  return user.platformAdmin ? 'Platform control plane' : 'Tenant workspace';
+  return user.platformAdmin ? 'Platform control plane' : 'Workspace';
 }
 
 export function getTenantScopeName(user?: AuthenticatedUser | null) {

@@ -164,7 +164,7 @@ export function FrontendPlatformProvider({ children }: { children: ReactNode }) 
         accessLabel: user?.impersonation
           ? 'Support impersonation'
           : canManagePlatformAdministration
-            ? 'Platform owner tenant'
+            ? 'Platform owner workspace'
             : 'Contracted SaaS workspace',
         isPlatformOwnerTenant,
         hasSystemAdminRole,

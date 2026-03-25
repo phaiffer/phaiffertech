@@ -41,7 +41,7 @@ export function ModuleGuard({ moduleCode, children }: ModuleGuardProps) {
     return (
       <ModuleGuardNotice
         title={`Checking ${moduleCode} workspace access`}
-        description="The authenticated shell is validating the tenant contract and current module exposure before opening this workspace."
+        description="The authenticated shell is validating the workspace contract and current module exposure before opening this workspace."
         tone="neutral"
       />
     );

@@ -85,7 +85,7 @@ describe('UsersPage authorization', () => {
 
     render(<UsersPage />);
 
-    expect(await screen.findByText('No users registered in this tenant')).toBeInTheDocument();
+    expect(await screen.findByText('No users in this workspace yet')).toBeInTheDocument();
     expect(screen.getByText('Create the first user to start assigning roles and controlled access inside this workspace.')).toBeInTheDocument();
     expect(screen.getByText(/The current list is scoped to/)).toBeInTheDocument();
   });
