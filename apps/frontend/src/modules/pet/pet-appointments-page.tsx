@@ -1,6 +1,6 @@
 'use client';
 
-import { FormEvent, useCallback, useEffect, useMemo, useState } from 'react';
+import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   PetAppointmentForm,
   PetAppointmentsFilters,
@@ -80,7 +80,9 @@ export function PetAppointmentsPage() {
   const [extrasAmount, setExtrasAmount] = useState('');
   const [extrasDescription, setExtrasDescription] = useState('');
   const [clientPlanId, setClientPlanId] = useState('');
-  const [allPlans, setAllPlans] = useState<ClientPlan[]>([]);
+  const [clientPlans, setClientPlans] = useState<ClientPlan[]>([]);
+  const [plansLoading, setPlansLoading] = useState(false);
+  const lastPlanClientIdRef = useRef<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
   const [deleteCandidate, setDeleteCandidate] = useState<PetAppointment | null>(null);
@@ -158,28 +160,25 @@ export function PetAppointmentsPage() {
     ];
   }, [professionals]);
 
-  // Plan options filtered to the currently selected client in the form
+  // Plan options loaded server-side by clientId when the form is open
   const planOptions = useMemo(() => {
-    const filtered = clientId
-      ? allPlans.filter((plan) => plan.clientId === clientId && plan.remainingSessions > 0)
-      : [];
+    if (!clientId) {
+      return [{ value: '', label: 'Select a client first' }];
+    }
+    if (plansLoading) {
+      return [{ value: '', label: 'Loading packages…' }];
+    }
+    const active = clientPlans.filter((plan) => plan.remainingSessions > 0);
     return [
-      { value: '', label: clientId ? 'No plan — one-time payment' : 'Select a client first' },
-      ...filtered.map((plan) => ({
+      { value: '', label: active.length > 0 ? 'No package — one-time payment' : 'No active package for this client' },
+      ...active.map((plan) => ({
         value: plan.id,
         label: `${plan.planName} (${plan.remainingSessions} sessions left)`
       }))
     ];
-  }, [allPlans, clientId]);
+  }, [clientPlans, clientId, plansLoading]);
 
   const loadReferences = useCallback(async () => {
-    // Load plans silently for use in the appointment form checkout section
-    petService.listClientPlans(undefined, 0, 200).then((result) => {
-      setAllPlans(resolvePageItems(result));
-    }).catch(() => {
-      // Non-critical — plan selector will simply show empty
-    });
-
     const [clientPage, profilePage, servicePage, professionalPage] = await Promise.allSettled([
       canReadClients ? petService.listClients(0, 200, '') : Promise.resolve(null),
       canReadProfiles ? petService.listProfiles(0, 200, '') : Promise.resolve(null),
@@ -286,6 +285,25 @@ export function PetAppointmentsPage() {
     loadReferences();
   }, [loadReferences]);
 
+  // Load plans for the selected client on-demand when the appointment form is open
+  useEffect(() => {
+    if (!isEditorOpen || !clientId) {
+      setClientPlans([]);
+      lastPlanClientIdRef.current = null;
+      return;
+    }
+    if (lastPlanClientIdRef.current === clientId) return;
+    lastPlanClientIdRef.current = clientId;
+    setPlansLoading(true);
+    petService.listClientPlans(clientId, 0, 100).then((result) => {
+      setClientPlans(resolvePageItems(result));
+    }).catch(() => {
+      setClientPlans([]);
+    }).finally(() => {
+      setPlansLoading(false);
+    });
+  }, [clientId, isEditorOpen]);
+
   useEffect(() => {
     loadData(0, search, statusFilter, clientFilterId, petFilterId, serviceFilterId, professionalFilterId, viewMode, currentMonth);
   }, [clientFilterId, loadData, petFilterId, professionalFilterId, search, serviceFilterId, statusFilter, viewMode, currentMonth]);
@@ -302,6 +320,8 @@ export function PetAppointmentsPage() {
     setExtrasAmount('');
     setExtrasDescription('');
     setClientPlanId('');
+    setClientPlans([]);
+    lastPlanClientIdRef.current = null;
   }
 
   function beginCreate(presetDate?: Date) {
@@ -432,8 +452,8 @@ export function PetAppointmentsPage() {
     >
       <div className={sharedPageStackClass}>
         <PageTitle 
-           title="Appointment Schedule" 
-           description="Book visits, assign services, and create the operating story that later surfaces in billing and insights." 
+           title="Appointment Schedule"
+           description="Schedule grooming visits, assign a professional, track payment, and manage your daily service queue."
            actions={
              <div className="flex gap-2">
                 <button 
@@ -509,7 +529,7 @@ export function PetAppointmentsPage() {
               loadingDescription="Preparing the appointment schedule with client, pet, and professional context."
               emptyState={{
                 title: 'No appointments yet',
-                description: 'Book the first appointment after clients, pet profiles, services, and professionals are ready.',
+                description: 'Add clients, their pets, your services (e.g. "Bath & Grooming"), and at least one groomer — then book the first appointment here.',
                 action: canCreateAppointments ? (
                   <button type="button" onClick={() => beginCreate()} className="ui-primary-button">
                     Book first appointment
@@ -539,7 +559,7 @@ export function PetAppointmentsPage() {
                     {editingId ? 'Edit appointment' : 'Book appointment'}
                   </h2>
                   <p className="text-sm mt-1 text-muted">
-                    Book the service, assign a groomer, and set up checkout — plan coverage and extras included.
+                    Select the client and pet, pick a service and groomer, then set payment — package or one-time, with any extras.
                   </p>
                 </div>
                 <button

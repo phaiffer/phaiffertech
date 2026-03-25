@@ -226,7 +226,7 @@ export function PetAppointmentForm({
             <FormSelect label="Pet" value={petId} options={formPetOptions} onChange={onPetIdChange} disabled={profilesLookupUnavailable} />
             <FormSelect label="Service" value={serviceId} options={formServiceOptions} onChange={onServiceIdChange} disabled={servicesLookupUnavailable} />
             <FormSelect
-              label="Professional (groomer / vet)"
+              label="Professional"
               value={professionalId}
               options={formProfessionalOptions}
               onChange={onProfessionalIdChange}
@@ -241,24 +241,24 @@ export function PetAppointmentForm({
         {/* Section: Plan & Checkout */}
         <div className="ui-surface-panel p-4 space-y-3">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-wide text-[color:var(--app-shell-muted)]">Plan & Checkout</p>
+            <p className="text-xs font-semibold uppercase tracking-wide text-[color:var(--app-shell-muted)]">Package & Payment</p>
             <p className="text-xs text-[color:var(--app-shell-muted)] mt-0.5">
-              Link a client plan to cover the base service, then add any extras charged today.
+              Link a session package to cover the base service, or leave empty for a one-time payment. Add any extras charged today.
             </p>
           </div>
           <div className="grid gap-3 md:grid-cols-3">
             <div>
               <FormSelect
-                label="Client plan (optional)"
+                label="Session package (optional)"
                 value={clientPlanId}
                 options={planOptions}
                 onChange={onClientPlanIdChange}
                 disabled={!clientId || !hasPlanOptions}
               />
               {!clientId ? (
-                <p className="mt-1 text-xs text-[color:var(--app-shell-muted)]">Select a client first to see available plans.</p>
+                <p className="mt-1 text-xs text-[color:var(--app-shell-muted)]">Select a client first to see available packages.</p>
               ) : !hasPlanOptions ? (
-                <p className="mt-1 text-xs text-[color:var(--app-shell-muted)]">No active plans found for this client.</p>
+                <p className="mt-1 text-xs text-[color:var(--app-shell-muted)]">No active package for this client — appointment will be charged individually.</p>
               ) : null}
             </div>
             <FormInput
@@ -278,16 +278,16 @@ export function PetAppointmentForm({
 
           {clientPlanId ? (
             <div className="rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs text-emerald-800">
-              Plan linked — base service will be covered by plan session when marked <strong>Completed</strong>.
+              ✓ 1 session will be used from this package when the appointment is marked <strong>Completed</strong>.
               {extrasAmount && parseFloat(extrasAmount) > 0
-                ? ` Extras of R$ ${parseFloat(extrasAmount).toFixed(2)} will still be charged.`
-                : ''}
+                ? ` Extras of R$ ${parseFloat(extrasAmount).toFixed(2)} will be charged separately.`
+                : ' The base service will be fully covered by the package.'}
             </div>
           ) : null}
 
           {!appointmentReferencesReady ? (
             <div className="ui-notice-warning">
-              Appointments need clients, pet profiles, services, and professionals available first. Load or create those records, then return here to book the visit.
+              To book an appointment, first add at least one client, pet, service, and professional. Return here once those are ready.
             </div>
           ) : null}
         </div>
@@ -364,13 +364,16 @@ export function createPetAppointmentColumns({
       header: 'Plan',
       render: (appointment) => {
         if (!appointment.clientPlanId) {
-          return <span className="text-xs text-[color:var(--app-shell-muted)]">One-time payment</span>;
+          return <span className="text-xs text-[color:var(--app-shell-muted)]">One-time</span>;
         }
         const remaining = appointment.planRemainingSessions;
         if (remaining == null) {
           return (
-            <span className="inline-flex items-center gap-1 rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-800">
-              Plan linked
+            <span
+              title="This appointment is covered by a session package"
+              className="inline-flex items-center gap-1 rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-800"
+            >
+              Package
             </span>
           );
         }
@@ -379,7 +382,7 @@ export function createPetAppointmentColumns({
         return (
           <div className="space-y-0.5">
             <span
-              title={`Plan sessions remaining: ${remaining}`}
+              title={`Package sessions remaining: ${remaining}`}
               className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ${
                 isExhausted
                   ? 'bg-red-100 text-red-800'
@@ -391,7 +394,7 @@ export function createPetAppointmentColumns({
               {isExhausted ? '✗ All used' : isLow ? `⚠ ${remaining} left` : `✓ ${remaining} left`}
             </span>
             {appointment.planSessionConsumed ? (
-              <div className="text-xs text-emerald-700">Session consumed</div>
+              <div className="text-xs text-emerald-700">Session used from package</div>
             ) : null}
           </div>
         );
@@ -399,7 +402,7 @@ export function createPetAppointmentColumns({
     },
     {
       key: 'payment',
-      header: 'Checkout',
+      header: 'Payment',
       render: (appointment) => {
         const due = appointment.finalAmountDue;
         const servicePrice = appointment.servicePrice;
@@ -437,7 +440,9 @@ export function createPetAppointmentColumns({
               <div className="flex items-center justify-between gap-3 border-t border-border pt-0.5 mt-0.5">
                 <span className="font-semibold text-foreground">Total due</span>
                 <span className={`font-semibold ${due === 0 ? 'text-emerald-700' : 'text-foreground'}`}>
-                  {due === 0 ? 'R$ 0.00 ✓' : `R$ ${due.toFixed(2)}`}
+                  {due === 0
+                    ? (appointment.planCovered ? 'Fully covered' : 'R$ 0.00')
+                    : `R$ ${due.toFixed(2)}`}
                 </span>
               </div>
             ) : null}

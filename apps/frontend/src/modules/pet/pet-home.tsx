@@ -113,9 +113,9 @@ function getPetWorkspaceActions(mode: PetWorkspaceMode): ModuleWorkspaceAction[]
     {
       href: '/pet/pets',
       eyebrow: grooming ? 'Care' : 'Clinical',
-      title: 'Review pet profiles',
+      title: grooming ? 'Review pets' : 'Review pet profiles',
       description: grooming
-        ? 'Add each pet after the client so services and care notes stay attached to the right customer.'
+        ? 'Add each pet after the client so appointments and special handling stay attached to the right customer.'
         : 'Add each pet after the client so appointments and care history stay attached to the right patient.',
       permission: 'pet.profile.read',
       anyEntitlements: petClinicalEntitlements,
@@ -137,9 +137,9 @@ function getPetWorkspaceActions(mode: PetWorkspaceMode): ModuleWorkspaceAction[]
     {
       href: '/pet/plans',
       eyebrow: grooming ? 'Session packages' : 'Plans',
-      title: grooming ? 'Manage client plans' : 'Manage client plans',
+      title: grooming ? 'Manage session packages' : 'Manage client plans',
       description: grooming
-        ? 'Create and track session packages — e.g. "10 banho e tosa" plans sold to loyal customers.'
+        ? 'Create and track session packages — e.g. "10 banho e tosa package" — and link them to customer appointments.'
         : 'Track multi-session packages associated with client appointments.',
       permission: 'pet.plan.read',
       anyEntitlements: petOperationalEntitlements,

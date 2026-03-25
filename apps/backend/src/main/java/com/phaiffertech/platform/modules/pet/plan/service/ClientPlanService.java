@@ -42,13 +42,18 @@ public class ClientPlanService extends BaseTenantCrudService<
 
     @Transactional(readOnly = true)
     public PageResponseDto<ClientPlanDtos.ClientPlanResponseDto> findAll(PageRequestDto pageRequest) {
+        return findAll(pageRequest, null);
+    }
+
+    @Transactional(readOnly = true)
+    public PageResponseDto<ClientPlanDtos.ClientPlanResponseDto> findAll(PageRequestDto pageRequest, UUID clientId) {
+        UUID tenantId = currentTenantId();
         return doList(
                 pageRequest,
                 Sort.by(Sort.Direction.DESC, "createdAt"),
-                (BasePageQuery query) -> repository.findAllByTenantId(
-                        currentTenantId(),
-                        query.pageable()
-                )
+                (BasePageQuery query) -> clientId != null
+                        ? repository.findAllByTenantIdAndClientId(tenantId, clientId, query.pageable())
+                        : repository.findAllByTenantId(tenantId, query.pageable())
         );
     }
 
