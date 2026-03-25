@@ -103,17 +103,17 @@ export function AppShell({ children }: { children: ReactNode }) {
           <Link href="/dashboard" className={`whitespace-nowrap rounded-xl px-3 py-2 text-sm font-medium transition-colors ${pathname === '/dashboard' ? 'bg-accent-muted text-foreground' : 'text-muted hover:bg-surface-inset hover:text-foreground'}`}>
             Dashboard
           </Link>
-          {modules.contractedProducts.includes('PET') && (
+          {modules.availableCodes.includes('PET') && (
             <Link href="/pet" className={`whitespace-nowrap rounded-xl px-3 py-2 text-sm font-medium transition-colors ${pathname.startsWith('/pet') ? 'bg-accent-muted text-foreground' : 'text-muted hover:bg-surface-inset hover:text-foreground'}`}>
               PetFlow
             </Link>
           )}
-          {modules.contractedProducts.includes('CRM') && (
+          {modules.availableCodes.includes('CRM') && (
             <Link href="/crm" className={`whitespace-nowrap rounded-xl px-3 py-2 text-sm font-medium transition-colors ${pathname.startsWith('/crm') ? 'bg-accent-muted text-foreground' : 'text-muted hover:bg-surface-inset hover:text-foreground'}`}>
               CRM
             </Link>
           )}
-          {modules.contractedProducts.includes('IOT') && (
+          {modules.availableCodes.includes('IOT') && (
             <Link href="/iot" className={`whitespace-nowrap rounded-xl px-3 py-2 text-sm font-medium transition-colors ${pathname.startsWith('/iot') ? 'bg-accent-muted text-foreground' : 'text-muted hover:bg-surface-inset hover:text-foreground'}`}>
               IoT
             </Link>
