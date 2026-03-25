@@ -288,7 +288,7 @@ export function WorkspaceConfigurationOverview() {
                     disabled={submitting}
                   />
 
-                  <div className="grid gap-3 grid-cols-2">
+                  <div className="grid gap-3 grid-cols-1 sm:grid-cols-2">
                     <FormInput
                       label="Primary Color"
                       value={formPrimary}
