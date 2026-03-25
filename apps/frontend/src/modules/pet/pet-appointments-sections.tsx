@@ -18,14 +18,15 @@ export type PetSelectOption = {
   label: string;
 };
 
+// Operator-friendly labels — avoid ALL_CAPS developer enum names
 export const petAppointmentStatusOptions: PetSelectOption[] = [
-  { value: '', label: 'All' },
-  { value: 'SCHEDULED', label: 'SCHEDULED' },
-  { value: 'CONFIRMED', label: 'CONFIRMED' },
-  { value: 'IN_PROGRESS', label: 'IN_PROGRESS' },
-  { value: 'COMPLETED', label: 'COMPLETED' },
-  { value: 'CANCELED', label: 'CANCELED' },
-  { value: 'NO_SHOW', label: 'NO_SHOW' }
+  { value: '', label: 'All statuses' },
+  { value: 'SCHEDULED', label: 'Scheduled' },
+  { value: 'CONFIRMED', label: 'Confirmed' },
+  { value: 'IN_PROGRESS', label: 'In progress' },
+  { value: 'COMPLETED', label: 'Completed' },
+  { value: 'CANCELED', label: 'Canceled' },
+  { value: 'NO_SHOW', label: 'No show' }
 ];
 
 export const petAppointmentFormStatusOptions = petAppointmentStatusOptions.filter((option) => option.value);
@@ -48,8 +49,8 @@ function resolveAppointmentCareState(appointment: PetAppointment) {
 
 function resolveAppointmentCareActionLabel(appointment: PetAppointment) {
   return resolveAppointmentCareState(appointment) === 'PENDING'
-    ? 'Start visit'
-    : 'Continue visit';
+    ? 'Care notes'
+    : 'Continue care';
 }
 
 type PetAppointmentsFiltersProps = {
@@ -109,7 +110,7 @@ export function PetAppointmentsFilters({
       <FormSelect label="Pet" value={petFilterId} options={petOptions} onChange={onPetFilterIdChange} disabled={profilesLookupUnavailable} />
       <FormSelect label="Service" value={serviceFilterId} options={serviceOptions} onChange={onServiceFilterIdChange} disabled={servicesLookupUnavailable} />
       <FormSelect
-        label="Profissional"
+        label="Professional"
         value={professionalFilterId}
         options={professionalOptions}
         onChange={onProfessionalFilterIdChange}
@@ -136,6 +137,7 @@ export function PetAppointmentsFilters({
 type PetAppointmentFormProps = {
   editingId: string | null;
   onSubmit: FormEventHandler<HTMLFormElement>;
+  // Booking fields
   clientId: string;
   onClientIdChange: (value: string) => void;
   formClientOptions: PetSelectOption[];
@@ -158,6 +160,10 @@ type PetAppointmentFormProps = {
   onStatusChange: (value: string) => void;
   notes: string;
   onNotesChange: (value: string) => void;
+  // Plan & checkout fields
+  clientPlanId: string;
+  onClientPlanIdChange: (value: string) => void;
+  planOptions: PetSelectOption[];
   extrasAmount: string;
   onExtrasAmountChange: (value: string) => void;
   extrasDescription: string;
@@ -192,6 +198,9 @@ export function PetAppointmentForm({
   onStatusChange,
   notes,
   onNotesChange,
+  clientPlanId,
+  onClientPlanIdChange,
+  planOptions,
   extrasAmount,
   onExtrasAmountChange,
   extrasDescription,
@@ -200,31 +209,90 @@ export function PetAppointmentForm({
   appointmentReferencesReady,
   onCancelEdit
 }: PetAppointmentFormProps) {
+  const hasPlanOptions = planOptions.length > 1; // more than just the "No plan" placeholder
+
   return (
     <PermissionGuard permission={editingId ? 'pet.appointment.update' : 'pet.appointment.create'}>
-      <form onSubmit={onSubmit} className="grid gap-3 ui-surface-panel p-4 md:grid-cols-3">
-        <FormSelect label="Client" value={clientId} options={formClientOptions} onChange={onClientIdChange} disabled={clientsLookupUnavailable} />
-        <FormSelect label="Pet" value={petId} options={formPetOptions} onChange={onPetIdChange} disabled={profilesLookupUnavailable} />
-        <FormSelect label="Service" value={serviceId} options={formServiceOptions} onChange={onServiceIdChange} disabled={servicesLookupUnavailable} />
-        <FormSelect
-          label="Professional"
-          value={professionalId}
-          options={formProfessionalOptions}
-          onChange={onProfessionalIdChange}
-          disabled={professionalsLookupUnavailable}
-        />
-        <DateTimeInput label="Date & time" value={scheduledAt} onChange={onScheduledAtChange} required />
-        <FormSelect label="Status" value={status} options={petAppointmentFormStatusOptions} onChange={onStatusChange} />
-        <FormInput label="Notes" value={notes} onChange={onNotesChange} />
-        <FormInput label="Extras amount" value={extrasAmount} onChange={onExtrasAmountChange} type="number" placeholder="0.00" />
-        <FormInput label="Extras description" value={extrasDescription} onChange={onExtrasDescriptionChange} placeholder="e.g. Pet taxi + nail trim" />
+      <form onSubmit={onSubmit} className="space-y-5">
 
-        <div className="md:col-span-3 flex gap-2">
+        {/* Section: Booking */}
+        <div className="ui-surface-panel p-4 space-y-3">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wide text-[color:var(--app-shell-muted)]">Booking</p>
+            <p className="text-xs text-[color:var(--app-shell-muted)] mt-0.5">Who, what, and when — the core of the appointment.</p>
+          </div>
+          <div className="grid gap-3 md:grid-cols-3">
+            <FormSelect label="Client" value={clientId} options={formClientOptions} onChange={onClientIdChange} disabled={clientsLookupUnavailable} />
+            <FormSelect label="Pet" value={petId} options={formPetOptions} onChange={onPetIdChange} disabled={profilesLookupUnavailable} />
+            <FormSelect label="Service" value={serviceId} options={formServiceOptions} onChange={onServiceIdChange} disabled={servicesLookupUnavailable} />
+            <FormSelect
+              label="Professional (groomer / vet)"
+              value={professionalId}
+              options={formProfessionalOptions}
+              onChange={onProfessionalIdChange}
+              disabled={professionalsLookupUnavailable}
+            />
+            <DateTimeInput label="Date & time" value={scheduledAt} onChange={onScheduledAtChange} required />
+            <FormSelect label="Status" value={status} options={petAppointmentFormStatusOptions} onChange={onStatusChange} />
+          </div>
+          <FormInput label="Notes" value={notes} onChange={onNotesChange} placeholder="Observations for this visit (e.g. 'sensitive skin', 'first visit')" />
+        </div>
+
+        {/* Section: Plan & Checkout */}
+        <div className="ui-surface-panel p-4 space-y-3">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wide text-[color:var(--app-shell-muted)]">Plan & Checkout</p>
+            <p className="text-xs text-[color:var(--app-shell-muted)] mt-0.5">
+              Link a client plan to cover the base service, then add any extras charged today.
+            </p>
+          </div>
+          <div className="grid gap-3 md:grid-cols-3">
+            <div>
+              <FormSelect
+                label="Client plan (optional)"
+                value={clientPlanId}
+                options={planOptions}
+                onChange={onClientPlanIdChange}
+                disabled={!clientId || !hasPlanOptions}
+              />
+              {!clientId ? (
+                <p className="mt-1 text-xs text-[color:var(--app-shell-muted)]">Select a client first to see available plans.</p>
+              ) : !hasPlanOptions ? (
+                <p className="mt-1 text-xs text-[color:var(--app-shell-muted)]">No active plans found for this client.</p>
+              ) : null}
+            </div>
+            <FormInput
+              label="Extras (R$)"
+              value={extrasAmount}
+              onChange={onExtrasAmountChange}
+              type="number"
+              placeholder="0.00"
+            />
+            <FormInput
+              label="Extras description"
+              value={extrasDescription}
+              onChange={onExtrasDescriptionChange}
+              placeholder="e.g. Pet taxi, nail trim, perfume"
+            />
+          </div>
+
+          {clientPlanId ? (
+            <div className="rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs text-emerald-800">
+              Plan linked — base service will be covered by plan session when marked <strong>Completed</strong>.
+              {extrasAmount && parseFloat(extrasAmount) > 0
+                ? ` Extras of R$ ${parseFloat(extrasAmount).toFixed(2)} will still be charged.`
+                : ''}
+            </div>
+          ) : null}
+
           {!appointmentReferencesReady ? (
-            <div className="w-full ui-notice-warning">
+            <div className="ui-notice-warning">
               Appointments need clients, pet profiles, services, and professionals available first. Load or create those records, then return here to book the visit.
             </div>
           ) : null}
+        </div>
+
+        <div className="flex gap-2">
           <button
             type="submit"
             disabled={submitting || !appointmentReferencesReady}
@@ -272,7 +340,14 @@ export function createPetAppointmentColumns({
     {
       key: 'serviceName',
       header: 'Service',
-      render: (appointment) => appointment.serviceName
+      render: (appointment) => (
+        <div>
+          <div className="font-medium text-sm">{appointment.serviceName}</div>
+          {appointment.petName ? (
+            <div className="text-xs text-[color:var(--app-shell-muted)]">{appointment.petName}</div>
+          ) : null}
+        </div>
+      )
     },
     {
       key: 'scheduledAt',
@@ -289,45 +364,82 @@ export function createPetAppointmentColumns({
       header: 'Plan',
       render: (appointment) => {
         if (!appointment.clientPlanId) {
-          return <span className="text-xs text-[color:var(--app-shell-muted)]">One-time</span>;
+          return <span className="text-xs text-[color:var(--app-shell-muted)]">One-time payment</span>;
         }
         const remaining = appointment.planRemainingSessions;
         if (remaining == null) {
-          return <span className="text-xs text-[color:var(--app-shell-muted)]">Plan</span>;
+          return (
+            <span className="inline-flex items-center gap-1 rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-800">
+              Plan linked
+            </span>
+          );
         }
         const isLow = remaining <= 2;
+        const isExhausted = remaining === 0;
         return (
-          <span
-            title={`Plan sessions remaining: ${remaining}`}
-            className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ${
-              isLow
-                ? 'bg-amber-100 text-amber-800'
-                : 'bg-emerald-100 text-emerald-800'
-            }`}
-          >
-            {isLow ? '⚠' : '✓'} {remaining} left
-          </span>
+          <div className="space-y-0.5">
+            <span
+              title={`Plan sessions remaining: ${remaining}`}
+              className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ${
+                isExhausted
+                  ? 'bg-red-100 text-red-800'
+                  : isLow
+                    ? 'bg-amber-100 text-amber-800'
+                    : 'bg-emerald-100 text-emerald-800'
+              }`}
+            >
+              {isExhausted ? '✗ All used' : isLow ? `⚠ ${remaining} left` : `✓ ${remaining} left`}
+            </span>
+            {appointment.planSessionConsumed ? (
+              <div className="text-xs text-emerald-700">Session consumed</div>
+            ) : null}
+          </div>
         );
       }
     },
     {
       key: 'payment',
-      header: 'Payment',
+      header: 'Checkout',
       render: (appointment) => {
         const due = appointment.finalAmountDue;
-        if (due == null) {
+        const servicePrice = appointment.servicePrice;
+        const extras = appointment.extrasAmount;
+        const covered = appointment.planCovered;
+
+        if (due == null && servicePrice == null) {
           return <span className="text-xs text-[color:var(--app-shell-muted)]">—</span>;
         }
+
         return (
-          <div>
-            <div className="text-xs font-medium">
-              {appointment.planCovered ? (
-                <span className="text-emerald-700">Plan covered</span>
-              ) : null}
-              {' '}R$ {due.toFixed(2)}
+          <div className="space-y-0.5 text-xs">
+            {/* Service line */}
+            <div className="flex items-center justify-between gap-3">
+              <span className="text-[color:var(--app-shell-muted)]">Service</span>
+              {covered ? (
+                <span className="font-medium text-emerald-700">Covered by plan</span>
+              ) : (
+                <span className="font-medium">
+                  {servicePrice != null ? `R$ ${servicePrice.toFixed(2)}` : '—'}
+                </span>
+              )}
             </div>
-            {appointment.extrasDescription ? (
-              <div className="text-xs text-[color:var(--app-shell-muted)]">{appointment.extrasDescription}</div>
+            {/* Extras line — only shown when present */}
+            {extras != null && extras > 0 ? (
+              <div className="flex items-center justify-between gap-3">
+                <span className="text-[color:var(--app-shell-muted)]">
+                  {appointment.extrasDescription ?? 'Extras'}
+                </span>
+                <span className="font-medium">R$ {extras.toFixed(2)}</span>
+              </div>
+            ) : null}
+            {/* Total due */}
+            {due != null ? (
+              <div className="flex items-center justify-between gap-3 border-t border-border pt-0.5 mt-0.5">
+                <span className="font-semibold text-foreground">Total due</span>
+                <span className={`font-semibold ${due === 0 ? 'text-emerald-700' : 'text-foreground'}`}>
+                  {due === 0 ? 'R$ 0.00 ✓' : `R$ ${due.toFixed(2)}`}
+                </span>
+              </div>
             ) : null}
           </div>
         );
@@ -346,8 +458,8 @@ export function createPetAppointmentColumns({
             <div>
               <StatusBadge status={resolveAppointmentCareState(appointment)} />
             </div>
-            <div className="text-xs text-[color:var(--app-shell-muted)]">
-              Records {medicalRecordCount} | Vaccines {vaccinationCount} | Prescriptions {prescriptionCount}
+            <div className="text-xs text-[color:var(--app-shell-muted)] mt-0.5">
+              {medicalRecordCount} records · {vaccinationCount} vaccines · {prescriptionCount} rx
             </div>
           </div>
         );
@@ -371,13 +483,6 @@ export function createPetAppointmentColumns({
       }
     },
     {
-      key: 'pet',
-      header: 'Pet',
-      render: (appointment) =>
-        appointment.petName ??
-        resolvePetLookupLabel(profiles, appointment.petId, (profile) => profile.name, 'Pet', profilesLookupUnavailable)
-    },
-    {
       key: 'professional',
       header: 'Professional',
       render: (appointment) =>
@@ -394,7 +499,7 @@ export function createPetAppointmentColumns({
       key: 'actions',
       header: 'Actions',
       render: (appointment) => (
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
           <PermissionGuard permission="pet.appointment.update">
             <button
               type="button"

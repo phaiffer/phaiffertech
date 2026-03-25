@@ -135,6 +135,18 @@ function getPetWorkspaceActions(mode: PetWorkspaceMode): ModuleWorkspaceAction[]
       restrictionDescription: 'Appointment flow becomes available when your workspace role can read PetFlow appointments.'
     },
     {
+      href: '/pet/plans',
+      eyebrow: grooming ? 'Session packages' : 'Plans',
+      title: grooming ? 'Manage client plans' : 'Manage client plans',
+      description: grooming
+        ? 'Create and track session packages — e.g. "10 banho e tosa" plans sold to loyal customers.'
+        : 'Track multi-session packages associated with client appointments.',
+      permission: 'pet.plan.read',
+      anyEntitlements: petOperationalEntitlements,
+      restrictionTitle: 'Plan access required',
+      restrictionDescription: 'Client plans become available when your workspace role can read PetFlow plans.'
+    },
+    {
       href: '/pet/services',
       eyebrow: grooming ? 'Service menu' : 'Commercial',
       title: 'Review services',
@@ -559,10 +571,21 @@ export function PetHome() {
         return { ...action, capability, status: capability.status };
       }
 
+      if (firstUse && action.href === '/pet/plans') {
+        const capability = notConfiguredCapability({
+          title: 'Client plans start after the first client is registered',
+          description: 'Add a client, register their pet, and book the first appointment — then create a session package to track loyalty visits.'
+        });
+
+        return { ...action, capability, status: capability.status };
+      }
+
       if (!firstUse && !featuredSection && action.href === '/pet/appointments') {
         const capability = noDataCapability({
           title: 'No recent appointment activity yet',
-          description: 'The workspace has PetFlow records, but no compact recent clinic activity block is available right now.'
+          description: petMode === 'grooming'
+            ? 'The workspace has PetFlow records, but no compact recent service activity block is available right now.'
+            : 'The workspace has PetFlow records, but no compact recent appointment activity block is available right now.'
         });
 
         return { ...action, capability, status: capability.status };
@@ -573,7 +596,7 @@ export function PetHome() {
   const themePolicy = platform.theme.canOverride
     ? `${getAppThemeModeLabel(platform.theme.tenantDefaultMode)} with user override`
     : `${getAppThemeModeLabel(platform.theme.tenantDefaultMode)} tenant-managed`;
-  const setupGuidance = buildPetGuidanceSteps(actionStates, ['/pet/clients', '/pet/pets', '/pet/appointments', '/pet/invoices', '/pet/insights']);
+  const setupGuidance = buildPetGuidanceSteps(actionStates, ['/pet/clients', '/pet/pets', '/pet/appointments', '/pet/plans', '/pet/invoices', '/pet/insights']);
   const restrictedGuidance = buildPetGuidanceSteps(actionStates, ['/pet/clients', '/pet/pets', '/pet/appointments', '/pet/invoices']);
   const primaryAction = useMemo(
     () => resolvePetPrimaryAction(actionStates, summary, firstUse, petMode),
