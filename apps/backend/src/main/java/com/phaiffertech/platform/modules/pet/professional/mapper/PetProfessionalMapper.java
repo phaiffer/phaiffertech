@@ -25,6 +25,7 @@ public final class PetProfessionalMapper implements BaseCrudMapper<
         entity.setLicenseNumber(trimToNull(request.licenseNumber()));
         entity.setPhone(trimToNull(request.phone()));
         entity.setEmail(trimToNull(request.email()));
+        entity.setCommissionRate(request.commissionRate());
         return entity;
     }
 
@@ -35,6 +36,7 @@ public final class PetProfessionalMapper implements BaseCrudMapper<
         entity.setLicenseNumber(trimToNull(request.licenseNumber()));
         entity.setPhone(trimToNull(request.phone()));
         entity.setEmail(trimToNull(request.email()));
+        entity.setCommissionRate(request.commissionRate());
     }
 
     @Override
@@ -46,6 +48,7 @@ public final class PetProfessionalMapper implements BaseCrudMapper<
                 entity.getLicenseNumber(),
                 entity.getPhone(),
                 entity.getEmail(),
+                entity.getCommissionRate(),
                 entity.getCreatedAt(),
                 entity.getUpdatedAt()
         );

@@ -80,6 +80,7 @@ export type PetProfessional = {
   licenseNumber?: string;
   phone?: string;
   email?: string;
+  commissionRate?: number | null;
   createdAt: string;
   updatedAt: string;
 };

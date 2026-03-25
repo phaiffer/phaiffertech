@@ -66,6 +66,7 @@ export type CreatePetProfessionalInput = {
   licenseNumber?: string;
   phone?: string;
   email?: string;
+  commissionRate?: number;
 };
 
 export type UpdatePetProfessionalInput = CreatePetProfessionalInput;

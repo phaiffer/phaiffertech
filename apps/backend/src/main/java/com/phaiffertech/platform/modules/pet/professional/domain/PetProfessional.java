@@ -7,6 +7,8 @@ import jakarta.persistence.Table;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.Where;
 
+import java.math.BigDecimal;
+
 @Entity
 @Table(name = "pet_professionals")
 @SQLDelete(sql = "UPDATE pet_professionals SET deleted_at = CURRENT_TIMESTAMP WHERE id = ?")
@@ -27,6 +29,9 @@ public class PetProfessional extends BaseTenantEntity {
 
     @Column(name = "email", length = 180)
     private String email;
+
+    @Column(name = "commission_rate", precision = 5, scale = 4)
+    private BigDecimal commissionRate;
 
     public String getName() {
         return name;
@@ -66,5 +71,13 @@ public class PetProfessional extends BaseTenantEntity {
 
     public void setEmail(String email) {
         this.email = email;
+    }
+
+    public BigDecimal getCommissionRate() {
+        return commissionRate;
+    }
+
+    public void setCommissionRate(BigDecimal commissionRate) {
+        this.commissionRate = commissionRate;
     }
 }

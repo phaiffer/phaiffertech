@@ -1,5 +1,6 @@
 package com.phaiffertech.platform.modules.pet.professional.dto;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.UUID;
 
@@ -10,6 +11,7 @@ public record PetProfessionalResponse(
         String licenseNumber,
         String phone,
         String email,
+        BigDecimal commissionRate,
         Instant createdAt,
         Instant updatedAt
 ) {
