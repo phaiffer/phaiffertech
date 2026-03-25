@@ -75,7 +75,7 @@ describe('LoginPage', () => {
       </PublicSiteProvider>
     );
 
-    fireEvent.change(screen.getByLabelText('Company or tenant'), { target: { value: 'default' } });
+    fireEvent.change(screen.getByLabelText('Company or workspace'), { target: { value: 'default' } });
     fireEvent.change(screen.getByLabelText('Email'), { target: { value: 'admin@local.test' } });
     fireEvent.change(screen.getByLabelText('Password'), { target: { value: 'Admin@123' } });
     fireEvent.click(await screen.findByRole('button', { name: 'Sign in' }));
@@ -106,7 +106,7 @@ describe('LoginPage', () => {
       </PublicSiteProvider>
     );
 
-    fireEvent.change(screen.getByLabelText('Company or tenant'), { target: { value: 'default' } });
+    fireEvent.change(screen.getByLabelText('Company or workspace'), { target: { value: 'default' } });
     fireEvent.change(screen.getByLabelText('Email'), { target: { value: 'admin@local.test' } });
     fireEvent.change(screen.getByLabelText('Password'), { target: { value: 'Admin@123' } });
     fireEvent.click(await screen.findByRole('button', { name: 'Sign in' }));
@@ -134,7 +134,7 @@ describe('LoginPage', () => {
       expect(authService.demoLogin).toHaveBeenCalledTimes(1);
     });
 
-    expect(screen.getByLabelText('Company or tenant')).toHaveValue('');
+    expect(screen.getByLabelText('Company or workspace')).toHaveValue('');
    expect(screen.getByLabelText('Email')).toHaveValue('');
     expect(screen.getByLabelText('Password')).toHaveValue('');
     expect(screen.getByRole('link', { name: 'Forgot your password?' })).toHaveAttribute('href', '/forgot-password');

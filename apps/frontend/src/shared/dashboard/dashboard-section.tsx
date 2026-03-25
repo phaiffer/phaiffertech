@@ -34,7 +34,7 @@ export function DashboardSection({ section }: DashboardSectionProps) {
       {!hasContent ? (
         <EmptyStateCard
           title={section.title}
-          description="Nenhum dado disponível para esta seção no tenant atual."
+          description="Nenhum dado disponível para esta seção no workspace atual."
         />
       ) : (
         <div className="space-y-4">

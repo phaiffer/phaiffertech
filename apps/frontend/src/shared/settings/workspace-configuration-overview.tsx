@@ -259,7 +259,7 @@ export function WorkspaceConfigurationOverview() {
                    Edit Workspace
                  </h2>
                  <p className="text-sm mt-1 text-[color:var(--app-shell-muted)]">
-                   Update branding, colors, and tenant name.
+                   Update branding, colors, and workspace name.
                  </p>
                </div>
                <button 
@@ -273,7 +273,7 @@ export function WorkspaceConfigurationOverview() {
             <div className="space-y-6">
                <form onSubmit={handleSave} className="space-y-5 flex flex-col h-full">
                   <FormInput
-                    label="Tenant Name"
+                    label="Workspace Name"
                     value={formName}
                     onChange={setFormName}
                     placeholder="E.g. Acme Corp"
@@ -288,7 +288,7 @@ export function WorkspaceConfigurationOverview() {
                     disabled={submitting}
                   />
 
-                  <div className="grid gap-3 grid-cols-2">
+                  <div className="grid gap-3 grid-cols-1 sm:grid-cols-2">
                     <FormInput
                       label="Primary Color"
                       value={formPrimary}

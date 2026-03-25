@@ -107,7 +107,7 @@ describe('TenantsPage access model', () => {
     render(<TenantsPage />);
 
     await waitFor(() => {
-      expect(screen.getByText('You do not have permission to view tenants.')).toBeInTheDocument();
+      expect(screen.getByText('You do not have permission to view workspaces.')).toBeInTheDocument();
     });
 
     expect(tenantService.list).not.toHaveBeenCalled();
@@ -118,7 +118,7 @@ describe('TenantsPage access model', () => {
     render(<TenantsPage />);
 
     await waitFor(() => {
-      expect(screen.getByText('Tenant administration is restricted to platform owner administrators.')).toBeInTheDocument();
+      expect(screen.getByText('Workspace administration is restricted to platform owner administrators.')).toBeInTheDocument();
     });
 
     expect(tenantService.list).not.toHaveBeenCalled();
@@ -330,7 +330,7 @@ describe('TenantsPage access model', () => {
       target: { value: ' Usage.Billing.Preview ' }
     });
     fireEvent.click(screen.getByRole('button', { name: 'Add entitlement' }));
-    fireEvent.click(screen.getByRole('button', { name: 'Update tenant' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Update workspace' }));
 
     await waitFor(() => {
       expect(tenantService.update).toHaveBeenCalledWith('tenant-2', expect.objectContaining({
@@ -389,7 +389,7 @@ describe('TenantsPage access model', () => {
     expect(await screen.findByText('Clinic North')).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: 'Edit' }));
-    fireEvent.change(screen.getByPlaceholderText('Describe why support access is needed for this tenant.'), {
+    fireEvent.change(screen.getByPlaceholderText('Describe why support access is needed for this workspace.'), {
       target: { value: 'Investigate CRM records for onboarding review' }
     });
     fireEvent.click(screen.getByRole('button', { name: 'Start support impersonation' }));

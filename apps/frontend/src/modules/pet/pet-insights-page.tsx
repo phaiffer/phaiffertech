@@ -27,7 +27,7 @@ function ClientGrowthPanel({ thisMonth, lastMonth }: { thisMonth: number; lastMo
   return (
     <div className={`${sharedPanelSurfaceClass} p-5`} style={workspacePanelSurfaceStyle}>
       <h3 className={sharedSectionHeadingClass}>Client Growth</h3>
-      <div className="mt-4 grid grid-cols-2 gap-4">
+      <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div>
           <p className={`${sharedCompactTextClass} mb-1`}>This month</p>
           <p className="text-2xl font-bold text-foreground">{thisMonth}</p>

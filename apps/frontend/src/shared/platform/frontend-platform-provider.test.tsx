@@ -116,7 +116,7 @@ describe('FrontendPlatformProvider', () => {
 
     expect(screen.getByTestId('theme-mode').textContent).toBe('dark');
     expect(screen.getByTestId('tenant-default').textContent).toBe('light');
-    expect(screen.getByTestId('workspace-label').textContent).toBe('Tenant workspace');
+    expect(screen.getByTestId('workspace-label').textContent).toBe('Workspace');
     expect(screen.getByTestId('full-visibility').textContent).toBe('no');
     expect(screen.getByTestId('contracted-products').textContent).toBe('CRM');
     expect(screen.getByTestId('branding-scope').textContent).toBe('Tenant One');
@@ -161,7 +161,7 @@ describe('FrontendPlatformProvider', () => {
       expect(document.documentElement.dataset.theme).toBe('light');
     });
 
-    expect(screen.getByTestId('workspace-label').textContent).toBe('Tenant workspace');
+    expect(screen.getByTestId('workspace-label').textContent).toBe('Workspace');
     expect(screen.getByTestId('full-visibility').textContent).toBe('no');
   });
 });

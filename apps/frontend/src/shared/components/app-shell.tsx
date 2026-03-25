@@ -1,6 +1,7 @@
 'use client';
 
 import { ReactNode, useMemo } from 'react';
+import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { ImpersonationBanner } from '@/shared/components/impersonation-banner';
 import { Sidebar } from '@/shared/components/sidebar';
@@ -43,7 +44,7 @@ function resolveHeaderMeta(pathname: string, platformAdmin?: boolean) {
 
   if (pathname.startsWith('/tenants')) {
     return {
-      label: 'Tenants',
+      label: 'Workspaces',
       description: 'Administração de organizações e módulos contratados.',
     };
   }
@@ -51,7 +52,7 @@ function resolveHeaderMeta(pathname: string, platformAdmin?: boolean) {
   if (pathname.startsWith('/users')) {
     return {
       label: 'Usuários',
-      description: 'Gestão de acesso, permissões e roles por tenant.',
+      description: 'Gestão de acesso, permissões e roles por workspace.',
     };
   }
 
@@ -94,8 +95,43 @@ export function AppShell({ children }: { children: ReactNode }) {
     <div className="flex min-h-screen bg-background bg-no-repeat" data-module={moduleContext} style={shellStyle}>
       <Sidebar />
 
-      <div className="flex flex-1 flex-col">
+      <div className="flex flex-1 flex-col min-w-0">
         <ImpersonationBanner tenantName={branding.scopeName} tenantCode={branding.tenantCode} />
+
+        {/* Mobile Navigation Bar — visible only on mobile (lg: sidebar takes over) */}
+        <nav className="sticky top-0 z-30 flex items-center gap-1 overflow-x-auto border-b border-border bg-surface px-3 py-2 lg:hidden">
+          <Link href="/dashboard" className={`whitespace-nowrap rounded-xl px-3 py-2 text-sm font-medium transition-colors ${pathname === '/dashboard' ? 'bg-accent-muted text-foreground' : 'text-muted hover:bg-surface-inset hover:text-foreground'}`}>
+            Dashboard
+          </Link>
+          {modules.contractedProducts.includes('PET') && (
+            <Link href="/pet" className={`whitespace-nowrap rounded-xl px-3 py-2 text-sm font-medium transition-colors ${pathname.startsWith('/pet') ? 'bg-accent-muted text-foreground' : 'text-muted hover:bg-surface-inset hover:text-foreground'}`}>
+              PetFlow
+            </Link>
+          )}
+          {modules.contractedProducts.includes('CRM') && (
+            <Link href="/crm" className={`whitespace-nowrap rounded-xl px-3 py-2 text-sm font-medium transition-colors ${pathname.startsWith('/crm') ? 'bg-accent-muted text-foreground' : 'text-muted hover:bg-surface-inset hover:text-foreground'}`}>
+              CRM
+            </Link>
+          )}
+          {modules.contractedProducts.includes('IOT') && (
+            <Link href="/iot" className={`whitespace-nowrap rounded-xl px-3 py-2 text-sm font-medium transition-colors ${pathname.startsWith('/iot') ? 'bg-accent-muted text-foreground' : 'text-muted hover:bg-surface-inset hover:text-foreground'}`}>
+              IoT
+            </Link>
+          )}
+          {workspace.canManagePlatformAdministration && (
+            <>
+              <Link href="/tenants" className={`whitespace-nowrap rounded-xl px-3 py-2 text-sm font-medium transition-colors ${pathname.startsWith('/tenants') ? 'bg-accent-muted text-foreground' : 'text-muted hover:bg-surface-inset hover:text-foreground'}`}>
+                Workspaces
+              </Link>
+              <Link href="/users" className={`whitespace-nowrap rounded-xl px-3 py-2 text-sm font-medium transition-colors ${pathname.startsWith('/users') ? 'bg-accent-muted text-foreground' : 'text-muted hover:bg-surface-inset hover:text-foreground'}`}>
+                Users
+              </Link>
+            </>
+          )}
+          <Link href="/settings" className={`whitespace-nowrap rounded-xl px-3 py-2 text-sm font-medium transition-colors ${pathname.startsWith('/settings') ? 'bg-accent-muted text-foreground' : 'text-muted hover:bg-surface-inset hover:text-foreground'}`}>
+            Settings
+          </Link>
+        </nav>
 
         {/* Header */}
         <header className={`sticky top-0 z-20 ${sharedShellHeaderClass}`}>
@@ -107,9 +143,9 @@ export function AppShell({ children }: { children: ReactNode }) {
               </h1>
               <p className={`mt-3 max-w-3xl ${sharedCompactTextClass}`}>{headerMeta.description}</p>
             </div>
-            <div className="w-full max-w-[26rem] rounded-3xl border border-border bg-surface px-4 py-4 shadow-xs lg:px-5">
+            <div className="hidden w-full max-w-[26rem] rounded-3xl border border-border bg-surface px-4 py-4 shadow-xs xl:block xl:px-5">
               <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[color:var(--app-shell-muted)]">
-                Active tenant
+                Active workspace
               </p>
               <p className="mt-2 text-base font-semibold text-foreground">{branding.scopeName}</p>
               <p className="mt-1 text-sm text-[color:var(--app-shell-muted)]">{workspace.accessLabel}</p>
@@ -121,7 +157,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                   {modules.contractedProducts.length} contracted module{modules.contractedProducts.length === 1 ? '' : 's'}
                 </span>
                 <span className="inline-flex items-center rounded-full border border-border bg-surface-inset px-3 py-1.5 text-xs font-medium text-[color:var(--app-shell-text)]">
-                  {workspace.canManagePlatformAdministration ? 'Platform administration' : 'Tenant workspace'}
+                  {workspace.canManagePlatformAdministration ? 'Platform administration' : 'Workspace'}
                 </span>
               </div>
             </div>

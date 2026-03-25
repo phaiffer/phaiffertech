@@ -190,7 +190,7 @@ export default function UsersPage() {
     },
     {
       key: 'workspace',
-      header: 'Tenant workspace',
+      header: 'Workspace',
       render: () => (
         <div>
           <p className="font-medium text-[color:var(--app-shell-heading)]">{workspaceLabel}</p>
@@ -238,7 +238,7 @@ export default function UsersPage() {
         <PageTitle
           eyebrow="Access control"
           title="Users"
-          description="Tenant-scoped user administration with clearer role, workspace, and access signals."
+          description="Workspace user administration with role, access, and identity signals."
           actions={
             <PermissionGuard permission="USER_WRITE">
               <button onClick={beginCreate} className="ui-primary-button">
@@ -251,12 +251,12 @@ export default function UsersPage() {
         <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)]">
           <PageSection
             tone="muted"
-            title="Tenant scope"
+            title="Workspace"
             description="Keep access administration anchored to the authenticated workspace before expanding into deeper role policies."
           >
             <div className="space-y-4">
               <div className="ui-notice-neutral">
-                The current list is scoped to <strong>{workspaceLabel}</strong> and uses the active tenant context from your authenticated workspace.
+                The current list is scoped to <strong>{workspaceLabel}</strong> in your authenticated workspace.
               </div>
               <div className="grid gap-3 sm:grid-cols-2">
                 <div className="ui-surface-panel p-4">
@@ -274,7 +274,7 @@ export default function UsersPage() {
                     {availableRoles.length} roles
                   </p>
                   <p className="mt-1 text-sm text-[color:var(--app-shell-muted)]">
-                    Tenant-safe role options for this workspace context.
+                    Role options available in this workspace.
                   </p>
                 </div>
               </div>
@@ -290,7 +290,7 @@ export default function UsersPage() {
                  </div>
                  <h3 className="text-lg font-semibold text-[color:var(--app-shell-heading)]">Manage Access Securely</h3>
                  <p className="mt-2 text-sm text-[color:var(--app-shell-muted)] max-w-sm mx-auto">
-                    Centralized workspace to invite team members and define granular permissions safely within your tenant boundaries. Use the &quot;Create user&quot; button or edit an existing row in the table below.
+                    Centralized workspace to invite team members and define granular permissions safely within your workspace. Use the &quot;Create user&quot; button or edit an existing row in the table below.
                  </p>
              </div>
           </div>
@@ -310,9 +310,9 @@ export default function UsersPage() {
           getRowKey={(user) => user.id}
           loading={loading}
           loadingTitle="Loading workspace users"
-          loadingDescription="Preparing the users, roles, and access state for the current tenant workspace."
+          loadingDescription="Preparing the users, roles, and access state for the current workspace."
           emptyState={{
-            title: 'No users registered in this tenant',
+            title: 'No users in this workspace yet',
             description:
               'Create the first user to start assigning roles and controlled access inside this workspace.'
           }}
@@ -377,7 +377,7 @@ export default function UsersPage() {
                       value={roleCode}
                       options={roleOptions}
                       onChange={setRoleCode}
-                      description="Role scope stays constrained to the authenticated tenant boundary."
+                      description="Role scope stays constrained to this workspace."
                       disabled={submitting}
                     />
                     

@@ -161,8 +161,8 @@ function getPetWorkspaceActions(mode: PetWorkspaceMode): ModuleWorkspaceAction[]
       eyebrow: grooming ? 'Operations' : 'Clinical',
       title: 'Review team',
       description: grooming
-        ? 'Keep groomers, attendants, and operational staff visible for the current tenant.'
-        : 'Keep the medical and operational team context visible for the current tenant.',
+        ? 'Keep groomers, attendants, and operational staff visible for the current workspace.'
+        : 'Keep the medical and operational team context visible for the current workspace.',
       permission: 'pet.professional.read',
       anyEntitlements: petOperationalEntitlements,
       restrictionTitle: 'Professional access required',
@@ -194,7 +194,7 @@ function getPetWorkspaceActions(mode: PetWorkspaceMode): ModuleWorkspaceAction[]
       href: '/pet/inventory',
       eyebrow: 'Inventory',
       title: 'Review stock',
-      description: 'Follow stock movement and operational traceability for tenant inventory.',
+      description: 'Follow stock movement and operational traceability for workspace inventory.',
       permission: 'pet.inventory.read',
       anyEntitlements: petRetailEntitlements,
       restrictionTitle: 'Inventory access required',
@@ -239,7 +239,7 @@ function resolvePetWorkspaceDescription(
   }
 
   if (hasSystemAdminRole) {
-    return `This PetFlow workspace stays tenant-scoped to ${scopeName} while an internal support role is active in the current session.`;
+    return `This PetFlow workspace is scoped to ${scopeName} while an internal support role is active in the current session.`;
   }
 
   return mode === 'grooming'
@@ -289,7 +289,7 @@ function getPetWorkspaceCopy(mode: PetWorkspaceMode): PetWorkspaceCopy {
       overviewAppointmentsLabel: 'Services today',
       overviewAppointmentsDescription: 'Booked services expected during the current operating day.',
       overviewUpcomingLabel: 'Booked visits',
-      overviewUpcomingDescription: 'Near-term service bookings already queued for the current tenant.',
+      overviewUpcomingDescription: 'Near-term service bookings already queued for the current workspace.',
       attentionLabel: 'Operations queue',
       attentionDescription: 'Inventory and billing signals that still need action in this workspace.',
       contextTitle: 'Business Snapshot',
@@ -299,7 +299,7 @@ function getPetWorkspaceCopy(mode: PetWorkspaceMode): PetWorkspaceCopy {
       restrictedTitle: 'Service summary restricted',
       restrictedDescription: 'This PetFlow workspace is available, but the service snapshot requires `pet.dashboard.read`. Continue through the permitted client, schedule, and care flows below.',
       loadingTitle: 'Loading PetFlow summary',
-      loadingDescription: 'Collecting the latest service and operational overview for this tenant workspace.',
+      loadingDescription: 'Collecting the latest service and operational overview for this workspace.',
       errorGuidanceTitle: 'Keep moving with PetFlow',
       errorGuidanceDescription: 'Use the PetFlow flows below while the summary feed recovers.',
       onboardingEyebrow: 'PetFlow Setup',
@@ -311,7 +311,7 @@ function getPetWorkspaceCopy(mode: PetWorkspaceMode): PetWorkspaceCopy {
       emptyGuidanceDescription: 'Use the flows below while activity builds up in your workspace.',
       emptySummaryTitle: 'No operating snapshot available',
       emptySummaryDescription: 'PetFlow did not return a live operations snapshot for this workspace yet.',
-      moduleSurfaceDescription: 'Scheduling, care, commercial, and inventory flows stay bounded to the active tenant contract.'
+      moduleSurfaceDescription: 'Scheduling, care, commercial, and inventory flows stay bounded to the active workspace contract.'
     };
   }
 
@@ -342,7 +342,7 @@ function getPetWorkspaceCopy(mode: PetWorkspaceMode): PetWorkspaceCopy {
     emptyGuidanceDescription: 'Use the flows below while activity builds up in your workspace.',
     emptySummaryTitle: 'No operating snapshot available',
     emptySummaryDescription: 'PetFlow did not return a live operations snapshot for this workspace yet.',
-    moduleSurfaceDescription: 'Services, products, care, and billing flows stay bounded to the active tenant contract.'
+    moduleSurfaceDescription: 'Services, products, care, and billing flows stay bounded to the active workspace contract.'
   };
 }
 
@@ -398,7 +398,7 @@ function buildPetContextCards({
       key: 'pet-operations',
       label: 'Operational attention',
       value: queueValue,
-      description: `PetFlow remains scoped to ${scopeName} with billing, inventory, and access boundaries explicit for the current tenant.`,
+      description: `PetFlow remains scoped to ${scopeName} with billing, inventory, and access boundaries explicit for the current workspace.`,
       tone: 'neutral'
     }
   ];
@@ -595,7 +595,7 @@ export function PetHome() {
     });
   const themePolicy = platform.theme.canOverride
     ? `${getAppThemeModeLabel(platform.theme.tenantDefaultMode)} with user override`
-    : `${getAppThemeModeLabel(platform.theme.tenantDefaultMode)} tenant-managed`;
+    : `${getAppThemeModeLabel(platform.theme.tenantDefaultMode)} workspace-managed`;
   const setupGuidance = buildPetGuidanceSteps(actionStates, ['/pet/clients', '/pet/pets', '/pet/appointments', '/pet/plans', '/pet/invoices', '/pet/insights']);
   const restrictedGuidance = buildPetGuidanceSteps(actionStates, ['/pet/clients', '/pet/pets', '/pet/appointments', '/pet/invoices']);
   const primaryAction = useMemo(
@@ -701,9 +701,9 @@ export function PetHome() {
           <ModuleWorkspaceFactList
             facts={[
               {
-                label: 'Tenant code',
+                label: 'Workspace code',
                 value: platform.branding.tenantCode ?? 'Not assigned',
-                description: 'Stable tenant identifier for the PetFlow workspace.'
+                description: 'Stable workspace identifier for PetFlow.'
               },
               {
                 label: 'Role context',
@@ -734,7 +734,7 @@ export function PetHome() {
           {
             label: 'Workspace scope',
             value: platform.branding.scopeName,
-            description: 'PetFlow operations stay anchored to the active tenant workspace.'
+            description: 'PetFlow operations stay anchored to the active workspace.'
           },
           {
             label: petCopy.overviewAppointmentsLabel,
@@ -769,8 +769,8 @@ export function PetHome() {
                 ? notConfiguredCapability({
                     title: petMode === 'grooming' ? 'Upcoming services not configured yet' : 'Upcoming care not configured yet',
                     description: petMode === 'grooming'
-                      ? 'Near-term services appear after the first bookings are created inside this tenant workspace.'
-                      : 'Near-term care appears after the first appointments are booked inside this tenant workspace.'
+                      ? 'Near-term services appear after the first bookings are created inside this workspace.'
+                      : 'Near-term care appears after the first appointments are booked inside this workspace.'
                   })
                 : undefined
           },
@@ -811,7 +811,7 @@ export function PetHome() {
         description="Walk through clients, pets, appointments, billing, and insights to get the most from your workspace."
         actions={actionStates}
         emptyTitle="No PetFlow actions available"
-        emptyDescription="This tenant has the PetFlow module enabled, but the current user does not have PetFlow read permissions yet."
+        emptyDescription="This workspace has the PetFlow module enabled, but the current user does not have PetFlow read permissions yet."
       />
 
       <ModuleWorkspaceSection

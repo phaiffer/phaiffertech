@@ -345,12 +345,12 @@ export default function TenantsPage() {
       if (editingTenantId) {
         savedTenant = await tenantService.update(editingTenantId, payload);
         setSuccess(
-          `Tenant ${savedTenant.name} updated. Contracted modules, branding defaults, and admin overrides are now aligned.`
+          `Workspace ${savedTenant.name} updated. Contracted modules, branding defaults, and admin overrides are now aligned.`
         );
       } else {
         savedTenant = await tenantService.create(payload);
         setSuccess(
-          `Tenant ${savedTenant.name} created. Review plan defaults, feature entitlements, and rollout overrides before handoff.`
+          `Workspace ${savedTenant.name} created. Review plan defaults, feature entitlements, and rollout overrides before handoff.`
         );
       }
       resetForm();
@@ -407,7 +407,7 @@ export default function TenantsPage() {
     try {
       await featureFlagService.setTenantOverride(editingTenantId, flagKey, enabled);
       await refreshFeatureFlags(editingTenantId);
-      setSuccess(`Feature flag ${flagKey} override updated for ${editingTenant?.name ?? 'the selected tenant'}.`);
+      setSuccess(`Feature flag ${flagKey} override updated for ${editingTenant?.name ?? 'the selected workspace'}.`);
     } catch (err) {
       setSuccess(null);
       setFeatureFlagsError((err as Error).message);
@@ -425,7 +425,7 @@ export default function TenantsPage() {
     try {
       await featureFlagService.clearTenantOverride(editingTenantId, flagKey);
       await refreshFeatureFlags(editingTenantId);
-      setSuccess(`Feature flag ${flagKey} now follows the global default for ${editingTenant?.name ?? 'the selected tenant'}.`);
+      setSuccess(`Feature flag ${flagKey} now follows the global default for ${editingTenant?.name ?? 'the selected workspace'}.`);
     } catch (err) {
       setSuccess(null);
       setFeatureFlagsError((err as Error).message);
@@ -449,29 +449,29 @@ export default function TenantsPage() {
     return [
       {
         key: 'tenant-count',
-        label: 'Tenants in scope',
+        label: 'Workspaces in scope',
         value: totalItems,
         trend: tenantsInScope < totalItems
           ? 'Pagination is active. Current cards summarize the full result size.'
-          : 'Current platform tenant count in this view.'
+          : 'Current platform workspace count in this view.'
       },
       {
         key: 'tenant-overrides',
         label: 'Manual module overrides',
         value: tenantsWithOverrides,
-        trend: 'Tenants extending plan defaults with additional module access.'
+        trend: 'Workspaces extending plan defaults with additional module access.'
       },
       {
         key: 'tenant-entitlements',
         label: 'Custom entitlements',
         value: tenantsWithCustomEntitlements,
-        trend: 'Tenants with extra commercial access beyond the plan baseline.'
+        trend: 'Workspaces with extra commercial access beyond the plan baseline.'
       },
       {
         key: 'tenant-enterprise',
-        label: 'Full access tenants',
+        label: 'Full access workspaces',
         value: enterpriseAccessTenants,
-        trend: 'Tenants whose effective entitlements currently include wildcard access.'
+        trend: 'Workspaces whose effective entitlements currently include wildcard access.'
       }
     ];
   }, [tenants, totalItems]);
@@ -508,7 +508,7 @@ export default function TenantsPage() {
         key: 'usage-signals',
         label: 'Tracked signals',
         value: trackedSignals,
-        trend: 'Distinct operational metric families recorded for this tenant.'
+        trend: 'Distinct operational metric families recorded for this workspace.'
       },
       {
         key: 'usage-sources',
@@ -561,7 +561,7 @@ export default function TenantsPage() {
   const columns: DataTableColumn<Tenant>[] = [
     {
       key: 'tenant',
-      header: 'Tenant',
+      header: 'Workspace',
       render: (tenant) => (
         <div>
           <p className="font-medium text-[color:var(--app-shell-heading)]">{tenant.name}</p>
@@ -616,7 +616,7 @@ export default function TenantsPage() {
         <div className="text-sm text-[color:var(--app-shell-text)]">
           <p>{themeLabel(tenant.defaultThemeMode)}</p>
           <p className="text-xs text-[color:var(--app-shell-muted)]">
-            {tenant.allowUserThemeOverride ? 'User override enabled' : 'Tenant-controlled'}
+            {tenant.allowUserThemeOverride ? 'User override enabled' : 'Workspace-controlled'}
           </p>
         </div>
       )
@@ -695,20 +695,20 @@ export default function TenantsPage() {
       permission="TENANT_READ"
       fallback={(
         <div className="ui-notice-warning">
-          You do not have permission to view tenants.
+          You do not have permission to view workspaces.
         </div>
       )}
     >
       {!canManagePlatform ? (
         <div className="ui-notice-warning">
-          Tenant administration is restricted to platform owner administrators.
+          Workspace administration is restricted to platform owner administrators.
         </div>
       ) : (
         <div className={sharedPageStackClass}>
           <PageTitle
             eyebrow="Platform administration"
-            title="Tenants"
-            description="Manage contracted modules, plan baselines, commercial overrides, and tenant experience defaults from the platform owner workspace."
+            title="Workspaces"
+            description="Manage contracted modules, plan baselines, commercial overrides, and workspace experience defaults from the platform owner view."
           />
 
           <MetricGrid cards={tenantSummaryCards} columns="md:grid-cols-2 xl:grid-cols-4" />
@@ -726,7 +726,7 @@ export default function TenantsPage() {
           ) : null}
 
           <PageSection
-            title={editingTenantId ? 'Update tenant experience' : 'Create tenant workspace'}
+            title={editingTenantId ? 'Update workspace' : 'Create workspace'}
             description="Core platform access stays active by default. Contracted products and branding remain controlled here."
             actions={editingTenantId ? (
               <button
@@ -743,7 +743,7 @@ export default function TenantsPage() {
                 <div className="space-y-5">
                   <div className="grid gap-4 md:grid-cols-2">
                     <label className="space-y-2">
-                      <span className={sharedInputLabelClass}>Tenant name</span>
+                      <span className={sharedInputLabelClass}>Workspace name</span>
                       <input
                         value={form.name}
                         onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))}
@@ -754,7 +754,7 @@ export default function TenantsPage() {
                     </label>
 
                     <label className="space-y-2">
-                      <span className={sharedInputLabelClass}>Tenant code</span>
+                      <span className={sharedInputLabelClass}>Workspace code</span>
                       <input
                         value={form.code}
                         onChange={(event) => setForm((current) => ({ ...current, code: event.target.value }))}
@@ -817,7 +817,7 @@ export default function TenantsPage() {
                         ))
                       ) : (
                         <span className="text-sm text-[color:var(--app-shell-muted)]">
-                          No custom feature entitlements configured for this tenant.
+                          No custom feature entitlements configured for this workspace.
                         </span>
                       )}
                     </div>
@@ -827,7 +827,7 @@ export default function TenantsPage() {
                     <div>
                       <p className="text-sm font-medium text-[color:var(--app-shell-heading)]">Contracted modules</p>
                       <p className="mt-1 text-sm text-[color:var(--app-shell-muted)]">
-                        CORE_PLATFORM remains active for every tenant. Modules included by the selected plan stay enabled, and additional products remain explicit overrides.
+                        CORE_PLATFORM remains active for every workspace. Modules included by the selected plan stay enabled, and additional products remain explicit overrides.
                       </p>
                     </div>
 
@@ -916,7 +916,7 @@ export default function TenantsPage() {
                           Contract preview
                         </p>
                         <p className="mt-1 text-[color:var(--app-shell-muted)]">
-                          Separate the commercial baseline from manual overrides before saving the tenant contract.
+                          Separate the commercial baseline from manual overrides before saving the workspace contract.
                         </p>
                       </div>
 
@@ -996,7 +996,7 @@ export default function TenantsPage() {
                     <div>
                       <p className="text-sm font-medium text-[color:var(--app-shell-heading)]">Branding defaults</p>
                       <p className="mt-1 text-sm text-[color:var(--app-shell-muted)]">
-                        Keep branding controlled so tenant identity stays visible without overriding the shared platform structure.
+                        Keep branding controlled so workspace identity stays visible without overriding the shared platform structure.
                       </p>
                     </div>
 
@@ -1076,7 +1076,7 @@ export default function TenantsPage() {
                     <div>
                       <p className="text-sm font-medium text-[color:var(--app-shell-heading)]">Contract review</p>
                       <p className="mt-1 text-sm text-[color:var(--app-shell-muted)]">
-                        Review the tenant baseline, manual overrides, effective entitlements, and observed usage before approving the contract state.
+                        Review the workspace baseline, manual overrides, effective entitlements, and observed usage before approving the contract state.
                       </p>
                     </div>
 
@@ -1127,7 +1127,7 @@ export default function TenantsPage() {
                           </div>
                         ) : (
                           <p className="mt-3 text-sm text-[color:var(--app-shell-muted)]">
-                            No manual module overrides are active for this tenant.
+                            No manual module overrides are active for this workspace.
                           </p>
                         )}
 
@@ -1215,7 +1215,7 @@ export default function TenantsPage() {
                                     {featureFlag.key}
                                   </p>
                                   <p className="text-xs text-[color:var(--app-shell-muted)]">
-                                    {featureFlag.scope === 'TENANT' ? 'Tenant override active' : 'Using global rollout'}
+                                    {featureFlag.scope === 'TENANT' ? 'Workspace override active' : 'Using global rollout'}
                                   </p>
                                 </div>
                                 <StatusBadge status={featureFlag.enabled ? 'active' : 'warn'} />
@@ -1230,7 +1230,7 @@ export default function TenantsPage() {
                                     onChange={(event) => void handleFeatureFlagToggle(featureFlag.key, event.target.checked)}
                                     className="h-4 w-4 rounded border-[color:var(--app-shell-border)]"
                                   />
-                                  Enable for this tenant
+                                  Enable for this workspace
                                 </label>
                                 {featureFlag.scope === 'TENANT' ? (
                                   <button
@@ -1249,7 +1249,7 @@ export default function TenantsPage() {
                       </div>
                     ) : (
                       <p className="text-sm text-[color:var(--app-shell-muted)]">
-                        No feature flags available for tenant override.
+                        No feature flags available for workspace override.
                       </p>
                     )}
                   </section>
@@ -1258,7 +1258,7 @@ export default function TenantsPage() {
                     <div>
                       <p className="text-sm font-medium text-[color:var(--app-shell-heading)]">Usage telemetry</p>
                       <p className="mt-1 text-sm text-[color:var(--app-shell-muted)]">
-                        Read-only daily aggregates from successful logins, API requests, and auditable entity creation. Use this to explain what the tenant is actually consuming today.
+                        Read-only daily aggregates from successful logins, API requests, and auditable entity creation. Use this to explain what this workspace is actually consuming today.
                       </p>
                     </div>
 
@@ -1317,7 +1317,7 @@ export default function TenantsPage() {
                       </>
                     ) : (
                       <p className="text-sm text-[color:var(--app-shell-muted)]">
-                        No recent usage telemetry has been recorded for this tenant.
+                        No recent usage telemetry has been recorded for this workspace.
                       </p>
                     )}
                   </section>
@@ -1326,7 +1326,7 @@ export default function TenantsPage() {
                     <div>
                       <p className="text-sm font-medium text-[color:var(--app-shell-heading)]">Support impersonation</p>
                       <p className="mt-1 text-sm text-[color:var(--app-shell-muted)]">
-                        Start a time-boxed support session inside this tenant while keeping your original platform operator identity fully auditable.
+                        Start a time-boxed support session inside this workspace while keeping your original platform operator identity fully auditable.
                       </p>
                     </div>
 
@@ -1337,7 +1337,7 @@ export default function TenantsPage() {
                       </div>
                     ) : editingTenant?.platformOwner ? (
                       <div className="ui-notice-warning">
-                        Support impersonation is only available for customer tenants.
+                        Support impersonation is only available for customer workspaces.
                       </div>
                     ) : (
                       <>
@@ -1353,7 +1353,7 @@ export default function TenantsPage() {
                             value={impersonationReason}
                             onChange={setImpersonationReason}
                             description="The reason becomes part of the auditable support-session record."
-                            placeholder="Describe why support access is needed for this tenant."
+                            placeholder="Describe why support access is needed for this workspace."
                             disabled={impersonationSubmitting}
                           />
 
@@ -1377,7 +1377,7 @@ export default function TenantsPage() {
                         </div>
 
                         <div className="ui-notice-warning">
-                          The resulting session stays tenant-scoped, keeps your real operator identity on audit records, and expires automatically.
+                          The resulting session stays workspace-scoped, keeps your real operator identity on audit records, and expires automatically.
                         </div>
 
                         {impersonationError ? (
@@ -1404,7 +1404,7 @@ export default function TenantsPage() {
                   disabled={submitting}
                   className="ui-primary-button"
                 >
-                  {submitting ? 'Saving tenant...' : editingTenantId ? 'Update tenant' : 'Create tenant'}
+                  {submitting ? 'Saving...' : editingTenantId ? 'Update workspace' : 'Create workspace'}
                 </button>
               </div>
             </form>
@@ -1418,9 +1418,9 @@ export default function TenantsPage() {
             loadingTitle="Loading tenant workspaces"
             loadingDescription="Preparing contracted modules, branding defaults, and access posture for the platform control panel."
             emptyState={{
-              title: 'No tenant workspaces registered',
+              title: 'No workspaces registered',
               description:
-                'Create the first tenant to define branding, contracted modules, and default workspace behavior.'
+                'Create the first workspace to define branding, contracted modules, and default behavior.'
             }}
           />
 
