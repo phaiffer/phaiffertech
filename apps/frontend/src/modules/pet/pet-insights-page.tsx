@@ -86,7 +86,7 @@ export function PetInsightsPage() {
         <PageTitle
           eyebrow="PetFlow business"
           title="Business Insights"
-          description="Operational intelligence built from your PetFlow data — client growth, service mix, pet mix, and appointment patterns."
+          description="Client growth, top services, pet mix, and appointment patterns — built from your real business activity."
         />
 
         {loading ? <div className="ui-notice-neutral">Loading insights...</div> : null}

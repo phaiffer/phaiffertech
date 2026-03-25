@@ -20,6 +20,7 @@ import { resolvePageItems, resolveTotalItems } from '@/shared/lib/pagination';
 import { petService } from '@/shared/services/pet-service';
 import { PageResponse } from '@/shared/types/common';
 import {
+  ClientPlan,
   PetAppointment,
   PetClient,
   PetProfessional,
@@ -78,6 +79,8 @@ export function PetAppointmentsPage() {
   const [notes, setNotes] = useState('');
   const [extrasAmount, setExtrasAmount] = useState('');
   const [extrasDescription, setExtrasDescription] = useState('');
+  const [clientPlanId, setClientPlanId] = useState('');
+  const [allPlans, setAllPlans] = useState<ClientPlan[]>([]);
   const [submitting, setSubmitting] = useState(false);
 
   const [deleteCandidate, setDeleteCandidate] = useState<PetAppointment | null>(null);
@@ -155,7 +158,28 @@ export function PetAppointmentsPage() {
     ];
   }, [professionals]);
 
+  // Plan options filtered to the currently selected client in the form
+  const planOptions = useMemo(() => {
+    const filtered = clientId
+      ? allPlans.filter((plan) => plan.clientId === clientId && plan.remainingSessions > 0)
+      : [];
+    return [
+      { value: '', label: clientId ? 'No plan — one-time payment' : 'Select a client first' },
+      ...filtered.map((plan) => ({
+        value: plan.id,
+        label: `${plan.planName} (${plan.remainingSessions} sessions left)`
+      }))
+    ];
+  }, [allPlans, clientId]);
+
   const loadReferences = useCallback(async () => {
+    // Load plans silently for use in the appointment form checkout section
+    petService.listClientPlans(undefined, 0, 200).then((result) => {
+      setAllPlans(resolvePageItems(result));
+    }).catch(() => {
+      // Non-critical — plan selector will simply show empty
+    });
+
     const [clientPage, profilePage, servicePage, professionalPage] = await Promise.allSettled([
       canReadClients ? petService.listClients(0, 200, '') : Promise.resolve(null),
       canReadProfiles ? petService.listProfiles(0, 200, '') : Promise.resolve(null),
@@ -277,6 +301,7 @@ export function PetAppointmentsPage() {
     setNotes('');
     setExtrasAmount('');
     setExtrasDescription('');
+    setClientPlanId('');
   }
 
   function beginCreate(presetDate?: Date) {
@@ -299,6 +324,7 @@ export function PetAppointmentsPage() {
     setNotes(appointment.notes ?? '');
     setExtrasAmount(appointment.extrasAmount != null ? String(appointment.extrasAmount) : '');
     setExtrasDescription(appointment.extrasDescription ?? '');
+    setClientPlanId(appointment.clientPlanId ?? '');
     setSuccess(null);
     setError(null);
     setIsEditorOpen(true);
@@ -336,6 +362,7 @@ export function PetAppointmentsPage() {
       scheduledAt: isoScheduledAt,
       status,
       notes: notes || undefined,
+      clientPlanId: clientPlanId || undefined,
       extrasAmount: parsedExtrasAmount,
       extrasDescription: extrasDescription || undefined
     };
@@ -512,7 +539,7 @@ export function PetAppointmentsPage() {
                     {editingId ? 'Edit appointment' : 'Book appointment'}
                   </h2>
                   <p className="text-sm mt-1 text-muted">
-                    Connect client, pet, service, and professional in one operational step.
+                    Book the service, assign a groomer, and set up checkout — plan coverage and extras included.
                   </p>
                 </div>
                 <button
@@ -549,6 +576,9 @@ export function PetAppointmentsPage() {
                   onStatusChange={setStatus}
                   notes={notes}
                   onNotesChange={setNotes}
+                  clientPlanId={clientPlanId}
+                  onClientPlanIdChange={setClientPlanId}
+                  planOptions={planOptions}
                   extrasAmount={extrasAmount}
                   onExtrasAmountChange={setExtrasAmount}
                   extrasDescription={extrasDescription}

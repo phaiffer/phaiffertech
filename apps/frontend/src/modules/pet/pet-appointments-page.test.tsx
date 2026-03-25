@@ -10,6 +10,7 @@ const { hasPermissionMock, hasAnyPermissionMock, petServiceMock } = vi.hoisted((
     listProfiles: vi.fn(),
     listServices: vi.fn(),
     listProfessionals: vi.fn(),
+    listClientPlans: vi.fn(),
     listAppointments: vi.fn(),
     createAppointment: vi.fn(),
     updateAppointment: vi.fn(),
@@ -53,6 +54,7 @@ describe('PetAppointmentsPage', () => {
     petServiceMock.listProfiles.mockResolvedValue(createPageResponse([]));
     petServiceMock.listServices.mockResolvedValue(createPageResponse([]));
     petServiceMock.listProfessionals.mockResolvedValue(createPageResponse([]));
+    petServiceMock.listClientPlans.mockResolvedValue(createPageResponse([]));
     petServiceMock.listAppointments.mockResolvedValue(createPageResponse([
       {
         id: 'appointment-1',
@@ -92,8 +94,8 @@ describe('PetAppointmentsPage', () => {
       expect(screen.getByText('Dr Example')).toBeInTheDocument();
       expect(screen.getByText('Bath')).toBeInTheDocument();
       expect(screen.getByText('Pending')).toBeInTheDocument();
-      expect(screen.getByText('Records 0 | Vaccines 0 | Prescriptions 0')).toBeInTheDocument();
-      expect(screen.getByRole('link', { name: 'Start visit' })).toHaveAttribute(
+      expect(screen.getByText('0 records · 0 vaccines · 0 rx')).toBeInTheDocument();
+      expect(screen.getByRole('link', { name: 'Care notes' })).toHaveAttribute(
         'href',
         '/pet/medical-records?appointmentId=appointment-1'
       );

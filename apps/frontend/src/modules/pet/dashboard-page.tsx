@@ -31,7 +31,7 @@ export function PetDashboardPage() {
       const result = await petService.getDashboardSummary();
       setSummary(result);
     } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : 'Erro ao carregar o dashboard do Pet.');
+      setError(err instanceof ApiClientError ? err.message : 'Unable to load the PetFlow dashboard.');
     } finally {
       setLoading(false);
     }
@@ -75,12 +75,12 @@ export function PetDashboardPage() {
           description="See appointments, billing pressure, inventory attention, and recent care in one business view."
           actions={(
             <Link href="/pet/insights" className="ui-secondary-button">
-              Open business insights
+              Business insights →
             </Link>
           )}
         />
 
-        {loading ? <div className="ui-notice-neutral">Carregando dashboard...</div> : null}
+        {loading ? <div className="ui-notice-neutral">Loading dashboard...</div> : null}
         {error ? <div className="ui-notice-error">{error}</div> : null}
 
         {summary ? (
