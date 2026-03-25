@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.UUID;
@@ -45,8 +46,9 @@ public class ClientPlanController {
     @GetMapping
     @RequirePermission("pet.plan.read")
     public ApiResponse<PageResponseDto<ClientPlanDtos.ClientPlanResponseDto>> findAll(
-            @Valid @ModelAttribute PageRequestDto pageRequest) {
-        return ApiResponse.success(service.findAll(pageRequest));
+            @Valid @ModelAttribute PageRequestDto pageRequest,
+            @RequestParam(required = false) UUID clientId) {
+        return ApiResponse.success(service.findAll(pageRequest, clientId));
     }
 
     @PutMapping("/{id}")

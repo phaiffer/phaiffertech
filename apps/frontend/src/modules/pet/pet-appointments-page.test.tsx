@@ -104,7 +104,7 @@ describe('PetAppointmentsPage', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Book appointment' }));
 
     expect(
-      screen.getByText('Appointments need clients, pet profiles, services, and professionals available first. Load or create those records, then return here to book the visit.')
+      screen.getByText('To book an appointment, first add at least one client, pet, service, and professional. Return here once those are ready.')
     ).toBeInTheDocument();
   });
 });

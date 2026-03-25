@@ -25,4 +25,16 @@ public interface ClientPlanRepository
             ORDER BY p.createdAt DESC
             """)
     Page<ClientPlan> findAllByTenantId(@Param("tenantId") UUID tenantId, Pageable pageable);
+
+    @Query("""
+            SELECT p FROM ClientPlan p
+            WHERE p.tenantId = :tenantId
+              AND p.clientId = :clientId
+              AND p.deletedAt IS NULL
+            ORDER BY p.createdAt DESC
+            """)
+    Page<ClientPlan> findAllByTenantIdAndClientId(
+            @Param("tenantId") UUID tenantId,
+            @Param("clientId") UUID clientId,
+            Pageable pageable);
 }
