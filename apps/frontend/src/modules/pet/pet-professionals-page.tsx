@@ -39,6 +39,7 @@ export function PetProfessionalsPage() {
   const [licenseNumber, setLicenseNumber] = useState('');
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
+  const [commissionRate, setCommissionRate] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
   const [deleteCandidate, setDeleteCandidate] = useState<PetProfessional | null>(null);
@@ -67,6 +68,7 @@ export function PetProfessionalsPage() {
     setLicenseNumber('');
     setPhone('');
     setEmail('');
+    setCommissionRate('');
   }
 
   function beginEdit(item: PetProfessional) {
@@ -76,6 +78,7 @@ export function PetProfessionalsPage() {
     setLicenseNumber(item.licenseNumber ?? '');
     setPhone(item.phone ?? '');
     setEmail(item.email ?? '');
+    setCommissionRate(item.commissionRate != null ? String(item.commissionRate) : '');
     setError(null);
     setSuccess(null);
   }
@@ -87,12 +90,14 @@ export function PetProfessionalsPage() {
     setSuccess(null);
 
     try {
+      const parsedRate = commissionRate ? parseFloat(commissionRate) : undefined;
       const payload = {
         name,
         specialty: specialty || undefined,
         licenseNumber: licenseNumber || undefined,
         phone: phone || undefined,
-        email: email || undefined
+        email: email || undefined,
+        commissionRate: parsedRate && !isNaN(parsedRate) ? parsedRate : undefined
       };
 
       if (editingId) {
@@ -135,6 +140,13 @@ export function PetProfessionalsPage() {
     { key: 'specialty', header: 'Specialty', render: (item) => item.specialty ?? '-' },
     { key: 'email', header: 'Email', render: (item) => item.email ?? '-' },
     { key: 'phone', header: 'Phone', render: (item) => item.phone ?? '-' },
+    {
+      key: 'commission',
+      header: 'Commission',
+      render: (item) => item.commissionRate != null
+        ? `${(item.commissionRate * 100).toFixed(1)}%`
+        : <span className="text-xs text-[color:var(--app-shell-muted)]">—</span>
+    },
     {
       key: 'actions',
       header: 'Actions',
@@ -203,6 +215,13 @@ export function PetProfessionalsPage() {
             <FormInput label="License number" value={licenseNumber} onChange={setLicenseNumber} />
             <FormInput label="Phone" value={phone} onChange={setPhone} />
             <FormInput label="Email" value={email} onChange={setEmail} type="email" />
+            <FormInput
+              label="Commission rate (optional)"
+              value={commissionRate}
+              onChange={setCommissionRate}
+              type="number"
+              placeholder="e.g. 0.10 for 10%"
+            />
 
             <div className="md:col-span-2 flex gap-2">
               <button

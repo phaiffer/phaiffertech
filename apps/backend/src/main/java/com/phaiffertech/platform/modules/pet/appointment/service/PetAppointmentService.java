@@ -62,6 +62,7 @@ public class PetAppointmentService extends BaseTenantCrudService<
     private final PetPrescriptionRepository petPrescriptionRepository;
     private final PlatformMetricsService platformMetricsService;
     private final ClientPlanRepository clientPlanRepository;
+    private final PetOperationalTriggerService operationalTriggerService;
 
     public PetAppointmentService(
             PetAppointmentRepository repository,
@@ -73,7 +74,8 @@ public class PetAppointmentService extends BaseTenantCrudService<
             PetVaccinationRepository petVaccinationRepository,
             PetPrescriptionRepository petPrescriptionRepository,
             PlatformMetricsService platformMetricsService,
-            ClientPlanRepository clientPlanRepository
+            ClientPlanRepository clientPlanRepository,
+            PetOperationalTriggerService operationalTriggerService
     ) {
         super(repository, repository, PetAppointmentMapper.INSTANCE, "Pet appointment not found.");
         this.repository = repository;
@@ -86,6 +88,7 @@ public class PetAppointmentService extends BaseTenantCrudService<
         this.petPrescriptionRepository = petPrescriptionRepository;
         this.platformMetricsService = platformMetricsService;
         this.clientPlanRepository = clientPlanRepository;
+        this.operationalTriggerService = operationalTriggerService;
     }
 
     @Override
@@ -185,7 +188,17 @@ public class PetAppointmentService extends BaseTenantCrudService<
         // Consume a plan session when appointment transitions to COMPLETED for the first time.
         tryConsumePlanSession(tenantId, entity);
 
-        return toValidatedResponse(repository.save(entity), tenantId);
+        PetAppointmentResponse response = toValidatedResponse(repository.save(entity), tenantId);
+
+        // Fire "pet ready" operational signal after a successful COMPLETED transition.
+        if ("COMPLETED".equals(entity.getStatus())) {
+            PetClient client = petClientRepository.findByIdAndTenantId(entity.getClientId(), tenantId).orElse(null);
+            String clientEmail = client != null ? client.getEmail() : null;
+            String clientName = client != null ? resolveClientName(client) : null;
+            operationalTriggerService.firePetReady(entity, clientEmail, clientName);
+        }
+
+        return response;
     }
 
     @Transactional
@@ -256,8 +269,13 @@ public class PetAppointmentService extends BaseTenantCrudService<
             entity.setServicePrice(serviceCatalog.getPrice());
         }
 
-        // Commission amount is null until a professional commission model is established (future phase).
-        entity.setCommissionAmount(null);
+        // Snapshot commission amount from professional rate at booking time.
+        BigDecimal finalPrice = entity.getServicePrice();
+        entity.setCommissionAmount(
+                professional.getCommissionRate() != null && finalPrice != null
+                        ? finalPrice.multiply(professional.getCommissionRate())
+                        : null
+        );
     }
 
     private PetAppointmentResponse toValidatedResponse(PetAppointment appointment, UUID tenantId) {
@@ -359,6 +377,14 @@ public class PetAppointmentService extends BaseTenantCrudService<
         clientPlanRepository.save(plan);
 
         entity.setPlanSessionConsumed(true);
+
+        // Fire "plan near end" signal when exactly 2 sessions remain after consumption.
+        if (plan.getRemainingSessions() == 2) {
+            PetClient client = petClientRepository.findByIdAndTenantId(plan.getClientId(), tenantId).orElse(null);
+            String clientEmail = client != null ? client.getEmail() : null;
+            String clientName = client != null ? resolveClientName(client) : null;
+            operationalTriggerService.firePlanNearEnd(plan, clientEmail, clientName, tenantId);
+        }
     }
 
     private Map<UUID, String> loadClientNames(UUID tenantId, Collection<UUID> ids) {
