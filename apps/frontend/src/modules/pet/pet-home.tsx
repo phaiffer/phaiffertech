@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
+import { PetModuleSubnav } from '@/modules/pet/pet-module-subnav';
 import { petMedicalRoutePermissions } from '@/modules/pet/pet-medical-permissions';
 import { usePermissions } from '@/shared/auth/usePermissions';
 import { DashboardSection } from '@/shared/dashboard/dashboard-section';
@@ -602,6 +603,8 @@ export function PetHome() {
       style={petVisual.style}
       data-pet-profile={petVisual.visualProfile.key}
     >
+      <PetModuleSubnav />
+
       <ModuleWorkspaceHero
         eyebrow={petCopy.heroEyebrow}
         title={`${platform.branding.scopeName} · PetFlow`}

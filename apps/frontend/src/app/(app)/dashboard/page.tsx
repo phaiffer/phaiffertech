@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
+import { PetOperationsDashboard } from '@/modules/pet/pet-operations-dashboard';
 import { DashboardContextCardGrid } from '@/shared/dashboard/dashboard-context-card-grid';
 import {
   buildDashboardExperienceCopy,
@@ -131,6 +132,17 @@ export default function DashboardPage() {
       ? contractedModules.filter((moduleItem) => moduleItem.code === 'PET')
       : contractedModules.filter((moduleItem) => moduleItem.code !== 'IOT');
   }, [contractedModules, hasPetVisible, platform.modules.items, variant]);
+
+  if (hasPetVisible) {
+    return (
+      <PetOperationsDashboard
+        eyebrow="PetFlow"
+        title="PetFlow overview"
+        description="Visao principal da demo com atendimentos do dia, planos perto do fim, estoque baixo, cobranca do proximo ciclo e comissao do time."
+        surfaceLabel="Official demo surface"
+      />
+    );
+  }
 
   return (
     <div className="space-y-6">

@@ -215,43 +215,43 @@ export const iotIndustrialProfile: VisualProfilePreset = {
 export const petClinicProfile: VisualProfilePreset = {
   key: 'pet-clinic',
   label: 'Pet Clinic',
-  accentFallback: '#0f766e',
-  primaryFallback: '#164e63',
+  accentFallback: '#2563eb',
+  primaryFallback: '#0f172a',
   accentTone: {
     emphasis: 'clinical',
-    softAlpha: 0.18,
-    highlightAlpha: 0.14
+    softAlpha: 0.2,
+    highlightAlpha: 0.16
   },
   backgroundMood: {
     softness: 'soft',
-    accentOpacity: 0.11,
-    supportOpacity: 0.09,
+    accentOpacity: 0.14,
+    supportOpacity: 0.12,
     accentAnchor: 'top left',
     supportAnchor: 'bottom center'
   },
   surfaceNuance: {
-    tintOpacity: 0.15,
-    borderOpacity: 0.17,
-    elevation: 'quiet'
+    tintOpacity: 0.18,
+    borderOpacity: 0.2,
+    elevation: 'soft'
   },
   iconTone: {
-    emphasisOpacity: 0.16,
-    mutedOpacity: 0.08
+    emphasisOpacity: 0.18,
+    mutedOpacity: 0.1
   },
   chartHighlightTone: {
-    accentOpacity: 0.22,
-    supportOpacity: 0.12
+    accentOpacity: 0.24,
+    supportOpacity: 0.14
   },
   dashboardHighlightTone: {
-    accentOpacity: 0.12,
-    supportOpacity: 0.09
+    accentOpacity: 0.16,
+    supportOpacity: 0.12
   },
   loginVisualContext: {
-    accentOpacity: 0.11,
-    supportOpacity: 0.1,
-    cardTintOpacity: 0.05,
-    cardBorderOpacity: 0.16,
-    brandMarkOpacity: 0.15
+    accentOpacity: 0.14,
+    supportOpacity: 0.12,
+    cardTintOpacity: 0.07,
+    cardBorderOpacity: 0.2,
+    brandMarkOpacity: 0.18
   },
   illustrationPreset: 'clinical-care'
 };
@@ -259,43 +259,43 @@ export const petClinicProfile: VisualProfilePreset = {
 export const petGroomingProfile: VisualProfilePreset = {
   key: 'pet-grooming',
   label: 'Pet Grooming',
-  accentFallback: '#d97706',
-  primaryFallback: '#7c2d12',
+  accentFallback: '#3b82f6',
+  primaryFallback: '#0f172a',
   accentTone: {
     emphasis: 'care',
-    softAlpha: 0.2,
-    highlightAlpha: 0.16
+    softAlpha: 0.22,
+    highlightAlpha: 0.18
   },
   backgroundMood: {
     softness: 'soft',
-    accentOpacity: 0.12,
-    supportOpacity: 0.08,
+    accentOpacity: 0.16,
+    supportOpacity: 0.12,
     accentAnchor: 'top center',
     supportAnchor: 'bottom left'
   },
   surfaceNuance: {
-    tintOpacity: 0.16,
-    borderOpacity: 0.18,
-    elevation: 'quiet'
+    tintOpacity: 0.18,
+    borderOpacity: 0.22,
+    elevation: 'soft'
   },
   iconTone: {
-    emphasisOpacity: 0.18,
-    mutedOpacity: 0.08
+    emphasisOpacity: 0.2,
+    mutedOpacity: 0.1
   },
   chartHighlightTone: {
-    accentOpacity: 0.24,
-    supportOpacity: 0.1
+    accentOpacity: 0.28,
+    supportOpacity: 0.14
   },
   dashboardHighlightTone: {
-    accentOpacity: 0.14,
-    supportOpacity: 0.08
+    accentOpacity: 0.18,
+    supportOpacity: 0.12
   },
   loginVisualContext: {
-    accentOpacity: 0.12,
-    supportOpacity: 0.08,
-    cardTintOpacity: 0.05,
-    cardBorderOpacity: 0.18,
-    brandMarkOpacity: 0.16
+    accentOpacity: 0.16,
+    supportOpacity: 0.12,
+    cardTintOpacity: 0.08,
+    cardBorderOpacity: 0.22,
+    brandMarkOpacity: 0.2
   },
   illustrationPreset: 'grooming-rhythm'
 };

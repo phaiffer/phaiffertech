@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { FormEvent, useCallback, useEffect, useState } from 'react';
+import { PetModuleSubnav } from '@/modules/pet/pet-module-subnav';
 import { PermissionGuard } from '@/shared/auth/PermissionGuard';
 import { ApiClientError } from '@/shared/lib/http';
 import { resolvePageItems, resolveTotalItems } from '@/shared/lib/pagination';
@@ -239,6 +240,8 @@ export function PetProfessionalsPage() {
       fallback={<div className="ui-notice-warning">You do not have permission to view team members.</div>}
     >
       <div className="space-y-5">
+        <PetModuleSubnav />
+
         <PageTitle
           eyebrow="PetFlow workspace"
           title="Professionals & Commission"

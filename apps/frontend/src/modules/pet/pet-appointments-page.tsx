@@ -13,6 +13,7 @@ import {
   PetLookupIssue,
   resolvePetLookupIssue
 } from '@/modules/pet/pet-lookup-feedback';
+import { PetModuleSubnav } from '@/modules/pet/pet-module-subnav';
 import { PermissionGuard } from '@/shared/auth/PermissionGuard';
 import { usePermissions } from '@/shared/auth/usePermissions';
 import { ApiClientError } from '@/shared/lib/http';
@@ -459,6 +460,8 @@ export function PetAppointmentsPage() {
       fallback={<div className="ui-notice-warning">You do not have permission to view appointments.</div>}
     >
       <div className={sharedPageStackClass}>
+        <PetModuleSubnav />
+
         <PageTitle 
            title="Appointments"
            description="Run the bath and grooming queue with professional visibility, plan coverage, and billing context."

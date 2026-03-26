@@ -12,6 +12,8 @@ type PublicFeatureItem = {
   eyebrow: string;
   title: string;
   description: string;
+  bullets?: string[];
+  footer?: string;
 };
 
 type PublicFeatureGridProps = {
@@ -45,12 +47,25 @@ export function PublicFeatureGrid({
                 key={`${item.eyebrow}-${item.title}`}
                 className={`${publicInteractiveCardSurfaceClass} group h-full p-7`}
               >
-                <div className="mb-4 h-1 w-8 rounded-full bg-border transition-colors group-hover:bg-accent" />
+                <div className="mb-4 h-1.5 w-10 rounded-full bg-border transition-colors group-hover:bg-accent" />
                 <p className={publicEyebrowClass}>{item.eyebrow}</p>
                 <h3 className="mt-2 text-lg font-semibold tracking-tight text-foreground">
                   {item.title}
                 </h3>
                 <p className="mt-3 text-sm leading-relaxed text-muted">{item.description}</p>
+                {item.bullets?.length ? (
+                  <ul className="mt-5 space-y-2 text-sm text-muted">
+                    {item.bullets.map((bullet) => (
+                      <li key={bullet} className="flex gap-2">
+                        <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-accent" />
+                        <span>{bullet}</span>
+                      </li>
+                    ))}
+                  </ul>
+                ) : null}
+                {item.footer ? (
+                  <p className="mt-5 border-t border-border pt-4 text-xs text-muted">{item.footer}</p>
+                ) : null}
               </div>
             ))}
           </div>

@@ -23,47 +23,65 @@ function resolveHeaderMeta(pathname: string, platformAdmin?: boolean, hasPetVisi
   if (pathname.startsWith('/iot')) {
     return {
       label: 'IoT System',
+      description: 'Internal module preserved outside the visible commercial surface.'
     };
   }
 
   if (pathname.startsWith('/crm')) {
     return {
       label: 'CRM',
+      description: 'Support lane for follow-up, commercial context, and relationship continuity.'
     };
   }
 
   if (pathname.startsWith('/pet')) {
     return {
       label: 'PetFlow',
+      description: 'Daily queue, plans, stock, billing, and team accountability in one product lane.'
     };
   }
 
   if (pathname.startsWith('/tenants')) {
     return {
       label: 'Workspaces',
+      description: 'Manage the workspace layer without expanding the visible product surface.'
     };
   }
 
   if (pathname.startsWith('/users')) {
     return {
       label: 'Usuários',
+      description: 'Keep internal access and workspace role allocation under control.'
     };
   }
 
   if (pathname.startsWith('/settings')) {
     return {
       label: 'Configurações',
+      description: 'Branding, access, and workspace setup for the current environment.'
     };
   }
 
   return {
     label: platformAdmin ? 'Platform' : hasPetVisible ? 'PetFlow overview' : 'Overview',
+    description: hasPetVisible
+      ? 'Commercial launchpad for the PetFlow demo with operational context front and center.'
+      : 'Shared workspace summary with the current visible product surface.'
   };
+}
+
+function getInitials(name?: string) {
+  if (!name) return 'PT';
+  return name
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase() ?? '')
+    .join('');
 }
 
 export function AppShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
-  const { branding, modules, workspace } = useFrontendPlatform();
+  const { branding, modules, user, workspace } = useFrontendPlatform();
   const hasPetVisible = modules.availableCodes.includes('PET');
 
   const moduleContext = useMemo(() => resolveModuleContext(pathname), [pathname]);
@@ -74,10 +92,15 @@ export function AppShell({ children }: { children: ReactNode }) {
   const shellStyle = useMemo(
     () => ({
       ...branding.style,
-      backgroundImage: 'linear-gradient(180deg, var(--tenant-accent-soft), transparent 220px)'
+      backgroundImage: [
+        'radial-gradient(circle at top left, color-mix(in srgb, var(--tenant-accent-soft) 92%, transparent), transparent 28%)',
+        'radial-gradient(circle at top right, color-mix(in srgb, var(--tenant-primary-soft) 85%, transparent), transparent 26%)',
+        'linear-gradient(180deg, rgba(255,255,255,0.48), transparent 240px)'
+      ].join(', ')
     }),
     [branding.style]
   );
+  const quickSearchHref = hasPetVisible ? '/pet/appointments' : '/dashboard';
 
   return (
     <div className="flex min-h-screen bg-background bg-no-repeat" data-module={moduleContext} style={shellStyle}>
@@ -101,16 +124,45 @@ export function AppShell({ children }: { children: ReactNode }) {
         </nav>
 
         <header className={`sticky top-0 z-20 ${sharedShellHeaderClass}`}>
-          <div className={`${appShellContentContainerClass} flex items-center justify-between gap-4 px-6 py-3 lg:px-8`}>
-            <div>
+          <div className={`${appShellContentContainerClass} flex flex-col gap-4 px-6 py-4 lg:px-8`}>
+            <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
+              <div>
               <p className={`${sharedEyebrowClass} text-[11px]`}>{branding.scopeName}</p>
-              <h1 className="text-base font-semibold tracking-tight text-foreground sm:text-lg">
+              <h1 className="text-xl font-semibold tracking-[-0.04em] text-foreground sm:text-[1.6rem]">
                 {headerMeta.label}
               </h1>
+                <p className="mt-2 max-w-2xl text-sm text-muted">{headerMeta.description}</p>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-3">
+                <Link
+                  href={quickSearchHref}
+                  className="hidden min-w-[280px] items-center gap-3 rounded-[1.15rem] border border-border bg-surface-inset px-4 py-3 text-sm text-muted shadow-xs transition-colors hover:border-accent hover:text-foreground lg:inline-flex"
+                >
+                  <svg className="h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+                    <circle cx="11" cy="11" r="7" />
+                    <path d="m20 20-3.5-3.5" strokeLinecap="round" />
+                  </svg>
+                  <span className="truncate">
+                    {hasPetVisible ? 'Buscar atendimentos, clientes ou cobranca' : 'Buscar no workspace'}
+                  </span>
+                </Link>
+
+                <span className="inline-flex items-center rounded-full border border-[color:var(--accent)] bg-accent-muted px-3 py-1 text-xs font-medium text-foreground">
+                  {workspace.accessLabel}
+                </span>
+
+                <div className="flex items-center gap-3 rounded-[1.15rem] border border-border bg-surface px-3 py-2.5 shadow-xs">
+                  <span className="flex h-10 w-10 items-center justify-center rounded-full bg-surface-inset text-sm font-semibold text-foreground">
+                    {getInitials(user?.fullName)}
+                  </span>
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-medium text-foreground">{user?.fullName}</p>
+                    <p className="truncate text-xs text-muted">{user?.email}</p>
+                  </div>
+                </div>
+              </div>
             </div>
-            <span className="inline-flex items-center rounded-full border border-[color:var(--accent)] bg-accent-muted px-3 py-1 text-xs font-medium text-foreground">
-              {workspace.accessLabel}
-            </span>
           </div>
         </header>
 

@@ -56,7 +56,7 @@ export function DataTable<T>({
   );
 
   return (
-    <div className="overflow-x-auto rounded-2xl border border-border bg-surface shadow-xs">
+    <div className="overflow-x-auto rounded-[calc(var(--radius-2xl)-0.1rem)] border border-border bg-surface shadow-sm">
       <table className="min-w-full divide-y divide-border">
         <thead className="bg-surface-inset">
           <tr>

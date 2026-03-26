@@ -5,6 +5,11 @@ export type WebsiteAction = {
   href: string;
 };
 
+export type WebsiteHeroStat = {
+  value: string;
+  label: string;
+};
+
 export type WebsiteStat = {
   value: string;
   label: string;
@@ -41,6 +46,8 @@ type WebsiteContent = {
       eyebrow: string;
       title: string;
       description: string;
+      highlights: string[];
+      stats: WebsiteHeroStat[];
       primaryCta: WebsiteAction;
       secondaryCta: WebsiteAction;
     };
@@ -166,6 +173,25 @@ const websiteContent: Record<PublicLocale, WebsiteContent> = {
           'PetFlow for recurring grooming and pet shop operations.',
         description:
           'Keep appointments, monthly plans, professionals, stock alerts, and billing in one PetFlow workspace built for bath and grooming routines.',
+        highlights: [
+          'Recurring grooming plans',
+          'Stock, billing, and commission',
+          'Automated reminders and pickup messages'
+        ],
+        stats: [
+          {
+            value: 'Queue',
+            label: 'Daily appointments with the assigned professional'
+          },
+          {
+            value: 'Plans',
+            label: 'Recurring clients, penultimate visits, and renewals'
+          },
+          {
+            value: 'Billing',
+            label: 'Pet taxi extras, stock alerts, and collection context'
+          }
+        ],
         primaryCta: { label: 'Request a demo', href: '/contact' },
         secondaryCta: { label: 'PetFlow access', href: '/login' }
       },
@@ -218,33 +244,33 @@ const websiteContent: Record<PublicLocale, WebsiteContent> = {
           bullets: ['Inventory with reorder alerts', 'Billing with pet taxi and extras', 'Commission by professional']
         }
       ],
-      expertiseTitle: 'Authority built on engineering depth, not on generic buzzwords',
+      expertiseTitle: 'Operational details that make the demo credible.',
       expertiseDescription:
-        'The site positions PhaifferTech as a technical brand for software architecture, data engineering and cloud systems that can support real operational products.',
+        'PetFlow sells better when the story sounds like a real operation: reception rhythm, recurring plans, stock pressure, billing follow-through, and a solid technical base underneath.',
       expertise: [
         {
-          eyebrow: 'Data Engineering & Analytics',
-          title: 'Operational data flows, business insights, and reusable platform primitives',
+          eyebrow: 'Front desk and service queue',
+          title: 'A clearer rhythm for appointments, pets, and responsible professionals',
           description:
-            'Data structures, analytical aggregations, tenancy concerns and modular contracts are treated as first-class design constraints. PetFlow surfaces insights directly from operational data.'
+            'The product keeps client, pet, service, professional, and daily schedule context tied together so the operation does not collapse into WhatsApp and spreadsheets.'
         },
         {
-          eyebrow: 'Cloud Architecture',
-          title: 'Infrastructure thinking without losing product clarity',
+          eyebrow: 'Recurring plans',
+          title: 'Monthly loyalty with penultimate-visit alerts',
           description:
-            'Cloud posture is connected to maintainability, deployment realism, observability and modular boundaries.'
+            'Recurring versus one-time clients stay visible, remaining sessions stay readable, and the team can act before the plan ends.'
         },
         {
-          eyebrow: 'Platform Engineering',
-          title: 'Shared capabilities that compound across products',
+          eyebrow: 'Stock, extras, and commission',
+          title: 'Operational billing without leaving the PetFlow flow',
           description:
-            'IAM, feature flags, module access, dashboards and canonical references reduce fragmentation and future integration risk.'
+            'Pet taxi add-ons, stock alerts, invoices, and professional commission remain part of the same commercial story instead of separate disconnected tools.'
         },
         {
-          eyebrow: 'Applied Research',
-          title: 'Technical investigation tied to delivery and evidence',
+          eyebrow: 'Technical foundation preserved',
+          title: 'A product that looks polished without faking a second app',
           description:
-            'The platform is also a vehicle for architecture notes, technical studies, postgraduate work and future dissertation-grade material.'
+            'The current architecture, permissions, and module foundations remain intact while the visible experience becomes more sellable and coherent.'
         }
       ],
       architectureTitle: 'A public narrative that stays readable for business and credible for technical peers',
@@ -831,6 +857,25 @@ const websiteContent: Record<PublicLocale, WebsiteContent> = {
           'PetFlow para banho e tosa recorrente e operacao de pet shop.',
         description:
           'Agenda, planos mensais, profissionais, alertas de estoque e cobranca no mesmo workspace para a rotina de banho e tosa.',
+        highlights: [
+          'Planos recorrentes de banho e tosa',
+          'Estoque, cobranca e comissao',
+          'Mensagens automaticas e operacao do dia'
+        ],
+        stats: [
+          {
+            value: 'Fila',
+            label: 'Atendimentos do dia com profissional responsavel'
+          },
+          {
+            value: 'Planos',
+            label: 'Recorrentes, penultimo banho e renovacao'
+          },
+          {
+            value: 'Cobranca',
+            label: 'Extras, pet taxi e contexto financeiro do ciclo'
+          }
+        ],
         primaryCta: { label: 'Solicitar demo', href: '/contact' },
         secondaryCta: { label: 'Acessar o PetFlow', href: '/login' }
       },
@@ -883,33 +928,33 @@ const websiteContent: Record<PublicLocale, WebsiteContent> = {
           bullets: ['Estoque com alerta de reposicao', 'Faturamento com pet taxi e extras', 'Comissao por profissional']
         }
       ],
-      expertiseTitle: 'Autoridade construída sobre profundidade técnica, não sobre buzzwords',
+      expertiseTitle: 'Detalhes operacionais que deixam a demo crivel.',
       expertiseDescription:
-        'O site posiciona a PhaifferTech como uma marca técnica de software architecture, data engineering e cloud systems capaz de sustentar produtos operacionais reais.',
+        'O PetFlow vende melhor quando a historia parece operacao real: recepcao, recorrencia, estoque, cobranca, mensagens automaticas e uma base tecnica firme por tras.',
       expertise: [
         {
-          eyebrow: 'Data Engineering & Analytics',
-          title: 'Fluxos operacionais de dados, análise e primitivas reutilizáveis de plataforma',
+          eyebrow: 'Recepcao e fila operacional',
+          title: 'Uma rotina mais clara para agenda, pets e profissionais',
           description:
-            'Estruturas de dados, agregações analíticas, tenancy e contratos modulares são tratados como restrições centrais de design. O PetFlow expõe suporte à decisão diretamente da operação.'
+            'Cliente, pet, servico, profissional e horario ficam no mesmo fluxo para que a operacao nao dependa de caderno, WhatsApp e planilhas soltas.'
         },
         {
-          eyebrow: 'Cloud Architecture',
-          title: 'Pensamento de infraestrutura sem perder clareza de produto',
+          eyebrow: 'Planos recorrentes',
+          title: 'Mensalidade com alerta de penultimo banho',
           description:
-            'Postura em cloud é conectada a mantenabilidade, realidade de deploy, observabilidade e fronteiras modulares.'
+            'Recorrentes versus avulsos ficam visiveis, sessoes restantes ficam legiveis e a equipe consegue agir antes do fim do plano.'
         },
         {
-          eyebrow: 'Platform Engineering',
-          title: 'Capabilities compartilhadas que acumulam valor entre produtos',
+          eyebrow: 'Estoque, extras e comissao',
+          title: 'Cobranca operacional sem sair do fluxo do PetFlow',
           description:
-            'Feature flags, module access, dashboard capabilities e referências canônicas reduzem fragmentação e risco futuro de integração.'
+            'Pet taxi, adicionais, estoque baixo, invoices e comissao por profissional entram na mesma narrativa comercial.'
         },
         {
-          eyebrow: 'Applied Research',
-          title: 'Investigação técnica ligada à entrega e à evidência',
+          eyebrow: 'Base tecnica preservada',
+          title: 'Acabamento premium sem fingir uma segunda aplicacao',
           description:
-            'A plataforma também é um veículo para notas de arquitetura, estudos técnicos, pós-graduação e material futuro de dissertação.'
+            'Arquitetura, permissoes e fundacoes modulares continuam reais enquanto a experiencia visivel fica mais coerente e vendavel.'
         }
       ],
       architectureTitle: 'Uma narrativa pública legível para negócio e defensável para pares técnicos',

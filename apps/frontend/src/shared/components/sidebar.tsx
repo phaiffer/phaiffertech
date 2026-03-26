@@ -103,19 +103,11 @@ export function Sidebar() {
     [visibleItems, workspace.canManagePlatformAdministration]
   );
 
-  const resolveModuleAccent = (code?: string) => {
-    if (code === 'IOT') return 'var(--accent-iot)';
-    if (code === 'PET') return 'var(--accent-pet)';
-    if (code === 'CRM') return 'var(--accent-crm)';
-    if (code === 'FINANCE') return 'var(--accent-core)';
-    return 'var(--accent-core)';
-  };
-
   return (
-    <aside className="sticky top-0 hidden h-screen w-72 flex-col border-r border-border bg-surface lg:flex">
+    <aside className="sticky top-0 hidden h-screen w-72 flex-col border-r border-border bg-[linear-gradient(180deg,rgba(255,255,255,0.96),rgba(248,250,252,0.94))] lg:flex">
       <div className="border-b border-border px-4 py-5">
         <Link href="/" className="flex items-center gap-3">
-          <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-border bg-surface-inset p-2 shadow-xs">
+          <div className="flex h-11 w-11 items-center justify-center rounded-[1.15rem] border border-border bg-[linear-gradient(180deg,#ffffff,#eff6ff)] p-2 shadow-sm">
             <img
               src="/PhaifferTech_logo.png"
               alt="Phaiffer Tech"
@@ -127,7 +119,7 @@ export function Sidebar() {
             <p className="truncate text-[11px] font-medium uppercase tracking-[0.18em] text-muted">PetFlow focus</p>
           </div>
         </Link>
-        <div className="mt-4">
+        <div className="mt-4 rounded-[1.3rem] border border-border bg-surface-inset p-3 shadow-xs">
           <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted">Workspace</p>
           <p className="mt-1 truncate text-sm font-semibold text-foreground">{branding.scopeName}</p>
           <p className="mt-1 truncate text-xs text-muted">{workspace.accessLabel}</p>
@@ -144,35 +136,38 @@ export function Sidebar() {
                 </p>
               ) : null}
               <div className={`${group.key === 'core' || group.items.length > 1 ? 'mt-2' : ''} space-y-1`}>
-              {group.items.map((item) => {
-                const active = isItemActive(pathname, item.href);
-                const Icon = item.icon;
-                const accent = resolveModuleAccent(item.moduleCode);
+                {group.items.map((item) => {
+                  const active = isItemActive(pathname, item.href);
+                  const Icon = item.icon;
 
-                return (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    className={`group flex items-center gap-3 rounded-xl border px-3 py-2.5 text-sm transition-all duration-200 ${
-                      active
-                        ? 'border-border bg-[color:var(--accent-muted)] text-foreground shadow-xs'
-                        : 'border-transparent text-muted hover:border-border hover:bg-surface-inset hover:text-foreground'
-                    }`}
-                  >
-                    <span
-                      className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg border border-border bg-surface shadow-xs transition-colors"
+                  return (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      className={`group flex items-center gap-3 rounded-xl border px-3 py-2.5 text-sm transition-all duration-200 ${
+                        active
+                          ? 'text-white shadow-sm'
+                          : 'border-transparent text-muted hover:border-border hover:bg-surface-inset hover:text-foreground'
+                      }`}
                       style={active ? {
-                        borderColor: `color-mix(in srgb, ${accent} 24%, var(--border))`,
-                        backgroundColor: `color-mix(in srgb, ${accent} 10%, var(--surface-inset))`,
-                        color: accent
+                        background: 'linear-gradient(135deg, var(--accent), color-mix(in srgb, var(--accent) 76%, #0f172a 24%))',
+                        borderColor: 'color-mix(in srgb, var(--accent) 30%, var(--border))'
                       } : undefined}
                     >
-                      <Icon className="h-4 w-4" />
-                    </span>
-                    <span className="truncate">{item.label}</span>
-                  </Link>
-                );
-              })}
+                      <span
+                        className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-[0.9rem] border border-border bg-surface shadow-xs transition-colors"
+                        style={active ? {
+                          borderColor: 'rgba(255,255,255,0.18)',
+                          backgroundColor: 'rgba(255,255,255,0.12)',
+                          color: '#ffffff'
+                        } : undefined}
+                      >
+                        <Icon className="h-4 w-4" />
+                      </span>
+                      <span className="truncate">{item.label}</span>
+                    </Link>
+                  );
+                })}
               </div>
             </div>
           ))}
@@ -180,13 +175,15 @@ export function Sidebar() {
       </nav>
 
       <div className="border-t border-border p-4">
-        <div className="mb-4 flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-full border border-border bg-surface text-sm font-semibold text-foreground">
-            {getInitials(user?.fullName)}
-          </div>
-          <div className="min-w-0">
-            <p className="truncate text-sm font-medium text-foreground">{user?.fullName}</p>
-            <p className="truncate text-[11px] text-muted">{user?.email}</p>
+        <div className="mb-4 rounded-[1.3rem] border border-border bg-surface p-3 shadow-xs">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full border border-border bg-surface-inset text-sm font-semibold text-foreground">
+              {getInitials(user?.fullName)}
+            </div>
+            <div className="min-w-0">
+              <p className="truncate text-sm font-medium text-foreground">{user?.fullName}</p>
+              <p className="truncate text-[11px] text-muted">{user?.email}</p>
+            </div>
           </div>
         </div>
         <button

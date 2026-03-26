@@ -1,6 +1,7 @@
 'use client';
 
 import { FormEvent, useCallback, useEffect, useMemo, useState } from 'react';
+import { PetModuleSubnav } from '@/modules/pet/pet-module-subnav';
 import { PermissionGuard } from '@/shared/auth/PermissionGuard';
 import { usePermissions } from '@/shared/auth/usePermissions';
 import {
@@ -276,6 +277,8 @@ export function PetPlansPage() {
       fallback={<div className="ui-notice-warning">You do not have permission to view client plans.</div>}
     >
       <div className={sharedPageStackClass}>
+        <PetModuleSubnav />
+
         <PageTitle
           eyebrow="PetFlow · Grooming"
           title="Monthly Plans"
