@@ -780,7 +780,7 @@ export function PetInvoicesPage() {
                   setClientFilterId('');
                   setStatusFilter('');
                 }}
-                className="ui-secondary-button"
+                className="ui-inline-button"
               >
                 Clear filters
               </button>

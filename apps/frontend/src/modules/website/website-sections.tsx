@@ -85,9 +85,9 @@ export function WebsiteSectionHeading({ eyebrow, title, description }: WebsiteSe
 
 export function WebsiteStatStrip({ items }: WebsiteStatStripProps) {
   return (
-    <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+    <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
       {items.map((item) => (
-        <div key={`${item.value}-${item.label}`} className={`${publicCardSurfaceClass} p-7`}>
+        <div key={`${item.value}-${item.label}`} className={`${publicCardSurfaceClass} p-6`}>
           <div className="mb-4 h-1 w-8 rounded-full bg-accent" />
           <p className="text-2xl font-semibold tracking-tight text-foreground">{item.value}</p>
           <p className="mt-3 text-xs font-medium uppercase tracking-wider text-muted">{item.label}</p>
@@ -100,11 +100,11 @@ export function WebsiteStatStrip({ items }: WebsiteStatStripProps) {
 
 export function WebsiteCardGrid({ items }: WebsiteCardGridProps) {
   return (
-    <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+    <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
       {items.map((item) => (
         <article
           key={`${item.eyebrow}-${item.title}`}
-          className={`${publicInteractiveCardSurfaceClass} group flex h-full flex-col justify-between p-7`}
+          className={`${publicInteractiveCardSurfaceClass} group flex h-full flex-col justify-between p-6`}
         >
           <div className="mb-4 h-1 w-8 rounded-full bg-border transition-colors group-hover:bg-accent" />
           <p className={publicEyebrowClass}>{item.eyebrow}</p>
@@ -128,6 +128,42 @@ export function WebsiteCardGrid({ items }: WebsiteCardGridProps) {
         </article>
       ))}
     </div>
+  );
+}
+
+type WebsiteFullSectionProps = {
+  id?: string;
+  tone?: 'default' | 'muted';
+  eyebrow?: string;
+  title: string;
+  description: string;
+  children: React.ReactNode;
+};
+
+export function WebsiteFullSection({
+  id,
+  tone = 'default',
+  eyebrow,
+  title,
+  description,
+  children,
+}: WebsiteFullSectionProps) {
+  return (
+    <section
+      id={id}
+      className={`border-t border-border ${tone === 'muted' ? 'bg-surface-inset' : ''}`}
+    >
+      <div className={`${publicSiteContainerClass} py-14 lg:py-20`}>
+        <div className="mb-10 max-w-2xl">
+          {eyebrow && <p className={publicEyebrowClass}>{eyebrow}</p>}
+          <h2 className={eyebrow ? `mt-3 ${publicSectionTitleClass}` : publicSectionTitleClass}>
+            {title}
+          </h2>
+          <p className={`mt-3 ${publicSectionSupportingTextClass}`}>{description}</p>
+        </div>
+        {children}
+      </div>
+    </section>
   );
 }
 

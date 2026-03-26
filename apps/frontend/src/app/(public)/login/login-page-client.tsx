@@ -27,6 +27,23 @@ export default function LoginPageClient({ nextPath }: LoginPageClientProps) {
   const router = useRouter();
   const { locale } = usePublicSite();
   const t = getPublicSiteMessages(locale).login;
+  const supportCopy = locale === 'pt-BR'
+    ? {
+        eyebrow: 'Acesso ao produto',
+        title: 'Entre no seu workspace.',
+        description:
+          'Use o código do workspace e suas credenciais para abrir a operação sem sair da linguagem visual do produto.',
+        backLabel: 'Voltar ao site',
+        contactLabel: 'Solicitar demo'
+      }
+    : {
+        eyebrow: 'Product access',
+        title: 'Sign in to your workspace.',
+        description:
+          'Use the workspace code and your credentials to open the product without leaving the platform visual language.',
+        backLabel: 'Back to site',
+        contactLabel: 'Request a demo'
+      };
   const { isAuthenticated, isLoading, signIn } = useAuth();
   const demoAssistedEnabled = process.env.NEXT_PUBLIC_DEMO_ASSISTED_ENABLED === 'true';
 
@@ -129,35 +146,40 @@ export default function LoginPageClient({ nextPath }: LoginPageClientProps) {
 
   return (
     <div className="min-h-screen bg-background" style={visualContext.containerStyle}>
-      <main className="mx-auto flex min-h-screen w-full max-w-5xl items-center justify-center px-6 py-12">
-        <div className="w-full max-w-[420px]">
-          <Link href="/" className="mb-8 inline-flex items-center gap-3 text-foreground">
-            <span
-              className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-2xl border bg-surface shadow-xs"
-              style={visualContext.brandMarkStyle}
-            >
-              <Image
-                src="/PhaifferTech_logo.png"
-                alt="PhaifferTech"
-                width={34}
-                height={34}
-                priority
-                className="h-[34px] w-[34px] object-contain"
-              />
-            </span>
-            <span className="text-lg font-semibold tracking-tight">PhaifferTech</span>
-          </Link>
+      <main className="mx-auto flex min-h-screen w-full max-w-md items-center px-6 py-12">
+        <div
+          className={`${sharedPanelSurfaceClass} w-full`}
+          style={visualContext.cardStyle}
+        >
+          <section className="px-7 py-8 sm:px-8 sm:py-9">
+            <Link href="/" className="inline-flex items-center gap-3 text-foreground">
+              <span
+                className="flex h-14 w-14 items-center justify-center overflow-hidden rounded-2xl border bg-surface shadow-sm"
+                style={visualContext.brandMarkStyle}
+              >
+                <Image
+                  src="/PhaifferTech_logo.png"
+                  alt="PhaifferTech"
+                  width={44}
+                  height={44}
+                  priority
+                  className="h-11 w-11 object-contain"
+                />
+              </span>
+              <span className="text-lg font-semibold tracking-tight">PhaifferTech</span>
+            </Link>
 
-          <section
-            className={`${sharedPanelSurfaceClass} p-7 sm:p-8`}
-            style={visualContext.cardStyle}
-          >
-            <div className="mb-6">
-              <h1 className="text-2xl font-semibold tracking-tight text-foreground">{t.title}</h1>
-              <p className={`mt-2 ${sharedCompactTextClass}`}>{t.description}</p>
+            <div className="mt-8">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--tenant-accent)]">
+                {supportCopy.eyebrow}
+              </p>
+              <h1 className="mt-3 text-3xl font-semibold tracking-tight text-foreground">
+                {supportCopy.title}
+              </h1>
+              <p className={`mt-4 ${sharedCompactTextClass}`}>{supportCopy.description}</p>
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit} className="mt-8 space-y-4">
               <div>
                 <label htmlFor="tenant-code" className={sharedInputLabelClass}>
                   {t.tenantCodeLabel}
@@ -222,11 +244,7 @@ export default function LoginPageClient({ nextPath }: LoginPageClientProps) {
                 ) : null}
               </div>
 
-              {notice ? (
-                <div className="ui-notice-info">
-                  {notice}
-                </div>
-              ) : null}
+              {notice ? <div className="ui-notice-info">{notice}</div> : null}
 
               {error ? (
                 <div className="rounded-lg border border-destructive/30 bg-destructive-muted px-3 py-2.5 text-sm text-destructive">
@@ -243,6 +261,15 @@ export default function LoginPageClient({ nextPath }: LoginPageClientProps) {
                 {submitting ? t.loadingLabel : t.submitLabel}
               </button>
             </form>
+
+            <div className="mt-6 flex items-center justify-between gap-4 border-t border-border pt-4 text-sm">
+              <Link href="/" className="font-medium text-muted transition-colors hover:text-foreground">
+                {supportCopy.backLabel}
+              </Link>
+              <Link href="/contact" className="font-medium" style={{ color: 'var(--tenant-accent)' }}>
+                {supportCopy.contactLabel}
+              </Link>
+            </div>
           </section>
         </div>
       </main>

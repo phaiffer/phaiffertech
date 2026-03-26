@@ -23,7 +23,6 @@ import {
 } from '@/modules/iot/iot-chrome';
 import { usePermissions } from '@/shared/auth/usePermissions';
 import { ApiClientError } from '@/shared/lib/http';
-import { getAppThemeModeLabel } from '@/shared/lib/tenant-branding';
 import {
   isCapabilityReady,
   noDataCapability,
@@ -362,9 +361,7 @@ export function IotHome() {
     });
   const availableActions = actionStates.filter((action) => action.capability?.interactive !== false);
   const primaryAction = resolveIotPrimaryAction(availableActions, summary, firstUse, canReadDashboard);
-  const themePolicy = platform.theme.canOverride
-    ? `${getAppThemeModeLabel(platform.theme.tenantDefaultMode)} with user override`
-    : `${getAppThemeModeLabel(platform.theme.tenantDefaultMode)} workspace-managed`;
+  const landingActions = actionStates.filter((action) => ['/iot/dashboard', '/iot/devices', '/iot/alarms'].includes(action.href));
   const setupGuidance = buildIotGuidanceSteps(actionStates, ['/iot/add-device', '/iot/devices', '/iot/registers']);
   const restrictedGuidance = buildIotGuidanceSteps(actionStates, ['/iot/devices', '/iot/alarms', '/iot/telemetry']);
 
@@ -422,9 +419,7 @@ export function IotHome() {
         chips={
           <>
             <Chip label="Workspace" value={platform.workspace.workspaceLabel} tone="cyan" icon={<DashboardIcon />} />
-            <Chip label="Code" value={platform.branding.tenantCode ?? platform.branding.scopeName} tone="amber" icon={<FactoryIcon />} />
-            <Chip label="Theme" value={getAppThemeModeLabel(platform.theme.tenantDefaultMode)} tone="green" icon={<WaveIcon />} />
-            <Chip label="Actions" value={availableActions.length} tone="neutral" icon={<PlugIcon />} />
+            <Chip label="Access" value={platform.workspace.accessLabel} tone="neutral" icon={<PlugIcon />} />
           </>
         }
         action={primaryAction ? <IotActionButton href={primaryAction.href}>{primaryAction.title}</IotActionButton> : null}
@@ -438,62 +433,16 @@ export function IotHome() {
                 tone: platform.workspace.isPlatformOwnerTenant ? 'green' : platform.workspace.hasSystemAdminRole ? 'amber' : 'cyan'
               },
               {
-                label: 'Access',
-                value: platform.workspace.accessLabel,
-                tone: platform.workspace.isPlatformOwnerTenant ? 'green' : 'cyan'
-              },
-              {
-                label: 'Theme policy',
-                value: themePolicy,
-                tone: platform.theme.canOverride ? 'cyan' : 'amber'
+                label: 'Next step',
+                value: primaryAction?.title ?? 'Review available surfaces',
+                tone: firstUse ? 'green' : summary && summary.totalAlarmsOpen > 0 ? 'amber' : 'cyan'
               }
             ]}
           />
         )}
       />
 
-      <div className="grid gap-4 xl:grid-cols-[1.2fr_0.8fr_0.8fr_0.8fr]">
-        <IotPanel
-          title="Operational focus"
-          description="Use this landing page to confirm the current state, understand the latest movement, and choose the next workflow."
-        >
-          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-1">
-            <IotSupportCard>
-              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--tenant-accent)]">
-                Current state
-              </p>
-              <p className="mt-2 text-sm font-medium text-foreground">
-                {!canReadDashboard
-                  ? 'Workspace access is available, but live pulse data is restricted.'
-                  : firstUse
-                    ? 'The workspace is ready for onboarding, but connected operations have not started yet.'
-                    : 'The landing page is tracking fleet, alarms, and maintenance for the current workspace.'}
-              </p>
-              <p className="mt-2 text-sm text-muted">
-                {platform.branding.scopeName} stays in {resolveWorkspaceMode(
-                  platform.workspace.isPlatformOwnerTenant,
-                  platform.workspace.hasSystemAdminRole
-                ).toLowerCase()} with {themePolicy.toLowerCase()}.
-              </p>
-            </IotSupportCard>
-            <IotSupportCard>
-              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--tenant-accent)]">
-                Next action
-              </p>
-              <p className="mt-2 text-sm font-medium text-foreground">
-                {primaryAction ? primaryAction.title : 'Review permitted IoT surfaces'}
-              </p>
-              <p className="mt-2 text-sm text-muted">
-                {!canReadDashboard
-                  ? 'Start with fleet or incident flows while dashboard access stays restricted.'
-                  : firstUse
-                    ? 'Onboard devices, mappings, and the first signals before expecting operational pulse cards.'
-                    : 'Use the pulse below to spot current pressure before moving into the detailed module screens.'}
-              </p>
-            </IotSupportCard>
-          </div>
-        </IotPanel>
-
+      <div className="grid gap-4 md:grid-cols-3">
         <IotMetricCard
           label="Active devices"
           value={canReadDashboard && summary ? summary.activeDevices : '--'}
@@ -563,10 +512,10 @@ export function IotHome() {
       </div>
 
       <IotPanel
-        title="Workspace Actions"
-        description="Open the IoT surfaces currently contracted for this workspace and allowed for the active user."
+        title="Core IoT flows"
+        description="Keep the visible IoT surface focused on fleet visibility, incidents, and the main operating view."
       >
-        {actionStates.length === 0 ? (
+        {landingActions.length === 0 ? (
           <IotEmptyState
             title="No IoT actions available"
             description="The IoT module is enabled for this workspace, but the current user does not have IoT read permissions yet."
@@ -574,7 +523,7 @@ export function IotHome() {
           />
         ) : (
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-            {actionStates.map((action) => (
+            {landingActions.map((action) => (
               <IotWorkspaceActionLink
                 key={action.href}
                 href={action.href}

@@ -5,7 +5,7 @@ import { getWebsiteContent } from './website-content';
 import { WebsiteHero } from './website-hero';
 import {
   WebsiteCardGrid,
-  WebsiteSplitSection
+  WebsiteFullSection,
 } from './website-sections';
 
 export function WebsitePlatformPage() {
@@ -15,16 +15,14 @@ export function WebsitePlatformPage() {
     locale === 'pt-BR'
       ? {
           products: 'Produtos',
-          engineering: 'Engineering',
+          contact: 'Contato',
           foundation: 'Fundação',
-          layers: 'Camadas',
           modules: 'Módulos'
         }
       : {
           products: 'Products',
-          engineering: 'Engineering',
+          contact: 'Contact',
           foundation: 'Foundation',
-          layers: 'Layers',
           modules: 'Modules'
         };
 
@@ -35,34 +33,26 @@ export function WebsitePlatformPage() {
         title={content.title}
         description={content.description}
         primaryCta={{ label: labels.products, href: '/products' }}
-        secondaryCta={{ label: labels.engineering, href: '/engineering' }}
+        secondaryCta={{ label: labels.contact, href: '/contact' }}
       />
 
-      <WebsiteSplitSection
+      <WebsiteFullSection
         tone="muted"
         eyebrow={labels.foundation}
         title={content.foundationTitle}
         description={content.foundationDescription}
       >
         <WebsiteCardGrid items={content.foundation} />
-      </WebsiteSplitSection>
+      </WebsiteFullSection>
 
-      <WebsiteSplitSection
-        eyebrow={labels.layers}
-        title={content.layersTitle}
-        description={content.layersDescription}
-      >
-        <WebsiteCardGrid items={content.layers} />
-      </WebsiteSplitSection>
-
-      <WebsiteSplitSection
+      <WebsiteFullSection
         tone="muted"
         eyebrow={labels.modules}
         title={content.modulesTitle}
         description={content.modulesDescription}
       >
         <WebsiteCardGrid items={content.modules} />
-      </WebsiteSplitSection>
+      </WebsiteFullSection>
     </>
   );
 }

@@ -187,25 +187,27 @@ export function PetProfessionalsPage() {
           description="Clinicians, groomers, and operational staff linked to this pet business workspace."
         />
 
-        <div className="grid gap-3 ui-surface-panel p-4 md:grid-cols-[1fr_auto_auto]">
+        <div className="grid gap-3 ui-surface-panel p-4 md:grid-cols-[1fr_auto]">
           <SearchBar value={searchInput} onChange={setSearchInput} placeholder="Name, specialty, license or contact" />
-          <button
-            type="button"
-            onClick={() => setSearch(searchInput)}
-            className="ui-primary-button"
-          >
-            Search
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              setSearchInput('');
-              setSearch('');
-            }}
-            className="ui-secondary-button"
-          >
-            Clear
-          </button>
+          <div className="flex items-end gap-2 pb-0.5">
+            <button
+              type="button"
+              onClick={() => setSearch(searchInput)}
+              className="ui-primary-button"
+            >
+              Search
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setSearchInput('');
+                setSearch('');
+              }}
+              className="ui-inline-button"
+            >
+              Clear
+            </button>
+          </div>
         </div>
 
         <PermissionGuard permission={editingId ? 'pet.professional.update' : 'pet.professional.create'}>

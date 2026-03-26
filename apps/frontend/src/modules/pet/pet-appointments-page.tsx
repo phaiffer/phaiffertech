@@ -29,6 +29,7 @@ import {
 } from '@/shared/types/pet';
 import { ConfirmDialog } from '@/shared/ui/confirm-dialog';
 import { DataTable } from '@/shared/ui/data-table';
+import { PageSection } from '@/shared/ui/page-section';
 import { PageTitle } from '@/shared/ui/page-title';
 import { Pagination } from '@/shared/ui/pagination';
 import { sharedPageStackClass } from '@/shared/components/public-visual-system';
@@ -421,6 +422,7 @@ export function PetAppointmentsPage() {
 
   const rows = resolvePageItems(pageData);
   const totalItems = resolveTotalItems(pageData);
+  const activeFilterCount = [search, statusFilter, clientFilterId, petFilterId, serviceFilterId, professionalFilterId].filter(Boolean).length;
   const clientsLookupUnavailable = lookupIssues.some((issue) => issue.key === 'clients');
   const profilesLookupUnavailable = lookupIssues.some((issue) => issue.key === 'profiles');
   const servicesLookupUnavailable = lookupIssues.some((issue) => issue.key === 'services');
@@ -452,8 +454,8 @@ export function PetAppointmentsPage() {
     >
       <div className={sharedPageStackClass}>
         <PageTitle 
-           title="Appointment Schedule"
-           description="Schedule grooming visits, assign a professional, track payment, and manage your daily service queue."
+           title="Appointments"
+           description="Run the daily schedule with just the filters and actions needed for booking and follow-through."
            actions={
              <div className="flex gap-2">
                 <button 
@@ -461,7 +463,7 @@ export function PetAppointmentsPage() {
                   onClick={() => setViewMode(viewMode === 'list' ? 'calendar' : 'list')}
                   className="ui-secondary-button"
                 >
-                  View: {viewMode === 'calendar' ? 'Calendar' : 'List'}
+                  {viewMode === 'calendar' ? 'Switch to list' : 'Switch to calendar'}
                 </button>
                 <PermissionGuard permission="pet.appointment.create">
                   <button type="button" onClick={() => beginCreate()} className="ui-primary-button">
@@ -472,38 +474,45 @@ export function PetAppointmentsPage() {
            }
         />
 
-        <PetAppointmentsFilters
-          searchInput={searchInput}
-          onSearchInputChange={setSearchInput}
-          statusFilter={statusFilter}
-          onStatusFilterChange={setStatusFilter}
-          clientFilterId={clientFilterId}
-          onClientFilterIdChange={setClientFilterId}
-          clientOptions={clientOptions}
-          clientsLookupUnavailable={clientsLookupUnavailable}
-          petFilterId={petFilterId}
-          onPetFilterIdChange={setPetFilterId}
-          petOptions={petOptions}
-          profilesLookupUnavailable={profilesLookupUnavailable}
-          serviceFilterId={serviceFilterId}
-          onServiceFilterIdChange={setServiceFilterId}
-          serviceOptions={serviceOptions}
-          servicesLookupUnavailable={servicesLookupUnavailable}
-          professionalFilterId={professionalFilterId}
-          onProfessionalFilterIdChange={setProfessionalFilterId}
-          professionalOptions={professionalOptions}
-          professionalsLookupUnavailable={professionalsLookupUnavailable}
-          onSearch={() => setSearch(searchInput)}
-          onClear={() => {
-            setSearchInput('');
-            setSearch('');
-            setStatusFilter('');
-            setClientFilterId('');
-            setPetFilterId('');
-            setServiceFilterId('');
-            setProfessionalFilterId('');
-          }}
-        />
+        <PageSection
+          tone="muted"
+          title="Filters"
+          description="Refine the schedule by status, customer, service, and professional."
+        >
+          <PetAppointmentsFilters
+            searchInput={searchInput}
+            onSearchInputChange={setSearchInput}
+            statusFilter={statusFilter}
+            onStatusFilterChange={setStatusFilter}
+            clientFilterId={clientFilterId}
+            onClientFilterIdChange={setClientFilterId}
+            clientOptions={clientOptions}
+            clientsLookupUnavailable={clientsLookupUnavailable}
+            petFilterId={petFilterId}
+            onPetFilterIdChange={setPetFilterId}
+            petOptions={petOptions}
+            profilesLookupUnavailable={profilesLookupUnavailable}
+            serviceFilterId={serviceFilterId}
+            onServiceFilterIdChange={setServiceFilterId}
+            serviceOptions={serviceOptions}
+            servicesLookupUnavailable={servicesLookupUnavailable}
+            professionalFilterId={professionalFilterId}
+            onProfessionalFilterIdChange={setProfessionalFilterId}
+            professionalOptions={professionalOptions}
+            professionalsLookupUnavailable={professionalsLookupUnavailable}
+            activeFilterCount={activeFilterCount}
+            onSearch={() => setSearch(searchInput)}
+            onClear={() => {
+              setSearchInput('');
+              setSearch('');
+              setStatusFilter('');
+              setClientFilterId('');
+              setPetFilterId('');
+              setServiceFilterId('');
+              setProfessionalFilterId('');
+            }}
+          />
+        </PageSection>
 
         <PetLookupFeedback issues={lookupIssues} />
 

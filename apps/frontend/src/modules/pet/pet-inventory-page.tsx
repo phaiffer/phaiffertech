@@ -547,7 +547,7 @@ export function PetInventoryPage() {
                   setProductFilterId('');
                   setMovementTypeFilter('');
                 }}
-                className="ui-secondary-button"
+                className="ui-inline-button"
               >
                 Clear filters
               </button>

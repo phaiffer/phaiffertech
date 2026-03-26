@@ -240,16 +240,6 @@ export function CrmLeadsPage() {
       render: (lead) => <StatusBadge status={lead.status} />
     },
     {
-      key: 'lifecycle',
-      header: 'Lifecycle',
-      render: (lead) => (
-        <div>
-          <p className="font-medium text-[color:var(--app-shell-heading)]">Criado em {formatDateTime(lead.createdAt)}</p>
-          <p className={`mt-1 ${sharedCompactTextClass}`}>Última revisão {formatDateTime(lead.updatedAt)}</p>
-        </div>
-      )
-    },
-    {
       key: 'actions',
       header: 'Ações',
       render: (lead) => (
@@ -285,8 +275,8 @@ export function CrmLeadsPage() {
       <div className={sharedPageStackClass}>
         <PageTitle
           eyebrow="CRM workspace"
-          title="CRM Leads"
-          description="Listagem de leads com filtros, paginação e controle de permissões."
+          title="Leads"
+          description="Keep intake, source, and relationship context visible without turning the page into an admin panel."
           actions={(
             <PermissionGuard permission="crm.lead.create">
               <Link
@@ -301,8 +291,8 @@ export function CrmLeadsPage() {
 
         <PageSection
           tone="muted"
-          title="Lead filters"
-          description="Refine the commercial queue by status, source, and relationship context without squeezing controls into uneven widths."
+          title="Filters"
+          description="Refine the queue by status, source, company, and contact."
         >
           <div className={sharedFilterToolbarClass}>
             <div className="grid gap-3 xl:grid-cols-[minmax(0,1.45fr)_repeat(4,minmax(0,0.82fr))] xl:items-end">
@@ -379,7 +369,7 @@ export function CrmLeadsPage() {
 
         <PageSection
           title="Lead queue"
-          description="The filtered table keeps relationship context, lifecycle timing, and action controls readable without overloading a single row."
+          description="Open leads with source, relationship context, and next actions."
           actions={(
             <p className="text-sm text-[color:var(--app-shell-muted)]">
               Total {totalItems} lead(s)
@@ -392,7 +382,17 @@ export function CrmLeadsPage() {
               rows={rows}
               getRowKey={(row) => row.id}
               loading={loading}
-              emptyMessage="Nenhum lead encontrado."
+              emptyState={{
+                title: 'Nenhum lead encontrado',
+                description: 'Abra o primeiro lead para iniciar a fila comercial deste workspace.',
+                action: (
+                  <PermissionGuard permission="crm.lead.create">
+                    <Link href="/crm/leads/new" className="ui-primary-button">
+                      Novo lead
+                    </Link>
+                  </PermissionGuard>
+                )
+              }}
             />
 
             <Pagination

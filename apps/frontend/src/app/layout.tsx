@@ -21,8 +21,11 @@ export const metadata: Metadata = {
   description:
     'Modular SaaS platform for operational systems, cloud architecture, data engineering and applied research.',
   icons: {
-    icon: '/favicon.ico',
-    shortcut: '/favicon.ico',
+    icon: [
+      { url: '/favicon.ico', sizes: '48x48' },
+      { url: '/icon.svg', type: 'image/svg+xml' },
+    ],
+    apple: '/PhaifferTech_logo.png',
   },
 };
 

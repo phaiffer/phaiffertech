@@ -84,7 +84,7 @@ describe('PetAppointmentsPage', () => {
       expect(petServiceMock.listAppointments).toHaveBeenCalledTimes(1);
     });
 
-    fireEvent.click(screen.getByRole('button', { name: 'View: Calendar' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Switch to list' }));
 
     expect(screen.getByText('Some PetFlow references are not yet available.')).toBeInTheDocument();
     expect(screen.getByText(/pet\.client\.read/)).toBeInTheDocument();

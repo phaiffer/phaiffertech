@@ -5,7 +5,7 @@ import { getWebsiteContent } from './website-content';
 import { WebsiteHero } from './website-hero';
 import {
   WebsiteCardGrid,
-  WebsiteSplitSection,
+  WebsiteFullSection,
   WebsiteStatStrip
 } from './website-sections';
 
@@ -16,16 +16,14 @@ export function WebsiteResearchPage() {
     locale === 'pt-BR'
       ? {
           insights: 'Insights',
-          engineering: 'Engineering',
+          contact: 'Contato',
           tracks: 'Trilhas de pesquisa',
-          outputs: 'Outputs',
           bridge: 'Ponte'
         }
       : {
           insights: 'Insights',
-          engineering: 'Engineering',
+          contact: 'Contact',
           tracks: 'Research tracks',
-          outputs: 'Outputs',
           bridge: 'Bridge'
         };
 
@@ -36,34 +34,25 @@ export function WebsiteResearchPage() {
         title={content.title}
         description={content.description}
         primaryCta={{ label: labels.insights, href: '/articles' }}
-        secondaryCta={{ label: labels.engineering, href: '/engineering' }}
+        secondaryCta={{ label: labels.contact, href: '/contact' }}
       />
 
-      <WebsiteSplitSection
+      <WebsiteFullSection
         tone="muted"
         eyebrow={labels.tracks}
         title={content.tracksTitle}
         description={content.tracksDescription}
       >
-        <WebsiteCardGrid items={content.tracks} />
-      </WebsiteSplitSection>
+        <WebsiteCardGrid items={content.tracks.slice(0, 3)} />
+      </WebsiteFullSection>
 
-      <WebsiteSplitSection
-        eyebrow={labels.outputs}
-        title={content.outputsTitle}
-        description={content.outputsDescription}
-      >
-        <WebsiteCardGrid items={content.outputs} />
-      </WebsiteSplitSection>
-
-      <WebsiteSplitSection
-        tone="muted"
+      <WebsiteFullSection
         eyebrow={labels.bridge}
         title={content.bridgeTitle}
         description={content.bridgeDescription}
       >
         <WebsiteStatStrip items={content.bridge} />
-      </WebsiteSplitSection>
+      </WebsiteFullSection>
     </>
   );
 }

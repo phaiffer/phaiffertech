@@ -181,8 +181,9 @@ describe('IotHome', () => {
 
     expect(screen.getByText('IoT Onboarding')).toBeInTheDocument();
     expect(screen.getByText('Set up the IoT workspace')).toBeInTheDocument();
-    expect(screen.getByText('Telemetry is not configured yet')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Register device' })).toBeInTheDocument();
+    expect(screen.getAllByText('Inspect devices').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('Review registers').length).toBeGreaterThan(0);
     expect(screen.getAllByText('Register device').length).toBeGreaterThan(0);
   });
 });

@@ -2,13 +2,10 @@
 
 import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
-import { DashboardContextCardGrid } from '@/shared/dashboard/dashboard-context-card-grid';
-import type { DashboardContextCard } from '@/shared/dashboard/contextual-dashboard';
 import { DashboardSection } from '@/shared/dashboard/dashboard-section';
 import { EmptyStateCard } from '@/shared/dashboard/empty-state-card';
 import { MetricGrid } from '@/shared/dashboard/metric-grid';
 import { ApiClientError } from '@/shared/lib/http';
-import { getAppThemeModeLabel } from '@/shared/lib/tenant-branding';
 import {
   ModuleWorkspaceAction,
   ModuleWorkspaceFactList,
@@ -168,54 +165,6 @@ function buildCrmGuidanceSteps(actions: ModuleWorkspaceAction[], keys: string[])
     });
 }
 
-function buildCrmContextCards({
-  canReadDashboard,
-  summary,
-  firstUse,
-  scopeName,
-  accessLabel
-}: {
-  canReadDashboard: boolean;
-  summary: CrmDashboardSummary | null;
-  firstUse: boolean;
-  scopeName: string;
-  accessLabel: string;
-}): DashboardContextCard[] {
-  return [
-    {
-      key: 'crm-pipeline-posture',
-      label: 'Pipeline posture',
-      value: !canReadDashboard
-        ? 'Restricted'
-        : summary
-          ? `${summary.totalLeads} leads / ${summary.totalDeals} deals`
-          : 'Loading...',
-      description: firstUse
-        ? 'The commercial workspace is still being seeded with the first companies, contacts, leads, and deals.'
-        : 'Lead intake and deal pressure stay explicit before drilling into dashboards, pipeline stages, or record lists.',
-      tone: 'accent'
-    },
-    {
-      key: 'crm-follow-up-rhythm',
-      label: 'Follow-up attention',
-      value: !canReadDashboard
-        ? 'Permission-bound'
-        : summary
-          ? `${summary.overdueTasks} overdue / ${summary.tasksPendentes} open`
-          : 'Loading...',
-      description: 'Open and overdue tasks keep the next commercial moves visible so execution does not disappear behind record volume.',
-      tone: 'primary'
-    },
-    {
-      key: 'crm-governance',
-      label: 'Workspace governance',
-      value: accessLabel,
-      description: `Commercial operations remain scoped to ${scopeName} and the permissions exposed in this authenticated CRM workspace.`,
-      tone: 'neutral'
-    }
-  ];
-}
-
 function resolveActionHref(actions: ModuleWorkspaceAction[], href: string, fallbackHref: string) {
   const action = actions.find((candidate) => candidate.href === href && candidate.capability?.interactive !== false);
   return action?.href ?? fallbackHref;
@@ -359,11 +308,12 @@ export function CrmHome() {
 
       return action;
     });
-  const themePolicy = platform.theme.canOverride
-    ? `${getAppThemeModeLabel(platform.theme.tenantDefaultMode)} with user override`
-    : `${getAppThemeModeLabel(platform.theme.tenantDefaultMode)} workspace-managed`;
   const fallbackGuidance = buildCrmGuidanceSteps(actionStates, ['/crm/companies', '/crm/contacts', '/crm/leads']);
-  const restrictedGuidance = buildCrmGuidanceSteps(actionStates, ['/crm/companies', '/crm/tasks', '/crm/notes']);
+  const restrictedGuidance = buildCrmGuidanceSteps(actionStates, ['/crm/companies', '/crm/leads', '/crm/tasks']);
+  const landingActions = useMemo(
+    () => actionStates.filter((action) => ['/crm/companies', '/crm/leads', '/crm/deals'].includes(action.href)),
+    [actionStates]
+  );
   const primaryAction = useMemo(
     () => resolveCrmPrimaryAction(actionStates, summary, firstUse),
     [actionStates, firstUse, summary]
@@ -377,16 +327,6 @@ export function CrmHome() {
       .map((key) => findPulseCard(summary, key))
       .filter((card): card is NonNullable<ReturnType<typeof findPulseCard>> => Boolean(card));
   }, [summary]);
-  const contextCards = useMemo(
-    () => buildCrmContextCards({
-      canReadDashboard,
-      summary,
-      firstUse,
-      scopeName: platform.branding.scopeName,
-      accessLabel: platform.workspace.accessLabel
-    }),
-    [canReadDashboard, firstUse, platform.branding.scopeName, platform.workspace.accessLabel, summary]
-  );
 
   useEffect(() => {
     let active = true;
@@ -453,9 +393,7 @@ export function CrmHome() {
         ) : null}
         chips={[
           { label: 'Workspace', value: platform.workspace.workspaceLabel },
-          { label: 'Access', value: platform.workspace.accessLabel, tone: 'neutral' },
-          { label: 'Profile', value: crmVisual.visualProfile.label, tone: 'neutral' },
-          { label: 'Theme', value: themePolicy, tone: 'neutral' }
+          { label: 'Access', value: platform.workspace.accessLabel, tone: 'neutral' }
         ]}
         aside={(
           <ModuleWorkspaceFactList
@@ -464,19 +402,6 @@ export function CrmHome() {
                 label: 'Workspace code',
                 value: platform.branding.tenantCode ?? 'Not assigned',
                 description: 'Stable workspace identifier for CRM.'
-              },
-              {
-                label: 'Role context',
-                value: platform.user?.role ?? 'Unknown role',
-                description: platform.user?.fullName
-                  ? `Authenticated as ${platform.user.fullName}.`
-                  : 'Authenticated user details are not available.'
-              },
-              {
-                label: 'Module surface',
-                value: 'Contracted CRM workspace',
-                description: 'Only contracted CRM routes remain exposed from this landing page.',
-                status: 'active'
               },
               {
                 label: 'Next action',
@@ -565,19 +490,12 @@ export function CrmHome() {
       />
 
       <ModuleWorkspaceQuickActionGrid
-        title="Workspace Actions"
-        description="Open the CRM surfaces permitted in the current role and keep restricted flows explicit when access boundaries apply."
-        actions={actionStates}
+        title="Core CRM flows"
+        description="Keep the visible CRM surface focused on records, lead intake, and live deals."
+        actions={landingActions}
         emptyTitle="No CRM actions available"
         emptyDescription="This workspace has the CRM module enabled, but the current user does not have CRM read permissions yet."
       />
-
-      <ModuleWorkspaceSection
-        title="Commercial Operating Context"
-        description="Keep the current pipeline stance, follow-up pressure, and workspace boundary readable before entering deeper CRM screens."
-      >
-        <DashboardContextCardGrid cards={contextCards} />
-      </ModuleWorkspaceSection>
 
       <ModuleWorkspaceSection
         title="Commercial Pulse"

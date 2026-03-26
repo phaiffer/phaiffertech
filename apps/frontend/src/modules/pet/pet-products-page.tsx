@@ -328,7 +328,7 @@ export function PetProductsPage() {
                   setSearchInput('');
                   setSearch('');
                 }}
-                className="ui-secondary-button"
+                className="ui-inline-button"
               >
                 Clear
               </button>

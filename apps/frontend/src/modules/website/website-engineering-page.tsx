@@ -5,7 +5,7 @@ import { getWebsiteContent } from './website-content';
 import { WebsiteHero } from './website-hero';
 import {
   WebsiteCardGrid,
-  WebsiteSplitSection,
+  WebsiteFullSection,
   WebsiteStatStrip
 } from './website-sections';
 
@@ -15,17 +15,15 @@ export function WebsiteEngineeringPage() {
   const labels =
     locale === 'pt-BR'
       ? {
-          research: 'Pesquisa',
-          insights: 'Insights',
+          platform: 'Plataforma',
+          contact: 'Contato',
           expertise: 'Especialidade',
-          delivery: 'Entrega',
           principles: 'Princípios'
         }
       : {
-          research: 'Research',
-          insights: 'Insights',
+          platform: 'Platform',
+          contact: 'Contact',
           expertise: 'Expertise',
-          delivery: 'Delivery',
           principles: 'Principles'
         };
 
@@ -35,35 +33,26 @@ export function WebsiteEngineeringPage() {
         eyebrow={content.eyebrow}
         title={content.title}
         description={content.description}
-        primaryCta={{ label: labels.research, href: '/research' }}
-        secondaryCta={{ label: labels.insights, href: '/articles' }}
+        primaryCta={{ label: labels.platform, href: '/platform' }}
+        secondaryCta={{ label: labels.contact, href: '/contact' }}
       />
 
-      <WebsiteSplitSection
+      <WebsiteFullSection
         tone="muted"
         eyebrow={labels.expertise}
         title={content.expertiseTitle}
         description={content.expertiseDescription}
       >
-        <WebsiteCardGrid items={content.expertise} />
-      </WebsiteSplitSection>
+        <WebsiteCardGrid items={content.expertise.slice(0, 3)} />
+      </WebsiteFullSection>
 
-      <WebsiteSplitSection
-        eyebrow={labels.delivery}
-        title={content.deliveryTitle}
-        description={content.deliveryDescription}
-      >
-        <WebsiteCardGrid items={content.delivery} />
-      </WebsiteSplitSection>
-
-      <WebsiteSplitSection
-        tone="muted"
+      <WebsiteFullSection
         eyebrow={labels.principles}
         title={content.principlesTitle}
         description={content.principlesDescription}
       >
         <WebsiteStatStrip items={content.principles} />
-      </WebsiteSplitSection>
+      </WebsiteFullSection>
     </>
   );
 }

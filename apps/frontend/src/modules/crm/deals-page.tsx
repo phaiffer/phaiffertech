@@ -9,7 +9,6 @@ import {
   sharedPageStackClass
 } from '@/shared/components/public-visual-system';
 import { StatusBadge } from '@/shared/dashboard/status-badge';
-import { MetricGrid } from '@/shared/dashboard/metric-grid';
 import { ApiClientError } from '@/shared/lib/http';
 import { resolvePageItems, resolveTotalItems } from '@/shared/lib/pagination';
 import { crmService, CreateDealInput, UpdateDealInput } from '@/shared/services/crm-service';
@@ -17,7 +16,6 @@ import { financeService } from '@/shared/services/finance-service';
 import { CrmCompany, CrmContact, CrmDeal, CrmLead, CrmPipelineStage } from '@/shared/types/crm';
 import { FinanceInvoice } from '@/shared/types/finance';
 import { PageResponse } from '@/shared/types/common';
-import { DashboardSummaryCard } from '@/shared/types/dashboard';
 import { ConfirmDialog } from '@/shared/ui/confirm-dialog';
 import { DateInput } from '@/shared/ui/date-input';
 import { FormInput } from '@/shared/ui/form-input';
@@ -306,34 +304,6 @@ export function CrmDealsPage() {
   const rows = resolvePageItems(pageData);
   const totalItems = resolveTotalItems(pageData);
   const openDealsOnPage = rows.filter((row) => row.status === 'OPEN').length;
-  const summaryCards: DashboardSummaryCard[] = [
-    {
-      key: 'deals-in-scope',
-      label: 'Deals in scope',
-      value: totalItems,
-      trend: 'Total matching deals currently tracked on the board.'
-    },
-    {
-      key: 'open-deals-on-page',
-      label: 'Open deals',
-      value: openDealsOnPage,
-      trend: 'Opportunities still active within this page view.'
-    },
-    {
-      key: 'pipeline-stages-ready',
-      label: 'Stages ready',
-      value: stages.length,
-      trend: 'Configured steps for the opportunity lifecycle.'
-    },
-    {
-      key: 'deal-filters',
-      label: 'Active filters',
-      value: activeFilterCount,
-      trend: activeFilterCount > 0
-        ? 'The board is narrowed by active commercial filters.'
-        : 'Showing the broader default opportunity list.'
-    }
-  ];
 
   function formatDealAmount(row: CrmDeal) {
     if (!row.amount) return 'No amount defined';
@@ -357,8 +327,8 @@ export function CrmDealsPage() {
       <div className={sharedPageStackClass}>
         <PageTitle
           eyebrow="CRM workspace"
-          title="Deals Pipeline"
-          description="Drag-and-drop opportunity management. Keep track of deal lifecycles visually and streamline interactions without leaving the board."
+          title="Deals"
+          description="Track opportunities on a single board without turning the page into a reporting layer."
           actions={(
             <PermissionGuard permission="crm.deal.create">
               <button type="button" onClick={beginCreateDeal} className="ui-primary-button">
@@ -368,12 +338,10 @@ export function CrmDealsPage() {
           )}
         />
 
-        <MetricGrid cards={summaryCards} columns="md:grid-cols-2 xl:grid-cols-4" />
-
         <PageSection
           tone="muted"
-          title="Board filters"
-          description="Focus the pipeline by search, lifecycle stage, and account context while keeping the board easily readable."
+          title="Filters"
+          description="Focus the board by search, lifecycle, and account."
         >
           <div className={sharedFilterToolbarClass}>
             <div className="grid gap-3 xl:grid-cols-[minmax(0,1.45fr)_220px_260px] xl:items-end">
@@ -414,90 +382,98 @@ export function CrmDealsPage() {
 
         {error ? <div className="ui-notice-error">{error}</div> : null}
 
-        {/* KANBAN BOARD */}
-        <div className="mt-8 flex gap-6 overflow-x-auto pb-8 pt-2">
-          {loading && rows.length === 0 ? (
-            <div className="w-full text-center py-20 text-[color:var(--app-shell-muted)]">
-              Loading pipeline data...
-            </div>
-          ) : stages.length === 0 && !loading ? (
-            <div className="ui-notice-neutral w-full">
-              The Kanban board requires at least one pipeline stage to be configured.
-              <div className="mt-3 flex gap-2">
-                <Link href="/crm/pipeline" className="ui-secondary-button">Configure pipeline stages</Link>
-              </div>
-            </div>
-          ) : (
-            columnsData.map(({ stage, deals }) => (
-              <div
-                key={stage.id || 'uncat'}
-                className="flex min-w-[320px] max-w-[320px] shrink-0 flex-col rounded-xl bg-[color:var(--app-shell-panel-muted)] p-3 border border-[color:var(--app-shell-border)]"
-                onDragOver={handleDragOver}
-                onDrop={(e) => stage.id ? handleDropDeal(e, stage.id) : undefined}
-              >
-                <div className="mb-4 flex items-center justify-between px-1">
-                  <div className="flex items-center gap-2">
-                    <div className="h-3 w-3 rounded-full" style={{ backgroundColor: stage.color || '#94a3b8' }} />
-                    <h3 className="font-semibold text-[color:var(--app-shell-heading)] uppercase tracking-wider text-sm">{stage.name}</h3>
-                  </div>
-                  <span className="rounded-full bg-[color:var(--app-shell-surface)] border border-[color:var(--app-shell-border)] px-2.5 py-0.5 text-xs font-medium text-[color:var(--app-shell-muted)]">
-                    {deals.length}
-                  </span>
-                </div>
-
-                <div className="flex flex-col gap-3 min-h-[150px]">
-                  {deals.map(deal => {
-                    const invoice = invoicesByDealId.get(deal.id);
-                    const fs = resolveFinanceStatus(invoice);
-                    return (
-                      <div
-                        key={deal.id}
-                        draggable={!isDragUpdating}
-                        onDragStart={(e) => handleDragStart(e, deal.id)}
-                        onClick={() => beginEditDeal(deal)}
-                        className="group cursor-grab active:cursor-grabbing rounded-lg border border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-surface)] p-4 shadow-sm hover:border-blue-500/40 hover:shadow-md transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
-                        tabIndex={0}
-                        role="button"
-                      >
-                        <div className="mb-3 flex items-start justify-between gap-2">
-                          <p className="font-semibold leading-tight text-[color:var(--app-shell-heading)] line-clamp-2">{deal.title}</p>
-                          {deal.status !== 'OPEN' && <StatusBadge status={deal.status} />}
-                        </div>
-
-                        <div className="space-y-2">
-                          <p className="text-sm font-medium text-[color:var(--app-shell-muted)] flex items-center gap-1.5 line-clamp-1">
-                            <svg className="w-4 h-4 opacity-70" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1v1H9V7zm5 0h1v1h-1V7zm-5 4h1v1H9v-1zm5 0h1v1h-1v-1zm-3 4H2v5h12v-5z" /></svg>
-                            {companyName(deal.companyId)}
-                          </p>
-
-                          <div className="flex items-center justify-between text-sm pt-2 border-t border-[color:var(--app-shell-border)]">
-                            <span className="font-semibold text-emerald-600 dark:text-emerald-400">
-                              {formatDealAmount(deal)}
-                            </span>
-                            <span className={`text-xs ${new Date(deal.expectedCloseDate || '2099') < new Date() ? 'text-red-500 font-medium' : 'text-[color:var(--app-shell-muted)]'}`}>
-                              {deal.expectedCloseDate ? new Date(deal.expectedCloseDate).toLocaleDateString() : 'No date'}
-                            </span>
-                          </div>
-
-                          {/* Finance status indicator */}
-                          <div className="flex items-center gap-1 pt-1.5">
-                            <svg className="w-3 h-3 opacity-60 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" /></svg>
-                            <span className={`text-[11px] font-medium ${fs.className}`}>{fs.label}</span>
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
-                  {deals.length === 0 && (
-                    <div className="flex h-24 items-center justify-center rounded-lg border-2 border-dashed border-[color:var(--app-shell-border)] bg-transparent">
-                      <span className="text-sm text-[color:var(--app-shell-muted)] opacity-60">Drop deals here</span>
-                    </div>
-                  )}
-                </div>
-              </div>
-            ))
+        <PageSection
+          title="Pipeline board"
+          description="Move opportunities by stage and open a deal only when you need details."
+          actions={(
+            <p className="text-sm text-[color:var(--app-shell-muted)]">
+              {openDealsOnPage} open deal(s) · {stages.length} stage(s) · {totalItems} total
+            </p>
           )}
-        </div>
+        >
+          <div className="flex gap-6 overflow-x-auto pb-8 pt-1">
+            {loading && rows.length === 0 ? (
+              <div className="w-full py-20 text-center text-[color:var(--app-shell-muted)]">
+                Loading pipeline data...
+              </div>
+            ) : stages.length === 0 && !loading ? (
+              <div className="ui-notice-neutral w-full">
+                The Kanban board requires at least one pipeline stage to be configured.
+                <div className="mt-3 flex gap-2">
+                  <Link href="/crm/pipeline" className="ui-secondary-button">Configure pipeline stages</Link>
+                </div>
+              </div>
+            ) : (
+              columnsData.map(({ stage, deals }) => (
+                <div
+                  key={stage.id || 'uncat'}
+                  className="flex min-w-[320px] max-w-[320px] shrink-0 flex-col rounded-xl border border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-panel-muted)] p-3"
+                  onDragOver={handleDragOver}
+                  onDrop={(e) => stage.id ? handleDropDeal(e, stage.id) : undefined}
+                >
+                  <div className="mb-4 flex items-center justify-between px-1">
+                    <div className="flex items-center gap-2">
+                      <div className="h-3 w-3 rounded-full" style={{ backgroundColor: stage.color || '#94a3b8' }} />
+                      <h3 className="text-sm font-semibold uppercase tracking-wider text-[color:var(--app-shell-heading)]">{stage.name}</h3>
+                    </div>
+                    <span className="rounded-full border border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-surface)] px-2.5 py-0.5 text-xs font-medium text-[color:var(--app-shell-muted)]">
+                      {deals.length}
+                    </span>
+                  </div>
+
+                  <div className="flex min-h-[150px] flex-col gap-3">
+                    {deals.map((deal) => {
+                      const invoice = invoicesByDealId.get(deal.id);
+                      const fs = resolveFinanceStatus(invoice);
+                      return (
+                        <div
+                          key={deal.id}
+                          draggable={!isDragUpdating}
+                          onDragStart={(e) => handleDragStart(e, deal.id)}
+                          onClick={() => beginEditDeal(deal)}
+                          className="group cursor-grab rounded-lg border border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-surface)] p-4 shadow-sm transition-all duration-200 hover:border-blue-500/40 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 active:cursor-grabbing"
+                          tabIndex={0}
+                          role="button"
+                        >
+                          <div className="mb-3 flex items-start justify-between gap-2">
+                            <p className="line-clamp-2 font-semibold leading-tight text-[color:var(--app-shell-heading)]">{deal.title}</p>
+                            {deal.status !== 'OPEN' ? <StatusBadge status={deal.status} /> : null}
+                          </div>
+
+                          <div className="space-y-2">
+                            <p className="line-clamp-1 text-sm font-medium text-[color:var(--app-shell-muted)]">
+                              {companyName(deal.companyId)}
+                            </p>
+
+                            <div className="flex items-center justify-between border-t border-[color:var(--app-shell-border)] pt-2 text-sm">
+                              <span className="font-semibold text-emerald-600 dark:text-emerald-400">
+                                {formatDealAmount(deal)}
+                              </span>
+                              <span className={new Date(deal.expectedCloseDate || '2099') < new Date()
+                                ? 'text-xs font-medium text-red-500'
+                                : 'text-xs text-[color:var(--app-shell-muted)]'}>
+                                {deal.expectedCloseDate ? new Date(deal.expectedCloseDate).toLocaleDateString() : 'No date'}
+                              </span>
+                            </div>
+
+                            <p className={`text-[11px] font-medium ${fs.className}`}>
+                              {fs.label}
+                            </p>
+                          </div>
+                        </div>
+                      );
+                    })}
+                    {deals.length === 0 ? (
+                      <div className="flex h-24 items-center justify-center rounded-lg border-2 border-dashed border-[color:var(--app-shell-border)] bg-transparent">
+                        <span className="text-sm text-[color:var(--app-shell-muted)] opacity-60">Drop deals here</span>
+                      </div>
+                    ) : null}
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </PageSection>
 
         {pageData.totalPages > 1 && (
           <Pagination page={pageData.page} totalPages={pageData.totalPages} totalElements={totalItems} onPageChange={(nextPage) => void load(nextPage, search, statusFilter, companyFilterId)} />

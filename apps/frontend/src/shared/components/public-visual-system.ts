@@ -12,7 +12,7 @@ import {
    Unified with the platform design system
    ═══════════════════════════════════════════════════════════════════════════ */
 
-export const sharedShellHeaderClass = 'border-b border-border bg-background/80 backdrop-blur-sm';
+export const sharedShellHeaderClass = 'border-b border-border/60 bg-background/90 backdrop-blur-md';
 
 export const sharedEyebrowClass = 'text-xs font-semibold uppercase tracking-[0.22em] text-accent';
 

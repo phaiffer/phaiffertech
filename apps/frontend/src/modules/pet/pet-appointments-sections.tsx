@@ -74,6 +74,7 @@ type PetAppointmentsFiltersProps = {
   onProfessionalFilterIdChange: (value: string) => void;
   professionalOptions: PetSelectOption[];
   professionalsLookupUnavailable: boolean;
+  activeFilterCount: number;
   onSearch: () => void;
   onClear: () => void;
 };
@@ -99,37 +100,51 @@ export function PetAppointmentsFilters({
   onProfessionalFilterIdChange,
   professionalOptions,
   professionalsLookupUnavailable,
+  activeFilterCount,
   onSearch,
   onClear
 }: PetAppointmentsFiltersProps) {
   return (
-    <div className="grid gap-3 ui-surface-panel p-4 md:grid-cols-[1fr_180px_220px_220px_220px_220px_auto_auto]">
-      <SearchBar value={searchInput} onChange={onSearchInputChange} placeholder="Service, status, notes" />
-      <FormSelect label="Status" value={statusFilter} options={petAppointmentStatusOptions} onChange={onStatusFilterChange} />
-      <FormSelect label="Client" value={clientFilterId} options={clientOptions} onChange={onClientFilterIdChange} disabled={clientsLookupUnavailable} />
-      <FormSelect label="Pet" value={petFilterId} options={petOptions} onChange={onPetFilterIdChange} disabled={profilesLookupUnavailable} />
-      <FormSelect label="Service" value={serviceFilterId} options={serviceOptions} onChange={onServiceFilterIdChange} disabled={servicesLookupUnavailable} />
-      <FormSelect
-        label="Professional"
-        value={professionalFilterId}
-        options={professionalOptions}
-        onChange={onProfessionalFilterIdChange}
-        disabled={professionalsLookupUnavailable}
-      />
-      <button
-        type="button"
-        onClick={onSearch}
-        className="ui-primary-button"
-      >
-        Search
-      </button>
-      <button
-        type="button"
-        onClick={onClear}
-        className="ui-secondary-button"
-      >
-        Clear
-      </button>
+    <div className="space-y-4">
+      <div className="grid gap-3 xl:grid-cols-[minmax(0,1.45fr)_repeat(2,minmax(0,0.9fr))]">
+        <SearchBar value={searchInput} onChange={onSearchInputChange} placeholder="Service, status, notes" />
+        <FormSelect label="Status" value={statusFilter} options={petAppointmentStatusOptions} onChange={onStatusFilterChange} />
+        <FormSelect label="Client" value={clientFilterId} options={clientOptions} onChange={onClientFilterIdChange} disabled={clientsLookupUnavailable} />
+      </div>
+
+      <div className="grid gap-3 xl:grid-cols-[repeat(3,minmax(0,1fr))_auto] xl:items-end">
+        <FormSelect label="Pet" value={petFilterId} options={petOptions} onChange={onPetFilterIdChange} disabled={profilesLookupUnavailable} />
+        <FormSelect label="Service" value={serviceFilterId} options={serviceOptions} onChange={onServiceFilterIdChange} disabled={servicesLookupUnavailable} />
+        <FormSelect
+          label="Professional"
+          value={professionalFilterId}
+          options={professionalOptions}
+          onChange={onProfessionalFilterIdChange}
+          disabled={professionalsLookupUnavailable}
+        />
+        <div className="flex items-end gap-2 pb-0.5">
+          <button
+            type="button"
+            onClick={onSearch}
+            className="ui-primary-button"
+          >
+            Search
+          </button>
+          <button
+            type="button"
+            onClick={onClear}
+            className="ui-inline-button"
+          >
+            Clear
+          </button>
+        </div>
+      </div>
+
+      <div className="text-sm text-[color:var(--app-shell-muted)]">
+        {activeFilterCount > 0
+          ? `${activeFilterCount} filter(s) shaping the schedule view.`
+          : 'No active filters in the appointment view.'}
+      </div>
     </div>
   );
 }
@@ -221,9 +236,11 @@ export function PetAppointmentForm({
             <p className="text-xs font-semibold uppercase tracking-wide text-[color:var(--app-shell-muted)]">Booking</p>
             <p className="text-xs text-[color:var(--app-shell-muted)] mt-0.5">Who, what, and when — the core of the appointment.</p>
           </div>
-          <div className="grid gap-3 md:grid-cols-3">
+          <div className="grid gap-3 grid-cols-2">
             <FormSelect label="Client" value={clientId} options={formClientOptions} onChange={onClientIdChange} disabled={clientsLookupUnavailable} />
             <FormSelect label="Pet" value={petId} options={formPetOptions} onChange={onPetIdChange} disabled={profilesLookupUnavailable} />
+          </div>
+          <div className="grid gap-3 grid-cols-2">
             <FormSelect label="Service" value={serviceId} options={formServiceOptions} onChange={onServiceIdChange} disabled={servicesLookupUnavailable} />
             <FormSelect
               label="Professional"
@@ -232,6 +249,8 @@ export function PetAppointmentForm({
               onChange={onProfessionalIdChange}
               disabled={professionalsLookupUnavailable}
             />
+          </div>
+          <div className="grid gap-3 grid-cols-2">
             <DateTimeInput label="Date & time" value={scheduledAt} onChange={onScheduledAtChange} required />
             <FormSelect label="Status" value={status} options={petAppointmentFormStatusOptions} onChange={onStatusChange} />
           </div>
@@ -246,21 +265,21 @@ export function PetAppointmentForm({
               Link a session package to cover the base service, or leave empty for a one-time payment. Add any extras charged today.
             </p>
           </div>
-          <div className="grid gap-3 md:grid-cols-3">
-            <div>
-              <FormSelect
-                label="Session package (optional)"
-                value={clientPlanId}
-                options={planOptions}
-                onChange={onClientPlanIdChange}
-                disabled={!clientId || !hasPlanOptions}
-              />
-              {!clientId ? (
-                <p className="mt-1 text-xs text-[color:var(--app-shell-muted)]">Select a client first to see available packages.</p>
-              ) : !hasPlanOptions ? (
-                <p className="mt-1 text-xs text-[color:var(--app-shell-muted)]">No active package for this client — appointment will be charged individually.</p>
-              ) : null}
-            </div>
+          <div>
+            <FormSelect
+              label="Session package (optional)"
+              value={clientPlanId}
+              options={planOptions}
+              onChange={onClientPlanIdChange}
+              disabled={!clientId || !hasPlanOptions}
+            />
+            {!clientId ? (
+              <p className="mt-1 text-xs text-[color:var(--app-shell-muted)]">Select a client first to see available packages.</p>
+            ) : !hasPlanOptions ? (
+              <p className="mt-1 text-xs text-[color:var(--app-shell-muted)]">No active package for this client — appointment will be charged individually.</p>
+            ) : null}
+          </div>
+          <div className="grid gap-3 grid-cols-2">
             <FormInput
               label="Extras (R$)"
               value={extrasAmount}
@@ -292,7 +311,7 @@ export function PetAppointmentForm({
           ) : null}
         </div>
 
-        <div className="flex gap-2">
+        <div className="flex gap-2 mt-1">
           <button
             type="submit"
             disabled={submitting || !appointmentReferencesReady}

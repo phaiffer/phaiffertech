@@ -28,12 +28,13 @@ describe('PublicSiteShell', () => {
       </PublicSiteProvider>
     );
 
-    const aboutLinks = await screen.findAllByRole('link', { name: 'About' });
+    const productLinks = await screen.findAllByRole('link', { name: 'Products' });
     const accessLinks = screen.getAllByRole('link', { name: 'Platform access' });
 
-    expect(aboutLinks[0]).toHaveAttribute('href', '/about');
+    expect(productLinks[0]).toHaveAttribute('href', '/products');
     expect(accessLinks[0]).toHaveAttribute('href', '/login');
     expect(screen.getAllByText('PetFlow').length).toBeGreaterThan(0);
+    expect(screen.queryByRole('link', { name: 'About' })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Light' })).not.toBeInTheDocument();
   });
 
@@ -49,7 +50,7 @@ describe('PublicSiteShell', () => {
     );
 
     expect(screen.getByText('login-content')).toBeInTheDocument();
-    expect(screen.queryByRole('link', { name: 'About' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'Products' })).not.toBeInTheDocument();
     expect(screen.queryByText('PetFlow')).not.toBeInTheDocument();
   });
 });

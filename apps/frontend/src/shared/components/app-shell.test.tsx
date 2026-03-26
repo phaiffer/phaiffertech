@@ -71,12 +71,10 @@ describe('AppShell', () => {
       </AppShell>
     );
 
-    expect(screen.getAllByText('Tenant workspace').length).toBeGreaterThan(0);
-    expect(screen.getByRole('heading', { name: 'Dashboard' })).toBeInTheDocument();
-    expect(screen.getByText('Visão geral do workspace e módulos contratados.')).toBeInTheDocument();
-    expect(screen.getByText('Active workspace')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Overview' })).toBeInTheDocument();
+    expect(screen.getByText('Tenant One')).toBeInTheDocument();
     expect(screen.getByText('Contracted SaaS workspace')).toBeInTheDocument();
-    expect(screen.getByText('0 contracted modules')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Overview' })).toHaveAttribute('href', '/dashboard');
     expect(screen.getByTestId('sidebar').parentElement).toHaveStyle({ '--tenant-accent': '#2563eb' });
   });
 });

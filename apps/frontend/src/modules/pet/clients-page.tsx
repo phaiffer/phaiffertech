@@ -62,6 +62,7 @@ export function PetClientsPage() {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
 
+  const [isEditorOpen, setIsEditorOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -113,6 +114,19 @@ export function PetClientsPage() {
     setStatus(client.status);
     setSuccess(null);
     setError(null);
+    setIsEditorOpen(true);
+  }
+
+  function beginCreate() {
+    resetForm();
+    setSuccess(null);
+    setError(null);
+    setIsEditorOpen(true);
+  }
+
+  function closeEditor() {
+    resetForm();
+    setIsEditorOpen(false);
   }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -146,6 +160,7 @@ export function PetClientsPage() {
       }
 
       resetForm();
+      setIsEditorOpen(false);
       await load(pageData.page, search, statusFilter);
     } catch (err) {
       const message = err instanceof ApiClientError ? err.message : 'Unable to save client.';
@@ -175,8 +190,11 @@ export function PetClientsPage() {
   const totalItems = resolveTotalItems(pageData);
   const activeFilterCount = [search, statusFilter].filter(Boolean).length;
 
-  function scrollToClientForm() {
-    globalThis.document.getElementById('pet-client-form-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  function revealClientEditor() {
+    beginCreate();
+    globalThis.setTimeout(() => {
+      globalThis.document.getElementById('pet-client-form-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 0);
   }
 
   const columns: DataTableColumn<PetClient>[] = [
@@ -252,14 +270,21 @@ export function PetClientsPage() {
       <div className={sharedPageStackClass}>
         <PageTitle
           eyebrow="PetFlow workspace"
-          title="Client Base"
-          description="Capture pet owners and contact context before moving into pets, appointments, and billing."
+          title="Clients"
+          description="Keep the customer base ready before moving into pets, appointments, and billing."
+          actions={(
+            <PermissionGuard permission="pet.client.create">
+              <button type="button" onClick={beginCreate} className="ui-primary-button">
+                New client
+              </button>
+            </PermissionGuard>
+          )}
         />
 
         <PageSection
           tone="muted"
-          title="Client filters"
-          description="Refine the client directory by search and lifecycle status without compressing controls into an uneven toolbar."
+          title="Filters"
+          description="Search by name, contact, or lifecycle status."
         >
           <div className={sharedFilterToolbarClass}>
             <div className="grid gap-3 xl:grid-cols-[minmax(0,1.45fr)_220px] xl:items-end">
@@ -285,7 +310,7 @@ export function PetClientsPage() {
                   setSearch('');
                   setStatusFilter('');
                 }}
-                className="ui-secondary-button"
+                className="ui-inline-button"
               >
                 Limpar
               </button>
@@ -298,52 +323,52 @@ export function PetClientsPage() {
           </div>
         </PageSection>
 
-        <PermissionGuard permission={editingId ? 'pet.client.update' : 'pet.client.create'}>
-          <div id="pet-client-form-section">
-            <PageSection
-              title={editingId ? 'Edit client' : 'Add or update client'}
-              description="Keep the customer record ready for pet registration, scheduling, and follow-up."
-            >
-              <form onSubmit={handleSubmit} className="space-y-5">
-                <div className="grid gap-4 xl:grid-cols-2">
-                  <FormInput label="Name" value={name} onChange={setName} required />
-                  <FormSelect label="Status" value={status} options={formStatusOptions} onChange={setStatus} />
-                  <FormInput label="Email" value={email} onChange={setEmail} type="email" />
-                  <FormInput label="Phone" value={phone} onChange={setPhone} />
-                  <FormInput label="Document" value={document} onChange={setDocument} />
-                  <div className="hidden xl:block" />
-                  <FormInput label="Address" value={address} onChange={setAddress} wrapperClassName="xl:col-span-2" />
-                </div>
+        {isEditorOpen ? (
+          <PermissionGuard permission={editingId ? 'pet.client.update' : 'pet.client.create'}>
+            <div id="pet-client-form-section">
+              <PageSection
+                title={editingId ? 'Edit client' : 'New client'}
+                description="Capture only the record details needed to keep the operation moving."
+              >
+                <form onSubmit={handleSubmit} className="space-y-5">
+                  <div className="grid gap-4 xl:grid-cols-2">
+                    <FormInput label="Name" value={name} onChange={setName} required />
+                    <FormSelect label="Status" value={status} options={formStatusOptions} onChange={setStatus} />
+                    <FormInput label="Email" value={email} onChange={setEmail} type="email" />
+                    <FormInput label="Phone" value={phone} onChange={setPhone} />
+                    <FormInput label="Document" value={document} onChange={setDocument} />
+                    <div className="hidden xl:block" />
+                    <FormInput label="Address" value={address} onChange={setAddress} wrapperClassName="xl:col-span-2" />
+                  </div>
 
-                <div className={sharedFormActionsClass}>
-                  <button
-                    type="submit"
-                    disabled={submitting}
-                    className="ui-primary-button"
-                  >
-                    {submitting ? 'Saving...' : editingId ? 'Update client' : 'Add client'}
-                  </button>
-                  {editingId ? (
+                  <div className={sharedFormActionsClass}>
+                    <button
+                      type="submit"
+                      disabled={submitting}
+                      className="ui-primary-button"
+                    >
+                      {submitting ? 'Saving...' : editingId ? 'Update client' : 'Add client'}
+                    </button>
                     <button
                       type="button"
-                      onClick={resetForm}
+                      onClick={closeEditor}
                       className="ui-secondary-button"
                     >
                       Cancel
                     </button>
-                  ) : null}
-                </div>
-              </form>
-            </PageSection>
-          </div>
-        </PermissionGuard>
+                  </div>
+                </form>
+              </PageSection>
+            </div>
+          </PermissionGuard>
+        ) : null}
 
         {error ? <div className="ui-notice-error">{error}</div> : null}
         {success ? <div className="ui-notice-success">{success}</div> : null}
 
         <PageSection
           title="Client directory"
-          description="This is the first step in the PetFlow story and the base for pets, visits, and billing."
+          description="The base list for pets, visits, and follow-through."
           actions={(
             <p className="text-sm text-[color:var(--app-shell-muted)]">Total {totalItems} client(s)</p>
           )}
@@ -361,7 +386,7 @@ export function PetClientsPage() {
                 description: 'Create the first client to unlock pet profiles and the rest of the PetFlow flow.',
                 action: (
                   <PermissionGuard permission="pet.client.create">
-                    <button type="button" onClick={scrollToClientForm} className="ui-primary-button">
+                    <button type="button" onClick={revealClientEditor} className="ui-primary-button">
                       Create first client
                     </button>
                   </PermissionGuard>

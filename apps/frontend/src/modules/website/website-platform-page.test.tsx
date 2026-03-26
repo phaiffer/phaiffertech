@@ -15,11 +15,11 @@ describe('WebsitePlatformPage', () => {
     );
 
     expect(
-      await screen.findByText(/One modular SaaS platform designed to host different operational products/i)
+      await screen.findByRole('heading', { name: /The technical foundation behind PetFlow/i })
     ).toBeInTheDocument();
-    expect(screen.getByAltText('PhaifferTech Background Banner')).toBeInTheDocument();
     expect(screen.getByText('Shared foundation')).toBeInTheDocument();
+    expect(screen.getByText('Modules')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Products' })).toHaveAttribute('href', '/products');
-    expect(screen.getByRole('link', { name: 'Engineering' })).toHaveAttribute('href', '/engineering');
+    expect(screen.getByRole('link', { name: 'Contact' })).toHaveAttribute('href', '/contact');
   });
 });

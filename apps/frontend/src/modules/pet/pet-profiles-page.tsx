@@ -281,27 +281,29 @@ export function PetProfilesPage() {
           description="Register each pet under a client so appointments, care history, and billing stay connected."
         />
 
-        <div className="grid gap-3 ui-surface-panel p-4 md:grid-cols-[1fr_260px_auto_auto]">
+        <div className="grid gap-3 ui-surface-panel p-4 md:grid-cols-[1fr_260px_auto]">
           <SearchBar value={searchInput} onChange={setSearchInput} placeholder="Name, species, breed" />
           <FormSelect label="Client" value={clientFilterId} options={clientOptions} onChange={setClientFilterId} />
-          <button
-            type="button"
-            onClick={() => setSearch(searchInput)}
-            className="ui-primary-button"
-          >
-            Search
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              setSearchInput('');
-              setSearch('');
-              setClientFilterId('');
-            }}
-            className="ui-secondary-button"
-          >
-            Clear
-          </button>
+          <div className="flex items-end gap-2 pb-0.5">
+            <button
+              type="button"
+              onClick={() => setSearch(searchInput)}
+              className="ui-primary-button"
+            >
+              Search
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setSearchInput('');
+                setSearch('');
+                setClientFilterId('');
+              }}
+              className="ui-inline-button"
+            >
+              Clear
+            </button>
+          </div>
         </div>
 
         <PermissionGuard permission={editingId ? 'pet.profile.update' : 'pet.profile.create'}>

@@ -5,7 +5,7 @@ import { getWebsiteContent } from './website-content';
 import { WebsiteHero } from './website-hero';
 import {
   WebsiteCardGrid,
-  WebsiteSplitSection,
+  WebsiteFullSection,
   WebsiteStatStrip
 } from './website-sections';
 
@@ -15,17 +15,15 @@ export function WebsiteAboutPage() {
   const labels =
     locale === 'pt-BR'
       ? {
-          platform: 'Plataforma',
-          research: 'Pesquisa',
-          identity: 'Identidade',
-          principles: 'Princípios',
+          products: 'Produtos',
+          contact: 'Contato',
+          identity: 'Base real',
           direction: 'Direção'
         }
       : {
-          platform: 'Platform',
-          research: 'Research',
-          identity: 'Identity',
-          principles: 'Principles',
+          products: 'Products',
+          contact: 'Contact',
+          identity: 'Built foundation',
           direction: 'Direction'
         };
 
@@ -35,34 +33,26 @@ export function WebsiteAboutPage() {
         eyebrow={content.eyebrow}
         title={content.title}
         description={content.description}
-        primaryCta={{ label: labels.platform, href: '/platform' }}
-        secondaryCta={{ label: labels.research, href: '/research' }}
+        primaryCta={{ label: labels.products, href: '/products' }}
+        secondaryCta={{ label: labels.contact, href: '/contact' }}
       />
 
-      <WebsiteSplitSection
+      <WebsiteFullSection
         eyebrow={labels.identity}
         title={content.identityTitle}
         description={content.identityDescription}
       >
         <WebsiteStatStrip items={content.identity} />
-      </WebsiteSplitSection>
+      </WebsiteFullSection>
 
-      <WebsiteSplitSection
+      <WebsiteFullSection
         tone="muted"
-        eyebrow={labels.principles}
-        title={content.principlesTitle}
-        description={content.principlesDescription}
-      >
-        <WebsiteCardGrid items={content.principles} />
-      </WebsiteSplitSection>
-
-      <WebsiteSplitSection
         eyebrow={labels.direction}
         title={content.directionTitle}
         description={content.directionDescription}
       >
         <WebsiteCardGrid items={content.direction} />
-      </WebsiteSplitSection>
+      </WebsiteFullSection>
     </>
   );
 }

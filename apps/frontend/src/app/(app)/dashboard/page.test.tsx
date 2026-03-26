@@ -254,11 +254,11 @@ describe('DashboardPage workspace context', () => {
       expect(moduleService.getDashboardSummary).toHaveBeenCalledTimes(1);
     });
 
+    expect(screen.getByRole('heading', { name: 'Platform overview' })).toBeInTheDocument();
     expect(screen.getByText(/Executive control plane/)).toBeInTheDocument();
-    expect(screen.getByText('Recommended Actions')).toBeInTheDocument();
     expect(screen.getAllByText('Create first company').length).toBeGreaterThan(0);
-    expect(screen.getByText('Module Access Matrix')).toBeInTheDocument();
-    expect(screen.queryByText('Contracted Modules')).not.toBeInTheDocument();
+    expect(screen.getByText('Visible products')).toBeInTheDocument();
+    expect(screen.queryByText('Products in this workspace')).not.toBeInTheDocument();
   });
 
   it('renders a customer workspace dashboard without platform-only sections', async () => {
@@ -367,12 +367,12 @@ describe('DashboardPage workspace context', () => {
       expect(moduleService.getDashboardSummary).toHaveBeenCalledTimes(1);
     });
 
+    expect(screen.getByRole('heading', { name: 'Workspace overview' })).toBeInTheDocument();
     expect(screen.getByText(/Executive workspace for Clinic North/)).toBeInTheDocument();
-    expect(screen.getByText('Recommended Actions')).toBeInTheDocument();
-    expect(screen.getByText('Contracted Modules')).toBeInTheDocument();
+    expect(screen.getByText('Products in this workspace')).toBeInTheDocument();
     expect(screen.getAllByText('Create first company').length).toBeGreaterThan(0);
     expect(screen.queryByText('Manage tenants')).not.toBeInTheDocument();
-    expect(screen.queryByText('Module Access Matrix')).not.toBeInTheDocument();
+    expect(screen.queryByText('Visible products')).not.toBeInTheDocument();
     expect(screen.queryByText('Pet Snapshot')).not.toBeInTheDocument();
   });
 
@@ -456,9 +456,9 @@ describe('DashboardPage workspace context', () => {
       expect(moduleService.getDashboardSummary).toHaveBeenCalledTimes(1);
     });
 
-    expect(screen.getByText('Guided Onboarding')).toBeInTheDocument();
+    expect(screen.getByText('Getting started')).toBeInTheDocument();
     expect(screen.getByText('Get Clinic North moving')).toBeInTheDocument();
     expect(screen.getAllByText('Create first company').length).toBeGreaterThan(0);
-    expect(screen.getAllByText('Start CRM setup').length).toBeGreaterThan(0);
+    expect(screen.getByText(/Some contracted products still need their first records/i)).toBeInTheDocument();
   });
 });

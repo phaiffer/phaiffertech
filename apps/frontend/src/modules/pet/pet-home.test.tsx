@@ -139,14 +139,11 @@ describe('PetHome', () => {
     });
 
     expect(screen.getByRole('heading', { name: 'Clinic North · PetFlow' })).toBeInTheDocument();
-    expect(screen.getByText('Pet Clinic')).toBeInTheDocument();
+    expect(screen.getByText('Core PetFlow flows')).toBeInTheDocument();
+    expect(screen.getByText('Review clients')).toBeInTheDocument();
     expect(screen.getByText('Book appointments')).toBeInTheDocument();
-    expect(screen.getByText('Open medical records')).toBeInTheDocument();
-    expect(screen.getByText('Review products')).toBeInTheDocument();
-    expect(screen.getAllByText("Review today's appointments").length).toBeGreaterThan(0);
-    expect(screen.getByText('Product access required')).toBeInTheDocument();
-    expect(screen.queryByRole('link', { name: /review products/i })).not.toBeInTheDocument();
-    expect(screen.getByText('Business Snapshot')).toBeInTheDocument();
+    expect(screen.getByText('Manage billing')).toBeInTheDocument();
+    expect(screen.getAllByText('Open PetFlow dashboard').length).toBeGreaterThan(0);
     expect(screen.getByText('Live Operations')).toBeInTheDocument();
     expect(screen.getByText('Clinical Feed')).toBeInTheDocument();
   }, 10000);
@@ -226,9 +223,8 @@ describe('PetHome', () => {
       expect(petService.getDashboardSummary).toHaveBeenCalledTimes(1);
     });
 
-    expect(screen.getByText('Pet Grooming')).toBeInTheDocument();
     expect(screen.getByText('PetFlow Grooming Workspace')).toBeInTheDocument();
-    expect(screen.getByText('Business Snapshot')).toBeInTheDocument();
+    expect(screen.getByText('Core PetFlow flows')).toBeInTheDocument();
     expect(screen.getByText('Live Service Snapshot')).toBeInTheDocument();
 
     currentPlatformState.visualProfile = {
@@ -279,8 +275,7 @@ describe('PetHome', () => {
     });
 
     expect(screen.getAllByText('Book appointments').length).toBeGreaterThan(0);
-    expect(screen.getAllByText('Review products').length).toBeGreaterThan(0);
     expect(screen.queryByText('Open medical records')).not.toBeInTheDocument();
-    expect(screen.queryByText('Review pet profiles')).not.toBeInTheDocument();
+    expect(screen.queryByText('Review products')).not.toBeInTheDocument();
   });
 });

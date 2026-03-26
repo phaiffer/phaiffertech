@@ -4,8 +4,6 @@ import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 import { petMedicalRoutePermissions } from '@/modules/pet/pet-medical-permissions';
 import { usePermissions } from '@/shared/auth/usePermissions';
-import { DashboardContextCardGrid } from '@/shared/dashboard/dashboard-context-card-grid';
-import type { DashboardContextCard } from '@/shared/dashboard/contextual-dashboard';
 import { DashboardSection } from '@/shared/dashboard/dashboard-section';
 import { EmptyStateCard } from '@/shared/dashboard/empty-state-card';
 import {
@@ -17,7 +15,6 @@ import {
 } from '@/shared/entitlements/tenant-entitlements';
 import { MetricGrid } from '@/shared/dashboard/metric-grid';
 import { ApiClientError } from '@/shared/lib/http';
-import { getAppThemeModeLabel } from '@/shared/lib/tenant-branding';
 import type { VisualProfileKey } from '@/shared/lib/visual-profile';
 import {
   ModuleWorkspaceAction,
@@ -346,64 +343,6 @@ function getPetWorkspaceCopy(mode: PetWorkspaceMode): PetWorkspaceCopy {
   };
 }
 
-function buildPetContextCards({
-  canReadDashboard,
-  summary,
-  firstUse,
-  scopeName,
-  accessLabel,
-  mode
-}: {
-  canReadDashboard: boolean;
-  summary: PetDashboardSummary | null;
-  firstUse: boolean;
-  scopeName: string;
-  accessLabel: string;
-  mode: PetWorkspaceMode;
-}): DashboardContextCard[] {
-  const throughputValue = !canReadDashboard
-    ? 'Restricted'
-    : summary
-      ? `${summary.appointmentsToday} today / ${summary.upcomingAppointments} upcoming`
-      : 'Loading...';
-  const coverageValue = !canReadDashboard
-    ? 'Permission-bound'
-    : summary
-      ? `${summary.totalClients} clients / ${summary.totalPets} pets`
-      : 'Loading...';
-  const queueValue = !canReadDashboard
-    ? accessLabel
-    : summary
-      ? `${summary.lowStockProducts} stock / ${summary.pendingInvoices} billing`
-      : 'Loading...';
-
-  return [
-    {
-      key: 'pet-throughput',
-      label: 'Service rhythm',
-      value: throughputValue,
-      description: firstUse
-        ? 'The workspace is still establishing the first scheduled services, pet profiles, and customer cadence.'
-        : 'Daily appointments and near-term bookings stay visible before drilling into the service schedule and customer records.',
-      tone: 'accent'
-    },
-    {
-      key: 'pet-coverage',
-      label: 'Customer base',
-      value: coverageValue,
-      description: 'Client and pet visibility keep reception, staff, and service history aligned inside the same pet business workspace.',
-      tone: 'primary'
-    },
-    {
-      key: 'pet-operations',
-      label: 'Operational attention',
-      value: queueValue,
-      description: `PetFlow remains scoped to ${scopeName} with billing, inventory, and access boundaries explicit for the current workspace.`,
-      tone: 'neutral'
-    }
-  ];
-}
-
 function resolvePetActionHref(actions: ModuleWorkspaceAction[], href: string, fallbackHref: string) {
   const action = actions.find((candidate) => candidate.href === href && candidate.capability?.interactive !== false);
   return action?.href ?? fallbackHref;
@@ -593,17 +532,18 @@ export function PetHome() {
 
       return action;
     });
-  const themePolicy = platform.theme.canOverride
-    ? `${getAppThemeModeLabel(platform.theme.tenantDefaultMode)} with user override`
-    : `${getAppThemeModeLabel(platform.theme.tenantDefaultMode)} workspace-managed`;
-  const setupGuidance = buildPetGuidanceSteps(actionStates, ['/pet/clients', '/pet/pets', '/pet/appointments', '/pet/plans', '/pet/invoices', '/pet/insights']);
+  const landingActions = useMemo(
+    () => actionStates.filter((action) => ['/pet/clients', '/pet/appointments', '/pet/invoices'].includes(action.href)),
+    [actionStates]
+  );
+  const setupGuidance = buildPetGuidanceSteps(actionStates, ['/pet/clients', '/pet/pets', '/pet/appointments', '/pet/invoices']);
   const restrictedGuidance = buildPetGuidanceSteps(actionStates, ['/pet/clients', '/pet/pets', '/pet/appointments', '/pet/invoices']);
   const primaryAction = useMemo(
     () => resolvePetPrimaryAction(actionStates, summary, firstUse, petMode),
     [actionStates, firstUse, petMode, summary]
   );
-  const insightsHref = useMemo(
-    () => resolvePetActionHref(actionStates, '/pet/insights', primaryAction?.href ?? '/pet/insights'),
+  const dashboardHref = useMemo(
+    () => resolvePetActionHref(actionStates, '/pet/dashboard', primaryAction?.href ?? '/pet/dashboard'),
     [actionStates, primaryAction]
   );
   const pulseCards = useMemo(() => {
@@ -615,17 +555,6 @@ export function PetHome() {
       .map((key) => findPetPulseCard(summary, key))
       .filter((card): card is NonNullable<ReturnType<typeof findPetPulseCard>> => Boolean(card));
   }, [summary]);
-  const contextCards = useMemo(
-    () => buildPetContextCards({
-      canReadDashboard,
-      summary,
-      firstUse,
-      scopeName: platform.branding.scopeName,
-      accessLabel: platform.workspace.accessLabel,
-      mode: petMode
-    }),
-    [canReadDashboard, firstUse, petMode, platform.branding.scopeName, platform.workspace.accessLabel, summary]
-  );
 
   useEffect(() => {
     let active = true;
@@ -693,9 +622,7 @@ export function PetHome() {
         ) : null}
         chips={[
           { label: 'Workspace', value: platform.workspace.workspaceLabel },
-          { label: 'Access', value: platform.workspace.accessLabel, tone: 'neutral' },
-          { label: 'Profile', value: petVisual.visualProfile.label, tone: 'neutral' },
-          { label: 'Theme', value: themePolicy, tone: 'neutral' }
+          { label: 'Access', value: platform.workspace.accessLabel, tone: 'neutral' }
         ]}
         aside={(
           <ModuleWorkspaceFactList
@@ -704,19 +631,6 @@ export function PetHome() {
                 label: 'Workspace code',
                 value: platform.branding.tenantCode ?? 'Not assigned',
                 description: 'Stable workspace identifier for PetFlow.'
-              },
-              {
-                label: 'Role context',
-                value: platform.user?.role ?? 'Unknown role',
-                description: platform.user?.fullName
-                  ? `Authenticated as ${platform.user.fullName}.`
-                  : 'Authenticated user details are not available.'
-              },
-              {
-                label: 'Module surface',
-                value: 'Contracted PetFlow workspace',
-                description: petCopy.moduleSurfaceDescription,
-                status: 'active'
               },
               {
                 label: 'Next action',
@@ -807,29 +721,22 @@ export function PetHome() {
       />
 
       <ModuleWorkspaceQuickActionGrid
-        title="PetFlow"
-        description="Walk through clients, pets, appointments, billing, and insights to get the most from your workspace."
-        actions={actionStates}
+        title="Core PetFlow flows"
+        description="Keep the commercial path short: customers, appointments, and billing first."
+        actions={landingActions}
         emptyTitle="No PetFlow actions available"
         emptyDescription="This workspace has the PetFlow module enabled, but the current user does not have PetFlow read permissions yet."
       />
-
-      <ModuleWorkspaceSection
-        title={petCopy.contextTitle}
-        description={petCopy.contextDescription}
-      >
-        <DashboardContextCardGrid cards={contextCards} />
-      </ModuleWorkspaceSection>
 
       <ModuleWorkspaceSection
         title={petCopy.snapshotTitle}
         description={petCopy.snapshotDescription}
         action={canReadDashboard ? (
           <Link
-            href={insightsHref}
+            href={dashboardHref}
             className="inline-flex text-sm font-semibold text-[color:var(--tenant-accent)]"
           >
-            Open business insights
+            Open PetFlow dashboard
           </Link>
         ) : primaryAction ? (
           <Link
@@ -877,7 +784,7 @@ export function PetHome() {
           />
         ) : summary ? (
           <div className="space-y-4">
-            <MetricGrid cards={pulseCards} columns="md:grid-cols-2 xl:grid-cols-4" />
+            <MetricGrid cards={pulseCards.slice(0, 4)} columns="md:grid-cols-2 xl:grid-cols-4" />
             {featuredSection ? (
               <DashboardSection section={featuredSection} />
             ) : (

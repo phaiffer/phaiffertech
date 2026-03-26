@@ -5,11 +5,6 @@ import { PublicFeatureGrid } from '@/shared/components/public-feature-grid';
 import { usePublicSite } from '@/shared/public/public-site-provider';
 import { getWebsiteContent } from './website-content';
 import { WebsiteHero } from './website-hero';
-import {
-  WebsiteCardGrid,
-  WebsiteSplitSection,
-  WebsiteStatStrip
-} from './website-sections';
 
 export function WebsiteHomePage() {
   const { locale } = usePublicSite();
@@ -17,16 +12,10 @@ export function WebsiteHomePage() {
   const labels =
     locale === 'pt-BR'
       ? {
-          framework: 'Visão de plataforma',
-          signals: 'Sinais',
-          authority: 'Autoridade',
-          architecture: 'Arquitetura'
+          framework: 'Soluções'
         }
       : {
-          framework: 'Platform view',
-          signals: 'Signals',
-          authority: 'Authority',
-          architecture: 'Architecture'
+          framework: 'Solutions'
         };
 
   return (
@@ -40,39 +29,13 @@ export function WebsiteHomePage() {
         secondaryCta={content.hero.secondaryCta}
       />
 
-      <WebsiteSplitSection
-        tone="muted"
-        eyebrow={labels.signals}
-        title={content.signalTitle}
-        description={content.signalDescription}
-      >
-        <WebsiteStatStrip items={content.signals} />
-      </WebsiteSplitSection>
-
       <PublicFeatureGrid
         id="products"
         eyebrowLabel={labels.framework}
         title={content.productsTitle}
         description={content.productsDescription}
-        items={content.products}
+        items={content.products.slice(0, 3)}
       />
-
-      <WebsiteSplitSection
-        eyebrow={labels.authority}
-        title={content.expertiseTitle}
-        description={content.expertiseDescription}
-      >
-        <WebsiteCardGrid items={content.expertise} />
-      </WebsiteSplitSection>
-
-      <WebsiteSplitSection
-        tone="muted"
-        eyebrow={labels.architecture}
-        title={content.architectureTitle}
-        description={content.architectureDescription}
-      >
-        <WebsiteCardGrid items={content.architecture} />
-      </WebsiteSplitSection>
 
       <PublicCtaSection
         eyebrow={content.cta.eyebrow}

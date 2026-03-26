@@ -14,15 +14,15 @@ export function WebsiteArticlesPage() {
   const labels =
     locale === 'pt-BR'
       ? {
-          research: 'Pesquisa',
-          platform: 'Plataforma',
-          publishing: 'Publicação',
+          products: 'Produtos',
+          contact: 'Contato',
+          publishing: 'Material de apoio',
           readInsight: 'Ler insight'
         }
       : {
-          research: 'Research',
-          platform: 'Platform',
-          publishing: 'Publishing',
+          products: 'Products',
+          contact: 'Contact',
+          publishing: 'Supporting material',
           readInsight: 'Read insight'
         };
 
@@ -32,17 +32,21 @@ export function WebsiteArticlesPage() {
         eyebrow={content.eyebrow}
         title={content.title}
         description={content.description}
-        primaryCta={{ label: labels.research, href: '/research' }}
-        secondaryCta={{ label: labels.platform, href: '/platform' }}
+        primaryCta={{ label: labels.products, href: '/products' }}
+        secondaryCta={{ label: labels.contact, href: '/contact' }}
       />
 
       <WebsiteSplitSection
         tone="muted"
         eyebrow={labels.publishing}
         title={content.featuredTitle}
-        description={content.featuredDescription}
+        description={
+          locale === 'pt-BR'
+            ? 'Estas notas apoiam a narrativa técnica da plataforma, mas o produto visível oficial hoje continua sendo o PetFlow.'
+            : 'These notes support the technical platform story, but PetFlow remains the official visible product surface today.'
+        }
       >
-        <WebsiteArticleGrid items={content.items} ctaLabel={labels.readInsight} />
+        <WebsiteArticleGrid items={content.items.slice(0, 2)} ctaLabel={labels.readInsight} />
       </WebsiteSplitSection>
     </>
   );
