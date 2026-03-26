@@ -86,6 +86,7 @@ export function PetCommissionSummaryPage() {
   }, [load, dateFrom, dateTo]);
 
   const grandTotal = rows.reduce((sum, r) => sum + r.totalCommission, 0);
+  const totalAppointments = rows.reduce((sum, r) => sum + r.appointmentCount, 0);
 
   return (
     <PermissionGuard
@@ -95,9 +96,26 @@ export function PetCommissionSummaryPage() {
       <div className="space-y-5">
         <PageTitle
           eyebrow="PetFlow workspace"
-          title="Resumo de Comissões"
-          description="Total de comissões por profissional em um período, para fechamento de pagamento."
+          title="Resumo de Comissoes"
+          description="Total de comissoes por profissional em um periodo, com foco em fechamento simples e demonstravel."
         />
+
+        <div className="grid gap-3 md:grid-cols-3">
+          <div className="rounded-2xl border border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-panel)] px-4 py-3">
+            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--app-shell-muted)]">Profissionais</p>
+            <p className="mt-2 text-lg font-semibold text-[color:var(--app-shell-heading)]">{rows.length}</p>
+          </div>
+          <div className="rounded-2xl border border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-panel)] px-4 py-3">
+            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--app-shell-muted)]">Atendimentos concluidos</p>
+            <p className="mt-2 text-lg font-semibold text-[color:var(--app-shell-heading)]">{totalAppointments}</p>
+          </div>
+          <div className="rounded-2xl border border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-panel)] px-4 py-3">
+            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--app-shell-muted)]">Total projetado</p>
+            <p className="mt-2 text-lg font-semibold text-[color:var(--app-shell-heading)]">
+              {grandTotal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+            </p>
+          </div>
+        </div>
 
         <div className="grid gap-3 ui-surface-panel p-4 md:grid-cols-[1fr_1fr_auto]">
           <FormInput label="De" type="date" value={dateFrom} onChange={setDateFrom} />

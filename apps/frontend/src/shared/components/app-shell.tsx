@@ -19,7 +19,7 @@ function resolveModuleContext(pathname: string): 'core' | 'crm' | 'iot' | 'pet' 
   return 'core';
 }
 
-function resolveHeaderMeta(pathname: string, platformAdmin?: boolean) {
+function resolveHeaderMeta(pathname: string, platformAdmin?: boolean, hasPetVisible?: boolean) {
   if (pathname.startsWith('/iot')) {
     return {
       label: 'IoT System',
@@ -57,18 +57,19 @@ function resolveHeaderMeta(pathname: string, platformAdmin?: boolean) {
   }
 
   return {
-    label: platformAdmin ? 'Platform' : 'Overview',
+    label: platformAdmin ? 'Platform' : hasPetVisible ? 'PetFlow overview' : 'Overview',
   };
 }
 
 export function AppShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const { branding, modules, workspace } = useFrontendPlatform();
+  const hasPetVisible = modules.availableCodes.includes('PET');
 
   const moduleContext = useMemo(() => resolveModuleContext(pathname), [pathname]);
   const headerMeta = useMemo(
-    () => resolveHeaderMeta(pathname, workspace.canManagePlatformAdministration),
-    [pathname, workspace.canManagePlatformAdministration]
+    () => resolveHeaderMeta(pathname, workspace.canManagePlatformAdministration, hasPetVisible),
+    [hasPetVisible, pathname, workspace.canManagePlatformAdministration]
   );
   const shellStyle = useMemo(
     () => ({
@@ -92,16 +93,6 @@ export function AppShell({ children }: { children: ReactNode }) {
           {modules.availableCodes.includes('PET') && (
             <Link href="/pet" className={`whitespace-nowrap rounded-xl px-3 py-2 text-sm font-medium transition-colors ${pathname.startsWith('/pet') ? 'bg-accent-muted text-foreground' : 'text-muted hover:bg-surface-inset hover:text-foreground'}`}>
               PetFlow
-            </Link>
-          )}
-          {modules.availableCodes.includes('CRM') && (
-            <Link href="/crm" className={`whitespace-nowrap rounded-xl px-3 py-2 text-sm font-medium transition-colors ${pathname.startsWith('/crm') ? 'bg-accent-muted text-foreground' : 'text-muted hover:bg-surface-inset hover:text-foreground'}`}>
-              CRM
-            </Link>
-          )}
-          {modules.availableCodes.includes('IOT') && (
-            <Link href="/iot" className={`whitespace-nowrap rounded-xl px-3 py-2 text-sm font-medium transition-colors ${pathname.startsWith('/iot') ? 'bg-accent-muted text-foreground' : 'text-muted hover:bg-surface-inset hover:text-foreground'}`}>
-              IoT
             </Link>
           )}
           <Link href="/settings" className={`whitespace-nowrap rounded-xl px-3 py-2 text-sm font-medium transition-colors ${pathname.startsWith('/settings') ? 'bg-accent-muted text-foreground' : 'text-muted hover:bg-surface-inset hover:text-foreground'}`}>

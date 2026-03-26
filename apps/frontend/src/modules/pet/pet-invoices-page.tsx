@@ -25,7 +25,7 @@ import { financeService } from '@/shared/services/finance-service';
 import { CreatePetInvoicePaymentInput, petService } from '@/shared/services/pet-service';
 import { PageResponse } from '@/shared/types/common';
 import { FinanceCashMovement, FinanceInvoice } from '@/shared/types/finance';
-import { PetClient, PetInvoice } from '@/shared/types/pet';
+import { ClientPlan, PetAppointment, PetClient, PetInvoice } from '@/shared/types/pet';
 import { ConfirmDialog } from '@/shared/ui/confirm-dialog';
 import { DataTable, DataTableColumn } from '@/shared/ui/data-table';
 import { DateTimeInput } from '@/shared/ui/datetime-input';
@@ -68,6 +68,21 @@ const initialPage: PageResponse<PetInvoice> = {
   size: pageSize
 };
 
+type NextCyclePreviewRow = {
+  clientId: string;
+  clientName: string;
+  billingType: 'Recurring' | 'One-time';
+  planName?: string | null;
+  remainingSessions?: number | null;
+  appointmentCount: number;
+  coveredAppointments: number;
+  projectedDue: number;
+  extrasTotal: number;
+  petTaxiTotal: number;
+  note: string;
+  reference: string;
+};
+
 function toDateTimeLocal(isoValue?: string | null) {
   if (!isoValue) {
     return '';
@@ -104,6 +119,35 @@ function formatCurrency(value: number, currency = 'BRL') {
 
 function nowLocalDateTime() {
   return toDateTimeLocal(new Date().toISOString());
+}
+
+function getNextCycleDateRange() {
+  const now = new Date();
+  const start = new Date(now.getFullYear(), now.getMonth() + 1, 1, 0, 0, 0, 0);
+  const end = new Date(now.getFullYear(), now.getMonth() + 2, 0, 23, 59, 59, 999);
+
+  return { start, end };
+}
+
+function formatCycleLabel(date: Date) {
+  return new Intl.DateTimeFormat('en-US', { month: 'long', year: 'numeric' }).format(date);
+}
+
+function buildCollectionReference(clientId: string, cycleDate: Date) {
+  const month = `${cycleDate.getMonth() + 1}`.padStart(2, '0');
+  return `PETFLOW:${clientId}:${cycleDate.getFullYear()}${month}`;
+}
+
+function resolveProjectedDue(appointment: PetAppointment) {
+  if (appointment.finalAmountDue != null) {
+    return appointment.finalAmountDue;
+  }
+
+  if (appointment.planCovered) {
+    return appointment.extrasAmount ?? 0;
+  }
+
+  return (appointment.servicePrice ?? 0) + (appointment.extrasAmount ?? 0);
 }
 
 function formatMethodLabel(value?: string | null) {
@@ -207,10 +251,16 @@ export function PetInvoicesPage() {
   const [financeError, setFinanceError] = useState<string | null>(null);
 
   const [deleteCandidate, setDeleteCandidate] = useState<PetInvoice | null>(null);
+  const [previewPlans, setPreviewPlans] = useState<ClientPlan[]>([]);
+  const [previewAppointments, setPreviewAppointments] = useState<PetAppointment[]>([]);
+  const [previewLoading, setPreviewLoading] = useState(false);
+  const [previewError, setPreviewError] = useState<string | null>(null);
 
   const canReadClients = hasPermission('pet.client.read');
   const canReadFinanceInvoices = hasPermission('finance.invoice.read');
   const canReadFinanceCash = hasPermission('finance.cash.read');
+  const canReadPlans = hasPermission('pet.plan.read');
+  const canReadAppointments = hasPermission('pet.appointment.read');
 
   const clientOptions = useMemo(() => ([
     { value: '', label: 'All clients' },
@@ -275,6 +325,66 @@ export function PetInvoicesPage() {
   useEffect(() => {
     void load(0, search, clientFilterId, statusFilter);
   }, [clientFilterId, load, search, statusFilter]);
+
+  useEffect(() => {
+    if (!canReadPlans && !canReadAppointments) {
+      setPreviewPlans([]);
+      setPreviewAppointments([]);
+      setPreviewError(null);
+      setPreviewLoading(false);
+      return;
+    }
+
+    let active = true;
+    const { start, end } = getNextCycleDateRange();
+
+    setPreviewLoading(true);
+    setPreviewError(null);
+
+    const plansRequest = canReadPlans
+      ? petService.listClientPlans(undefined, 0, 200)
+      : Promise.resolve<PageResponse<ClientPlan>>({ items: [], totalItems: 0, totalPages: 0, page: 0, size: 200 });
+    const appointmentsRequest = canReadAppointments
+      ? petService.listAppointments(0, 200, '', {
+        scheduledFrom: start.toISOString(),
+        scheduledTo: end.toISOString()
+      })
+      : Promise.resolve<PageResponse<PetAppointment>>({ items: [], totalItems: 0, totalPages: 0, page: 0, size: 200 });
+
+    Promise.allSettled([plansRequest, appointmentsRequest])
+      .then(([plansResult, appointmentsResult]) => {
+        if (!active) {
+          return;
+        }
+
+        const nextErrors: string[] = [];
+
+        if (plansResult.status === 'fulfilled') {
+          setPreviewPlans(resolvePageItems(plansResult.value));
+        } else {
+          setPreviewPlans([]);
+          nextErrors.push(plansResult.reason instanceof Error ? plansResult.reason.message : 'Unable to load monthly plans for the next cycle preview.');
+        }
+
+        if (appointmentsResult.status === 'fulfilled') {
+          setPreviewAppointments(resolvePageItems(appointmentsResult.value));
+        } else {
+          setPreviewAppointments([]);
+          nextErrors.push(appointmentsResult.reason instanceof Error ? appointmentsResult.reason.message : 'Unable to load next cycle appointments.');
+        }
+
+        setPreviewError(nextErrors.length > 0 ? nextErrors.join(' ') : null);
+      })
+      .finally(() => {
+        if (active) {
+          setPreviewLoading(false);
+        }
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [canReadAppointments, canReadPlans]);
 
   const rows = resolvePageItems(pageData);
   const reviewedInvoice = useMemo(
@@ -371,6 +481,68 @@ export function PetInvoicesPage() {
     && Boolean(invoice.dueAt)
     && new Date(invoice.dueAt as string).getTime() < Date.now()
   )).length;
+  const nextCycleLabel = formatCycleLabel(getNextCycleDateRange().start);
+  const nextCyclePreviewRows = useMemo<NextCyclePreviewRow[]>(() => {
+    const appointmentsByClient = new Map<string, PetAppointment[]>();
+
+    previewAppointments
+      .filter((appointment) => appointment.status.toUpperCase() !== 'CANCELED')
+      .forEach((appointment) => {
+        const current = appointmentsByClient.get(appointment.clientId) ?? [];
+        current.push(appointment);
+        appointmentsByClient.set(appointment.clientId, current);
+      });
+
+    const clientIds = new Set<string>();
+    previewPlans.forEach((plan) => {
+      if (plan.remainingSessions > 0) {
+        clientIds.add(plan.clientId);
+      }
+    });
+    previewAppointments.forEach((appointment) => clientIds.add(appointment.clientId));
+
+    return Array.from(clientIds).map((clientIdValue) => {
+      const client = clients.find((entry) => entry.id === clientIdValue);
+      const activePlan = previewPlans.find((plan) => plan.clientId === clientIdValue && plan.remainingSessions > 0) ?? null;
+      const appointments = appointmentsByClient.get(clientIdValue) ?? [];
+      const projectedDue = appointments.reduce((total, appointment) => total + resolveProjectedDue(appointment), 0);
+      const extrasTotal = appointments.reduce((total, appointment) => total + (appointment.extrasAmount ?? 0), 0);
+      const petTaxiTotal = appointments.reduce((total, appointment) => (
+        /taxi/i.test(appointment.extrasDescription ?? '')
+          ? total + (appointment.extrasAmount ?? 0)
+          : total
+      ), 0);
+      const coveredAppointments = appointments.filter((appointment) => appointment.planCovered || appointment.clientPlanId).length;
+      const billingType: NextCyclePreviewRow['billingType'] = activePlan ? 'Recurring' : 'One-time';
+
+      let note = activePlan
+        ? 'Base monthly plan remains active for the next cycle.'
+        : 'This client will be billed from scheduled services and extras only.';
+
+      if (activePlan && activePlan.remainingSessions <= 2) {
+        note = client?.email
+          ? 'Renewal email is part of the demo when the plan reaches the penultimate visit.'
+          : 'Renewal alert is ready, but this client still needs an email on file.';
+      } else if (petTaxiTotal > 0) {
+        note = 'Pet taxi is already reflected as an extra charge in the next cycle preview.';
+      }
+
+      return {
+        clientId: clientIdValue,
+        clientName: client?.name ?? client?.fullName ?? clientIdValue,
+        billingType,
+        planName: activePlan?.planName ?? null,
+        remainingSessions: activePlan?.remainingSessions ?? null,
+        appointmentCount: appointments.length,
+        coveredAppointments,
+        projectedDue,
+        extrasTotal,
+        petTaxiTotal,
+        note,
+        reference: buildCollectionReference(clientIdValue, getNextCycleDateRange().start)
+      };
+    }).sort((left, right) => right.projectedDue - left.projectedDue);
+  }, [clients, previewAppointments, previewPlans]);
 
   function scrollToInvoiceForm() {
     document.getElementById('pet-invoice-form-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -688,8 +860,8 @@ export function PetInvoicesPage() {
       <div className={sharedPageStackClass}>
         <PageTitle
           eyebrow="PetFlow finance"
-          title="Billing & Invoices"
-          description="Show how PetFlow services become invoices, payments, and finance visibility."
+          title="Billing & Next Cycle"
+          description="Show how PetFlow services become invoices, payments, and a clear preview of the next monthly cycle."
           actions={(
             <div className="flex flex-wrap gap-2">
               <PermissionGuard permission="pet.invoice.create">
@@ -786,6 +958,70 @@ export function PetInvoicesPage() {
               </button>
             </div>
           </div>
+        </PageSection>
+
+        <PageSection
+          tone="muted"
+          title="Next cycle billing preview"
+          description={`Use this ${nextCycleLabel} preview to explain recurring clients, covered services, pet taxi extras, and what is already ready for collection.`}
+        >
+          {previewError ? <div className="ui-notice-warning">{previewError}</div> : null}
+          {previewLoading ? (
+            <div className="ui-notice-neutral">Loading next cycle preview...</div>
+          ) : nextCyclePreviewRows.length === 0 ? (
+            <div className="ui-notice-neutral">
+              No recurring plan or scheduled appointment is currently shaping the next cycle.
+            </div>
+          ) : (
+            <div className="grid gap-4 lg:grid-cols-2">
+              {nextCyclePreviewRows.slice(0, 6).map((row) => (
+                <div key={row.reference} className="rounded-3xl border border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-panel)] p-5">
+                  <div className="flex flex-wrap items-start justify-between gap-3">
+                    <div>
+                      <p className="text-sm font-semibold text-[color:var(--app-shell-heading)]">{row.clientName}</p>
+                      <p className={`mt-1 ${sharedCompactTextClass}`}>{row.reference}</p>
+                    </div>
+                    <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium ${
+                      row.billingType === 'Recurring'
+                        ? 'bg-emerald-100 text-emerald-800'
+                        : 'bg-slate-100 text-slate-700'
+                    }`}>
+                      {row.billingType}
+                    </span>
+                  </div>
+
+                  <dl className="mt-4 grid gap-4 sm:grid-cols-2">
+                    <div>
+                      <dt className="text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--app-shell-muted)]">Projected due</dt>
+                      <dd className="mt-1 text-lg font-semibold text-[color:var(--app-shell-heading)]">{formatCurrency(row.projectedDue)}</dd>
+                    </div>
+                    <div>
+                      <dt className="text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--app-shell-muted)]">Appointments</dt>
+                      <dd className="mt-1 text-sm text-[color:var(--app-shell-text)]">
+                        {row.appointmentCount} scheduled / {row.coveredAppointments} covered by plan
+                      </dd>
+                    </div>
+                    <div>
+                      <dt className="text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--app-shell-muted)]">Plan status</dt>
+                      <dd className="mt-1 text-sm text-[color:var(--app-shell-text)]">
+                        {row.planName
+                          ? `${row.planName} · ${row.remainingSessions ?? 0} session(s) left`
+                          : 'One-time charging only'}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt className="text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--app-shell-muted)]">Extras</dt>
+                      <dd className="mt-1 text-sm text-[color:var(--app-shell-text)]">
+                        {formatCurrency(row.extrasTotal)}{row.petTaxiTotal > 0 ? ` · ${formatCurrency(row.petTaxiTotal)} from pet taxi` : ''}
+                      </dd>
+                    </div>
+                  </dl>
+
+                  <p className={`mt-4 ${sharedCompactTextClass}`}>{row.note}</p>
+                </div>
+              ))}
+            </div>
+          )}
         </PageSection>
 
         <PetLookupFeedback issues={lookupIssues} />
@@ -967,6 +1203,14 @@ export function PetInvoicesPage() {
                       </dt>
                       <dd className="mt-1 text-sm text-[color:var(--app-shell-text)]">
                         {reviewedInvoice.financeInvoiceId}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt className="text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--app-shell-muted)]">
+                        Billing reference draft
+                      </dt>
+                      <dd className="mt-1 text-sm text-[color:var(--app-shell-text)]">
+                        {buildCollectionReference(reviewedInvoice.clientId, reviewedInvoice.dueAt ? new Date(reviewedInvoice.dueAt) : new Date())}
                       </dd>
                     </div>
                   </dl>

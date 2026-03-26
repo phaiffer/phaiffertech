@@ -67,11 +67,11 @@ function formatMovementSource(value?: string | null) {
     case 'PET_PRODUCT_SYNC':
       return 'Product catalog sync';
     case 'IOT_MAINTENANCE_CONSUMPTION':
-      return 'IoT maintenance consumption';
+      return 'Operational consumption';
     case 'IOT_PART_REPLACEMENT':
-      return 'IoT part replacement';
+      return 'Stock replacement';
     case 'IOT_PART_SYNC':
-      return 'IoT part sync';
+      return 'Catalog sync';
     default:
       return value ?? 'Unknown source';
   }
@@ -206,18 +206,20 @@ export function PetInventoryPage() {
       trend: 'Current catalog entries connected to the shared inventory foundation.'
     },
     {
-      key: 'low-stock-products',
-      label: 'Low stock products',
+      key: 'critical-products',
+      label: 'Below minimum',
+      value: criticalLowStockProducts.length,
+      trend: criticalLowStockProducts.length > 0
+        ? 'These products are already below the minimum quantity.'
+        : 'No product is currently below the minimum threshold.'
+    },
+    {
+      key: 'reorder-products',
+      label: 'Reorder now',
       value: lowStockProducts.length,
       trend: lowStockProducts.length > 0
         ? 'These products are already at or below the replenishment point.'
-        : 'No product is currently below the reorder threshold.'
-    },
-    {
-      key: 'moved-units',
-      label: 'Units on page',
-      value: movedUnitsOnPage,
-      trend: 'Visible stock movement quantity in the current ledger slice.'
+        : 'No product is currently at the reorder point.'
     },
     {
       key: 'outbound-movements',
@@ -225,7 +227,7 @@ export function PetInventoryPage() {
       value: outboundMovementsOnPage,
       trend: activeFilterCount > 0
         ? 'Count reflects the filtered operational view.'
-        : 'Current outbound movements visible on this page.'
+        : `Visible stock movement quantity on this page: ${movedUnitsOnPage} unit(s).`
     }
   ];
 
@@ -433,8 +435,8 @@ export function PetInventoryPage() {
       <div className={sharedPageStackClass}>
         <PageTitle
           eyebrow="PetFlow operations"
-          title="Pet Inventory"
-          description="Translate the shared inventory foundation into day-to-day stock decisions, replenishment signals, and movement history operators can trust."
+          title="Stock & Replenishment"
+          description="Keep bath, grooming, and retail stock visible with minimum alerts, reorder context, and movement history the team can trust."
           actions={(
             <div className="flex flex-wrap gap-3">
               <Link href="/pet/products" className="ui-secondary-button">
@@ -452,12 +454,12 @@ export function PetInventoryPage() {
         {error ? <div className="ui-notice-error">{error}</div> : null}
         {success ? <div className="ui-notice-success">{success}</div> : null}
 
-        <MetricGrid cards={summaryCards} columns="md:grid-cols-2 xl:grid-cols-4" />
+        <MetricGrid cards={summaryCards} columns="md:grid-cols-2 xl:grid-cols-3" />
 
         <PageSection
           tone="muted"
           title="Stock health watchlist"
-          description="Keep the most commercially important replenishment risks visible before they become canceled sales or missed care routines."
+          description="Keep the most important replenishment risks visible before they become missed services, canceled sales, or rushed purchases."
         >
           {productsLookupUnavailable ? (
             <div className="ui-notice-warning">
@@ -594,9 +596,9 @@ export function PetInventoryPage() {
                 </div>
 
                 <div className="rounded-2xl border border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-panel-muted)] p-4">
-                  <p className="text-sm font-medium text-[color:var(--app-shell-heading)]">Shared inventory reminder</p>
+                  <p className="text-sm font-medium text-[color:var(--app-shell-heading)]">Operator reminder</p>
                   <p className={`mt-1 ${sharedCompactTextClass}`}>
-                    This stock foundation already supports PetFlow today and can later support IoT parts without changing how operators interpret movement history.
+                    Keep the movement reason explicit so reception, stock control, and billing stay aligned during the demo.
                   </p>
                 </div>
 

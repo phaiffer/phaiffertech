@@ -8,10 +8,8 @@ import { notificationService } from '@/shared/services/notification-service';
 import { PageTitle } from '@/shared/ui/page-title';
 
 /* ─── Inventory Hub ──────────────────────────────────────────────────────────
- * Inventory is a shared operational capability used across PetFlow and IoT.
- * This page surfaces the relevant inventory entry points based on the user's
- * permissions, making it clear that inventory is a platform foundation rather
- * than a feature of any single product.
+ * The visible inventory surface is intentionally focused on PetFlow for the
+ * current demo cycle. Shared foundations remain intact under the hood.
  * ─────────────────────────────────────────────────────────────────────────── */
 
 type InventorySurfaceCardProps = {
@@ -51,9 +49,9 @@ export function InventoryHubPage() {
   return (
     <div className={sharedPageStackClass}>
       <PageTitle
-        eyebrow="Platform foundation"
+        eyebrow="PetFlow operations"
         title="Inventory"
-        description="Shared operational capability across all products. Inventory tracks product stock, inbound and outbound movements, and consumption across both PetFlow and IoT operations."
+        description="Inventory keeps stock, replenishment, and movement history visible for the PetFlow demo without inflating the visible product surface."
       />
 
       {lowStockCount > 0 && (
@@ -64,13 +62,13 @@ export function InventoryHubPage() {
               {lowStockCount} item{lowStockCount === 1 ? '' : 's'} with low stock
             </p>
             <p className="mt-0.5 text-xs text-warning/80">
-              Stock levels are at or below the minimum threshold. Open the relevant inventory section to plan replenishment.
+              Stock levels are at or below the minimum threshold. Open PetFlow inventory to plan replenishment before service delivery is affected.
             </p>
           </div>
         </div>
       )}
 
-      <div className="grid gap-6 md:grid-cols-2">
+      <div className="grid gap-6 md:grid-cols-1">
         <PermissionGuard permission="pet.inventory.read">
           <InventorySurfaceCard
             title="PetFlow — Products & Stock"
@@ -79,21 +77,12 @@ export function InventoryHubPage() {
             label="Go to PetFlow Inventory"
           />
         </PermissionGuard>
-
-        <PermissionGuard permission="iot.part.read">
-          <InventorySurfaceCard
-            title="IoT System — Parts & Components"
-            description="Track parts and components used in device maintenance and field operations. Supports consumption logging and replenishment visibility."
-            href="/iot/parts"
-            label="Go to IoT Parts"
-          />
-        </PermissionGuard>
       </div>
 
       <div className="rounded-2xl border border-dashed border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-panel-muted)] p-6">
         <p className="text-sm font-semibold text-[color:var(--app-shell-muted)]">How inventory works on this platform</p>
         <p className="mt-2 text-sm text-[color:var(--app-shell-muted)]">
-          Inventory is tracked per product context. PetFlow manages pharmaceutical products and retail items; IoT tracks parts and components used during maintenance. Each section shows stock levels, minimum thresholds, and movement history relevant to the respective operation.
+          Inventory stays readable when operators can answer three questions quickly: what is low, what moved, and why it changed. The PetFlow demo keeps those answers visible for products, retail items, and grooming supplies.
         </p>
       </div>
     </div>

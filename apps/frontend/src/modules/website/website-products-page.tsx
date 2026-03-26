@@ -62,26 +62,26 @@ export function WebsiteProductsPage() {
   const labels =
     locale === 'pt-BR'
       ? {
-          platform: 'Plataforma',
+          platform: 'Solicitar demo',
           contact: 'Contato',
-          portfolio: 'Portfólio',
+          portfolio: 'PetFlow',
           nextStep: 'Próximo passo',
           ctaTitle: 'Pronto para ver o PetFlow em ação?',
           ctaDescription:
             'O PetFlow está operacional e aceitando os primeiros clientes. Entre em contato para agendar uma demonstração ou solicitar acesso para o seu negócio.',
           ctaPrimary: 'Entrar em contato',
-          ctaSecondary: 'Acessar a plataforma',
+          ctaSecondary: 'Acessar o PetFlow',
         }
       : {
-          platform: 'Platform',
+          platform: 'Request a demo',
           contact: 'Contact',
-          portfolio: 'Portfolio',
+          portfolio: 'PetFlow',
           nextStep: 'Next step',
           ctaTitle: 'Ready to see PetFlow in action?',
           ctaDescription:
             'PetFlow is operational and accepting early customers. Reach out to schedule a demo or request access for your pet business.',
           ctaPrimary: 'Get in touch',
-          ctaSecondary: 'Platform access',
+          ctaSecondary: 'PetFlow access',
         };
 
   return (
@@ -90,7 +90,7 @@ export function WebsiteProductsPage() {
         eyebrow={content.eyebrow}
         title={content.title}
         description={content.description}
-        primaryCta={{ label: labels.platform, href: '/platform' }}
+        primaryCta={{ label: labels.platform, href: '/contact' }}
         secondaryCta={{ label: labels.contact, href: '/contact' }}
       />
 

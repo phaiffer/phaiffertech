@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { FormEvent, useCallback, useEffect, useState } from 'react';
 import { PermissionGuard } from '@/shared/auth/PermissionGuard';
 import { ApiClientError } from '@/shared/lib/http';
@@ -10,6 +11,7 @@ import { PetProfessional } from '@/shared/types/pet';
 import { ConfirmDialog } from '@/shared/ui/confirm-dialog';
 import { DataTable, DataTableColumn } from '@/shared/ui/data-table';
 import { FormInput } from '@/shared/ui/form-input';
+import { PageSection } from '@/shared/ui/page-section';
 import { PageTitle } from '@/shared/ui/page-title';
 import { Pagination } from '@/shared/ui/pagination';
 import { SearchBar } from '@/shared/ui/search-bar';
@@ -26,7 +28,9 @@ const initialPage: PageResponse<PetProfessional> = {
 
 export function PetProfessionalsPage() {
   const [pageData, setPageData] = useState<PageResponse<PetProfessional>>(initialPage);
+  const [monthlyAppointments, setMonthlyAppointments] = useState<Record<string, { count: number; total: number }>>({});
   const [loading, setLoading] = useState(false);
+  const [summaryLoading, setSummaryLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
@@ -60,6 +64,47 @@ export function PetProfessionalsPage() {
   useEffect(() => {
     void load(0, search);
   }, [load, search]);
+
+  useEffect(() => {
+    let active = true;
+    const now = new Date();
+    const start = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+    const end = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999).toISOString();
+
+    setSummaryLoading(true);
+
+    petService.listAppointments(0, 500, '', {
+      status: 'COMPLETED',
+      scheduledFrom: start,
+      scheduledTo: end
+    }).then((result) => {
+      if (!active) {
+        return;
+      }
+
+      const grouped = resolvePageItems(result).reduce<Record<string, { count: number; total: number }>>((accumulator, appointment) => {
+        const current = accumulator[appointment.professionalId] ?? { count: 0, total: 0 };
+        current.count += 1;
+        current.total += appointment.commissionAmount ?? 0;
+        accumulator[appointment.professionalId] = current;
+        return accumulator;
+      }, {});
+
+      setMonthlyAppointments(grouped);
+    }).catch(() => {
+      if (active) {
+        setMonthlyAppointments({});
+      }
+    }).finally(() => {
+      if (active) {
+        setSummaryLoading(false);
+      }
+    });
+
+    return () => {
+      active = false;
+    };
+  }, []);
 
   function resetForm() {
     setEditingId(null);
@@ -134,6 +179,8 @@ export function PetProfessionalsPage() {
 
   const rows = resolvePageItems(pageData);
   const totalItems = resolveTotalItems(pageData);
+  const configuredCommissionCount = rows.filter((item) => item.commissionRate != null).length;
+  const projectedCommissionTotal = Object.values(monthlyAppointments).reduce((total, item) => total + item.total, 0);
 
   const columns: DataTableColumn<PetProfessional>[] = [
     { key: 'name', header: 'Name', render: (item) => item.name },
@@ -143,9 +190,20 @@ export function PetProfessionalsPage() {
     {
       key: 'commission',
       header: 'Taxa de Comissão',
-      render: (item) => item.commissionRate != null
-        ? `${(item.commissionRate * 100).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}%`
-        : <span className="text-xs text-[color:var(--app-shell-muted)]">—</span>
+      render: (item) => (
+        <div className="space-y-1">
+          <p className="font-medium text-[color:var(--app-shell-heading)]">
+            {item.commissionRate != null
+              ? `${(item.commissionRate * 100).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}%`
+              : '—'}
+          </p>
+          <p className="text-xs text-[color:var(--app-shell-muted)]">
+            {monthlyAppointments[item.id]
+              ? `${monthlyAppointments[item.id].count} completed service(s) · ${monthlyAppointments[item.id].total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}`
+              : 'No completed services this month'}
+          </p>
+        </div>
+      )
     },
     {
       key: 'actions',
@@ -183,9 +241,37 @@ export function PetProfessionalsPage() {
       <div className="space-y-5">
         <PageTitle
           eyebrow="PetFlow workspace"
-          title="Team Members"
-          description="Clinicians, groomers, and operational staff linked to this pet business workspace."
+          title="Professionals & Commission"
+          description="Keep groomers and attendants visible with commission rules and current-month payout context."
+          actions={(
+            <Link href="/pet/commissions" className="ui-secondary-button">
+              Open commission summary
+            </Link>
+          )}
         />
+
+        <PageSection
+          tone="muted"
+          title="Commission snapshot"
+          description="Use this summary to explain who is configured, who already generated commission, and what is projected this month."
+        >
+          <div className="grid gap-3 md:grid-cols-3">
+            <div className="rounded-2xl border border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-panel)] px-4 py-3">
+              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--app-shell-muted)]">Professionals</p>
+              <p className="mt-2 text-lg font-semibold text-[color:var(--app-shell-heading)]">{totalItems}</p>
+            </div>
+            <div className="rounded-2xl border border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-panel)] px-4 py-3">
+              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--app-shell-muted)]">Commission configured</p>
+              <p className="mt-2 text-lg font-semibold text-[color:var(--app-shell-heading)]">{configuredCommissionCount}</p>
+            </div>
+            <div className="rounded-2xl border border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-panel)] px-4 py-3">
+              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--app-shell-muted)]">Projected this month</p>
+              <p className="mt-2 text-lg font-semibold text-[color:var(--app-shell-heading)]">
+                {summaryLoading ? 'Loading...' : projectedCommissionTotal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+              </p>
+            </div>
+          </div>
+        </PageSection>
 
         <div className="grid gap-3 ui-surface-panel p-4 md:grid-cols-[1fr_auto]">
           <SearchBar value={searchInput} onChange={setSearchInput} placeholder="Name, specialty, license or contact" />

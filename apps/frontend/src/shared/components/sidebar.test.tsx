@@ -89,13 +89,14 @@ describe('Sidebar', () => {
     currentUser.featureEntitlements = ['crm.full', 'pet.full', 'iot.basic'];
   });
 
-  it('renders contextual CRM and Pet navigation and keeps tenant admin visible only for platform admins', () => {
+  it('renders the reduced PetFlow-first navigation and keeps platform framing visible for admins', () => {
     const { container, getByText } = render(<Sidebar />);
 
     expect(container.textContent).toContain('PhaifferTech');
     expect(getByText('Platform')).toBeTruthy();
-    expect(container.querySelector('a[href="/crm"]')).not.toBeNull();
     expect(container.querySelector('a[href="/pet"]')).not.toBeNull();
+    expect(container.querySelector('a[href="/crm"]')).toBeNull();
+    expect(container.querySelector('a[href="/iot/dashboard"]')).toBeNull();
     expect(container.querySelector('a[href="/pet/appointments"]')).toBeNull();
     expect(container.querySelector('a[href="/tenants"]')).toBeNull();
   });
@@ -108,16 +109,19 @@ describe('Sidebar', () => {
     const { container } = render(<Sidebar />);
 
     expect(container.querySelector('a[href="/tenants"]')).toBeNull();
-    expect(container.querySelector('a[href="/crm"]')).not.toBeNull();
+    expect(container.querySelector('a[href="/pet"]')).not.toBeNull();
+    expect(container.querySelector('a[href="/crm"]')).toBeNull();
   });
 
-  it('hides IoT navigation when the tenant does not contract the IoT monitor entitlement', () => {
-    currentUser.permissions = ['iot.dashboard.read'];
-    currentUser.featureEntitlements = ['pet.full'];
-    navigationState.pathname = '/iot/dashboard';
+  it('does not expose CRM or IoT even when those products are contracted internally', () => {
+    currentUser.permissions = ['crm.task.read', 'pet.appointment.read', 'iot.dashboard.read'];
+    currentUser.featureEntitlements = ['crm.full', 'pet.full', 'iot.basic'];
+    navigationState.pathname = '/dashboard';
 
     const { container } = render(<Sidebar />);
 
+    expect(container.querySelector('a[href="/pet"]')).not.toBeNull();
+    expect(container.querySelector('a[href="/crm"]')).toBeNull();
     expect(container.querySelector('a[href="/iot/dashboard"]')).toBeNull();
   });
 

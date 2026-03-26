@@ -69,10 +69,19 @@ export default function DashboardPage() {
   const experience = useMemo(() => buildDashboardExperienceCopy(platform), [platform]);
   const contractedModules = useMemo(() => getContractedWorkspaceModules(platform), [platform]);
   const accessibleModules = useMemo(() => getAccessibleWorkspaceModules(platform), [platform]);
+  const hasPetVisible = useMemo(
+    () => accessibleModules.some((moduleItem) => moduleItem.code === 'PET'),
+    [accessibleModules]
+  );
+  const visibleOfficialModules = useMemo(() => (
+    hasPetVisible
+      ? accessibleModules.filter((moduleItem) => moduleItem.code === 'PET')
+      : accessibleModules.filter((moduleItem) => moduleItem.code !== 'IOT')
+  ), [accessibleModules, hasPetVisible]);
 
   const visibleSummaryModuleCodes = useMemo(() => {
-    return new Set(accessibleModules.map((moduleItem) => moduleItem.code));
-  }, [accessibleModules]);
+    return new Set(visibleOfficialModules.map((moduleItem) => moduleItem.code));
+  }, [visibleOfficialModules]);
 
   const visibleModuleSummaries = useMemo(
     () => summary?.modules.filter((moduleSummary) => visibleSummaryModuleCodes.has(moduleSummary.moduleCode)) ?? [],
@@ -113,17 +122,23 @@ export default function DashboardPage() {
 
   const visibleModules = useMemo(() => {
     if (variant === 'platform') {
-      return platform.modules.items.filter((moduleItem) => moduleItem.code !== 'CORE_PLATFORM');
+      return hasPetVisible
+        ? platform.modules.items.filter((moduleItem) => moduleItem.code === 'PET')
+        : platform.modules.items.filter((moduleItem) => moduleItem.code !== 'CORE_PLATFORM' && moduleItem.code !== 'IOT');
     }
 
-    return contractedModules;
-  }, [contractedModules, platform.modules.items, variant]);
+    return hasPetVisible
+      ? contractedModules.filter((moduleItem) => moduleItem.code === 'PET')
+      : contractedModules.filter((moduleItem) => moduleItem.code !== 'IOT');
+  }, [contractedModules, hasPetVisible, platform.modules.items, variant]);
 
   return (
     <div className="space-y-6">
       <PageTitle
-        title={variant === 'platform' ? 'Platform overview' : 'Workspace overview'}
-        description={experience.description}
+        title={hasPetVisible ? 'PetFlow overview' : variant === 'platform' ? 'Platform overview' : 'Workspace overview'}
+        description={hasPetVisible
+          ? 'Commercial launchpad for the PetFlow demo: daily schedule, recurring plans, stock alerts, and billing attention in one place.'
+          : experience.description}
       />
 
       {summaryError ? <DashboardNotice message={summaryError} /> : null}
@@ -151,12 +166,14 @@ export default function DashboardPage() {
       <section className="rounded-3xl border border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-panel)] p-5 shadow-card">
         <div className="mb-5">
           <h2 className="text-base font-semibold text-[color:var(--app-shell-heading)]">
-            {variant === 'platform' ? 'Visible products' : 'Products in this workspace'}
+            {hasPetVisible ? 'Official demo surface' : variant === 'platform' ? 'Visible products' : 'Products in this workspace'}
           </h2>
           <p className="mt-1 text-sm text-[color:var(--app-shell-muted)]">
-            {variant === 'platform'
-              ? 'Keep the commercial product surface clear and expose only what is ready to be shown.'
-              : 'Open the contracted module surfaces that matter right now.'}
+            {hasPetVisible
+              ? 'Keep the visible surface centered on PetFlow while the rest of the platform stays preserved internally.'
+              : variant === 'platform'
+                ? 'Keep the commercial product surface clear and expose only what is ready to be shown.'
+                : 'Open the contracted module surfaces that matter right now.'}
           </p>
         </div>
 

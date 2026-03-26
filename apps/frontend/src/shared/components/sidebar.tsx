@@ -6,10 +6,7 @@ import { ReactNode, useMemo } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/shared/auth/use-auth';
-import {
-  iotMonitorEntitlements,
-  petSubmoduleEntitlements
-} from '@/shared/entitlements/tenant-entitlements';
+import { petSubmoduleEntitlements } from '@/shared/entitlements/tenant-entitlements';
 import { useFrontendPlatform } from '@/shared/platform/use-frontend-platform';
 import { groupSidebarItems, SidebarGroup, filterSidebarItems } from '@/shared/platform/sidebar-navigation';
 
@@ -67,14 +64,8 @@ const items: SidebarItem[] = [
   { href: '/dashboard', label: 'Overview', group: 'core', icon: IconGrid },
   { href: '/settings', label: 'Configurações', group: 'core', icon: IconSettings },
 
-  // CRM
-  { href: '/crm', label: 'CRM', anyOf: ['crm.dashboard.read', 'crm.company.read', 'crm.contact.read', 'crm.lead.read', 'crm.deal.read'], moduleCode: 'CRM', group: 'crm', icon: IconGrid },
-
   // PetFlow
   { href: '/pet', label: 'PetFlow', anyOf: ['pet.dashboard.read', 'pet.client.read', 'pet.profile.read', 'pet.appointment.read', 'pet.invoice.read'], anyEntitlements: petSubmoduleEntitlements, moduleCode: 'PET', group: 'pet', icon: IconGrid },
-
-  // IoT
-  { href: '/iot', label: 'IoT System', anyOf: ['iot.dashboard.read', 'iot.device.read', 'iot.alarm.read'], anyEntitlements: iotMonitorEntitlements, moduleCode: 'IOT', group: 'iot', icon: IconGrid },
 ];
 
 function isItemActive(pathname: string, href: string) {
@@ -133,7 +124,7 @@ export function Sidebar() {
           </div>
           <div className="min-w-0">
             <p className="truncate text-sm font-semibold text-foreground">PhaifferTech</p>
-            <p className="truncate text-[11px] font-medium uppercase tracking-[0.18em] text-muted">Software & Data</p>
+            <p className="truncate text-[11px] font-medium uppercase tracking-[0.18em] text-muted">PetFlow focus</p>
           </div>
         </Link>
         <div className="mt-4">

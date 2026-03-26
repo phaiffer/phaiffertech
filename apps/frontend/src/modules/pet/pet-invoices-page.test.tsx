@@ -7,6 +7,8 @@ const { hasPermissionMock, hasAnyPermissionMock, petServiceMock, financeServiceM
   hasAnyPermissionMock: vi.fn(),
   petServiceMock: {
     listClients: vi.fn(),
+    listClientPlans: vi.fn(),
+    listAppointments: vi.fn(),
     listInvoices: vi.fn(),
     createInvoice: vi.fn(),
     updateInvoice: vi.fn(),
@@ -53,9 +55,47 @@ describe('PetInvoicesPage', () => {
       {
         id: 'client-1',
         name: 'Ana Costa',
+        email: 'ana@example.com',
         status: 'ACTIVE',
         createdAt: '2026-03-10T10:00:00Z',
         updatedAt: '2026-03-10T10:00:00Z'
+      }
+    ]));
+    petServiceMock.listClientPlans.mockResolvedValue(createPageResponse([
+      {
+        id: 'plan-1',
+        clientId: 'client-1',
+        planName: 'Banho e tosa 4x',
+        totalSessions: 4,
+        usedSessions: 2,
+        remainingSessions: 2,
+        expiresAt: null,
+        createdAt: '2026-03-10T10:00:00Z',
+        updatedAt: '2026-03-10T10:00:00Z'
+      }
+    ]));
+    petServiceMock.listAppointments.mockResolvedValue(createPageResponse([
+      {
+        id: 'appointment-1',
+        clientId: 'client-1',
+        clientName: 'Ana Costa',
+        petId: 'pet-1',
+        petName: 'Luna',
+        serviceId: 'service-1',
+        serviceName: 'Bath & grooming',
+        professionalId: 'professional-1',
+        professionalName: 'Marcia',
+        scheduledAt: '2026-04-05T10:00:00Z',
+        status: 'SCHEDULED',
+        clientPlanId: 'plan-1',
+        planCovered: true,
+        planRemainingSessions: 2,
+        extrasAmount: 25,
+        extrasDescription: 'Pet taxi ida e volta',
+        finalAmountDue: 25,
+        servicePrice: 90,
+        createdAt: '2026-03-18T10:00:00Z',
+        updatedAt: '2026-03-18T10:00:00Z'
       }
     ]));
     petServiceMock.listInvoices.mockResolvedValue(createPageResponse([
@@ -137,6 +177,9 @@ describe('PetInvoicesPage', () => {
       expect(petServiceMock.listInvoices).toHaveBeenCalledTimes(1);
     });
 
+    expect(screen.getByText('Next cycle billing preview')).toBeInTheDocument();
+    expect(screen.getByText('Banho e tosa 4x · 2 session(s) left')).toBeInTheDocument();
+    expect(screen.getByText('Renewal email is part of the demo when the plan reaches the penultimate visit.')).toBeInTheDocument();
     expect(screen.getByText('Open balance')).toBeInTheDocument();
     expect(screen.getAllByText('Ana Costa').length).toBeGreaterThan(0);
 

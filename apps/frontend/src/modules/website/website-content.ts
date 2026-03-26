@@ -161,61 +161,61 @@ const websiteContent: Record<PublicLocale, WebsiteContent> = {
   'en-US': {
     home: {
       hero: {
-        eyebrow: 'PetFlow · grooming · clinics · pet shops',
+        eyebrow: 'PetFlow · recurring grooming · pet shop operations',
         title:
-          'PetFlow for pet operations that need clarity.',
+          'PetFlow for recurring grooming and pet shop operations.',
         description:
-          'Appointments, packages, inventory, and billing in one system for grooming, clinics, and hybrid pet businesses.',
+          'Keep appointments, monthly plans, professionals, stock alerts, and billing in one PetFlow workspace built for bath and grooming routines.',
         primaryCta: { label: 'Request a demo', href: '/contact' },
-        secondaryCta: { label: 'Platform access', href: '/login' }
+        secondaryCta: { label: 'PetFlow access', href: '/login' }
       },
       signalTitle: 'A clearer operating system for pet businesses.',
       signalDescription:
-        'PetFlow keeps appointments, packages, inventory, and billing on the same workflow so the business can operate without fragmented tools.',
+        'PetFlow keeps reception, service execution, recurring plans, stock, and billing on the same workflow so a grooming operation can run without fragmented tools.',
       signals: [
         {
           value: 'Scheduling',
           label: 'Appointments & scheduling',
           description:
-            'Clients, pets, appointments, professionals, and services in a single system. No notebook, no spreadsheet.'
-        },
-        {
-          value: 'Inventory',
-          label: 'Inventory & billing',
-          description:
-            'Manage products, stock movements, and monthly invoices. The system calculates what each client owes, including extras like pet taxi.'
+            'Clients, pets, bath and grooming services, professionals, and daily queue control in one place. No notebook, no spreadsheet.'
         },
         {
           value: 'Plans',
-          label: 'Monthly plans',
+          label: 'Recurring plans & loyalty',
           description:
-            'Register plans with a set number of sessions, track usage, and receive automatic alerts when a client is on their second-to-last session.'
+            'Separate recurring clients from one-time visits, track remaining sessions, and warn the team when the client is close to the final visits of the monthly plan.'
+        },
+        {
+          value: 'Billing',
+          label: 'Billing, extras, and stock alerts',
+          description:
+            'Manage products, low-stock alerts, pet taxi extras, and monthly billing with a cleaner operational view.'
         }
       ],
-      productsTitle: 'One visible product. Three operating contexts.',
+      productsTitle: 'One visible product. The full bath and grooming cycle.',
       productsDescription:
-        'PetFlow is the commercial product today. It adapts to grooming, clinical, and hybrid pet operations on the same platform foundation.',
+        'PetFlow is now the official visible product. It keeps reception, appointments, recurring plans, professionals, stock, and billing aligned for pet shops and grooming teams.',
       products: [
         {
-          eyebrow: 'For grooming services',
-          title: 'PetFlow',
+          eyebrow: 'Reception and daily schedule',
+          title: 'Service queue with responsible professional',
           description:
-            'Service scheduling, monthly plan management, per-appointment professional tracking, and complete pet history.',
-          bullets: ['Scheduling with responsible professional', 'Monthly packages with session tracking', 'Service history per pet']
+            'Book baths, grooming, and add-ons with the pet, client, and responsible professional visible in the same flow.',
+          bullets: ['Daily schedule with professional assignment', 'Pet and client context on every visit', 'Operational queue ready for demo']
         },
         {
-          eyebrow: 'For veterinary clinics',
-          title: 'PetFlow Clinical',
+          eyebrow: 'Recurring clients and monthly plans',
+          title: 'Plan control with session countdown',
           description:
-            'Electronic health records, vaccines, prescriptions, and clinical timeline integrated with scheduling and billing.',
-          bullets: ['Health records and vaccines per pet', 'Prescriptions and clinical notes', 'Appointment timeline']
+            'Track active plans, sessions remaining, penultimate-visit alerts, and the difference between recurring and one-time customers.',
+          bullets: ['Recurring versus one-time visibility', 'Penultimate-session alert', 'Automatic renewal notice logic']
         },
         {
-          eyebrow: 'For hybrid pet shops',
-          title: 'PetFlow Complete',
+          eyebrow: 'Billing, extras, and retail support',
+          title: 'Next cycle billing with stock awareness',
           description:
-            'Combine services, products, and clinical care in a single system with integrated inventory and billing.',
-          bullets: ['Inventory with reorder alerts', 'Billing with pet taxi and extras', 'Report by professional']
+            'Show projected charges, pet taxi extras, low-stock products, and service commissions without leaving the PetFlow workspace.',
+          bullets: ['Inventory with reorder alerts', 'Billing with pet taxi and extras', 'Commission by professional']
         }
       ],
       expertiseTitle: 'Authority built on engineering depth, not on generic buzzwords',
@@ -272,11 +272,11 @@ const websiteContent: Record<PublicLocale, WebsiteContent> = {
       ],
       cta: {
         eyebrow: 'PetFlow available now',
-        title: 'Start organizing your pet business today.',
+        title: 'Run bath and grooming with more control.',
         description:
-          'Scheduling, monthly plans, inventory, professionals, and billing in a single system. Get in touch to learn about PetFlow.',
+          'Show a clearer operation from the first demo: appointments, recurring plans, professionals, stock, and billing in one system.',
         primaryCta: { label: 'Get in touch', href: '/contact' },
-        secondaryCta: { label: 'See the platform', href: '/platform' }
+        secondaryCta: { label: 'PetFlow access', href: '/login' }
       }
     },
     about: {
@@ -325,15 +325,15 @@ const websiteContent: Record<PublicLocale, WebsiteContent> = {
         },
         {
           eyebrow: 'In progress',
-          title: 'CRM and commercial coordination',
+          title: 'Shared foundation and guided evolution',
           description:
-            'The CRM module already covers companies, contacts, leads, deals and pipeline. It is being prepared for cross-product coordination as the customer base grows.'
+            'Permissions, notifications, multi-tenancy and billing scaffolding remain ready behind the scenes while the visible product stays centered on PetFlow.'
         },
         {
           eyebrow: 'Future phase',
-          title: 'IoT System for industrial and field operations',
+          title: 'Preserved module foundations',
           description:
-            'Telemetry, device management, alarms and dashboards for industrial contexts. Preserved in the platform for future commercial activation.'
+            'Additional code paths stay protected internally for future extraction and later decisions, without expanding today\'s commercial surface.'
         }
       ],
       identityTitle: 'By the numbers',
@@ -347,10 +347,10 @@ const websiteContent: Record<PublicLocale, WebsiteContent> = {
             '52 incremental migrations since the start, with no schema rewrites.'
         },
         {
-          value: '3',
-          label: 'Vertical modules',
+          value: '1',
+          label: 'Official product surface',
           description:
-            'Pet, CRM and IoT — independent in architecture, integrated in the platform.'
+            'PetFlow is the only product being promoted commercially right now.'
         },
         {
           value: 'GCP',
@@ -362,9 +362,9 @@ const websiteContent: Record<PublicLocale, WebsiteContent> = {
     },
     platform: {
       eyebrow: 'Platform',
-      title: 'The technical foundation behind PetFlow — and the next products.',
+      title: 'The technical foundation behind PetFlow.',
       description:
-        'PhaifferTech Platform is the shared core of authentication, multi-tenancy, permissions and modules that powers PetFlow today and the next products tomorrow. Each vertical module evolves independently on the same foundation.',
+        'PhaifferTech Platform is the shared core of authentication, multi-tenancy, permissions and modules that powers PetFlow today. The goal is to keep the visible product simple without discarding the technical base.',
       foundationTitle: 'Shared foundation',
       foundationDescription:
         'The platform already exposes cross-cutting concerns that matter in real SaaS operations and future integration work.',
@@ -402,67 +402,61 @@ const websiteContent: Record<PublicLocale, WebsiteContent> = {
           eyebrow: 'Core and shared',
           title: 'Technical foundation without vertical business logic',
           description:
-            'Auth, tenancy, IAM, module access, feature flags and reusable technical contracts stay out of CRM, Pet and IoT business rules.'
+            'Auth, tenancy, IAM, module access, feature flags and reusable technical contracts stay out of PetFlow business rules.'
         },
         {
-          eyebrow: 'Vertical modules',
-          title: 'CRM, Pet and IoT own their business domains',
+          eyebrow: 'Visible product',
+          title: 'PetFlow owns the commercial story',
           description:
-            'Each module keeps its own services, DTOs, mappers and controllers, with cross-module integration going through explicit contracts.'
+            'The platform stays behind the scenes while PetFlow carries the visible story for grooming, recurring plans, stock, and billing.'
         }
       ],
-      modulesTitle: 'Products on the same foundation',
+      modulesTitle: 'What is visible on this foundation now',
       modulesDescription:
-        'The value of the platform is not that every product does the same thing. It is that they can evolve under the same architectural discipline.',
+        'The value of the platform is not showing every module at once. It is keeping PetFlow strong while the rest of the codebase remains preserved for later decisions.',
       modules: [
         {
           eyebrow: 'PetFlow · primary product',
-          title: 'Clinical and operational workflows for pet care environments',
+          title: 'Operations for grooming, pet retail, and recurring service routines',
           description:
-            'PetFlow connects appointments with medical workflow, inventory and a consolidated clinical timeline — the current commercial focus of the platform.'
+            'PetFlow connects appointments, monthly plans, professionals, stock alerts, billing, and customer follow-through — the current commercial focus of the platform.'
         },
         {
-          eyebrow: 'CRM',
-          title: 'Commercial structure and future transversal coordination',
+          eyebrow: 'Shared foundation',
+          title: 'Reusable services behind the visible product',
           description:
-            'CRM handles companies, contacts, leads, deals, tasks, notes and activity while preparing for future cross-product coordination.'
-        },
-        {
-          eyebrow: 'IoT System · future phase',
-          title: 'Operational telemetry and industrial monitoring',
-          description:
-            'IoT System supports devices, telemetry, alarms, reporting and operational storytelling on top of the shared platform — preserved for future commercial deployment.'
+            'Permissions, tenant scope, audit, notifications, and dashboard contracts stay reusable without inflating the commercial surface.'
         }
       ]
     },
     products: {
       eyebrow: 'Products',
-      title: 'PetFlow is available now. The platform is built for more.',
+      title: 'PetFlow is the official product surface now.',
       description:
-        'PhaifferTech currently focuses its commercial execution on PetFlow — operational software for veterinary and pet-service environments. CRM and IoT System are part of the same platform foundation, ready for their own phases.',
+        'PhaifferTech now focuses its commercial execution on PetFlow — operational software for grooming, pet shops, and recurring service environments.',
       products: [
         {
-          eyebrow: 'Pet business management · now available',
+          eyebrow: 'Bath and grooming operation',
           title: 'PetFlow',
           description:
-            'Scheduling, monthly plans, inventory, professionals and billing in one system. For clinics, grooming services and pet shops.'
+            'Scheduling, monthly plans, inventory, professionals and billing in one system. Built for pet shops and grooming services.'
         },
         {
-          eyebrow: 'Commercial · maturing phase',
-          title: 'CRM / Operational Hub',
+          eyebrow: 'Recurring revenue',
+          title: 'Monthly plans and billing follow-through',
           description:
-            'Commercial structure with companies, contacts, leads, deals and pipeline. Being prepared for cross-product coordination.'
+            'Separate recurring clients from one-time visits, track sessions left, warn at the penultimate visit, and prepare the next billing cycle.'
         },
         {
-          eyebrow: 'Industrial / infrastructure · future phase',
-          title: 'IoT System',
+          eyebrow: 'Stock and service delivery',
+          title: 'Retail support and team accountability',
           description:
-            'Telemetry, devices, alarms and dashboards for industrial operations. Preserved in the platform for future commercial activation.'
+            'Keep products above minimum stock, attach a professional to each procedure, and explain commission by appointment and by professional.'
         }
       ],
       fitTitle: 'Built for the way pet businesses actually work',
       fitDescription:
-        'Whether you run a clinic, a grooming salon, a pet shop, or a hybrid operation, PetFlow adapts to your workflow without requiring a separate system for each business type.',
+        'Whether you run a grooming salon, a pet shop, or a pet operation with monthly loyalty plans, PetFlow adapts to the daily routine without forcing generic workflows.',
       fit: [
         {
           eyebrow: 'Veterinary clinic',
@@ -538,7 +532,7 @@ const websiteContent: Record<PublicLocale, WebsiteContent> = {
           eyebrow: 'Operational software',
           title: 'Products are framed as systems, not isolated screens',
           description:
-            'CRM, IoT and PetFlow are explained by their workflows, contracts and platform posture.'
+            'PetFlow is explained through workflows, contracts and platform posture, without inflating the visible surface.'
         },
         {
           eyebrow: 'Progressive evolution',
@@ -600,9 +594,9 @@ const websiteContent: Record<PublicLocale, WebsiteContent> = {
         },
         {
           eyebrow: 'Applied domain systems',
-          title: 'Industrial and clinical operational software',
+          title: 'Recurring pet operations as an applied system',
           description:
-            'IoT System and PetFlow provide concrete product contexts that can support comparative analysis and applied architecture narratives.'
+            'PetFlow already provides a concrete context for applied analysis in service execution, recurring billing, stock flow and customer follow-through.'
         }
       ],
       outputsTitle: 'What this page prepares the brand to publish',
@@ -642,7 +636,7 @@ const websiteContent: Record<PublicLocale, WebsiteContent> = {
           value: 'Products',
           label: 'Operational contexts for applied analysis',
           description:
-            'CRM, PetFlow and IoT create different domain pressures on the same platform foundation.'
+            'PetFlow and the shared foundation create enough operational depth for applied analysis without inflating the visible story.'
         },
         {
           value: 'Future',
@@ -681,7 +675,7 @@ const websiteContent: Record<PublicLocale, WebsiteContent> = {
             {
               title: 'Shared capabilities without shared business confusion',
               paragraphs: [
-                'Tenancy, IAM, auditing, feature gating and module access are shared because they are platform concerns. CRM, PetFlow and IoT stay vertical because their business rules should not be diluted into generic infrastructure layers.',
+                'Tenancy, IAM, auditing, feature gating and module access are shared because they are platform concerns. PetFlow stays vertical because its business rules should not be diluted into generic infrastructure layers.',
                 'This separation makes the codebase easier to explain publicly and easier to evolve internally.'
               ]
             },
@@ -697,74 +691,74 @@ const websiteContent: Record<PublicLocale, WebsiteContent> = {
             'The result is a platform that can host multiple product lines while preserving a technical story that customers, peers and evaluators can all understand.'
         },
         {
-          slug: 'data-platform-thinking-for-industrial-iot',
+          slug: 'operational-data-for-recurring-pet-services',
           category: 'Data Engineering',
           readTime: '7 min read',
-          title: 'Data platform thinking for industrial IoT operations',
+          title: 'Data thinking for recurring pet operations',
           description:
-            'How telemetry-heavy products benefit from being framed as data systems instead of only device dashboards.',
+            'How grooming operations become more reliable when appointments, plans, stock and billing are treated as connected operational data.',
           highlight:
-            'Industrial and field operations generate more than status screens. They produce operational data, escalation paths and architecture decisions that should be designed as a platform concern.',
+            'A grooming operation generates more than booked services. It produces service cadence, customer recurrence, stock pressure and billing events that should be treated as one operating system.',
           sections: [
             {
-              title: 'From device inventory to operational data flow',
+              title: 'From scheduled visits to operational data flow',
               paragraphs: [
-                'An IoT product becomes strategically stronger when telemetry, alarms and maintenance narratives are treated as connected operational data flows rather than isolated screens.',
-                'That framing influences how contracts are written, how capabilities are exposed and how executive dashboards can be explained.'
+                'Recurring pet operations become strategically stronger when appointments, plan sessions, pet taxi extras and pickup notifications are treated as connected operational flows rather than isolated screens.',
+                'That framing influences how contracts are written, how billing previews are surfaced and how the commercial demo can be explained.'
               ]
             },
             {
               title: 'Why platform posture matters',
               paragraphs: [
-                'The platform foundation matters because industrial use cases eventually pressure identity, module access, tenant separation, auditing and reporting at the same time.',
-                'Having those concerns already built into the shared layers makes the IoT module easier to extend without rewriting its foundations.'
+                'The platform foundation matters because grooming use cases still pressure identity, module access, tenant separation, auditing and billing visibility at the same time.',
+                'Having those concerns already built into the shared layers makes PetFlow easier to extend without rewriting its foundations.'
               ]
             },
             {
               title: 'Applied research value',
               paragraphs: [
-                'Telemetry-heavy products are fertile ground for future work in data engineering, platform design and operational analytics.',
-                'That is one reason the public positioning of PhaifferTech needs to include both product delivery and research direction.'
+                'Recurring service operations are fertile ground for future work in data engineering, platform design and operational analytics.',
+                'That is one reason the public positioning of PhaifferTech should connect product delivery, operational clarity and research direction.'
               ]
             }
           ],
           closing:
-            'The IoT story becomes more credible when it is explained as an operational data system living on a shared engineering platform.'
+            'The PetFlow story becomes stronger when it is explained as an operational data system for recurring pet services.'
         },
         {
-          slug: 'shared-foundations-for-clinical-and-commercial-operations',
+          slug: 'shared-foundations-for-service-and-billing-operations',
           category: 'Products',
           readTime: '9 min read',
-          title: 'Shared foundations for clinical and commercial operations',
+          title: 'Shared foundations for service and billing operations',
           description:
-            'What CRM and PetFlow reveal about building different workflows on top of one architectural base.',
+            'What PetFlow reveals about building service execution, recurring plans and billing follow-through on one architectural base.',
           highlight:
-            'Clinical operations and commercial coordination look very different on the surface, but they both benefit from explicit contracts, shared governance and progressive integration.',
+            'Reception, service execution, stock and billing look different on the surface, but they all benefit from explicit contracts, shared governance and progressive integration.',
           sections: [
             {
-              title: 'Why CRM and PetFlow should not be forced into the same model',
+              title: 'Why service operations and billing should not be flattened',
               paragraphs: [
-                'A transversal platform does not mean flattening every domain into a single abstract workflow. CRM and PetFlow need different language, different entities and different operational semantics.',
-                'The platform value comes from shared governance and explicit integration points, not from pretending the domains are identical.'
+                'A transversal platform does not mean flattening every concern into a single abstract workflow. Front desk, service execution, recurring plans and invoicing need different language, different entities and different operational semantics.',
+                'The platform value comes from shared governance and explicit integration points, not from pretending every operational step is the same.'
               ]
             },
             {
               title: 'Where shared foundation actually helps',
               paragraphs: [
-                'Canonical references, tenancy, permissions, dashboards and authenticated shell concerns are the kind of capabilities that compound value across both modules.',
-                'That makes it possible to build cross-module visibility incrementally without violating ownership boundaries.'
+                'Canonical references, tenancy, permissions, dashboards, notifications and authenticated shell concerns are the kind of capabilities that compound value across the same visible product surface.',
+                'That makes it possible to expand PetFlow incrementally without violating ownership boundaries or inflating the commercial story.'
               ]
             },
             {
               title: 'Why this matters to product and research',
               paragraphs: [
                 'The same integration choices that help product evolution also create a clean basis for architecture discussion and future academic analysis.',
-                'That is why PhaifferTech needs its public brand to explain both the systems and the reasoning behind them.'
+                'That is why PhaifferTech needs its public brand to explain both the working product and the reasoning behind its foundation.'
               ]
             }
           ],
           closing:
-            'The strongest portfolio story is not “many modules”. It is “many domains, one disciplined platform foundation”.'
+            'The strongest portfolio story is not more visible modules. It is a disciplined foundation under one product that is ready to sell today.'
         }
       ]
     },
@@ -779,9 +773,9 @@ const websiteContent: Record<PublicLocale, WebsiteContent> = {
       lanes: [
         {
           eyebrow: 'Commercial',
-          title: 'Product and platform discovery',
+          title: 'PetFlow demo for grooming operations',
           description:
-            'For conversations about the operational value of CRM, IoT System, PetFlow and the shared platform posture.'
+            'For conversations centered on bath and grooming flow, recurring plans, stock alerts, pet taxi extras, and billing.'
         },
         {
           eyebrow: 'Technical',
@@ -816,7 +810,7 @@ const websiteContent: Record<PublicLocale, WebsiteContent> = {
           eyebrow: 'Expected next step',
           title: 'Know whether the first step is discovery, validation or protected access',
           description:
-            'Some conversations start with product clarity, others with architecture review, and others with demo or platform access.'
+            'Some conversations start with the live demo, others with rollout validation, and others with protected PetFlow access.'
         }
       ],
       cta: {
@@ -825,68 +819,68 @@ const websiteContent: Record<PublicLocale, WebsiteContent> = {
         description:
           'Get in touch to learn about the system, schedule a demo or understand how PetFlow fits your pet business.',
         primaryCta: { label: 'Send a message', href: 'mailto:contato@phaiffertech.com.br' },
-        secondaryCta: { label: 'See the system', href: '/platform' }
+        secondaryCta: { label: 'PetFlow access', href: '/login' }
       }
     }
   },
   'pt-BR': {
     home: {
       hero: {
-        eyebrow: 'PetFlow · grooming · clinicas · pet shops',
+        eyebrow: 'PetFlow · banho e tosa recorrente · operacao pet',
         title:
-          'PetFlow para operacoes pet que precisam de clareza.',
+          'PetFlow para banho e tosa recorrente e operacao de pet shop.',
         description:
-          'Agenda, pacotes, estoque e faturamento em um unico sistema para banho e tosa, clinicas e operacoes pet hibridas.',
+          'Agenda, planos mensais, profissionais, alertas de estoque e cobranca no mesmo workspace para a rotina de banho e tosa.',
         primaryCta: { label: 'Solicitar demo', href: '/contact' },
-        secondaryCta: { label: 'Acessar a plataforma', href: '/login' }
+        secondaryCta: { label: 'Acessar o PetFlow', href: '/login' }
       },
       signalTitle: 'Uma operacao mais clara para o seu pet business.',
       signalDescription:
-        'O PetFlow conecta agenda, atendimentos, pacotes, estoque e cobranca no mesmo fluxo para evitar operacao fragmentada.',
+        'O PetFlow conecta recepcao, execucao do servico, planos recorrentes, estoque e cobranca no mesmo fluxo para evitar operacao fragmentada.',
       signals: [
         {
-          value: 'Agenda e atendimentos',
-          label: 'Tudo que acontece no seu pet shop, registrado e organizado',
+          value: 'Agenda',
+          label: 'Fila de servicos com cliente, pet e profissional',
           description:
-            'Clientes, pets, agendamentos, profissionais e serviços em um único sistema. Sem caderno, sem planilha.'
+            'Clientes, pets, banho, tosa e adicionais no mesmo fluxo. Sem caderno, sem planilha.'
         },
         {
-          value: 'Estoque e faturamento',
-          label: 'Controle de produtos e cobranças sem trabalho duplicado',
+          value: 'Planos',
+          label: 'Recorrentes e avulsos sem confusao operacional',
           description:
-            'Gerencie produtos, movimentações de estoque e faturas mensais. O sistema calcula o que cada cliente deve, incluindo extras como pet taxi.'
+            'Separe clientes de plano mensal dos avulsos, acompanhe sessoes restantes e receba aviso na penultima visita.'
         },
         {
-          value: 'Planos mensais',
-          label: 'Controle de pacotes por cliente sem perder nenhuma sessão',
+          value: 'Cobranca',
+          label: 'Estoque, extras e faturamento no mesmo ritmo da operacao',
           description:
-            'Cadastre planos com número de sessões, acompanhe o uso e receba aviso automático quando o cliente estiver na penúltima sessão do pacote.'
+            'Gerencie produtos, alertas de estoque minimo, pet taxi e cobranca mensal com mais clareza comercial.'
         }
       ],
-      productsTitle: 'Um produto visivel. Tres contextos de operacao.',
+      productsTitle: 'Um produto visivel. Todo o ciclo de banho e tosa.',
       productsDescription:
-        'O PetFlow e o produto comercial hoje. Ele se adapta a grooming, clinicas e operacoes hibridas sobre a mesma base de plataforma.',
+        'O PetFlow passa a ser a superficie oficial do produto. Ele alinha recepcao, agenda, planos recorrentes, profissionais, estoque e cobranca para pet shops e operacoes de grooming.',
       products: [
         {
-          eyebrow: 'Para banho e tosa',
-          title: 'PetFlow',
+          eyebrow: 'Recepcao e agenda diaria',
+          title: 'Fila de servicos com profissional responsavel',
           description:
-            'Agenda de serviços, controle de planos mensais, registro de profissionais por atendimento e histórico completo de cada pet.',
-          bullets: ['Agendamento com profissional responsável', 'Pacotes mensais com controle de sessões', 'Histórico de serviços por pet']
+            'Agende banho, tosa e adicionais com o pet, o cliente e o profissional responsavel visiveis no mesmo fluxo.',
+          bullets: ['Agenda com profissional responsavel', 'Contexto de cliente e pet em cada visita', 'Fila pronta para demo comercial']
         },
         {
-          eyebrow: 'Para clínicas veterinárias',
-          title: 'PetFlow Clínico',
+          eyebrow: 'Clientes recorrentes e planos mensais',
+          title: 'Controle de planos com contagem de sessoes',
           description:
-            'Prontuário eletrônico, vacinas, prescrições e timeline clínica integrados ao agendamento e faturamento.',
-          bullets: ['Prontuário e vacinas por pet', 'Prescrições e anotações clínicas', 'Timeline de atendimentos']
+            'Acompanhe planos ativos, sessoes restantes, alerta de penultima visita e diferenca entre cliente recorrente e cliente avulso.',
+          bullets: ['Recorrente versus avulso', 'Alerta de penultima sessao', 'Logica de aviso automatico para renovacao']
         },
         {
-          eyebrow: 'Para pet shops híbridos',
-          title: 'PetFlow Completo',
+          eyebrow: 'Cobranca, extras e apoio de loja',
+          title: 'Proximo ciclo de cobranca com estoque no radar',
           description:
-            'Combine serviços, produtos e atendimento clínico em um único sistema com controle de estoque e faturamento integrado.',
-          bullets: ['Estoque com alerta de reposição', 'Faturamento com pet taxi e extras', 'Relatório por profissional']
+            'Mostre cobranca prevista, extras como pet taxi, produtos abaixo do minimo e comissao por atendimento sem sair do PetFlow.',
+          bullets: ['Estoque com alerta de reposicao', 'Faturamento com pet taxi e extras', 'Comissao por profissional']
         }
       ],
       expertiseTitle: 'Autoridade construída sobre profundidade técnica, não sobre buzzwords',
@@ -943,11 +937,11 @@ const websiteContent: Record<PublicLocale, WebsiteContent> = {
       ],
       cta: {
         eyebrow: 'PetFlow disponível agora',
-        title: 'Comece a organizar seu pet business hoje.',
+        title: 'Toque o banho e tosa com mais controle.',
         description:
-          'Agenda, planos mensais, estoque, profissionais e faturamento em um único sistema. Entre em contato para conhecer o PetFlow.',
+          'Mostre uma operacao mais clara desde a primeira demo: agenda, planos recorrentes, profissionais, estoque e cobranca no mesmo sistema.',
         primaryCta: { label: 'Entrar em contato', href: '/contact' },
-        secondaryCta: { label: 'Ver o sistema', href: '/platform' }
+        secondaryCta: { label: 'Acessar o PetFlow', href: '/login' }
       }
     },
     about: {
@@ -996,15 +990,15 @@ const websiteContent: Record<PublicLocale, WebsiteContent> = {
         },
         {
           eyebrow: 'Em evolução',
-          title: 'CRM e coordenação comercial',
+          title: 'Fundação compartilhada e evolução guiada',
           description:
-            'O módulo de CRM já cobre empresas, contatos, leads, negócios e pipeline. Está sendo preparado para coordenação entre produtos à medida que a base de clientes cresce.'
+            'Permissões, notificações, multi-tenancy e base de cobrança continuam prontas nos bastidores enquanto o produto visível permanece centrado no PetFlow.'
         },
         {
           eyebrow: 'Fase futura',
-          title: 'IoT System para operações industriais e de campo',
+          title: 'Fundações preservadas para etapas futuras',
           description:
-            'Telemetria, gerenciamento de dispositivos, alarmes e dashboards para contextos industriais. Preservado na plataforma para ativação comercial futura.'
+            'Outros caminhos de código permanecem protegidos internamente para extração e decisões futuras, sem expandir a superfície comercial de agora.'
         }
       ],
       identityTitle: 'Em números',
@@ -1018,10 +1012,10 @@ const websiteContent: Record<PublicLocale, WebsiteContent> = {
             '52 migrações incrementais desde o início, sem reescrita de schema.'
         },
         {
-          value: '3',
-          label: 'Módulos verticais',
+          value: '1',
+          label: 'Produto oficial visível',
           description:
-            'Pet, CRM e IoT — independentes na arquitetura, integrados na plataforma.'
+            'PetFlow é o único produto promovido comercialmente neste momento.'
         },
         {
           value: 'GCP',
@@ -1033,9 +1027,9 @@ const websiteContent: Record<PublicLocale, WebsiteContent> = {
     },
     platform: {
       eyebrow: 'Plataforma',
-      title: 'A fundação técnica por trás do PetFlow — e dos próximos produtos.',
+      title: 'A fundacao tecnica por tras do PetFlow.',
       description:
-        'A PhaifferTech Platform é o núcleo compartilhado de autenticação, multi-tenancy, permissões e módulos que sustenta o PetFlow hoje e os próximos produtos amanhã. Cada módulo vertical evolui de forma independente sobre a mesma base.',
+        'A PhaifferTech Platform e o nucleo compartilhado de autenticacao, multi-tenancy, permissoes e modulos que sustenta o PetFlow hoje. A meta e manter o produto visivel simples sem descartar a base tecnica.',
       foundationTitle: 'Fundação compartilhada',
       foundationDescription:
         'A plataforma já expõe preocupações transversais que importam em SaaS real e em integração futura.',
@@ -1073,67 +1067,61 @@ const websiteContent: Record<PublicLocale, WebsiteContent> = {
           eyebrow: 'Core e shared',
           title: 'Fundação técnica sem regra de negócio vertical',
           description:
-            'Auth, tenancy, IAM, module access, feature flags e contratos técnicos reutilizáveis ficam fora das regras de CRM, Pet e IoT.'
+            'Auth, tenancy, IAM, module access, feature flags e contratos tecnicos reutilizaveis ficam fora das regras do PetFlow.'
         },
         {
-          eyebrow: 'Módulos verticais',
-          title: 'CRM, Pet e IoT donos dos seus domínios',
+          eyebrow: 'Produto visivel',
+          title: 'PetFlow conduz a historia comercial',
           description:
-            'Cada módulo mantém seus services, DTOs, mappers e controllers, com integração cruzada feita por contracts explícitos.'
+            'A plataforma fica nos bastidores enquanto o PetFlow carrega a historia visivel de agenda, planos recorrentes, estoque e cobranca.'
         }
       ],
-      modulesTitle: 'Produtos sobre a mesma fundação',
+      modulesTitle: 'O que fica visivel nesta fundacao agora',
       modulesDescription:
-        'O valor da plataforma não é fazer tudo igual. É permitir evolução sob a mesma disciplina arquitetural.',
+        'O valor da plataforma nao esta em mostrar todos os modulos ao mesmo tempo. Esta em manter o PetFlow forte enquanto o restante da base fica preservado para decisoes futuras.',
       modules: [
         {
           eyebrow: 'PetFlow · produto principal',
-          title: 'Fluxos clínicos e operacionais para o setor pet',
+          title: 'Operacao para banho e tosa, loja pet e recorrencia mensal',
           description:
-            'O PetFlow conecta appointments ao medical workflow, inventory e uma timeline clínica consolidada — foco comercial atual da plataforma.'
+            'O PetFlow conecta appointments, planos mensais, profissionais, alertas de estoque, cobranca e follow-up com clientes — foco comercial atual da plataforma.'
         },
         {
-          eyebrow: 'CRM',
-          title: 'Estrutura comercial e futura coordenação transversal',
+          eyebrow: 'Fundacao compartilhada',
+          title: 'Servicos reutilizaveis por tras do produto visivel',
           description:
-            'O CRM já cobre companies, contacts, leads, deals, tasks, notes e activity enquanto se prepara para coordenação cross-product.'
-        },
-        {
-          eyebrow: 'IoT System · fase futura',
-          title: 'Telemetria operacional e monitoramento industrial',
-          description:
-            'O IoT System suporta devices, telemetry, alarms, reporting e narrativa operacional sobre a mesma plataforma — preservado para ativação comercial futura.'
+            'Permissoes, tenant scope, auditoria, notificacoes e contratos de dashboard continuam reutilizaveis sem inflar a superficie comercial.'
         }
       ]
     },
     products: {
       eyebrow: 'Produtos',
-      title: 'PetFlow disponível agora. A plataforma está pronta para mais.',
+      title: 'PetFlow e a superficie oficial do produto agora.',
       description:
-        'A PhaifferTech concentra sua execução comercial no PetFlow — sistema de gestão para pet businesses: clínicas, grooming, pet shops e operações híbridas. CRM e IoT System fazem parte da mesma fundação de plataforma, prontos para suas próprias fases.',
+        'A PhaifferTech concentra sua execucao comercial no PetFlow — software operacional para banho e tosa, pet shops e servicos recorrentes.',
       products: [
         {
-          eyebrow: 'Gestão de pet business · disponível agora',
+          eyebrow: 'Operacao de banho e tosa',
           title: 'PetFlow',
           description:
-            'Agenda, planos mensais, estoque, profissionais e faturamento em um único sistema. Para clínicas, grooming e pet shops.'
+            'Agenda, planos mensais, estoque, profissionais e faturamento em um unico sistema. Feito para grooming e pet shop.'
         },
         {
-          eyebrow: 'Comercial · fase de maturação',
-          title: 'CRM / Operational Hub',
+          eyebrow: 'Receita recorrente',
+          title: 'Planos mensais e cobranca do proximo ciclo',
           description:
-            'Estrutura comercial com empresas, contatos, leads, deals e pipeline. Preparado para coordenação entre produtos.'
+            'Separe recorrentes de avulsos, acompanhe sessoes restantes, avise na penultima visita e prepare a cobranca do proximo mes.'
         },
         {
-          eyebrow: 'Industrial / infraestrutura · fase futura',
-          title: 'IoT System',
+          eyebrow: 'Entrega do servico e apoio de loja',
+          title: 'Estoque, extras e responsabilidade por profissional',
           description:
-            'Telemetria, dispositivos, alarmes e dashboards para operações industriais. Preservado na plataforma para ativação futura.'
+            'Mantenha produtos acima do minimo, associe profissional a cada procedimento e explique comissao por atendimento e por profissional.'
         }
       ],
-      fitTitle: 'Feito para o jeito que negócios pet realmente funcionam',
+      fitTitle: 'Feito para o jeito que negocios pet realmente funcionam',
       fitDescription:
-        'Seja uma clínica, um pet shop, um salão de banho e tosa ou uma operação híbrida, o PetFlow adapta ao seu fluxo sem precisar de um sistema diferente para cada modelo.',
+        'Seja um salao de banho e tosa, um pet shop ou uma operacao com planos recorrentes, o PetFlow se adapta ao ritmo diario sem impor fluxo generico.',
       fit: [
         {
           eyebrow: 'Clínica veterinária',
@@ -1209,7 +1197,7 @@ const websiteContent: Record<PublicLocale, WebsiteContent> = {
           eyebrow: 'Software operacional',
           title: 'Produtos apresentados como sistemas, não como telas isoladas',
           description:
-            'CRM, IoT e PetFlow são explicados por fluxos, contratos e postura de plataforma.'
+            'O PetFlow é explicado por fluxos, contratos e postura de plataforma, sem inflar a superfície visível.'
         },
         {
           eyebrow: 'Evolução progressiva',
@@ -1271,9 +1259,9 @@ const websiteContent: Record<PublicLocale, WebsiteContent> = {
         },
         {
           eyebrow: 'Sistemas aplicados',
-          title: 'Software operacional clínico e industrial',
+          title: 'Operação pet recorrente como sistema aplicado',
           description:
-            'IoT System e PetFlow fornecem contextos concretos de produto que podem sustentar análise comparativa e narrativa arquitetural aplicada.'
+            'O PetFlow já fornece um contexto concreto para análise aplicada em execução de serviços, cobrança recorrente, estoque e follow-up com clientes.'
         }
       ],
       outputsTitle: 'O que esta página prepara a marca para publicar',
@@ -1313,7 +1301,7 @@ const websiteContent: Record<PublicLocale, WebsiteContent> = {
           value: 'Produtos',
           label: 'Contextos operacionais para análise aplicada',
           description:
-            'CRM, PetFlow e IoT criam pressões de domínio diferentes sobre a mesma fundação de plataforma.'
+            'O PetFlow e a fundação compartilhada criam profundidade operacional suficiente para análise aplicada sem inflar a narrativa visível.'
         },
         {
           value: 'Futuro',
@@ -1352,7 +1340,7 @@ const websiteContent: Record<PublicLocale, WebsiteContent> = {
             {
               title: 'Capabilities compartilhadas sem confusão de negócio compartilhada',
               paragraphs: [
-                'Tenancy, IAM, auditing, feature gating e module access são compartilhados porque são concerns de plataforma. CRM, PetFlow e IoT continuam verticais porque suas regras de negócio não devem ser diluídas em camadas genéricas.',
+                'Tenancy, IAM, auditing, feature gating e module access são compartilhados porque são concerns de plataforma. O PetFlow continua vertical porque suas regras de negócio não devem ser diluídas em camadas genéricas.',
                 'Essa separação torna o codebase mais fácil de explicar publicamente e mais fácil de evoluir internamente.'
               ]
             },
@@ -1368,74 +1356,74 @@ const websiteContent: Record<PublicLocale, WebsiteContent> = {
             'O resultado é uma plataforma capaz de hospedar várias linhas de produto enquanto preserva uma história técnica compreensível para clientes, pares e avaliadores.'
         },
         {
-          slug: 'data-platform-thinking-for-industrial-iot',
+          slug: 'operational-data-for-recurring-pet-services',
           category: 'Data Engineering',
           readTime: '7 min read',
-          title: 'Data platform thinking for industrial IoT operations',
+          title: 'Data thinking para operacao pet recorrente',
           description:
-            'Como produtos orientados a telemetria ganham força quando são tratados como sistemas de dados e não apenas como dashboards de devices.',
+            'Como operacoes de banho e tosa ficam mais confiaveis quando agenda, planos, estoque e cobranca sao tratados como dados operacionais conectados.',
           highlight:
-            'Operações industriais e de campo geram mais do que telas de status. Elas produzem dados operacionais, fluxos de escalonamento e decisões de arquitetura que devem ser pensadas como preocupação de plataforma.',
+            'Uma operacao de banho e tosa gera mais do que servicos agendados. Ela produz cadencia de atendimento, recorrencia, pressao de estoque e eventos de cobranca que devem ser tratados como um so sistema operacional.',
           sections: [
             {
-              title: 'De inventário de devices a fluxo operacional de dados',
+              title: 'De visitas agendadas a fluxo operacional de dados',
               paragraphs: [
-                'Um produto IoT fica estrategicamente mais forte quando telemetry, alarms e narrativas de maintenance são tratados como fluxos operacionais conectados em vez de telas isoladas.',
-                'Esse enquadramento influencia como contratos são escritos, como capabilities são expostas e como dashboards executivos podem ser explicados.'
+                'Uma operacao pet recorrente fica estrategicamente mais forte quando appointments, sessoes de plano, extras de pet taxi e avisos de retirada sao tratados como fluxos conectados em vez de telas isoladas.',
+                'Esse enquadramento influencia como contratos sao escritos, como previews de cobranca aparecem e como a demo comercial pode ser explicada.'
               ]
             },
             {
               title: 'Por que a postura de plataforma importa',
               paragraphs: [
-                'A fundação de plataforma importa porque casos de uso industriais pressionam identity, module access, separação por tenant, auditing e reporting ao mesmo tempo.',
-                'Ter essas concerns já construídas nas camadas compartilhadas torna o módulo IoT mais fácil de expandir sem reescrever sua base.'
+                'A fundacao de plataforma importa porque casos de uso de banho e tosa ainda pressionam identity, module access, separacao por tenant, auditing e visibilidade de cobranca ao mesmo tempo.',
+                'Ter essas concerns ja construidas nas camadas compartilhadas torna o PetFlow mais facil de expandir sem reescrever sua base.'
               ]
             },
             {
               title: 'Valor para pesquisa aplicada',
               paragraphs: [
-                'Produtos intensivos em telemetria são terreno fértil para trabalho futuro em data engineering, platform design e analytics operacional.',
-                'Essa é uma das razões pelas quais o posicionamento público da PhaifferTech precisa incluir tanto entrega de produto quanto direção de pesquisa.'
+                'Operacoes recorrentes de servico sao terreno fertil para trabalho futuro em data engineering, platform design e analytics operacional.',
+                'Essa e uma das razoes pelas quais o posicionamento publico da PhaifferTech deve conectar entrega de produto, clareza operacional e direcao de pesquisa.'
               ]
             }
           ],
           closing:
-            'A narrativa de IoT fica mais crível quando é explicada como sistema operacional de dados vivendo sobre uma plataforma de engenharia compartilhada.'
+            'A narrativa do PetFlow fica mais forte quando e explicada como sistema operacional de dados para servicos pet recorrentes.'
         },
         {
-          slug: 'shared-foundations-for-clinical-and-commercial-operations',
+          slug: 'shared-foundations-for-service-and-billing-operations',
           category: 'Products',
           readTime: '9 min read',
-          title: 'Shared foundations for clinical and commercial operations',
+          title: 'Shared foundations for service and billing operations',
           description:
-            'O que CRM e PetFlow revelam sobre construir workflows diferentes sobre a mesma base arquitetural.',
+            'O que o PetFlow revela sobre construir execucao de servicos, planos recorrentes e cobranca sobre a mesma base arquitetural.',
           highlight:
-            'Operações clínicas e coordenação comercial parecem muito diferentes na superfície, mas ambas se beneficiam de contratos explícitos, governança compartilhada e integração progressiva.',
+            'Recepcao, execucao de servico, estoque e cobranca parecem diferentes na superficie, mas todos se beneficiam de contratos explicitos, governanca compartilhada e integracao progressiva.',
           sections: [
             {
-              title: 'Por que CRM e PetFlow não devem ser forçados ao mesmo modelo',
+              title: 'Por que operacao de servico e cobranca nao devem ser achatadas',
               paragraphs: [
-                'Uma plataforma transversal não significa achatar todos os domínios num único workflow abstrato. CRM e PetFlow precisam de linguagem, entidades e semântica operacional diferentes.',
-                'O valor da plataforma vem da governança compartilhada e dos pontos de integração explícitos, e não de fingir que os domínios são idênticos.'
+                'Uma plataforma transversal nao significa achatar todas as preocupacoes num unico workflow abstrato. Recepcao, execucao do servico, planos recorrentes e faturamento precisam de linguagem, entidades e semantica operacional diferentes.',
+                'O valor da plataforma vem da governanca compartilhada e dos pontos de integracao explicitos, e nao de fingir que cada etapa operacional e igual.'
               ]
             },
             {
               title: 'Onde a fundação compartilhada realmente ajuda',
               paragraphs: [
-                'Referências canônicas, tenancy, permissions, dashboards e concerns do shell autenticado são o tipo de capability que acumula valor nos dois módulos.',
-                'Isso permite construir visibilidade cross-module de forma incremental sem violar ownership.'
+                'Referencias canonicas, tenancy, permissions, dashboards, notificacoes e concerns do shell autenticado sao o tipo de capability que acumula valor dentro da mesma superficie visivel.',
+                'Isso permite expandir o PetFlow de forma incremental sem violar ownership nem inflar a historia comercial.'
               ]
             },
             {
               title: 'Por que isso importa para produto e pesquisa',
               paragraphs: [
-                'As mesmas escolhas de integração que ajudam a evolução do produto também criam uma base limpa para discussão arquitetural e análise acadêmica futura.',
-                'É por isso que a marca pública da PhaifferTech precisa explicar os sistemas e o raciocínio por trás deles.'
+                'As mesmas escolhas de integracao que ajudam a evolucao do produto tambem criam uma base limpa para discussao arquitetural e analise academica futura.',
+                'E por isso que a marca publica da PhaifferTech precisa explicar tanto o produto em funcionamento quanto o raciocinio por tras da fundacao.'
               ]
             }
           ],
           closing:
-            'A história mais forte do portfólio não é “muitos módulos”. É “muitos domínios, uma fundação disciplinada de plataforma”.'
+            'A historia mais forte do portfolio nao e ter mais modulos visiveis. E ter uma fundacao disciplinada sustentando um produto que ja pode ser vendido agora.'
         }
       ]
     },
@@ -1450,9 +1438,9 @@ const websiteContent: Record<PublicLocale, WebsiteContent> = {
       lanes: [
         {
           eyebrow: 'Comercial',
-          title: 'Descoberta de produto e plataforma',
+          title: 'Demo PetFlow para banho e tosa',
           description:
-            'Para conversas sobre valor operacional de CRM, IoT System, PetFlow e a postura compartilhada da plataforma.'
+            'Para conversas centradas em agenda, planos recorrentes, alertas de estoque, pet taxi e cobranca do banho e tosa.'
         },
         {
           eyebrow: 'Técnico',
@@ -1487,7 +1475,7 @@ const websiteContent: Record<PublicLocale, WebsiteContent> = {
           eyebrow: 'Próximo passo esperado',
           title: 'Saiba se o primeiro passo é descoberta, validação ou acesso protegido',
           description:
-            'Algumas conversas começam por clareza de produto, outras por revisão arquitetural e outras por demo ou acesso à plataforma.'
+            'Algumas conversas comecam pela demo ao vivo, outras pela validacao do rollout e outras por acesso protegido ao PetFlow.'
         }
       ],
       cta: {
@@ -1496,7 +1484,7 @@ const websiteContent: Record<PublicLocale, WebsiteContent> = {
         description:
           'Entre em contato para conhecer o sistema, agendar uma demonstração ou entender como o PetFlow se encaixa no seu pet business.',
         primaryCta: { label: 'Enviar mensagem', href: 'mailto:contato@phaiffertech.com.br' },
-        secondaryCta: { label: 'Ver o sistema', href: '/platform' }
+        secondaryCta: { label: 'Acessar o PetFlow', href: '/login' }
       }
     }
   }

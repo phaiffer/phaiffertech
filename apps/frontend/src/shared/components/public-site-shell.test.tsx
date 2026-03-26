@@ -29,7 +29,7 @@ describe('PublicSiteShell', () => {
     );
 
     const productLinks = await screen.findAllByRole('link', { name: 'Products' });
-    const accessLinks = screen.getAllByRole('link', { name: 'Platform access' });
+    const accessLinks = screen.getAllByRole('link', { name: 'PetFlow access' });
 
     expect(productLinks[0]).toHaveAttribute('href', '/products');
     expect(accessLinks[0]).toHaveAttribute('href', '/login');

@@ -17,7 +17,7 @@ describe('WebsitePlatformPage', () => {
     expect(
       await screen.findByRole('heading', { name: /The technical foundation behind PetFlow/i })
     ).toBeInTheDocument();
-    expect(screen.getByText('Shared foundation')).toBeInTheDocument();
+    expect(screen.getAllByText('Shared foundation').length).toBeGreaterThan(0);
     expect(screen.getByText('Modules')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Products' })).toHaveAttribute('href', '/products');
     expect(screen.getByRole('link', { name: 'Contact' })).toHaveAttribute('href', '/contact');

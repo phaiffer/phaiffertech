@@ -355,6 +355,10 @@ export function createPetAppointmentColumns({
   onEdit,
   onDelete
 }: CreatePetAppointmentColumnsArgs): DataTableColumn<PetAppointment>[] {
+  const resolveClientEmail = (appointment: PetAppointment) => {
+    return clients.find((client) => client.id === appointment.clientId)?.email ?? null;
+  };
+
   return [
     {
       key: 'serviceName',
@@ -365,6 +369,16 @@ export function createPetAppointmentColumns({
           {appointment.petName ? (
             <div className="text-xs text-[color:var(--app-shell-muted)]">{appointment.petName}</div>
           ) : null}
+          <div className="text-xs text-[color:var(--app-shell-muted)]">
+            with {appointment.professionalName ??
+              resolvePetLookupLabel(
+                professionals,
+                appointment.professionalId,
+                (professional) => professional.name,
+                'Professional',
+                professionalsLookupUnavailable
+              )}
+          </div>
         </div>
       )
     },
@@ -376,7 +390,21 @@ export function createPetAppointmentColumns({
     {
       key: 'status',
       header: 'Status',
-      render: (appointment) => <StatusBadge status={appointment.status} />
+      render: (appointment) => {
+        const clientEmail = resolveClientEmail(appointment);
+        const completed = appointment.status.toUpperCase() === 'COMPLETED';
+
+        return (
+          <div className="space-y-2">
+            <StatusBadge status={appointment.status} />
+            {completed ? (
+              <p className="text-xs text-[color:var(--app-shell-muted)]">
+                {clientEmail ? 'Pickup email sent automatically' : 'Pickup email skipped: no client email'}
+              </p>
+            ) : null}
+          </div>
+        );
+      }
     },
     {
       key: 'planSessions',
@@ -414,6 +442,9 @@ export function createPetAppointmentColumns({
             </span>
             {appointment.planSessionConsumed ? (
               <div className="text-xs text-emerald-700">Session used from package</div>
+            ) : null}
+            {appointment.planSessionConsumed && remaining === 2 ? (
+              <div className="text-xs text-amber-700">Renewal alert triggered</div>
             ) : null}
           </div>
         );
@@ -493,31 +524,65 @@ export function createPetAppointmentColumns({
       key: 'client',
       header: 'Client',
       render: (appointment) => {
+        const clientLabel = appointment.clientName
+          ? appointment.clientName
+          : resolvePetLookupLabel(
+            clients,
+            appointment.clientId,
+            (client) => client.name ?? client.fullName,
+            'Client',
+            clientsLookupUnavailable
+          );
+
         if (appointment.clientName) {
-          return appointment.clientName;
+          return (
+            <div className="space-y-1">
+              <p className="font-medium text-[color:var(--app-shell-heading)]">{clientLabel}</p>
+              <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${
+                appointment.clientPlanId
+                  ? 'bg-emerald-100 text-emerald-800'
+                  : 'bg-slate-100 text-slate-700'
+              }`}>
+                {appointment.clientPlanId ? 'Recurring' : 'One-time'}
+              </span>
+            </div>
+          );
         }
 
-        return resolvePetLookupLabel(
-          clients,
-          appointment.clientId,
-          (client) => client.name ?? client.fullName,
-          'Client',
-          clientsLookupUnavailable
+        return (
+          <div className="space-y-1">
+            <p className="font-medium text-[color:var(--app-shell-heading)]">{clientLabel}</p>
+            <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${
+              appointment.clientPlanId
+                ? 'bg-emerald-100 text-emerald-800'
+                : 'bg-slate-100 text-slate-700'
+            }`}>
+              {appointment.clientPlanId ? 'Recurring' : 'One-time'}
+            </span>
+          </div>
         );
       }
     },
     {
       key: 'professional',
       header: 'Professional',
-      render: (appointment) =>
-        appointment.professionalName ??
-        resolvePetLookupLabel(
-          professionals,
-          appointment.professionalId,
-          (professional) => professional.name,
-          'Professional',
-          professionalsLookupUnavailable
-        )
+      render: (appointment) => (
+        <div className="space-y-1">
+          <p className="font-medium text-[color:var(--app-shell-heading)]">
+            {appointment.professionalName ??
+              resolvePetLookupLabel(
+                professionals,
+                appointment.professionalId,
+                (professional) => professional.name,
+                'Professional',
+                professionalsLookupUnavailable
+              )}
+          </p>
+          <p className="text-xs text-[color:var(--app-shell-muted)]">
+            Commission {appointment.commissionAmount != null ? `R$ ${appointment.commissionAmount.toFixed(2)}` : 'pending setup'}
+          </p>
+        </div>
+      )
     },
     {
       key: 'actions',

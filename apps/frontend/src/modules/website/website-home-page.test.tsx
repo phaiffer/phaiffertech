@@ -14,9 +14,9 @@ describe('WebsiteHomePage', () => {
       </PublicSiteProvider>
     );
 
-    expect(await screen.findByRole('heading', { name: /PetFlow for pet operations that need clarity/i })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: /PetFlow for recurring grooming and pet shop operations/i })).toBeInTheDocument();
     expect(screen.getByText('Solutions')).toBeInTheDocument();
-    expect(screen.getByText('PetFlow Complete')).toBeInTheDocument();
+    expect(screen.getByText('One visible product. The full bath and grooming cycle.')).toBeInTheDocument();
     expect(screen.getAllByRole('link', { name: 'Request a demo' })[0]).toHaveAttribute('href', '/contact');
   });
 });

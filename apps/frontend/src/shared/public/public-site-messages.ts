@@ -4,9 +4,9 @@ export const publicSiteMessages = {
   'pt-BR': {
     shell: {
       brandEyebrow: 'PhaifferTech',
-      brandTitle: 'Engineering platforms for real operations',
+      brandTitle: 'PetFlow para operacoes pet reais',
       brandSubtitle:
-        'Arquitetura de software, dados, cloud e pesquisa aplicada na mesma base.',
+        'Software para banho e tosa, recorrencia mensal e operacao de pet shop com base tecnica solida.',
       navHome: 'Início',
       navAbout: 'Sobre',
       navPlatform: 'Plataforma',
@@ -15,22 +15,22 @@ export const publicSiteMessages = {
       navResearch: 'Pesquisa',
       navArticles: 'Insights',
       navContact: 'Contato',
-      navLogin: 'Acesso à plataforma',
+      navLogin: 'Acesso PetFlow',
       themeLight: 'Light',
       themeDark: 'Dark',
       localeLabel: 'Idioma',
       footerNarrativeTitle: 'PhaifferTech',
       footerNarrativeText:
-        'Empresa e plataforma orientadas por arquitetura de software, cloud, data engineering e sistemas operacionais modulares.',
+        'PhaifferTech apresenta o PetFlow como produto principal para agenda, planos mensais, estoque e cobranca de operacoes pet.',
       footerExploreTitle: 'Explorar',
       footerProductsTitle: 'Produtos',
       footerAccessTitle: 'Acesso',
       footerCopyright:
-        'PhaifferTech · Plataforma SaaS modular multi-tenant para operação, engenharia e pesquisa aplicada.'
+        'PhaifferTech · PetFlow para banho e tosa, pet shop e operacao recorrente, sustentado por fundacao SaaS multi-tenant.'
     },
     login: {
       title: 'Acessar workspace',
-      description: 'Entre com o workspace e suas credenciais para abrir a plataforma.',
+      description: 'Entre com o workspace e suas credenciais para abrir o PetFlow.',
       tenantCodeLabel: 'Empresa ou workspace',
       emailLabel: 'E-mail',
       passwordLabel: 'Senha',
@@ -74,9 +74,9 @@ export const publicSiteMessages = {
   'en-US': {
     shell: {
       brandEyebrow: 'PhaifferTech',
-      brandTitle: 'Engineering platforms for real operations',
+      brandTitle: 'PetFlow for real pet operations',
       brandSubtitle:
-        'Software architecture, data engineering, cloud systems and applied research on the same foundation.',
+        'Software for grooming, recurring plans, pet retail, and operational billing on a solid technical foundation.',
       navHome: 'Home',
       navAbout: 'About',
       navPlatform: 'Platform',
@@ -85,22 +85,22 @@ export const publicSiteMessages = {
       navResearch: 'Research',
       navArticles: 'Insights',
       navContact: 'Contact',
-      navLogin: 'Platform access',
+      navLogin: 'PetFlow access',
       themeLight: 'Light',
       themeDark: 'Dark',
       localeLabel: 'Language',
       footerNarrativeTitle: 'PhaifferTech',
       footerNarrativeText:
-        'A company and platform shaped by software architecture, cloud systems, data engineering and modular operational products.',
+        'PhaifferTech now presents PetFlow as the main product surface for scheduling, recurring plans, stock control, and billing in pet operations.',
       footerExploreTitle: 'Explore',
       footerProductsTitle: 'Products',
       footerAccessTitle: 'Access',
       footerCopyright:
-        'PhaifferTech · Multi-tenant modular SaaS platform for operations, engineering and applied research.'
+        'PhaifferTech · PetFlow for grooming, pet shops, and recurring service operations, powered by a multi-tenant SaaS foundation.'
     },
     login: {
       title: 'Access workspace',
-      description: 'Sign in with your workspace and credentials to enter the platform.',
+      description: 'Sign in with your workspace and credentials to enter PetFlow.',
       tenantCodeLabel: 'Company or workspace',
       emailLabel: 'Email',
       passwordLabel: 'Password',

@@ -533,11 +533,11 @@ export function PetHome() {
       return action;
     });
   const landingActions = useMemo(
-    () => actionStates.filter((action) => ['/pet/clients', '/pet/appointments', '/pet/invoices'].includes(action.href)),
+    () => actionStates.filter((action) => ['/pet/clients', '/pet/appointments', '/pet/plans', '/pet/professionals', '/pet/inventory', '/pet/invoices'].includes(action.href)),
     [actionStates]
   );
-  const setupGuidance = buildPetGuidanceSteps(actionStates, ['/pet/clients', '/pet/pets', '/pet/appointments', '/pet/invoices']);
-  const restrictedGuidance = buildPetGuidanceSteps(actionStates, ['/pet/clients', '/pet/pets', '/pet/appointments', '/pet/invoices']);
+  const setupGuidance = buildPetGuidanceSteps(actionStates, ['/pet/clients', '/pet/appointments', '/pet/plans', '/pet/invoices']);
+  const restrictedGuidance = buildPetGuidanceSteps(actionStates, ['/pet/clients', '/pet/appointments', '/pet/plans', '/pet/invoices']);
   const primaryAction = useMemo(
     () => resolvePetPrimaryAction(actionStates, summary, firstUse, petMode),
     [actionStates, firstUse, petMode, summary]
@@ -721,8 +721,8 @@ export function PetHome() {
       />
 
       <ModuleWorkspaceQuickActionGrid
-        title="Core PetFlow flows"
-        description="Keep the commercial path short: customers, appointments, and billing first."
+        title="Core PetFlow demo flows"
+        description="Keep the story short for Monday: reception, services, recurring plans, team accountability, stock, and billing."
         actions={landingActions}
         emptyTitle="No PetFlow actions available"
         emptyDescription="This workspace has the PetFlow module enabled, but the current user does not have PetFlow read permissions yet."

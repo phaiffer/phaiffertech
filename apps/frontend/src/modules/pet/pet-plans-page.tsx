@@ -16,6 +16,7 @@ import { ConfirmDialog } from '@/shared/ui/confirm-dialog';
 import { DataTable, DataTableColumn } from '@/shared/ui/data-table';
 import { FormInput } from '@/shared/ui/form-input';
 import { FormSelect } from '@/shared/ui/form-select';
+import { PageSection } from '@/shared/ui/page-section';
 import { PageTitle } from '@/shared/ui/page-title';
 import { Pagination } from '@/shared/ui/pagination';
 
@@ -177,13 +178,28 @@ export function PetPlansPage() {
     return client ? (client.name ?? client.fullName ?? plan.clientId) : plan.clientId;
   }
 
+  function resolveClientEmail(plan: ClientPlan) {
+    const client = clients.find((c) => c.id === plan.clientId);
+    return client?.email ?? null;
+  }
+
   const rows = resolvePageItems(pageData);
+  const activePlans = rows.filter((plan) => resolvePlanStatusKey(plan) === 'active').length;
+  const lowSessionPlans = rows.filter((plan) => plan.remainingSessions > 0 && plan.remainingSessions <= 2).length;
+  const exhaustedPlans = rows.filter((plan) => plan.remainingSessions <= 0).length;
 
   const columns: DataTableColumn<ClientPlan>[] = [
     {
       key: 'client',
       header: 'Client',
-      render: (plan) => resolveClientName(plan)
+      render: (plan) => (
+        <div className="space-y-1">
+          <p className="font-medium text-[color:var(--app-shell-heading)]">{resolveClientName(plan)}</p>
+          <span className="inline-flex items-center rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-medium text-emerald-800">
+            Recurring client
+          </span>
+        </div>
+      )
     },
     {
       key: 'planName',
@@ -206,6 +222,9 @@ export function PetPlansPage() {
               <span className="text-xs text-[color:var(--app-shell-muted)]">/ {plan.totalSessions}</span>
             </div>
             <div className="text-xs text-[color:var(--app-shell-muted)]">{plan.usedSessions} used</div>
+            {plan.remainingSessions === 2 ? (
+              <div className="text-xs text-amber-700">Penultimate visit alert</div>
+            ) : null}
           </div>
         );
       }
@@ -213,7 +232,16 @@ export function PetPlansPage() {
     {
       key: 'status',
       header: 'Status',
-      render: (plan) => <StatusBadge status={resolvePlanStatusKey(plan)} />
+      render: (plan) => (
+        <div className="space-y-2">
+          <StatusBadge status={resolvePlanStatusKey(plan)} />
+          {plan.remainingSessions === 2 ? (
+            <p className="text-xs text-[color:var(--app-shell-muted)]">
+              {resolveClientEmail(plan) ? 'Renewal email sent automatically' : 'Renewal email needs client email'}
+            </p>
+          ) : null}
+        </div>
+      )
     },
     {
       key: 'expiry',
@@ -250,12 +278,33 @@ export function PetPlansPage() {
       <div className={sharedPageStackClass}>
         <PageTitle
           eyebrow="PetFlow · Grooming"
-          title="Client Plans"
-          description="Manage session packages sold to clients — track remaining visits, expiry, and plan usage across appointments."
+          title="Monthly Plans"
+          description="Manage recurring clients, remaining visits, penultimate alerts, and plan usage across grooming appointments."
         />
 
         {error ? <div className="ui-notice-error">{error}</div> : null}
         {success ? <div className="ui-notice-success">{success}</div> : null}
+
+        <PageSection
+          tone="muted"
+          title="Renewal watch"
+          description="Keep the recurring base visible before the plan runs out or the client misses the next cycle."
+        >
+          <div className="grid gap-3 md:grid-cols-3">
+            <div className="rounded-2xl border border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-panel)] px-4 py-3">
+              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--app-shell-muted)]">Active plans</p>
+              <p className="mt-2 text-lg font-semibold text-[color:var(--app-shell-heading)]">{activePlans}</p>
+            </div>
+            <div className="rounded-2xl border border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-panel)] px-4 py-3">
+              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--app-shell-muted)]">Need renewal soon</p>
+              <p className="mt-2 text-lg font-semibold text-[color:var(--app-shell-heading)]">{lowSessionPlans}</p>
+            </div>
+            <div className="rounded-2xl border border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-panel)] px-4 py-3">
+              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--app-shell-muted)]">Exhausted</p>
+              <p className="mt-2 text-lg font-semibold text-[color:var(--app-shell-heading)]">{exhaustedPlans}</p>
+            </div>
+          </div>
+        </PageSection>
 
         <DataTable
           columns={columns}

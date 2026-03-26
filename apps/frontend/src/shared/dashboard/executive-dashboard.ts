@@ -305,6 +305,9 @@ export function buildExecutiveContextCards(
   attentionSignals: DashboardQuickAction[]
 ): DashboardContextCard[] {
   const accessibleModules = getAccessibleWorkspaceModules(platform);
+  const visibleModules = accessibleModules.some((moduleItem) => moduleItem.code === 'PET')
+    ? accessibleModules.filter((moduleItem) => moduleItem.code === 'PET')
+    : accessibleModules.filter((moduleItem) => moduleItem.code !== 'IOT');
   const variant = resolveDashboardWorkspaceVariant(platform);
   const demoWorkspace = isDemoWorkspace(platform);
   const primaryAction = recommendedActions[0];
@@ -315,9 +318,9 @@ export function buildExecutiveContextCards(
       label: demoWorkspace ? 'Demo Story' : 'Operational Coverage',
       value: variant === 'platform'
         ? `${moduleSummaries.length} live modules`
-        : `${accessibleModules.length} contracted module${accessibleModules.length === 1 ? '' : 's'}`,
+        : `${visibleModules.length} visible module${visibleModules.length === 1 ? '' : 's'}`,
       description: demoWorkspace
-        ? 'The seeded demo workspace is ready to show CRM, PetFlow, and IoT value from the first screen.'
+        ? 'The seeded demo workspace is ready to show PetFlow value from the first screen.'
         : 'Start with the modules already returning real signals for the current workspace.',
       tone: 'accent'
     },

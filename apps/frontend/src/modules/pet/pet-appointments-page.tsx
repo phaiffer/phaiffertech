@@ -428,6 +428,12 @@ export function PetAppointmentsPage() {
   const servicesLookupUnavailable = lookupIssues.some((issue) => issue.key === 'services');
   const professionalsLookupUnavailable = lookupIssues.some((issue) => issue.key === 'professionals');
   const appointmentReferencesReady = !clientsLookupUnavailable && !profilesLookupUnavailable && !servicesLookupUnavailable && !professionalsLookupUnavailable;
+  const visibleAppointments = viewMode === 'calendar' ? calendarData : rows;
+  const recurringAppointments = visibleAppointments.filter((appointment) => Boolean(appointment.clientPlanId)).length;
+  const oneTimeAppointments = visibleAppointments.filter((appointment) => !appointment.clientPlanId).length;
+  const readyForPickup = visibleAppointments.filter((appointment) => appointment.status.toUpperCase() === 'COMPLETED').length;
+  const lowPlanAlerts = visibleAppointments.filter((appointment) => Boolean(appointment.clientPlanId) && (appointment.planRemainingSessions ?? 99) <= 2).length;
+  const visibleCommissionTotal = visibleAppointments.reduce((total, appointment) => total + (appointment.commissionAmount ?? 0), 0);
 
   const columns = useMemo(() => createPetAppointmentColumns({
     clients,
@@ -455,7 +461,7 @@ export function PetAppointmentsPage() {
       <div className={sharedPageStackClass}>
         <PageTitle 
            title="Appointments"
-           description="Run the daily schedule with just the filters and actions needed for booking and follow-through."
+           description="Run the bath and grooming queue with professional visibility, plan coverage, and billing context."
            actions={
              <div className="flex gap-2">
                 <button 
@@ -518,6 +524,40 @@ export function PetAppointmentsPage() {
 
         {error ? <div className="ui-notice-error">{error}</div> : null}
         {success ? <div className="ui-notice-success">{success}</div> : null}
+
+        <PageSection
+          tone="muted"
+          title="Operating focus"
+          description="Keep the commercial story readable before diving into the full schedule."
+        >
+          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-5">
+            <div className="rounded-2xl border border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-panel)] px-4 py-3">
+              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--app-shell-muted)]">Recurring</p>
+              <p className="mt-2 text-lg font-semibold text-[color:var(--app-shell-heading)]">{recurringAppointments}</p>
+            </div>
+            <div className="rounded-2xl border border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-panel)] px-4 py-3">
+              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--app-shell-muted)]">One-time</p>
+              <p className="mt-2 text-lg font-semibold text-[color:var(--app-shell-heading)]">{oneTimeAppointments}</p>
+            </div>
+            <div className="rounded-2xl border border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-panel)] px-4 py-3">
+              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--app-shell-muted)]">Ready</p>
+              <p className="mt-2 text-lg font-semibold text-[color:var(--app-shell-heading)]">{readyForPickup}</p>
+            </div>
+            <div className="rounded-2xl border border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-panel)] px-4 py-3">
+              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--app-shell-muted)]">Plan alerts</p>
+              <p className="mt-2 text-lg font-semibold text-[color:var(--app-shell-heading)]">{lowPlanAlerts}</p>
+            </div>
+            <div className="rounded-2xl border border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-panel)] px-4 py-3">
+              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--app-shell-muted)]">Commission</p>
+              <p className="mt-2 text-lg font-semibold text-[color:var(--app-shell-heading)]">
+                {visibleCommissionTotal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+              </p>
+            </div>
+          </div>
+          <p className="mt-4 text-sm text-[color:var(--app-shell-muted)]">
+            Completed services automatically trigger the pickup email when the client has an email on file.
+          </p>
+        </PageSection>
 
         {viewMode === 'calendar' ? (
           <PetAppointmentsCalendar

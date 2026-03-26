@@ -223,7 +223,7 @@ describe('DashboardPage workspace context', () => {
     };
   });
 
-  it('renders a platform-oriented dashboard for the platform tenant admin workspace', async () => {
+  it('prioritizes the PetFlow demo surface for the platform tenant admin workspace', async () => {
     vi.mocked(moduleService.getDashboardSummary).mockResolvedValue({
       coreSummary: {
         key: 'executive-summary',
@@ -254,11 +254,12 @@ describe('DashboardPage workspace context', () => {
       expect(moduleService.getDashboardSummary).toHaveBeenCalledTimes(1);
     });
 
-    expect(screen.getByRole('heading', { name: 'Platform overview' })).toBeInTheDocument();
-    expect(screen.getByText(/Executive control plane/)).toBeInTheDocument();
-    expect(screen.getAllByText('Create first company').length).toBeGreaterThan(0);
-    expect(screen.getByText('Visible products')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'PetFlow overview' })).toBeInTheDocument();
+    expect(screen.getByText('Official demo surface')).toBeInTheDocument();
+    expect(screen.getAllByText('PetFlow').length).toBeGreaterThan(0);
+    expect(screen.queryByText('Visible products')).not.toBeInTheDocument();
     expect(screen.queryByText('Products in this workspace')).not.toBeInTheDocument();
+    expect(screen.queryByText('CRM Snapshot')).not.toBeInTheDocument();
   });
 
   it('renders a customer workspace dashboard without platform-only sections', async () => {

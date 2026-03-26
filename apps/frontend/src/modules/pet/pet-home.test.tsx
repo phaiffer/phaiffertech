@@ -139,7 +139,7 @@ describe('PetHome', () => {
     });
 
     expect(screen.getByRole('heading', { name: 'Clinic North · PetFlow' })).toBeInTheDocument();
-    expect(screen.getByText('Core PetFlow flows')).toBeInTheDocument();
+    expect(screen.getByText('Core PetFlow demo flows')).toBeInTheDocument();
     expect(screen.getByText('Review clients')).toBeInTheDocument();
     expect(screen.getByText('Book appointments')).toBeInTheDocument();
     expect(screen.getByText('Manage billing')).toBeInTheDocument();
@@ -224,7 +224,7 @@ describe('PetHome', () => {
     });
 
     expect(screen.getByText('PetFlow Grooming Workspace')).toBeInTheDocument();
-    expect(screen.getByText('Core PetFlow flows')).toBeInTheDocument();
+    expect(screen.getByText('Core PetFlow demo flows')).toBeInTheDocument();
     expect(screen.getByText('Live Service Snapshot')).toBeInTheDocument();
 
     currentPlatformState.visualProfile = {

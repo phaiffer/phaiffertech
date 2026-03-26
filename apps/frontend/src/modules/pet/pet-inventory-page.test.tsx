@@ -82,7 +82,8 @@ describe('PetInventoryPage', () => {
       expect(petServiceMock.listInventoryMovements).toHaveBeenCalledTimes(1);
     });
 
-    expect(screen.getByText('Low stock products')).toBeInTheDocument();
+    expect(screen.getByText('Below minimum')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Stock & Replenishment' })).toBeInTheDocument();
     expect(screen.getByText('Stock health watchlist')).toBeInTheDocument();
     expect(screen.getByText('Recovery Food Pack')).toBeInTheDocument();
     expect(screen.getByText('Below minimum 2 UNIT.')).toBeInTheDocument();

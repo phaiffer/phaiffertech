@@ -67,7 +67,11 @@ describe('PetAppointmentsPage', () => {
         professionalId: 'professional-1',
         professionalName: 'Dr Example',
         scheduledAt: '2026-03-10T10:00:00Z',
-        status: 'SCHEDULED',
+        status: 'COMPLETED',
+        clientPlanId: 'plan-1',
+        planRemainingSessions: 2,
+        planSessionConsumed: true,
+        commissionAmount: 18.5,
         medicalRecordCount: 0,
         vaccinationCount: 0,
         prescriptionCount: 0,
@@ -84,6 +88,12 @@ describe('PetAppointmentsPage', () => {
       expect(petServiceMock.listAppointments).toHaveBeenCalledTimes(1);
     });
 
+    expect(screen.getByText('Operating focus')).toBeInTheDocument();
+    expect(screen.getByText('Recurring')).toBeInTheDocument();
+    expect(screen.getByText('Ready')).toBeInTheDocument();
+    expect(screen.getByText('Plan alerts')).toBeInTheDocument();
+    expect(screen.getByText('R$ 18,50')).toBeInTheDocument();
+
     fireEvent.click(screen.getByRole('button', { name: 'Switch to list' }));
 
     expect(screen.getByText('Some PetFlow references are not yet available.')).toBeInTheDocument();
@@ -93,7 +103,10 @@ describe('PetAppointmentsPage', () => {
       expect(screen.getByText('Pet Example')).toBeInTheDocument();
       expect(screen.getByText('Dr Example')).toBeInTheDocument();
       expect(screen.getByText('Bath')).toBeInTheDocument();
-      expect(screen.getByText('Pending')).toBeInTheDocument();
+      expect(screen.getAllByText('Completed').length).toBeGreaterThan(0);
+      expect(screen.getAllByText('Recurring').length).toBeGreaterThan(0);
+      expect(screen.getByText('Pickup email skipped: no client email')).toBeInTheDocument();
+      expect(screen.getByText('Renewal alert triggered')).toBeInTheDocument();
       expect(screen.getByText('0 records · 0 vaccines · 0 rx')).toBeInTheDocument();
       expect(screen.getByRole('link', { name: 'Care notes' })).toHaveAttribute(
         'href',
