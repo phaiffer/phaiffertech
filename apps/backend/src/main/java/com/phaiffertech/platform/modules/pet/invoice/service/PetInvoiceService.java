@@ -16,6 +16,7 @@ import com.phaiffertech.platform.modules.pet.appointment.repository.PetAppointme
 import com.phaiffertech.platform.modules.pet.client.domain.PetClient;
 import com.phaiffertech.platform.modules.pet.client.repository.PetClientRepository;
 import com.phaiffertech.platform.modules.pet.invoice.domain.PetInvoice;
+import com.phaiffertech.platform.modules.pet.invoice.dto.MonthlyCloseRequest;
 import com.phaiffertech.platform.modules.pet.invoice.dto.PetInvoiceCreateRequest;
 import com.phaiffertech.platform.modules.pet.invoice.dto.PetInvoicePaymentCreateRequest;
 import com.phaiffertech.platform.modules.pet.invoice.dto.PetInvoicePaymentResponse;
@@ -26,6 +27,7 @@ import com.phaiffertech.platform.modules.pet.servicecatalog.domain.PetServiceCat
 import com.phaiffertech.platform.modules.pet.servicecatalog.repository.PetServiceCatalogRepository;
 import com.phaiffertech.platform.shared.crud.BasePageQuery;
 import com.phaiffertech.platform.shared.domain.enums.AuditActionType;
+import com.phaiffertech.platform.shared.exception.ConflictOperationException;
 import com.phaiffertech.platform.shared.exception.ResourceNotFoundException;
 import com.phaiffertech.platform.shared.pagination.PageRequestDto;
 import com.phaiffertech.platform.shared.pagination.PageResponseDto;
@@ -33,6 +35,9 @@ import com.phaiffertech.platform.shared.pagination.PaginationUtils;
 import com.phaiffertech.platform.shared.tenancy.TenantContext;
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.time.LocalTime;
+import java.time.YearMonth;
+import java.time.ZoneOffset;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -40,6 +45,7 @@ import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -232,6 +238,100 @@ public class PetInvoiceService {
                 )
         );
         return toPaymentResponse(payment);
+    }
+
+    @Transactional
+    @AuditableAction(action = AuditActionType.CREATE, entity = "pet_invoice")
+    public PetInvoiceResponse monthlyClose(MonthlyCloseRequest request) {
+        UUID tenantId = currentTenantId();
+        PetClient client = requireClient(tenantId, request.clientId());
+
+        String periodLabel = YearMonth.from(request.periodStart()).toString();
+        if (repository.countByClientAndPeriodDescription(tenantId, client.getId(), "%" + periodLabel + "%") > 0) {
+            throw new ConflictOperationException(
+                    "A monthly close invoice for period " + periodLabel + " already exists for this client."
+            );
+        }
+
+        Instant scheduledFrom = request.periodStart().atStartOfDay(ZoneOffset.UTC).toInstant();
+        Instant scheduledTo = request.periodEnd().atTime(LocalTime.MAX).atOffset(ZoneOffset.UTC).toInstant();
+
+        List<PetAppointment> appointments = appointmentRepository.findAllByTenantIdAndSearch(
+                tenantId,
+                "COMPLETED",
+                null,
+                client.getId(),
+                null,
+                null,
+                scheduledFrom,
+                scheduledTo,
+                "%",
+                Pageable.unpaged()
+        ).getContent();
+
+        if (appointments.isEmpty()) {
+            throw new ConflictOperationException(
+                    "No completed appointments found for client " + clientName(client) + " in period " + periodLabel + "."
+            );
+        }
+
+        BigDecimal totalAmount = appointments.stream()
+                .map(appt -> {
+                    BigDecimal extras = appt.getExtrasAmount() != null ? appt.getExtrasAmount() : BigDecimal.ZERO;
+                    BigDecimal service = appt.isPlanSessionConsumed()
+                            ? BigDecimal.ZERO
+                            : (appt.getServicePrice() != null ? appt.getServicePrice() : BigDecimal.ZERO);
+                    return service.add(extras);
+                })
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        StringBuilder description = new StringBuilder("Fechamento Mensal ")
+                .append(periodLabel)
+                .append(" — ")
+                .append(clientName(client));
+        for (PetAppointment appt : appointments) {
+            BigDecimal extras = appt.getExtrasAmount() != null ? appt.getExtrasAmount() : BigDecimal.ZERO;
+            BigDecimal service = appt.isPlanSessionConsumed()
+                    ? BigDecimal.ZERO
+                    : (appt.getServicePrice() != null ? appt.getServicePrice() : BigDecimal.ZERO);
+            description.append("\n• ").append(appt.getServiceName());
+            if (appt.isPlanSessionConsumed()) {
+                description.append(" (coberto pelo plano)");
+            } else {
+                description.append(" R$ ").append(service);
+            }
+            if (extras.compareTo(BigDecimal.ZERO) > 0) {
+                description.append(" + extras R$ ").append(extras);
+            }
+        }
+
+        FinanceInvoice financeInvoice = financeInvoiceService.create(
+                tenantId,
+                new FinanceInvoiceUpsertCommand(
+                        FinanceSourceModule.PET,
+                        "PET_CLIENT",
+                        client.getId(),
+                        clientName(client),
+                        null,
+                        null,
+                        description.toString(),
+                        FinanceInvoiceStatus.ISSUED,
+                        null,
+                        totalAmount,
+                        Instant.now(),
+                        null,
+                        null,
+                        null,
+                        null
+                )
+        );
+
+        PetInvoice invoice = new PetInvoice();
+        invoice.setTenantId(tenantId);
+        invoice.setClientId(client.getId());
+        invoice.setFinanceInvoiceId(financeInvoice.getId());
+        repository.save(invoice);
+        return getById(invoice.getId());
     }
 
     private PetInvoice getOrThrow(UUID id, UUID tenantId) {

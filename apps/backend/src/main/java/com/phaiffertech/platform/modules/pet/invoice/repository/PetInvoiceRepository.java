@@ -42,6 +42,20 @@ public interface PetInvoiceRepository extends JpaRepository<PetInvoice, UUID>, B
 
     java.util.List<PetInvoice> findAllByTenantIdAndFinanceInvoiceIdIn(UUID tenantId, Collection<UUID> financeInvoiceIds);
 
+    @Query("""
+            SELECT COUNT(i)
+            FROM PetInvoice i
+            JOIN i.financeInvoice f
+            WHERE i.tenantId = :tenantId
+              AND i.clientId = :clientId
+              AND LOWER(f.description) LIKE :periodPattern
+            """)
+    long countByClientAndPeriodDescription(
+            @Param("tenantId") UUID tenantId,
+            @Param("clientId") UUID clientId,
+            @Param("periodPattern") String periodPattern
+    );
+
     @Query(value = """
             SELECT *
             FROM pet_invoices i

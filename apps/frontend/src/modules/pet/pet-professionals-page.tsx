@@ -78,7 +78,7 @@ export function PetProfessionalsPage() {
     setLicenseNumber(item.licenseNumber ?? '');
     setPhone(item.phone ?? '');
     setEmail(item.email ?? '');
-    setCommissionRate(item.commissionRate != null ? String(item.commissionRate) : '');
+    setCommissionRate(item.commissionRate != null ? String(item.commissionRate * 100) : '');
     setError(null);
     setSuccess(null);
   }
@@ -97,7 +97,7 @@ export function PetProfessionalsPage() {
         licenseNumber: licenseNumber || undefined,
         phone: phone || undefined,
         email: email || undefined,
-        commissionRate: parsedRate && !isNaN(parsedRate) ? parsedRate : undefined
+        commissionRate: parsedRate && !isNaN(parsedRate) ? parsedRate / 100 : undefined
       };
 
       if (editingId) {
@@ -142,9 +142,9 @@ export function PetProfessionalsPage() {
     { key: 'phone', header: 'Phone', render: (item) => item.phone ?? '-' },
     {
       key: 'commission',
-      header: 'Commission',
+      header: 'Taxa de Comissão',
       render: (item) => item.commissionRate != null
-        ? `${(item.commissionRate * 100).toFixed(1)}%`
+        ? `${(item.commissionRate * 100).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}%`
         : <span className="text-xs text-[color:var(--app-shell-muted)]">—</span>
     },
     {
@@ -216,11 +216,11 @@ export function PetProfessionalsPage() {
             <FormInput label="Phone" value={phone} onChange={setPhone} />
             <FormInput label="Email" value={email} onChange={setEmail} type="email" />
             <FormInput
-              label="Commission rate (optional)"
+              label="Taxa de comissão (%)"
               value={commissionRate}
               onChange={setCommissionRate}
               type="number"
-              placeholder="e.g. 0.10 for 10%"
+              placeholder="ex: 15"
             />
 
             <div className="md:col-span-2 flex gap-2">

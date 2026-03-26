@@ -1,6 +1,7 @@
 package com.phaiffertech.platform.modules.pet.invoice.controller;
 
 import com.phaiffertech.platform.core.tenant.entitlement.TenantEntitlementKeys;
+import com.phaiffertech.platform.modules.pet.invoice.dto.MonthlyCloseRequest;
 import com.phaiffertech.platform.modules.pet.invoice.dto.PetInvoiceCreateRequest;
 import com.phaiffertech.platform.modules.pet.invoice.dto.PetInvoicePaymentCreateRequest;
 import com.phaiffertech.platform.modules.pet.invoice.dto.PetInvoicePaymentResponse;
@@ -78,6 +79,12 @@ public class PetInvoiceController {
     @RequirePermission("pet.invoice.delete")
     public ApiResponse<PetInvoiceResponse> restore(@PathVariable UUID id) {
         return ApiResponse.success(service.restore(id));
+    }
+
+    @PostMapping("/monthly-close")
+    @RequirePermission("pet.invoice.create")
+    public ApiResponse<PetInvoiceResponse> monthlyClose(@Valid @RequestBody MonthlyCloseRequest request) {
+        return ApiResponse.success(service.monthlyClose(request));
     }
 
     @PostMapping("/{id}/payments")

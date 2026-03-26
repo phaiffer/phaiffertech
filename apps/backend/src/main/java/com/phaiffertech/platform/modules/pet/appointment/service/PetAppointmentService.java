@@ -34,6 +34,7 @@ import com.phaiffertech.platform.shared.pagination.PageRequestDto;
 import com.phaiffertech.platform.shared.pagination.PageResponseDto;
 import com.phaiffertech.platform.shared.pagination.PaginationUtils;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.Instant;
 import java.util.Collection;
 import java.util.Map;
@@ -273,7 +274,7 @@ public class PetAppointmentService extends BaseTenantCrudService<
         BigDecimal finalPrice = entity.getServicePrice();
         entity.setCommissionAmount(
                 professional.getCommissionRate() != null && finalPrice != null
-                        ? finalPrice.multiply(professional.getCommissionRate())
+                        ? finalPrice.multiply(professional.getCommissionRate()).setScale(2, RoundingMode.HALF_UP)
                         : null
         );
     }

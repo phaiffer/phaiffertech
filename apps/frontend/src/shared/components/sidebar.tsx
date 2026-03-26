@@ -290,6 +290,7 @@ const items: SidebarItem[] = [
   { href: '/pet/pets', label: 'Pets', anyOf: ['pet.profile.read'], anyEntitlements: petClinicalEntitlements, moduleCode: 'PET', group: 'pet', icon: IconHeart },
   { href: '/pet/appointments', label: 'Appointments', anyOf: ['pet.appointment.read'], anyEntitlements: petOperationalEntitlements, moduleCode: 'PET', group: 'pet', icon: IconCalendar },
   { href: '/pet/invoices', label: 'Billing', anyOf: ['pet.invoice.read'], anyEntitlements: petSubmoduleEntitlements, moduleCode: 'PET', group: 'pet', icon: IconReceipt },
+  { href: '/pet/commissions', label: 'Comissões', anyOf: ['pet.appointment.read'], anyEntitlements: petOperationalEntitlements, moduleCode: 'PET', group: 'pet', icon: IconBanknote },
   { href: '/pet/insights', label: 'Insights', anyOf: ['pet.dashboard.read'], anyEntitlements: petSubmoduleEntitlements, moduleCode: 'PET', group: 'pet', icon: IconChart },
   { href: '/pet/medical-records', label: 'Medical Records', anyOf: ['pet.medical-record.read', 'pet.vaccination.read', 'pet.prescription.read'], anyEntitlements: petClinicalEntitlements, moduleCode: 'PET', group: 'pet', icon: IconHeart },
 ];
