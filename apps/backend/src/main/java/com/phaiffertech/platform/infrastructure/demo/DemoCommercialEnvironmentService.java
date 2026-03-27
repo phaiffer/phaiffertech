@@ -335,6 +335,7 @@ public class DemoCommercialEnvironmentService {
                 deleteByTenant("pet_services", tenantId);
                 deleteByTenant("pet_professionals", tenantId);
                 deleteByTenant("pet_profiles", tenantId);
+                deleteByTenant("pet_client_plans", tenantId);
                 deleteByTenant("pet_clients", tenantId);
 
                 deleteByTenant("iot_parts", tenantId);
