@@ -85,6 +85,7 @@ public class DemoCommercialEnvironmentService {
         private static final UUID PET_APPOINTMENT_REX_ID = uuid("20000000-0000-0000-0000-000000000041");
         private static final UUID PET_APPOINTMENT_THOR_ID = uuid("20000000-0000-0000-0000-000000000042");
         private static final UUID PET_APPOINTMENT_LUNA_ID = uuid("20000000-0000-0000-0000-000000000043");
+        private static final UUID PET_PLAN_MARIA_ID = uuid("20000000-0000-0000-0000-000000000044");
 
         private static final UUID PET_RECORD_REX_ID = uuid("20000000-0000-0000-0000-000000000051");
         private static final UUID PET_RECORD_THOR_ID = uuid("20000000-0000-0000-0000-000000000052");
@@ -618,16 +619,21 @@ public class DemoCommercialEnvironmentService {
         }
 
         private void seedPet(UUID tenantId, Instant now) {
-                Instant rexVaccinationAt = LocalDate.now(ZoneOffset.UTC).atTime(9, 30).toInstant(ZoneOffset.UTC);
-                Instant thorConsultationAt = now.plus(Duration.ofHours(2));
-                Instant lunaCheckupAt = now.plus(Duration.ofDays(1));
+                LocalDate currentDate = LocalDate.now(ZoneOffset.UTC);
+                Instant recurringBathCompletedAt = currentDate.atTime(9, 0).toInstant(ZoneOffset.UTC);
+                Instant oneTimeBathInProgressAt = currentDate.atTime(13, 30).toInstant(ZoneOffset.UTC);
+                Instant nextCycleRecurringAt = currentDate.plusMonths(1).withDayOfMonth(3).atTime(10, 30)
+                                .toInstant(ZoneOffset.UTC);
+                Instant mariaPlanExpiresAt = currentDate.plusDays(12).atTime(12, 0).toInstant(ZoneOffset.UTC);
+                Instant mariaInvoiceIssuedAt = currentDate.minusDays(1).atTime(18, 0).toInstant(ZoneOffset.UTC);
+                Instant joaoInvoiceIssuedAt = currentDate.minusDays(2).atTime(17, 30).toInstant(ZoneOffset.UTC);
 
                 insertPetClient(
                                 PET_MARIA_CLIENT_ID,
                                 tenantId,
                                 "Maria Oliveira",
                                 "Maria Oliveira",
-                                "maria.oliveira@petcarecuritiba.com.br",
+                                "maria@misterdog.demo",
                                 "+55 41 99710-1101",
                                 "CPF-MARIA-001",
                                 "Rua das Araucarias, 120 - Curitiba/PR",
@@ -638,7 +644,7 @@ public class DemoCommercialEnvironmentService {
                                 tenantId,
                                 "Joao Batista",
                                 "Joao Batista",
-                                "joao.batista@petcarecuritiba.com.br",
+                                "joao@misterdog.demo",
                                 "+55 41 99710-2202",
                                 "CPF-JOAO-002",
                                 "Av. Vicente Machado, 890 - Curitiba/PR",
@@ -647,113 +653,147 @@ public class DemoCommercialEnvironmentService {
 
                 insertPetProfile(PET_REX_ID, tenantId, PET_MARIA_CLIENT_ID, "Rex", "DOG", "Golden Retriever",
                                 LocalDate.of(2020, 5, 14), "MALE", new BigDecimal("31.20"), "Golden",
-                                "Annual vaccination plan on track.", now.minus(Duration.ofDays(14)));
-                insertPetProfile(PET_LUNA_ID, tenantId, PET_MARIA_CLIENT_ID, "Luna", "CAT", "Siamese",
-                                LocalDate.of(2021, 8, 9), "FEMALE", new BigDecimal("4.30"), "Seal point",
-                                "Indoor cat with routine follow-up.", now.minus(Duration.ofDays(13)));
+                                "Recurring grooming client with renewal close to the penultimate bath.", now.minus(Duration.ofDays(14)));
+                insertPetProfile(PET_LUNA_ID, tenantId, PET_MARIA_CLIENT_ID, "Luna", "DOG", "Shih Tzu",
+                                LocalDate.of(2021, 8, 9), "FEMALE", new BigDecimal("5.40"), "Caramel",
+                                "Pickup and delivery client for the next monthly cycle.", now.minus(Duration.ofDays(13)));
                 insertPetProfile(PET_THOR_ID, tenantId, PET_JOAO_CLIENT_ID, "Thor", "DOG", "German Shepherd",
                                 LocalDate.of(2019, 11, 3), "MALE", new BigDecimal("34.80"), "Black and tan",
-                                "Returned after mild gait discomfort.", now.minus(Duration.ofDays(12)));
+                                "One-time bath and grooming client with pet taxi extra.", now.minus(Duration.ofDays(12)));
 
-                insertPetService(PET_SERVICE_VACCINATION_ID, tenantId, "Vaccination",
-                                "Core immunization appointments with vaccine tracking.", new BigDecimal("180.00"), 30,
+                insertPetService(PET_SERVICE_VACCINATION_ID, tenantId, "Banho e tosa premium",
+                                "Full bath and grooming package for recurring customers.", new BigDecimal("95.00"), 120,
                                 now.minus(Duration.ofDays(11)));
-                insertPetService(PET_SERVICE_CHECKUP_ID, tenantId, "Checkup",
-                                "Routine preventive assessment with owner guidance.", new BigDecimal("220.00"), 45,
+                insertPetService(PET_SERVICE_CHECKUP_ID, tenantId, "Banho essencial",
+                                "Core bath package with reception and checkout ready for retail add-ons.", new BigDecimal("70.00"), 60,
                                 now.minus(Duration.ofDays(11)));
-                insertPetService(PET_SERVICE_CONSULTATION_ID, tenantId, "Clinical consultation",
-                                "Focused clinical consultation for symptoms or follow-up.", new BigDecimal("260.00"),
-                                50, now.minus(Duration.ofDays(11)));
+                insertPetService(PET_SERVICE_CONSULTATION_ID, tenantId, "Tosa higienica",
+                                "Focused grooming finish for between-cycle maintenance.", new BigDecimal("45.00"),
+                                45, now.minus(Duration.ofDays(11)));
 
-                insertPetProfessional(PET_PROFESSIONAL_MARINA_ID, tenantId, "Dr. Marina Lopes", "Veterinary clinician",
-                                "CRMV-PR-11234", "+55 41 98800-1101", "marina.lopes@petcarecuritiba.com.br",
+                insertPetProfessional(PET_PROFESSIONAL_MARINA_ID, tenantId, "Marina Lopes", "Banho e tosa premium",
+                                "PR-GRM-11234", "+55 41 98800-1101", "marina@misterdog.demo",
+                                new BigDecimal("0.1500"),
                                 now.minus(Duration.ofDays(10)));
-                insertPetProfessional(PET_PROFESSIONAL_RAFAEL_ID, tenantId, "Dr. Rafael Souza", "Preventive care",
-                                "CRMV-PR-11888", "+55 41 98800-2202", "rafael.souza@petcarecuritiba.com.br",
+                insertPetProfessional(PET_PROFESSIONAL_RAFAEL_ID, tenantId, "Rafael Souza", "Acabamento e tosa higienica",
+                                "PR-GRM-11888", "+55 41 98800-2202", "rafael@misterdog.demo",
+                                new BigDecimal("0.1200"),
                                 now.minus(Duration.ofDays(10)));
+
+                insertPetClientPlan(
+                                PET_PLAN_MARIA_ID,
+                                tenantId,
+                                PET_MARIA_CLIENT_ID,
+                                "Plano mensal banho e tosa",
+                                6,
+                                4,
+                                mariaPlanExpiresAt,
+                                now.minus(Duration.ofDays(7)));
 
                 insertPetAppointment(PET_APPOINTMENT_REX_ID, tenantId, PET_MARIA_CLIENT_ID, PET_REX_ID,
-                                PET_SERVICE_VACCINATION_ID, PET_PROFESSIONAL_RAFAEL_ID, rexVaccinationAt, "Vaccination",
-                                "COMPLETED", "Rabies booster applied and owner instructed about the next cycle.",
+                                PET_SERVICE_VACCINATION_ID, PET_PROFESSIONAL_MARINA_ID, recurringBathCompletedAt,
+                                "Banho e tosa premium",
+                                "COMPLETED",
+                                "Recurring appointment completed. Pet ready and pickup message already covered by client email.",
+                                new BigDecimal("95.00"),
+                                new BigDecimal("14.25"),
+                                PET_PLAN_MARIA_ID,
+                                true,
+                                null,
+                                null,
                                 now.minus(Duration.ofHours(8)));
                 insertPetAppointment(PET_APPOINTMENT_THOR_ID, tenantId, PET_JOAO_CLIENT_ID, PET_THOR_ID,
-                                PET_SERVICE_CONSULTATION_ID, PET_PROFESSIONAL_MARINA_ID, thorConsultationAt,
-                                "Clinical consultation", "SCHEDULED",
-                                "Evaluate gait recovery and adjust anti-inflammatory follow-up if needed.",
+                                PET_SERVICE_CHECKUP_ID, PET_PROFESSIONAL_RAFAEL_ID, oneTimeBathInProgressAt,
+                                "Banho essencial",
+                                "IN_PROGRESS",
+                                "One-time visit with pet taxi return already approved at checkout.",
+                                new BigDecimal("70.00"),
+                                new BigDecimal("8.40"),
+                                null,
+                                false,
+                                new BigDecimal("18.00"),
+                                "Pet taxi ida e volta",
                                 now.minus(Duration.ofHours(2)));
                 insertPetAppointment(PET_APPOINTMENT_LUNA_ID, tenantId, PET_MARIA_CLIENT_ID, PET_LUNA_ID,
-                                PET_SERVICE_CHECKUP_ID, PET_PROFESSIONAL_MARINA_ID, lunaCheckupAt, "Checkup",
-                                "SCHEDULED", "Routine wellness review before the next vaccination cycle.",
+                                PET_SERVICE_VACCINATION_ID, PET_PROFESSIONAL_MARINA_ID, nextCycleRecurringAt,
+                                "Banho e tosa premium",
+                                "SCHEDULED",
+                                "Next cycle already reserved with pickup service on the way in.",
+                                new BigDecimal("95.00"),
+                                new BigDecimal("14.25"),
+                                PET_PLAN_MARIA_ID,
+                                false,
+                                new BigDecimal("9.00"),
+                                "Pet taxi ida",
                                 now.minus(Duration.ofHours(1)));
 
                 insertPetMedicalRecord(
                                 PET_RECORD_REX_ID,
                                 tenantId,
                                 PET_REX_ID,
-                                PET_PROFESSIONAL_RAFAEL_ID,
+                                PET_PROFESSIONAL_MARINA_ID,
                                 PET_APPOINTMENT_REX_ID,
-                                "Annual vaccination visit completed without adverse reactions.",
-                                "Preventive care up to date.",
-                                "Maintain hydration and return for the booster next year.",
+                                "Bath and grooming finished with coat hydration and routine owner guidance.",
+                                "Recurring package delivery completed successfully.",
+                                "Hold the renewal conversation at the penultimate bath and keep pickup messaging active.",
                                 now.minus(Duration.ofHours(7)));
                 insertPetMedicalRecord(
                                 PET_RECORD_THOR_ID,
                                 tenantId,
                                 PET_THOR_ID,
-                                PET_PROFESSIONAL_MARINA_ID,
-                                null,
-                                "Owner reported intermittent rear-limb discomfort after intense exercise.",
-                                "Mild musculoskeletal overload suspected.",
-                                "Clinical re-evaluation scheduled with rest and anti-inflammatory support.",
+                                PET_PROFESSIONAL_RAFAEL_ID,
+                                PET_APPOINTMENT_THOR_ID,
+                                "One-time grooming visit in progress with pet taxi already tied to checkout.",
+                                "Commercial demo flow active for standalone customer.",
+                                "Keep the responsible professional, pet taxi extra, and charge visibility explicit at the end of the visit.",
                                 now.minus(Duration.ofHours(5)));
 
-                insertPetVaccination(PET_VACCINATION_REX_ID, tenantId, PET_REX_ID, PET_APPOINTMENT_REX_ID, "Rabies",
-                                rexVaccinationAt, rexVaccinationAt.plus(Duration.ofDays(365)),
-                                "Annual booster registered in the patient timeline.", now.minus(Duration.ofHours(7)));
-                insertPetVaccination(PET_VACCINATION_LUNA_ID, tenantId, PET_LUNA_ID, null, "Triple Feline",
-                                now.minus(Duration.ofDays(28)), now.plus(Duration.ofDays(337)),
-                                "Routine feline vaccination already applied for the next cycle.",
-                                now.minus(Duration.ofDays(28)));
+                insertPetVaccination(PET_VACCINATION_REX_ID, tenantId, PET_REX_ID, PET_APPOINTMENT_REX_ID,
+                                "Operational reminder",
+                                recurringBathCompletedAt, currentDate.plusMonths(1).atTime(8, 0).toInstant(ZoneOffset.UTC),
+                                "Internal follow-up reminder preserved for timeline completeness.", now.minus(Duration.ofHours(7)));
+                insertPetVaccination(PET_VACCINATION_LUNA_ID, tenantId, PET_LUNA_ID, PET_APPOINTMENT_LUNA_ID,
+                                "Next cycle reminder",
+                                nextCycleRecurringAt, nextCycleRecurringAt.plus(Duration.ofDays(30)),
+                                "Next recurring cycle already visible in the commercial demo queue.",
+                                now.minus(Duration.ofHours(1)));
 
-                insertPetProduct(PET_PRODUCT_RABIES_ID, tenantId, "Rabies vaccine dose", "VAC-RAB-001",
-                                new BigDecimal("58.00"), 4, now.minus(Duration.ofDays(6)));
-                insertPetProduct(PET_PRODUCT_SUPPLEMENT_ID, tenantId, "Joint support supplement", "SUP-JNT-014",
-                                new BigDecimal("92.00"), 12, now.minus(Duration.ofDays(6)));
-                insertPetProduct(PET_PRODUCT_PARASITE_ID, tenantId, "Antiparasitic kit", "MED-ANT-020",
-                                new BigDecimal("48.00"), 3, now.minus(Duration.ofDays(6)));
+                insertPetProduct(PET_PRODUCT_RABIES_ID, tenantId, "Shampoo hipoalergenico", "PET-SHAM-001",
+                                new BigDecimal("48.00"), 1, 2, 5, now.minus(Duration.ofDays(6)));
+                insertPetProduct(PET_PRODUCT_SUPPLEMENT_ID, tenantId, "Mascara hidratante", "PET-HYDR-014",
+                                new BigDecimal("36.00"), 6, 2, 4, now.minus(Duration.ofDays(6)));
+                insertPetProduct(PET_PRODUCT_PARASITE_ID, tenantId, "Lacos sortidos", "PET-ACC-020",
+                                new BigDecimal("18.00"), 2, 1, 3, now.minus(Duration.ofDays(6)));
 
                 insertPetInventoryMovement(PET_INVENTORY_RABIES_ID, tenantId, PET_PRODUCT_RABIES_ID, "OUTBOUND", 2,
-                                "Vaccination appointments consumed two doses this week.",
+                                "Busy grooming days consumed more shampoo than expected before the next purchase window.",
                                 now.minus(Duration.ofHours(12)));
                 insertPetInventoryMovement(PET_INVENTORY_SUPPLEMENT_ID, tenantId, PET_PRODUCT_SUPPLEMENT_ID, "INBOUND",
-                                6, "Monthly replenishment received for preventive care stock.",
+                                4, "Partial replenishment received for the hydration line before the weekend rush.",
                                 now.minus(Duration.ofDays(2)));
                 insertPetInventoryMovement(PET_INVENTORY_PARASITE_ID, tenantId, PET_PRODUCT_PARASITE_ID, "OUTBOUND", 3,
-                                "Campaign stock reserved for current consultations.", now.minus(Duration.ofHours(18)));
-
-                Instant mariaIssuedAt = now.minus(Duration.ofDays(1));
-                Instant joaoIssuedAt = now.minus(Duration.ofDays(4));
+                                "Accessory stock reserved for premium pickups and retail upsell.", now.minus(Duration.ofHours(18)));
 
                 insertPetInvoice(
                                 PET_INVOICE_MARIA_ID,
                                 tenantId,
                                 PET_MARIA_CLIENT_ID,
-                                new BigDecimal("440.00"),
+                                new BigDecimal("95.00"),
                                 "PAID",
-                                mariaIssuedAt,
+                                mariaInvoiceIssuedAt,
                                 now.minus(Duration.ofDays(1)),
-                                "Vaccination and preventive care invoice settled in the last shift.",
+                                "Recurring package service settled during the last completed shift.",
                                 "PET.APPOINTMENT",
                                 PET_APPOINTMENT_REX_ID);
                 insertFinancePayment(
                                 PET_PAYMENT_MARIA_ID,
                                 tenantId,
                                 PET_INVOICE_MARIA_ID,
-                                new BigDecimal("440.00"),
+                                new BigDecimal("95.00"),
                                 "PIX",
-                                mariaIssuedAt.plus(Duration.ofHours(2)),
-                                "PIX-PET-MARIA",
-                                "Customer settled the invoice after the vaccination visit.",
+                                mariaInvoiceIssuedAt.plus(Duration.ofHours(2)),
+                                "PIX-PETFLOW-MARIA",
+                                "Customer settled the recurring grooming charge after pickup confirmation.",
                                 now.minus(Duration.ofDays(1)));
                 insertFinanceCashMovement(
                                 PET_CASH_MARIA_ID,
@@ -762,20 +802,20 @@ public class DemoCommercialEnvironmentService {
                                 PET_PAYMENT_MARIA_ID,
                                 "IN",
                                 "INVOICE_PAYMENT",
-                                new BigDecimal("440.00"),
-                                mariaIssuedAt.plus(Duration.ofHours(2)),
-                                "Cash entry generated from Maria invoice payment.",
+                                new BigDecimal("95.00"),
+                                mariaInvoiceIssuedAt.plus(Duration.ofHours(2)),
+                                "Cash entry generated from the paid recurring grooming invoice.",
                                 now.minus(Duration.ofDays(1)));
 
                 insertPetInvoice(
                                 PET_INVOICE_JOAO_ID,
                                 tenantId,
                                 PET_JOAO_CLIENT_ID,
-                                new BigDecimal("260.00"),
+                                new BigDecimal("88.00"),
                                 "ISSUED",
-                                joaoIssuedAt,
-                                now.minus(Duration.ofDays(4)),
-                                "Clinical consultation invoice still open for collection.",
+                                joaoInvoiceIssuedAt,
+                                now.minus(Duration.ofDays(2)),
+                                "One-time grooming visit still open with pet taxi extra pending collection.",
                                 "PET.APPOINTMENT",
                                 PET_APPOINTMENT_THOR_ID);
         }
@@ -1263,15 +1303,36 @@ public class DemoCommercialEnvironmentService {
                         String licenseNumber,
                         String phone,
                         String email,
+                        BigDecimal commissionRate,
                         Instant createdAt) {
                 insert(
                                 """
                                                 INSERT INTO pet_professionals (
-                                                    id, tenant_id, name, specialty, license_number, phone, email,
+                                                    id, tenant_id, name, specialty, license_number, phone, email, commission_rate,
+                                                    created_at, updated_at, created_by, updated_by
+                                                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                                                """,
+                                id, tenantId, name, specialty, licenseNumber, phone, email, commissionRate,
+                                ts(createdAt), ts(createdAt), SEED_ACTOR, SEED_ACTOR);
+        }
+
+        private void insertPetClientPlan(
+                        UUID id,
+                        UUID tenantId,
+                        UUID clientId,
+                        String planName,
+                        int totalSessions,
+                        int usedSessions,
+                        Instant expiresAt,
+                        Instant createdAt) {
+                insert(
+                                """
+                                                INSERT INTO pet_client_plans (
+                                                    id, tenant_id, client_id, plan_name, total_sessions, used_sessions, expires_at,
                                                     created_at, updated_at, created_by, updated_by
                                                 ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                                                 """,
-                                id, tenantId, name, specialty, licenseNumber, phone, email,
+                                id, tenantId, clientId, planName, totalSessions, usedSessions, ts(expiresAt),
                                 ts(createdAt), ts(createdAt), SEED_ACTOR, SEED_ACTOR);
         }
 
@@ -1286,16 +1347,24 @@ public class DemoCommercialEnvironmentService {
                         String serviceName,
                         String status,
                         String notes,
+                        BigDecimal servicePrice,
+                        BigDecimal commissionAmount,
+                        UUID clientPlanId,
+                        boolean planSessionConsumed,
+                        BigDecimal extrasAmount,
+                        String extrasDescription,
                         Instant createdAt) {
                 insert(
                                 """
                                                 INSERT INTO pet_appointments (
                                                     id, tenant_id, client_id, pet_id, service_id, professional_id, scheduled_at, service_name, status, notes,
+                                                    service_price, commission_amount, client_plan_id, plan_session_consumed, extras_amount, extras_description,
                                                     created_at, updated_at, created_by, updated_by
-                                                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                                                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                                                 """,
                                 id, tenantId, clientId, petId, serviceId, professionalId, ts(scheduledAt), serviceName,
-                                status, notes,
+                                status, notes, servicePrice, commissionAmount, clientPlanId, planSessionConsumed,
+                                extrasAmount, extrasDescription,
                                 ts(createdAt), ts(createdAt), SEED_ACTOR, SEED_ACTOR);
         }
 
@@ -1348,6 +1417,8 @@ public class DemoCommercialEnvironmentService {
                         String sku,
                         BigDecimal price,
                         int stockQuantity,
+                        int minimumQuantity,
+                        int reorderPoint,
                         Instant createdAt) {
                 UUID inventoryItemId = UUID.randomUUID();
                 insert(
@@ -1358,7 +1429,7 @@ public class DemoCommercialEnvironmentService {
                                                 ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                                                 """,
                                 inventoryItemId, tenantId, name, sku, "PET_RETAIL_GOOD", "UNIT", stockQuantity,
-                                0, 5, ts(createdAt), ts(createdAt), SEED_ACTOR, SEED_ACTOR);
+                                minimumQuantity, reorderPoint, ts(createdAt), ts(createdAt), SEED_ACTOR, SEED_ACTOR);
                 insert(
                                 """
                                                 INSERT INTO pet_products (

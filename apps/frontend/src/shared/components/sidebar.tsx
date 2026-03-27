@@ -7,6 +7,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/shared/auth/use-auth';
 import { petSubmoduleEntitlements } from '@/shared/entitlements/tenant-entitlements';
+import { useAppMessages } from '@/shared/i18n/app-i18n-provider';
 import { useFrontendPlatform } from '@/shared/platform/use-frontend-platform';
 import { groupSidebarItems, SidebarGroup, filterSidebarItems } from '@/shared/platform/sidebar-navigation';
 
@@ -59,15 +60,6 @@ function IconLogout({ className }: { className?: string }) {
    Navigation Items Configuration
    ═══════════════════════════════════════════════════════════════════════════ */
 
-const items: SidebarItem[] = [
-  // Workspace
-  { href: '/dashboard', label: 'Overview', group: 'core', icon: IconGrid },
-  { href: '/settings', label: 'Configurações', group: 'core', icon: IconSettings },
-
-  // PetFlow
-  { href: '/pet', label: 'PetFlow', anyOf: ['pet.dashboard.read', 'pet.client.read', 'pet.profile.read', 'pet.appointment.read', 'pet.invoice.read'], anyEntitlements: petSubmoduleEntitlements, moduleCode: 'PET', group: 'pet', icon: IconGrid },
-];
-
 function isItemActive(pathname: string, href: string) {
   return pathname === href || pathname.startsWith(`${href}/`);
 }
@@ -88,7 +80,21 @@ function getInitials(name?: string) {
 export function Sidebar() {
   const pathname = usePathname();
   const { signOut } = useAuth();
+  const messages = useAppMessages().sidebar;
   const { branding, modules, user, workspace } = useFrontendPlatform();
+  const items = useMemo<SidebarItem[]>(() => [
+    { href: '/dashboard', label: messages.overview, group: 'core', icon: IconGrid },
+    { href: '/settings', label: messages.settings, group: 'core', icon: IconSettings },
+    {
+      href: '/pet',
+      label: messages.petFlow,
+      anyOf: ['pet.dashboard.read', 'pet.client.read', 'pet.profile.read', 'pet.appointment.read', 'pet.invoice.read'],
+      anyEntitlements: petSubmoduleEntitlements,
+      moduleCode: 'PET',
+      group: 'pet',
+      icon: IconGrid
+    },
+  ], [messages.overview, messages.petFlow, messages.settings]);
 
   const visibleItems = useMemo(() => {
     return filterSidebarItems(items, {
@@ -96,7 +102,7 @@ export function Sidebar() {
       modules: { availableCodes: modules.availableCodes, loading: modules.loading },
       workspace: { canManagePlatformAdministration: workspace.canManagePlatformAdministration },
     });
-  }, [modules.availableCodes, modules.loading, user, workspace.canManagePlatformAdministration]);
+  }, [items, modules.availableCodes, modules.loading, user, workspace.canManagePlatformAdministration]);
 
   const groupedItems = useMemo(
     () => groupSidebarItems(visibleItems, workspace.canManagePlatformAdministration),
@@ -116,11 +122,11 @@ export function Sidebar() {
           </div>
           <div className="min-w-0">
             <p className="truncate text-sm font-semibold text-foreground">PhaifferTech</p>
-            <p className="truncate text-[11px] font-medium uppercase tracking-[0.18em] text-muted">PetFlow focus</p>
+            <p className="truncate text-[11px] font-medium uppercase tracking-[0.18em] text-muted">{messages.focusLabel}</p>
           </div>
         </Link>
         <div className="mt-4 rounded-[1.3rem] border border-border bg-surface-inset p-3 shadow-xs">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted">Workspace</p>
+          <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted">{messages.workspaceLabel}</p>
           <p className="mt-1 truncate text-sm font-semibold text-foreground">{branding.scopeName}</p>
           <p className="mt-1 truncate text-xs text-muted">{workspace.accessLabel}</p>
         </div>
@@ -132,7 +138,11 @@ export function Sidebar() {
             <div key={group.key}>
               {group.key === 'core' || group.items.length > 1 ? (
                 <p className="px-3 text-[11px] font-semibold uppercase tracking-[0.16em] text-muted">
-                  {group.title}
+                  {group.key === 'core'
+                    ? messages.workspaceLabel
+                    : group.key === 'pet'
+                      ? messages.petFlow
+                      : group.title}
                 </p>
               ) : null}
               <div className={`${group.key === 'core' || group.items.length > 1 ? 'mt-2' : ''} space-y-1`}>
@@ -192,7 +202,7 @@ export function Sidebar() {
           className="flex w-full items-center justify-center gap-2 rounded-xl border border-border bg-surface px-3 py-2.5 text-sm text-muted shadow-xs transition-colors hover:border-destructive hover:bg-destructive-muted hover:text-destructive hover:shadow-sm"
         >
           <IconLogout className="h-4 w-4" />
-          <span>Sair</span>
+          <span>{messages.signOut}</span>
         </button>
       </div>
     </aside>

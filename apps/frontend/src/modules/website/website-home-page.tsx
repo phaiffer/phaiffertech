@@ -2,6 +2,7 @@
 
 import { PublicCtaSection } from '@/shared/components/public-cta-section';
 import { PublicFeatureGrid } from '@/shared/components/public-feature-grid';
+import { useAppMessages } from '@/shared/i18n/app-i18n-provider';
 import { usePublicSite } from '@/shared/public/public-site-provider';
 import { WebsiteCardGrid, WebsiteFullSection, WebsiteStatStrip } from './website-sections';
 import { getWebsiteContent } from './website-content';
@@ -9,17 +10,8 @@ import { WebsiteHero } from './website-hero';
 
 export function WebsiteHomePage() {
   const { locale } = usePublicSite();
+  const messages = useAppMessages().publicHome;
   const content = getWebsiteContent(locale).home;
-  const labels =
-    locale === 'pt-BR'
-      ? {
-          framework: 'Soluções',
-          productLanes: 'Frentes operacionais'
-        }
-      : {
-          framework: 'Solutions',
-          productLanes: 'Operational lanes'
-        };
 
   return (
     <>
@@ -36,7 +28,7 @@ export function WebsiteHomePage() {
 
       <WebsiteFullSection
         id="signals"
-        eyebrow={labels.framework}
+        eyebrow={messages.framework}
         title={content.signalTitle}
         description={content.signalDescription}
       >
@@ -45,7 +37,7 @@ export function WebsiteHomePage() {
 
       <PublicFeatureGrid
         id="products"
-        eyebrowLabel={labels.productLanes}
+        eyebrowLabel={messages.productLanes}
         title={content.productsTitle}
         description={content.productsDescription}
         items={content.products.slice(0, 3)}
@@ -54,7 +46,7 @@ export function WebsiteHomePage() {
       <WebsiteFullSection
         id="operations"
         tone="muted"
-        eyebrow={locale === 'pt-BR' ? 'Porque a demo convence' : 'Why the demo lands'}
+        eyebrow={messages.expertiseEyebrow}
         title={content.expertiseTitle}
         description={content.expertiseDescription}
       >

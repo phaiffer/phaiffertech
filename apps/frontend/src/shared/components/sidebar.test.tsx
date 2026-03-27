@@ -90,10 +90,11 @@ describe('Sidebar', () => {
   });
 
   it('renders the reduced PetFlow-first navigation and keeps platform framing visible for admins', () => {
-    const { container, getByText } = render(<Sidebar />);
+    const { container, getAllByText, getByText } = render(<Sidebar />);
 
     expect(container.textContent).toContain('PhaifferTech');
-    expect(getByText('Platform')).toBeTruthy();
+    expect(getAllByText('Workspace').length).toBeGreaterThan(0);
+    expect(getByText('Platform owner tenant')).toBeTruthy();
     expect(container.querySelector('a[href="/pet"]')).not.toBeNull();
     expect(container.querySelector('a[href="/crm"]')).toBeNull();
     expect(container.querySelector('a[href="/iot/dashboard"]')).toBeNull();

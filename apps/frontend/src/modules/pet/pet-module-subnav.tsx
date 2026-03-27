@@ -2,16 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-
-const items = [
-  { href: '/pet', label: 'Workspace' },
-  { href: '/pet/dashboard', label: 'Dashboard' },
-  { href: '/pet/appointments', label: 'Atendimentos' },
-  { href: '/pet/plans', label: 'Planos' },
-  { href: '/pet/inventory', label: 'Estoque' },
-  { href: '/pet/invoices', label: 'Cobranca' },
-  { href: '/pet/professionals', label: 'Equipe' }
-];
+import { useAppMessages } from '@/shared/i18n/app-i18n-provider';
 
 function isActive(pathname: string | null, href: string) {
   if (!pathname) {
@@ -27,6 +18,16 @@ function isActive(pathname: string | null, href: string) {
 
 export function PetModuleSubnav() {
   const pathname = usePathname();
+  const t = useAppMessages().petSubnav;
+  const items = [
+    { href: '/pet', label: t.workspace },
+    { href: '/pet/dashboard', label: t.dashboard },
+    { href: '/pet/appointments', label: t.appointments },
+    { href: '/pet/plans', label: t.plans },
+    { href: '/pet/inventory', label: t.inventory },
+    { href: '/pet/invoices', label: t.invoices },
+    { href: '/pet/professionals', label: t.professionals }
+  ];
 
   return (
     <nav className="overflow-x-auto rounded-[calc(var(--radius-2xl)-0.1rem)] border border-border bg-surface px-2 py-2 shadow-sm">

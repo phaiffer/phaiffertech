@@ -20,6 +20,7 @@ import {
 } from '@/shared/dashboard/executive-dashboard';
 import { StatusBadge } from '@/shared/dashboard/status-badge';
 import { ApiClientError } from '@/shared/lib/http';
+import { useAppMessages } from '@/shared/i18n/app-i18n-provider';
 import { GettingStartedChecklist } from '@/shared/onboarding/getting-started';
 import { useFrontendPlatform } from '@/shared/platform/use-frontend-platform';
 import { moduleService } from '@/shared/services/module-service';
@@ -32,6 +33,7 @@ function DashboardNotice({ message }: { message: string }) {
 
 export default function DashboardPage() {
   const platform = useFrontendPlatform();
+  const messages = useAppMessages().dashboardRoutes;
   const [summary, setSummary] = useState<PlatformDashboardSummary | null>(null);
   const [summaryLoading, setSummaryLoading] = useState(true);
   const [summaryError, setSummaryError] = useState<string | null>(null);
@@ -136,10 +138,10 @@ export default function DashboardPage() {
   if (hasPetVisible) {
     return (
       <PetOperationsDashboard
-        eyebrow="PetFlow"
-        title="PetFlow overview"
-        description="Visao principal da demo com atendimentos do dia, planos perto do fim, estoque baixo, cobranca do proximo ciclo e comissao do time."
-        surfaceLabel="Official demo surface"
+        eyebrow={messages.mainEyebrow}
+        title={messages.mainTitle}
+        description={messages.mainDescription}
+        surfaceLabel={messages.surfaceLabel}
       />
     );
   }

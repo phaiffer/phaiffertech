@@ -11,8 +11,8 @@ import {
   publicSecondaryButtonClass,
   publicSiteContainerClass,
 } from '@/shared/components/public-visual-system';
+import { useAppMessages } from '@/shared/i18n/app-i18n-provider';
 import { usePublicSite } from '@/shared/public/public-site-provider';
-import { getPublicSiteMessages } from '@/shared/public/public-site-messages';
 
 type PublicSiteShellProps = {
   children: ReactNode;
@@ -21,7 +21,7 @@ type PublicSiteShellProps = {
 export function PublicSiteShell({ children }: PublicSiteShellProps) {
   const pathname = usePathname();
   const { locale, setLocale } = usePublicSite();
-  const t = getPublicSiteMessages(locale).shell;
+  const t = useAppMessages().publicShell;
   const useMinimalChrome = ['/login', '/forgot-password', '/reset-password'].includes(pathname);
 
   const navigationItems = [
@@ -40,12 +40,12 @@ export function PublicSiteShell({ children }: PublicSiteShellProps) {
 
   const productLinks = [
     { href: '/products', label: 'PetFlow' },
-    { href: '/platform', label: locale === 'pt-BR' ? 'Fundação da plataforma' : 'Platform foundation' },
+    { href: '/platform', label: t.footerPlatformLabel },
   ];
 
   const accessLinks = [
     { href: '/login', label: t.navLogin },
-    { href: '/contact', label: locale === 'pt-BR' ? 'Solicitar demo' : 'Request a demo' },
+    { href: '/contact', label: t.footerDemoLabel },
   ];
 
   const nextLocale = locale === 'pt-BR' ? 'en-US' : 'pt-BR';
@@ -166,7 +166,7 @@ export function PublicSiteShell({ children }: PublicSiteShellProps) {
           </div>
 
           <div>
-            <p className="text-sm font-medium text-white">{locale === 'pt-BR' ? 'Navegação' : 'Navigation'}</p>
+            <p className="text-sm font-medium text-white">{t.navLabel}</p>
             <div className="mt-4 flex flex-col gap-2 text-sm text-slate-300">
               {footerLinks.map((item) => (
                 <Link key={item.href} href={item.href} className="transition-colors hover:text-white">

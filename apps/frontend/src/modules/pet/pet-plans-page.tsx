@@ -8,6 +8,8 @@ import {
   sharedPageStackClass
 } from '@/shared/components/public-visual-system';
 import { StatusBadge } from '@/shared/dashboard/status-badge';
+import { useAppI18n, useAppMessages } from '@/shared/i18n/app-i18n-provider';
+import { formatDateForLocale } from '@/shared/i18n/formatters';
 import { ApiClientError } from '@/shared/lib/http';
 import { resolvePageItems, resolveTotalItems } from '@/shared/lib/pagination';
 import { petService } from '@/shared/services/pet-service';
@@ -39,7 +41,20 @@ function resolvePlanStatusKey(plan: ClientPlan): string {
   return 'active'; // healthy
 }
 
+function formatExpiryLabel(locale: string, value: string | null | undefined, noExpiryLabel: string) {
+  if (!value) {
+    return noExpiryLabel;
+  }
+
+  return formatDateForLocale(locale as 'pt-BR' | 'en-US', value);
+}
+
 export function PetPlansPage() {
+  const { locale } = useAppI18n();
+  const appMessages = useAppMessages();
+  const messages = appMessages.petPlans;
+  const appointmentMessages = appMessages.petAppointments;
+  const commonButtons = appMessages.common.buttons;
   const { hasPermission } = usePermissions();
   const [pageData, setPageData] = useState<PageResponse<ClientPlan>>(initialPage);
   const [clients, setClients] = useState<PetClient[]>([]);
@@ -61,17 +76,17 @@ export function PetPlansPage() {
 
   const clientOptions = useMemo(() => {
     return [
-      { value: '', label: 'All clients' },
+      { value: '', label: messages.filters.allClients },
       ...clients.map((c) => ({ value: c.id, label: c.name ?? c.fullName ?? c.id }))
     ];
-  }, [clients]);
+  }, [clients, messages.filters.allClients]);
 
   const formClientOptions = useMemo(() => {
     return [
-      { value: '', label: 'Select a client' },
+      { value: '', label: messages.filters.selectClient },
       ...clients.map((c) => ({ value: c.id, label: c.name ?? c.fullName ?? c.id }))
     ];
-  }, [clients]);
+  }, [clients, messages.filters.selectClient]);
 
   const load = useCallback(async (page: number) => {
     setLoading(true);
@@ -80,11 +95,11 @@ export function PetPlansPage() {
       const result = await petService.listClientPlans(undefined, page, pageSize);
       setPageData(result);
     } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : 'Unable to load client plans.');
+      setError(err instanceof ApiClientError ? err.message : messages.loadingDescription);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [messages.loadingDescription]);
 
   useEffect(() => {
     void load(0);
@@ -122,13 +137,13 @@ export function PetPlansPage() {
     event.preventDefault();
 
     if (!editingId && !clientId) {
-      setError('Select a client to create the plan for.');
+      setError(messages.validation.selectClient);
       return;
     }
 
     const parsed = parseInt(totalSessions, 10);
     if (isNaN(parsed) || parsed < 1) {
-      setError('Total sessions must be a positive number.');
+      setError(messages.validation.positiveSessions);
       return;
     }
 
@@ -143,7 +158,7 @@ export function PetPlansPage() {
           totalSessions: parsed,
           expiresAt: expiresAt || undefined
         });
-        setSuccess('Plan updated.');
+        setSuccess(messages.form.update);
       } else {
         await petService.createClientPlan({
           clientId,
@@ -151,12 +166,12 @@ export function PetPlansPage() {
           totalSessions: parsed,
           expiresAt: expiresAt || undefined
         });
-        setSuccess('Plan created.');
+        setSuccess(messages.form.create);
       }
       resetForm();
       await load(0);
     } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : 'Unable to save plan.');
+      setError(err instanceof ApiClientError ? err.message : messages.feedback.saveError);
     } finally {
       setSubmitting(false);
     }
@@ -167,10 +182,10 @@ export function PetPlansPage() {
     try {
       await petService.deleteClientPlan(deleteCandidate.id);
       setDeleteCandidate(null);
-      setSuccess('Plan removed.');
+      setSuccess(messages.dialog.confirm);
       await load(0);
     } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : 'Unable to remove plan.');
+      setError(err instanceof ApiClientError ? err.message : messages.feedback.removeError);
     }
   }
 
@@ -188,43 +203,61 @@ export function PetPlansPage() {
   const activePlans = rows.filter((plan) => resolvePlanStatusKey(plan) === 'active').length;
   const lowSessionPlans = rows.filter((plan) => plan.remainingSessions > 0 && plan.remainingSessions <= 2).length;
   const exhaustedPlans = rows.filter((plan) => plan.remainingSessions <= 0).length;
+  const penultimatePlans = rows.filter((plan) => plan.remainingSessions === 2).length;
+  const renewalEmailMissingCount = rows.filter((plan) => plan.remainingSessions === 2 && !resolveClientEmail(plan)).length;
 
   const columns: DataTableColumn<ClientPlan>[] = [
     {
       key: 'client',
-      header: 'Client',
+      header: messages.form.client,
       render: (plan) => (
         <div className="space-y-1">
           <p className="font-medium text-[color:var(--app-shell-heading)]">{resolveClientName(plan)}</p>
+          <p className="text-xs text-[color:var(--app-shell-muted)]">
+            {resolveClientEmail(plan) ?? messages.columns.noRenewalEmail}
+          </p>
           <span className="inline-flex items-center rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-medium text-emerald-800">
-            Recurring client
+            {appointmentMessages.columns.recurring}
           </span>
         </div>
       )
     },
     {
       key: 'planName',
-      header: 'Plan',
-      render: (plan) => <span className="font-medium">{plan.planName}</span>
+      header: messages.form.planName,
+      render: (plan) => (
+        <div className="space-y-1">
+          <span className="font-medium">{plan.planName}</span>
+          <p className="text-xs text-[color:var(--app-shell-muted)]">
+            {plan.remainingSessions > 0 ? messages.columns.activeLinked : messages.columns.noSessionsLeft}
+          </p>
+        </div>
+      )
     },
     {
       key: 'sessions',
-      header: 'Sessions',
+      header: messages.form.totalSessions,
       render: (plan) => {
         const statusKey = resolvePlanStatusKey(plan);
         const isProblematic = statusKey === 'canceled' || statusKey === 'error';
         const isLow = statusKey === 'warn';
         return (
-          <div>
+          <div className="space-y-1">
             <div className="flex items-center gap-1.5">
               <span className={`text-sm font-semibold ${isProblematic ? 'text-red-600' : isLow ? 'text-amber-600' : 'text-emerald-700'}`}>
-                {plan.remainingSessions} left
+                {plan.remainingSessions} {appointmentMessages.columns.leftSuffix}
               </span>
               <span className="text-xs text-[color:var(--app-shell-muted)]">/ {plan.totalSessions}</span>
             </div>
-            <div className="text-xs text-[color:var(--app-shell-muted)]">{plan.usedSessions} used</div>
+            <div className="text-xs text-[color:var(--app-shell-muted)]">{plan.usedSessions} {messages.columns.used}</div>
             {plan.remainingSessions === 2 ? (
-              <div className="text-xs text-amber-700">Penultimate visit alert</div>
+              <div className="text-xs text-amber-700">{messages.columns.penultimateAlert}</div>
+            ) : null}
+            {plan.remainingSessions === 1 ? (
+              <div className="text-xs text-amber-700">{messages.columns.finalSession}</div>
+            ) : null}
+            {plan.remainingSessions <= 0 ? (
+              <div className="text-xs text-red-700">{messages.columns.renewBeforeNextVisit}</div>
             ) : null}
           </div>
         );
@@ -232,13 +265,21 @@ export function PetPlansPage() {
     },
     {
       key: 'status',
-      header: 'Status',
+      header: messages.columns.status,
       render: (plan) => (
         <div className="space-y-2">
           <StatusBadge status={resolvePlanStatusKey(plan)} />
           {plan.remainingSessions === 2 ? (
             <p className="text-xs text-[color:var(--app-shell-muted)]">
-              {resolveClientEmail(plan) ? 'Renewal email sent automatically' : 'Renewal email needs client email'}
+              {resolveClientEmail(plan) ? messages.columns.renewalSent : messages.columns.renewalNeedsEmail}
+            </p>
+          ) : plan.remainingSessions === 1 ? (
+            <p className="text-xs text-[color:var(--app-shell-muted)]">
+              Next completed visit will finish the current plan.
+            </p>
+          ) : plan.remainingSessions > 2 ? (
+            <p className="text-xs text-[color:var(--app-shell-muted)]">
+              Plan is active and still supports the recurring cycle.
             </p>
           ) : null}
         </div>
@@ -246,24 +287,31 @@ export function PetPlansPage() {
     },
     {
       key: 'expiry',
-      header: 'Expires',
-      render: (plan) => plan.expiresAt
-        ? new Date(plan.expiresAt).toLocaleDateString()
-        : <span className="text-xs text-[color:var(--app-shell-muted)]">No expiry</span>
+      header: messages.form.expiresOn,
+      render: (plan) => (
+        <div className="space-y-1">
+          <p className="font-medium text-[color:var(--app-shell-heading)]">
+            {formatExpiryLabel(locale, plan.expiresAt, messages.filters.noExpiry)}
+          </p>
+          <p className="text-xs text-[color:var(--app-shell-muted)]">
+            {plan.expiresAt ? messages.columns.expiryAlign : messages.columns.sessionTrigger}
+          </p>
+        </div>
+      )
     },
     {
       key: 'actions',
-      header: 'Actions',
+      header: messages.columns.actions,
       render: (plan) => (
         <div className="flex gap-2">
           <PermissionGuard permission="pet.plan.create">
             <button type="button" onClick={() => beginEdit(plan)} className="ui-inline-button">
-              Edit
+              {commonButtons.edit}
             </button>
           </PermissionGuard>
           <PermissionGuard permission="pet.plan.create">
             <button type="button" onClick={() => setDeleteCandidate(plan)} className="ui-inline-danger-button">
-              Remove
+              {commonButtons.remove}
             </button>
           </PermissionGuard>
         </div>
@@ -274,15 +322,27 @@ export function PetPlansPage() {
   return (
     <PermissionGuard
       permission="pet.plan.read"
-      fallback={<div className="ui-notice-warning">You do not have permission to view client plans.</div>}
+      fallback={<div className="ui-notice-warning">{messages.noPermission}</div>}
     >
       <div className={sharedPageStackClass}>
         <PetModuleSubnav />
 
         <PageTitle
-          eyebrow="PetFlow · Grooming"
-          title="Monthly Plans"
-          description="Manage recurring clients, remaining visits, penultimate alerts, and plan usage across grooming appointments."
+          eyebrow={messages.eyebrow}
+          title={messages.title}
+          description={messages.description}
+          actions={canManagePlan ? (
+            <button
+              type="button"
+              onClick={() => {
+                resetForm();
+                document.getElementById('pet-plan-form-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+              }}
+              className="ui-primary-button"
+            >
+              {messages.createPlan}
+            </button>
+          ) : undefined}
         />
 
         {error ? <div className="ui-notice-error">{error}</div> : null}
@@ -290,23 +350,36 @@ export function PetPlansPage() {
 
         <PageSection
           tone="muted"
-          title="Renewal watch"
-          description="Keep the recurring base visible before the plan runs out or the client misses the next cycle."
+          title={messages.watchTitle}
+          description={messages.watchDescription}
         >
-          <div className="grid gap-3 md:grid-cols-3">
+          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
             <div className="rounded-2xl border border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-panel)] px-4 py-3">
-              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--app-shell-muted)]">Active plans</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--app-shell-muted)]">{messages.activePlans}</p>
               <p className="mt-2 text-lg font-semibold text-[color:var(--app-shell-heading)]">{activePlans}</p>
+              <p className="mt-1 text-xs text-[color:var(--app-shell-muted)]">{messages.activePlansDetail}</p>
             </div>
             <div className="rounded-2xl border border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-panel)] px-4 py-3">
-              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--app-shell-muted)]">Need renewal soon</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--app-shell-muted)]">{messages.renewSoon}</p>
               <p className="mt-2 text-lg font-semibold text-[color:var(--app-shell-heading)]">{lowSessionPlans}</p>
+              <p className="mt-1 text-xs text-[color:var(--app-shell-muted)]">{messages.renewSoonDetail}</p>
             </div>
             <div className="rounded-2xl border border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-panel)] px-4 py-3">
-              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--app-shell-muted)]">Exhausted</p>
-              <p className="mt-2 text-lg font-semibold text-[color:var(--app-shell-heading)]">{exhaustedPlans}</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--app-shell-muted)]">{messages.penultimateBath}</p>
+              <p className="mt-2 text-lg font-semibold text-[color:var(--app-shell-heading)]">{penultimatePlans}</p>
+              <p className="mt-1 text-xs text-[color:var(--app-shell-muted)]">{messages.penultimateBathDetail}</p>
+            </div>
+            <div className="rounded-2xl border border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-panel)] px-4 py-3">
+              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--app-shell-muted)]">{messages.renewalEmailMissing}</p>
+              <p className="mt-2 text-lg font-semibold text-[color:var(--app-shell-heading)]">{renewalEmailMissingCount}</p>
+              <p className="mt-1 text-xs text-[color:var(--app-shell-muted)]">{messages.renewalEmailMissingDetail}</p>
             </div>
           </div>
+          {exhaustedPlans > 0 ? (
+            <div className="ui-notice-warning mt-5">
+              {exhaustedPlans} {messages.exhaustedWarning}
+            </div>
+          ) : null}
         </PageSection>
 
         <DataTable
@@ -314,11 +387,11 @@ export function PetPlansPage() {
           rows={rows}
           getRowKey={(row) => row.id}
           loading={loading}
-          loadingTitle="Loading client plans"
-          loadingDescription="Fetching session packages for this workspace."
+          loadingTitle={messages.loadingTitle}
+          loadingDescription={messages.loadingDescription}
           emptyState={{
-            title: 'No client plans yet',
-            description: 'Create a session package after a client purchases a grooming plan — e.g. "10 bath & trim sessions". Use the form below to get started.',
+            title: messages.emptyTitle,
+            description: messages.emptyDescription,
             action: canManagePlan ? (
               <button
                 type="button"
@@ -328,7 +401,7 @@ export function PetPlansPage() {
                 }}
                 className="ui-primary-button"
               >
-                Create first plan
+                {messages.firstPlan}
               </button>
             ) : undefined
           }}
@@ -346,32 +419,32 @@ export function PetPlansPage() {
             <form onSubmit={handleSubmit} className="ui-surface-panel p-4 space-y-4">
               <div>
                 <h3 className="text-sm font-semibold text-foreground">
-                  {editingId ? 'Edit plan' : 'Create new plan'}
+                  {editingId ? messages.form.editTitle : messages.form.createTitle}
                 </h3>
                 <p className="text-xs text-[color:var(--app-shell-muted)] mt-0.5">
                   {editingId
-                    ? 'Update the plan name, session count, or expiry date.'
-                    : 'Link a session package to a client. Example: "10 banho e tosa sessions" valid for 6 months.'}
+                    ? messages.form.editDescription
+                    : messages.form.createDescription}
                 </p>
               </div>
 
               <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
                 <FormSelect
-                  label="Client"
+                  label={messages.form.client}
                   value={clientId}
                   options={formClientOptions}
                   onChange={setClientId}
                   disabled={!!editingId || !canReadClients}
                 />
                 <FormInput
-                  label="Plan name"
+                  label={messages.form.planName}
                   value={planName}
                   onChange={setPlanName}
-                  placeholder="e.g. 10 banho e tosa"
+                  placeholder={messages.columns.planNamePlaceholder}
                   required
                 />
                 <FormInput
-                  label="Total sessions"
+                  label={messages.form.totalSessions}
                   value={totalSessions}
                   onChange={setTotalSessions}
                   type="number"
@@ -379,7 +452,7 @@ export function PetPlansPage() {
                   required
                 />
                 <FormInput
-                  label="Expires on (optional)"
+                  label={messages.form.expiresOn}
                   value={expiresAt}
                   onChange={setExpiresAt}
                   type="date"
@@ -388,11 +461,11 @@ export function PetPlansPage() {
 
               <div className="flex gap-2">
                 <button type="submit" disabled={submitting} className="ui-primary-button">
-                  {submitting ? 'Saving...' : editingId ? 'Update plan' : 'Create plan'}
+                  {submitting ? messages.form.save : editingId ? messages.form.update : messages.form.create}
                 </button>
                 {editingId ? (
                   <button type="button" onClick={resetForm} className="ui-secondary-button">
-                    Cancel
+                    {messages.form.cancel}
                   </button>
                 ) : null}
               </div>
@@ -402,9 +475,9 @@ export function PetPlansPage() {
 
         <ConfirmDialog
           open={Boolean(deleteCandidate)}
-          title="Remove this plan?"
-          description={deleteCandidate ? `"${deleteCandidate.planName}" will be removed. This cannot be undone.` : undefined}
-          confirmLabel="Remove"
+          title={messages.dialog.title}
+          description={deleteCandidate ? messages.dialog.description.replace('{name}', deleteCandidate.planName) : undefined}
+          confirmLabel={messages.dialog.confirm}
           onCancel={() => setDeleteCandidate(null)}
           onConfirm={handleConfirmDelete}
         />

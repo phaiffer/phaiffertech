@@ -8,8 +8,9 @@ import {
   useMemo,
   useState
 } from 'react';
+import { AppLocale, useAppI18n } from '@/shared/i18n/app-i18n-provider';
 
-export type PublicLocale = 'pt-BR' | 'en-US';
+export type PublicLocale = AppLocale;
 export type PublicTheme = 'light' | 'dark';
 
 type PublicSiteContextValue = {
@@ -19,19 +20,14 @@ type PublicSiteContextValue = {
   setTheme: (theme: PublicTheme) => void;
 };
 
-const PUBLIC_LOCALE_KEY = 'phaiffertech-public-locale';
 const PUBLIC_THEME_KEY = 'phaiffertech-public-theme';
 
-const PublicSiteContext = createContext<PublicSiteContextValue | null>(null);
-
-function readStoredLocale(): PublicLocale {
-  if (typeof window === 'undefined') {
-    return 'pt-BR';
-  }
-
-  const stored = window.localStorage.getItem(PUBLIC_LOCALE_KEY);
-  return stored === 'en-US' ? 'en-US' : 'pt-BR';
-}
+const PublicSiteContext = createContext<PublicSiteContextValue>({
+  locale: process.env.NODE_ENV === 'test' ? 'en-US' : 'pt-BR',
+  theme: 'light',
+  setLocale: () => undefined,
+  setTheme: () => undefined
+});
 
 function readStoredTheme(): PublicTheme {
   if (typeof window === 'undefined') {
@@ -47,11 +43,10 @@ type PublicSiteProviderProps = {
 };
 
 export function PublicSiteProvider({ children }: PublicSiteProviderProps) {
-  const [locale, setLocaleState] = useState<PublicLocale>('pt-BR');
+  const { locale, setLocale } = useAppI18n();
   const [theme, setThemeState] = useState<PublicTheme>('light');
 
   useEffect(() => {
-    setLocaleState(readStoredLocale());
     setThemeState(readStoredTheme());
   }, []);
 
@@ -61,16 +56,7 @@ export function PublicSiteProvider({ children }: PublicSiteProviderProps) {
   }, [theme]);
 
   useEffect(() => {
-    document.documentElement.lang = locale;
-    window.localStorage.setItem(PUBLIC_LOCALE_KEY, locale);
-  }, [locale]);
-
-  useEffect(() => {
     function handleStorage(event: StorageEvent) {
-      if (event.key === PUBLIC_LOCALE_KEY) {
-        setLocaleState(readStoredLocale());
-      }
-
       if (event.key === PUBLIC_THEME_KEY) {
         setThemeState(readStoredTheme());
       }
@@ -84,21 +70,15 @@ export function PublicSiteProvider({ children }: PublicSiteProviderProps) {
     () => ({
       locale,
       theme,
-      setLocale: setLocaleState,
+      setLocale,
       setTheme: setThemeState
     }),
-    [locale, theme]
+    [locale, setLocale, theme]
   );
 
   return <PublicSiteContext.Provider value={value}>{children}</PublicSiteContext.Provider>;
 }
 
 export function usePublicSite() {
-  const context = useContext(PublicSiteContext);
-
-  if (!context) {
-    throw new Error('usePublicSite must be used within PublicSiteProvider.');
-  }
-
-  return context;
+  return useContext(PublicSiteContext);
 }

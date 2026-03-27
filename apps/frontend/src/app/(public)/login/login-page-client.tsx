@@ -17,8 +17,8 @@ import {
   sharedInputLabelClass,
   sharedPanelSurfaceClass
 } from '@/shared/components/public-visual-system';
+import { useAppMessages } from '@/shared/i18n/app-i18n-provider';
 import { usePublicSite } from '@/shared/public/public-site-provider';
-import { getPublicSiteMessages } from '@/shared/public/public-site-messages';
 
 type LoginPageClientProps = {
   nextPath: string;
@@ -26,25 +26,9 @@ type LoginPageClientProps = {
 
 export default function LoginPageClient({ nextPath }: LoginPageClientProps) {
   const router = useRouter();
-  const { locale } = usePublicSite();
-  const t = getPublicSiteMessages(locale).login;
-  const supportCopy = locale === 'pt-BR'
-    ? {
-        eyebrow: 'Acesso ao produto',
-        title: 'Entre no seu workspace.',
-        description:
-          'Use o código do workspace e suas credenciais para abrir a operação sem sair da linguagem visual do produto.',
-        backLabel: 'Voltar ao site',
-        contactLabel: 'Solicitar demo'
-      }
-    : {
-        eyebrow: 'Product access',
-        title: 'Sign in to your workspace.',
-        description:
-          'Use the workspace code and your credentials to open the product without leaving the platform visual language.',
-        backLabel: 'Back to site',
-        contactLabel: 'Request a demo'
-      };
+  usePublicSite();
+  const t = useAppMessages().login;
+  const supportCopy = t.support;
   const { isAuthenticated, isLoading, signIn } = useAuth();
   const demoAssistedEnabled = process.env.NEXT_PUBLIC_DEMO_ASSISTED_ENABLED === 'true';
 
@@ -188,26 +172,26 @@ export default function LoginPageClient({ nextPath }: LoginPageClientProps) {
                     {supportCopy.eyebrow}
                   </p>
                   <h1 className="mt-6 text-4xl font-semibold tracking-[-0.04em] text-white">
-                    PetFlow pronto para abrir a operacao do dia.
+                    {supportCopy.heroTitle}
                   </h1>
                   <p className="mt-5 text-base leading-7 text-slate-300">
-                    Agenda, planos, cobranca e follow-up continuam na mesma linguagem visual do produto, sem distracao e sem uma landing pesada no meio do acesso.
+                    {supportCopy.heroDescription}
                   </p>
                 </div>
               </div>
 
               <div className="relative grid gap-3 sm:grid-cols-3">
                 <div className="rounded-[1.4rem] border border-white/10 bg-white/5 p-4 backdrop-blur-sm">
-                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Fila</p>
-                  <p className="mt-2 text-sm leading-6 text-slate-200">Atendimentos e pets prontos com profissional responsavel.</p>
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">{supportCopy.laneQueueTitle}</p>
+                  <p className="mt-2 text-sm leading-6 text-slate-200">{supportCopy.laneQueueDescription}</p>
                 </div>
                 <div className="rounded-[1.4rem] border border-white/10 bg-white/5 p-4 backdrop-blur-sm">
-                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Planos</p>
-                  <p className="mt-2 text-sm leading-6 text-slate-200">Recorrencia mensal, penultimo banho e renovacao no radar.</p>
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">{supportCopy.lanePlansTitle}</p>
+                  <p className="mt-2 text-sm leading-6 text-slate-200">{supportCopy.lanePlansDescription}</p>
                 </div>
                 <div className="rounded-[1.4rem] border border-white/10 bg-white/5 p-4 backdrop-blur-sm">
-                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Cobranca</p>
-                  <p className="mt-2 text-sm leading-6 text-slate-200">Extras, estoque e comissao sem sair do fluxo comercial.</p>
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">{supportCopy.laneBillingTitle}</p>
+                  <p className="mt-2 text-sm leading-6 text-slate-200">{supportCopy.laneBillingDescription}</p>
                 </div>
               </div>
             </section>
@@ -329,9 +313,9 @@ export default function LoginPageClient({ nextPath }: LoginPageClientProps) {
               </form>
 
               <div className="mt-6 rounded-[1.4rem] border border-border bg-surface-inset px-4 py-4">
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted">PetFlow access</p>
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted">{supportCopy.accessCardTitle}</p>
                 <p className="mt-2 text-sm leading-6 text-muted">
-                  Login keeps the focus on access while preserving the premium atmosphere of the product and the demo.
+                  {supportCopy.accessCardDescription}
                 </p>
               </div>
 

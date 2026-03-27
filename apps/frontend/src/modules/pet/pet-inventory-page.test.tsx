@@ -83,7 +83,7 @@ describe('PetInventoryPage', () => {
     });
 
     expect(screen.getByText('Below minimum')).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: 'Stock & Replenishment' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Stock and replenishment' })).toBeInTheDocument();
     expect(screen.getByText('Stock health watchlist')).toBeInTheDocument();
     expect(screen.getByText('Recovery Food Pack')).toBeInTheDocument();
     expect(screen.getByText('Below minimum 2 UNIT.')).toBeInTheDocument();

@@ -16,6 +16,8 @@ import {
 import { PetModuleSubnav } from '@/modules/pet/pet-module-subnav';
 import { PermissionGuard } from '@/shared/auth/PermissionGuard';
 import { usePermissions } from '@/shared/auth/usePermissions';
+import { useAppI18n, useAppMessages } from '@/shared/i18n/app-i18n-provider';
+import { formatCurrencyForLocale } from '@/shared/i18n/formatters';
 import { ApiClientError } from '@/shared/lib/http';
 import { resolvePageItems, resolveTotalItems } from '@/shared/lib/pagination';
 import { petService } from '@/shared/services/pet-service';
@@ -45,7 +47,23 @@ const initialPage: PageResponse<PetAppointment> = {
   size: pageSize
 };
 
+function hasPetTaxi(appointment: PetAppointment) {
+  return /taxi/i.test(appointment.extrasDescription ?? '');
+}
+
+function hasPickupMessageCoverage(appointment: PetAppointment, clients: PetClient[]) {
+  if (appointment.status.toUpperCase() !== 'COMPLETED') {
+    return false;
+  }
+
+  const client = clients.find((entry) => entry.id === appointment.clientId);
+  return Boolean(client?.email);
+}
+
 export function PetAppointmentsPage() {
+  const { locale } = useAppI18n();
+  const messages = useAppMessages().petAppointments;
+  const commonButtons = useAppMessages().common.buttons;
   const { hasPermission } = usePermissions();
   const [pageData, setPageData] = useState<PageResponse<PetAppointment>>(initialPage);
   const [calendarData, setCalendarData] = useState<PetAppointment[]>([]);
@@ -97,23 +115,23 @@ export function PetAppointmentsPage() {
 
   const clientOptions = useMemo(() => {
     return [
-      { value: '', label: 'All' },
+      { value: '', label: messages.formOptions.all },
       ...clients.map((client) => ({
         value: client.id,
         label: client.name ?? client.fullName ?? client.id
       }))
     ];
-  }, [clients]);
+  }, [clients, messages.formOptions.all]);
 
   const formClientOptions = useMemo(() => {
     return [
-      { value: '', label: 'Select a client' },
+      { value: '', label: messages.formOptions.selectClient },
       ...clients.map((client) => ({
         value: client.id,
         label: client.name ?? client.fullName ?? client.id
       }))
     ];
-  }, [clients]);
+  }, [clients, messages.formOptions.selectClient]);
 
   const filteredProfiles = useMemo(() => {
     if (!clientId) return profiles;
@@ -122,63 +140,63 @@ export function PetAppointmentsPage() {
 
   const petOptions = useMemo(() => {
     return [
-      { value: '', label: 'All' },
+      { value: '', label: messages.formOptions.all },
       ...profiles.map((profile) => ({ value: profile.id, label: profile.name }))
     ];
-  }, [profiles]);
+  }, [messages.formOptions.all, profiles]);
 
   const serviceOptions = useMemo(() => {
     return [
-      { value: '', label: 'All' },
+      { value: '', label: messages.formOptions.all },
       ...services.map((service) => ({ value: service.id, label: service.name }))
     ];
-  }, [services]);
+  }, [messages.formOptions.all, services]);
 
   const professionalOptions = useMemo(() => {
     return [
-      { value: '', label: 'All' },
+      { value: '', label: messages.formOptions.all },
       ...professionals.map((professional) => ({ value: professional.id, label: professional.name }))
     ];
-  }, [professionals]);
+  }, [messages.formOptions.all, professionals]);
 
   const formPetOptions = useMemo(() => {
     return [
-      { value: '', label: 'Select a pet' },
+      { value: '', label: messages.formOptions.selectPet },
       ...filteredProfiles.map((profile) => ({ value: profile.id, label: profile.name }))
     ];
-  }, [filteredProfiles]);
+  }, [filteredProfiles, messages.formOptions.selectPet]);
 
   const formServiceOptions = useMemo(() => {
     return [
-      { value: '', label: 'Select a service' },
+      { value: '', label: messages.formOptions.selectService },
       ...services.map((service) => ({ value: service.id, label: service.name }))
     ];
-  }, [services]);
+  }, [messages.formOptions.selectService, services]);
 
   const formProfessionalOptions = useMemo(() => {
     return [
-      { value: '', label: 'Select a professional' },
+      { value: '', label: messages.formOptions.selectProfessional },
       ...professionals.map((professional) => ({ value: professional.id, label: professional.name }))
     ];
-  }, [professionals]);
+  }, [messages.formOptions.selectProfessional, professionals]);
 
   // Plan options loaded server-side by clientId when the form is open
   const planOptions = useMemo(() => {
     if (!clientId) {
-      return [{ value: '', label: 'Select a client first' }];
+      return [{ value: '', label: messages.formOptions.selectClientFirst }];
     }
     if (plansLoading) {
-      return [{ value: '', label: 'Loading packages…' }];
+      return [{ value: '', label: messages.formOptions.loadingPlans }];
     }
     const active = clientPlans.filter((plan) => plan.remainingSessions > 0);
     return [
-      { value: '', label: active.length > 0 ? 'No package — one-time payment' : 'No active package for this client' },
+      { value: '', label: active.length > 0 ? messages.formOptions.oneTime : messages.formOptions.noActivePlan },
       ...active.map((plan) => ({
         value: plan.id,
-        label: `${plan.planName} (${plan.remainingSessions} sessions left)`
+        label: `${plan.planName} (${plan.remainingSessions} ${messages.formOptions.sessionsLeftSuffix})`
       }))
     ];
-  }, [clientPlans, clientId, plansLoading]);
+  }, [clientPlans, clientId, messages.formOptions, plansLoading]);
 
   const loadReferences = useCallback(async () => {
     const [clientPage, profilePage, servicePage, professionalPage] = await Promise.allSettled([
@@ -192,46 +210,46 @@ export function PetAppointmentsPage() {
 
     if (!canReadClients) {
       setClients([]);
-      issues.push({ key: 'clients', label: 'Clientes', message: resolvePetLookupIssue(null, 'pet.client.read') });
+      issues.push({ key: 'clients', label: messages.notices.clients, message: resolvePetLookupIssue(null, 'pet.client.read') });
     } else if (clientPage.status === 'fulfilled' && clientPage.value) {
       setClients(resolvePageItems(clientPage.value));
     } else {
       setClients([]);
-      issues.push({ key: 'clients', label: 'Clientes', message: resolvePetLookupIssue(clientPage.status === 'rejected' ? clientPage.reason : null) });
+      issues.push({ key: 'clients', label: messages.notices.clients, message: resolvePetLookupIssue(clientPage.status === 'rejected' ? clientPage.reason : null) });
     }
 
     if (!canReadProfiles) {
       setProfiles([]);
-      issues.push({ key: 'profiles', label: 'Pets', message: resolvePetLookupIssue(null, 'pet.profile.read') });
+      issues.push({ key: 'profiles', label: messages.notices.pets, message: resolvePetLookupIssue(null, 'pet.profile.read') });
     } else if (profilePage.status === 'fulfilled' && profilePage.value) {
       setProfiles(resolvePageItems(profilePage.value));
     } else {
       setProfiles([]);
-      issues.push({ key: 'profiles', label: 'Pets', message: resolvePetLookupIssue(profilePage.status === 'rejected' ? profilePage.reason : null) });
+      issues.push({ key: 'profiles', label: messages.notices.pets, message: resolvePetLookupIssue(profilePage.status === 'rejected' ? profilePage.reason : null) });
     }
 
     if (!canReadServices) {
       setServices([]);
-      issues.push({ key: 'services', label: 'Serviços', message: resolvePetLookupIssue(null, 'pet.service.read') });
+      issues.push({ key: 'services', label: messages.notices.services, message: resolvePetLookupIssue(null, 'pet.service.read') });
     } else if (servicePage.status === 'fulfilled' && servicePage.value) {
       setServices(resolvePageItems(servicePage.value));
     } else {
       setServices([]);
-      issues.push({ key: 'services', label: 'Serviços', message: resolvePetLookupIssue(servicePage.status === 'rejected' ? servicePage.reason : null) });
+      issues.push({ key: 'services', label: messages.notices.services, message: resolvePetLookupIssue(servicePage.status === 'rejected' ? servicePage.reason : null) });
     }
 
     if (!canReadProfessionals) {
       setProfessionals([]);
-      issues.push({ key: 'professionals', label: 'Profissionais', message: resolvePetLookupIssue(null, 'pet.professional.read') });
+      issues.push({ key: 'professionals', label: messages.notices.professionals, message: resolvePetLookupIssue(null, 'pet.professional.read') });
     } else if (professionalPage.status === 'fulfilled' && professionalPage.value) {
       setProfessionals(resolvePageItems(professionalPage.value));
     } else {
       setProfessionals([]);
-      issues.push({ key: 'professionals', label: 'Profissionais', message: resolvePetLookupIssue(professionalPage.status === 'rejected' ? professionalPage.reason : null) });
+      issues.push({ key: 'professionals', label: messages.notices.professionals, message: resolvePetLookupIssue(professionalPage.status === 'rejected' ? professionalPage.reason : null) });
     }
 
     setLookupIssues(issues);
-  }, [canReadClients, canReadProfessionals, canReadProfiles, canReadServices]);
+  }, [canReadClients, canReadProfessionals, canReadProfiles, canReadServices, messages.notices]);
 
   const loadData = useCallback(async (
     page: number,
@@ -277,11 +295,11 @@ export function PetAppointmentsPage() {
         setPageData(result);
       }
     } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : 'Unable to load appointments.');
+      setError(err instanceof ApiClientError ? err.message : messages.errors.load);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [messages.errors.load]);
 
   useEffect(() => {
     loadReferences();
@@ -361,13 +379,13 @@ export function PetAppointmentsPage() {
     event.preventDefault();
 
     if (!clientId || !petId || !serviceId || !professionalId) {
-      setError('Select client, pet, service, and professional to book the appointment.');
+      setError(messages.errors.missingReferences);
       return;
     }
 
     const isoScheduledAt = toIsoDate(scheduledAt);
     if (!isoScheduledAt) {
-      setError('Please provide the appointment date and time.');
+      setError(messages.errors.missingDate);
       return;
     }
 
@@ -392,16 +410,16 @@ export function PetAppointmentsPage() {
     try {
       if (editingId) {
         await petService.updateAppointment(editingId, payload);
-        setSuccess('Appointment updated.');
+        setSuccess(messages.success.updated);
       } else {
         await petService.createAppointment(payload);
-        setSuccess('Appointment booked.');
+        setSuccess(messages.success.created);
       }
 
       setIsEditorOpen(false);
       await loadData(pageData.page, search, statusFilter, clientFilterId, petFilterId, serviceFilterId, professionalFilterId, viewMode, currentMonth);
     } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : 'Unable to save appointment.');
+      setError(err instanceof ApiClientError ? err.message : messages.errors.save);
     } finally {
       setSubmitting(false);
     }
@@ -414,10 +432,10 @@ export function PetAppointmentsPage() {
       await petService.deleteAppointment(deleteCandidate.id);
       setDeleteCandidate(null);
       setIsEditorOpen(false); // Close drawer if deleting from inside
-      setSuccess('Appointment removed.');
+      setSuccess(messages.success.deleted);
       await loadData(pageData.page, search, statusFilter, clientFilterId, petFilterId, serviceFilterId, professionalFilterId, viewMode, currentMonth);
     } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : 'Unable to delete appointment.');
+      setError(err instanceof ApiClientError ? err.message : messages.errors.delete);
     }
   }
 
@@ -433,10 +451,15 @@ export function PetAppointmentsPage() {
   const recurringAppointments = visibleAppointments.filter((appointment) => Boolean(appointment.clientPlanId)).length;
   const oneTimeAppointments = visibleAppointments.filter((appointment) => !appointment.clientPlanId).length;
   const readyForPickup = visibleAppointments.filter((appointment) => appointment.status.toUpperCase() === 'COMPLETED').length;
+  const pickupMessagesReady = visibleAppointments.filter((appointment) => hasPickupMessageCoverage(appointment, clients)).length;
   const lowPlanAlerts = visibleAppointments.filter((appointment) => Boolean(appointment.clientPlanId) && (appointment.planRemainingSessions ?? 99) <= 2).length;
+  const petTaxiAppointments = visibleAppointments.filter((appointment) => hasPetTaxi(appointment)).length;
   const visibleCommissionTotal = visibleAppointments.reduce((total, appointment) => total + (appointment.commissionAmount ?? 0), 0);
 
   const columns = useMemo(() => createPetAppointmentColumns({
+    locale,
+    messages,
+    commonButtons,
     clients,
     professionals,
     profiles,
@@ -448,6 +471,9 @@ export function PetAppointmentsPage() {
   }), [
     clients,
     clientsLookupUnavailable,
+    commonButtons,
+    locale,
+    messages,
     professionals,
     professionalsLookupUnavailable,
     profiles,
@@ -457,14 +483,14 @@ export function PetAppointmentsPage() {
   return (
     <PermissionGuard
       permission="pet.appointment.read"
-      fallback={<div className="ui-notice-warning">You do not have permission to view appointments.</div>}
+      fallback={<div className="ui-notice-warning">{messages.noPermission}</div>}
     >
       <div className={sharedPageStackClass}>
         <PetModuleSubnav />
 
         <PageTitle 
-           title="Appointments"
-           description="Run the bath and grooming queue with professional visibility, plan coverage, and billing context."
+           title={messages.title}
+           description={messages.description}
            actions={
              <div className="flex gap-2">
                 <button 
@@ -472,11 +498,11 @@ export function PetAppointmentsPage() {
                   onClick={() => setViewMode(viewMode === 'list' ? 'calendar' : 'list')}
                   className="ui-secondary-button"
                 >
-                  {viewMode === 'calendar' ? 'Switch to list' : 'Switch to calendar'}
+                  {viewMode === 'calendar' ? messages.actions.switchToList : messages.actions.switchToCalendar}
                 </button>
                 <PermissionGuard permission="pet.appointment.create">
                   <button type="button" onClick={() => beginCreate()} className="ui-primary-button">
-                    Book appointment
+                    {messages.actions.book}
                   </button>
                 </PermissionGuard>
              </div>
@@ -485,8 +511,8 @@ export function PetAppointmentsPage() {
 
         <PageSection
           tone="muted"
-          title="Filters"
-          description="Refine the schedule by status, customer, service, and professional."
+          title={messages.filters.title}
+          description={messages.filters.description}
         >
           <PetAppointmentsFilters
             searchInput={searchInput}
@@ -530,35 +556,45 @@ export function PetAppointmentsPage() {
 
         <PageSection
           tone="muted"
-          title="Operating focus"
-          description="Keep the commercial story readable before diving into the full schedule."
+          title={messages.focus.title}
+          description={messages.focus.description}
         >
-          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-5">
+          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-6">
             <div className="rounded-2xl border border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-panel)] px-4 py-3">
-              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--app-shell-muted)]">Recurring</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--app-shell-muted)]">{messages.focus.recurring}</p>
               <p className="mt-2 text-lg font-semibold text-[color:var(--app-shell-heading)]">{recurringAppointments}</p>
+              <p className="mt-1 text-xs text-[color:var(--app-shell-muted)]">{messages.focus.recurringDetail}</p>
             </div>
             <div className="rounded-2xl border border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-panel)] px-4 py-3">
-              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--app-shell-muted)]">One-time</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--app-shell-muted)]">{messages.focus.oneTime}</p>
               <p className="mt-2 text-lg font-semibold text-[color:var(--app-shell-heading)]">{oneTimeAppointments}</p>
+              <p className="mt-1 text-xs text-[color:var(--app-shell-muted)]">{messages.focus.oneTimeDetail}</p>
             </div>
             <div className="rounded-2xl border border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-panel)] px-4 py-3">
-              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--app-shell-muted)]">Ready</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--app-shell-muted)]">{messages.focus.ready}</p>
               <p className="mt-2 text-lg font-semibold text-[color:var(--app-shell-heading)]">{readyForPickup}</p>
+              <p className="mt-1 text-xs text-[color:var(--app-shell-muted)]">{pickupMessagesReady} {messages.focus.readyDetailSuffix}</p>
             </div>
             <div className="rounded-2xl border border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-panel)] px-4 py-3">
-              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--app-shell-muted)]">Plan alerts</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--app-shell-muted)]">{messages.focus.planAlerts}</p>
               <p className="mt-2 text-lg font-semibold text-[color:var(--app-shell-heading)]">{lowPlanAlerts}</p>
+              <p className="mt-1 text-xs text-[color:var(--app-shell-muted)]">{messages.focus.planAlertsDetail}</p>
             </div>
             <div className="rounded-2xl border border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-panel)] px-4 py-3">
-              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--app-shell-muted)]">Commission</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--app-shell-muted)]">{messages.focus.petTaxi}</p>
+              <p className="mt-2 text-lg font-semibold text-[color:var(--app-shell-heading)]">{petTaxiAppointments}</p>
+              <p className="mt-1 text-xs text-[color:var(--app-shell-muted)]">{messages.focus.petTaxiDetail}</p>
+            </div>
+            <div className="rounded-2xl border border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-panel)] px-4 py-3">
+              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--app-shell-muted)]">{messages.focus.commission}</p>
               <p className="mt-2 text-lg font-semibold text-[color:var(--app-shell-heading)]">
-                {visibleCommissionTotal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                {formatCurrencyForLocale(locale, visibleCommissionTotal)}
               </p>
+              <p className="mt-1 text-xs text-[color:var(--app-shell-muted)]">{messages.focus.commissionDetail}</p>
             </div>
           </div>
           <p className="mt-4 text-sm text-[color:var(--app-shell-muted)]">
-            Completed services automatically trigger the pickup email when the client has an email on file.
+            {messages.focus.pickupRule}
           </p>
         </PageSection>
 
@@ -577,14 +613,14 @@ export function PetAppointmentsPage() {
               rows={rows}
               getRowKey={(row) => row.id}
               loading={loading}
-              loadingTitle="Loading appointments"
-              loadingDescription="Preparing the appointment schedule with client, pet, and professional context."
+              loadingTitle={messages.table.loadingTitle}
+              loadingDescription={messages.table.loadingDescription}
               emptyState={{
-                title: 'No appointments yet',
-                description: 'Add clients, their pets, your services (e.g. "Bath & Grooming"), and at least one groomer — then book the first appointment here.',
+                title: messages.table.emptyTitle,
+                description: messages.table.emptyDescription,
                 action: canCreateAppointments ? (
                   <button type="button" onClick={() => beginCreate()} className="ui-primary-button">
-                    Book first appointment
+                    {messages.table.firstAppointment}
                   </button>
                 ) : undefined
               }}
@@ -608,10 +644,10 @@ export function PetAppointmentsPage() {
               <div className="mb-6 flex items-center justify-between">
                 <div>
                   <h2 className="text-xl font-semibold tracking-tight text-foreground">
-                    {editingId ? 'Edit appointment' : 'Book appointment'}
+                    {editingId ? messages.drawer.editTitle : messages.drawer.createTitle}
                   </h2>
                   <p className="text-sm mt-1 text-muted">
-                    Select the client and pet, pick a service and groomer, then set payment — package or one-time, with any extras.
+                    {messages.drawer.description}
                   </p>
                 </div>
                 <button
@@ -666,9 +702,9 @@ export function PetAppointmentsPage() {
 
         <ConfirmDialog
           open={Boolean(deleteCandidate)}
-          title="Remove appointment?"
-          description={deleteCandidate ? `The appointment for "${deleteCandidate.serviceName}" will be removed.` : undefined}
-          confirmLabel="Remove"
+          title={messages.dialog.deleteTitle}
+          description={deleteCandidate ? messages.dialog.deleteDescription.replace('{service}', deleteCandidate.serviceName) : undefined}
+          confirmLabel={messages.dialog.confirmDelete}
           onCancel={() => setDeleteCandidate(null)}
           onConfirm={handleConfirmDelete}
         />

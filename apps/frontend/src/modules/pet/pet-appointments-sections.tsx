@@ -5,6 +5,9 @@ import Link from 'next/link';
 import { petMedicalRoutePermissions } from '@/modules/pet/pet-medical-permissions';
 import { PermissionGuard } from '@/shared/auth/PermissionGuard';
 import { StatusBadge } from '@/shared/dashboard/status-badge';
+import type { AppLocale } from '@/shared/i18n/app-i18n-provider';
+import { useAppI18n, useAppMessages } from '@/shared/i18n/app-i18n-provider';
+import { formatCurrencyForLocale, formatDateTimeForLocale } from '@/shared/i18n/formatters';
 import { DataTableColumn } from '@/shared/ui/data-table';
 import { DateTimeInput } from '@/shared/ui/datetime-input';
 import { FormInput } from '@/shared/ui/form-input';
@@ -18,18 +21,45 @@ export type PetSelectOption = {
   label: string;
 };
 
-// Operator-friendly labels — avoid ALL_CAPS developer enum names
-export const petAppointmentStatusOptions: PetSelectOption[] = [
-  { value: '', label: 'All statuses' },
-  { value: 'SCHEDULED', label: 'Scheduled' },
-  { value: 'CONFIRMED', label: 'Confirmed' },
-  { value: 'IN_PROGRESS', label: 'In progress' },
-  { value: 'COMPLETED', label: 'Completed' },
-  { value: 'CANCELED', label: 'Canceled' },
-  { value: 'NO_SHOW', label: 'No show' }
-];
+function buildPetAppointmentStatusOptions(messages: ReturnType<typeof useAppMessages>['petAppointments']): PetSelectOption[] {
+  return [
+    { value: '', label: messages.statuses.all },
+    { value: 'SCHEDULED', label: messages.statuses.scheduled },
+    { value: 'CONFIRMED', label: messages.statuses.confirmed },
+    { value: 'IN_PROGRESS', label: messages.statuses.inProgress },
+    { value: 'COMPLETED', label: messages.statuses.completed },
+    { value: 'CANCELED', label: messages.statuses.canceled },
+    { value: 'NO_SHOW', label: messages.statuses.noShow }
+  ];
+}
 
-export const petAppointmentFormStatusOptions = petAppointmentStatusOptions.filter((option) => option.value);
+function hasPetTaxi(appointment: PetAppointment) {
+  return /taxi/i.test(appointment.extrasDescription ?? '');
+}
+
+function AppointmentSignalPill({
+  label,
+  tone = 'neutral'
+}: {
+  label: string;
+  tone?: 'neutral' | 'accent' | 'success' | 'warning' | 'danger';
+}) {
+  const toneClass = tone === 'accent'
+    ? 'bg-blue-100 text-blue-800'
+    : tone === 'success'
+      ? 'bg-emerald-100 text-emerald-800'
+      : tone === 'warning'
+        ? 'bg-amber-100 text-amber-800'
+        : tone === 'danger'
+          ? 'bg-red-100 text-red-800'
+          : 'bg-slate-100 text-slate-700';
+
+  return (
+    <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${toneClass}`}>
+      {label}
+    </span>
+  );
+}
 
 function resolveAppointmentCareState(appointment: PetAppointment) {
   const medicalRecordCount = appointment.medicalRecordCount ?? 0;
@@ -48,9 +78,10 @@ function resolveAppointmentCareState(appointment: PetAppointment) {
 }
 
 function resolveAppointmentCareActionLabel(appointment: PetAppointment) {
-  return resolveAppointmentCareState(appointment) === 'PENDING'
-    ? 'Care notes'
-    : 'Continue care';
+  const messages = resolveAppointmentCareState(appointment);
+  return messages === 'PENDING'
+    ? 'PENDING'
+    : 'CONTINUE';
 }
 
 type PetAppointmentsFiltersProps = {
@@ -104,19 +135,23 @@ export function PetAppointmentsFilters({
   onSearch,
   onClear
 }: PetAppointmentsFiltersProps) {
+  const commonButtons = useAppMessages().common.buttons;
+  const t = useAppMessages().petAppointments;
+  const statusOptions = buildPetAppointmentStatusOptions(t);
+
   return (
     <div className="space-y-4">
       <div className="grid gap-3 xl:grid-cols-[minmax(0,1.45fr)_repeat(2,minmax(0,0.9fr))]">
-        <SearchBar value={searchInput} onChange={onSearchInputChange} placeholder="Service, status, notes" />
-        <FormSelect label="Status" value={statusFilter} options={petAppointmentStatusOptions} onChange={onStatusFilterChange} />
-        <FormSelect label="Client" value={clientFilterId} options={clientOptions} onChange={onClientFilterIdChange} disabled={clientsLookupUnavailable} />
+        <SearchBar value={searchInput} onChange={onSearchInputChange} placeholder={t.filters.searchPlaceholder} />
+        <FormSelect label={t.filters.status} value={statusFilter} options={statusOptions} onChange={onStatusFilterChange} />
+        <FormSelect label={t.filters.client} value={clientFilterId} options={clientOptions} onChange={onClientFilterIdChange} disabled={clientsLookupUnavailable} />
       </div>
 
       <div className="grid gap-3 xl:grid-cols-[repeat(3,minmax(0,1fr))_auto] xl:items-end">
-        <FormSelect label="Pet" value={petFilterId} options={petOptions} onChange={onPetFilterIdChange} disabled={profilesLookupUnavailable} />
-        <FormSelect label="Service" value={serviceFilterId} options={serviceOptions} onChange={onServiceFilterIdChange} disabled={servicesLookupUnavailable} />
+        <FormSelect label={t.filters.pet} value={petFilterId} options={petOptions} onChange={onPetFilterIdChange} disabled={profilesLookupUnavailable} />
+        <FormSelect label={t.filters.service} value={serviceFilterId} options={serviceOptions} onChange={onServiceFilterIdChange} disabled={servicesLookupUnavailable} />
         <FormSelect
-          label="Professional"
+          label={t.filters.professional}
           value={professionalFilterId}
           options={professionalOptions}
           onChange={onProfessionalFilterIdChange}
@@ -128,22 +163,22 @@ export function PetAppointmentsFilters({
             onClick={onSearch}
             className="ui-primary-button"
           >
-            Search
+            {commonButtons.search}
           </button>
           <button
             type="button"
             onClick={onClear}
             className="ui-inline-button"
           >
-            Clear
+            {commonButtons.clear}
           </button>
         </div>
       </div>
 
       <div className="text-sm text-[color:var(--app-shell-muted)]">
         {activeFilterCount > 0
-          ? `${activeFilterCount} filter(s) shaping the schedule view.`
-          : 'No active filters in the appointment view.'}
+          ? `${activeFilterCount} ${t.filters.activeCountSuffix}`
+          : t.filters.noActive}
       </div>
     </div>
   );
@@ -224,6 +259,9 @@ export function PetAppointmentForm({
   appointmentReferencesReady,
   onCancelEdit
 }: PetAppointmentFormProps) {
+  const { locale } = useAppI18n();
+  const t = useAppMessages().petAppointments;
+  const statusOptions = buildPetAppointmentStatusOptions(t).filter((option) => option.value);
   const hasPlanOptions = planOptions.length > 1; // more than just the "No plan" placeholder
 
   return (
@@ -233,17 +271,17 @@ export function PetAppointmentForm({
         {/* Section: Booking */}
         <div className="ui-surface-panel p-4 space-y-3">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-wide text-[color:var(--app-shell-muted)]">Booking</p>
-            <p className="text-xs text-[color:var(--app-shell-muted)] mt-0.5">Who, what, and when — the core of the appointment.</p>
+            <p className="text-xs font-semibold uppercase tracking-wide text-[color:var(--app-shell-muted)]">{t.form.bookingTitle}</p>
+            <p className="text-xs text-[color:var(--app-shell-muted)] mt-0.5">{t.form.bookingDescription}</p>
           </div>
           <div className="grid gap-3 grid-cols-2">
-            <FormSelect label="Client" value={clientId} options={formClientOptions} onChange={onClientIdChange} disabled={clientsLookupUnavailable} />
-            <FormSelect label="Pet" value={petId} options={formPetOptions} onChange={onPetIdChange} disabled={profilesLookupUnavailable} />
+            <FormSelect label={t.filters.client} value={clientId} options={formClientOptions} onChange={onClientIdChange} disabled={clientsLookupUnavailable} />
+            <FormSelect label={t.filters.pet} value={petId} options={formPetOptions} onChange={onPetIdChange} disabled={profilesLookupUnavailable} />
           </div>
           <div className="grid gap-3 grid-cols-2">
-            <FormSelect label="Service" value={serviceId} options={formServiceOptions} onChange={onServiceIdChange} disabled={servicesLookupUnavailable} />
+            <FormSelect label={t.filters.service} value={serviceId} options={formServiceOptions} onChange={onServiceIdChange} disabled={servicesLookupUnavailable} />
             <FormSelect
-              label="Professional"
+              label={t.filters.professional}
               value={professionalId}
               options={formProfessionalOptions}
               onChange={onProfessionalIdChange}
@@ -251,62 +289,60 @@ export function PetAppointmentForm({
             />
           </div>
           <div className="grid gap-3 grid-cols-2">
-            <DateTimeInput label="Date & time" value={scheduledAt} onChange={onScheduledAtChange} required />
-            <FormSelect label="Status" value={status} options={petAppointmentFormStatusOptions} onChange={onStatusChange} />
+            <DateTimeInput label={t.form.dateTime} value={scheduledAt} onChange={onScheduledAtChange} required />
+            <FormSelect label={t.filters.status} value={status} options={statusOptions} onChange={onStatusChange} />
           </div>
-          <FormInput label="Notes" value={notes} onChange={onNotesChange} placeholder="Observations for this visit (e.g. 'sensitive skin', 'first visit')" />
+          <FormInput label={t.form.notes} value={notes} onChange={onNotesChange} placeholder={t.form.notesPlaceholder} />
         </div>
 
         {/* Section: Plan & Checkout */}
         <div className="ui-surface-panel p-4 space-y-3">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-wide text-[color:var(--app-shell-muted)]">Package & Payment</p>
-            <p className="text-xs text-[color:var(--app-shell-muted)] mt-0.5">
-              Link a session package to cover the base service, or leave empty for a one-time payment. Add any extras charged today.
-            </p>
+            <p className="text-xs font-semibold uppercase tracking-wide text-[color:var(--app-shell-muted)]">{t.form.packageTitle}</p>
+            <p className="text-xs text-[color:var(--app-shell-muted)] mt-0.5">{t.form.packageDescription}</p>
           </div>
           <div>
             <FormSelect
-              label="Session package (optional)"
+              label={t.form.packageLabel}
               value={clientPlanId}
               options={planOptions}
               onChange={onClientPlanIdChange}
               disabled={!clientId || !hasPlanOptions}
             />
             {!clientId ? (
-              <p className="mt-1 text-xs text-[color:var(--app-shell-muted)]">Select a client first to see available packages.</p>
+              <p className="mt-1 text-xs text-[color:var(--app-shell-muted)]">{t.form.packageSelectClient}</p>
             ) : !hasPlanOptions ? (
-              <p className="mt-1 text-xs text-[color:var(--app-shell-muted)]">No active package for this client — appointment will be charged individually.</p>
+              <p className="mt-1 text-xs text-[color:var(--app-shell-muted)]">{t.form.packageUnavailable}</p>
             ) : null}
           </div>
           <div className="grid gap-3 grid-cols-2">
             <FormInput
-              label="Extras (R$)"
+              label={t.form.extrasAmount}
               value={extrasAmount}
               onChange={onExtrasAmountChange}
               type="number"
               placeholder="0.00"
             />
             <FormInput
-              label="Extras description"
+              label={t.form.extrasDescription}
               value={extrasDescription}
               onChange={onExtrasDescriptionChange}
-              placeholder="e.g. Pet taxi, nail trim, perfume"
+              placeholder={t.form.extrasPlaceholder}
             />
           </div>
 
           {clientPlanId ? (
             <div className="rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs text-emerald-800">
-              ✓ 1 session will be used from this package when the appointment is marked <strong>Completed</strong>.
+              ✓ {t.form.packageCoverageIntro}
               {extrasAmount && parseFloat(extrasAmount) > 0
-                ? ` Extras of R$ ${parseFloat(extrasAmount).toFixed(2)} will be charged separately.`
-                : ' The base service will be fully covered by the package.'}
+                ? ` ${t.form.packageCoverageExtras.replace('{amount}', formatCurrencyForLocale(locale, parseFloat(extrasAmount)).replace(/^R\$\s?/, ''))}`
+                : ` ${t.form.packageCoverageFull}`}
             </div>
           ) : null}
 
           {!appointmentReferencesReady ? (
             <div className="ui-notice-warning">
-              To book an appointment, first add at least one client, pet, service, and professional. Return here once those are ready.
+              {t.form.referencesRequired}
             </div>
           ) : null}
         </div>
@@ -317,7 +353,7 @@ export function PetAppointmentForm({
             disabled={submitting || !appointmentReferencesReady}
             className="ui-primary-button"
           >
-            {submitting ? 'Saving...' : editingId ? 'Update appointment' : 'Book appointment'}
+            {submitting ? t.form.save : editingId ? t.form.update : t.form.create}
           </button>
           {editingId ? (
             <button
@@ -325,7 +361,7 @@ export function PetAppointmentForm({
               onClick={onCancelEdit}
               className="ui-secondary-button"
             >
-              Cancel
+              {t.form.cancel}
             </button>
           ) : null}
         </div>
@@ -335,6 +371,9 @@ export function PetAppointmentForm({
 }
 
 type CreatePetAppointmentColumnsArgs = {
+  locale: AppLocale;
+  messages: ReturnType<typeof useAppMessages>['petAppointments'];
+  commonButtons: ReturnType<typeof useAppMessages>['common']['buttons'];
   clients: PetClient[];
   professionals: PetProfessional[];
   profiles: PetProfile[];
@@ -346,6 +385,9 @@ type CreatePetAppointmentColumnsArgs = {
 };
 
 export function createPetAppointmentColumns({
+  locale,
+  messages,
+  commonButtons,
   clients,
   professionals,
   profiles,
@@ -362,15 +404,15 @@ export function createPetAppointmentColumns({
   return [
     {
       key: 'serviceName',
-      header: 'Service',
+      header: messages.columns.service,
       render: (appointment) => (
-        <div>
+        <div className="space-y-1.5">
           <div className="font-medium text-sm">{appointment.serviceName}</div>
           {appointment.petName ? (
             <div className="text-xs text-[color:var(--app-shell-muted)]">{appointment.petName}</div>
           ) : null}
           <div className="text-xs text-[color:var(--app-shell-muted)]">
-            with {appointment.professionalName ??
+            {messages.columns.responsible}: {appointment.professionalName ??
               resolvePetLookupLabel(
                 professionals,
                 appointment.professionalId,
@@ -379,17 +421,33 @@ export function createPetAppointmentColumns({
                 professionalsLookupUnavailable
               )}
           </div>
+          {hasPetTaxi(appointment) ? (
+            <div>
+              <AppointmentSignalPill label={messages.columns.petTaxi} tone="accent" />
+            </div>
+          ) : null}
         </div>
       )
     },
     {
       key: 'scheduledAt',
-      header: 'Scheduled',
-      render: (appointment) => new Date(appointment.scheduledAt).toLocaleString()
+      header: messages.columns.scheduled,
+      render: (appointment) => (
+        <div className="space-y-1">
+          <p className="font-medium text-[color:var(--app-shell-heading)]">
+            {formatDateTimeForLocale(locale, appointment.scheduledAt)}
+          </p>
+          <p className="text-xs text-[color:var(--app-shell-muted)]">
+            {appointment.status.toUpperCase() === 'COMPLETED'
+              ? messages.columns.petReady
+              : messages.columns.checkoutAfterSlot}
+          </p>
+        </div>
+      )
     },
     {
       key: 'status',
-      header: 'Status',
+      header: messages.columns.status,
       render: (appointment) => {
         const clientEmail = resolveClientEmail(appointment);
         const completed = appointment.status.toUpperCase() === 'COMPLETED';
@@ -399,7 +457,11 @@ export function createPetAppointmentColumns({
             <StatusBadge status={appointment.status} />
             {completed ? (
               <p className="text-xs text-[color:var(--app-shell-muted)]">
-                {clientEmail ? 'Pickup email sent automatically' : 'Pickup email skipped: no client email'}
+                {clientEmail ? messages.columns.pickupSent : messages.columns.pickupSkipped}
+              </p>
+            ) : appointment.status.toUpperCase() === 'IN_PROGRESS' ? (
+              <p className="text-xs text-[color:var(--app-shell-muted)]">
+                {messages.columns.inProgressDetail}
               </p>
             ) : null}
           </div>
@@ -408,43 +470,48 @@ export function createPetAppointmentColumns({
     },
     {
       key: 'planSessions',
-      header: 'Plan',
+      header: messages.columns.plan,
       render: (appointment) => {
         if (!appointment.clientPlanId) {
-          return <span className="text-xs text-[color:var(--app-shell-muted)]">One-time</span>;
+          return (
+            <div className="space-y-1">
+              <AppointmentSignalPill label={messages.columns.oneTime} />
+              <p className="text-xs text-[color:var(--app-shell-muted)]">
+                {messages.columns.chargeCheckout}
+              </p>
+            </div>
+          );
         }
         const remaining = appointment.planRemainingSessions;
         if (remaining == null) {
           return (
-            <span
-              title="This appointment is covered by a session package"
-              className="inline-flex items-center gap-1 rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-800"
-            >
-              Package
-            </span>
+            <div className="space-y-1">
+              <AppointmentSignalPill label={messages.columns.activePlan} tone="accent" />
+              <p className="text-xs text-[color:var(--app-shell-muted)]">
+                {messages.columns.linkedPlan}
+              </p>
+            </div>
           );
         }
         const isLow = remaining <= 2;
         const isExhausted = remaining === 0;
         return (
-          <div className="space-y-0.5">
-            <span
-              title={`Package sessions remaining: ${remaining}`}
-              className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ${
-                isExhausted
-                  ? 'bg-red-100 text-red-800'
-                  : isLow
-                    ? 'bg-amber-100 text-amber-800'
-                    : 'bg-emerald-100 text-emerald-800'
-              }`}
-            >
-              {isExhausted ? '✗ All used' : isLow ? `⚠ ${remaining} left` : `✓ ${remaining} left`}
-            </span>
+          <div className="space-y-1">
+            <div className="flex flex-wrap gap-1.5">
+              <AppointmentSignalPill label={messages.columns.activePlan} tone="success" />
+              <AppointmentSignalPill
+                label={isExhausted ? messages.columns.allUsed : `${remaining} ${messages.columns.leftSuffix}`}
+                tone={isExhausted ? 'danger' : isLow ? 'warning' : 'success'}
+              />
+            </div>
+            {appointment.planCovered ? (
+              <div className="text-xs text-emerald-700">{messages.columns.coveredByPlan}</div>
+            ) : null}
             {appointment.planSessionConsumed ? (
-              <div className="text-xs text-emerald-700">Session used from package</div>
+              <div className="text-xs text-emerald-700">{messages.columns.sessionUsed}</div>
             ) : null}
             {appointment.planSessionConsumed && remaining === 2 ? (
-              <div className="text-xs text-amber-700">Renewal alert triggered</div>
+              <div className="text-xs text-amber-700">{messages.columns.renewalTriggered}</div>
             ) : null}
           </div>
         );
@@ -452,7 +519,7 @@ export function createPetAppointmentColumns({
     },
     {
       key: 'payment',
-      header: 'Payment',
+      header: messages.columns.payment,
       render: (appointment) => {
         const due = appointment.finalAmountDue;
         const servicePrice = appointment.servicePrice;
@@ -465,34 +532,31 @@ export function createPetAppointmentColumns({
 
         return (
           <div className="space-y-0.5 text-xs">
-            {/* Service line */}
             <div className="flex items-center justify-between gap-3">
-              <span className="text-[color:var(--app-shell-muted)]">Service</span>
+              <span className="text-[color:var(--app-shell-muted)]">{messages.columns.serviceAmount}</span>
               {covered ? (
-                <span className="font-medium text-emerald-700">Covered by plan</span>
+                <span className="font-medium text-emerald-700">{messages.columns.coveredByPlan}</span>
               ) : (
                 <span className="font-medium">
-                  {servicePrice != null ? `R$ ${servicePrice.toFixed(2)}` : '—'}
+                  {servicePrice != null ? formatCurrencyForLocale(locale, servicePrice) : '—'}
                 </span>
               )}
             </div>
-            {/* Extras line — only shown when present */}
             {extras != null && extras > 0 ? (
               <div className="flex items-center justify-between gap-3">
                 <span className="text-[color:var(--app-shell-muted)]">
-                  {appointment.extrasDescription ?? 'Extras'}
+                  {hasPetTaxi(appointment) ? messages.columns.petTaxiAmount : appointment.extrasDescription ?? messages.columns.extras}
                 </span>
-                <span className="font-medium">R$ {extras.toFixed(2)}</span>
+                <span className="font-medium">{formatCurrencyForLocale(locale, extras)}</span>
               </div>
             ) : null}
-            {/* Total due */}
             {due != null ? (
               <div className="flex items-center justify-between gap-3 border-t border-border pt-0.5 mt-0.5">
-                <span className="font-semibold text-foreground">Total due</span>
+                <span className="font-semibold text-foreground">{messages.columns.totalDue}</span>
                 <span className={`font-semibold ${due === 0 ? 'text-emerald-700' : 'text-foreground'}`}>
                   {due === 0
-                    ? (appointment.planCovered ? 'Fully covered' : 'R$ 0.00')
-                    : `R$ ${due.toFixed(2)}`}
+                    ? (appointment.planCovered ? messages.columns.fullyCovered : formatCurrencyForLocale(locale, 0))
+                    : formatCurrencyForLocale(locale, due)}
                 </span>
               </div>
             ) : null}
@@ -502,7 +566,7 @@ export function createPetAppointmentColumns({
     },
     {
       key: 'careState',
-      header: 'Care',
+      header: messages.columns.care,
       render: (appointment) => {
         const medicalRecordCount = appointment.medicalRecordCount ?? 0;
         const vaccinationCount = appointment.vaccinationCount ?? 0;
@@ -514,7 +578,7 @@ export function createPetAppointmentColumns({
               <StatusBadge status={resolveAppointmentCareState(appointment)} />
             </div>
             <div className="text-xs text-[color:var(--app-shell-muted)] mt-0.5">
-              {medicalRecordCount} records · {vaccinationCount} vaccines · {prescriptionCount} rx
+              {medicalRecordCount} {messages.columns.records} · {vaccinationCount} {messages.columns.vaccines} · {prescriptionCount} {messages.columns.prescriptions}
             </div>
           </div>
         );
@@ -522,7 +586,7 @@ export function createPetAppointmentColumns({
     },
     {
       key: 'client',
-      header: 'Client',
+      header: messages.columns.client,
       render: (appointment) => {
         const clientLabel = appointment.clientName
           ? appointment.clientName
@@ -538,13 +602,10 @@ export function createPetAppointmentColumns({
           return (
             <div className="space-y-1">
               <p className="font-medium text-[color:var(--app-shell-heading)]">{clientLabel}</p>
-              <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${
-                appointment.clientPlanId
-                  ? 'bg-emerald-100 text-emerald-800'
-                  : 'bg-slate-100 text-slate-700'
-              }`}>
-                {appointment.clientPlanId ? 'Recurring' : 'One-time'}
-              </span>
+              <AppointmentSignalPill
+                label={appointment.clientPlanId ? messages.columns.recurring : messages.columns.oneTime}
+                tone={appointment.clientPlanId ? 'success' : 'neutral'}
+              />
             </div>
           );
         }
@@ -552,20 +613,17 @@ export function createPetAppointmentColumns({
         return (
           <div className="space-y-1">
             <p className="font-medium text-[color:var(--app-shell-heading)]">{clientLabel}</p>
-            <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${
-              appointment.clientPlanId
-                ? 'bg-emerald-100 text-emerald-800'
-                : 'bg-slate-100 text-slate-700'
-            }`}>
-              {appointment.clientPlanId ? 'Recurring' : 'One-time'}
-            </span>
+            <AppointmentSignalPill
+              label={appointment.clientPlanId ? messages.columns.recurring : messages.columns.oneTime}
+              tone={appointment.clientPlanId ? 'success' : 'neutral'}
+            />
           </div>
         );
       }
     },
     {
       key: 'professional',
-      header: 'Professional',
+      header: messages.columns.professional,
       render: (appointment) => (
         <div className="space-y-1">
           <p className="font-medium text-[color:var(--app-shell-heading)]">
@@ -578,15 +636,16 @@ export function createPetAppointmentColumns({
                 professionalsLookupUnavailable
               )}
           </p>
+          <p className="text-xs text-[color:var(--app-shell-muted)]">{messages.columns.professionalDetail}</p>
           <p className="text-xs text-[color:var(--app-shell-muted)]">
-            Commission {appointment.commissionAmount != null ? `R$ ${appointment.commissionAmount.toFixed(2)}` : 'pending setup'}
+            {messages.columns.commission} {appointment.commissionAmount != null ? formatCurrencyForLocale(locale, appointment.commissionAmount) : messages.columns.pendingSetup}
           </p>
         </div>
       )
     },
     {
       key: 'actions',
-      header: 'Actions',
+      header: messages.columns.actions,
       render: (appointment) => (
         <div className="flex gap-2 flex-wrap">
           <PermissionGuard permission="pet.appointment.update">
@@ -595,7 +654,7 @@ export function createPetAppointmentColumns({
               onClick={() => onEdit(appointment)}
               className="ui-inline-button"
             >
-              Edit
+              {commonButtons.edit}
             </button>
           </PermissionGuard>
 
@@ -605,7 +664,7 @@ export function createPetAppointmentColumns({
               onClick={() => onDelete(appointment)}
               className="ui-inline-danger-button"
             >
-              Delete
+              {commonButtons.delete}
             </button>
           </PermissionGuard>
 
@@ -615,7 +674,9 @@ export function createPetAppointmentColumns({
                 href={`/pet/medical-records?appointmentId=${appointment.id}`}
                 className="rounded-lg border border-emerald-300 px-2 py-1 text-xs font-medium text-emerald-700"
               >
-                {resolveAppointmentCareActionLabel(appointment)}
+                {resolveAppointmentCareActionLabel(appointment) === 'PENDING'
+                  ? messages.columns.careNotes
+                  : messages.columns.continueCare}
               </Link>
             </PermissionGuard>
           ) : null}

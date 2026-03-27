@@ -6,6 +6,8 @@ import { PetModuleSubnav } from '@/modules/pet/pet-module-subnav';
 import { StatusBadge } from '@/shared/dashboard/status-badge';
 import { sharedCompactTextClass, sharedPageStackClass } from '@/shared/components/public-visual-system';
 import { ApiClientError } from '@/shared/lib/http';
+import { useAppI18n, useAppMessages } from '@/shared/i18n/app-i18n-provider';
+import { formatCurrencyForLocale, formatDateForLocale, formatTimeForLocale } from '@/shared/i18n/formatters';
 import { resolvePageItems } from '@/shared/lib/pagination';
 import { useFrontendPlatform } from '@/shared/platform/use-frontend-platform';
 import { petService } from '@/shared/services/pet-service';
@@ -66,19 +68,6 @@ function nextCycleRange(date = new Date()) {
   };
 }
 
-function formatCurrency(value: number, currency = 'BRL') {
-  return new Intl.NumberFormat('pt-BR', { style: 'currency', currency }).format(value);
-}
-
-function formatTime(value: string) {
-  return new Date(value).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-}
-
-function formatDate(value?: string | null) {
-  if (!value) return 'Sem data';
-  return new Date(value).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' });
-}
-
 function resolveProjectedDue(appointment: PetAppointment) {
   if (appointment.finalAmountDue != null) {
     return appointment.finalAmountDue;
@@ -94,6 +83,18 @@ function resolveProjectedDue(appointment: PetAppointment) {
 function resolveClientName(clientLookup: Map<string, PetClient>, clientId: string, fallback?: string | null) {
   const client = clientLookup.get(clientId);
   return fallback ?? client?.name ?? client?.fullName ?? clientId;
+}
+
+function hasPetTaxi(appointment: PetAppointment) {
+  return /taxi/i.test(appointment.extrasDescription ?? '');
+}
+
+function hasPickupMessage(appointment: PetAppointment, clientLookup: Map<string, PetClient>) {
+  if (appointment.status.toUpperCase() !== 'COMPLETED') {
+    return false;
+  }
+
+  return Boolean(clientLookup.get(appointment.clientId)?.email);
 }
 
 function OperationsStatCard({
@@ -122,6 +123,30 @@ function OperationsStatCard({
   );
 }
 
+function SignalPill({
+  label,
+  tone = 'neutral'
+}: {
+  label: string;
+  tone?: 'neutral' | 'accent' | 'success' | 'warning' | 'danger';
+}) {
+  const toneClass = tone === 'accent'
+    ? 'bg-blue-100 text-blue-800'
+    : tone === 'success'
+      ? 'bg-emerald-100 text-emerald-800'
+      : tone === 'warning'
+        ? 'bg-amber-100 text-amber-800'
+        : tone === 'danger'
+          ? 'bg-red-100 text-red-800'
+          : 'bg-slate-100 text-slate-700';
+
+  return (
+    <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${toneClass}`}>
+      {label}
+    </span>
+  );
+}
+
 export function PetOperationsDashboard({
   eyebrow,
   title,
@@ -129,6 +154,8 @@ export function PetOperationsDashboard({
   showSubnav = false,
   surfaceLabel
 }: PetOperationsDashboardProps) {
+  const { locale } = useAppI18n();
+  const t = useAppMessages().petDashboard;
   const platform = useFrontendPlatform();
   const [state, setState] = useState<DashboardState>(initialState);
   const [loading, setLoading] = useState(true);
@@ -203,19 +230,19 @@ export function PetOperationsDashboard({
       });
 
       if (todayResult.status === 'rejected') {
-        nextErrors.push(todayResult.reason instanceof ApiClientError ? todayResult.reason.message : 'Nao foi possivel carregar os atendimentos do dia.');
+        nextErrors.push(todayResult.reason instanceof ApiClientError ? todayResult.reason.message : t.errors.appointments);
       }
 
       if (plansResult.status === 'rejected') {
-        nextErrors.push(plansResult.reason instanceof ApiClientError ? plansResult.reason.message : 'Nao foi possivel carregar os planos do workspace.');
+        nextErrors.push(plansResult.reason instanceof ApiClientError ? plansResult.reason.message : t.errors.plans);
       }
 
       if (productsResult.status === 'rejected') {
-        nextErrors.push(productsResult.reason instanceof ApiClientError ? productsResult.reason.message : 'Nao foi possivel carregar o estoque do workspace.');
+        nextErrors.push(productsResult.reason instanceof ApiClientError ? productsResult.reason.message : t.errors.inventory);
       }
 
       if (invoicesResult.status === 'rejected') {
-        nextErrors.push(invoicesResult.reason instanceof ApiClientError ? invoicesResult.reason.message : 'Nao foi possivel carregar a cobranca do workspace.');
+        nextErrors.push(invoicesResult.reason instanceof ApiClientError ? invoicesResult.reason.message : t.errors.billing);
       }
 
       setError(nextErrors.length > 0 ? nextErrors.join(' ') : null);
@@ -225,7 +252,18 @@ export function PetOperationsDashboard({
     return () => {
       active = false;
     };
-  }, [canReadAppointments, canReadClients, canReadDashboard, canReadInvoices, canReadPlans, canReadProducts]);
+  }, [
+    canReadAppointments,
+    canReadClients,
+    canReadDashboard,
+    canReadInvoices,
+    canReadPlans,
+    canReadProducts,
+    t.errors.appointments,
+    t.errors.billing,
+    t.errors.inventory,
+    t.errors.plans
+  ]);
 
   const clientLookup = useMemo(() => {
     return new Map(state.clients.map((client) => [client.id, client]));
@@ -242,7 +280,10 @@ export function PetOperationsDashboard({
   const inProgressPets = todayAppointments.filter((appointment) => appointment.status.toUpperCase() === 'IN_PROGRESS');
   const recurringToday = todayAppointments.filter((appointment) => Boolean(appointment.clientPlanId));
   const oneTimeToday = todayAppointments.filter((appointment) => !appointment.clientPlanId);
-  const todayProjectedDue = todayAppointments.reduce((total, appointment) => total + resolveProjectedDue(appointment), 0);
+  const readyWithPickupMessage = readyPets.filter((appointment) => hasPickupMessage(appointment, clientLookup)).length;
+  const readyMissingPickupMessage = readyPets.length - readyWithPickupMessage;
+  const petTaxiToday = todayAppointments.filter((appointment) => hasPetTaxi(appointment));
+  const petTaxiTodayTotal = petTaxiToday.reduce((total, appointment) => total + (appointment.extrasAmount ?? 0), 0);
 
   const planAlerts = useMemo(
     () => state.plans
@@ -302,7 +343,7 @@ export function PetOperationsDashboard({
   }, [state.completedMonthAppointments]);
 
   if (!canReadDashboard) {
-    return <div className="ui-notice-warning">Voce nao possui permissao para visualizar o dashboard do PetFlow.</div>;
+    return <div className="ui-notice-warning">{t.noPermission}</div>;
   }
 
   return (
@@ -310,208 +351,252 @@ export function PetOperationsDashboard({
       {showSubnav ? <PetModuleSubnav /> : null}
       {surfaceLabel ? <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-accent">{surfaceLabel}</p> : null}
 
-        <PageTitle
-          eyebrow={eyebrow}
-          title={title}
-          description={description}
-          actions={(
-            <>
-              <Link href="/pet/appointments" className="ui-secondary-button">
-                Agenda operacional
-              </Link>
-              <Link href="/pet/invoices" className="ui-primary-button">
-                Cobranca e proximo ciclo
-              </Link>
-            </>
-          )}
-        />
+      <PageTitle
+        eyebrow={eyebrow}
+        title={title}
+        description={description}
+        actions={(
+          <>
+            <Link href="/pet/appointments" className="ui-secondary-button">
+              {t.actions.appointments}
+            </Link>
+            <Link href="/pet/invoices" className="ui-primary-button">
+              {t.actions.billing}
+            </Link>
+          </>
+        )}
+      />
 
-        {loading ? <div className="ui-notice-neutral">Carregando o panorama operacional do PetFlow...</div> : null}
-        {error ? <div className="ui-notice-error">{error}</div> : null}
+      {loading ? <div className="ui-notice-neutral">{t.loading}</div> : null}
+      {error ? <div className="ui-notice-error">{error}</div> : null}
 
-        {!loading ? (
-          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-            <OperationsStatCard
-              label="Atendimentos do dia"
-              value={String(todayAppointments.length)}
-              detail={`${inProgressPets.length} em andamento e ${readyPets.length} pets prontos para liberar.`}
-              tone="accent"
-            />
-            <OperationsStatCard
-              label="Recorrentes vs avulsos"
-              value={`${recurringToday.length} / ${oneTimeToday.length}`}
-              detail="Separacao visivel entre clientes de plano e atendimentos pontuais."
-            />
-            <OperationsStatCard
-              label="Penultimo banho"
-              value={String(planAlerts.filter((plan) => plan.remainingSessions === 2).length)}
-              detail={`${expiringPlans.length} planos expiram nas proximas duas semanas.`}
-              tone={planAlerts.length > 0 ? 'warning' : 'default'}
-            />
-            <OperationsStatCard
-              label="Estoque baixo"
-              value={String(lowStockProducts.length)}
-              detail="Itens abaixo do ponto de reposicao antes de comprometer a operacao."
-              tone={lowStockProducts.length > 0 ? 'warning' : 'default'}
-            />
-            <OperationsStatCard
-              label="Proximo ciclo"
-              value={formatCurrency(nextCycleProjectedDue)}
-              detail={`${nextCycleRecurring} atendimentos do proximo ciclo ja estao conectados a planos recorrentes.`}
-            />
-            <OperationsStatCard
-              label="Comissao / producao"
-              value={formatCurrency(monthCommissionTotal)}
-              detail={`${state.completedMonthAppointments.length} atendimentos concluidos ja geraram comissao neste mes.`}
-            />
-          </div>
-        ) : null}
+      {!loading ? (
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <OperationsStatCard
+            label={t.stats.appointmentsDay}
+            value={String(todayAppointments.length)}
+            detail={`${inProgressPets.length} ${t.stats.appointmentsDayDetail.replace('{ready}', String(readyPets.length))}`}
+            tone="accent"
+          />
+          <OperationsStatCard
+            label={t.stats.recurringVsOneTime}
+            value={`${recurringToday.length} / ${oneTimeToday.length}`}
+            detail={t.stats.recurringVsOneTimeDetail}
+          />
+          <OperationsStatCard
+            label={t.stats.pickupMessage}
+            value={`${readyWithPickupMessage}/${readyPets.length}`}
+            detail={readyMissingPickupMessage > 0
+              ? `${readyMissingPickupMessage} ${t.stats.pickupMessageMissing}`
+              : t.stats.pickupMessageReady}
+          />
+          <OperationsStatCard
+            label={t.stats.penultimateBath}
+            value={String(planAlerts.filter((plan) => plan.remainingSessions === 2).length)}
+            detail={`${expiringPlans.length} ${t.stats.penultimateBathDetail}`}
+            tone={planAlerts.length > 0 ? 'warning' : 'default'}
+          />
+          <OperationsStatCard
+            label={t.stats.petTaxi}
+            value={String(petTaxiToday.length)}
+            detail={petTaxiToday.length > 0
+              ? `${formatCurrencyForLocale(locale, petTaxiTodayTotal)} em extras de coleta e entrega no dia.`
+              : t.stats.petTaxiEmpty}
+          />
+          <OperationsStatCard
+            label={t.stats.lowStock}
+            value={String(lowStockProducts.length)}
+            detail={t.stats.lowStockDetail}
+            tone={lowStockProducts.length > 0 ? 'warning' : 'default'}
+          />
+          <OperationsStatCard
+            label={t.stats.nextCycle}
+            value={formatCurrencyForLocale(locale, nextCycleProjectedDue)}
+            detail={`${nextCycleRecurring} ${t.stats.nextCycleDetail}`}
+          />
+          <OperationsStatCard
+            label={t.stats.commission}
+            value={formatCurrencyForLocale(locale, monthCommissionTotal)}
+            detail={`${state.completedMonthAppointments.length} ${t.stats.commissionDetail}`}
+          />
+        </div>
+      ) : null}
 
-        <div className="grid gap-6 xl:grid-cols-[minmax(0,1.05fr)_minmax(320px,0.95fr)]">
-          <PageSection
-            title="Fila operacional de hoje"
-            description="Use esta fila para contar a historia do dia: recepcao, profissional responsavel, plano associado e valor previsto."
-          >
-            {todayAppointments.length === 0 ? (
-              <div className="ui-notice-neutral">Nenhum atendimento esta agendado para hoje neste workspace.</div>
-            ) : (
-              <div className="space-y-3">
-                {todayAppointments.slice(0, 6).map((appointment) => (
-                  <div key={appointment.id} className="rounded-[1.45rem] border border-border bg-surface-inset p-4 shadow-xs">
-                    <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                      <div>
-                        <p className="text-sm font-semibold text-foreground">
-                          {formatTime(appointment.scheduledAt)} · {appointment.petName ?? appointment.petId}
-                        </p>
-                        <p className={`mt-1 ${sharedCompactTextClass}`}>
-                          {resolveClientName(clientLookup, appointment.clientId, appointment.clientName)} · {appointment.serviceName}
-                        </p>
-                        <p className={`mt-2 ${sharedCompactTextClass}`}>
-                          {appointment.professionalName ?? 'Profissional nao informado'}
-                          {appointment.clientPlanId ? ' · Plano recorrente' : ' · Atendimento avulso'}
-                          {appointment.extrasAmount ? ` · Extras ${formatCurrency(appointment.extrasAmount)}` : ''}
-                        </p>
-                      </div>
-                      <div className="space-y-2">
-                        <StatusBadge status={appointment.status} />
-                        <p className="text-sm font-semibold text-foreground">{formatCurrency(resolveProjectedDue(appointment))}</p>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </PageSection>
-
-          <PageSection
-            tone="muted"
-            title="Renovacao e cobranca"
-            description="Planos perto do fim, cobranças em aberto e o valor projetado para o proximo ciclo."
-          >
-            <div className="space-y-3">
-              <div className="rounded-[1.45rem] border border-border bg-surface px-4 py-4 shadow-xs">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted">Proximo ciclo</p>
-                <p className="mt-2 text-2xl font-semibold tracking-[-0.03em] text-foreground">{formatCurrency(nextCycleProjectedDue)}</p>
-                <p className={`mt-2 ${sharedCompactTextClass}`}>
-                  {nextCycleRecurring} atendimentos ja entram como recorrentes no proximo ciclo.
-                </p>
-              </div>
-
-              {planAlerts.slice(0, 3).map((plan) => (
-                <div key={plan.id} className="rounded-[1.35rem] border border-border bg-surface px-4 py-4 shadow-xs">
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <p className="text-sm font-semibold text-foreground">
-                        {resolveClientName(clientLookup, plan.clientId)} · {plan.planName}
-                      </p>
-                      <p className={`mt-1 ${sharedCompactTextClass}`}>
-                        {plan.remainingSessions} sessoes restantes · expira em {formatDate(plan.expiresAt)}
-                      </p>
-                    </div>
-                    <StatusBadge status={plan.remainingSessions === 2 ? 'warn' : 'pending'} />
-                  </div>
-                </div>
-              ))}
-
-              {openInvoices.slice(0, 3).map((invoice) => (
-                <div key={invoice.id} className="rounded-[1.35rem] border border-border bg-surface px-4 py-4 shadow-xs">
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <p className="text-sm font-semibold text-foreground">
-                        {resolveClientName(clientLookup, invoice.clientId, invoice.clientName)}
-                      </p>
-                      <p className={`mt-1 ${sharedCompactTextClass}`}>
-                        Vence em {formatDate(invoice.dueAt)} · saldo {formatCurrency(invoice.outstandingAmount)}
-                      </p>
-                    </div>
-                    <StatusBadge status={overdueInvoices.some((item) => item.id === invoice.id) ? 'alert' : invoice.status} />
-                  </div>
-                </div>
-              ))}
-
-              {planAlerts.length === 0 && openInvoices.length === 0 ? (
-                <div className="ui-notice-neutral">Sem alertas de plano ou cobranca neste momento.</div>
-              ) : null}
+      <div className="grid gap-6 xl:grid-cols-[minmax(0,1.05fr)_minmax(320px,0.95fr)]">
+        <PageSection
+          title={t.queue.title}
+          description={t.queue.description}
+        >
+          {todayAppointments.length === 0 ? (
+            <div className="ui-notice-neutral">
+              {t.queue.empty}
             </div>
-          </PageSection>
-        </div>
-
-        <div className="grid gap-6 xl:grid-cols-2">
-          <PageSection
-            title="Estoque abaixo do ponto"
-            description="Mantenha shampoo, loja e consumo operacional visiveis antes de perder venda ou atrasar atendimento."
-          >
-            {lowStockProducts.length === 0 ? (
-              <div className="ui-notice-neutral">Nenhum item esta abaixo do ponto de reposicao agora.</div>
-            ) : (
-              <div className="grid gap-3 md:grid-cols-2">
-                {lowStockProducts.slice(0, 4).map((product) => (
-                  <div key={product.id} className="rounded-[1.45rem] border border-border bg-surface-inset p-4 shadow-xs">
-                    <div className="flex items-start justify-between gap-3">
-                      <div>
-                        <p className="text-sm font-semibold text-foreground">{product.name}</p>
-                        <p className={`mt-1 ${sharedCompactTextClass}`}>SKU {product.sku}</p>
+          ) : (
+            <div className="space-y-3">
+              {todayAppointments.slice(0, 6).map((appointment) => (
+                <div key={appointment.id} className="rounded-[1.45rem] border border-border bg-surface-inset p-4 shadow-xs">
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                    <div className="space-y-2">
+                      <p className="text-sm font-semibold text-foreground">
+                        {formatTimeForLocale(locale, appointment.scheduledAt)} · {appointment.petName ?? appointment.petId}
+                      </p>
+                      <p className={sharedCompactTextClass}>
+                        {resolveClientName(clientLookup, appointment.clientId, appointment.clientName)} · {appointment.serviceName}
+                      </p>
+                      <div className="flex flex-wrap gap-1.5">
+                        <SignalPill
+                          label={appointment.clientPlanId ? t.pills.recurring : t.pills.oneTime}
+                          tone={appointment.clientPlanId ? 'success' : 'neutral'}
+                        />
+                        <SignalPill label={appointment.professionalName ?? t.queue.pendingProfessional} tone="accent" />
+                        {appointment.clientPlanId ? <SignalPill label={t.pills.activePlan} tone="success" /> : null}
+                        {appointment.planRemainingSessions === 2 ? <SignalPill label={t.pills.penultimateBath} tone="warning" /> : null}
+                        {hasPetTaxi(appointment) ? <SignalPill label={t.pills.petTaxi} tone="accent" /> : null}
+                        {hasPickupMessage(appointment, clientLookup) ? <SignalPill label={t.pills.pickupSent} tone="success" /> : null}
                       </div>
-                      <StatusBadge status={product.currentQuantity <= product.minimumQuantity ? 'alert' : 'warn'} />
+                      <p className={sharedCompactTextClass}>
+                        {appointment.professionalName ?? t.queue.missingProfessional}
+                        {appointment.extrasAmount ? ` · ${t.queue.extrasLabel} ${formatCurrencyForLocale(locale, appointment.extrasAmount)}` : ''}
+                        {appointment.commissionAmount != null ? ` · ${t.queue.commissionLabel} ${formatCurrencyForLocale(locale, appointment.commissionAmount)}` : ''}
+                      </p>
                     </div>
-                    <p className="mt-4 text-lg font-semibold text-foreground">
-                      {product.currentQuantity} {product.unitOfMeasure}
-                    </p>
-                    <p className={`mt-2 ${sharedCompactTextClass}`}>
-                      Minimo {product.minimumQuantity} · reposicao em {product.reorderPoint}
-                    </p>
-                  </div>
-                ))}
-              </div>
-            )}
-          </PageSection>
-
-          <PageSection
-            tone="muted"
-            title="Producao por profissional"
-            description="Mostre a producao do mes junto com a comissao prevista para reforcar a historia operacional."
-          >
-            {productionByProfessional.length === 0 ? (
-              <div className="ui-notice-neutral">Ainda nao ha atendimentos concluidos suficientes para resumir a producao deste mes.</div>
-            ) : (
-              <div className="space-y-3">
-                {productionByProfessional.map((professional) => (
-                  <div key={professional.professionalName} className="rounded-[1.45rem] border border-border bg-surface px-4 py-4 shadow-xs">
-                    <div className="flex items-start justify-between gap-3">
-                      <div>
-                        <p className="text-sm font-semibold text-foreground">{professional.professionalName}</p>
-                        <p className={`mt-1 ${sharedCompactTextClass}`}>
-                          {professional.completed} atendimentos concluidos neste mes
-                        </p>
-                      </div>
-                      <p className="text-sm font-semibold text-foreground">{formatCurrency(professional.commission)}</p>
+                    <div className="space-y-2">
+                      <StatusBadge status={appointment.status} />
+                      <p className="text-sm font-semibold text-foreground">{formatCurrencyForLocale(locale, resolveProjectedDue(appointment))}</p>
                     </div>
                   </div>
-                ))}
+                </div>
+              ))}
+            </div>
+          )}
+        </PageSection>
+
+        <PageSection
+          tone="muted"
+          title={t.billing.title}
+          description={t.billing.description}
+        >
+          <div className="space-y-3">
+            <div className="rounded-[1.45rem] border border-border bg-surface px-4 py-4 shadow-xs">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted">{t.billing.nextCycleLabel}</p>
+              <p className="mt-2 text-2xl font-semibold tracking-[-0.03em] text-foreground">{formatCurrencyForLocale(locale, nextCycleProjectedDue)}</p>
+              <p className={`mt-2 ${sharedCompactTextClass}`}>
+                {nextCycleRecurring} {t.billing.nextCycleDetail}
+              </p>
+            </div>
+
+            {planAlerts.slice(0, 3).map((plan) => (
+              <div key={plan.id} className="rounded-[1.35rem] border border-border bg-surface px-4 py-4 shadow-xs">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="text-sm font-semibold text-foreground">
+                      {resolveClientName(clientLookup, plan.clientId)} · {plan.planName}
+                    </p>
+                    <p className={`mt-1 ${sharedCompactTextClass}`}>
+                      {plan.remainingSessions} {t.billing.remainingSessions} · {t.billing.expiresAt} {formatDateForLocale(locale, plan.expiresAt, '', { day: '2-digit', month: 'short' })}
+                    </p>
+                    <div className="mt-2 flex flex-wrap gap-1.5">
+                      <SignalPill label={t.pills.activePlan} tone="success" />
+                      {plan.remainingSessions === 2 ? <SignalPill label={t.pills.penultimateBath} tone="warning" /> : null}
+                    </div>
+                  </div>
+                  <StatusBadge status={plan.remainingSessions === 2 ? 'warn' : 'pending'} />
+                </div>
               </div>
-            )}
-          </PageSection>
-        </div>
+            ))}
+
+            {openInvoices.slice(0, 3).map((invoice) => (
+              <div key={invoice.id} className="rounded-[1.35rem] border border-border bg-surface px-4 py-4 shadow-xs">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="text-sm font-semibold text-foreground">
+                      {resolveClientName(clientLookup, invoice.clientId, invoice.clientName)}
+                    </p>
+                    <p className={`mt-1 ${sharedCompactTextClass}`}>
+                      {t.billing.dueAt} {formatDateForLocale(locale, invoice.dueAt, '', { day: '2-digit', month: 'short' })} · {t.billing.balance} {formatCurrencyForLocale(locale, invoice.outstandingAmount)}
+                    </p>
+                    <div className="mt-2 flex flex-wrap gap-1.5">
+                      <SignalPill label={t.pills.cycleCharge} tone="accent" />
+                      {overdueInvoices.some((item) => item.id === invoice.id) ? <SignalPill label={t.pills.overdue} tone="danger" /> : null}
+                    </div>
+                  </div>
+                  <StatusBadge status={overdueInvoices.some((item) => item.id === invoice.id) ? 'alert' : invoice.status} />
+                </div>
+              </div>
+            ))}
+
+            {planAlerts.length === 0 && openInvoices.length === 0 ? (
+              <div className="ui-notice-neutral">{t.billing.noAlerts}</div>
+            ) : null}
+          </div>
+        </PageSection>
       </div>
+
+      <div className="grid gap-6 xl:grid-cols-2">
+        <PageSection
+          title={t.inventory.title}
+          description={t.inventory.description}
+        >
+          {lowStockProducts.length === 0 ? (
+            <div className="ui-notice-neutral">{t.inventory.empty}</div>
+          ) : (
+            <div className="grid gap-3 md:grid-cols-2">
+              {lowStockProducts.slice(0, 4).map((product) => (
+                <div key={product.id} className="rounded-[1.45rem] border border-border bg-surface-inset p-4 shadow-xs">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="text-sm font-semibold text-foreground">{product.name}</p>
+                      <p className={`mt-1 ${sharedCompactTextClass}`}>{t.inventory.sku} {product.sku}</p>
+                    </div>
+                    <StatusBadge status={product.currentQuantity <= product.minimumQuantity ? 'alert' : 'warn'} />
+                  </div>
+                  <p className="mt-4 text-lg font-semibold text-foreground">
+                    {product.currentQuantity} {product.unitOfMeasure}
+                  </p>
+                  <p className={`mt-2 ${sharedCompactTextClass}`}>
+                    {t.inventory.minimum} {product.minimumQuantity} · {t.inventory.reorder} {product.reorderPoint}
+                  </p>
+                  {product.currentQuantity <= product.minimumQuantity ? (
+                    <div className="mt-2 flex flex-wrap gap-1.5">
+                      <SignalPill label={t.pills.belowMinimum} tone="danger" />
+                    </div>
+                  ) : null}
+                </div>
+              ))}
+            </div>
+          )}
+        </PageSection>
+
+        <PageSection
+          tone="muted"
+          title={t.production.title}
+          description={t.production.description}
+        >
+          {productionByProfessional.length === 0 ? (
+            <div className="ui-notice-neutral">{t.production.empty}</div>
+          ) : (
+            <div className="space-y-3">
+              {productionByProfessional.map((professional) => (
+                <div key={professional.professionalName} className="rounded-[1.45rem] border border-border bg-surface px-4 py-4 shadow-xs">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="text-sm font-semibold text-foreground">{professional.professionalName}</p>
+                      <p className={`mt-1 ${sharedCompactTextClass}`}>
+                        {professional.completed} {t.production.completed}
+                      </p>
+                      <div className="mt-2 flex flex-wrap gap-1.5">
+                        <SignalPill label={t.pills.responsible} tone="accent" />
+                        <SignalPill label={t.pills.commission} tone="success" />
+                      </div>
+                    </div>
+                    <p className="text-sm font-semibold text-foreground">{formatCurrencyForLocale(locale, professional.commission)}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </PageSection>
+      </div>
+    </div>
   );
 }

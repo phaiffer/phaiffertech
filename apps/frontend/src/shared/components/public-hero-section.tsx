@@ -1,3 +1,5 @@
+'use client';
+
 import Link from 'next/link';
 import {
   publicEyebrowClass,
@@ -6,6 +8,7 @@ import {
   publicSecondaryButtonClass,
   publicSiteContainerClass,
 } from '@/shared/components/public-visual-system';
+import { useAppMessages } from '@/shared/i18n/app-i18n-provider';
 import type { WebsiteHeroStat } from '@/modules/website/website-content';
 
 type PublicHeroSectionProps = {
@@ -33,6 +36,8 @@ export function PublicHeroSection({
   secondaryCtaLabel,
   secondaryCtaHref,
 }: PublicHeroSectionProps) {
+  const t = useAppMessages().publicHero;
+
   return (
     <section id={id} className="relative overflow-hidden border-b border-border bg-slate-950 text-white">
       <div className="pointer-events-none absolute inset-0">
@@ -76,11 +81,11 @@ export function PublicHeroSection({
             <div className="rounded-[1.7rem] border border-white/10 bg-slate-950/80 p-5">
               <div className="flex items-center justify-between gap-3">
                 <div>
-                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-blue-200">PetFlow demo</p>
-                  <h2 className="mt-2 text-xl font-semibold tracking-[-0.03em] text-white">Operational focus</h2>
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-blue-200">{t.panelEyebrow}</p>
+                  <h2 className="mt-2 text-xl font-semibold tracking-[-0.03em] text-white">{t.panelTitle}</h2>
                 </div>
                 <span className="inline-flex items-center rounded-full border border-emerald-400/20 bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-200">
-                  Live-ready
+                  {t.panelBadge}
                 </span>
               </div>
 
@@ -97,9 +102,9 @@ export function PublicHeroSection({
               </div>
 
               <div className="mt-5 rounded-[1.35rem] border border-blue-400/20 bg-blue-500/10 px-4 py-4">
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-blue-200">Demo story</p>
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-blue-200">{t.storyEyebrow}</p>
                 <p className="mt-2 text-sm leading-6 text-slate-200">
-                  Show the full cycle with PetFlow at the center: appointment, recurring plan, stock pressure, billing, and automated follow-through.
+                  {t.storyText}
                 </p>
               </div>
             </div>

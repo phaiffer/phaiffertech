@@ -14,6 +14,7 @@ import {
   sharedPageStackClass
 } from '@/shared/components/public-visual-system';
 import { StatusBadge } from '@/shared/dashboard/status-badge';
+import { useAppMessages } from '@/shared/i18n/app-i18n-provider';
 import { ApiClientError } from '@/shared/lib/http';
 import { resolvePageItems, resolveTotalItems } from '@/shared/lib/pagination';
 import {
@@ -183,6 +184,13 @@ function formatDirectionLabel(value?: string | null) {
   return formatCategoryLabel(value);
 }
 
+function isOverdueInvoice(invoice: PetInvoice) {
+  return invoice.status !== 'PAID'
+    && invoice.status !== 'CANCELED'
+    && Boolean(invoice.dueAt)
+    && new Date(invoice.dueAt as string).getTime() < Date.now();
+}
+
 function statToneClass(tone: 'default' | 'warning' | 'danger' = 'default') {
   if (tone === 'warning') {
     return 'border-[color:var(--status-warning-weak)] bg-[color:var(--status-warning-soft)]';
@@ -215,6 +223,7 @@ function SnapshotCard({ label, value, detail, tone = 'default' }: SnapshotCardPr
 }
 
 export function PetInvoicesPage() {
+  const messages = useAppMessages().petInvoices;
   const { hasPermission } = usePermissions();
   const [pageData, setPageData] = useState<PageResponse<PetInvoice>>(initialPage);
   const [clients, setClients] = useState<PetClient[]>([]);
@@ -476,12 +485,7 @@ export function PetInvoicesPage() {
   const visibleOpenBalance = rows.reduce((total, invoice) => total + invoice.outstandingAmount, 0);
   const visibleTotalInvoiced = rows.reduce((total, invoice) => total + invoice.totalAmount, 0);
   const paymentCount = rows.reduce((total, invoice) => total + invoice.payments.length, 0);
-  const overdueCount = rows.filter((invoice) => (
-    invoice.status !== 'PAID'
-    && invoice.status !== 'CANCELED'
-    && Boolean(invoice.dueAt)
-    && new Date(invoice.dueAt as string).getTime() < Date.now()
-  )).length;
+  const overdueCount = rows.filter((invoice) => isOverdueInvoice(invoice)).length;
   const nextCycleLabel = formatCycleLabel(getNextCycleDateRange().start);
   const nextCyclePreviewRows = useMemo<NextCyclePreviewRow[]>(() => {
     const appointmentsByClient = new Map<string, PetAppointment[]>();
@@ -544,6 +548,10 @@ export function PetInvoicesPage() {
       };
     }).sort((left, right) => right.projectedDue - left.projectedDue);
   }, [clients, previewAppointments, previewPlans]);
+  const nextCycleProjectedTotal = nextCyclePreviewRows.reduce((total, row) => total + row.projectedDue, 0);
+  const nextCycleRecurringClients = nextCyclePreviewRows.filter((row) => row.billingType === 'Recurring').length;
+  const nextCyclePetTaxiClients = nextCyclePreviewRows.filter((row) => row.petTaxiTotal > 0).length;
+  const nextCyclePenultimateClients = nextCyclePreviewRows.filter((row) => (row.remainingSessions ?? 99) === 2).length;
 
   function scrollToInvoiceForm() {
     document.getElementById('pet-invoice-form-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -757,7 +765,9 @@ export function PetInvoicesPage() {
               clientsLookupUnavailable
             )}
           </p>
-          <p className={`mt-1 ${sharedCompactTextClass}`}>{item.clientId}</p>
+          <p className={`mt-1 ${sharedCompactTextClass}`}>
+            {clients.find((client) => client.id === item.clientId)?.email ?? item.clientId}
+          </p>
         </div>
       )
     },
@@ -770,7 +780,7 @@ export function PetInvoicesPage() {
             {item.businessContextLabel ?? item.description ?? 'Manual invoice'}
           </p>
           <p className={`mt-1 ${sharedCompactTextClass}`}>
-            Linked finance document {item.financeInvoiceId}
+            {item.businessContextType ? `${formatCategoryLabel(item.businessContextType)} flow` : 'Manual finance flow'} • Linked finance document {item.financeInvoiceId}
           </p>
         </div>
       )
@@ -785,6 +795,9 @@ export function PetInvoicesPage() {
           </p>
           <p className={`mt-1 ${sharedCompactTextClass}`}>
             Paid {formatCurrency(item.paidAmount)} • Open {formatCurrency(item.outstandingAmount)}
+          </p>
+          <p className={`mt-1 ${sharedCompactTextClass}`}>
+            {item.outstandingAmount > 0 ? 'Collection still open in the current cycle.' : 'Financially settled.'}
           </p>
         </div>
       )
@@ -802,6 +815,9 @@ export function PetInvoicesPage() {
                 ? `Canceled on ${formatDateTime(item.canceledAt)}`
                 : `${item.payments.length} payment record${item.payments.length === 1 ? '' : 's'}`}
           </p>
+          {isOverdueInvoice(item) ? (
+            <p className="text-xs text-red-700">Collection overdue for this invoice.</p>
+          ) : null}
         </div>
       )
     },
@@ -856,15 +872,15 @@ export function PetInvoicesPage() {
   return (
     <PermissionGuard
       permission="pet.invoice.read"
-      fallback={<div className="ui-notice-warning">You do not have permission to view PetFlow invoices.</div>}
+      fallback={<div className="ui-notice-warning">{messages.noPermission}</div>}
     >
       <div className={sharedPageStackClass}>
         <PetModuleSubnav />
 
         <PageTitle
           eyebrow="PetFlow finance"
-          title="Billing & Next Cycle"
-          description="Show how PetFlow services become invoices, payments, and a clear preview of the next monthly cycle."
+          title={messages.title}
+          description={messages.description}
           actions={(
             <div className="flex flex-wrap gap-2">
               <PermissionGuard permission="pet.invoice.create">
@@ -906,15 +922,15 @@ export function PetInvoicesPage() {
           <SnapshotCard
             label="Operational attention"
             value={String(overdueCount)}
-            detail={`${paymentCount} payment record${paymentCount === 1 ? '' : 's'} currently visible.`}
+            detail={`${paymentCount} payment record${paymentCount === 1 ? '' : 's'} currently visible across this finance slice.`}
             tone={overdueCount > 0 ? 'danger' : 'default'}
           />
         </div>
 
         <PageSection
           tone="muted"
-          title="Invoice filters"
-          description="Refine the finance list by client or lifecycle without losing the commercial story behind each document."
+          title={messages.filtersTitle}
+          description={messages.filtersDescription}
         >
           <div className={sharedFilterToolbarClass}>
             <div className="grid gap-3 xl:grid-cols-[minmax(0,1.35fr)_minmax(0,0.9fr)_minmax(0,0.7fr)] xl:items-end">
@@ -965,7 +981,7 @@ export function PetInvoicesPage() {
 
         <PageSection
           tone="muted"
-          title="Next cycle billing preview"
+          title={messages.nextCycleTitle}
           description={`Use this ${nextCycleLabel} preview to explain recurring clients, covered services, pet taxi extras, and what is already ready for collection.`}
         >
           {previewError ? <div className="ui-notice-warning">{previewError}</div> : null}
@@ -976,53 +992,79 @@ export function PetInvoicesPage() {
               No recurring plan or scheduled appointment is currently shaping the next cycle.
             </div>
           ) : (
-            <div className="grid gap-4 lg:grid-cols-2">
-              {nextCyclePreviewRows.slice(0, 6).map((row) => (
-                <div key={row.reference} className="rounded-3xl border border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-panel)] p-5">
-                  <div className="flex flex-wrap items-start justify-between gap-3">
-                    <div>
-                      <p className="text-sm font-semibold text-[color:var(--app-shell-heading)]">{row.clientName}</p>
-                      <p className={`mt-1 ${sharedCompactTextClass}`}>{row.reference}</p>
+            <div className="space-y-4">
+              <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+                <SnapshotCard
+                  label="Next cycle projected"
+                  value={formatCurrency(nextCycleProjectedTotal)}
+                  detail="Projected charge combining plan-covered visits and extras."
+                />
+                <SnapshotCard
+                  label="Recurring clients"
+                  value={String(nextCycleRecurringClients)}
+                  detail="Clients already anchored in the recurring billing lane."
+                />
+                <SnapshotCard
+                  label="Penultimate alerts"
+                  value={String(nextCyclePenultimateClients)}
+                  detail="Clients reaching the renewal conversation right now."
+                  tone={nextCyclePenultimateClients > 0 ? 'warning' : 'default'}
+                />
+                <SnapshotCard
+                  label="Pet taxi clients"
+                  value={String(nextCyclePetTaxiClients)}
+                  detail="Clients carrying pickup or delivery extras into the next cycle."
+                />
+              </div>
+
+              <div className="grid gap-4 lg:grid-cols-2">
+                {nextCyclePreviewRows.slice(0, 6).map((row) => (
+                  <div key={row.reference} className="rounded-3xl border border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-panel)] p-5">
+                    <div className="flex flex-wrap items-start justify-between gap-3">
+                      <div>
+                        <p className="text-sm font-semibold text-[color:var(--app-shell-heading)]">{row.clientName}</p>
+                        <p className={`mt-1 ${sharedCompactTextClass}`}>{row.reference}</p>
+                      </div>
+                      <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium ${
+                        row.billingType === 'Recurring'
+                          ? 'bg-emerald-100 text-emerald-800'
+                          : 'bg-slate-100 text-slate-700'
+                      }`}>
+                        {row.billingType}
+                      </span>
                     </div>
-                    <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium ${
-                      row.billingType === 'Recurring'
-                        ? 'bg-emerald-100 text-emerald-800'
-                        : 'bg-slate-100 text-slate-700'
-                    }`}>
-                      {row.billingType}
-                    </span>
+
+                    <dl className="mt-4 grid gap-4 sm:grid-cols-2">
+                      <div>
+                        <dt className="text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--app-shell-muted)]">Projected due</dt>
+                        <dd className="mt-1 text-lg font-semibold text-[color:var(--app-shell-heading)]">{formatCurrency(row.projectedDue)}</dd>
+                      </div>
+                      <div>
+                        <dt className="text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--app-shell-muted)]">Appointments</dt>
+                        <dd className="mt-1 text-sm text-[color:var(--app-shell-text)]">
+                          {row.appointmentCount} scheduled / {row.coveredAppointments} covered by plan
+                        </dd>
+                      </div>
+                      <div>
+                        <dt className="text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--app-shell-muted)]">Plan status</dt>
+                        <dd className="mt-1 text-sm text-[color:var(--app-shell-text)]">
+                          {row.planName
+                            ? `${row.planName} · ${row.remainingSessions ?? 0} session(s) left`
+                            : 'One-time charging only'}
+                        </dd>
+                      </div>
+                      <div>
+                        <dt className="text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--app-shell-muted)]">Extras</dt>
+                        <dd className="mt-1 text-sm text-[color:var(--app-shell-text)]">
+                          {formatCurrency(row.extrasTotal)}{row.petTaxiTotal > 0 ? ` · ${formatCurrency(row.petTaxiTotal)} from pet taxi` : ''}
+                        </dd>
+                      </div>
+                    </dl>
+
+                    <p className={`mt-4 ${sharedCompactTextClass}`}>{row.note}</p>
                   </div>
-
-                  <dl className="mt-4 grid gap-4 sm:grid-cols-2">
-                    <div>
-                      <dt className="text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--app-shell-muted)]">Projected due</dt>
-                      <dd className="mt-1 text-lg font-semibold text-[color:var(--app-shell-heading)]">{formatCurrency(row.projectedDue)}</dd>
-                    </div>
-                    <div>
-                      <dt className="text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--app-shell-muted)]">Appointments</dt>
-                      <dd className="mt-1 text-sm text-[color:var(--app-shell-text)]">
-                        {row.appointmentCount} scheduled / {row.coveredAppointments} covered by plan
-                      </dd>
-                    </div>
-                    <div>
-                      <dt className="text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--app-shell-muted)]">Plan status</dt>
-                      <dd className="mt-1 text-sm text-[color:var(--app-shell-text)]">
-                        {row.planName
-                          ? `${row.planName} · ${row.remainingSessions ?? 0} session(s) left`
-                          : 'One-time charging only'}
-                      </dd>
-                    </div>
-                    <div>
-                      <dt className="text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--app-shell-muted)]">Extras</dt>
-                      <dd className="mt-1 text-sm text-[color:var(--app-shell-text)]">
-                        {formatCurrency(row.extrasTotal)}{row.petTaxiTotal > 0 ? ` · ${formatCurrency(row.petTaxiTotal)} from pet taxi` : ''}
-                      </dd>
-                    </div>
-                  </dl>
-
-                  <p className={`mt-4 ${sharedCompactTextClass}`}>{row.note}</p>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
           )}
         </PageSection>
@@ -1113,8 +1155,8 @@ export function PetInvoicesPage() {
         </div>
 
         <PageSection
-          title="Billing pipeline"
-          description="Review invoice status, open balance, and the finance record behind each PetFlow charge."
+          title={messages.pipelineTitle}
+          description={messages.pipelineDescription}
         >
           <DataTable
             columns={columns}
@@ -1125,7 +1167,7 @@ export function PetInvoicesPage() {
             loadingDescription="Preparing the latest PetFlow invoice lifecycle and payment posture for this tenant."
             emptyState={{
               title: 'No invoices yet',
-              description: 'Issue the first invoice after an appointment or service so the finance story becomes visible.',
+              description: 'Issue the first invoice after an appointment or service, then register one payment so open balance, next cycle billing, and finance follow-through become visible.',
               action: hasPermission('pet.invoice.create') ? (
                 <button type="button" onClick={beginCreateInvoice} className="ui-primary-button">
                   Issue first invoice

@@ -4,6 +4,9 @@ import Link from 'next/link';
 import { FormEvent, useCallback, useEffect, useState } from 'react';
 import { PetModuleSubnav } from '@/modules/pet/pet-module-subnav';
 import { PermissionGuard } from '@/shared/auth/PermissionGuard';
+import { StatusBadge } from '@/shared/dashboard/status-badge';
+import { useAppI18n, useAppMessages } from '@/shared/i18n/app-i18n-provider';
+import { formatCurrencyForLocale } from '@/shared/i18n/formatters';
 import { ApiClientError } from '@/shared/lib/http';
 import { resolvePageItems, resolveTotalItems } from '@/shared/lib/pagination';
 import { petService } from '@/shared/services/pet-service';
@@ -28,6 +31,10 @@ const initialPage: PageResponse<PetProfessional> = {
 };
 
 export function PetProfessionalsPage() {
+  const { locale } = useAppI18n();
+  const appMessages = useAppMessages();
+  const messages = appMessages.petProfessionals;
+  const commonButtons = appMessages.common.buttons;
   const [pageData, setPageData] = useState<PageResponse<PetProfessional>>(initialPage);
   const [monthlyAppointments, setMonthlyAppointments] = useState<Record<string, { count: number; total: number }>>({});
   const [loading, setLoading] = useState(false);
@@ -56,11 +63,11 @@ export function PetProfessionalsPage() {
       const result = await petService.listProfessionals(page, pageSize, currentSearch);
       setPageData(result);
     } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : 'Unable to load team members.');
+      setError(err instanceof ApiClientError ? err.message : messages.feedback.loadError);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [messages.feedback.loadError]);
 
   useEffect(() => {
     void load(0, search);
@@ -148,16 +155,16 @@ export function PetProfessionalsPage() {
 
       if (editingId) {
         await petService.updateProfessional(editingId, payload);
-        setSuccess('Professional updated.');
+        setSuccess(messages.feedback.updated);
       } else {
         await petService.createProfessional(payload);
-        setSuccess('Professional added.');
+        setSuccess(messages.feedback.created);
       }
 
       resetForm();
       await load(pageData.page, search);
     } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : 'Unable to save professional.');
+      setError(err instanceof ApiClientError ? err.message : messages.feedback.saveError);
     } finally {
       setSubmitting(false);
     }
@@ -171,10 +178,10 @@ export function PetProfessionalsPage() {
     try {
       await petService.deleteProfessional(deleteCandidate.id);
       setDeleteCandidate(null);
-      setSuccess('Professional removed.');
+      setSuccess(messages.feedback.removed);
       await load(pageData.page, search);
     } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : 'Unable to delete professional.');
+      setError(err instanceof ApiClientError ? err.message : messages.feedback.deleteError);
     }
   }
 
@@ -182,33 +189,78 @@ export function PetProfessionalsPage() {
   const totalItems = resolveTotalItems(pageData);
   const configuredCommissionCount = rows.filter((item) => item.commissionRate != null).length;
   const projectedCommissionTotal = Object.values(monthlyAppointments).reduce((total, item) => total + item.total, 0);
+  const pendingCommissionSetup = rows.filter((item) => item.commissionRate == null).length;
 
   const columns: DataTableColumn<PetProfessional>[] = [
-    { key: 'name', header: 'Name', render: (item) => item.name },
-    { key: 'specialty', header: 'Specialty', render: (item) => item.specialty ?? '-' },
-    { key: 'email', header: 'Email', render: (item) => item.email ?? '-' },
-    { key: 'phone', header: 'Phone', render: (item) => item.phone ?? '-' },
     {
-      key: 'commission',
-      header: 'Taxa de Comissão',
+      key: 'professional',
+      header: messages.columns.professional,
       render: (item) => (
         <div className="space-y-1">
-          <p className="font-medium text-[color:var(--app-shell-heading)]">
-            {item.commissionRate != null
-              ? `${(item.commissionRate * 100).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}%`
-              : '—'}
-          </p>
+          <p className="font-medium text-[color:var(--app-shell-heading)]">{item.name}</p>
           <p className="text-xs text-[color:var(--app-shell-muted)]">
-            {monthlyAppointments[item.id]
-              ? `${monthlyAppointments[item.id].count} completed service(s) · ${monthlyAppointments[item.id].total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}`
-              : 'No completed services this month'}
+            {item.specialty ?? messages.columns.defaultSpecialty}
           </p>
         </div>
       )
     },
     {
+      key: 'contact',
+      header: messages.columns.contact,
+      render: (item) => (
+        <div className="space-y-1">
+          <p className="text-sm text-[color:var(--app-shell-heading)]">{item.email ?? messages.columns.noEmail}</p>
+          <p className="text-xs text-[color:var(--app-shell-muted)]">{item.phone ?? messages.columns.noPhone}</p>
+        </div>
+      )
+    },
+    {
+      key: 'commission',
+      header: messages.columns.commission,
+      render: (item) => (
+        <div className="space-y-1">
+          <p className="font-medium text-[color:var(--app-shell-heading)]">
+            {item.commissionRate != null
+              ? `${(item.commissionRate * 100).toLocaleString(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}%`
+              : '—'}
+          </p>
+          <p className="text-xs text-[color:var(--app-shell-muted)]">
+            {monthlyAppointments[item.id]
+              ? `${monthlyAppointments[item.id].count} · ${formatCurrencyForLocale(locale, monthlyAppointments[item.id].total)}`
+              : messages.columns.noCompletedServices}
+          </p>
+          <p className="text-xs text-[color:var(--app-shell-muted)]">
+            {item.commissionRate != null
+              ? messages.columns.ruleVisible
+              : messages.columns.defineRate}
+          </p>
+        </div>
+      )
+    },
+    {
+      key: 'status',
+      header: messages.columns.status,
+      render: (item) => {
+        const monthlySummary = monthlyAppointments[item.id];
+        const status = item.commissionRate == null ? 'warn' : monthlySummary ? 'active' : 'neutral';
+
+        return (
+          <div className="space-y-2">
+            <StatusBadge status={status} />
+            <p className="text-xs text-[color:var(--app-shell-muted)]">
+              {item.commissionRate == null
+                ? messages.columns.needsSetup
+                : monthlySummary
+                  ? messages.columns.alreadyGenerating
+                  : messages.columns.readyForNextVisit}
+            </p>
+          </div>
+        );
+      }
+    },
+    {
       key: 'actions',
-      header: 'Actions',
+      header: messages.columns.actions,
       render: (item) => (
         <div className="flex gap-2">
           <PermissionGuard permission="pet.professional.update">
@@ -217,7 +269,7 @@ export function PetProfessionalsPage() {
               onClick={() => beginEdit(item)}
               className="ui-inline-button"
             >
-              Edit
+              {commonButtons.edit}
             </button>
           </PermissionGuard>
           <PermissionGuard permission="pet.professional.delete">
@@ -226,7 +278,7 @@ export function PetProfessionalsPage() {
               onClick={() => setDeleteCandidate(item)}
               className="ui-inline-danger-button"
             >
-              Delete
+              {commonButtons.delete}
             </button>
           </PermissionGuard>
         </div>
@@ -237,54 +289,63 @@ export function PetProfessionalsPage() {
   return (
     <PermissionGuard
       permission="pet.professional.read"
-      fallback={<div className="ui-notice-warning">You do not have permission to view team members.</div>}
+      fallback={<div className="ui-notice-warning">{messages.noPermission}</div>}
     >
       <div className="space-y-5">
         <PetModuleSubnav />
 
         <PageTitle
-          eyebrow="PetFlow workspace"
-          title="Professionals & Commission"
-          description="Keep groomers and attendants visible with commission rules and current-month payout context."
+          eyebrow={messages.eyebrow}
+          title={messages.title}
+          description={messages.description}
           actions={(
             <Link href="/pet/commissions" className="ui-secondary-button">
-              Open commission summary
+              {messages.openSummary}
             </Link>
           )}
         />
 
         <PageSection
           tone="muted"
-          title="Commission snapshot"
-          description="Use this summary to explain who is configured, who already generated commission, and what is projected this month."
+          title={messages.snapshotTitle}
+          description={messages.snapshotDescription}
         >
-          <div className="grid gap-3 md:grid-cols-3">
+          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
             <div className="rounded-2xl border border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-panel)] px-4 py-3">
-              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--app-shell-muted)]">Professionals</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--app-shell-muted)]">{messages.metrics.professionals}</p>
               <p className="mt-2 text-lg font-semibold text-[color:var(--app-shell-heading)]">{totalItems}</p>
             </div>
             <div className="rounded-2xl border border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-panel)] px-4 py-3">
-              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--app-shell-muted)]">Commission configured</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--app-shell-muted)]">{messages.metrics.configured}</p>
               <p className="mt-2 text-lg font-semibold text-[color:var(--app-shell-heading)]">{configuredCommissionCount}</p>
             </div>
             <div className="rounded-2xl border border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-panel)] px-4 py-3">
-              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--app-shell-muted)]">Projected this month</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--app-shell-muted)]">{messages.metrics.projected}</p>
               <p className="mt-2 text-lg font-semibold text-[color:var(--app-shell-heading)]">
-                {summaryLoading ? 'Loading...' : projectedCommissionTotal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                {summaryLoading ? messages.metrics.loading : formatCurrencyForLocale(locale, projectedCommissionTotal)}
               </p>
             </div>
+            <div className="rounded-2xl border border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-panel)] px-4 py-3">
+              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--app-shell-muted)]">{messages.metrics.needSetup}</p>
+              <p className="mt-2 text-lg font-semibold text-[color:var(--app-shell-heading)]">{pendingCommissionSetup}</p>
+            </div>
           </div>
+          {pendingCommissionSetup > 0 ? (
+            <div className="ui-notice-warning mt-5">
+              {messages.warnings.pendingSetup.replace('{count}', String(pendingCommissionSetup))}
+            </div>
+          ) : null}
         </PageSection>
 
         <div className="grid gap-3 ui-surface-panel p-4 md:grid-cols-[1fr_auto]">
-          <SearchBar value={searchInput} onChange={setSearchInput} placeholder="Name, specialty, license or contact" />
+          <SearchBar value={searchInput} onChange={setSearchInput} placeholder={messages.search.placeholder} />
           <div className="flex items-end gap-2 pb-0.5">
             <button
               type="button"
               onClick={() => setSearch(searchInput)}
               className="ui-primary-button"
             >
-              Search
+              {messages.search.apply}
             </button>
             <button
               type="button"
@@ -294,25 +355,32 @@ export function PetProfessionalsPage() {
               }}
               className="ui-inline-button"
             >
-              Clear
+              {messages.search.clear}
             </button>
           </div>
         </div>
 
         <PermissionGuard permission={editingId ? 'pet.professional.update' : 'pet.professional.create'}>
           <form onSubmit={handleSubmit} className="grid gap-3 ui-surface-panel p-4 md:grid-cols-2">
-            <FormInput label="Name" value={name} onChange={setName} required />
-            <FormInput label="Specialty" value={specialty} onChange={setSpecialty} />
-            <FormInput label="License number" value={licenseNumber} onChange={setLicenseNumber} />
-            <FormInput label="Phone" value={phone} onChange={setPhone} />
-            <FormInput label="Email" value={email} onChange={setEmail} type="email" />
+            <FormInput label={messages.form.name} value={name} onChange={setName} required />
+            <FormInput label={messages.form.specialty} value={specialty} onChange={setSpecialty} />
+            <FormInput label={messages.form.licenseNumber} value={licenseNumber} onChange={setLicenseNumber} />
+            <FormInput label={messages.form.phone} value={phone} onChange={setPhone} />
+            <FormInput label={messages.form.email} value={email} onChange={setEmail} type="email" />
             <FormInput
-              label="Taxa de comissão (%)"
+              label={messages.form.commissionRate}
               value={commissionRate}
               onChange={setCommissionRate}
               type="number"
-              placeholder="ex: 15"
+              placeholder={messages.form.commissionRatePlaceholder}
             />
+
+            <div className="md:col-span-2 rounded-2xl border border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-panel-muted)] p-4">
+              <p className="text-sm font-medium text-[color:var(--app-shell-heading)]">{messages.form.reminderTitle}</p>
+              <p className="mt-1 text-xs text-[color:var(--app-shell-muted)]">
+                {messages.form.reminderDescription}
+              </p>
+            </div>
 
             <div className="md:col-span-2 flex gap-2">
               <button
@@ -320,7 +388,7 @@ export function PetProfessionalsPage() {
                 disabled={submitting}
                 className="ui-primary-button"
               >
-                {submitting ? 'Saving...' : editingId ? 'Update professional' : 'Add professional'}
+                {submitting ? messages.form.saving : editingId ? messages.form.update : messages.form.create}
               </button>
               {editingId ? (
                 <button
@@ -328,7 +396,7 @@ export function PetProfessionalsPage() {
                   onClick={resetForm}
                   className="ui-secondary-button"
                 >
-                  Cancel
+                  {messages.form.cancel}
                 </button>
               ) : null}
             </div>
@@ -338,13 +406,34 @@ export function PetProfessionalsPage() {
         {error ? <div className="ui-notice-error">{error}</div> : null}
         {success ? <div className="ui-notice-success">{success}</div> : null}
 
-        <DataTable columns={columns} rows={rows} getRowKey={(row) => row.id} loading={loading} emptyMessage="No team members found. Add the first professional to enable appointment assignments." />
+        <DataTable
+          columns={columns}
+          rows={rows}
+          getRowKey={(row) => row.id}
+          loading={loading}
+          emptyState={{
+            title: messages.table.emptyTitle,
+            description: messages.table.emptyDescription,
+            action: (
+              <button
+                type="button"
+                onClick={() => {
+                  resetForm();
+                  document.querySelector('form')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }}
+                className="ui-primary-button"
+              >
+                {messages.table.addFirst}
+              </button>
+            )
+          }}
+        />
         <Pagination page={pageData.page} totalPages={pageData.totalPages} totalElements={totalItems} onPageChange={(page) => load(page, search)} />
 
         <ConfirmDialog
           open={deleteCandidate !== null}
-          title="Remove team member?"
-          description={deleteCandidate ? `"${deleteCandidate.name}" will be removed from this workspace.` : undefined}
+          title={messages.dialog.title}
+          description={deleteCandidate ? messages.dialog.description.replace('{name}', deleteCandidate.name) : undefined}
           onConfirm={handleConfirmDelete}
           onCancel={() => setDeleteCandidate(null)}
         />

@@ -1,13 +1,16 @@
 'use client';
 
 import { PetOperationsDashboard } from '@/modules/pet/pet-operations-dashboard';
+import { useAppMessages } from '@/shared/i18n/app-i18n-provider';
 
 export function PetDashboardPage() {
+  const messages = useAppMessages().dashboardRoutes;
+
   return (
     <PetOperationsDashboard
-      eyebrow="PetFlow dashboard"
-      title="Operations Dashboard"
-      description="Acompanhe fila do dia, pets prontos, recorrencia, estoque baixo, cobranca do proximo ciclo e comissao em uma unica leitura operacional."
+      eyebrow={messages.petDashboardEyebrow}
+      title={messages.petDashboardTitle}
+      description={messages.petDashboardDescription}
       showSubnav
     />
   );
