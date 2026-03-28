@@ -13,7 +13,6 @@ import { useFrontendPlatform } from '@/shared/platform/use-frontend-platform';
 import { petService } from '@/shared/services/pet-service';
 import { ClientPlan, PetAppointment, PetClient, PetInvoice, PetProduct } from '@/shared/types/pet';
 import { PageSection } from '@/shared/ui/page-section';
-import { PageTitle } from '@/shared/ui/page-title';
 
 type PetOperationsDashboardProps = {
   eyebrow: string;
@@ -109,16 +108,16 @@ function OperationsStatCard({
   tone?: StatTone;
 }) {
   const toneClass = tone === 'accent'
-    ? 'border-[color:var(--accent)] bg-accent-muted'
+    ? 'border-transparent bg-[linear-gradient(135deg,var(--accent),color-mix(in_srgb,var(--accent)_82%,#0f172a_18%))] text-white shadow-[0_18px_40px_-24px_color-mix(in_srgb,var(--accent)_45%,transparent)]'
     : tone === 'warning'
-      ? 'border-warning/30 bg-warning-muted'
-      : 'border-border bg-surface';
+      ? 'border-warning/20 bg-white'
+      : 'border-slate-200 bg-white';
 
   return (
-    <div className={`rounded-[1.6rem] border p-4 shadow-xs ${toneClass}`}>
-      <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted">{label}</p>
-      <p className="mt-3 text-2xl font-semibold tracking-[-0.03em] text-foreground">{value}</p>
-      <p className={`mt-2 ${sharedCompactTextClass}`}>{detail}</p>
+    <div className={`rounded-[1.5rem] border p-5 shadow-xs ${toneClass}`}>
+      <p className={`text-[11px] font-semibold uppercase tracking-[0.18em] ${tone === 'accent' ? 'text-white/72' : 'text-slate-600'}`}>{label}</p>
+      <p className={`mt-4 text-3xl font-semibold tracking-[-0.04em] ${tone === 'accent' ? 'text-white' : 'text-foreground'}`}>{value}</p>
+      <p className={`mt-2 text-sm leading-6 ${tone === 'accent' ? 'text-white/80' : 'text-slate-600'}`}>{detail}</p>
     </div>
   );
 }
@@ -141,7 +140,7 @@ function SignalPill({
           : 'bg-slate-100 text-slate-700';
 
   return (
-    <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${toneClass}`}>
+    <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium ${toneClass}`}>
       {label}
     </span>
   );
@@ -279,11 +278,9 @@ export function PetOperationsDashboard({
   const readyPets = todayAppointments.filter((appointment) => appointment.status.toUpperCase() === 'COMPLETED');
   const inProgressPets = todayAppointments.filter((appointment) => appointment.status.toUpperCase() === 'IN_PROGRESS');
   const recurringToday = todayAppointments.filter((appointment) => Boolean(appointment.clientPlanId));
-  const oneTimeToday = todayAppointments.filter((appointment) => !appointment.clientPlanId);
   const readyWithPickupMessage = readyPets.filter((appointment) => hasPickupMessage(appointment, clientLookup)).length;
   const readyMissingPickupMessage = readyPets.length - readyWithPickupMessage;
   const petTaxiToday = todayAppointments.filter((appointment) => hasPetTaxi(appointment));
-  const petTaxiTodayTotal = petTaxiToday.reduce((total, appointment) => total + (appointment.extrasAmount ?? 0), 0);
 
   const planAlerts = useMemo(
     () => state.plans
@@ -322,6 +319,7 @@ export function PetOperationsDashboard({
   const nextCycleProjectedDue = state.nextCycleAppointments.reduce((total, appointment) => total + resolveProjectedDue(appointment), 0);
   const nextCycleRecurring = state.nextCycleAppointments.filter((appointment) => Boolean(appointment.clientPlanId)).length;
   const monthCommissionTotal = state.completedMonthAppointments.reduce((total, appointment) => total + (appointment.commissionAmount ?? 0), 0);
+  const penultimateBathCount = planAlerts.filter((plan) => plan.remainingSessions === 2).length;
 
   const productionByProfessional = useMemo(() => {
     const grouped = new Map<string, { professionalName: string; completed: number; commission: number }>();
@@ -349,29 +347,29 @@ export function PetOperationsDashboard({
   return (
     <div className={sharedPageStackClass}>
       {showSubnav ? <PetModuleSubnav /> : null}
-      {surfaceLabel ? <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-accent">{surfaceLabel}</p> : null}
 
-      <PageTitle
-        eyebrow={eyebrow}
-        title={title}
-        description={description}
-        actions={(
-          <>
-            <Link href="/pet/appointments" className="ui-secondary-button">
-              {t.actions.appointments}
-            </Link>
-            <Link href="/pet/invoices" className="ui-primary-button">
-              {t.actions.billing}
-            </Link>
-          </>
-        )}
-      />
+      <section className="flex flex-col gap-4 rounded-[1.75rem] border border-slate-200 bg-white p-5 shadow-xs lg:flex-row lg:items-center lg:justify-between lg:p-6">
+        <div className="max-w-3xl">
+          {surfaceLabel ? <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-accent">{surfaceLabel}</p> : null}
+          <p className={`${surfaceLabel ? 'mt-2 ' : ''}text-xs font-semibold uppercase tracking-[0.18em] text-slate-600`}>{eyebrow}</p>
+          <h2 className="mt-2 text-3xl font-semibold tracking-[-0.04em] text-foreground">{title}</h2>
+          <p className="mt-3 text-sm leading-7 text-slate-600">{description}</p>
+        </div>
+        <div className="flex flex-wrap items-center gap-3">
+          <Link href="/pet/appointments" className="ui-secondary-button">
+            {t.actions.appointments}
+          </Link>
+          <Link href="/pet/invoices" className="ui-primary-button">
+            {t.actions.billing}
+          </Link>
+        </div>
+      </section>
 
       {loading ? <div className="ui-notice-neutral">{t.loading}</div> : null}
       {error ? <div className="ui-notice-error">{error}</div> : null}
 
       {!loading ? (
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
           <OperationsStatCard
             label={t.stats.appointmentsDay}
             value={String(todayAppointments.length)}
@@ -379,35 +377,10 @@ export function PetOperationsDashboard({
             tone="accent"
           />
           <OperationsStatCard
-            label={t.stats.recurringVsOneTime}
-            value={`${recurringToday.length} / ${oneTimeToday.length}`}
-            detail={t.stats.recurringVsOneTimeDetail}
-          />
-          <OperationsStatCard
-            label={t.stats.pickupMessage}
-            value={`${readyWithPickupMessage}/${readyPets.length}`}
-            detail={readyMissingPickupMessage > 0
-              ? `${readyMissingPickupMessage} ${t.stats.pickupMessageMissing}`
-              : t.stats.pickupMessageReady}
-          />
-          <OperationsStatCard
             label={t.stats.penultimateBath}
-            value={String(planAlerts.filter((plan) => plan.remainingSessions === 2).length)}
+            value={String(penultimateBathCount)}
             detail={`${expiringPlans.length} ${t.stats.penultimateBathDetail}`}
             tone={planAlerts.length > 0 ? 'warning' : 'default'}
-          />
-          <OperationsStatCard
-            label={t.stats.petTaxi}
-            value={String(petTaxiToday.length)}
-            detail={petTaxiToday.length > 0
-              ? `${formatCurrencyForLocale(locale, petTaxiTodayTotal)} em extras de coleta e entrega no dia.`
-              : t.stats.petTaxiEmpty}
-          />
-          <OperationsStatCard
-            label={t.stats.lowStock}
-            value={String(lowStockProducts.length)}
-            detail={t.stats.lowStockDetail}
-            tone={lowStockProducts.length > 0 ? 'warning' : 'default'}
           />
           <OperationsStatCard
             label={t.stats.nextCycle}
@@ -422,7 +395,7 @@ export function PetOperationsDashboard({
         </div>
       ) : null}
 
-      <div className="grid gap-6 xl:grid-cols-[minmax(0,1.05fr)_minmax(320px,0.95fr)]">
+      <div className="grid gap-6 xl:grid-cols-[minmax(0,1.55fr)_minmax(320px,1fr)]">
         <PageSection
           title={t.queue.title}
           description={t.queue.description}
@@ -434,7 +407,7 @@ export function PetOperationsDashboard({
           ) : (
             <div className="space-y-3">
               {todayAppointments.slice(0, 6).map((appointment) => (
-                <div key={appointment.id} className="rounded-[1.45rem] border border-border bg-surface-inset p-4 shadow-xs">
+                <div key={appointment.id} className="rounded-[1.35rem] border border-slate-200 bg-slate-50 p-4">
                   <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                     <div className="space-y-2">
                       <p className="text-sm font-semibold text-foreground">
@@ -477,16 +450,26 @@ export function PetOperationsDashboard({
           description={t.billing.description}
         >
           <div className="space-y-3">
-            <div className="rounded-[1.45rem] border border-border bg-surface px-4 py-4 shadow-xs">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted">{t.billing.nextCycleLabel}</p>
+            <div className="rounded-[1.35rem] border border-slate-200 bg-white px-4 py-4">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-600">{t.billing.nextCycleLabel}</p>
               <p className="mt-2 text-2xl font-semibold tracking-[-0.03em] text-foreground">{formatCurrencyForLocale(locale, nextCycleProjectedDue)}</p>
               <p className={`mt-2 ${sharedCompactTextClass}`}>
                 {nextCycleRecurring} {t.billing.nextCycleDetail}
               </p>
+              <div className="mt-3 flex flex-wrap gap-1.5">
+                <SignalPill label={`${recurringToday.length} ${t.pills.recurring}`} tone="success" />
+                {petTaxiToday.length > 0 ? <SignalPill label={`${petTaxiToday.length} ${t.pills.petTaxi}`} tone="accent" /> : null}
+                {readyPets.length > 0 ? (
+                  <SignalPill
+                    label={readyMissingPickupMessage > 0 ? `${readyMissingPickupMessage} ${t.pills.pickupPending}` : t.pills.pickupSent}
+                    tone={readyMissingPickupMessage > 0 ? 'warning' : 'success'}
+                  />
+                ) : null}
+              </div>
             </div>
 
             {planAlerts.slice(0, 3).map((plan) => (
-              <div key={plan.id} className="rounded-[1.35rem] border border-border bg-surface px-4 py-4 shadow-xs">
+              <div key={plan.id} className="rounded-[1.25rem] border border-slate-200 bg-white px-4 py-4">
                 <div className="flex items-start justify-between gap-3">
                   <div>
                     <p className="text-sm font-semibold text-foreground">
@@ -506,7 +489,7 @@ export function PetOperationsDashboard({
             ))}
 
             {openInvoices.slice(0, 3).map((invoice) => (
-              <div key={invoice.id} className="rounded-[1.35rem] border border-border bg-surface px-4 py-4 shadow-xs">
+              <div key={invoice.id} className="rounded-[1.25rem] border border-slate-200 bg-white px-4 py-4">
                 <div className="flex items-start justify-between gap-3">
                   <div>
                     <p className="text-sm font-semibold text-foreground">
@@ -542,7 +525,7 @@ export function PetOperationsDashboard({
           ) : (
             <div className="grid gap-3 md:grid-cols-2">
               {lowStockProducts.slice(0, 4).map((product) => (
-                <div key={product.id} className="rounded-[1.45rem] border border-border bg-surface-inset p-4 shadow-xs">
+                <div key={product.id} className="rounded-[1.35rem] border border-slate-200 bg-slate-50 p-4">
                   <div className="flex items-start justify-between gap-3">
                     <div>
                       <p className="text-sm font-semibold text-foreground">{product.name}</p>
@@ -577,7 +560,7 @@ export function PetOperationsDashboard({
           ) : (
             <div className="space-y-3">
               {productionByProfessional.map((professional) => (
-                <div key={professional.professionalName} className="rounded-[1.45rem] border border-border bg-surface px-4 py-4 shadow-xs">
+                <div key={professional.professionalName} className="rounded-[1.35rem] border border-slate-200 bg-white px-4 py-4">
                   <div className="flex items-start justify-between gap-3">
                     <div>
                       <p className="text-sm font-semibold text-foreground">{professional.professionalName}</p>

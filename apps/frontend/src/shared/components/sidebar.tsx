@@ -1,11 +1,10 @@
 'use client';
 
-/* eslint-disable @next/next/no-img-element */
-
 import { ReactNode, useMemo } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/shared/auth/use-auth';
+import { BrandMark } from '@/shared/components/brand-assets';
 import { petSubmoduleEntitlements } from '@/shared/entitlements/tenant-entitlements';
 import { useAppMessages } from '@/shared/i18n/app-i18n-provider';
 import { useFrontendPlatform } from '@/shared/platform/use-frontend-platform';
@@ -110,25 +109,21 @@ export function Sidebar() {
   );
 
   return (
-    <aside className="sticky top-0 hidden h-screen w-72 flex-col border-r border-border bg-[linear-gradient(180deg,rgba(255,255,255,0.96),rgba(248,250,252,0.94))] lg:flex">
+    <aside className="sticky top-0 hidden h-screen w-72 flex-col border-r border-slate-200 bg-white lg:flex">
       <div className="border-b border-border px-4 py-5">
         <Link href="/" className="flex items-center gap-3">
-          <div className="flex h-11 w-11 items-center justify-center rounded-[1.15rem] border border-border bg-[linear-gradient(180deg,#ffffff,#eff6ff)] p-2 shadow-sm">
-            <img
-              src="/PhaifferTech_logo.png"
-              alt="Phaiffer Tech"
-              className="h-full w-full object-contain"
-            />
-          </div>
+          <BrandMark className="h-12 w-12 shrink-0" imageClassName="scale-[1.08]" />
           <div className="min-w-0">
-            <p className="truncate text-sm font-semibold text-foreground">PhaifferTech</p>
-            <p className="truncate text-[11px] font-medium uppercase tracking-[0.18em] text-muted">{messages.focusLabel}</p>
+            <p className="truncate text-base font-semibold tracking-[-0.02em] text-foreground">PetFlow</p>
+            <p className="mt-1 truncate text-[11px] font-medium uppercase tracking-[0.18em] text-slate-600">
+              by PhaifferTech
+            </p>
           </div>
         </Link>
-        <div className="mt-4 rounded-[1.3rem] border border-border bg-surface-inset p-3 shadow-xs">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted">{messages.workspaceLabel}</p>
+        <div className="mt-4 rounded-[1.25rem] border border-slate-200 bg-slate-50 p-3">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500">{messages.workspaceLabel}</p>
           <p className="mt-1 truncate text-sm font-semibold text-foreground">{branding.scopeName}</p>
-          <p className="mt-1 truncate text-xs text-muted">{workspace.accessLabel}</p>
+          <p className="mt-1 truncate text-xs text-slate-600">{workspace.accessLabel}</p>
         </div>
       </div>
 
@@ -137,7 +132,7 @@ export function Sidebar() {
           {groupedItems.map((group) => (
             <div key={group.key}>
               {group.key === 'core' || group.items.length > 1 ? (
-                <p className="px-3 text-[11px] font-semibold uppercase tracking-[0.16em] text-muted">
+                <p className="px-3 text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">
                   {group.key === 'core'
                     ? messages.workspaceLabel
                     : group.key === 'pet'
@@ -156,16 +151,12 @@ export function Sidebar() {
                       href={item.href}
                       className={`group flex items-center gap-3 rounded-xl border px-3 py-2.5 text-sm transition-all duration-200 ${
                         active
-                          ? 'text-white shadow-sm'
-                          : 'border-transparent text-muted hover:border-border hover:bg-surface-inset hover:text-foreground'
+                          ? 'border-transparent bg-[color:var(--accent)] text-white shadow-sm'
+                          : 'border-transparent text-slate-600 hover:border-slate-200 hover:bg-slate-50 hover:text-foreground'
                       }`}
-                      style={active ? {
-                        background: 'linear-gradient(135deg, var(--accent), color-mix(in srgb, var(--accent) 76%, #0f172a 24%))',
-                        borderColor: 'color-mix(in srgb, var(--accent) 30%, var(--border))'
-                      } : undefined}
                     >
                       <span
-                        className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-[0.9rem] border border-border bg-surface shadow-xs transition-colors"
+                        className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-[0.9rem] border border-slate-200 bg-slate-50 transition-colors"
                         style={active ? {
                           borderColor: 'rgba(255,255,255,0.18)',
                           backgroundColor: 'rgba(255,255,255,0.12)',
@@ -185,21 +176,21 @@ export function Sidebar() {
       </nav>
 
       <div className="border-t border-border p-4">
-        <div className="mb-4 rounded-[1.3rem] border border-border bg-surface p-3 shadow-xs">
+        <div className="mb-4 rounded-[1.25rem] border border-slate-200 bg-slate-50 p-3">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full border border-border bg-surface-inset text-sm font-semibold text-foreground">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-sm font-semibold text-foreground">
               {getInitials(user?.fullName)}
             </div>
             <div className="min-w-0">
               <p className="truncate text-sm font-medium text-foreground">{user?.fullName}</p>
-              <p className="truncate text-[11px] text-muted">{user?.email}</p>
+              <p className="truncate text-[11px] text-slate-500">{user?.email}</p>
             </div>
           </div>
         </div>
         <button
           type="button"
           onClick={() => void signOut()}
-          className="flex w-full items-center justify-center gap-2 rounded-xl border border-border bg-surface px-3 py-2.5 text-sm text-muted shadow-xs transition-colors hover:border-destructive hover:bg-destructive-muted hover:text-destructive hover:shadow-sm"
+          className="flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-600 transition-colors hover:border-destructive hover:bg-destructive-muted hover:text-destructive"
         >
           <IconLogout className="h-4 w-4" />
           <span>{messages.signOut}</span>

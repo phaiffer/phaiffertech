@@ -87,11 +87,10 @@ export function WebsiteStatStrip({ items }: WebsiteStatStripProps) {
   return (
     <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
       {items.map((item) => (
-        <div key={`${item.value}-${item.label}`} className={`${publicCardSurfaceClass} p-6`}>
-          <div className="mb-4 h-1 w-8 rounded-full bg-accent" />
-          <p className="text-2xl font-semibold tracking-tight text-foreground">{item.value}</p>
-          <p className="mt-3 text-xs font-medium uppercase tracking-wider text-muted">{item.label}</p>
-          <p className="mt-2 text-sm leading-relaxed text-muted">{item.description}</p>
+        <div key={`${item.value}-${item.label}`} className={`${publicCardSurfaceClass} rounded-[1.75rem] p-7`}>
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--accent)]">{item.label}</p>
+          <p className="mt-4 text-3xl font-semibold tracking-[-0.04em] text-foreground">{item.value}</p>
+          <p className="mt-3 text-sm leading-7 text-muted">{item.description}</p>
         </div>
       ))}
     </div>
@@ -104,18 +103,17 @@ export function WebsiteCardGrid({ items }: WebsiteCardGridProps) {
       {items.map((item) => (
         <article
           key={`${item.eyebrow}-${item.title}`}
-          className={`${publicInteractiveCardSurfaceClass} group flex h-full flex-col justify-between p-6`}
+          className={`${publicInteractiveCardSurfaceClass} group flex h-full flex-col justify-between rounded-[1.75rem] p-7`}
         >
-          <div className="mb-4 h-1 w-8 rounded-full bg-border transition-colors group-hover:bg-accent" />
           <p className={publicEyebrowClass}>{item.eyebrow}</p>
-          <h3 className="mt-2 text-lg font-semibold tracking-tight text-foreground">{item.title}</h3>
-          <p className="mt-3 text-sm leading-relaxed text-muted">{item.description}</p>
+          <h3 className="mt-3 text-xl font-semibold tracking-[-0.03em] text-foreground">{item.title}</h3>
+          <p className="mt-4 text-sm leading-7 text-muted">{item.description}</p>
 
           {item.bullets?.length ? (
-            <ul className="mt-4 space-y-2 text-sm text-muted">
+            <ul className="mt-5 space-y-3 text-sm text-muted">
               {item.bullets.map((bullet) => (
                 <li key={bullet} className="flex gap-2">
-                  <span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-accent" />
+                  <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-accent" />
                   <span>{bullet}</span>
                 </li>
               ))}
@@ -154,7 +152,7 @@ export function WebsiteFullSection({
       className={`border-t border-border ${tone === 'muted' ? 'bg-surface-inset' : ''}`}
     >
       <div className={`${publicSiteContainerClass} py-14 lg:py-20`}>
-        <div className="mb-10 max-w-2xl">
+        <div className="mb-10 max-w-3xl">
           {eyebrow && <p className={publicEyebrowClass}>{eyebrow}</p>}
           <h2 className={eyebrow ? `mt-3 ${publicSectionTitleClass}` : publicSectionTitleClass}>
             {title}

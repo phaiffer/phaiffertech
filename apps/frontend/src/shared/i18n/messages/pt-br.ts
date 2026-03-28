@@ -224,6 +224,7 @@ const ptBRMessages = {
       penultimateBath: 'Penultimo banho',
       petTaxi: 'Pet taxi',
       pickupSent: 'Mensagem enviada',
+      pickupPending: 'Mensagem pendente',
       responsible: 'Responsavel',
       commission: 'Comissao',
       cycleCharge: 'Cobranca do ciclo',

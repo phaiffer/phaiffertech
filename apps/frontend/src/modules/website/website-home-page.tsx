@@ -26,6 +26,14 @@ export function WebsiteHomePage() {
         secondaryCta={content.hero.secondaryCta}
       />
 
+      <PublicFeatureGrid
+        id="products"
+        eyebrowLabel={messages.productLanes}
+        title={content.productsTitle}
+        description={content.productsDescription}
+        items={content.products.slice(0, 3)}
+      />
+
       <WebsiteFullSection
         id="signals"
         eyebrow={messages.framework}
@@ -34,14 +42,6 @@ export function WebsiteHomePage() {
       >
         <WebsiteStatStrip items={content.signals} />
       </WebsiteFullSection>
-
-      <PublicFeatureGrid
-        id="products"
-        eyebrowLabel={messages.productLanes}
-        title={content.productsTitle}
-        description={content.productsDescription}
-        items={content.products.slice(0, 3)}
-      />
 
       <WebsiteFullSection
         id="operations"

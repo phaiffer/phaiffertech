@@ -13,7 +13,7 @@ import {
    ═══════════════════════════════════════════════════════════════════════════ */
 
 export const sharedShellHeaderClass =
-  'border-b border-border/80 bg-background/80 shadow-[0_18px_44px_-34px_rgba(15,23,42,0.35)] backdrop-blur-xl';
+  'border-b border-border/90 bg-white/90 shadow-[0_12px_26px_-22px_rgba(15,23,42,0.12)] backdrop-blur-xl';
 
 export const sharedEyebrowClass = 'text-[11px] font-semibold uppercase tracking-[0.24em] text-accent';
 
@@ -27,20 +27,20 @@ export const sharedSectionHeadingClass = 'text-lg font-semibold tracking-[-0.03e
 
 export const sharedCardTitleClass = 'text-lg font-semibold tracking-[-0.03em] text-foreground';
 
-export const sharedBodyTextClass = 'text-base leading-7 text-muted sm:text-lg sm:leading-8';
+export const sharedBodyTextClass = 'text-base leading-7 text-slate-600 sm:text-lg sm:leading-8';
 
-export const sharedSupportingTextClass = 'text-sm leading-6 text-muted sm:text-[15px] sm:leading-7';
+export const sharedSupportingTextClass = 'text-sm leading-6 text-slate-600 sm:text-[15px] sm:leading-7';
 
-export const sharedCompactTextClass = 'text-sm leading-6 text-muted';
+export const sharedCompactTextClass = 'text-sm leading-6 text-slate-600';
 
-export const sharedSurfaceClass = 'rounded-[1.65rem] border border-border bg-surface shadow-sm backdrop-blur-xl';
+export const sharedSurfaceClass = 'rounded-[1.5rem] border border-border bg-surface shadow-sm';
 
 export const sharedInteractiveSurfaceClass =
-  `${sharedSurfaceClass} transition-all duration-200 hover:-translate-y-0.5 hover:border-accent hover:shadow-md`;
+  `${sharedSurfaceClass} transition-all duration-200 hover:-translate-y-0.5 hover:border-accent/60 hover:shadow-md`;
 
-export const sharedPanelSurfaceClass = 'ui-surface-panel rounded-[1.9rem]';
+export const sharedPanelSurfaceClass = 'ui-surface-panel rounded-[1.75rem]';
 
-export const sharedMutedSurfaceClass = 'ui-surface-muted rounded-[1.65rem]';
+export const sharedMutedSurfaceClass = 'ui-surface-muted rounded-[1.6rem]';
 
 export const sharedDashedSurfaceClass =
   'rounded-[1.65rem] border border-dashed border-border bg-surface-inset';
@@ -51,7 +51,7 @@ export const sharedPageHeaderClass = 'flex flex-col gap-4 xl:flex-row xl:items-e
 
 export const sharedPageHeaderBodyClass = 'max-w-4xl';
 
-export const sharedSectionSurfaceClass = 'ui-surface-panel rounded-[1.9rem] p-5 lg:p-6';
+export const sharedSectionSurfaceClass = 'ui-surface-panel rounded-[1.75rem] p-5 lg:p-6';
 
 export const sharedMutedSectionSurfaceClass = 'ui-surface-muted rounded-[1.9rem] p-4 lg:p-5';
 
@@ -66,7 +66,7 @@ export const sharedFormActionsClass = 'flex flex-wrap items-center gap-3 pt-1';
 
 export const sharedInlineActionsClass = 'flex flex-wrap items-center gap-2';
 
-export const sharedFieldHintClass = 'text-xs leading-5 text-muted';
+export const sharedFieldHintClass = 'text-xs leading-5 text-slate-500';
 
 export const sharedPrimaryButtonClass =
   'ui-primary-button';
@@ -98,9 +98,9 @@ export const sharedDrawerOverlayClass = 'fixed inset-0 z-50 flex justify-end bg-
 
 
 
-export const publicSiteContainerClass = 'mx-auto w-full max-w-[1180px] px-6 lg:px-8';
+export const publicSiteContainerClass = 'mx-auto w-full max-w-[1280px] px-6 lg:px-8';
 
-export const publicSectionLayoutClass = 'grid gap-8 lg:grid-cols-[minmax(0,0.72fr)_minmax(0,1fr)] lg:items-start lg:gap-12 xl:gap-14';
+export const publicSectionLayoutClass = 'grid gap-8 lg:grid-cols-[minmax(0,0.68fr)_minmax(0,1fr)] lg:items-start lg:gap-14 xl:gap-16';
 
 export const publicHeadingColumnClass = 'lg:sticky lg:top-28';
 
@@ -121,7 +121,7 @@ export const publicCardSurfaceClass = sharedSurfaceClass;
 export const publicInteractiveCardSurfaceClass = sharedInteractiveSurfaceClass;
 
 export const publicHighlightSurfaceClass =
-  'rounded-[1.9rem] border border-accent bg-accent-muted shadow-card';
+  'rounded-[1.75rem] border border-accent/20 bg-accent-muted shadow-card';
 
 export const publicChromeSurfaceClass = sharedShellHeaderClass;
 

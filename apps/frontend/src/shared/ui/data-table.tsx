@@ -47,7 +47,7 @@ export function DataTable<T>({
         <div className="mx-auto flex max-w-2xl flex-col items-center gap-3 text-center">
           <div>
             <p className="text-sm font-semibold text-foreground">{title}</p>
-            <p className="mt-1 text-sm text-muted">{description}</p>
+            <p className="mt-1 text-sm text-slate-600">{description}</p>
           </div>
           {action ? <div>{action}</div> : null}
         </div>
@@ -58,12 +58,12 @@ export function DataTable<T>({
   return (
     <div className="overflow-x-auto rounded-[calc(var(--radius-2xl)-0.1rem)] border border-border bg-surface shadow-sm">
       <table className="min-w-full divide-y divide-border">
-        <thead className="bg-surface-inset">
+        <thead className="bg-slate-50">
           <tr>
             {columns.map((column) => (
               <th
                 key={column.key}
-                className={`px-5 py-3.5 text-left text-[11px] font-semibold uppercase tracking-[0.18em] text-muted ${column.className ?? ''}`}
+                className={`px-5 py-4 text-left text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-600 ${column.className ?? ''}`}
               >
                 {column.header}
               </th>
@@ -83,7 +83,7 @@ export function DataTable<T>({
             rows.map((row) => (
               <tr
                 key={getRowKey(row)}
-                className="align-top transition-colors duration-200 hover:bg-accent-muted"
+                className="align-top transition-colors duration-200 hover:bg-slate-50"
               >
                 {columns.map((column) => (
                   <td

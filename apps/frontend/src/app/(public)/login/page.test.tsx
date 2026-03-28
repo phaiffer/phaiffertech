@@ -2,6 +2,7 @@ import React from 'react';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import LoginPage from '@/app/(public)/login/page';
+import { buildLoginVisualContext } from '@/shared/components/public-visual-system';
 import { AuthProvider } from '@/shared/components/auth-provider';
 import { getSession, setAuthNotice } from '@/shared/lib/session';
 import { PublicSiteProvider } from '@/shared/public/public-site-provider';
@@ -153,5 +154,30 @@ describe('LoginPage', () => {
     );
 
     expect(await screen.findByText('Password reset successfully. Sign in again with the new credential.')).toBeInTheDocument();
+  });
+
+  it('keeps the visual context stable while typing the tenant code and only commits it on blur', async () => {
+    const { container } = render(
+      <PublicSiteProvider>
+        <AuthProvider>
+          <LoginPage />
+        </AuthProvider>
+      </PublicSiteProvider>
+    );
+
+    const surface = container.firstElementChild as HTMLElement;
+    const tenantInput = screen.getByLabelText('Company or workspace');
+    const defaultAccent = buildLoginVisualContext('').containerStyle['--tenant-accent'];
+    const petAccent = buildLoginVisualContext('pet-spa').containerStyle['--tenant-accent'];
+
+    expect(surface.style.getPropertyValue('--tenant-accent')).toBe(String(defaultAccent));
+
+    fireEvent.change(tenantInput, { target: { value: 'pet-spa' } });
+    expect(surface.style.getPropertyValue('--tenant-accent')).toBe(String(defaultAccent));
+
+    fireEvent.blur(tenantInput);
+    await waitFor(() => {
+      expect(surface.style.getPropertyValue('--tenant-accent')).toBe(String(petAccent));
+    });
   });
 });

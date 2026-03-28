@@ -1,9 +1,9 @@
 'use client';
 
 import { ReactNode } from 'react';
-import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { BrandBanner, BrandMark } from '@/shared/components/brand-assets';
 import {
   publicChromeSurfaceClass,
   publicCompactButtonClass,
@@ -55,7 +55,7 @@ export function PublicSiteShell({ children }: PublicSiteShellProps) {
     `inline-flex h-10 items-center rounded-2xl px-3.5 text-sm font-medium transition-all duration-200 ${
       active
         ? 'bg-accent-muted text-foreground shadow-sm'
-        : 'text-muted hover:bg-surface-inset hover:text-foreground'
+        : 'text-slate-600 hover:bg-surface-inset hover:text-slate-900'
     }`;
 
   const localeButtonClass = publicCompactButtonClass;
@@ -69,61 +69,58 @@ export function PublicSiteShell({ children }: PublicSiteShellProps) {
   }
 
   return (
-    <div className="relative min-h-screen bg-background text-foreground">
-      <div className="pointer-events-none fixed inset-0 overflow-hidden">
-        <div className="absolute -left-24 top-0 h-80 w-80 rounded-full bg-accent/10 blur-3xl" />
-        <div className="absolute right-0 top-1/4 h-72 w-72 rounded-full bg-blue-400/10 blur-3xl" />
-      </div>
-
+    <div className="min-h-screen bg-white text-foreground">
       <header className={`sticky top-0 z-40 ${publicChromeSurfaceClass}`}>
-        <div className={`${publicSiteContainerClass} flex items-center justify-between py-3`}>
-          <Link href="/" className="group inline-flex items-center gap-3">
-            <div className="flex h-11 w-11 items-center justify-center overflow-hidden rounded-[1.1rem] border border-slate-200/80 bg-[linear-gradient(180deg,#ffffff,#eff6ff)] p-1.5 shadow-sm">
-              <Image
-                src="/PhaifferTech_logo.png"
-                alt="PhaifferTech"
-                width={40}
-                height={40}
-                priority
-                className="h-full w-full object-cover"
-              />
-            </div>
-            <div className="hidden sm:block">
-              <span className="block text-base font-semibold tracking-tight text-foreground">PhaifferTech</span>
-              <span className="block text-2xs font-medium uppercase tracking-[0.2em] text-muted">PetFlow focus</span>
+        <div className={`${publicSiteContainerClass} flex h-20 items-center justify-between gap-6`}>
+          <Link href="/" className="group inline-flex shrink-0 items-center gap-3">
+            <BrandMark priority className="h-11 w-11 shrink-0 sm:h-12 sm:w-12" imageClassName="scale-[1.08]" />
+            <div className="min-w-0">
+              <p className="truncate text-base font-semibold tracking-[-0.03em] text-slate-900">PetFlow</p>
+              <p className="mt-0.5 truncate text-[11px] font-medium uppercase tracking-[0.18em] text-slate-600">
+                by PhaifferTech
+              </p>
             </div>
           </Link>
 
-          <div className="hidden items-center gap-4 lg:flex">
-            <nav className="flex items-center gap-2">
-              {navigationItems.map((item) => (
-                <Link key={item.href} href={item.href} className={navLinkClass(item.active)}>
-                  {item.label}
-                </Link>
-              ))}
-            </nav>
-
-            <div className="flex items-center gap-3">
-              <button
-                type="button"
-                onClick={() => setLocale(nextLocale)}
-                aria-label={t.localeLabel}
-                className={localeButtonClass}
-              >
-                {localeSwitchLabel}
-              </button>
-
+          <nav className="hidden items-center gap-8 md:flex">
+            {navigationItems.map((item) => (
               <Link
-                href="/login"
-                className={pathname === '/login' ? publicSecondaryButtonClass : publicPrimaryButtonClass}
+                key={item.href}
+                href={item.href}
+                className={`text-sm transition-colors ${
+                  item.active ? 'font-semibold text-foreground' : 'font-medium text-slate-600 hover:text-slate-900'
+                }`}
               >
+                {item.label}
+              </Link>
+            ))}
+          </nav>
+
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={() => setLocale(nextLocale)}
+              aria-label={t.localeLabel}
+              className={`${localeButtonClass} hidden sm:inline-flex`}
+            >
+              {localeSwitchLabel}
+            </button>
+
+            <Link href="/login" className="text-sm font-medium text-slate-700 transition-colors hover:text-slate-900 md:hidden">
+              {t.navLogin}
+            </Link>
+            <div className="hidden items-center gap-3 md:flex">
+              <Link href="/login" className={publicSecondaryButtonClass}>
                 {t.navLogin}
+              </Link>
+              <Link href="/contact" className={publicPrimaryButtonClass}>
+                {t.footerDemoLabel}
               </Link>
             </div>
           </div>
         </div>
 
-        <div className={`${publicSiteContainerClass} pb-4 lg:hidden`}>
+        <div className={`${publicSiteContainerClass} pb-4 md:hidden`}>
           <nav className="flex gap-2 overflow-x-auto whitespace-nowrap">
             {navigationItems.map((item) => (
               <Link key={item.href} href={item.href} className={navLinkClass(item.active)}>
@@ -152,16 +149,17 @@ export function PublicSiteShell({ children }: PublicSiteShellProps) {
         </div>
       </header>
 
-      <main className="relative z-10">{children}</main>
+      <main>{children}</main>
 
       <footer className="relative z-10 mt-16 border-t border-white/10 bg-slate-950 text-white">
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(59,130,246,0.16),transparent_32%)]" />
         <div className={`${publicSiteContainerClass} relative grid gap-10 py-12 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)_minmax(0,1fr)]`}>
           <div>
-            <p className="text-lg font-semibold text-white">PhaifferTech</p>
-            <p className="mt-1 text-2xs font-medium uppercase tracking-wider text-slate-400">
-              PetFlow focus
-            </p>
+            <BrandBanner
+              tone="dark"
+              className="h-16 w-[172px] sm:w-[188px]"
+            />
+            <p className="mt-5 text-2xs font-medium uppercase tracking-wider text-slate-400">{t.brandTitle}</p>
             <p className="mt-4 text-sm leading-relaxed text-slate-300">{t.footerNarrativeText}</p>
           </div>
 

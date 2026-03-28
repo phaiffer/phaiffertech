@@ -218,6 +218,7 @@ export const enUSMessages: AppMessages = {
       penultimateBath: 'Penultimate bath',
       petTaxi: 'Pet taxi',
       pickupSent: 'Message sent',
+      pickupPending: 'Message pending',
       responsible: 'Responsible',
       commission: 'Commission',
       cycleCharge: 'Cycle billing',

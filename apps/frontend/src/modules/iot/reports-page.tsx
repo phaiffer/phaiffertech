@@ -110,14 +110,31 @@ export function IotReportsPage() {
 
   // Dynamically initialize charting so the X-axis handles the real user time, eliminating "stale demo" feel.
   const { initialPerformance, initialThroughput } = useMemo(() => {
+    const rangeConfig = {
+      '24h': { performanceBase: 70, performanceStep: 1.5, throughputBase: 72, throughputStep: 12 },
+      '7d': { performanceBase: 74, performanceStep: 1.25, throughputBase: 118, throughputStep: 18 },
+      '30d': { performanceBase: 78, performanceStep: 1, throughputBase: 164, throughputStep: 26 }
+    }[timeRange] ?? { performanceBase: 70, performanceStep: 1.5, throughputBase: 72, throughputStep: 12 };
     const now = new Date();
     const perf = [];
     const thru = [];
     for (let i = 0; i < 10; i++) {
       const d = new Date(now.getTime() - (9 - i) * 10 * 60000);
       const label = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-      perf.push({ label, value: 70 + Math.floor(i * 1.5) + Math.floor(Math.random() * 5) });
-      thru.push({ label, value: 72 + i * 12 + Math.floor(Math.random() * 10) });
+      perf.push({
+        label,
+        value:
+          rangeConfig.performanceBase
+          + Math.floor(i * rangeConfig.performanceStep)
+          + Math.floor(Math.random() * 5)
+      });
+      thru.push({
+        label,
+        value:
+          rangeConfig.throughputBase
+          + i * rangeConfig.throughputStep
+          + Math.floor(Math.random() * 10)
+      });
     }
     return { initialPerformance: perf, initialThroughput: thru };
   }, [timeRange]); // recalculate line chart base when swapping time ranges to fake a new loading slice

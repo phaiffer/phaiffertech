@@ -1,9 +1,9 @@
 'use client';
 
 import { FormEvent, useMemo, useState } from 'react';
-import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { BrandMark } from '@/shared/components/brand-assets';
 import {
   clearImpersonationBackupSession,
   clearSession,
@@ -93,20 +93,16 @@ export default function ResetPasswordPageClient({ token }: ResetPasswordPageClie
       <main className="mx-auto flex min-h-screen w-full max-w-5xl items-center justify-center px-6 py-12">
         <div className="w-full max-w-[420px]">
           <Link href="/" className="mb-8 inline-flex items-center gap-3 text-foreground">
-            <span
-              className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-2xl border bg-surface shadow-xs"
+            <BrandMark
+              priority
+              className="h-14 w-14"
+              imageClassName="scale-[1.08]"
               style={visualContext.brandMarkStyle}
-            >
-              <Image
-                src="/PhaifferTech_logo.png"
-                alt="PhaifferTech"
-                width={34}
-                height={34}
-                priority
-                className="h-[34px] w-[34px] object-contain"
-              />
-            </span>
-            <span className="text-lg font-semibold tracking-tight">PhaifferTech</span>
+            />
+            <div>
+              <span className="block text-lg font-semibold tracking-tight">PhaifferTech</span>
+              <span className="block text-[11px] uppercase tracking-[0.18em] text-muted">{t.title}</span>
+            </div>
           </Link>
 
           <section className={`${sharedPanelSurfaceClass} p-7 sm:p-8`} style={visualContext.cardStyle}>

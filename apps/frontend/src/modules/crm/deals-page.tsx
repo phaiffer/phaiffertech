@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { PermissionGuard } from '@/shared/auth/PermissionGuard';
 import {
@@ -90,15 +90,7 @@ export function CrmDealsPage() {
   const [leadId, setLeadId] = useState('');
   const [expectedCloseDate, setExpectedCloseDate] = useState('');
 
-  useEffect(() => {
-    void loadSupportingData();
-  }, []);
-
-  useEffect(() => {
-    void load(0, search, statusFilter, companyFilterId);
-  }, [search, statusFilter, companyFilterId]);
-
-  async function loadSupportingData() {
+  const loadSupportingData = useCallback(async () => {
     try {
       const [companiesPage, contactsPage, leadsPage, stagesPage] = await Promise.all([
         crmService.listCompanies(0, 100),
@@ -113,9 +105,9 @@ export function CrmDealsPage() {
     } catch (err) {
       setError(err instanceof ApiClientError ? err.message : 'Unable to load deal dependencies for the CRM workspace.');
     }
-  }
+  }, []);
 
-  async function loadInvoices() {
+  const loadInvoices = useCallback(async () => {
     try {
       const invoicesPage = await financeService.listInvoices(0, 200, { sourceModule: 'CRM' });
       const map = new Map<string, FinanceInvoice>();
@@ -128,9 +120,14 @@ export function CrmDealsPage() {
     } catch {
       // Finance context is non-critical — silently ignore errors
     }
-  }
+  }, []);
 
-  async function load(page: number, currentSearch: string, currentStatus: string, currentCompanyId: string) {
+  const load = useCallback(async (
+    page: number,
+    currentSearch: string,
+    currentStatus: string,
+    currentCompanyId: string
+  ) => {
     setLoading(true);
     setError(null);
     try {
@@ -145,7 +142,15 @@ export function CrmDealsPage() {
     } finally {
       setLoading(false);
     }
-  }
+  }, [loadInvoices]);
+
+  useEffect(() => {
+    void loadSupportingData();
+  }, [loadSupportingData]);
+
+  useEffect(() => {
+    void load(0, search, statusFilter, companyFilterId);
+  }, [companyFilterId, load, search, statusFilter]);
 
   function resetForm() {
     setEditingId(null);

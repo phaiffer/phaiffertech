@@ -84,7 +84,7 @@ export function StatusBadge({ status }: StatusBadgeProps) {
 
   return (
     <span
-      className={`inline-flex items-center rounded-md border px-2 py-1 text-2xs font-medium ${classes}`}
+      className={`inline-flex items-center rounded-lg border px-2.5 py-1 text-2xs font-medium ${classes}`}
     >
       {prettify(status)}
     </span>
