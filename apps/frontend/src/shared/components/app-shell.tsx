@@ -1,6 +1,7 @@
 'use client';
 
-import { ReactNode, useMemo } from 'react';
+import type { ReactNode } from 'react';
+import { useMemo } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { BrandMark } from '@/shared/components/brand-assets';
@@ -103,20 +104,26 @@ export function AppShell({ children }: { children: ReactNode }) {
   );
 
   return (
-    <div className="flex min-h-screen bg-slate-50" data-module={moduleContext} style={shellStyle}>
+    <div
+      className="flex min-h-screen bg-[linear-gradient(180deg,#f5f8f6,#ffffff_240px)]"
+      data-module={moduleContext}
+      style={shellStyle}
+    >
       <Sidebar />
 
       <div className="flex min-w-0 flex-1 flex-col">
         <ImpersonationBanner tenantName={branding.scopeName} tenantCode={branding.tenantCode} />
 
-        <nav className="sticky top-0 z-30 flex items-center gap-2 overflow-x-auto border-b border-slate-200 bg-white px-3 py-3 lg:hidden">
+        <nav className="sticky top-0 z-30 flex items-center gap-2 overflow-x-auto border-b border-slate-200/80 bg-white/88 px-3 py-3 backdrop-blur-xl lg:hidden">
           <Link href="/" className="inline-flex shrink-0">
             <BrandMark className="h-11 w-11 rounded-2xl" imageClassName="scale-[1.08]" />
           </Link>
           <Link
             href="/dashboard"
             className={`whitespace-nowrap rounded-xl px-3 py-2 text-sm font-medium transition-colors ${
-              pathname === '/dashboard' ? 'bg-slate-900 text-white' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+              pathname === '/dashboard'
+                ? 'bg-[color:var(--accent)]/10 text-[color:var(--accent)]'
+                : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
             }`}
           >
             {messages.mobileOverview}
@@ -141,17 +148,24 @@ export function AppShell({ children }: { children: ReactNode }) {
           </Link>
         </nav>
 
-        <header className="sticky top-0 z-20 border-b border-slate-200 bg-white">
-          <div className="mx-auto flex w-full max-w-[1600px] flex-col gap-4 px-6 py-5 lg:px-8">
-            <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
+        <header className="sticky top-0 z-20 border-b border-slate-200/70 bg-white/84 backdrop-blur-xl">
+          <div className="mx-auto w-full max-w-[1600px] px-6 py-4 lg:px-8">
+            <div className="flex flex-col gap-4 rounded-[1.85rem] border border-slate-200/80 bg-white/86 px-5 py-5 shadow-[0_20px_44px_-34px_rgba(15,23,42,0.16)] xl:flex-row xl:items-center xl:justify-between">
               <div>
-                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[color:var(--accent)]">{branding.scopeName}</p>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[color:var(--accent)]">
+                  {hasPetVisible ? 'PetFlow workspace' : branding.scopeName}
+                </p>
+                {hasPetVisible ? (
+                  <p className="mt-2 inline-flex items-center rounded-full bg-[color:var(--accent)]/10 px-3 py-1 text-xs font-medium text-[color:var(--accent)]">
+                    {branding.scopeName}
+                  </p>
+                ) : null}
                 <h1 className="mt-2 text-3xl font-bold tracking-[-0.04em] text-slate-900">{headerMeta.label}</h1>
                 <p className="mt-2 max-w-2xl text-sm leading-7 text-slate-600">{headerMeta.description}</p>
               </div>
 
               <div className="flex flex-wrap items-center gap-3">
-                <div className="hidden min-w-[300px] items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 lg:flex">
+                <div className="hidden min-w-[300px] items-center gap-3 rounded-xl border border-slate-200/80 bg-slate-50/80 px-4 py-3 lg:flex">
                   <SearchIcon />
                   <span className="truncate text-sm text-slate-500">
                     {hasPetVisible ? messages.quickSearchPet : messages.quickSearchWorkspace}
@@ -160,7 +174,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 
                 <Link
                   href={primaryActionHref}
-                  className="inline-flex items-center gap-2 rounded-xl bg-[linear-gradient(135deg,var(--accent),#1d4ed8)] px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-blue-950/20 transition-transform hover:-translate-y-0.5"
+                  className="inline-flex items-center gap-2 rounded-xl bg-[linear-gradient(135deg,var(--accent),var(--petflow-teal))] px-4 py-3 text-sm font-semibold text-white shadow-[0_18px_38px_-26px_rgba(16,185,129,0.52)] transition-transform hover:-translate-y-0.5"
                 >
                   <PlusIcon />
                   {primaryActionLabel}
@@ -170,17 +184,17 @@ export function AppShell({ children }: { children: ReactNode }) {
                   type="button"
                   onClick={() => setLocale(nextLocale)}
                   aria-label={messages.localeButtonLabel}
-                  className="inline-flex h-11 items-center rounded-xl border border-slate-200 bg-white px-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-600 transition-colors hover:border-slate-300 hover:text-slate-900"
+                  className="inline-flex h-11 items-center rounded-xl border border-slate-200/80 bg-slate-50/80 px-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-600 transition-colors hover:border-slate-300 hover:text-slate-900"
                 >
                   {localeSwitchLabel}
                 </button>
 
-                <span className="inline-flex items-center rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-700">
+                <span className="inline-flex items-center rounded-full bg-[color:var(--accent)]/10 px-3 py-1 text-xs font-medium text-[color:var(--accent)]">
                   {workspace.accessLabel}
                 </span>
 
-                <div className="flex items-center gap-3 rounded-xl border border-slate-200 bg-white px-3 py-2.5">
-                  <span className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 text-sm font-semibold text-slate-900">
+                <div className="flex items-center gap-3 rounded-xl border border-slate-200/80 bg-slate-50/80 px-3 py-2.5">
+                  <span className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-sm font-semibold text-slate-900 shadow-[0_10px_24px_-22px_rgba(15,23,42,0.16)]">
                     {getInitials(user?.fullName)}
                   </span>
                   <div className="min-w-0">
@@ -193,7 +207,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           </div>
         </header>
 
-        <main className="flex-1 px-6 py-8 lg:px-8">
+        <main className="flex-1 px-6 py-6 lg:px-8">
           <div className="mx-auto w-full max-w-[1600px]">{children}</div>
         </main>
       </div>

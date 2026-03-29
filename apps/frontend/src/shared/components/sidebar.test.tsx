@@ -127,7 +127,7 @@ describe('Sidebar', () => {
     expect(container.querySelector('a[href="/iot/dashboard"]')).toBeNull();
   });
 
-  it('filters veterinary-only PetFlow navigation when the tenant only contracts aesthetics and retail', () => {
+  it('keeps grooming-friendly PetFlow navigation visible while filtering veterinary-only areas', () => {
     currentUser.role = 'TENANT_ADMIN';
     currentUser.platformAdmin = false;
     currentUser.platformOwner = false;
@@ -138,7 +138,7 @@ describe('Sidebar', () => {
     const { container } = render(<Sidebar />);
 
     expect(container.querySelector('a[href="/dashboard"]')).not.toBeNull();
-    expect(container.querySelector('a[href="/pet/clients"]')).toBeNull();
+    expect(container.querySelector('a[href="/pet/clients"]')).not.toBeNull();
     expect(container.querySelector('a[href="/pet/appointments"]')).not.toBeNull();
     expect(container.querySelector('a[href="/pet/medical-records"]')).toBeNull();
   });

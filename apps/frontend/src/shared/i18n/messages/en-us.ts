@@ -126,6 +126,8 @@ export const enUSMessages: AppMessages = {
   petSubnav: {
     workspace: 'Workspace',
     dashboard: 'Dashboard',
+    clients: 'Clients',
+    pets: 'Pets',
     appointments: 'Appointments',
     plans: 'Plans',
     inventory: 'Inventory',

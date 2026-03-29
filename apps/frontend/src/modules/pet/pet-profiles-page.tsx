@@ -1,19 +1,34 @@
 'use client';
 
-import { FormEvent, useCallback, useEffect, useMemo, useState } from 'react';
+import type { FormEvent } from 'react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import {
+  sharedCompactTextClass,
+  sharedFilterToolbarClass,
+  sharedFormActionsClass,
+  sharedInlineActionsClass,
+  sharedPageStackClass
+} from '@/shared/components/public-visual-system';
+import { PermissionGuard } from '@/shared/auth/PermissionGuard';
 import { ApiClientError } from '@/shared/lib/http';
 import { resolvePageItems, resolveTotalItems } from '@/shared/lib/pagination';
 import { petService } from '@/shared/services/pet-service';
-import { PageResponse } from '@/shared/types/common';
-import { PetClient, PetProfile } from '@/shared/types/pet';
-import { PermissionGuard } from '@/shared/auth/PermissionGuard';
+import type { PageResponse } from '@/shared/types/common';
+import type { PetClient, PetProfile } from '@/shared/types/pet';
 import { ConfirmDialog } from '@/shared/ui/confirm-dialog';
-import { DataTable, DataTableColumn } from '@/shared/ui/data-table';
+import { DataTable, type DataTableColumn } from '@/shared/ui/data-table';
 import { FormInput } from '@/shared/ui/form-input';
 import { FormSelect } from '@/shared/ui/form-select';
+import { PageSection } from '@/shared/ui/page-section';
 import { PageTitle } from '@/shared/ui/page-title';
 import { Pagination } from '@/shared/ui/pagination';
 import { SearchBar } from '@/shared/ui/search-bar';
+
+type PetProfilesPageProps = {
+  initialView?: 'list' | 'create';
+};
 
 const pageSize = 10;
 
@@ -26,12 +41,23 @@ const initialPage: PageResponse<PetProfile> = {
 };
 
 const genderOptions = [
-  { value: '', label: 'Not specified' },
-  { value: 'MALE', label: 'MALE' },
-  { value: 'FEMALE', label: 'FEMALE' }
+  { value: '', label: 'Nao informado' },
+  { value: 'MALE', label: 'Macho' },
+  { value: 'FEMALE', label: 'Femea' }
 ];
 
-export function PetProfilesPage() {
+function formatDate(value?: string) {
+  if (!value) {
+    return 'Nao informado';
+  }
+
+  return new Intl.DateTimeFormat('pt-BR', { dateStyle: 'short' }).format(new Date(value));
+}
+
+export function PetProfilesPage({ initialView = 'list' }: PetProfilesPageProps) {
+  const router = useRouter();
+  const isCreateRoute = initialView === 'create';
+
   const [pageData, setPageData] = useState<PageResponse<PetProfile>>(initialPage);
   const [clients, setClients] = useState<PetClient[]>([]);
   const [loading, setLoading] = useState(false);
@@ -42,6 +68,7 @@ export function PetProfilesPage() {
   const [search, setSearch] = useState('');
   const [clientFilterId, setClientFilterId] = useState('');
 
+  const [isEditorOpen, setIsEditorOpen] = useState(isCreateRoute);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [clientId, setClientId] = useState('');
   const [name, setName] = useState('');
@@ -56,25 +83,21 @@ export function PetProfilesPage() {
 
   const [deleteCandidate, setDeleteCandidate] = useState<PetProfile | null>(null);
 
-  const clientOptions = useMemo(() => {
-    return [
-      { value: '', label: 'All' },
-      ...clients.map((client) => ({
-        value: client.id,
-        label: client.name ?? client.fullName ?? client.id
-      }))
-    ];
-  }, [clients]);
+  const clientOptions = useMemo(() => [
+    { value: '', label: 'Todos os clientes' },
+    ...clients.map((client) => ({
+      value: client.id,
+      label: client.name ?? client.fullName ?? client.id
+    }))
+  ], [clients]);
 
-  const formClientOptions = useMemo(() => {
-    return [
-      { value: '', label: 'Select a client' },
-      ...clients.map((client) => ({
-        value: client.id,
-        label: client.name ?? client.fullName ?? client.id
-      }))
-    ];
-  }, [clients]);
+  const formClientOptions = useMemo(() => [
+    { value: '', label: 'Selecione um cliente' },
+    ...clients.map((client) => ({
+      value: client.id,
+      label: client.name ?? client.fullName ?? client.id
+    }))
+  ], [clients]);
 
   const loadClients = useCallback(async () => {
     try {
@@ -88,13 +111,14 @@ export function PetProfilesPage() {
   const load = useCallback(async (page: number, currentSearch: string, currentClientId: string) => {
     setLoading(true);
     setError(null);
+
     try {
       const result = await petService.listProfiles(page, pageSize, currentSearch, {
         clientId: currentClientId || undefined
       });
       setPageData(result);
     } catch (err) {
-      const message = err instanceof ApiClientError ? err.message : 'Unable to load pet profiles.';
+      const message = err instanceof ApiClientError ? err.message : 'Nao foi possivel carregar os pets.';
       setError(message);
     } finally {
       setLoading(false);
@@ -122,6 +146,17 @@ export function PetProfilesPage() {
     setNotes('');
   }
 
+  useEffect(() => {
+    if (!isCreateRoute) {
+      return;
+    }
+
+    resetForm();
+    setSuccess(null);
+    setError(null);
+    setIsEditorOpen(true);
+  }, [isCreateRoute]);
+
   function beginEdit(profile: PetProfile) {
     setEditingId(profile.id);
     setClientId(profile.clientId);
@@ -135,6 +170,18 @@ export function PetProfilesPage() {
     setNotes(profile.notes ?? '');
     setSuccess(null);
     setError(null);
+    setIsEditorOpen(true);
+  }
+
+  function closeEditor() {
+    resetForm();
+
+    if (isCreateRoute) {
+      router.push('/pet/pets');
+      return;
+    }
+
+    setIsEditorOpen(false);
   }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -172,16 +219,24 @@ export function PetProfilesPage() {
     try {
       if (editingId) {
         await petService.updateProfile(editingId, payload);
-        setSuccess('Pet profile updated.');
+        setSuccess('Pet atualizado.');
+        setIsEditorOpen(false);
       } else {
         await petService.createProfile(payload);
-        setSuccess('Pet profile added.');
+
+        if (isCreateRoute) {
+          router.push('/pet/pets');
+          return;
+        }
+
+        setSuccess('Pet adicionado.');
+        setIsEditorOpen(false);
       }
 
       resetForm();
       await load(pageData.page, search, clientFilterId);
     } catch (err) {
-      const message = err instanceof ApiClientError ? err.message : 'Unable to save pet profile.';
+      const message = err instanceof ApiClientError ? err.message : 'Nao foi possivel salvar o pet.';
       setError(message);
     } finally {
       setSubmitting(false);
@@ -196,72 +251,71 @@ export function PetProfilesPage() {
     try {
       await petService.deleteProfile(deleteCandidate.id);
       setDeleteCandidate(null);
-      setSuccess('Pet profile removed.');
+      setSuccess('Pet removido.');
       await load(pageData.page, search, clientFilterId);
     } catch (err) {
-      const message = err instanceof ApiClientError ? err.message : 'Unable to delete pet profile.';
+      const message = err instanceof ApiClientError ? err.message : 'Nao foi possivel remover o pet.';
       setError(message);
     }
   }
 
   const rows = resolvePageItems(pageData);
   const totalItems = resolveTotalItems(pageData);
-
-  function scrollToProfileForm() {
-    document.getElementById('pet-profile-form-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  }
+  const activeFilterCount = [search, clientFilterId].filter(Boolean).length;
 
   const columns: DataTableColumn<PetProfile>[] = [
     {
-      key: 'name',
-      header: 'Nome',
-      render: (profile) => profile.name
-    },
-    {
-      key: 'species',
-      header: 'Espécie',
-      render: (profile) => profile.species
-    },
-    {
-      key: 'breed',
-      header: 'Raça',
-      render: (profile) => profile.breed ?? '-'
-    },
-    {
-      key: 'color',
-      header: 'Cor',
-      render: (profile) => profile.color ?? '-'
+      key: 'pet',
+      header: 'Pet',
+      render: (profile) => (
+        <div>
+          <p className="font-medium text-[color:var(--app-shell-heading)]">{profile.name}</p>
+          <p className={`mt-1 ${sharedCompactTextClass}`}>
+            {profile.species}{profile.breed ? ` · ${profile.breed}` : ''}
+          </p>
+        </div>
+      )
     },
     {
       key: 'client',
       header: 'Cliente',
       render: (profile) => {
         const client = clients.find((entry) => entry.id === profile.clientId);
-        return client?.name ?? client?.fullName ?? profile.clientId;
+
+        return (
+          <div>
+            <p className="font-medium text-[color:var(--app-shell-heading)]">{client?.name ?? client?.fullName ?? profile.clientId}</p>
+            <p className={`mt-1 ${sharedCompactTextClass}`}>Nascimento: {formatDate(profile.birthDate)}</p>
+          </div>
+        );
       }
     },
     {
-      key: 'actions',
-      header: 'Ações',
+      key: 'details',
+      header: 'Detalhes',
       render: (profile) => (
-        <div className="flex gap-2">
+        <div>
+          <p className="font-medium text-[color:var(--app-shell-heading)]">{profile.color ?? 'Cor nao informada'}</p>
+          <p className={`mt-1 ${sharedCompactTextClass}`}>
+            {profile.weight === undefined ? 'Peso nao informado' : `${profile.weight} kg`}
+          </p>
+        </div>
+      )
+    },
+    {
+      key: 'actions',
+      header: 'Acoes',
+      render: (profile) => (
+        <div className={sharedInlineActionsClass}>
           <PermissionGuard permission="pet.profile.update">
-            <button
-              type="button"
-              onClick={() => beginEdit(profile)}
-              className="ui-inline-button"
-            >
-              Edit
+            <button type="button" onClick={() => beginEdit(profile)} className="ui-inline-button">
+              Editar
             </button>
           </PermissionGuard>
 
           <PermissionGuard permission="pet.profile.delete">
-            <button
-              type="button"
-              onClick={() => setDeleteCandidate(profile)}
-              className="ui-inline-danger-button"
-            >
-              Delete
+            <button type="button" onClick={() => setDeleteCandidate(profile)} className="ui-inline-danger-button">
+              Remover
             </button>
           </PermissionGuard>
         </div>
@@ -272,110 +326,145 @@ export function PetProfilesPage() {
   return (
     <PermissionGuard
       permission="pet.profile.read"
-      fallback={<div className="ui-notice-warning">You do not have permission to view pet profiles.</div>}
+      fallback={<div className="ui-notice-warning">Voce nao tem permissao para visualizar pets.</div>}
     >
-      <div className="space-y-5">
+      <div className={sharedPageStackClass}>
         <PageTitle
           eyebrow="PetFlow workspace"
-          title="Pet Profiles"
-          description="Register each pet under a client so appointments, care history, and billing stay connected."
+          title={isCreateRoute ? 'Novo pet' : 'Pets'}
+          description={
+            isCreateRoute
+              ? 'Cadastre o pet dentro de um cliente para que atendimentos, planos e cobranca fiquem ligados ao registro certo.'
+              : 'Cadastre cada pet dentro de um cliente para que atendimentos e cobranca mantenham o contexto correto.'
+          }
+          actions={isCreateRoute ? (
+            <Link href="/pet/pets" className="ui-secondary-button">
+              Voltar para pets
+            </Link>
+          ) : (
+            <PermissionGuard permission="pet.profile.create">
+              <Link href="/pet/pets/new" className="ui-primary-button">
+                Novo pet
+              </Link>
+            </PermissionGuard>
+          )}
         />
 
-        <div className="grid gap-3 ui-surface-panel p-4 md:grid-cols-[1fr_260px_auto]">
-          <SearchBar value={searchInput} onChange={setSearchInput} placeholder="Name, species, breed" />
-          <FormSelect label="Client" value={clientFilterId} options={clientOptions} onChange={setClientFilterId} />
-          <div className="flex items-end gap-2 pb-0.5">
-            <button
-              type="button"
-              onClick={() => setSearch(searchInput)}
-              className="ui-primary-button"
-            >
-              Search
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setSearchInput('');
-                setSearch('');
-                setClientFilterId('');
-              }}
-              className="ui-inline-button"
-            >
-              Clear
-            </button>
-          </div>
-        </div>
-
-        <PermissionGuard permission={editingId ? 'pet.profile.update' : 'pet.profile.create'}>
-          <form id="pet-profile-form-section" onSubmit={handleSubmit} className="grid gap-3 ui-surface-panel p-4 md:grid-cols-3">
-            <FormSelect label="Client" value={clientId} options={formClientOptions} onChange={setClientId} />
-            <FormInput label="Name" value={name} onChange={setName} required />
-            <FormInput label="Species" value={species} onChange={setSpecies} required />
-            <FormInput label="Breed" value={breed} onChange={setBreed} />
-            <FormInput label="Birth date" value={birthDate} onChange={setBirthDate} type="date" />
-            <FormSelect label="Gender" value={gender} options={genderOptions} onChange={setGender} />
-            <FormInput label="Weight (kg)" value={weight} onChange={setWeight} />
-            <FormInput label="Color" value={color} onChange={setColor} />
-            <div className="md:col-span-2">
-              <FormInput label="Notes" value={notes} onChange={setNotes} />
-            </div>
-
-            <div className="md:col-span-3 flex gap-2">
-              <button
-                type="submit"
-                disabled={submitting}
-                className="ui-primary-button"
-              >
-                {submitting ? 'Saving...' : editingId ? 'Update pet profile' : 'Add pet profile'}
-              </button>
-              {editingId ? (
+        {!isCreateRoute ? (
+          <PageSection tone="muted" title="Filtros" description="Busque por pet, especie ou cliente vinculado.">
+            <div className={sharedFilterToolbarClass}>
+              <div className="grid gap-3 xl:grid-cols-[minmax(0,1.45fr)_260px] xl:items-end">
+                <SearchBar value={searchInput} onChange={setSearchInput} placeholder="Pet, especie ou raca" />
+                <FormSelect label="Cliente" value={clientFilterId} options={clientOptions} onChange={setClientFilterId} />
+              </div>
+              <div className={sharedFormActionsClass}>
+                <button type="button" onClick={() => setSearch(searchInput)} className="ui-primary-button">
+                  Buscar
+                </button>
                 <button
                   type="button"
-                  onClick={resetForm}
-                  className="ui-secondary-button"
+                  onClick={() => {
+                    setSearchInput('');
+                    setSearch('');
+                    setClientFilterId('');
+                  }}
+                  className="ui-inline-button"
                 >
-                  Cancel
+                  Limpar
                 </button>
-              ) : null}
+                <p className="text-sm text-[color:var(--app-shell-muted)]">
+                  {activeFilterCount > 0
+                    ? `${activeFilterCount} filtro(s) ativos na lista de pets.`
+                    : 'Sem filtros ativos na base de pets.'}
+                </p>
+              </div>
             </div>
-          </form>
-        </PermissionGuard>
+          </PageSection>
+        ) : null}
+
+        {clients.length === 0 ? (
+          <div className="ui-notice-warning">
+            Crie um cliente antes de cadastrar o primeiro pet.
+          </div>
+        ) : null}
 
         {error ? <div className="ui-notice-error">{error}</div> : null}
         {success ? <div className="ui-notice-success">{success}</div> : null}
 
-        <DataTable
-          columns={columns}
-          rows={rows}
-          getRowKey={(row) => row.id}
-          loading={loading}
-          loadingTitle="Loading pet profiles"
-          loadingDescription="Preparing pet profiles linked to clients in this workspace."
-          emptyState={{
-            title: 'No pet profiles yet',
-            description: 'Add the first pet after creating a client so appointments and care records have the right patient.',
-            action: (
-              <PermissionGuard permission="pet.profile.create">
-                <button type="button" onClick={scrollToProfileForm} className="ui-primary-button">
-                  Create first pet profile
-                </button>
-              </PermissionGuard>
-            )
-          }}
-        />
+        {isEditorOpen ? (
+          <PermissionGuard permission={editingId ? 'pet.profile.update' : 'pet.profile.create'}>
+            <PageSection
+              title={editingId ? 'Editar pet' : 'Novo pet'}
+              description="Mantenha o cadastro simples: cliente, identificacao e os detalhes necessarios para agendar e cobrar corretamente."
+            >
+              <form onSubmit={handleSubmit} className="space-y-5">
+                <div className="grid gap-4 xl:grid-cols-2">
+                  <FormSelect label="Cliente" value={clientId} options={formClientOptions} onChange={setClientId} />
+                  <FormInput label="Nome" value={name} onChange={setName} required />
+                  <FormInput label="Especie" value={species} onChange={setSpecies} required />
+                  <FormInput label="Raca" value={breed} onChange={setBreed} />
+                  <FormInput label="Nascimento" value={birthDate} onChange={setBirthDate} type="date" />
+                  <FormSelect label="Genero" value={gender} options={genderOptions} onChange={setGender} />
+                  <FormInput label="Peso (kg)" value={weight} onChange={setWeight} type="number" />
+                  <FormInput label="Cor" value={color} onChange={setColor} />
+                  <FormInput label="Observacoes" value={notes} onChange={setNotes} wrapperClassName="xl:col-span-2" />
+                </div>
 
-        <Pagination
-          page={pageData.page}
-          totalPages={pageData.totalPages}
-          totalElements={totalItems}
-          onPageChange={(nextPage) => load(nextPage, search, clientFilterId)}
-        />
+                <div className={sharedFormActionsClass}>
+                  <button type="submit" disabled={submitting || clients.length === 0} className="ui-primary-button">
+                    {submitting ? 'Salvando...' : editingId ? 'Atualizar pet' : 'Adicionar pet'}
+                  </button>
+                  <button type="button" onClick={closeEditor} className="ui-secondary-button">
+                    Cancelar
+                  </button>
+                </div>
+              </form>
+            </PageSection>
+          </PermissionGuard>
+        ) : null}
+
+        {!isCreateRoute ? (
+          <PageSection
+            title="Base de pets"
+            description="Lista conectada a clientes, atendimentos e cobranca."
+            actions={<p className="text-sm text-[color:var(--app-shell-muted)]">Total de {totalItems} pet(s)</p>}
+          >
+            <div className="space-y-5">
+              <DataTable
+                columns={columns}
+                rows={rows}
+                getRowKey={(row) => row.id}
+                loading={loading}
+                loadingTitle="Carregando pets"
+                loadingDescription="Preparando os pets vinculados aos clientes deste workspace."
+                emptyState={{
+                  title: 'Nenhum pet ainda',
+                  description: 'Cadastre o primeiro pet depois de criar um cliente para deixar agenda e cobranca com o contexto certo.',
+                  action: (
+                    <PermissionGuard permission="pet.profile.create">
+                      <Link href="/pet/pets/new" className="ui-primary-button">
+                        Criar primeiro pet
+                      </Link>
+                    </PermissionGuard>
+                  )
+                }}
+              />
+
+              <Pagination
+                page={pageData.page}
+                totalPages={pageData.totalPages}
+                totalElements={totalItems}
+                onPageChange={(nextPage) => load(nextPage, search, clientFilterId)}
+              />
+            </div>
+          </PageSection>
+        ) : null}
 
         <ConfirmDialog
           open={Boolean(deleteCandidate)}
-          title="Remove pet profile?"
-          description={deleteCandidate ? `"${deleteCandidate.name}" will be removed from this workspace.` : undefined}
-          confirmLabel="Remove"
+          title="Remover pet?"
+          description={deleteCandidate ? `"${deleteCandidate.name}" sera removido deste workspace.` : undefined}
+          confirmLabel="Remover"
           onCancel={() => setDeleteCandidate(null)}
           onConfirm={handleConfirmDelete}
         />

@@ -42,6 +42,8 @@ export function FormInput({
   const generatedInputId = useId();
   const inputId = id ?? generatedInputId;
   const descriptionId = description ? `${inputId}-description` : undefined;
+  const resolvedInputMode = inputMode ?? (type === 'number' ? 'decimal' : undefined);
+  const resolvedStep = type === 'number' && inputProps.step === undefined ? 'any' : inputProps.step;
 
   return (
     <div className={wrapperClassName ? `${sharedFieldGroupClass} ${wrapperClassName}` : sharedFieldGroupClass}>
@@ -56,14 +58,15 @@ export function FormInput({
         onChange={(event) => onChange(event.target.value)}
         placeholder={placeholder}
         autoComplete={autoComplete}
-        inputMode={inputMode}
+        inputMode={resolvedInputMode}
         autoCapitalize={autoCapitalize}
         autoCorrect={autoCorrect}
         spellCheck={spellCheck}
+        step={resolvedStep}
         required={required}
         disabled={disabled}
         aria-describedby={descriptionId}
-        className={className ? `${sharedInputClass} ${className}` : sharedInputClass}
+        className={className ? `${sharedInputClass} min-w-0 ${className}` : `${sharedInputClass} min-w-0`}
         {...inputProps}
       />
       {description ? <span id={descriptionId} className={sharedFieldHintClass}>{description}</span> : null}

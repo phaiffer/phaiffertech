@@ -26,22 +26,22 @@ function joinClasses(...values: Array<string | undefined | false>) {
 
 function resolveMarkToneClass(tone: BrandTone) {
   if (tone === 'dark') {
-    return 'border-white/12 bg-white/10 shadow-[0_24px_64px_-36px_rgba(15,23,42,0.72)] backdrop-blur';
+    return 'border-white/12 bg-[linear-gradient(180deg,rgba(255,255,255,0.14),rgba(255,255,255,0.06))] shadow-[0_24px_64px_-36px_rgba(15,23,42,0.72)] backdrop-blur';
   }
 
-  return 'border-slate-200/80 bg-[linear-gradient(180deg,#ffffff,#eff6ff)] shadow-[0_22px_56px_-34px_rgba(15,23,42,0.22)]';
+  return 'border-slate-200/80 bg-[radial-gradient(circle_at_top,rgba(16,185,129,0.08),transparent_68%),linear-gradient(180deg,#ffffff,#f8fbf9)] shadow-[0_18px_42px_-30px_rgba(15,23,42,0.18)]';
 }
 
 function resolveBannerToneClass(tone: BrandTone) {
   if (tone === 'dark') {
-    return 'border-white/10 bg-white/5 shadow-[0_28px_72px_-38px_rgba(15,23,42,0.8)] backdrop-blur';
+    return 'border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.1),rgba(255,255,255,0.04))] shadow-[0_28px_72px_-38px_rgba(15,23,42,0.8)] backdrop-blur';
   }
 
-  return 'border-slate-200/80 bg-slate-950 shadow-[0_18px_42px_-32px_rgba(15,23,42,0.22)]';
+  return 'border-slate-200/80 bg-white shadow-[0_16px_32px_-28px_rgba(15,23,42,0.18)]';
 }
 
 export function BrandMark({
-  alt = 'PhaifferTech emblem',
+  alt = 'PhaifferTech logo',
   priority = false,
   tone = 'light',
   className,

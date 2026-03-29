@@ -22,6 +22,8 @@ export function PetModuleSubnav() {
   const items = [
     { href: '/pet', label: t.workspace },
     { href: '/pet/dashboard', label: t.dashboard },
+    { href: '/pet/clients', label: t.clients },
+    { href: '/pet/pets', label: t.pets },
     { href: '/pet/appointments', label: t.appointments },
     { href: '/pet/plans', label: t.plans },
     { href: '/pet/inventory', label: t.inventory },

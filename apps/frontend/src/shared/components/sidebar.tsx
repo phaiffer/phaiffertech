@@ -1,20 +1,12 @@
 'use client';
 
-import { ReactNode, useMemo } from 'react';
+import type { ReactNode } from 'react';
+import { useMemo } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import {
-  LayoutDashboard,
-  PawPrint,
-  Users,
-  Calendar,
-  FileText,
-  Syringe,
-  DollarSign,
-  LogOut,
-} from 'lucide-react';
 import { useAuth } from '@/shared/auth/use-auth';
 import { BrandMark } from '@/shared/components/brand-assets';
+import { petSubmoduleEntitlements } from '@/shared/entitlements/tenant-entitlements';
 import { useAppMessages } from '@/shared/i18n/app-i18n-provider';
 import { useFrontendPlatform } from '@/shared/platform/use-frontend-platform';
 import { filterSidebarItems } from '@/shared/platform/sidebar-navigation';
@@ -22,57 +14,6 @@ import { filterSidebarItems } from '@/shared/platform/sidebar-navigation';
 type SidebarItem = {
   href: string;
   label: string;
-  icon: ReactNode;
-  group: 'main' | 'gestao' | 'financeiro';
-};
-
-function isItemActive(pathname: string, href: string) {
-  return pathname === href || pathname.startsWith(`${href}/`);
-}
-
-export function Sidebar() {
-  const pathname = usePathname();
-  const { signOut } = useAuth();
-  const messages = useAppMessages().sidebar;
-  const { branding, workspace } = useFrontendPlatform();
-
-  const items: SidebarItem[] = useMemo(() => [
-    // Main
-    { href: '/dashboard', label: 'Dashboard', icon: <LayoutDashboard className="h-5 w-5" />, group: 'main' },
-    // Gestao
-    { href: '/pet/pacientes', label: 'Pacientes', icon: <PawPrint className="h-5 w-5" />, group: 'gestao' },
-    { href: '/pet/tutores', label: 'Tutores', icon: <Users className="h-5 w-5" />, group: 'gestao' },
-    { href: '/pet/agendamentos', label: 'Agendamentos', icon: <Calendar className="h-5 w-5" />, group: 'gestao' },
-    { href: '/pet/prontuarios', label: 'Prontuarios', icon: <FileText className="h-5 w-5" />, group: 'gestao' },
-    { href: '/pet/vacinas', label: 'Vacinas', icon: <Syringe className="h-5 w-5" />, group: 'gestao' },
-    // Financeiro
-    { href: '/pet/faturamento', label: 'Faturamento', icon: <DollarSign className="h-5 w-5" />, group: 'financeiro' },
-  ], []);
-
-  const mainItems = items.filter((item) => item.group === 'main');
-  const gestaoItems = items.filter((item) => item.group === 'gestao');
-  const financeiroItems = items.filter((item) => item.group === 'financeiro');
-
-  return (
-    <aside className="sticky top-0 hidden h-screen w-64 flex-col border-r border-border bg-white lg:flex">
-      {/* Logo */}
-      <div className="border-b border-border px-5 py-5">
-        <Link href="/" className="flex items-center gap-3">
-          <BrandMark className="h-10 w-10 shrink-0" imageClassName="scale-[1.08]" />
-          <div className="min-w-0">
-            <p className="text-base font-semibold tracking-[-0.02em] text-foreground">PetFlow</p>
-            <p className="text-[10px] font-medium text-petflow">by PhaifferTech</p>
-          </div>
-        </Link>
-      </div>
-
-      {/* Navigation */}
-      <nav className="flex-1 overflow-y-auto px-3 py-5">
-        <div className="space-y-6">
-          {/* Main Items */}
-          <div className="space-y-1">
-            {mainItems.map((item) => {
-              const active = isItemActive(pathname, item.href);
   anyOf?: string[];
   anyEntitlements?: readonly string[];
   moduleCode?: 'PET';
@@ -89,7 +30,10 @@ function isItemActive(pathname: string, href: string) {
 }
 
 function getInitials(name?: string) {
-  if (!name) return 'PT';
+  if (!name) {
+    return 'PT';
+  }
+
   return name
     .split(/\s+/)
     .slice(0, 2)
@@ -112,7 +56,27 @@ function IconCalendar({ className }: { className?: string }) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75">
       <rect x="3" y="5" width="18" height="16" rx="3" />
-      <path d="M16 3v4M8 3v4M3 10h18" strokeLinecap="round" />
+      <path d="M8 3v4M16 3v4M3 10h18" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function IconClients({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75">
+      <circle cx="8" cy="8" r="3" />
+      <circle cx="16.5" cy="9.5" r="2.5" />
+      <path d="M3.5 19c0-2.4 2.1-4.5 4.8-4.5S13 16.6 13 19" strokeLinecap="round" />
+      <path d="M14.5 18.5c.4-1.7 1.8-3 3.5-3 .9 0 1.8.3 2.5.8" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function IconPet({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75">
+      <path d="M12 20c-1.8 0-3.1-.7-4.2-2.1-.7-.9-1.8-1.5-3-1.5C3.3 16.4 2 15.1 2 13.6c0-1.3 1-2.4 2.3-2.6 1-.2 1.8-.9 2-1.9.3-1.5 1.6-2.6 3.1-2.6 1.1 0 2.1.6 2.6 1.6.5-1 1.5-1.6 2.6-1.6 1.5 0 2.8 1.1 3.1 2.6.2 1 .9 1.7 2 1.9 1.3.2 2.3 1.3 2.3 2.6 0 1.5-1.3 2.8-2.8 2.8-1.2 0-2.3.6-3 1.5C15.1 19.3 13.8 20 12 20Z" />
+      <path d="M8 8.2c0-.9-.7-1.6-1.6-1.6S4.8 7.3 4.8 8.2s.7 1.6 1.6 1.6S8 9.1 8 8.2ZM19.2 8.2c0-.9-.7-1.6-1.6-1.6S16 7.3 16 8.2s.7 1.6 1.6 1.6 1.6-.7 1.6-1.6ZM11.2 5.5c0-.9-.7-1.6-1.6-1.6S8 4.6 8 5.5s.7 1.6 1.6 1.6 1.6-.7 1.6-1.6ZM16 5.5c0-.9-.7-1.6-1.6-1.6s-1.6.7-1.6 1.6.7 1.6 1.6 1.6S16 6.4 16 5.5Z" />
     </svg>
   );
 }
@@ -160,7 +124,10 @@ function IconSettings({ className }: { className?: string }) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75">
       <circle cx="12" cy="12" r="3" />
-      <path d="M12 2v3M12 19v3M4.93 4.93l2.12 2.12M16.95 16.95l2.12 2.12M2 12h3M19 12h3M4.93 19.07l2.12-2.12M16.95 7.05l2.12-2.12" strokeLinecap="round" />
+      <path
+        d="M12 2v3M12 19v3M4.93 4.93l2.12 2.12M16.95 16.95l2.12 2.12M2 12h3M19 12h3M4.93 19.07l2.12-2.12M16.95 7.05l2.12-2.12"
+        strokeLinecap="round"
+      />
     </svg>
   );
 }
@@ -191,6 +158,24 @@ export function Sidebar() {
       moduleCode: 'PET',
       group: 'pet',
       icon: IconOverview
+    },
+    {
+      href: '/pet/clients',
+      label: petMessages.clients,
+      anyOf: ['pet.client.read'],
+      anyEntitlements: petSubmoduleEntitlements,
+      moduleCode: 'PET',
+      group: 'pet',
+      icon: IconClients
+    },
+    {
+      href: '/pet/pets',
+      label: petMessages.pets,
+      anyOf: ['pet.profile.read'],
+      anyEntitlements: petSubmoduleEntitlements,
+      moduleCode: 'PET',
+      group: 'pet',
+      icon: IconPet
     },
     {
       href: '/pet/appointments',
@@ -243,7 +228,17 @@ export function Sidebar() {
       group: 'core',
       icon: IconSettings
     }
-  ], [petMessages.appointments, petMessages.invoices, petMessages.inventory, petMessages.plans, petMessages.professionals, shellMessages.overview, shellMessages.settings]);
+  ], [
+    petMessages.appointments,
+    petMessages.clients,
+    petMessages.invoices,
+    petMessages.inventory,
+    petMessages.pets,
+    petMessages.plans,
+    petMessages.professionals,
+    shellMessages.overview,
+    shellMessages.settings
+  ]);
 
   const visibleItems = useMemo(() => {
     return filterSidebarItems(items, {
@@ -257,8 +252,8 @@ export function Sidebar() {
   const workspaceItems = visibleItems.filter((item) => item.group === 'core');
 
   return (
-    <aside className="sticky top-0 hidden h-screen w-64 flex-col border-r border-slate-200 bg-white lg:flex">
-      <div className="flex h-20 items-center gap-3 border-b border-slate-200 px-6">
+    <aside className="sticky top-0 hidden h-screen w-64 flex-col border-r border-slate-200/80 bg-[linear-gradient(180deg,#fbfdfc,#ffffff)] lg:flex">
+      <div className="flex h-20 items-center gap-3 border-b border-slate-200/80 px-6">
         <BrandMark className="h-11 w-11 shrink-0 rounded-2xl" imageClassName="scale-[1.08]" />
         <div className="min-w-0">
           <p className="truncate text-lg font-bold tracking-[-0.03em] text-slate-900">PetFlow</p>
@@ -268,9 +263,11 @@ export function Sidebar() {
         </div>
       </div>
 
-      <div className="border-b border-slate-200 px-4 py-4">
-        <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">{shellMessages.workspaceLabel}</p>
+      <div className="border-b border-slate-200/80 px-4 py-4">
+        <div className="rounded-2xl border border-slate-200/80 bg-[linear-gradient(180deg,rgba(16,185,129,0.08),rgba(255,255,255,0.98))] p-4 shadow-[0_18px_34px_-30px_rgba(15,23,42,0.12)]">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+            {shellMessages.workspaceLabel}
+          </p>
           <p className="mt-2 truncate text-sm font-semibold text-slate-900">{branding.scopeName}</p>
           <p className="mt-1 truncate text-xs text-slate-600">{workspace.accessLabel}</p>
         </div>
@@ -278,7 +275,9 @@ export function Sidebar() {
 
       <nav className="flex-1 overflow-y-auto p-4">
         <div>
-          <p className="px-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">{shellMessages.petFlow}</p>
+          <p className="px-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+            {shellMessages.petFlow}
+          </p>
           <div className="mt-3 space-y-1">
             {primaryItems.map((item) => {
               const active = isItemActive(pathname, item.href);
@@ -288,25 +287,17 @@ export function Sidebar() {
                 <Link
                   key={item.href}
                   href={item.href}
-                  className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all ${
-                    active
-                      ? 'bg-petflow text-white shadow-sm shadow-petflow/20'
-                      : 'text-muted hover:bg-slate-50 hover:text-foreground'
-                  }`}
-                >
-                  <span className={active ? 'text-white' : 'text-muted-foreground'}>{item.icon}</span>
-                  <span>{item.label}</span>
                   className={`group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors ${
                     active
-                      ? 'bg-[linear-gradient(135deg,var(--accent),#1d4ed8)] text-white shadow-lg shadow-blue-950/20'
-                      : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                      ? 'bg-[linear-gradient(135deg,var(--accent),var(--petflow-teal))] text-white shadow-[0_18px_36px_-26px_rgba(16,185,129,0.48)]'
+                      : 'text-slate-600 hover:bg-[color:var(--accent)]/5 hover:text-slate-900'
                   }`}
                 >
                   <span
                     className={`inline-flex h-9 w-9 items-center justify-center rounded-xl border ${
                       active
                         ? 'border-white/15 bg-white/10 text-white'
-                        : 'border-slate-200 bg-slate-50 text-slate-700'
+                        : 'border-slate-200/80 bg-white text-slate-700'
                     }`}
                   >
                     <Icon className="h-4 w-4" />
@@ -316,46 +307,13 @@ export function Sidebar() {
               );
             })}
           </div>
-
-          {/* Gestao Group */}
-          <div>
-            <p className="mb-2 px-3 text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
-              Gestao
-            </p>
-            <div className="space-y-1">
-              {gestaoItems.map((item) => {
-                const active = isItemActive(pathname, item.href);
-                return (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all ${
-                      active
-                        ? 'bg-petflow text-white shadow-sm shadow-petflow/20'
-                        : 'text-muted hover:bg-slate-50 hover:text-foreground'
-                    }`}
-                  >
-                    <span className={active ? 'text-white' : 'text-muted-foreground'}>{item.icon}</span>
-                    <span>{item.label}</span>
-                  </Link>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Financeiro Group */}
-          <div>
-            <p className="mb-2 px-3 text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
-              Financeiro
-            </p>
-            <div className="space-y-1">
-              {financeiroItems.map((item) => {
-                const active = isItemActive(pathname, item.href);
         </div>
 
         {workspaceItems.length > 0 ? (
           <div className="mt-8">
-            <p className="px-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">{shellMessages.workspaceLabel}</p>
+            <p className="px-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+              {shellMessages.workspaceLabel}
+            </p>
             <div className="mt-3 space-y-1">
               {workspaceItems.map((item) => {
                 const active = isItemActive(pathname, item.href);
@@ -365,18 +323,8 @@ export function Sidebar() {
                   <Link
                     key={item.href}
                     href={item.href}
-                    className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all ${
-                      active
-                        ? 'bg-petflow text-white shadow-sm shadow-petflow/20'
-                        : 'text-muted hover:bg-slate-50 hover:text-foreground'
-                    }`}
-                  >
-                    <span className={active ? 'text-white' : 'text-muted-foreground'}>{item.icon}</span>
-                    <span>{item.label}</span>
                     className={`group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors ${
-                      active
-                        ? 'bg-slate-900 text-white'
-                        : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                      active ? 'bg-slate-900 text-white' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
                     }`}
                   >
                     <span
@@ -394,30 +342,13 @@ export function Sidebar() {
               })}
             </div>
           </div>
-        </div>
-      </nav>
-
-      {/* Footer - Workspace Card */}
-      <div className="border-t border-border p-4">
-        <div className="rounded-xl bg-petflow/5 p-3">
-          <p className="text-sm font-semibold text-petflow">{branding.scopeName || 'Clinica VetCare'}</p>
-          <p className="mt-0.5 text-xs text-muted">{workspace.accessLabel || 'Plano Professional'}</p>
-        </div>
-        
-        <button
-          type="button"
-          onClick={() => void signOut()}
-          className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl border border-border bg-white px-3 py-2.5 text-sm text-muted transition-colors hover:border-destructive hover:bg-destructive-muted hover:text-destructive"
-        >
-          <LogOut className="h-4 w-4" />
-          <span>{messages.signOut}</span>
         ) : null}
       </nav>
 
-      <div className="border-t border-slate-200 p-4">
-        <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+      <div className="border-t border-slate-200/80 p-4">
+        <div className="rounded-2xl border border-slate-200/80 bg-slate-50/90 p-4">
           <div className="flex items-center gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 bg-white text-sm font-semibold text-slate-900">
+            <div className="flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 bg-white text-sm font-semibold text-slate-900 shadow-[0_10px_24px_-22px_rgba(15,23,42,0.16)]">
               {getInitials(user?.fullName)}
             </div>
             <div className="min-w-0">
@@ -430,7 +361,7 @@ export function Sidebar() {
         <button
           type="button"
           onClick={() => void signOut()}
-          className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-medium text-slate-600 transition-colors hover:border-destructive hover:bg-destructive-muted hover:text-destructive"
+          className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200/80 bg-white px-3 py-2.5 text-sm font-medium text-slate-600 transition-colors hover:border-destructive hover:bg-destructive-muted hover:text-destructive"
         >
           <IconLogout className="h-4 w-4" />
           <span>{shellMessages.signOut}</span>

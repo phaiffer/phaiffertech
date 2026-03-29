@@ -1,6 +1,9 @@
 'use client';
 
-import { FormEvent, useCallback, useEffect, useState } from 'react';
+import type { FormEvent } from 'react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { useCallback, useEffect, useState } from 'react';
 import {
   sharedCompactTextClass,
   sharedFilterToolbarClass,
@@ -8,15 +11,15 @@ import {
   sharedInlineActionsClass,
   sharedPageStackClass
 } from '@/shared/components/public-visual-system';
+import { PermissionGuard } from '@/shared/auth/PermissionGuard';
+import { StatusBadge } from '@/shared/dashboard/status-badge';
 import { ApiClientError } from '@/shared/lib/http';
 import { resolvePageItems, resolveTotalItems } from '@/shared/lib/pagination';
 import { petService } from '@/shared/services/pet-service';
-import { PageResponse } from '@/shared/types/common';
-import { PetClient } from '@/shared/types/pet';
-import { PermissionGuard } from '@/shared/auth/PermissionGuard';
-import { StatusBadge } from '@/shared/dashboard/status-badge';
+import type { PageResponse } from '@/shared/types/common';
+import type { PetClient } from '@/shared/types/pet';
 import { ConfirmDialog } from '@/shared/ui/confirm-dialog';
-import { DataTable, DataTableColumn } from '@/shared/ui/data-table';
+import { DataTable, type DataTableColumn } from '@/shared/ui/data-table';
 import { FormInput } from '@/shared/ui/form-input';
 import { FormSelect } from '@/shared/ui/form-select';
 import { PageSection } from '@/shared/ui/page-section';
@@ -24,17 +27,21 @@ import { PageTitle } from '@/shared/ui/page-title';
 import { Pagination } from '@/shared/ui/pagination';
 import { SearchBar } from '@/shared/ui/search-bar';
 
+type PetClientsPageProps = {
+  initialView?: 'list' | 'create';
+};
+
 const pageSize = 10;
 
 const statusOptions = [
-  { value: '', label: 'All' },
-  { value: 'ACTIVE', label: 'ACTIVE' },
-  { value: 'INACTIVE', label: 'INACTIVE' }
+  { value: '', label: 'Todos' },
+  { value: 'ACTIVE', label: 'Ativo' },
+  { value: 'INACTIVE', label: 'Inativo' }
 ];
 
 const formStatusOptions = [
-  { value: 'ACTIVE', label: 'ACTIVE' },
-  { value: 'INACTIVE', label: 'INACTIVE' }
+  { value: 'ACTIVE', label: 'Ativo' },
+  { value: 'INACTIVE', label: 'Inativo' }
 ];
 
 const initialPage: PageResponse<PetClient> = {
@@ -52,7 +59,10 @@ function formatDateTime(value: string) {
   }).format(new Date(value));
 }
 
-export function PetClientsPage() {
+export function PetClientsPage({ initialView = 'list' }: PetClientsPageProps) {
+  const router = useRouter();
+  const isCreateRoute = initialView === 'create';
+
   const [pageData, setPageData] = useState<PageResponse<PetClient>>(initialPage);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -62,7 +72,7 @@ export function PetClientsPage() {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
 
-  const [isEditorOpen, setIsEditorOpen] = useState(false);
+  const [isEditorOpen, setIsEditorOpen] = useState(isCreateRoute);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -77,13 +87,14 @@ export function PetClientsPage() {
   const load = useCallback(async (page: number, currentSearch: string, currentStatus: string) => {
     setLoading(true);
     setError(null);
+
     try {
       const result = await petService.listClients(page, pageSize, currentSearch, {
         status: currentStatus || undefined
       });
       setPageData(result);
     } catch (err) {
-      const message = err instanceof ApiClientError ? err.message : 'Unable to load clients.';
+      const message = err instanceof ApiClientError ? err.message : 'Nao foi possivel carregar os clientes.';
       setError(message);
     } finally {
       setLoading(false);
@@ -104,6 +115,17 @@ export function PetClientsPage() {
     setStatus('ACTIVE');
   }
 
+  useEffect(() => {
+    if (!isCreateRoute) {
+      return;
+    }
+
+    resetForm();
+    setSuccess(null);
+    setError(null);
+    setIsEditorOpen(true);
+  }, [isCreateRoute]);
+
   function beginEdit(client: PetClient) {
     setEditingId(client.id);
     setName(client.name ?? client.fullName ?? '');
@@ -117,15 +139,14 @@ export function PetClientsPage() {
     setIsEditorOpen(true);
   }
 
-  function beginCreate() {
-    resetForm();
-    setSuccess(null);
-    setError(null);
-    setIsEditorOpen(true);
-  }
-
   function closeEditor() {
     resetForm();
+
+    if (isCreateRoute) {
+      router.push('/pet/clients');
+      return;
+    }
+
     setIsEditorOpen(false);
   }
 
@@ -146,7 +167,8 @@ export function PetClientsPage() {
           address: address || undefined,
           status
         });
-        setSuccess('Client updated.');
+        setSuccess('Cliente atualizado.');
+        setIsEditorOpen(false);
       } else {
         await petService.createClient({
           name,
@@ -156,14 +178,20 @@ export function PetClientsPage() {
           address: address || undefined,
           status
         });
-        setSuccess('Client added.');
+
+        if (isCreateRoute) {
+          router.push('/pet/clients');
+          return;
+        }
+
+        setSuccess('Cliente adicionado.');
+        setIsEditorOpen(false);
       }
 
       resetForm();
-      setIsEditorOpen(false);
       await load(pageData.page, search, statusFilter);
     } catch (err) {
-      const message = err instanceof ApiClientError ? err.message : 'Unable to save client.';
+      const message = err instanceof ApiClientError ? err.message : 'Nao foi possivel salvar o cliente.';
       setError(message);
     } finally {
       setSubmitting(false);
@@ -178,10 +206,10 @@ export function PetClientsPage() {
     try {
       await petService.deleteClient(deleteCandidate.id);
       setDeleteCandidate(null);
-      setSuccess('Client removed.');
+      setSuccess('Cliente removido.');
       await load(pageData.page, search, statusFilter);
     } catch (err) {
-      const message = err instanceof ApiClientError ? err.message : 'Unable to delete client.';
+      const message = err instanceof ApiClientError ? err.message : 'Nao foi possivel remover o cliente.';
       setError(message);
     }
   }
@@ -190,13 +218,6 @@ export function PetClientsPage() {
   const totalItems = resolveTotalItems(pageData);
   const activeFilterCount = [search, statusFilter].filter(Boolean).length;
 
-  function revealClientEditor() {
-    beginCreate();
-    globalThis.setTimeout(() => {
-      globalThis.document.getElementById('pet-client-form-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }, 0);
-  }
-
   const columns: DataTableColumn<PetClient>[] = [
     {
       key: 'profile',
@@ -204,27 +225,27 @@ export function PetClientsPage() {
       render: (client) => (
         <div>
           <p className="font-medium text-[color:var(--app-shell-heading)]">{client.name ?? client.fullName ?? '-'}</p>
-          <p className={`mt-1 ${sharedCompactTextClass}`}>Document: {client.document ?? 'Not provided'}</p>
+          <p className={`mt-1 ${sharedCompactTextClass}`}>Documento: {client.document ?? 'Nao informado'}</p>
         </div>
       )
     },
     {
       key: 'contact',
-      header: 'Contact',
+      header: 'Contato',
       render: (client) => (
         <div>
-          <p className="font-medium text-[color:var(--app-shell-heading)]">{client.email ?? 'No email'}</p>
-          <p className={`mt-1 ${sharedCompactTextClass}`}>{client.phone ?? 'No phone'}</p>
+          <p className="font-medium text-[color:var(--app-shell-heading)]">{client.email ?? 'Sem e-mail'}</p>
+          <p className={`mt-1 ${sharedCompactTextClass}`}>{client.phone ?? 'Sem telefone'}</p>
         </div>
       )
     },
     {
       key: 'address',
-      header: 'Address & updated',
+      header: 'Endereco e atualizacao',
       render: (client) => (
         <div>
-          <p className="font-medium text-[color:var(--app-shell-heading)]">{client.address ?? 'No address'}</p>
-          <p className={`mt-1 ${sharedCompactTextClass}`}>Updated {formatDateTime(client.updatedAt)}</p>
+          <p className="font-medium text-[color:var(--app-shell-heading)]">{client.address ?? 'Sem endereco'}</p>
+          <p className={`mt-1 ${sharedCompactTextClass}`}>Atualizado em {formatDateTime(client.updatedAt)}</p>
         </div>
       )
     },
@@ -235,26 +256,18 @@ export function PetClientsPage() {
     },
     {
       key: 'actions',
-      header: 'Actions',
+      header: 'Acoes',
       render: (client) => (
         <div className={sharedInlineActionsClass}>
           <PermissionGuard permission="pet.client.update">
-            <button
-              type="button"
-              onClick={() => beginEdit(client)}
-              className="ui-inline-button"
-            >
-              Edit
+            <button type="button" onClick={() => beginEdit(client)} className="ui-inline-button">
+              Editar
             </button>
           </PermissionGuard>
 
           <PermissionGuard permission="pet.client.delete">
-            <button
-              type="button"
-              onClick={() => setDeleteCandidate(client)}
-              className="ui-inline-danger-button"
-            >
-              Delete
+            <button type="button" onClick={() => setDeleteCandidate(client)} className="ui-inline-danger-button">
+              Remover
             </button>
           </PermissionGuard>
         </div>
@@ -265,149 +278,137 @@ export function PetClientsPage() {
   return (
     <PermissionGuard
       permission="pet.client.read"
-      fallback={<div className="ui-notice-warning">You do not have permission to view clients.</div>}
-    >
+      fallback={<div className="ui-notice-warning">Voce nao tem permissao para visualizar clientes.</div>}
+    > 
       <div className={sharedPageStackClass}>
         <PageTitle
           eyebrow="PetFlow workspace"
-          title="Clients"
-          description="Keep the customer base ready before moving into pets, appointments, and billing."
-          actions={(
+          title={isCreateRoute ? 'Novo cliente' : 'Clientes'}
+          description={
+            isCreateRoute
+              ? 'Crie a base do cadastro antes de ligar pets, atendimentos, planos e cobranca.'
+              : 'Mantenha a base de clientes pronta antes de avançar para pets, atendimentos e cobranca.'
+          }
+          actions={isCreateRoute ? (
+            <Link href="/pet/clients" className="ui-secondary-button">
+              Voltar para clientes
+            </Link>
+          ) : (
             <PermissionGuard permission="pet.client.create">
-              <button type="button" onClick={beginCreate} className="ui-primary-button">
-                New client
-              </button>
+              <Link href="/pet/clients/new" className="ui-primary-button">
+                Novo cliente
+              </Link>
             </PermissionGuard>
           )}
         />
 
-        <PageSection
-          tone="muted"
-          title="Filters"
-          description="Search by name, contact, or lifecycle status."
-        >
-          <div className={sharedFilterToolbarClass}>
-            <div className="grid gap-3 xl:grid-cols-[minmax(0,1.45fr)_220px] xl:items-end">
-              <SearchBar
-                value={searchInput}
-                onChange={setSearchInput}
-                placeholder="Nome, email, telefone, endereço"
-              />
-              <FormSelect label="Status" value={statusFilter} options={statusOptions} onChange={setStatusFilter} />
+        {!isCreateRoute ? (
+          <PageSection tone="muted" title="Filtros" description="Busque por nome, contato ou status do cadastro.">
+            <div className={sharedFilterToolbarClass}>
+              <div className="grid gap-3 xl:grid-cols-[minmax(0,1.45fr)_220px] xl:items-end">
+                <SearchBar value={searchInput} onChange={setSearchInput} placeholder="Nome, e-mail, telefone, endereco" />
+                <FormSelect label="Status" value={statusFilter} options={statusOptions} onChange={setStatusFilter} />
+              </div>
+              <div className={sharedFormActionsClass}>
+                <button type="button" onClick={() => setSearch(searchInput)} className="ui-primary-button">
+                  Buscar
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSearchInput('');
+                    setSearch('');
+                    setStatusFilter('');
+                  }}
+                  className="ui-inline-button"
+                >
+                  Limpar
+                </button>
+                <p className="text-sm text-[color:var(--app-shell-muted)]">
+                  {activeFilterCount > 0
+                    ? `${activeFilterCount} filtro(s) ativos na visao de clientes.`
+                    : 'Sem filtros ativos na base de clientes.'}
+                </p>
+              </div>
             </div>
-            <div className={sharedFormActionsClass}>
-              <button
-                type="button"
-                onClick={() => setSearch(searchInput)}
-                className="ui-primary-button"
-              >
-                Buscar
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setSearchInput('');
-                  setSearch('');
-                  setStatusFilter('');
-                }}
-                className="ui-inline-button"
-              >
-                Limpar
-              </button>
-              <p className="text-sm text-[color:var(--app-shell-muted)]">
-                {activeFilterCount > 0
-                  ? `${activeFilterCount} filtro(s) ativos na visão de clientes.`
-                  : 'Sem filtros ativos na base de clientes.'}
-              </p>
-            </div>
-          </div>
-        </PageSection>
-
-        {isEditorOpen ? (
-          <PermissionGuard permission={editingId ? 'pet.client.update' : 'pet.client.create'}>
-            <div id="pet-client-form-section">
-              <PageSection
-                title={editingId ? 'Edit client' : 'New client'}
-                description="Capture only the record details needed to keep the operation moving."
-              >
-                <form onSubmit={handleSubmit} className="space-y-5">
-                  <div className="grid gap-4 xl:grid-cols-2">
-                    <FormInput label="Name" value={name} onChange={setName} required />
-                    <FormSelect label="Status" value={status} options={formStatusOptions} onChange={setStatus} />
-                    <FormInput label="Email" value={email} onChange={setEmail} type="email" />
-                    <FormInput label="Phone" value={phone} onChange={setPhone} />
-                    <FormInput label="Document" value={document} onChange={setDocument} />
-                    <div className="hidden xl:block" />
-                    <FormInput label="Address" value={address} onChange={setAddress} wrapperClassName="xl:col-span-2" />
-                  </div>
-
-                  <div className={sharedFormActionsClass}>
-                    <button
-                      type="submit"
-                      disabled={submitting}
-                      className="ui-primary-button"
-                    >
-                      {submitting ? 'Saving...' : editingId ? 'Update client' : 'Add client'}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={closeEditor}
-                      className="ui-secondary-button"
-                    >
-                      Cancel
-                    </button>
-                  </div>
-                </form>
-              </PageSection>
-            </div>
-          </PermissionGuard>
+          </PageSection>
         ) : null}
 
         {error ? <div className="ui-notice-error">{error}</div> : null}
         {success ? <div className="ui-notice-success">{success}</div> : null}
 
-        <PageSection
-          title="Client directory"
-          description="The base list for pets, visits, and follow-through."
-          actions={(
-            <p className="text-sm text-[color:var(--app-shell-muted)]">Total {totalItems} client(s)</p>
-          )}
-        >
-          <div className="space-y-5">
-            <DataTable
-              columns={columns}
-              rows={rows}
-              getRowKey={(row) => row.id}
-              loading={loading}
-              loadingTitle="Loading clients"
-              loadingDescription="Preparing the client base for this PetFlow workspace."
-              emptyState={{
-                title: 'No clients yet',
-                description: 'Create the first client to unlock pet profiles and the rest of the PetFlow flow.',
-                action: (
-                  <PermissionGuard permission="pet.client.create">
-                    <button type="button" onClick={revealClientEditor} className="ui-primary-button">
-                      Create first client
-                    </button>
-                  </PermissionGuard>
-                )
-              }}
-            />
+        {isEditorOpen ? (
+          <PermissionGuard permission={editingId ? 'pet.client.update' : 'pet.client.create'}>
+            <PageSection
+              title={editingId ? 'Editar cliente' : 'Novo cliente'}
+              description="Capture apenas os dados necessarios para recepcao, cobranca e follow-up seguirem organizados."
+            >
+              <form onSubmit={handleSubmit} className="space-y-5">
+                <div className="grid gap-4 xl:grid-cols-2">
+                  <FormInput label="Nome" value={name} onChange={setName} required />
+                  <FormSelect label="Status" value={status} options={formStatusOptions} onChange={setStatus} />
+                  <FormInput label="E-mail" value={email} onChange={setEmail} type="email" />
+                  <FormInput label="Telefone" value={phone} onChange={setPhone} />
+                  <FormInput label="Documento" value={document} onChange={setDocument} />
+                  <div className="hidden xl:block" />
+                  <FormInput label="Endereco" value={address} onChange={setAddress} wrapperClassName="xl:col-span-2" />
+                </div>
 
-            <Pagination
-              page={pageData.page}
-              totalPages={pageData.totalPages}
-              totalElements={totalItems}
-              onPageChange={(nextPage) => load(nextPage, search, statusFilter)}
-            />
-          </div>
-        </PageSection>
+                <div className={sharedFormActionsClass}>
+                  <button type="submit" disabled={submitting} className="ui-primary-button">
+                    {submitting ? 'Salvando...' : editingId ? 'Atualizar cliente' : 'Adicionar cliente'}
+                  </button>
+                  <button type="button" onClick={closeEditor} className="ui-secondary-button">
+                    Cancelar
+                  </button>
+                </div>
+              </form>
+            </PageSection>
+          </PermissionGuard>
+        ) : null}
+
+        {!isCreateRoute ? (
+          <PageSection
+            title="Base de clientes"
+            description="Lista principal para pets, visitas e cobranca."
+            actions={<p className="text-sm text-[color:var(--app-shell-muted)]">Total de {totalItems} cliente(s)</p>}
+          >
+            <div className="space-y-5">
+              <DataTable
+                columns={columns}
+                rows={rows}
+                getRowKey={(row) => row.id}
+                loading={loading}
+                loadingTitle="Carregando clientes"
+                loadingDescription="Preparando a base de clientes deste workspace PetFlow."
+                emptyState={{
+                  title: 'Nenhum cliente ainda',
+                  description: 'Crie o primeiro cliente para liberar pets, atendimentos e o restante do fluxo PetFlow.',
+                  action: (
+                    <PermissionGuard permission="pet.client.create">
+                      <Link href="/pet/clients/new" className="ui-primary-button">
+                        Criar primeiro cliente
+                      </Link>
+                    </PermissionGuard>
+                  )
+                }}
+              />
+
+              <Pagination
+                page={pageData.page}
+                totalPages={pageData.totalPages}
+                totalElements={totalItems}
+                onPageChange={(nextPage) => load(nextPage, search, statusFilter)}
+              />
+            </div>
+          </PageSection>
+        ) : null}
 
         <ConfirmDialog
           open={Boolean(deleteCandidate)}
-          title="Remove client?"
-          description={deleteCandidate ? `"${deleteCandidate.name ?? deleteCandidate.fullName ?? 'This client'}" will be removed from this workspace.` : undefined}
-          confirmLabel="Remove"
+          title="Remover cliente?"
+          description={deleteCandidate ? `"${deleteCandidate.name ?? deleteCandidate.fullName ?? 'Este cliente'}" sera removido deste workspace.` : undefined}
+          confirmLabel="Remover"
           onCancel={() => setDeleteCandidate(null)}
           onConfirm={handleConfirmDelete}
         />

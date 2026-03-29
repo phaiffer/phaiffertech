@@ -132,6 +132,8 @@ const ptBRMessages = {
   petSubnav: {
     workspace: 'Workspace',
     dashboard: 'Dashboard',
+    clients: 'Clientes',
+    pets: 'Pets',
     appointments: 'Atendimentos',
     plans: 'Planos',
     inventory: 'Estoque',

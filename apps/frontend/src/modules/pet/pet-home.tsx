@@ -116,7 +116,7 @@ function getPetWorkspaceActions(mode: PetWorkspaceMode): ModuleWorkspaceAction[]
         ? 'Add each pet after the client so appointments and special handling stay attached to the right customer.'
         : 'Add each pet after the client so appointments and care history stay attached to the right patient.',
       permission: 'pet.profile.read',
-      anyEntitlements: petClinicalEntitlements,
+      anyEntitlements: petSubmoduleEntitlements,
       restrictionTitle: 'Pet profile access required',
       restrictionDescription: 'Patient profiles stay unavailable until your workspace role can read PetFlow pet records.'
     },
