@@ -31,6 +31,21 @@ const config: Config = {
           iot: 'var(--accent-iot)',
           pet: 'var(--accent-pet)',
         },
+        // PetFlow Brand Colors
+        petflow: {
+          DEFAULT: 'var(--petflow-primary)',
+          primary: 'var(--petflow-primary)',
+          dark: 'var(--petflow-primary-dark)',
+          light: 'var(--petflow-primary-light)',
+          teal: 'var(--petflow-teal)',
+        },
+        // Feature Card Icon Colors
+        'icon-green': 'var(--icon-green)',
+        'icon-purple': 'var(--icon-purple)',
+        'icon-pink': 'var(--icon-pink)',
+        'icon-coral': 'var(--icon-coral)',
+        'icon-teal': 'var(--icon-teal)',
+        'icon-red': 'var(--icon-red)',
         success: {
           DEFAULT: 'var(--success)',
           muted: 'var(--success-muted)',
@@ -77,6 +92,11 @@ const config: Config = {
         '18': '4.5rem',
         '88': '22rem',
         '128': '32rem',
+      },
+      backgroundImage: {
+        'petflow-gradient': 'linear-gradient(135deg, var(--petflow-gradient-start) 0%, var(--petflow-gradient-end) 100%)',
+        'petflow-gradient-radial': 'radial-gradient(ellipse at top, var(--petflow-gradient-end) 0%, var(--petflow-gradient-start) 100%)',
+        'hero-pattern': 'radial-gradient(circle at 20% 50%, rgba(16, 185, 129, 0.08) 0%, transparent 50%), radial-gradient(circle at 80% 50%, rgba(20, 184, 166, 0.08) 0%, transparent 50%)',
       },
       animation: {
         'fade-in': 'fade-in 0.2s ease-out',

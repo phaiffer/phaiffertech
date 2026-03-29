@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
+import { Calendar, PawPrint, DollarSign, Syringe, MoreVertical, TrendingUp } from 'lucide-react';
 import { PetModuleSubnav } from '@/modules/pet/pet-module-subnav';
 import { StatusBadge } from '@/shared/dashboard/status-badge';
 import { sharedCompactTextClass, sharedPageStackClass } from '@/shared/components/public-visual-system';
@@ -100,24 +101,42 @@ function OperationsStatCard({
   label,
   value,
   detail,
-  tone = 'default'
+  trend,
+  tone = 'default',
+  icon
 }: {
   label: string;
   value: string;
   detail: string;
+  trend?: { value: string; positive?: boolean };
   tone?: StatTone;
+  icon?: React.ReactNode;
 }) {
   const toneClass = tone === 'accent'
-    ? 'border-transparent bg-[linear-gradient(135deg,var(--accent),color-mix(in_srgb,var(--accent)_82%,#0f172a_18%))] text-white shadow-[0_18px_40px_-24px_color-mix(in_srgb,var(--accent)_45%,transparent)]'
+    ? 'border-transparent bg-petflow-gradient text-white shadow-lg shadow-petflow/20'
     : tone === 'warning'
       ? 'border-warning/20 bg-white'
       : 'border-slate-200 bg-white';
 
   return (
-    <div className={`rounded-[1.5rem] border p-5 shadow-xs ${toneClass}`}>
-      <p className={`text-[11px] font-semibold uppercase tracking-[0.18em] ${tone === 'accent' ? 'text-white/72' : 'text-slate-600'}`}>{label}</p>
-      <p className={`mt-4 text-3xl font-semibold tracking-[-0.04em] ${tone === 'accent' ? 'text-white' : 'text-foreground'}`}>{value}</p>
-      <p className={`mt-2 text-sm leading-6 ${tone === 'accent' ? 'text-white/80' : 'text-slate-600'}`}>{detail}</p>
+    <div className={`relative rounded-2xl border p-5 ${toneClass}`}>
+      <div className="flex items-start justify-between">
+        <p className={`text-sm font-medium ${tone === 'accent' ? 'text-white/80' : 'text-muted'}`}>{label}</p>
+        {icon && (
+          <div className={`flex h-10 w-10 items-center justify-center rounded-xl ${tone === 'accent' ? 'bg-white/10' : 'bg-slate-100'}`}>
+            {icon}
+          </div>
+        )}
+      </div>
+      <p className={`mt-3 text-3xl font-semibold tracking-[-0.03em] ${tone === 'accent' ? 'text-white' : 'text-foreground'}`}>{value}</p>
+      {trend && (
+        <div className="mt-2 flex items-center gap-1.5">
+          <span className={`text-sm font-medium ${trend.positive ? 'text-emerald-500' : 'text-red-500'}`}>
+            {trend.positive ? '+' : ''}{trend.value}
+          </span>
+        </div>
+      )}
+      <p className={`mt-1 text-sm ${tone === 'accent' ? 'text-white/70' : 'text-muted'}`}>{detail}</p>
     </div>
   );
 }
@@ -348,19 +367,30 @@ export function PetOperationsDashboard({
     <div className={sharedPageStackClass}>
       {showSubnav ? <PetModuleSubnav /> : null}
 
-      <section className="flex flex-col gap-4 rounded-[1.75rem] border border-slate-200 bg-white p-5 shadow-xs lg:flex-row lg:items-center lg:justify-between lg:p-6">
-        <div className="max-w-3xl">
-          {surfaceLabel ? <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-accent">{surfaceLabel}</p> : null}
-          <p className={`${surfaceLabel ? 'mt-2 ' : ''}text-xs font-semibold uppercase tracking-[0.18em] text-slate-600`}>{eyebrow}</p>
-          <h2 className="mt-2 text-3xl font-semibold tracking-[-0.04em] text-foreground">{title}</h2>
-          <p className="mt-3 text-sm leading-7 text-slate-600">{description}</p>
+      <section className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+        <div>
+          <h1 className="text-2xl font-semibold tracking-[-0.03em] text-foreground">{title}</h1>
+          <p className="mt-1 text-sm text-muted">{description}</p>
         </div>
-        <div className="flex flex-wrap items-center gap-3">
-          <Link href="/pet/appointments" className="ui-secondary-button">
-            {t.actions.appointments}
-          </Link>
-          <Link href="/pet/invoices" className="ui-primary-button">
-            {t.actions.billing}
+        <div className="flex items-center gap-3">
+          <div className="relative">
+            <svg className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+            <input
+              type="text"
+              placeholder="Buscar paciente, tutor..."
+              className="w-64 rounded-xl border border-border bg-white py-2.5 pl-10 pr-4 text-sm text-foreground placeholder:text-muted-foreground focus:border-petflow focus:outline-none focus:ring-2 focus:ring-petflow/20"
+            />
+          </div>
+          <Link 
+            href="/pet/appointments/new" 
+            className="inline-flex items-center gap-2 rounded-xl bg-petflow px-4 py-2.5 text-sm font-semibold text-white shadow-sm shadow-petflow/20 transition-all hover:-translate-y-0.5 hover:bg-petflow-dark"
+          >
+            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+            </svg>
+            Novo Agendamento
           </Link>
         </div>
       </section>
@@ -371,26 +401,32 @@ export function PetOperationsDashboard({
       {!loading ? (
         <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
           <OperationsStatCard
-            label={t.stats.appointmentsDay}
+            label="Consultas Hoje"
             value={String(todayAppointments.length)}
-            detail={`${inProgressPets.length} ${t.stats.appointmentsDayDetail.replace('{ready}', String(readyPets.length))}`}
+            detail={`${inProgressPets.length} pendentes`}
             tone="accent"
+            icon={<Calendar className="h-5 w-5 text-white" />}
           />
           <OperationsStatCard
-            label={t.stats.penultimateBath}
-            value={String(penultimateBathCount)}
-            detail={`${expiringPlans.length} ${t.stats.penultimateBathDetail}`}
-            tone={planAlerts.length > 0 ? 'warning' : 'default'}
+            label="Pacientes Ativos"
+            value={String(state.clients.length)}
+            detail=""
+            trend={{ value: '+12 este mes', positive: true }}
+            icon={<PawPrint className="h-5 w-5 text-muted-foreground" />}
           />
           <OperationsStatCard
-            label={t.stats.nextCycle}
+            label="Receita Mensal"
             value={formatCurrencyForLocale(locale, nextCycleProjectedDue)}
-            detail={`${nextCycleRecurring} ${t.stats.nextCycleDetail}`}
+            detail=""
+            trend={{ value: '+18.5%', positive: true }}
+            icon={<DollarSign className="h-5 w-5 text-muted-foreground" />}
           />
           <OperationsStatCard
-            label={t.stats.commission}
-            value={formatCurrencyForLocale(locale, monthCommissionTotal)}
-            detail={`${state.completedMonthAppointments.length} ${t.stats.commissionDetail}`}
+            label="Vacinas Aplicadas"
+            value={String(state.completedMonthAppointments.length)}
+            detail=""
+            trend={{ value: '+8.2%', positive: true }}
+            icon={<Syringe className="h-5 w-5 text-muted-foreground" />}
           />
         </div>
       ) : null}

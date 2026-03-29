@@ -3,196 +3,159 @@
 import { ReactNode, useMemo } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import {
+  LayoutDashboard,
+  PawPrint,
+  Users,
+  Calendar,
+  FileText,
+  Syringe,
+  DollarSign,
+  LogOut,
+} from 'lucide-react';
 import { useAuth } from '@/shared/auth/use-auth';
 import { BrandMark } from '@/shared/components/brand-assets';
-import { petSubmoduleEntitlements } from '@/shared/entitlements/tenant-entitlements';
 import { useAppMessages } from '@/shared/i18n/app-i18n-provider';
 import { useFrontendPlatform } from '@/shared/platform/use-frontend-platform';
-import { groupSidebarItems, SidebarGroup, filterSidebarItems } from '@/shared/platform/sidebar-navigation';
 
 type SidebarItem = {
   href: string;
   label: string;
-  anyOf?: string[];
-  anyEntitlements?: readonly string[];
-  moduleCode?: 'CRM' | 'IOT' | 'PET' | 'FINANCE';
-  group: SidebarGroup;
-  platformOnly?: boolean;
-  icon: (props: { className?: string }) => ReactNode;
+  icon: ReactNode;
+  group: 'main' | 'gestao' | 'financeiro';
 };
-
-/* ═══════════════════════════════════════════════════════════════════════════
-   Icon Components - Minimal stroke-based icons
-   ═══════════════════════════════════════════════════════════════════════════ */
-
-function IconGrid({ className }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-      <rect x="3" y="3" width="7" height="7" rx="1" />
-      <rect x="14" y="3" width="7" height="7" rx="1" />
-      <rect x="3" y="14" width="7" height="7" rx="1" />
-      <rect x="14" y="14" width="7" height="7" rx="1" />
-    </svg>
-  );
-}
-
-function IconSettings({ className }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-      <circle cx="12" cy="12" r="3" />
-      <path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83" />
-    </svg>
-  );
-}
-
-function IconLogout({ className }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-      <polyline points="16,17 21,12 16,7" />
-      <line x1="21" y1="12" x2="9" y2="12" />
-    </svg>
-  );
-}
-
-/* ═══════════════════════════════════════════════════════════════════════════
-   Navigation Items Configuration
-   ═══════════════════════════════════════════════════════════════════════════ */
 
 function isItemActive(pathname: string, href: string) {
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
-function getInitials(name?: string) {
-  if (!name) return 'PT';
-  return name
-    .split(/\s+/)
-    .slice(0, 2)
-    .map((part) => part[0]?.toUpperCase() ?? '')
-    .join('');
-}
-
-/* ═══════════════════════════════════════════════════════════════════════════
-   Sidebar Component
-   ═══════════════════════════════════════════════════════════════════════════ */
-
 export function Sidebar() {
   const pathname = usePathname();
   const { signOut } = useAuth();
   const messages = useAppMessages().sidebar;
-  const { branding, modules, user, workspace } = useFrontendPlatform();
-  const items = useMemo<SidebarItem[]>(() => [
-    { href: '/dashboard', label: messages.overview, group: 'core', icon: IconGrid },
-    { href: '/settings', label: messages.settings, group: 'core', icon: IconSettings },
-    {
-      href: '/pet',
-      label: messages.petFlow,
-      anyOf: ['pet.dashboard.read', 'pet.client.read', 'pet.profile.read', 'pet.appointment.read', 'pet.invoice.read'],
-      anyEntitlements: petSubmoduleEntitlements,
-      moduleCode: 'PET',
-      group: 'pet',
-      icon: IconGrid
-    },
-  ], [messages.overview, messages.petFlow, messages.settings]);
+  const { branding, workspace } = useFrontendPlatform();
 
-  const visibleItems = useMemo(() => {
-    return filterSidebarItems(items, {
-      user,
-      modules: { availableCodes: modules.availableCodes, loading: modules.loading },
-      workspace: { canManagePlatformAdministration: workspace.canManagePlatformAdministration },
-    });
-  }, [items, modules.availableCodes, modules.loading, user, workspace.canManagePlatformAdministration]);
+  const items: SidebarItem[] = useMemo(() => [
+    // Main
+    { href: '/dashboard', label: 'Dashboard', icon: <LayoutDashboard className="h-5 w-5" />, group: 'main' },
+    // Gestao
+    { href: '/pet/pacientes', label: 'Pacientes', icon: <PawPrint className="h-5 w-5" />, group: 'gestao' },
+    { href: '/pet/tutores', label: 'Tutores', icon: <Users className="h-5 w-5" />, group: 'gestao' },
+    { href: '/pet/agendamentos', label: 'Agendamentos', icon: <Calendar className="h-5 w-5" />, group: 'gestao' },
+    { href: '/pet/prontuarios', label: 'Prontuarios', icon: <FileText className="h-5 w-5" />, group: 'gestao' },
+    { href: '/pet/vacinas', label: 'Vacinas', icon: <Syringe className="h-5 w-5" />, group: 'gestao' },
+    // Financeiro
+    { href: '/pet/faturamento', label: 'Faturamento', icon: <DollarSign className="h-5 w-5" />, group: 'financeiro' },
+  ], []);
 
-  const groupedItems = useMemo(
-    () => groupSidebarItems(visibleItems, workspace.canManagePlatformAdministration),
-    [visibleItems, workspace.canManagePlatformAdministration]
-  );
+  const mainItems = items.filter((item) => item.group === 'main');
+  const gestaoItems = items.filter((item) => item.group === 'gestao');
+  const financeiroItems = items.filter((item) => item.group === 'financeiro');
 
   return (
-    <aside className="sticky top-0 hidden h-screen w-72 flex-col border-r border-slate-200 bg-white lg:flex">
-      <div className="border-b border-border px-4 py-5">
+    <aside className="sticky top-0 hidden h-screen w-64 flex-col border-r border-border bg-white lg:flex">
+      {/* Logo */}
+      <div className="border-b border-border px-5 py-5">
         <Link href="/" className="flex items-center gap-3">
-          <BrandMark className="h-12 w-12 shrink-0" imageClassName="scale-[1.08]" />
+          <BrandMark className="h-10 w-10 shrink-0" imageClassName="scale-[1.08]" />
           <div className="min-w-0">
-            <p className="truncate text-base font-semibold tracking-[-0.02em] text-foreground">PetFlow</p>
-            <p className="mt-1 truncate text-[11px] font-medium uppercase tracking-[0.18em] text-slate-600">
-              by PhaifferTech
-            </p>
+            <p className="text-base font-semibold tracking-[-0.02em] text-foreground">PetFlow</p>
+            <p className="text-[10px] font-medium text-petflow">by PhaifferTech</p>
           </div>
         </Link>
-        <div className="mt-4 rounded-[1.25rem] border border-slate-200 bg-slate-50 p-3">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500">{messages.workspaceLabel}</p>
-          <p className="mt-1 truncate text-sm font-semibold text-foreground">{branding.scopeName}</p>
-          <p className="mt-1 truncate text-xs text-slate-600">{workspace.accessLabel}</p>
-        </div>
       </div>
 
-      <nav className="flex-1 overflow-y-auto px-3 py-4">
+      {/* Navigation */}
+      <nav className="flex-1 overflow-y-auto px-3 py-5">
         <div className="space-y-6">
-          {groupedItems.map((group) => (
-            <div key={group.key}>
-              {group.key === 'core' || group.items.length > 1 ? (
-                <p className="px-3 text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">
-                  {group.key === 'core'
-                    ? messages.workspaceLabel
-                    : group.key === 'pet'
-                      ? messages.petFlow
-                      : group.title}
-                </p>
-              ) : null}
-              <div className={`${group.key === 'core' || group.items.length > 1 ? 'mt-2' : ''} space-y-1`}>
-                {group.items.map((item) => {
-                  const active = isItemActive(pathname, item.href);
-                  const Icon = item.icon;
+          {/* Main Items */}
+          <div className="space-y-1">
+            {mainItems.map((item) => {
+              const active = isItemActive(pathname, item.href);
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all ${
+                    active
+                      ? 'bg-petflow text-white shadow-sm shadow-petflow/20'
+                      : 'text-muted hover:bg-slate-50 hover:text-foreground'
+                  }`}
+                >
+                  <span className={active ? 'text-white' : 'text-muted-foreground'}>{item.icon}</span>
+                  <span>{item.label}</span>
+                </Link>
+              );
+            })}
+          </div>
 
-                  return (
-                    <Link
-                      key={item.href}
-                      href={item.href}
-                      className={`group flex items-center gap-3 rounded-xl border px-3 py-2.5 text-sm transition-all duration-200 ${
-                        active
-                          ? 'border-transparent bg-[color:var(--accent)] text-white shadow-sm'
-                          : 'border-transparent text-slate-600 hover:border-slate-200 hover:bg-slate-50 hover:text-foreground'
-                      }`}
-                    >
-                      <span
-                        className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-[0.9rem] border border-slate-200 bg-slate-50 transition-colors"
-                        style={active ? {
-                          borderColor: 'rgba(255,255,255,0.18)',
-                          backgroundColor: 'rgba(255,255,255,0.12)',
-                          color: '#ffffff'
-                        } : undefined}
-                      >
-                        <Icon className="h-4 w-4" />
-                      </span>
-                      <span className="truncate">{item.label}</span>
-                    </Link>
-                  );
-                })}
-              </div>
+          {/* Gestao Group */}
+          <div>
+            <p className="mb-2 px-3 text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+              Gestao
+            </p>
+            <div className="space-y-1">
+              {gestaoItems.map((item) => {
+                const active = isItemActive(pathname, item.href);
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all ${
+                      active
+                        ? 'bg-petflow text-white shadow-sm shadow-petflow/20'
+                        : 'text-muted hover:bg-slate-50 hover:text-foreground'
+                    }`}
+                  >
+                    <span className={active ? 'text-white' : 'text-muted-foreground'}>{item.icon}</span>
+                    <span>{item.label}</span>
+                  </Link>
+                );
+              })}
             </div>
-          ))}
+          </div>
+
+          {/* Financeiro Group */}
+          <div>
+            <p className="mb-2 px-3 text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+              Financeiro
+            </p>
+            <div className="space-y-1">
+              {financeiroItems.map((item) => {
+                const active = isItemActive(pathname, item.href);
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all ${
+                      active
+                        ? 'bg-petflow text-white shadow-sm shadow-petflow/20'
+                        : 'text-muted hover:bg-slate-50 hover:text-foreground'
+                    }`}
+                  >
+                    <span className={active ? 'text-white' : 'text-muted-foreground'}>{item.icon}</span>
+                    <span>{item.label}</span>
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
         </div>
       </nav>
 
+      {/* Footer - Workspace Card */}
       <div className="border-t border-border p-4">
-        <div className="mb-4 rounded-[1.25rem] border border-slate-200 bg-slate-50 p-3">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-sm font-semibold text-foreground">
-              {getInitials(user?.fullName)}
-            </div>
-            <div className="min-w-0">
-              <p className="truncate text-sm font-medium text-foreground">{user?.fullName}</p>
-              <p className="truncate text-[11px] text-slate-500">{user?.email}</p>
-            </div>
-          </div>
+        <div className="rounded-xl bg-petflow/5 p-3">
+          <p className="text-sm font-semibold text-petflow">{branding.scopeName || 'Clinica VetCare'}</p>
+          <p className="mt-0.5 text-xs text-muted">{workspace.accessLabel || 'Plano Professional'}</p>
         </div>
+        
         <button
           type="button"
           onClick={() => void signOut()}
-          className="flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-600 transition-colors hover:border-destructive hover:bg-destructive-muted hover:text-destructive"
+          className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl border border-border bg-white px-3 py-2.5 text-sm text-muted transition-colors hover:border-destructive hover:bg-destructive-muted hover:text-destructive"
         >
-          <IconLogout className="h-4 w-4" />
+          <LogOut className="h-4 w-4" />
           <span>{messages.signOut}</span>
         </button>
       </div>

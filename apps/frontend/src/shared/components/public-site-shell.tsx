@@ -4,13 +4,7 @@ import { ReactNode } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { BrandBanner, BrandMark } from '@/shared/components/brand-assets';
-import {
-  publicChromeSurfaceClass,
-  publicCompactButtonClass,
-  publicPrimaryButtonClass,
-  publicSecondaryButtonClass,
-  publicSiteContainerClass,
-} from '@/shared/components/public-visual-system';
+import { publicSiteContainerClass } from '@/shared/components/public-visual-system';
 import { useAppMessages } from '@/shared/i18n/app-i18n-provider';
 import { usePublicSite } from '@/shared/public/public-site-provider';
 
@@ -22,43 +16,37 @@ export function PublicSiteShell({ children }: PublicSiteShellProps) {
   const pathname = usePathname();
   const { locale, setLocale } = usePublicSite();
   const t = useAppMessages().publicShell;
-  const useMinimalChrome = ['/login', '/forgot-password', '/reset-password'].includes(pathname);
+  const useMinimalChrome = ['/login', '/forgot-password', '/reset-password', '/register'].includes(pathname);
 
   const navigationItems = [
-    { href: '/', label: t.navHome, active: pathname === '/' },
-    { href: '/products', label: t.navProducts, active: pathname === '/products' },
-    { href: '/platform', label: t.navPlatform, active: pathname === '/platform' },
-    { href: '/contact', label: t.navContact, active: pathname === '/contact' },
+    { href: '/', label: 'Plataforma', active: pathname === '/' },
+    { href: '/recursos', label: 'Recursos', active: pathname === '/recursos' },
+    { href: '/precos', label: 'Precos', active: pathname === '/precos' },
+    { href: '/clientes', label: 'Clientes', active: pathname === '/clientes' },
+    { href: '/contact', label: 'Contato', active: pathname === '/contact' },
   ];
 
   const footerLinks = [
-    { href: '/', label: t.navHome },
-    { href: '/products', label: t.navProducts },
-    { href: '/platform', label: t.navPlatform },
-    { href: '/contact', label: t.navContact },
+    { href: '/', label: 'Plataforma' },
+    { href: '/recursos', label: 'Recursos' },
+    { href: '/precos', label: 'Precos' },
+    { href: '/contact', label: 'Contato' },
   ];
 
   const productLinks = [
-    { href: '/products', label: 'PetFlow' },
-    { href: '/platform', label: t.footerPlatformLabel },
+    { href: '/produtos/prontuario', label: 'Prontuario Digital' },
+    { href: '/produtos/agendamentos', label: 'Agendamentos' },
+    { href: '/produtos/vacinas', label: 'Controle de Vacinas' },
+    { href: '/produtos/financeiro', label: 'Gestao Financeira' },
   ];
 
   const accessLinks = [
-    { href: '/login', label: t.navLogin },
-    { href: '/contact', label: t.footerDemoLabel },
+    { href: '/login', label: 'Entrar' },
+    { href: '/register', label: 'Comecar teste gratuito' },
   ];
 
   const nextLocale = locale === 'pt-BR' ? 'en-US' : 'pt-BR';
   const localeSwitchLabel = nextLocale === 'en-US' ? 'EN' : 'PT';
-
-  const navLinkClass = (active: boolean) =>
-    `inline-flex h-10 items-center rounded-2xl px-3.5 text-sm font-medium transition-all duration-200 ${
-      active
-        ? 'bg-accent-muted text-foreground shadow-sm'
-        : 'text-slate-600 hover:bg-surface-inset hover:text-slate-900'
-    }`;
-
-  const localeButtonClass = publicCompactButtonClass;
 
   if (useMinimalChrome) {
     return (
@@ -70,25 +58,28 @@ export function PublicSiteShell({ children }: PublicSiteShellProps) {
 
   return (
     <div className="min-h-screen bg-white text-foreground">
-      <header className={`sticky top-0 z-40 ${publicChromeSurfaceClass}`}>
+      {/* Header */}
+      <header className="sticky top-0 z-40 border-b border-border/50 bg-white/95 backdrop-blur-lg">
         <div className={`${publicSiteContainerClass} flex h-20 items-center justify-between gap-6`}>
+          {/* Logo */}
           <Link href="/" className="group inline-flex shrink-0 items-center gap-3">
-            <BrandMark priority className="h-11 w-11 shrink-0 sm:h-12 sm:w-12" imageClassName="scale-[1.08]" />
+            <BrandMark priority className="h-10 w-10 shrink-0" imageClassName="scale-[1.08]" />
             <div className="min-w-0">
-              <p className="truncate text-base font-semibold tracking-[-0.03em] text-slate-900">PetFlow</p>
-              <p className="mt-0.5 truncate text-[11px] font-medium uppercase tracking-[0.18em] text-slate-600">
-                by PhaifferTech
-              </p>
+              <p className="text-lg font-semibold tracking-[-0.02em] text-petflow">PetFlow</p>
+              <p className="text-[10px] font-medium text-muted-foreground">by PhaifferTech</p>
             </div>
           </Link>
 
-          <nav className="hidden items-center gap-8 md:flex">
+          {/* Navigation */}
+          <nav className="hidden items-center gap-8 lg:flex">
             {navigationItems.map((item) => (
               <Link
                 key={item.href}
                 href={item.href}
                 className={`text-sm transition-colors ${
-                  item.active ? 'font-semibold text-foreground' : 'font-medium text-slate-600 hover:text-slate-900'
+                  item.active 
+                    ? 'font-semibold text-foreground' 
+                    : 'font-medium text-muted hover:text-foreground'
                 }`}
               >
                 {item.label}
@@ -96,76 +87,68 @@ export function PublicSiteShell({ children }: PublicSiteShellProps) {
             ))}
           </nav>
 
-          <div className="flex items-center gap-3">
-            <button
-              type="button"
-              onClick={() => setLocale(nextLocale)}
-              aria-label={t.localeLabel}
-              className={`${localeButtonClass} hidden sm:inline-flex`}
+          {/* Actions */}
+          <div className="flex items-center gap-4">
+            <Link 
+              href="/login" 
+              className="hidden text-sm font-medium text-muted transition-colors hover:text-foreground md:inline-flex"
             >
-              {localeSwitchLabel}
-            </button>
-
-            <Link href="/login" className="text-sm font-medium text-slate-700 transition-colors hover:text-slate-900 md:hidden">
-              {t.navLogin}
+              Entrar
             </Link>
-            <div className="hidden items-center gap-3 md:flex">
-              <Link href="/login" className={publicSecondaryButtonClass}>
-                {t.navLogin}
-              </Link>
-              <Link href="/contact" className={publicPrimaryButtonClass}>
-                {t.footerDemoLabel}
-              </Link>
-            </div>
+            <Link 
+              href="/register" 
+              className="inline-flex items-center rounded-xl bg-petflow px-5 py-2.5 text-sm font-semibold text-white shadow-sm shadow-petflow/20 transition-all hover:-translate-y-0.5 hover:bg-petflow-dark"
+            >
+              Demonstracao gratuita
+            </Link>
           </div>
         </div>
 
-        <div className={`${publicSiteContainerClass} pb-4 md:hidden`}>
+        {/* Mobile Navigation */}
+        <div className={`${publicSiteContainerClass} pb-4 lg:hidden`}>
           <nav className="flex gap-2 overflow-x-auto whitespace-nowrap">
             {navigationItems.map((item) => (
-              <Link key={item.href} href={item.href} className={navLinkClass(item.active)}>
+              <Link 
+                key={item.href} 
+                href={item.href} 
+                className={`inline-flex items-center rounded-full px-4 py-2 text-sm transition-colors ${
+                  item.active 
+                    ? 'bg-petflow/10 font-medium text-petflow' 
+                    : 'text-muted hover:bg-slate-100'
+                }`}
+              >
                 {item.label}
               </Link>
             ))}
           </nav>
-
-          <div className="mt-4 flex items-center gap-3">
-            <button
-              type="button"
-              onClick={() => setLocale(nextLocale)}
-              aria-label={t.localeLabel}
-              className={localeButtonClass}
-            >
-              {localeSwitchLabel}
-            </button>
-
-            <Link
-              href="/login"
-              className={pathname === '/login' ? publicSecondaryButtonClass : publicPrimaryButtonClass}
-            >
-              {t.navLogin}
-            </Link>
-          </div>
         </div>
       </header>
 
       <main>{children}</main>
 
-      <footer className="relative z-10 mt-16 border-t border-white/10 bg-slate-950 text-white">
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(59,130,246,0.16),transparent_32%)]" />
-        <div className={`${publicSiteContainerClass} relative grid gap-10 py-12 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)_minmax(0,1fr)]`}>
+      {/* Footer */}
+      <footer className="relative z-10 mt-20 border-t border-white/10 bg-petflow-gradient text-white">
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_30%_70%,rgba(16,185,129,0.15),transparent_50%)]" />
+        
+        <div className={`${publicSiteContainerClass} relative grid gap-12 py-16 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)_minmax(0,1fr)]`}>
+          {/* Brand Column */}
           <div>
-            <BrandBanner
-              tone="dark"
-              className="h-16 w-[172px] sm:w-[188px]"
-            />
-            <p className="mt-5 text-2xs font-medium uppercase tracking-wider text-slate-400">{t.brandTitle}</p>
-            <p className="mt-4 text-sm leading-relaxed text-slate-300">{t.footerNarrativeText}</p>
+            <div className="flex items-center gap-3">
+              <BrandMark tone="dark" className="h-10 w-10" />
+              <div>
+                <p className="text-lg font-semibold text-white">PetFlow</p>
+                <p className="text-xs text-slate-400">by PhaifferTech</p>
+              </div>
+            </div>
+            <p className="mt-6 max-w-sm text-sm leading-relaxed text-slate-300">
+              Sistema de gestao completo para clinicas veterinarias. Prontuario digital, agendamentos, vacinas e muito mais.
+            </p>
           </div>
 
+          {/* Navigation Column */}
           <div>
-            <p className="text-sm font-medium text-white">{t.navLabel}</p>
-            <div className="mt-4 flex flex-col gap-2 text-sm text-slate-300">
+            <p className="text-sm font-semibold text-white">Navegacao</p>
+            <div className="mt-4 flex flex-col gap-3 text-sm text-slate-300">
               {footerLinks.map((item) => (
                 <Link key={item.href} href={item.href} className="transition-colors hover:text-white">
                   {item.label}
@@ -174,21 +157,19 @@ export function PublicSiteShell({ children }: PublicSiteShellProps) {
             </div>
           </div>
 
+          {/* Products & Access Column */}
           <div>
-            <p className="text-sm font-medium text-white">{t.footerProductsTitle}</p>
-            <div className="mt-4 flex flex-col gap-2 text-sm text-slate-300">
+            <p className="text-sm font-semibold text-white">Produtos</p>
+            <div className="mt-4 flex flex-col gap-3 text-sm text-slate-300">
               {productLinks.map((item) => (
-                <Link
-                  key={`${item.href}-${item.label}`}
-                  href={item.href}
-                  className="transition-colors hover:text-white"
-                >
+                <Link key={item.href} href={item.href} className="transition-colors hover:text-white">
                   {item.label}
                 </Link>
               ))}
             </div>
-            <p className="mt-8 text-sm font-medium text-white">{t.footerAccessTitle}</p>
-            <div className="mt-4 flex flex-col gap-2 text-sm text-slate-300">
+            
+            <p className="mt-8 text-sm font-semibold text-white">Acesso</p>
+            <div className="mt-4 flex flex-col gap-3 text-sm text-slate-300">
               {accessLinks.map((item) => (
                 <Link key={item.href} href={item.href} className="transition-colors hover:text-white">
                   {item.label}
@@ -198,9 +179,10 @@ export function PublicSiteShell({ children }: PublicSiteShellProps) {
           </div>
         </div>
 
+        {/* Copyright */}
         <div className="border-t border-white/10">
-          <div className={`${publicSiteContainerClass} py-5 text-sm text-slate-400`}>
-            {t.footerCopyright}
+          <div className={`${publicSiteContainerClass} py-6 text-sm text-slate-400`}>
+            2024 PhaifferTech. Todos os direitos reservados.
           </div>
         </div>
       </footer>
