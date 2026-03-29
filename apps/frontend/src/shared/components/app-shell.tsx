@@ -1,14 +1,25 @@
 'use client';
 
 import type { ReactNode } from 'react';
-import { useMemo } from 'react';
+import { useMemo, useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { BrandMark } from '@/shared/components/brand-assets';
+import { Search, X, Globe, Bell, Settings, LogOut, ChevronDown } from 'lucide-react';
 import { ImpersonationBanner } from '@/shared/components/impersonation-banner';
 import { Sidebar } from '@/shared/components/sidebar';
+import { useAuth } from '@/shared/auth/use-auth';
 import { useAppI18n, useAppMessages } from '@/shared/i18n/app-i18n-provider';
 import { useFrontendPlatform } from '@/shared/platform/use-frontend-platform';
+import { Avatar, AvatarFallback } from '@/shared/ui/shadcn/avatar';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/shared/ui/shadcn/dropdown-menu';
+import { Separator } from '@/shared/ui/shadcn/separator';
 
 function resolveModuleContext(pathname: string): 'core' | 'crm' | 'iot' | 'pet' {
   if (pathname.startsWith('/iot')) return 'iot';
@@ -26,30 +37,24 @@ function resolveHeaderMeta(
   if (pathname.startsWith('/iot')) {
     return { label: labels.iotLabel, description: labels.iotDescription };
   }
-
   if (pathname.startsWith('/crm')) {
     return { label: labels.crmLabel, description: labels.crmDescription };
   }
-
   if (pathname.startsWith('/pet')) {
     return { label: labels.petLabel, description: labels.petDescription };
   }
-
   if (pathname.startsWith('/tenants')) {
     return { label: labels.workspacesLabel, description: labels.workspacesDescription };
   }
-
   if (pathname.startsWith('/users')) {
     return { label: labels.usersLabel, description: labels.usersDescription };
   }
-
   if (pathname.startsWith('/settings')) {
     return { label: labels.settingsLabel, description: labels.settingsDescription };
   }
-
   return {
     label: platformAdmin ? labels.platformLabel : hasPetVisible ? labels.petOverviewLabel : labels.overviewLabel,
-    description: hasPetVisible ? labels.petOverviewDescription : labels.overviewDescription
+    description: hasPetVisible ? labels.petOverviewDescription : labels.overviewDescription,
   };
 }
 
@@ -62,28 +67,11 @@ function getInitials(name?: string) {
     .join('');
 }
 
-function SearchIcon() {
-  return (
-    <svg className="h-4 w-4 shrink-0 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-      <circle cx="11" cy="11" r="7" />
-      <path d="m20 20-3.5-3.5" strokeLinecap="round" />
-    </svg>
-  );
-}
-
-function PlusIcon() {
-  return (
-    <svg className="h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-      <path d="M12 5v14M5 12h14" strokeLinecap="round" />
-    </svg>
-  );
-}
-
 export function AppShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const { locale, setLocale } = useAppI18n();
+  const { signOut } = useAuth();
   const messages = useAppMessages().appShell;
-  const petSubnav = useAppMessages().petSubnav;
   const { branding, modules, user, workspace } = useFrontendPlatform();
   const hasPetVisible = modules.availableCodes.includes('PET');
 
@@ -92,122 +80,165 @@ export function AppShell({ children }: { children: ReactNode }) {
     () => resolveHeaderMeta(pathname, messages.header, workspace.canManagePlatformAdministration, hasPetVisible),
     [hasPetVisible, messages.header, pathname, workspace.canManagePlatformAdministration]
   );
+
   const nextLocale = locale === 'pt-BR' ? 'en-US' : 'pt-BR';
-  const localeSwitchLabel = nextLocale === 'en-US' ? 'EN' : 'PT';
-  const primaryActionHref = hasPetVisible ? '/pet/appointments' : '/settings';
-  const primaryActionLabel = hasPetVisible ? petSubnav.appointments : messages.mobileSettings;
-  const shellStyle = useMemo(
-    () => ({
-      ...branding.style
-    }),
-    [branding.style]
-  );
+  const localeSwitchLabel = nextLocale === 'en-US' ? 'PT-BR' : 'EN-US';
+  const currentLocaleLabel = locale === 'pt-BR' ? 'PT-BR' : 'EN-US';
+
+  const shellStyle = useMemo(() => ({ ...branding.style }), [branding.style]);
+
+  const [searchOpen, setSearchOpen] = useState(false);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (searchOpen && searchInputRef.current) {
+      searchInputRef.current.focus();
+    }
+  }, [searchOpen]);
 
   return (
     <div
-      className="flex min-h-screen bg-[linear-gradient(180deg,#f5f8f6,#ffffff_240px)]"
+      className="flex h-screen overflow-hidden bg-[var(--background)]"
       data-module={moduleContext}
       style={shellStyle}
     >
       <Sidebar />
 
-      <div className="flex min-w-0 flex-1 flex-col">
+      <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
         <ImpersonationBanner tenantName={branding.scopeName} tenantCode={branding.tenantCode} />
 
-        <nav className="sticky top-0 z-30 flex items-center gap-2 overflow-x-auto border-b border-slate-200/80 bg-white/88 px-3 py-3 backdrop-blur-xl lg:hidden">
-          <Link href="/" className="inline-flex shrink-0">
-            <BrandMark className="h-11 w-11 rounded-2xl" imageClassName="scale-[1.08]" />
-          </Link>
-          <Link
-            href="/dashboard"
-            className={`whitespace-nowrap rounded-xl px-3 py-2 text-sm font-medium transition-colors ${
-              pathname === '/dashboard'
-                ? 'bg-[color:var(--accent)]/10 text-[color:var(--accent)]'
-                : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
-            }`}
-          >
-            {messages.mobileOverview}
-          </Link>
-          {hasPetVisible ? (
-            <Link
-              href="/pet/appointments"
-              className={`whitespace-nowrap rounded-xl px-3 py-2 text-sm font-medium transition-colors ${
-                pathname.startsWith('/pet') ? 'bg-[color:var(--accent)] text-white' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
-              }`}
-            >
-              {petSubnav.appointments}
-            </Link>
-          ) : null}
-          <Link
-            href="/settings"
-            className={`whitespace-nowrap rounded-xl px-3 py-2 text-sm font-medium transition-colors ${
-              pathname.startsWith('/settings') ? 'bg-slate-900 text-white' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
-            }`}
-          >
-            {messages.mobileSettings}
-          </Link>
-        </nav>
+        {/* Topbar */}
+        <header className="sticky top-0 z-30 flex h-16 shrink-0 items-center gap-2 border-b border-[var(--border)] bg-[var(--surface)] px-4">
+          {/* Breadcrumb / section title */}
+          <Separator orientation="vertical" className="mx-1 h-5" />
+          <span className="truncate text-sm font-medium text-[var(--foreground)]">
+            {headerMeta.label}
+          </span>
 
-        <header className="sticky top-0 z-20 border-b border-slate-200/70 bg-white/84 backdrop-blur-xl">
-          <div className="mx-auto w-full max-w-[1600px] px-6 py-4 lg:px-8">
-            <div className="flex flex-col gap-4 rounded-[1.85rem] border border-slate-200/80 bg-white/86 px-5 py-5 shadow-[0_20px_44px_-34px_rgba(15,23,42,0.16)] xl:flex-row xl:items-center xl:justify-between">
-              <div>
-                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[color:var(--accent)]">
-                  {hasPetVisible ? 'PetFlow workspace' : branding.scopeName}
-                </p>
-                {hasPetVisible ? (
-                  <p className="mt-2 inline-flex items-center rounded-full bg-[color:var(--accent)]/10 px-3 py-1 text-xs font-medium text-[color:var(--accent)]">
-                    {branding.scopeName}
-                  </p>
-                ) : null}
-                <h1 className="mt-2 text-3xl font-bold tracking-[-0.04em] text-slate-900">{headerMeta.label}</h1>
-                <p className="mt-2 max-w-2xl text-sm leading-7 text-slate-600">{headerMeta.description}</p>
-              </div>
+          <div className="flex-1" />
 
-              <div className="flex flex-wrap items-center gap-3">
-                <div className="hidden min-w-[300px] items-center gap-3 rounded-xl border border-slate-200/80 bg-slate-50/80 px-4 py-3 lg:flex">
-                  <SearchIcon />
-                  <span className="truncate text-sm text-slate-500">
-                    {hasPetVisible ? messages.quickSearchPet : messages.quickSearchWorkspace}
-                  </span>
-                </div>
-
-                <Link
-                  href={primaryActionHref}
-                  className="inline-flex items-center gap-2 rounded-xl bg-[linear-gradient(135deg,var(--accent),var(--petflow-teal))] px-4 py-3 text-sm font-semibold text-white shadow-[0_18px_38px_-26px_rgba(16,185,129,0.52)] transition-transform hover:-translate-y-0.5"
-                >
-                  <PlusIcon />
-                  {primaryActionLabel}
-                </Link>
-
+          {/* Search */}
+          <div className="flex items-center">
+            {searchOpen ? (
+              <div className="flex items-center gap-1 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-2 py-1.5">
+                <Search className="h-4 w-4 shrink-0 text-[var(--muted-foreground)]" />
+                <input
+                  ref={searchInputRef}
+                  type="text"
+                  placeholder="Buscar clientes, pets, agendamentos..."
+                  className="w-52 bg-transparent text-sm text-[var(--foreground)] outline-none placeholder:text-[var(--muted-foreground)]"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Escape') setSearchOpen(false);
+                  }}
+                />
                 <button
                   type="button"
-                  onClick={() => setLocale(nextLocale)}
-                  aria-label={messages.localeButtonLabel}
-                  className="inline-flex h-11 items-center rounded-xl border border-slate-200/80 bg-slate-50/80 px-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-600 transition-colors hover:border-slate-300 hover:text-slate-900"
+                  onClick={() => setSearchOpen(false)}
+                  className="flex h-5 w-5 items-center justify-center rounded text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
                 >
-                  {localeSwitchLabel}
+                  <X className="h-3.5 w-3.5" />
                 </button>
-
-                <span className="inline-flex items-center rounded-full bg-[color:var(--accent)]/10 px-3 py-1 text-xs font-medium text-[color:var(--accent)]">
-                  {workspace.accessLabel}
-                </span>
-
-                <div className="flex items-center gap-3 rounded-xl border border-slate-200/80 bg-slate-50/80 px-3 py-2.5">
-                  <span className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-sm font-semibold text-slate-900 shadow-[0_10px_24px_-22px_rgba(15,23,42,0.16)]">
-                    {getInitials(user?.fullName)}
-                  </span>
-                  <div className="min-w-0">
-                    <p className="truncate text-sm font-semibold text-slate-900">{user?.fullName}</p>
-                    <p className="truncate text-xs text-slate-500">{user?.email}</p>
-                  </div>
-                </div>
               </div>
-            </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setSearchOpen(true)}
+                aria-label="Buscar"
+                className="flex h-8 w-8 items-center justify-center rounded-lg text-[var(--muted-foreground)] transition-colors hover:bg-[var(--surface-inset)] hover:text-[var(--foreground)]"
+              >
+                <Search className="h-4 w-4" />
+              </button>
+            )}
           </div>
+
+          {/* Language selector */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button
+                type="button"
+                aria-label={messages.localeButtonLabel}
+                className="flex h-8 items-center gap-1.5 rounded-lg px-2 text-xs font-medium text-[var(--muted-foreground)] transition-colors hover:bg-[var(--surface-inset)] hover:text-[var(--foreground)]"
+              >
+                <Globe className="h-4 w-4" />
+                {currentLocaleLabel}
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-32">
+              <DropdownMenuItem
+                onClick={() => setLocale('pt-BR')}
+                className={locale === 'pt-BR' ? 'font-medium text-[var(--primary)]' : ''}
+              >
+                PT-BR
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => setLocale('en-US')}
+                className={locale === 'en-US' ? 'font-medium text-[var(--primary)]' : ''}
+              >
+                EN-US
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          {/* Notifications */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button
+                type="button"
+                aria-label="Notificações"
+                className="relative flex h-8 w-8 items-center justify-center rounded-lg text-[var(--muted-foreground)] transition-colors hover:bg-[var(--surface-inset)] hover:text-[var(--foreground)]"
+              >
+                <Bell className="h-4 w-4" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-72">
+              <DropdownMenuLabel>Notificações</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <div className="px-2 py-4 text-center text-sm text-[var(--muted-foreground)]">
+                Nenhuma notificação no momento.
+              </div>
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          {/* User avatar */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button
+                type="button"
+                className="flex h-8 items-center gap-1.5 rounded-lg px-1.5 text-left transition-colors hover:bg-[var(--surface-inset)]"
+              >
+                <Avatar className="h-7 w-7 text-xs">
+                  <AvatarFallback className="bg-[var(--primary)] text-[var(--primary-foreground)]">
+                    {getInitials(user?.fullName)}
+                  </AvatarFallback>
+                </Avatar>
+                <ChevronDown className="h-3.5 w-3.5 text-[var(--muted-foreground)]" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56">
+              <div className="px-2 py-1.5">
+                <p className="text-sm font-medium text-[var(--foreground)]">{user?.fullName}</p>
+                <p className="text-xs text-[var(--muted-foreground)]">{user?.email}</p>
+              </div>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem asChild>
+                <Link href="/settings" className="cursor-pointer">
+                  <Settings className="h-4 w-4" />
+                  Configurações
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                onClick={() => void signOut()}
+                className="cursor-pointer text-[var(--destructive)] focus:text-[var(--destructive)]"
+              >
+                <LogOut className="h-4 w-4" />
+                Sair
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </header>
 
-        <main className="flex-1 px-6 py-6 lg:px-8">
+        <main className="flex-1 overflow-auto px-6 py-6 lg:px-8">
           <div className="mx-auto w-full max-w-[1600px]">{children}</div>
         </main>
       </div>

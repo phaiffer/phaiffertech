@@ -70,8 +70,8 @@ export function PetCommissionSummaryPage() {
     try {
       const result = await petService.listAppointments(0, 500, '', {
         status: 'COMPLETED',
-        scheduledFrom: `${from}T00:00:00.000Z`,
-        scheduledTo: `${to}T23:59:59.999Z`
+        scheduledFrom: new Date(`${from}T00:00:00`).toISOString(),
+        scheduledTo: new Date(`${to}T23:59:59`).toISOString()
       });
       setRows(groupByProfessional(result.items ?? []));
     } catch (err) {

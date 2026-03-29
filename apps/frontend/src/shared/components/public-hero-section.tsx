@@ -75,7 +75,7 @@ export function PublicHeroSection({
               {titleAfter}
             </h1>
 
-            <p className={`mt-6 max-w-2xl text-slate-600 ${sharedBodyTextClass}`}>{description}</p>
+            <p className={`mt-6 max-w-2xl ${sharedBodyTextClass}`}>{description}</p>
 
             <div className="mt-10 flex flex-wrap items-center gap-4">
               <Link
@@ -115,7 +115,7 @@ export function PublicHeroSection({
                   <BrandMark priority className="h-11 w-11 shrink-0 rounded-2xl" imageClassName="scale-[1.08]" />
                   <div>
                     <p className="text-sm font-semibold tracking-[-0.02em] text-slate-900">PetFlow</p>
-                    <p className="text-[10px] font-medium uppercase tracking-[0.18em] text-slate-500">banho, tosa e recorrência</p>
+                    <p className="text-[10px] font-medium uppercase tracking-[0.18em] text-slate-700">banho, tosa e recorrência</p>
                   </div>
                 </div>
                 <span className="inline-flex rounded-full bg-[color:var(--accent)]/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-[color:var(--accent)]">
@@ -127,12 +127,12 @@ export function PublicHeroSection({
                 {heroStats.length > 0 ? heroStats.map((stat) => (
                   <div key={`${stat.value}-${stat.label}`} className="rounded-[1.35rem] border border-slate-200 bg-slate-50/90 px-4 py-3.5">
                     <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[color:var(--accent)]">{stat.value}</p>
-                    <p className={`mt-2 text-slate-600 ${sharedCompactTextClass}`}>{stat.label}</p>
+                    <p className={`mt-2 ${sharedCompactTextClass}`}>{stat.label}</p>
                   </div>
                 )) : (
                   <div className="rounded-[1.35rem] border border-slate-200 bg-slate-50/90 px-4 py-3.5 sm:col-span-3">
                     <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[color:var(--accent)]">PetFlow</p>
-                    <p className={`mt-2 text-slate-600 ${sharedCompactTextClass}`}>
+                    <p className={`mt-2 ${sharedCompactTextClass}`}>
                       Daily queue, recurring plans, billing, and inventory in one product surface.
                     </p>
                   </div>
@@ -141,7 +141,7 @@ export function PublicHeroSection({
 
               <div className="mt-5 grid gap-4 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)]">
                 <div className="rounded-[1.5rem] border border-slate-200 bg-slate-50/90 p-4">
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">Operação visível</p>
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-700">Operação visível</p>
                   <div className="mt-4 space-y-3">
                     {heroHighlights.slice(0, 3).map((item, index) => (
                       <div key={item} className="flex items-start gap-3 rounded-2xl bg-white px-3 py-3 shadow-[0_10px_24px_-24px_rgba(15,23,42,0.16)]">

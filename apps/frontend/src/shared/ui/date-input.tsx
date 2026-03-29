@@ -1,4 +1,8 @@
-import { sharedInputClass, sharedInputLabelClass } from '@/shared/components/public-visual-system';
+import {
+  sharedInputClass,
+  sharedInputLabelClass,
+  sharedInputWithTrailingAccessoryClass
+} from '@/shared/components/public-visual-system';
 
 type DateInputProps = {
   label: string;
@@ -16,7 +20,7 @@ export function DateInput({ label, value, onChange, required = false }: DateInpu
         value={value}
         onChange={(event) => onChange(event.target.value)}
         required={required}
-        className={sharedInputClass}
+        className={`${sharedInputClass} ${sharedInputWithTrailingAccessoryClass}`}
       />
     </label>
   );

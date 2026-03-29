@@ -3,7 +3,8 @@ import {
   sharedFieldGroupClass,
   sharedFieldHintClass,
   sharedInputClass,
-  sharedInputLabelClass
+  sharedInputLabelClass,
+  sharedInputWithTrailingAccessoryClass
 } from '@/shared/components/public-visual-system';
 
 type FormSelectOption = {
@@ -46,7 +47,7 @@ export function FormSelect({
         disabled={disabled}
         onChange={(event) => onChange(event.target.value)}
         aria-describedby={descriptionId}
-        className={className ? `${sharedInputClass} ${className}` : sharedInputClass}
+        className={className ? `${sharedInputClass} ${sharedInputWithTrailingAccessoryClass} ${className}` : `${sharedInputClass} ${sharedInputWithTrailingAccessoryClass}`}
       >
         {options.map((option) => (
           <option key={option.value} value={option.value}>

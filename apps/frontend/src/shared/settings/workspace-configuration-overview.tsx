@@ -206,7 +206,7 @@ export function WorkspaceConfigurationOverview() {
           </div>
         ) : (
           <div className="grid gap-4 xl:grid-cols-2">
-            {overview.contractedModules.map((moduleItem) => (
+            {overview.contractedModules.filter((m) => m.code === 'PET').map((moduleItem) => (
               <article
                 key={moduleItem.code}
                 className="ui-surface-muted p-5"

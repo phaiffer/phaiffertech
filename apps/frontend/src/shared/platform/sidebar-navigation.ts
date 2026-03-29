@@ -6,15 +6,15 @@ import type {
   FrontendPlatformWorkspace
 } from '@/shared/platform/frontend-platform.types';
 
-export type SidebarGroup = 'core' | 'finance' | 'iot' | 'crm' | 'pet';
+export type SidebarGroup = 'core' | 'finance' | 'pet';
 
 type SidebarItemBase = {
   href: string;
   label: string;
   anyOf?: string[];
   anyEntitlements?: readonly string[];
-  moduleCode?: 'CRM' | 'IOT' | 'PET' | 'FINANCE';
-  group: SidebarGroup;
+  moduleCode?: string;
+  group: string;
   platformOnly?: boolean;
 };
 
@@ -58,7 +58,7 @@ export function groupSidebarItems<T extends SidebarItemBase>(
   items: T[],
   canManagePlatformAdministration: boolean
 ) {
-  const groupOrder: SidebarGroup[] = ['core', 'pet', 'crm', 'iot', 'finance'];
+  const groupOrder: SidebarGroup[] = ['core', 'pet', 'finance'];
 
   return groupOrder
     .map((group) => {
@@ -66,11 +66,7 @@ export function groupSidebarItems<T extends SidebarItemBase>(
         ? (canManagePlatformAdministration ? 'Platform' : 'Workspace')
         : group === 'finance'
           ? 'Finance'
-          : group === 'crm'
-            ? 'CRM'
-            : group === 'pet'
-              ? 'PetFlow'
-              : 'IoT System';
+          : 'PetFlow';
 
       return {
         key: group,

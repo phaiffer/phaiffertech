@@ -7,7 +7,6 @@ import {
 } from '@/shared/components/public-visual-system';
 import { DashboardSummaryCard as DashboardSummaryCardType } from '@/shared/types/dashboard';
 import { StatusBadge } from '@/shared/dashboard/status-badge';
-import { workspaceMutedSurfaceStyle } from '@/shared/modules/module-workspace-visual';
 
 type SummaryCardProps = {
   card: DashboardSummaryCardType;
@@ -22,31 +21,31 @@ function SummaryCardBody({ card }: SummaryCardProps) {
     <>
       <div className="flex items-start justify-between gap-3">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted">{card.label}</p>
-          <p className="mt-2 text-2xl font-semibold tabular-nums text-foreground">
+          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">{card.label}</p>
+          <p className="mt-2 text-3xl font-bold tabular-nums text-slate-900">
             {formatValue(card.value)}
           </p>
         </div>
         <StatusBadge status={card.status} />
       </div>
-      {card.trend && <p className={`mt-3 ${sharedCompactTextClass}`}>{card.trend}</p>}
+      {card.trend ? <p className={`mt-3 ${sharedCompactTextClass}`}>{card.trend}</p> : null}
     </>
   );
 }
 
 export function SummaryCard({ card }: SummaryCardProps) {
-  const className = `${sharedInteractiveSurfaceClass} p-4`;
+  const className = `${sharedInteractiveSurfaceClass} p-5`;
 
   if (card.href) {
     return (
-      <Link href={card.href} className={className} style={workspaceMutedSurfaceStyle}>
+      <Link href={card.href} className={className}>
         <SummaryCardBody card={card} />
       </Link>
     );
   }
 
   return (
-    <div className={className} style={workspaceMutedSurfaceStyle}>
+    <div className={className}>
       <SummaryCardBody card={card} />
     </div>
   );

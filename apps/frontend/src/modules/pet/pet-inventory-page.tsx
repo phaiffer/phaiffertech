@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { FormEvent, useCallback, useEffect, useMemo, useState } from 'react';
+import { ArrowRightLeft, Package, TriangleAlert, TrendingUp, type LucideIcon } from 'lucide-react';
 import { PetModuleSubnav } from '@/modules/pet/pet-module-subnav';
 import { PermissionGuard } from '@/shared/auth/PermissionGuard';
 import { usePermissions } from '@/shared/auth/usePermissions';
@@ -13,7 +14,6 @@ import {
   sharedPageStackClass
 } from '@/shared/components/public-visual-system';
 import { StatusBadge } from '@/shared/dashboard/status-badge';
-import { MetricGrid } from '@/shared/dashboard/metric-grid';
 import { useAppI18n, useAppMessages } from '@/shared/i18n/app-i18n-provider';
 import { formatDateTimeForLocale } from '@/shared/i18n/formatters';
 import { ApiClientError } from '@/shared/lib/http';
@@ -26,7 +26,6 @@ import {
 } from '@/modules/pet/pet-lookup-feedback';
 import { petService } from '@/shared/services/pet-service';
 import { PageResponse } from '@/shared/types/common';
-import { DashboardSummaryCard } from '@/shared/types/dashboard';
 import { PetInventoryMovement, PetProduct } from '@/shared/types/pet';
 import { ConfirmDialog } from '@/shared/ui/confirm-dialog';
 import { DataTable, DataTableColumn } from '@/shared/ui/data-table';
@@ -109,6 +108,55 @@ function resolveStockHealth(product: PetProduct, messages: InventoryMessages) {
     status: 'ok',
     detail: messages.health.healthyDetail
   };
+}
+
+type InventorySpotlightCardProps = {
+  icon: LucideIcon;
+  label: string;
+  value: string;
+  detail: string;
+  tone?: 'default' | 'accent' | 'warning';
+};
+
+function InventorySpotlightCard({
+  icon: Icon,
+  label,
+  value,
+  detail,
+  tone = 'default'
+}: InventorySpotlightCardProps) {
+  const toneClass = tone === 'accent'
+    ? 'border-transparent bg-[linear-gradient(135deg,var(--accent),var(--petflow-teal))] text-white shadow-[0_20px_40px_-28px_rgba(16,185,129,0.5)]'
+    : tone === 'warning'
+      ? 'border-amber-200/80 bg-[linear-gradient(180deg,rgba(251,191,36,0.12),rgba(255,255,255,0.98))]'
+      : 'border-slate-200/90 bg-white';
+
+  return (
+    <div className={`rounded-2xl border p-5 shadow-[0_16px_34px_-28px_rgba(15,23,42,0.16)] ${toneClass}`}>
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <p className={`text-xs font-semibold uppercase tracking-[0.16em] ${tone === 'accent' ? 'text-white/72' : 'text-slate-500'}`}>
+            {label}
+          </p>
+          <p className={`mt-3 text-3xl font-bold tracking-[-0.03em] ${tone === 'accent' ? 'text-white' : 'text-slate-900'}`}>
+            {value}
+          </p>
+        </div>
+        <span
+          className={`flex h-11 w-11 items-center justify-center rounded-xl ${
+            tone === 'accent'
+              ? 'bg-white/12 text-white'
+              : tone === 'warning'
+                ? 'bg-amber-100 text-amber-700'
+                : 'bg-[color:var(--accent)]/10 text-[color:var(--accent)]'
+          }`}
+        >
+          <Icon className="h-5 w-5" />
+        </span>
+      </div>
+      <p className={`mt-3 ${tone === 'accent' ? 'text-sm leading-6 text-white/80' : sharedCompactTextClass}`}>{detail}</p>
+    </div>
+  );
 }
 
 export function PetInventoryPage() {
@@ -221,36 +269,44 @@ export function PetInventoryPage() {
   const movedUnitsOnPage = rows.reduce((total, item) => total + item.quantity, 0);
   const outboundMovementsOnPage = rows.filter((item) => item.movementType === 'OUT').length;
 
-  const summaryCards: DashboardSummaryCard[] = [
+  const inventorySignals = [
     {
       key: 'catalog-products',
+      icon: Package,
       label: messages.summary.trackedLabel,
-      value: products.length,
-      trend: messages.summary.trackedDetail
+      value: new Intl.NumberFormat(locale).format(products.length),
+      detail: messages.summary.trackedDetail,
+      tone: 'default' as const
     },
     {
       key: 'critical-products',
+      icon: TriangleAlert,
       label: messages.summary.belowMinimumLabel,
-      value: criticalLowStockProducts.length,
-      trend: criticalLowStockProducts.length > 0
+      value: new Intl.NumberFormat(locale).format(criticalLowStockProducts.length),
+      detail: criticalLowStockProducts.length > 0
         ? messages.summary.belowMinimumDetail
-        : messages.summary.belowMinimumSafe
+        : messages.summary.belowMinimumSafe,
+      tone: criticalLowStockProducts.length > 0 ? 'warning' as const : 'default' as const
     },
     {
       key: 'reorder-products',
+      icon: TrendingUp,
       label: messages.summary.reorderLabel,
-      value: lowStockProducts.length,
-      trend: lowStockProducts.length > 0
+      value: new Intl.NumberFormat(locale).format(lowStockProducts.length),
+      detail: lowStockProducts.length > 0
         ? messages.summary.reorderDetail
-        : messages.summary.reorderSafe
+        : messages.summary.reorderSafe,
+      tone: lowStockProducts.length > 0 ? 'accent' as const : 'default' as const
     },
     {
       key: 'outbound-movements',
+      icon: ArrowRightLeft,
       label: messages.summary.outboundLabel,
-      value: outboundMovementsOnPage,
-      trend: activeFilterCount > 0
+      value: new Intl.NumberFormat(locale).format(outboundMovementsOnPage),
+      detail: activeFilterCount > 0
         ? messages.summary.filteredDetail
-        : applyTemplate(messages.summary.visibleQuantityDetail, { value: movedUnitsOnPage })
+        : applyTemplate(messages.summary.visibleQuantityDetail, { value: movedUnitsOnPage }),
+      tone: 'default' as const
     }
   ];
 
@@ -494,7 +550,18 @@ export function PetInventoryPage() {
         {error ? <div className="ui-notice-error">{error}</div> : null}
         {success ? <div className="ui-notice-success">{success}</div> : null}
 
-        <MetricGrid cards={summaryCards} columns="md:grid-cols-2 xl:grid-cols-3" />
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          {inventorySignals.map((card) => (
+            <InventorySpotlightCard
+              key={card.key}
+              icon={card.icon}
+              label={card.label}
+              value={card.value}
+              detail={card.detail}
+              tone={card.tone}
+            />
+          ))}
+        </div>
 
         <PageSection
           tone="muted"

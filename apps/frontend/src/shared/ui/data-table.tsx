@@ -42,11 +42,11 @@ export function DataTable<T>({
     <tr>
       <td
         colSpan={columns.length}
-        className="px-5 py-10"
+        className="px-6 py-12"
       >
         <div className="mx-auto flex max-w-2xl flex-col items-center gap-3 text-center">
           <div>
-            <p className="text-sm font-semibold text-foreground">{title}</p>
+            <p className="text-sm font-semibold text-slate-900">{title}</p>
             <p className="mt-1 text-sm text-slate-600">{description}</p>
           </div>
           {action ? <div>{action}</div> : null}
@@ -56,21 +56,21 @@ export function DataTable<T>({
   );
 
   return (
-    <div className="overflow-x-auto rounded-[calc(var(--radius-2xl)-0.1rem)] border border-border bg-surface shadow-sm">
-      <table className="min-w-full divide-y divide-border">
-        <thead className="bg-slate-50">
+    <div className="overflow-x-auto rounded-2xl border border-slate-200/90 bg-white shadow-[0_16px_34px_-28px_rgba(15,23,42,0.16)]">
+      <table className="min-w-full divide-y divide-slate-200">
+        <thead className="bg-slate-50/85">
           <tr>
             {columns.map((column) => (
               <th
                 key={column.key}
-                className={`px-5 py-4 text-left text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-600 ${column.className ?? ''}`}
+                className={`px-6 py-4 text-left text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500 ${column.className ?? ''}`}
               >
                 {column.header}
               </th>
             ))}
           </tr>
         </thead>
-        <tbody className="divide-y divide-border text-sm text-foreground">
+        <tbody className="divide-y divide-slate-100 text-sm text-slate-900">
           {loading ? (
             renderStateRow(loadingTitle, loadingDescription)
           ) : rows.length === 0 ? (
@@ -83,12 +83,12 @@ export function DataTable<T>({
             rows.map((row) => (
               <tr
                 key={getRowKey(row)}
-                className="align-top transition-colors duration-200 hover:bg-slate-50"
+                className="align-top transition-colors duration-200 hover:bg-slate-50/70"
               >
                 {columns.map((column) => (
                   <td
                     key={`${getRowKey(row)}-${column.key}`}
-                    className={`px-5 py-3.5 ${column.className ?? ''}`}
+                    className={`px-6 py-4 ${column.className ?? ''}`}
                   >
                     {column.render(row)}
                   </td>

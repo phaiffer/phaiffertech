@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { FormEvent, useCallback, useEffect, useMemo, useState } from 'react';
+import { AlertTriangle, ArrowUpRight, Clock3, Receipt, WalletCards, type LucideIcon } from 'lucide-react';
 import { PetModuleSubnav } from '@/modules/pet/pet-module-subnav';
 import { PermissionGuard } from '@/shared/auth/PermissionGuard';
 import { usePermissions } from '@/shared/auth/usePermissions';
@@ -204,19 +205,33 @@ function statToneClass(tone: 'default' | 'warning' | 'danger' = 'default') {
 }
 
 type SnapshotCardProps = {
+  icon: LucideIcon;
   label: string;
   value: string;
   detail: string;
   tone?: 'default' | 'warning' | 'danger';
 };
 
-function SnapshotCard({ label, value, detail, tone = 'default' }: SnapshotCardProps) {
+function SnapshotCard({ icon: Icon, label, value, detail, tone = 'default' }: SnapshotCardProps) {
   return (
     <div className={`rounded-3xl border p-4 shadow-xs ${statToneClass(tone)}`}>
-      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--app-shell-muted)]">
-        {label}
-      </p>
-      <p className="mt-3 text-2xl font-semibold text-[color:var(--app-shell-heading)]">{value}</p>
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-700">
+            {label}
+          </p>
+          <p className="mt-3 text-2xl font-semibold text-[color:var(--app-shell-heading)]">{value}</p>
+        </div>
+        <span className={`flex h-11 w-11 items-center justify-center rounded-2xl ${
+          tone === 'danger'
+            ? 'bg-red-100 text-red-700'
+            : tone === 'warning'
+              ? 'bg-amber-100 text-amber-700'
+              : 'bg-[color:var(--accent)]/10 text-[color:var(--accent)]'
+        }`}>
+          <Icon className="h-5 w-5" />
+        </span>
+      </div>
       <p className={`mt-2 ${sharedCompactTextClass}`}>{detail}</p>
     </div>
   );
@@ -902,6 +917,7 @@ export function PetInvoicesPage() {
 
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
           <SnapshotCard
+            icon={Receipt}
             label="Invoices in scope"
             value={new Intl.NumberFormat('pt-BR').format(totalItems)}
             detail={activeFilterCount > 0
@@ -909,17 +925,20 @@ export function PetInvoicesPage() {
               : 'Full PetFlow invoice list for this tenant.'}
           />
           <SnapshotCard
+            icon={ArrowUpRight}
             label="Visible invoiced value"
             value={formatCurrency(visibleTotalInvoiced)}
             detail="Gross amount represented in the current page view."
           />
           <SnapshotCard
+            icon={WalletCards}
             label="Open balance"
             value={formatCurrency(visibleOpenBalance)}
             detail="Amount still expected from the visible invoice slice."
             tone={visibleOpenBalance > 0 ? 'warning' : 'default'}
           />
           <SnapshotCard
+            icon={AlertTriangle}
             label="Operational attention"
             value={String(overdueCount)}
             detail={`${paymentCount} payment record${paymentCount === 1 ? '' : 's'} currently visible across this finance slice.`}
@@ -995,22 +1014,26 @@ export function PetInvoicesPage() {
             <div className="space-y-4">
               <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
                 <SnapshotCard
+                  icon={WalletCards}
                   label="Next cycle projected"
                   value={formatCurrency(nextCycleProjectedTotal)}
                   detail="Projected charge combining plan-covered visits and extras."
                 />
                 <SnapshotCard
+                  icon={Receipt}
                   label="Recurring clients"
                   value={String(nextCycleRecurringClients)}
                   detail="Clients already anchored in the recurring billing lane."
                 />
                 <SnapshotCard
+                  icon={Clock3}
                   label="Penultimate alerts"
                   value={String(nextCyclePenultimateClients)}
                   detail="Clients reaching the renewal conversation right now."
                   tone={nextCyclePenultimateClients > 0 ? 'warning' : 'default'}
                 />
                 <SnapshotCard
+                  icon={ArrowUpRight}
                   label="Pet taxi clients"
                   value={String(nextCyclePetTaxiClients)}
                   detail="Clients carrying pickup or delivery extras into the next cycle."
@@ -1036,17 +1059,17 @@ export function PetInvoicesPage() {
 
                     <dl className="mt-4 grid gap-4 sm:grid-cols-2">
                       <div>
-                        <dt className="text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--app-shell-muted)]">Projected due</dt>
+                        <dt className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-700">Projected due</dt>
                         <dd className="mt-1 text-lg font-semibold text-[color:var(--app-shell-heading)]">{formatCurrency(row.projectedDue)}</dd>
                       </div>
                       <div>
-                        <dt className="text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--app-shell-muted)]">Appointments</dt>
+                        <dt className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-700">Appointments</dt>
                         <dd className="mt-1 text-sm text-[color:var(--app-shell-text)]">
                           {row.appointmentCount} scheduled / {row.coveredAppointments} covered by plan
                         </dd>
                       </div>
                       <div>
-                        <dt className="text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--app-shell-muted)]">Plan status</dt>
+                        <dt className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-700">Plan status</dt>
                         <dd className="mt-1 text-sm text-[color:var(--app-shell-text)]">
                           {row.planName
                             ? `${row.planName} · ${row.remainingSessions ?? 0} session(s) left`
@@ -1054,7 +1077,7 @@ export function PetInvoicesPage() {
                         </dd>
                       </div>
                       <div>
-                        <dt className="text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--app-shell-muted)]">Extras</dt>
+                        <dt className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-700">Extras</dt>
                         <dd className="mt-1 text-sm text-[color:var(--app-shell-text)]">
                           {formatCurrency(row.extrasTotal)}{row.petTaxiTotal > 0 ? ` · ${formatCurrency(row.petTaxiTotal)} from pet taxi` : ''}
                         </dd>
@@ -1219,7 +1242,7 @@ export function PetInvoicesPage() {
 
                   <dl className="mt-5 grid gap-4 sm:grid-cols-2">
                     <div>
-                      <dt className="text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--app-shell-muted)]">
+                      <dt className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-700">
                         Total amount
                       </dt>
                       <dd className="mt-1 text-lg font-semibold text-[color:var(--app-shell-heading)]">
@@ -1227,7 +1250,7 @@ export function PetInvoicesPage() {
                       </dd>
                     </div>
                     <div>
-                      <dt className="text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--app-shell-muted)]">
+                      <dt className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-700">
                         Outstanding
                       </dt>
                       <dd className="mt-1 text-lg font-semibold text-[color:var(--app-shell-heading)]">
@@ -1235,7 +1258,7 @@ export function PetInvoicesPage() {
                       </dd>
                     </div>
                     <div>
-                      <dt className="text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--app-shell-muted)]">
+                      <dt className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-700">
                         Paid amount
                       </dt>
                       <dd className="mt-1 text-sm text-[color:var(--app-shell-text)]">
@@ -1243,7 +1266,7 @@ export function PetInvoicesPage() {
                       </dd>
                     </div>
                     <div>
-                      <dt className="text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--app-shell-muted)]">
+                      <dt className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-700">
                         Linked finance invoice
                       </dt>
                       <dd className="mt-1 text-sm text-[color:var(--app-shell-text)]">
@@ -1251,7 +1274,7 @@ export function PetInvoicesPage() {
                       </dd>
                     </div>
                     <div>
-                      <dt className="text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--app-shell-muted)]">
+                      <dt className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-700">
                         Billing reference draft
                       </dt>
                       <dd className="mt-1 text-sm text-[color:var(--app-shell-text)]">
@@ -1265,7 +1288,7 @@ export function PetInvoicesPage() {
                   <p className="text-sm font-semibold text-[color:var(--app-shell-heading)]">Lifecycle checkpoints</p>
                   <div className="mt-4 space-y-3">
                     <div>
-                      <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--app-shell-muted)]">
+                      <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-700">
                         Issued at
                       </p>
                       <p className="mt-1 text-sm text-[color:var(--app-shell-text)]">
@@ -1273,7 +1296,7 @@ export function PetInvoicesPage() {
                       </p>
                     </div>
                     <div>
-                      <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--app-shell-muted)]">
+                      <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-700">
                         Due at
                       </p>
                       <p className="mt-1 text-sm text-[color:var(--app-shell-text)]">
@@ -1281,7 +1304,7 @@ export function PetInvoicesPage() {
                       </p>
                     </div>
                     <div>
-                      <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--app-shell-muted)]">
+                      <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-700">
                         Paid at
                       </p>
                       <p className="mt-1 text-sm text-[color:var(--app-shell-text)]">
@@ -1289,7 +1312,7 @@ export function PetInvoicesPage() {
                       </p>
                     </div>
                     <div>
-                      <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--app-shell-muted)]">
+                      <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-700">
                         Canceled at
                       </p>
                       <p className="mt-1 text-sm text-[color:var(--app-shell-text)]">
@@ -1318,7 +1341,7 @@ export function PetInvoicesPage() {
 
                     <dl className="mt-4 grid gap-4 sm:grid-cols-2">
                       <div>
-                        <dt className="text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--app-shell-muted)]">
+                        <dt className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-700">
                           Counterparty
                         </dt>
                         <dd className="mt-1 text-sm text-[color:var(--app-shell-text)]">
@@ -1326,7 +1349,7 @@ export function PetInvoicesPage() {
                         </dd>
                       </div>
                       <div>
-                        <dt className="text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--app-shell-muted)]">
+                        <dt className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-700">
                           Document number
                         </dt>
                         <dd className="mt-1 text-sm text-[color:var(--app-shell-text)]">
@@ -1334,7 +1357,7 @@ export function PetInvoicesPage() {
                         </dd>
                       </div>
                       <div>
-                        <dt className="text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--app-shell-muted)]">
+                        <dt className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-700">
                           Finance status
                         </dt>
                         <dd className="mt-1 text-sm text-[color:var(--app-shell-text)]">
@@ -1342,7 +1365,7 @@ export function PetInvoicesPage() {
                         </dd>
                       </div>
                       <div>
-                        <dt className="text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--app-shell-muted)]">
+                        <dt className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-700">
                           Outstanding amount
                         </dt>
                         <dd className="mt-1 text-sm text-[color:var(--app-shell-text)]">
@@ -1360,7 +1383,7 @@ export function PetInvoicesPage() {
 
                     <div className="mt-4 space-y-3">
                       <div>
-                        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--app-shell-muted)]">
+                        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-700">
                           Business context
                         </p>
                         <p className="mt-1 text-sm text-[color:var(--app-shell-text)]">
@@ -1368,7 +1391,7 @@ export function PetInvoicesPage() {
                         </p>
                       </div>
                       <div>
-                        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--app-shell-muted)]">
+                        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-700">
                           Recipient
                         </p>
                         <p className="mt-1 text-sm text-[color:var(--app-shell-text)]">
@@ -1376,7 +1399,7 @@ export function PetInvoicesPage() {
                         </p>
                       </div>
                       <div>
-                        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--app-shell-muted)]">
+                        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-700">
                           Fiscal reference
                         </p>
                         <p className="mt-1 text-sm text-[color:var(--app-shell-text)]">

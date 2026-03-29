@@ -1,83 +1,165 @@
 'use client';
 
-import { PublicCtaSection } from '@/shared/components/public-cta-section';
+import Link from 'next/link';
 import {
-  publicEyebrowClass,
-  publicSectionSupportingTextClass,
-  publicSectionTitleClass,
-  publicSiteContainerClass
-} from '@/shared/components/public-visual-system';
+  ArrowRight,
+  CalendarCheck,
+  Car,
+  CheckCircle2,
+  CreditCard,
+  Package,
+  Scissors,
+  ShoppingBag,
+  TrendingUp,
+  Users
+} from 'lucide-react';
+import { publicSiteContainerClass } from '@/shared/components/public-visual-system';
 import { useAppMessages } from '@/shared/i18n/app-i18n-provider';
 import { usePublicSite } from '@/shared/public/public-site-provider';
 import { getWebsiteContent } from './website-content';
-import { WebsiteHero } from './website-hero';
-import {
-  WebsiteCardGrid,
-  WebsiteFullSection,
-  WebsiteStatStrip
-} from './website-sections';
 
 export function WebsiteHomePage() {
   const { locale } = usePublicSite();
-  const messages = useAppMessages().publicHome;
   const content = getWebsiteContent(locale).home;
+  const featureIcons = [Scissors, ShoppingBag, CalendarCheck];
+  const operationalIcons = [Car, Package, CreditCard, Users, TrendingUp, CheckCircle2];
 
   return (
-    <>
-      <WebsiteHero
-        id="overview"
-        eyebrow={content.hero.eyebrow}
-        title={content.hero.title}
-        titleHighlight={content.hero.titleHighlight}
-        description={content.hero.description}
-        highlights={content.hero.highlights}
-        stats={content.hero.stats}
-        primaryCta={content.hero.primaryCta}
-        secondaryCta={content.hero.secondaryCta}
-      />
-
-      <section className="relative -mt-6 pb-4 lg:-mt-10">
-        <div className="pointer-events-none absolute inset-x-0 top-0 h-36 bg-[linear-gradient(180deg,rgba(16,185,129,0.08),transparent)]" />
-        <div className={`${publicSiteContainerClass} relative`}>
-          <div className="rounded-[2rem] border border-slate-200/80 bg-white/92 p-6 shadow-[0_30px_72px_-44px_rgba(15,23,42,0.2)] backdrop-blur-sm sm:p-8">
-            <div className="max-w-3xl">
-              <p className={`${publicEyebrowClass} text-[color:var(--accent)]`}>{messages.framework}</p>
-              <h2 className={`mt-3 ${publicSectionTitleClass}`}>{content.signalTitle}</h2>
-              <p className={`mt-3 ${publicSectionSupportingTextClass}`}>{content.signalDescription}</p>
+    <main>
+      <section className="relative overflow-hidden bg-gradient-to-b from-[color:var(--accent)]/6 via-white to-white">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(16,185,129,0.12),transparent_36%)]" />
+        <div className={`${publicSiteContainerClass} relative py-24 md:py-28`}>
+          <div className="mx-auto max-w-4xl text-center">
+            <div className="inline-flex items-center gap-2 rounded-full bg-[color:var(--accent)]/10 px-4 py-2 text-sm font-medium text-[color:var(--accent)]">
+              <span>{content.hero.eyebrow}</span>
             </div>
-            <div className="mt-8">
-              <WebsiteStatStrip items={content.signals} />
+            <h1 className="mt-6 text-4xl font-bold tracking-[-0.045em] text-slate-900 md:text-5xl lg:text-6xl">
+              {content.hero.title}
+            </h1>
+            <p className="mx-auto mt-6 max-w-3xl text-lg leading-8 text-slate-600">
+              {content.hero.description}
+            </p>
+            <div className="mt-8 flex flex-col items-center justify-center gap-4 sm:flex-row">
+              <Link
+                href={content.hero.primaryCta.href}
+                className="inline-flex w-full items-center justify-center rounded-xl bg-[linear-gradient(135deg,var(--accent),var(--petflow-teal))] px-5 py-3 text-sm font-semibold text-white shadow-[0_18px_38px_-26px_rgba(16,185,129,0.52)] sm:w-auto"
+              >
+                {content.hero.primaryCta.label}
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </Link>
+              <Link
+                href={content.hero.secondaryCta.href}
+                className="inline-flex w-full items-center justify-center rounded-xl border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 transition-colors hover:border-slate-300 hover:text-slate-900 sm:w-auto"
+              >
+                {content.hero.secondaryCta.label}
+              </Link>
             </div>
           </div>
         </div>
       </section>
 
-      <WebsiteFullSection
-        eyebrow={messages.productLanes}
-        title={content.productsTitle}
-        description={content.productsDescription}
-      >
-        <WebsiteCardGrid items={content.products} />
-      </WebsiteFullSection>
+      <section className="py-20 md:py-24">
+        <div className={publicSiteContainerClass}>
+          <div className="text-center">
+            <p className="text-sm font-medium uppercase tracking-[0.18em] text-[color:var(--accent)]">Solutions</p>
+            <h2 className="text-3xl font-bold tracking-[-0.035em] text-slate-900 md:text-4xl">{content.productsTitle}</h2>
+            <p className="mx-auto mt-4 max-w-3xl text-lg leading-8 text-slate-600">{content.productsDescription}</p>
+          </div>
+          <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {content.products.map((item, index) => {
+              const Icon = featureIcons[index] ?? TrendingUp;
+              return (
+                <article key={item.title} className="rounded-2xl border border-slate-200/90 bg-white p-6 shadow-[0_18px_38px_-30px_rgba(15,23,42,0.16)]">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[color:var(--accent)]/10 text-[color:var(--accent)]">
+                    <Icon className="h-6 w-6" />
+                  </div>
+                  <p className="mt-5 text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">{item.eyebrow}</p>
+                  <h3 className="mt-3 text-xl font-semibold tracking-[-0.02em] text-slate-900">{item.title}</h3>
+                  <p className="mt-4 text-sm leading-7 text-slate-600">{item.description}</p>
+                  {item.bullets?.length ? (
+                    <ul className="mt-5 space-y-3">
+                      {item.bullets.map((bullet) => (
+                        <li key={bullet} className="flex items-start gap-3 text-sm leading-6 text-slate-700">
+                          <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-[color:var(--accent)]" />
+                          <span>{bullet}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : null}
+                </article>
+              );
+            })}
+          </div>
+        </div>
+      </section>
 
-      <WebsiteFullSection
-        tone="muted"
-        eyebrow={messages.expertiseEyebrow}
-        title={content.expertiseTitle}
-        description={content.expertiseDescription}
-      >
-        <WebsiteCardGrid items={content.expertise} />
-      </WebsiteFullSection>
+      <section className="bg-slate-50/80 py-20 md:py-24">
+        <div className={`${publicSiteContainerClass} grid gap-12 lg:grid-cols-[minmax(0,1fr)_minmax(0,0.95fr)] lg:items-center`}>
+          <div>
+            <h2 className="text-3xl font-bold tracking-[-0.035em] text-slate-900 md:text-4xl">{content.expertiseTitle}</h2>
+            <p className="mt-5 text-lg leading-8 text-slate-600">{content.expertiseDescription}</p>
+            <ul className="mt-8 space-y-4">
+              {content.expertise.slice(0, 6).map((item, index) => {
+                const Icon = operationalIcons[index] ?? CheckCircle2;
+                return (
+                  <li key={item.title} className="flex items-start gap-3">
+                    <Icon className="mt-1 h-5 w-5 shrink-0 text-[color:var(--accent)]" />
+                    <div>
+                      <p className="font-medium text-slate-900">{item.title}</p>
+                      <p className="mt-1 text-sm leading-6 text-slate-600">{item.description}</p>
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+          <div className="rounded-[1.75rem] bg-[linear-gradient(135deg,rgba(16,185,129,0.16),rgba(255,255,255,0.92))] p-8">
+            <div className="rounded-2xl bg-white p-6 shadow-[0_28px_54px_-34px_rgba(15,23,42,0.22)]">
+              <div className="flex items-center gap-3">
+                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[color:var(--accent)]/12 text-[color:var(--accent)]">
+                  <TrendingUp className="h-5 w-5" />
+                </div>
+                <div>
+                  <p className="font-semibold text-slate-900">PetFlow</p>
+                  <p className="text-sm text-slate-500">{content.signalTitle}</p>
+                </div>
+              </div>
+              <div className="mt-6 space-y-3">
+                {content.signals.map((item) => (
+                  <div key={item.value} className="rounded-xl bg-slate-50/80 p-4">
+                    <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--accent)]">{item.value}</p>
+                    <p className="mt-2 font-medium text-slate-900">{item.label}</p>
+                    <p className="mt-2 text-sm leading-6 text-slate-600">{item.description}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
 
-      <PublicCtaSection
-        eyebrow={content.cta.eyebrow}
-        title={content.cta.title}
-        description={content.cta.description}
-        primaryCtaLabel={content.cta.primaryCta.label}
-        primaryCtaHref={content.cta.primaryCta.href}
-        secondaryCtaLabel={content.cta.secondaryCta.label}
-        secondaryCtaHref={content.cta.secondaryCta.href}
-      />
-    </>
+      <section className="bg-[color:var(--accent)] py-20 text-white md:py-24">
+        <div className={`${publicSiteContainerClass} text-center`}>
+          <p className="text-sm font-medium uppercase tracking-[0.18em] text-white/75">{content.cta.eyebrow}</p>
+          <h2 className="mx-auto mt-5 max-w-3xl text-3xl font-bold tracking-[-0.035em] md:text-4xl">{content.cta.title}</h2>
+          <p className="mx-auto mt-5 max-w-2xl text-lg leading-8 text-white/80">{content.cta.description}</p>
+          <div className="mt-8 flex flex-col items-center justify-center gap-4 sm:flex-row">
+            <Link
+              href={content.cta.primaryCta.href}
+              className="inline-flex items-center justify-center rounded-xl bg-white px-5 py-3 text-sm font-semibold text-slate-900"
+            >
+              {content.cta.primaryCta.label}
+              <ArrowRight className="ml-2 h-4 w-4" />
+            </Link>
+            <Link
+              href={content.cta.secondaryCta.href}
+              className="inline-flex items-center justify-center rounded-xl border border-white/30 px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-white/10"
+            >
+              {content.cta.secondaryCta.label}
+            </Link>
+          </div>
+        </div>
+      </section>
+    </main>
   );
 }

@@ -29,11 +29,9 @@ export function PublicSiteShell({ children }: PublicSiteShellProps) {
   const localeSwitchLabel = nextLocale === 'en-US' ? 'EN' : 'PT';
 
   const navigationItems = [
-    { href: '/platform', label: t.navHome },
+    { href: '/', label: t.navHome },
+    { href: '/platform', label: t.navPlatform },
     { href: '/products', label: t.navProducts },
-    { href: '/engineering', label: t.navEngineering },
-    { href: '/research', label: t.navResearch },
-    { href: '/articles', label: t.navArticles },
     { href: '/contact', label: t.navContact }
   ];
 
@@ -47,24 +45,36 @@ export function PublicSiteShell({ children }: PublicSiteShellProps) {
 
   return (
     <div className="min-h-screen bg-white text-foreground">
-      <header className="sticky top-0 z-40 border-b border-slate-200/80 bg-white/88 backdrop-blur-xl">
-        <div className={`${publicSiteContainerClass} flex h-20 items-center justify-between gap-6`}>
-          <Link href="/" className="inline-flex shrink-0 items-center gap-3">
-            <BrandMark priority className="h-11 w-11 shrink-0 rounded-2xl" imageClassName="scale-[1.08]" />
-            <div className="min-w-0">
-              <p className="truncate text-lg font-semibold tracking-[-0.02em] text-slate-900">PetFlow</p>
-              <p className="truncate text-[10px] font-medium uppercase tracking-[0.18em] text-slate-500">by PhaifferTech</p>
+      <header className="sticky top-0 z-40 border-b border-slate-200/80 bg-white/95 backdrop-blur-xl">
+        <div className={`${publicSiteContainerClass} flex h-16 items-center justify-between gap-6`}>
+          <Link href="/" className="inline-flex shrink-0 items-center gap-2.5">
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[color:var(--accent)]/10 text-[color:var(--accent)]">
+              <svg viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5" aria-hidden="true">
+                <ellipse cx="12" cy="17" rx="4.5" ry="3.5" />
+                <ellipse cx="7" cy="13.5" rx="2" ry="2.5" />
+                <ellipse cx="17" cy="13.5" rx="2" ry="2.5" />
+                <ellipse cx="9.5" cy="10" rx="2" ry="2.5" />
+                <ellipse cx="14.5" cy="10" rx="2" ry="2.5" />
+              </svg>
+            </span>
+            <div className="flex flex-col leading-none">
+              <span className="text-base font-bold tracking-tight text-slate-900">PetFlow</span>
+              <span className="mt-0.5 flex items-center gap-1 text-[10px] font-medium uppercase tracking-[0.14em] text-slate-500">
+                by
+                <BrandMark className="h-3.5 w-3.5 rounded-sm" imageClassName="scale-110" />
+                PhaifferTech
+              </span>
             </div>
           </Link>
 
-          <nav className="hidden items-center gap-6 lg:flex">
+          <nav className="hidden items-center gap-8 md:flex">
             {navigationItems.map((item) => (
               <Link
                 key={item.href}
                 href={item.href}
                 className={`text-sm transition-colors ${
                   isActivePath(pathname, item.href)
-                    ? 'font-semibold text-[color:var(--accent)]'
+                    ? 'font-semibold text-slate-900'
                     : 'font-medium text-slate-600 hover:text-slate-900'
                 }`}
               >
@@ -83,8 +93,8 @@ export function PublicSiteShell({ children }: PublicSiteShellProps) {
               {localeSwitchLabel}
             </button>
 
-            <Link href="/login" className="hidden text-sm font-medium text-slate-600 transition-colors hover:text-slate-900 md:inline-flex">
-              {t.navLogin}
+            <Link href="/contact" className="hidden text-sm font-medium text-slate-600 transition-colors hover:text-slate-900 md:inline-flex">
+              {t.navContact}
             </Link>
             <Link
               href="/login"
@@ -95,7 +105,7 @@ export function PublicSiteShell({ children }: PublicSiteShellProps) {
           </div>
         </div>
 
-        <div className={`${publicSiteContainerClass} pb-4 lg:hidden`}>
+        <div className={`${publicSiteContainerClass} pb-4 md:hidden`}>
           <nav className="flex gap-2 overflow-x-auto whitespace-nowrap">
             {navigationItems.map((item) => (
               <Link
@@ -104,7 +114,7 @@ export function PublicSiteShell({ children }: PublicSiteShellProps) {
                 className={`inline-flex h-10 items-center rounded-xl border px-3.5 text-sm font-medium transition-colors ${
                   isActivePath(pathname, item.href)
                     ? 'border-[color:var(--accent)]/20 bg-[color:var(--accent)]/10 text-[color:var(--accent)]'
-                    : 'border-slate-200 bg-white text-slate-600 hover:text-slate-900'
+                    : 'border-slate-200 bg-white text-slate-700 hover:text-slate-900'
                 }`}
               >
                 {item.label}
@@ -116,24 +126,34 @@ export function PublicSiteShell({ children }: PublicSiteShellProps) {
 
       <main>{children}</main>
 
-      <footer className="relative overflow-hidden border-t border-slate-200 bg-[linear-gradient(180deg,#f8fbf9,#ffffff)]">
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_18%_22%,rgba(16,185,129,0.08),transparent_36%)]" />
-        <div className={`${publicSiteContainerClass} grid gap-10 py-14 lg:grid-cols-[minmax(0,1.45fr)_minmax(0,0.9fr)_minmax(0,0.9fr)]`}>
+      <footer className="border-t border-slate-200 bg-slate-50/70">
+        <div className={`${publicSiteContainerClass} grid gap-10 py-12 md:grid-cols-4`}>
           <div>
-            <div className="inline-flex items-center gap-3 rounded-[1.6rem] border border-slate-200/80 bg-white/90 px-4 py-3 shadow-[0_18px_34px_-28px_rgba(15,23,42,0.16)]">
-              <BrandMark className="h-11 w-11 shrink-0 rounded-2xl" imageClassName="scale-[1.08]" />
-              <div className="min-w-0">
-                <p className="truncate text-lg font-semibold tracking-[-0.02em] text-slate-900">PetFlow</p>
-                <p className="truncate text-[10px] font-medium uppercase tracking-[0.18em] text-slate-500">by PhaifferTech</p>
+            <Link href="/" className="inline-flex items-center gap-2.5">
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[color:var(--accent)]/10 text-[color:var(--accent)]">
+                <svg viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5" aria-hidden="true">
+                  <ellipse cx="12" cy="17" rx="4.5" ry="3.5" />
+                  <ellipse cx="7" cy="13.5" rx="2" ry="2.5" />
+                  <ellipse cx="17" cy="13.5" rx="2" ry="2.5" />
+                  <ellipse cx="9.5" cy="10" rx="2" ry="2.5" />
+                  <ellipse cx="14.5" cy="10" rx="2" ry="2.5" />
+                </svg>
+              </span>
+              <div className="flex flex-col leading-none">
+                <span className="text-base font-bold tracking-tight text-slate-900">PetFlow</span>
+                <span className="mt-0.5 flex items-center gap-1 text-[10px] font-medium uppercase tracking-[0.14em] text-slate-500">
+                  by
+                  <BrandMark className="h-3.5 w-3.5 rounded-sm" imageClassName="scale-110" />
+                  PhaifferTech
+                </span>
               </div>
-            </div>
-            <p className="mt-5 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">{t.brandTitle}</p>
-            <p className="mt-4 max-w-xl text-sm leading-7 text-slate-600">{t.footerNarrativeText}</p>
+            </Link>
+            <p className="mt-4 max-w-xs text-sm leading-7 text-slate-600">{t.footerNarrativeText}</p>
           </div>
 
           <div>
             <p className="text-sm font-semibold text-slate-900">{t.footerExploreTitle}</p>
-            <div className="mt-4 flex flex-col gap-3 text-sm text-slate-600">
+            <div className="mt-4 flex flex-col gap-3 text-sm text-slate-700">
               {navigationItems.map((item) => (
                 <Link key={item.href} href={item.href} className="transition-colors hover:text-slate-900">
                   {item.label}
@@ -143,23 +163,33 @@ export function PublicSiteShell({ children }: PublicSiteShellProps) {
           </div>
 
           <div>
-            <p className="text-sm font-semibold text-slate-900">{t.footerAccessTitle}</p>
-            <div className="mt-4 flex flex-col gap-3 text-sm text-slate-600">
-              <Link href="/login" className="transition-colors hover:text-slate-900">
-                {t.navLogin}
+            <p className="text-sm font-semibold text-slate-900">{t.footerProductsTitle}</p>
+            <div className="mt-4 flex flex-col gap-3 text-sm text-slate-700">
+              <Link href="/products" className="transition-colors hover:text-slate-900">
+                {t.navProducts}
+              </Link>
+              <Link href="/platform" className="transition-colors hover:text-slate-900">
+                {t.navPlatform}
               </Link>
               <Link href="/contact" className="transition-colors hover:text-slate-900">
                 {t.navContact}
               </Link>
-              <Link href="/products" className="transition-colors hover:text-slate-900">
-                {t.navProducts}
+            </div>
+          </div>
+
+          <div>
+            <p className="text-sm font-semibold text-slate-900">{t.footerAccessTitle}</p>
+            <div className="mt-4 flex flex-col gap-3 text-sm text-slate-700">
+              <Link href="/login" className="transition-colors hover:text-slate-900">
+                {t.navLogin}
               </Link>
+              <Link href="/contact" className="transition-colors hover:text-slate-900">{t.navContact}</Link>
             </div>
           </div>
         </div>
 
-        <div className="border-t border-slate-200">
-          <div className={`${publicSiteContainerClass} py-5 text-sm text-slate-500`}>{t.footerCopyright}</div>
+        <div className="border-t border-slate-200 bg-white/80">
+          <div className={`${publicSiteContainerClass} py-5 text-sm text-slate-700`}>{t.footerCopyright}</div>
         </div>
       </footer>
     </div>

@@ -1,6 +1,7 @@
 'use client';
 
 import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { CalendarCheck, CarFront, CreditCard, RefreshCcw, type LucideIcon } from 'lucide-react';
 import {
   PetAppointmentForm,
   PetAppointmentsFilters,
@@ -46,6 +47,55 @@ const initialPage: PageResponse<PetAppointment> = {
   page: 0,
   size: pageSize
 };
+
+type AppointmentFocusCardProps = {
+  icon: LucideIcon;
+  label: string;
+  value: string;
+  detail: string;
+  tone?: 'default' | 'accent' | 'warning';
+};
+
+function AppointmentFocusCard({
+  icon: Icon,
+  label,
+  value,
+  detail,
+  tone = 'default'
+}: AppointmentFocusCardProps) {
+  const toneClass = tone === 'accent'
+    ? 'border-transparent bg-[linear-gradient(135deg,var(--accent),var(--petflow-teal))] text-white shadow-[0_20px_40px_-28px_rgba(16,185,129,0.5)]'
+    : tone === 'warning'
+      ? 'border-amber-200/80 bg-[linear-gradient(180deg,rgba(251,191,36,0.12),rgba(255,255,255,0.98))]'
+      : 'border-slate-200/90 bg-white';
+
+  return (
+    <div className={`rounded-2xl border p-5 shadow-[0_16px_34px_-28px_rgba(15,23,42,0.16)] ${toneClass}`}>
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <p className={`text-xs font-semibold uppercase tracking-[0.16em] ${tone === 'accent' ? 'text-white/72' : 'text-slate-500'}`}>
+            {label}
+          </p>
+          <p className={`mt-3 text-3xl font-bold tracking-[-0.03em] ${tone === 'accent' ? 'text-white' : 'text-slate-900'}`}>
+            {value}
+          </p>
+        </div>
+        <span
+          className={`flex h-11 w-11 items-center justify-center rounded-xl ${
+            tone === 'accent'
+              ? 'bg-white/12 text-white'
+              : tone === 'warning'
+                ? 'bg-amber-100 text-amber-700'
+                : 'bg-[color:var(--accent)]/10 text-[color:var(--accent)]'
+          }`}
+        >
+          <Icon className="h-5 w-5" />
+        </span>
+      </div>
+      <p className={`mt-3 ${tone === 'accent' ? 'text-sm leading-6 text-white/80' : 'text-sm leading-6 text-slate-600'}`}>{detail}</p>
+    </div>
+  );
+}
 
 function hasPetTaxi(appointment: PetAppointment) {
   return /taxi/i.test(appointment.extrasDescription ?? '');
@@ -560,38 +610,44 @@ export function PetAppointmentsPage() {
           description={messages.focus.description}
         >
           <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-6">
-            <div className="rounded-2xl border border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-panel)] px-4 py-3">
-              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--app-shell-muted)]">{messages.focus.recurring}</p>
-              <p className="mt-2 text-lg font-semibold text-[color:var(--app-shell-heading)]">{recurringAppointments}</p>
-              <p className="mt-1 text-xs text-[color:var(--app-shell-muted)]">{messages.focus.recurringDetail}</p>
-            </div>
-            <div className="rounded-2xl border border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-panel)] px-4 py-3">
-              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--app-shell-muted)]">{messages.focus.oneTime}</p>
-              <p className="mt-2 text-lg font-semibold text-[color:var(--app-shell-heading)]">{oneTimeAppointments}</p>
-              <p className="mt-1 text-xs text-[color:var(--app-shell-muted)]">{messages.focus.oneTimeDetail}</p>
-            </div>
-            <div className="rounded-2xl border border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-panel)] px-4 py-3">
-              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--app-shell-muted)]">{messages.focus.ready}</p>
-              <p className="mt-2 text-lg font-semibold text-[color:var(--app-shell-heading)]">{readyForPickup}</p>
-              <p className="mt-1 text-xs text-[color:var(--app-shell-muted)]">{pickupMessagesReady} {messages.focus.readyDetailSuffix}</p>
-            </div>
-            <div className="rounded-2xl border border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-panel)] px-4 py-3">
-              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--app-shell-muted)]">{messages.focus.planAlerts}</p>
-              <p className="mt-2 text-lg font-semibold text-[color:var(--app-shell-heading)]">{lowPlanAlerts}</p>
-              <p className="mt-1 text-xs text-[color:var(--app-shell-muted)]">{messages.focus.planAlertsDetail}</p>
-            </div>
-            <div className="rounded-2xl border border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-panel)] px-4 py-3">
-              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--app-shell-muted)]">{messages.focus.petTaxi}</p>
-              <p className="mt-2 text-lg font-semibold text-[color:var(--app-shell-heading)]">{petTaxiAppointments}</p>
-              <p className="mt-1 text-xs text-[color:var(--app-shell-muted)]">{messages.focus.petTaxiDetail}</p>
-            </div>
-            <div className="rounded-2xl border border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-panel)] px-4 py-3">
-              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--app-shell-muted)]">{messages.focus.commission}</p>
-              <p className="mt-2 text-lg font-semibold text-[color:var(--app-shell-heading)]">
-                {formatCurrencyForLocale(locale, visibleCommissionTotal)}
-              </p>
-              <p className="mt-1 text-xs text-[color:var(--app-shell-muted)]">{messages.focus.commissionDetail}</p>
-            </div>
+            <AppointmentFocusCard
+              icon={RefreshCcw}
+              label={messages.focus.recurring}
+              value={new Intl.NumberFormat(locale).format(recurringAppointments)}
+              detail={messages.focus.recurringDetail}
+            />
+            <AppointmentFocusCard
+              icon={CalendarCheck}
+              label={messages.focus.oneTime}
+              value={new Intl.NumberFormat(locale).format(oneTimeAppointments)}
+              detail={messages.focus.oneTimeDetail}
+            />
+            <AppointmentFocusCard
+              icon={CalendarCheck}
+              label={messages.focus.ready}
+              value={new Intl.NumberFormat(locale).format(readyForPickup)}
+              detail={`${pickupMessagesReady} ${messages.focus.readyDetailSuffix}`}
+            />
+            <AppointmentFocusCard
+              icon={CreditCard}
+              label={messages.focus.planAlerts}
+              value={new Intl.NumberFormat(locale).format(lowPlanAlerts)}
+              detail={messages.focus.planAlertsDetail}
+              tone={lowPlanAlerts > 0 ? 'warning' : 'default'}
+            />
+            <AppointmentFocusCard
+              icon={CarFront}
+              label={messages.focus.petTaxi}
+              value={new Intl.NumberFormat(locale).format(petTaxiAppointments)}
+              detail={messages.focus.petTaxiDetail}
+            />
+            <AppointmentFocusCard
+              icon={CreditCard}
+              label={messages.focus.commission}
+              value={formatCurrencyForLocale(locale, visibleCommissionTotal)}
+              detail={messages.focus.commissionDetail}
+              tone="accent"
+            />
           </div>
           <p className="mt-4 text-sm text-[color:var(--app-shell-muted)]">
             {messages.focus.pickupRule}

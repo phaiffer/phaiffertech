@@ -2,12 +2,19 @@
 
 import Link from 'next/link';
 import { FormEvent, useCallback, useEffect, useState } from 'react';
+import { CalendarDays, DollarSign, Star, Users, type LucideIcon } from 'lucide-react';
 import { PetModuleSubnav } from '@/modules/pet/pet-module-subnav';
 import { PermissionGuard } from '@/shared/auth/PermissionGuard';
+import {
+  sharedCompactTextClass,
+  sharedFilterToolbarClass,
+  sharedPageStackClass
+} from '@/shared/components/public-visual-system';
 import { StatusBadge } from '@/shared/dashboard/status-badge';
 import { useAppI18n, useAppMessages } from '@/shared/i18n/app-i18n-provider';
 import { formatCurrencyForLocale } from '@/shared/i18n/formatters';
 import { ApiClientError } from '@/shared/lib/http';
+import { maskPhoneInput, stripPhoneMask } from '@/shared/lib/phone';
 import { resolvePageItems, resolveTotalItems } from '@/shared/lib/pagination';
 import { petService } from '@/shared/services/pet-service';
 import { PageResponse } from '@/shared/types/common';
@@ -29,6 +36,55 @@ const initialPage: PageResponse<PetProfessional> = {
   page: 0,
   size: pageSize
 };
+
+type TeamSnapshotCardProps = {
+  icon: LucideIcon;
+  label: string;
+  value: string;
+  detail: string;
+  tone?: 'default' | 'accent' | 'warning';
+};
+
+function TeamSnapshotCard({
+  icon: Icon,
+  label,
+  value,
+  detail,
+  tone = 'default'
+}: TeamSnapshotCardProps) {
+  const toneClass = tone === 'accent'
+    ? 'border-transparent bg-[linear-gradient(135deg,var(--accent),var(--petflow-teal))] text-white shadow-[0_20px_40px_-28px_rgba(16,185,129,0.5)]'
+    : tone === 'warning'
+      ? 'border-amber-200/80 bg-[linear-gradient(180deg,rgba(251,191,36,0.12),rgba(255,255,255,0.98))]'
+      : 'border-slate-200/90 bg-white';
+
+  return (
+    <div className={`rounded-2xl border p-5 shadow-[0_16px_34px_-28px_rgba(15,23,42,0.16)] ${toneClass}`}>
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <p className={`text-xs font-semibold uppercase tracking-[0.16em] ${tone === 'accent' ? 'text-white/72' : 'text-slate-500'}`}>
+            {label}
+          </p>
+          <p className={`mt-3 text-3xl font-bold tracking-[-0.03em] ${tone === 'accent' ? 'text-white' : 'text-slate-900'}`}>
+            {value}
+          </p>
+        </div>
+        <span
+          className={`flex h-11 w-11 items-center justify-center rounded-xl ${
+            tone === 'accent'
+              ? 'bg-white/12 text-white'
+              : tone === 'warning'
+                ? 'bg-amber-100 text-amber-700'
+                : 'bg-[color:var(--accent)]/10 text-[color:var(--accent)]'
+          }`}
+        >
+          <Icon className="h-5 w-5" />
+        </span>
+      </div>
+      <p className={`mt-3 ${tone === 'accent' ? 'text-sm leading-6 text-white/80' : sharedCompactTextClass}`}>{detail}</p>
+    </div>
+  );
+}
 
 export function PetProfessionalsPage() {
   const { locale } = useAppI18n();
@@ -129,7 +185,7 @@ export function PetProfessionalsPage() {
     setName(item.name);
     setSpecialty(item.specialty ?? '');
     setLicenseNumber(item.licenseNumber ?? '');
-    setPhone(item.phone ?? '');
+    setPhone(item.phone ? maskPhoneInput(item.phone) : '');
     setEmail(item.email ?? '');
     setCommissionRate(item.commissionRate != null ? String(item.commissionRate * 100) : '');
     setError(null);
@@ -148,7 +204,7 @@ export function PetProfessionalsPage() {
         name,
         specialty: specialty || undefined,
         licenseNumber: licenseNumber || undefined,
-        phone: phone || undefined,
+        phone: stripPhoneMask(phone) || undefined,
         email: email || undefined,
         commissionRate: parsedRate && !isNaN(parsedRate) ? parsedRate / 100 : undefined
       };
@@ -198,7 +254,7 @@ export function PetProfessionalsPage() {
       render: (item) => (
         <div className="space-y-1">
           <p className="font-medium text-[color:var(--app-shell-heading)]">{item.name}</p>
-          <p className="text-xs text-[color:var(--app-shell-muted)]">
+          <p className="text-xs text-slate-700">
             {item.specialty ?? messages.columns.defaultSpecialty}
           </p>
         </div>
@@ -210,7 +266,7 @@ export function PetProfessionalsPage() {
       render: (item) => (
         <div className="space-y-1">
           <p className="text-sm text-[color:var(--app-shell-heading)]">{item.email ?? messages.columns.noEmail}</p>
-          <p className="text-xs text-[color:var(--app-shell-muted)]">{item.phone ?? messages.columns.noPhone}</p>
+          <p className="text-xs text-slate-700">{item.phone ?? messages.columns.noPhone}</p>
         </div>
       )
     },
@@ -224,12 +280,12 @@ export function PetProfessionalsPage() {
               ? `${(item.commissionRate * 100).toLocaleString(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}%`
               : '—'}
           </p>
-          <p className="text-xs text-[color:var(--app-shell-muted)]">
+          <p className="text-xs text-slate-700">
             {monthlyAppointments[item.id]
               ? `${monthlyAppointments[item.id].count} · ${formatCurrencyForLocale(locale, monthlyAppointments[item.id].total)}`
               : messages.columns.noCompletedServices}
           </p>
-          <p className="text-xs text-[color:var(--app-shell-muted)]">
+          <p className="text-xs text-slate-700">
             {item.commissionRate != null
               ? messages.columns.ruleVisible
               : messages.columns.defineRate}
@@ -247,7 +303,7 @@ export function PetProfessionalsPage() {
         return (
           <div className="space-y-2">
             <StatusBadge status={status} />
-            <p className="text-xs text-[color:var(--app-shell-muted)]">
+            <p className="text-xs text-slate-700">
               {item.commissionRate == null
                 ? messages.columns.needsSetup
                 : monthlySummary
@@ -291,7 +347,7 @@ export function PetProfessionalsPage() {
       permission="pet.professional.read"
       fallback={<div className="ui-notice-warning">{messages.noPermission}</div>}
     >
-      <div className="space-y-5">
+      <div className={sharedPageStackClass}>
         <PetModuleSubnav />
 
         <PageTitle
@@ -311,24 +367,32 @@ export function PetProfessionalsPage() {
           description={messages.snapshotDescription}
         >
           <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-            <div className="rounded-2xl border border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-panel)] px-4 py-3">
-              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--app-shell-muted)]">{messages.metrics.professionals}</p>
-              <p className="mt-2 text-lg font-semibold text-[color:var(--app-shell-heading)]">{totalItems}</p>
-            </div>
-            <div className="rounded-2xl border border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-panel)] px-4 py-3">
-              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--app-shell-muted)]">{messages.metrics.configured}</p>
-              <p className="mt-2 text-lg font-semibold text-[color:var(--app-shell-heading)]">{configuredCommissionCount}</p>
-            </div>
-            <div className="rounded-2xl border border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-panel)] px-4 py-3">
-              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--app-shell-muted)]">{messages.metrics.projected}</p>
-              <p className="mt-2 text-lg font-semibold text-[color:var(--app-shell-heading)]">
-                {summaryLoading ? messages.metrics.loading : formatCurrencyForLocale(locale, projectedCommissionTotal)}
-              </p>
-            </div>
-            <div className="rounded-2xl border border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-panel)] px-4 py-3">
-              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--app-shell-muted)]">{messages.metrics.needSetup}</p>
-              <p className="mt-2 text-lg font-semibold text-[color:var(--app-shell-heading)]">{pendingCommissionSetup}</p>
-            </div>
+            <TeamSnapshotCard
+              icon={Users}
+              label={messages.metrics.professionals}
+              value={new Intl.NumberFormat(locale).format(totalItems)}
+              detail={messages.snapshotDescription}
+            />
+            <TeamSnapshotCard
+              icon={CalendarDays}
+              label={messages.metrics.configured}
+              value={new Intl.NumberFormat(locale).format(configuredCommissionCount)}
+              detail={messages.columns.ruleVisible}
+            />
+            <TeamSnapshotCard
+              icon={DollarSign}
+              label={messages.metrics.projected}
+              value={summaryLoading ? messages.metrics.loading : formatCurrencyForLocale(locale, projectedCommissionTotal)}
+              detail={messages.columns.noCompletedServices}
+              tone="accent"
+            />
+            <TeamSnapshotCard
+              icon={Star}
+              label={messages.metrics.needSetup}
+              value={new Intl.NumberFormat(locale).format(pendingCommissionSetup)}
+              detail={messages.columns.defineRate}
+              tone={pendingCommissionSetup > 0 ? 'warning' : 'default'}
+            />
           </div>
           {pendingCommissionSetup > 0 ? (
             <div className="ui-notice-warning mt-5">
@@ -337,7 +401,7 @@ export function PetProfessionalsPage() {
           ) : null}
         </PageSection>
 
-        <div className="grid gap-3 ui-surface-panel p-4 md:grid-cols-[1fr_auto]">
+        <div className={`grid gap-3 md:grid-cols-[1fr_auto] ${sharedFilterToolbarClass}`}>
           <SearchBar value={searchInput} onChange={setSearchInput} placeholder={messages.search.placeholder} />
           <div className="flex items-end gap-2 pb-0.5">
             <button
@@ -380,7 +444,7 @@ export function PetProfessionalsPage() {
               name="professionalPhone"
               label={messages.form.phone}
               value={phone}
-              onChange={setPhone}
+              onChange={(v) => setPhone(maskPhoneInput(v))}
               autoComplete="section-professional tel"
               inputMode="tel"
               data-lpignore="true"
@@ -416,7 +480,7 @@ export function PetProfessionalsPage() {
 
             <div className="md:col-span-2 rounded-2xl border border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-panel-muted)] p-4">
               <p className="text-sm font-medium text-[color:var(--app-shell-heading)]">{messages.form.reminderTitle}</p>
-              <p className="mt-1 text-xs text-[color:var(--app-shell-muted)]">
+              <p className="mt-1 text-xs text-slate-700">
                 {messages.form.reminderDescription}
               </p>
             </div>

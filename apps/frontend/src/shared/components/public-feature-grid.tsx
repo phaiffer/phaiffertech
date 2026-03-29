@@ -51,7 +51,7 @@ export function PublicFeatureGrid({
           <h2 className="mt-3 text-3xl font-semibold tracking-[-0.03em] text-foreground sm:text-4xl lg:text-[2.75rem]">
             {title}
           </h2>
-          <p className="mx-auto mt-5 max-w-2xl text-base leading-8 text-muted sm:text-lg">{description}</p>
+          <p className="mx-auto mt-5 max-w-2xl text-base leading-8 text-[color:var(--muted)] sm:text-lg">{description}</p>
         </div>
 
         <div className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
@@ -71,13 +71,13 @@ export function PublicFeatureGrid({
                 ) : null}
 
                 {item.eyebrow ? <p className={`mt-5 ${publicEyebrowClass}`}>{item.eyebrow}</p> : null}
-                <h3 className="mt-3 text-xl font-semibold tracking-[-0.03em] text-foreground">{item.title}</h3>
-                <p className="mt-4 text-sm leading-7 text-muted">{item.description}</p>
+                <h3 className="mt-3 text-xl font-semibold tracking-[-0.03em] text-slate-900">{item.title}</h3>
+                <p className="mt-4 text-sm leading-7 text-slate-600">{item.description}</p>
 
                 {item.bullets?.length ? (
                   <ul className="mt-5 space-y-3">
                     {item.bullets.map((bullet) => (
-                      <li key={bullet} className="flex items-start gap-3 text-sm text-muted">
+                      <li key={bullet} className="flex items-start gap-3 text-sm text-slate-700">
                         <span className="mt-0.5 inline-flex h-5 w-5 items-center justify-center rounded-full bg-accent-muted">
                           <Check className="h-3 w-3 text-accent" />
                         </span>
@@ -97,7 +97,7 @@ export function PublicFeatureGrid({
                   </Link>
                 ) : null}
 
-                {item.footer ? <p className="mt-6 border-t border-border pt-4 text-xs text-muted">{item.footer}</p> : null}
+                {item.footer ? <p className="mt-6 border-t border-border pt-4 text-xs text-slate-700">{item.footer}</p> : null}
               </article>
             );
           })}

@@ -1,10 +1,12 @@
 'use client';
 
 import { FormEvent, useCallback, useEffect, useMemo, useState } from 'react';
+import { RefreshCcw, Repeat, TriangleAlert, Users, type LucideIcon } from 'lucide-react';
 import { PetModuleSubnav } from '@/modules/pet/pet-module-subnav';
 import { PermissionGuard } from '@/shared/auth/PermissionGuard';
 import { usePermissions } from '@/shared/auth/usePermissions';
 import {
+  sharedCompactTextClass,
   sharedPageStackClass
 } from '@/shared/components/public-visual-system';
 import { StatusBadge } from '@/shared/dashboard/status-badge';
@@ -32,6 +34,55 @@ const initialPage: PageResponse<ClientPlan> = {
   page: 0,
   size: pageSize
 };
+
+type PlanSignalCardProps = {
+  icon: LucideIcon;
+  label: string;
+  value: string;
+  detail: string;
+  tone?: 'default' | 'accent' | 'warning';
+};
+
+function PlanSignalCard({
+  icon: Icon,
+  label,
+  value,
+  detail,
+  tone = 'default'
+}: PlanSignalCardProps) {
+  const toneClass = tone === 'accent'
+    ? 'border-transparent bg-[linear-gradient(135deg,var(--accent),var(--petflow-teal))] text-white shadow-[0_20px_40px_-28px_rgba(16,185,129,0.5)]'
+    : tone === 'warning'
+      ? 'border-amber-200/80 bg-[linear-gradient(180deg,rgba(251,191,36,0.12),rgba(255,255,255,0.98))]'
+      : 'border-slate-200/90 bg-white';
+
+  return (
+    <div className={`rounded-2xl border p-5 shadow-[0_16px_34px_-28px_rgba(15,23,42,0.16)] ${toneClass}`}>
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <p className={`text-xs font-semibold uppercase tracking-[0.16em] ${tone === 'accent' ? 'text-white/72' : 'text-slate-500'}`}>
+            {label}
+          </p>
+          <p className={`mt-3 text-3xl font-bold tracking-[-0.03em] ${tone === 'accent' ? 'text-white' : 'text-slate-900'}`}>
+            {value}
+          </p>
+        </div>
+        <span
+          className={`flex h-11 w-11 items-center justify-center rounded-xl ${
+            tone === 'accent'
+              ? 'bg-white/12 text-white'
+              : tone === 'warning'
+                ? 'bg-amber-100 text-amber-700'
+                : 'bg-[color:var(--accent)]/10 text-[color:var(--accent)]'
+          }`}
+        >
+          <Icon className="h-5 w-5" />
+        </span>
+      </div>
+      <p className={`mt-3 ${tone === 'accent' ? 'text-sm leading-6 text-white/80' : sharedCompactTextClass}`}>{detail}</p>
+    </div>
+  );
+}
 
 // Returns a toneMap-compatible status key for StatusBadge
 function resolvePlanStatusKey(plan: ClientPlan): string {
@@ -354,26 +405,32 @@ export function PetPlansPage() {
           description={messages.watchDescription}
         >
           <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-            <div className="rounded-2xl border border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-panel)] px-4 py-3">
-              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--app-shell-muted)]">{messages.activePlans}</p>
-              <p className="mt-2 text-lg font-semibold text-[color:var(--app-shell-heading)]">{activePlans}</p>
-              <p className="mt-1 text-xs text-[color:var(--app-shell-muted)]">{messages.activePlansDetail}</p>
-            </div>
-            <div className="rounded-2xl border border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-panel)] px-4 py-3">
-              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--app-shell-muted)]">{messages.renewSoon}</p>
-              <p className="mt-2 text-lg font-semibold text-[color:var(--app-shell-heading)]">{lowSessionPlans}</p>
-              <p className="mt-1 text-xs text-[color:var(--app-shell-muted)]">{messages.renewSoonDetail}</p>
-            </div>
-            <div className="rounded-2xl border border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-panel)] px-4 py-3">
-              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--app-shell-muted)]">{messages.penultimateBath}</p>
-              <p className="mt-2 text-lg font-semibold text-[color:var(--app-shell-heading)]">{penultimatePlans}</p>
-              <p className="mt-1 text-xs text-[color:var(--app-shell-muted)]">{messages.penultimateBathDetail}</p>
-            </div>
-            <div className="rounded-2xl border border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-panel)] px-4 py-3">
-              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--app-shell-muted)]">{messages.renewalEmailMissing}</p>
-              <p className="mt-2 text-lg font-semibold text-[color:var(--app-shell-heading)]">{renewalEmailMissingCount}</p>
-              <p className="mt-1 text-xs text-[color:var(--app-shell-muted)]">{messages.renewalEmailMissingDetail}</p>
-            </div>
+            <PlanSignalCard
+              icon={Users}
+              label={messages.activePlans}
+              value={new Intl.NumberFormat(locale).format(activePlans)}
+              detail={messages.activePlansDetail}
+            />
+            <PlanSignalCard
+              icon={RefreshCcw}
+              label={messages.renewSoon}
+              value={new Intl.NumberFormat(locale).format(lowSessionPlans)}
+              detail={messages.renewSoonDetail}
+              tone={lowSessionPlans > 0 ? 'warning' : 'default'}
+            />
+            <PlanSignalCard
+              icon={Repeat}
+              label={messages.penultimateBath}
+              value={new Intl.NumberFormat(locale).format(penultimatePlans)}
+              detail={messages.penultimateBathDetail}
+            />
+            <PlanSignalCard
+              icon={TriangleAlert}
+              label={messages.renewalEmailMissing}
+              value={new Intl.NumberFormat(locale).format(renewalEmailMissingCount)}
+              detail={messages.renewalEmailMissingDetail}
+              tone={renewalEmailMissingCount > 0 ? 'accent' : 'default'}
+            />
           </div>
           {exhaustedPlans > 0 ? (
             <div className="ui-notice-warning mt-5">

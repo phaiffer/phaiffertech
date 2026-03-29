@@ -75,7 +75,7 @@ export function WebsiteSectionHeading({ eyebrow, title, description }: WebsiteSe
   return (
     <div className="max-w-xl">
       {eyebrow && <p className={publicEyebrowClass}>{eyebrow}</p>}
-      <h2 className={eyebrow ? publicSectionTitleClass : 'text-2xl font-semibold tracking-tight text-foreground sm:text-3xl'}>
+      <h2 className={eyebrow ? publicSectionTitleClass : 'text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl'}>
         {title}
       </h2>
       <p className={publicSectionSupportingTextClass}>{description}</p>
@@ -89,8 +89,8 @@ export function WebsiteStatStrip({ items }: WebsiteStatStripProps) {
       {items.map((item) => (
         <div key={`${item.value}-${item.label}`} className={`${publicCardSurfaceClass} rounded-[1.5rem] p-6`}>
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--accent)]">{item.label}</p>
-          <p className="mt-4 text-3xl font-semibold tracking-[-0.04em] text-foreground">{item.value}</p>
-          <p className="mt-3 text-sm leading-7 text-muted">{item.description}</p>
+          <p className="mt-4 text-3xl font-semibold tracking-[-0.04em] text-slate-900">{item.value}</p>
+          <p className="mt-3 text-sm leading-7 text-slate-600">{item.description}</p>
         </div>
       ))}
     </div>
@@ -106,11 +106,11 @@ export function WebsiteCardGrid({ items }: WebsiteCardGridProps) {
           className={`${publicInteractiveCardSurfaceClass} group flex h-full flex-col justify-between rounded-[1.5rem] p-6`}
         >
           <p className={publicEyebrowClass}>{item.eyebrow}</p>
-          <h3 className="mt-3 text-xl font-semibold tracking-[-0.03em] text-foreground">{item.title}</h3>
-          <p className="mt-4 text-sm leading-7 text-muted">{item.description}</p>
+          <h3 className="mt-3 text-xl font-semibold tracking-[-0.03em] text-slate-900">{item.title}</h3>
+          <p className="mt-4 text-sm leading-7 text-slate-600">{item.description}</p>
 
           {item.bullets?.length ? (
-            <ul className="mt-5 space-y-3 text-sm text-muted">
+            <ul className="mt-5 space-y-3 text-sm text-slate-600">
               {item.bullets.map((bullet) => (
                 <li key={bullet} className="flex gap-2">
                   <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-accent" />
@@ -121,7 +121,7 @@ export function WebsiteCardGrid({ items }: WebsiteCardGridProps) {
           ) : null}
 
           {item.footer && (
-            <p className="mt-4 border-t border-border pt-4 text-xs text-muted">{item.footer}</p>
+            <p className="mt-4 border-t border-border pt-4 text-xs text-slate-600">{item.footer}</p>
           )}
         </article>
       ))}
@@ -176,10 +176,10 @@ export function WebsiteArticleGrid({ items, ctaLabel }: WebsiteArticleGridProps)
           <div className="mb-4 h-1 w-8 rounded-full bg-border transition-colors group-hover:bg-accent" />
           <div className="flex items-center justify-between gap-4">
             <p className={publicEyebrowClass}>{item.category}</p>
-            <p className="text-xs text-muted">{item.readTime}</p>
+            <p className="text-xs text-slate-600">{item.readTime}</p>
           </div>
-          <h3 className="mt-3 text-lg font-semibold tracking-tight text-foreground">{item.title}</h3>
-          <p className="mt-3 text-sm leading-relaxed text-muted">{item.description}</p>
+          <h3 className="mt-3 text-lg font-semibold tracking-tight text-slate-900">{item.title}</h3>
+          <p className="mt-3 text-sm leading-relaxed text-slate-600">{item.description}</p>
           <Link
             href={`/articles/${item.slug}`}
             className="mt-5 inline-flex text-sm font-medium text-accent transition-colors hover:text-foreground"

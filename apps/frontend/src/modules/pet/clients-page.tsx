@@ -4,6 +4,7 @@ import type { FormEvent } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
+import { Mail, Phone, Users } from 'lucide-react';
 import {
   sharedCompactTextClass,
   sharedFilterToolbarClass,
@@ -14,6 +15,7 @@ import {
 import { PermissionGuard } from '@/shared/auth/PermissionGuard';
 import { StatusBadge } from '@/shared/dashboard/status-badge';
 import { ApiClientError } from '@/shared/lib/http';
+import { formatPhoneDisplay, maskPhoneInput, stripPhoneMask } from '@/shared/lib/phone';
 import { resolvePageItems, resolveTotalItems } from '@/shared/lib/pagination';
 import { petService } from '@/shared/services/pet-service';
 import type { PageResponse } from '@/shared/types/common';
@@ -130,7 +132,7 @@ export function PetClientsPage({ initialView = 'list' }: PetClientsPageProps) {
     setEditingId(client.id);
     setName(client.name ?? client.fullName ?? '');
     setEmail(client.email ?? '');
-    setPhone(client.phone ?? '');
+    setPhone(client.phone ? formatPhoneDisplay(client.phone) : '');
     setDocument(client.document ?? '');
     setAddress(client.address ?? '');
     setStatus(client.status);
@@ -162,7 +164,7 @@ export function PetClientsPage({ initialView = 'list' }: PetClientsPageProps) {
         await petService.updateClient(editingId, {
           name,
           email: email || undefined,
-          phone: phone || undefined,
+          phone: stripPhoneMask(phone) || undefined,
           document: document || undefined,
           address: address || undefined,
           status
@@ -173,7 +175,7 @@ export function PetClientsPage({ initialView = 'list' }: PetClientsPageProps) {
         await petService.createClient({
           name,
           email: email || undefined,
-          phone: phone || undefined,
+          phone: stripPhoneMask(phone) || undefined,
           document: document || undefined,
           address: address || undefined,
           status
@@ -217,6 +219,9 @@ export function PetClientsPage({ initialView = 'list' }: PetClientsPageProps) {
   const rows = resolvePageItems(pageData);
   const totalItems = resolveTotalItems(pageData);
   const activeFilterCount = [search, statusFilter].filter(Boolean).length;
+  const activeClients = rows.filter((client) => client.status === 'ACTIVE').length;
+  const clientsWithEmail = rows.filter((client) => Boolean(client.email)).length;
+  const clientsWithPhone = rows.filter((client) => Boolean(client.phone)).length;
 
   const columns: DataTableColumn<PetClient>[] = [
     {
@@ -235,7 +240,9 @@ export function PetClientsPage({ initialView = 'list' }: PetClientsPageProps) {
       render: (client) => (
         <div>
           <p className="font-medium text-[color:var(--app-shell-heading)]">{client.email ?? 'Sem e-mail'}</p>
-          <p className={`mt-1 ${sharedCompactTextClass}`}>{client.phone ?? 'Sem telefone'}</p>
+          <p className={`mt-1 ${sharedCompactTextClass}`}>
+            {client.phone ? formatPhoneDisplay(client.phone) : 'Sem telefone'}
+          </p>
         </div>
       )
     },
@@ -303,6 +310,29 @@ export function PetClientsPage({ initialView = 'list' }: PetClientsPageProps) {
         />
 
         {!isCreateRoute ? (
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            {[
+              { label: 'Total de clientes', value: totalItems, icon: Users },
+              { label: 'Cadastros ativos', value: activeClients, icon: Users },
+              { label: 'Com e-mail', value: clientsWithEmail, icon: Mail },
+              { label: 'Com telefone', value: clientsWithPhone, icon: Phone }
+            ].map((item) => (
+              <div key={item.label} className="rounded-2xl border border-slate-200/90 bg-white p-5 shadow-[0_16px_34px_-28px_rgba(15,23,42,0.16)]">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">{item.label}</p>
+                    <p className="mt-3 text-3xl font-bold tracking-[-0.03em] text-slate-900">{item.value}</p>
+                  </div>
+                  <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-[color:var(--accent)]/10 text-[color:var(--accent)]">
+                    <item.icon className="h-5 w-5" />
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : null}
+
+        {!isCreateRoute ? (
           <PageSection tone="muted" title="Filtros" description="Busque por nome, contato ou status do cadastro.">
             <div className={sharedFilterToolbarClass}>
               <div className="grid gap-3 xl:grid-cols-[minmax(0,1.45fr)_220px] xl:items-end">
@@ -324,7 +354,7 @@ export function PetClientsPage({ initialView = 'list' }: PetClientsPageProps) {
                 >
                   Limpar
                 </button>
-                <p className="text-sm text-[color:var(--app-shell-muted)]">
+                <p className="text-sm text-slate-700">
                   {activeFilterCount > 0
                     ? `${activeFilterCount} filtro(s) ativos na visao de clientes.`
                     : 'Sem filtros ativos na base de clientes.'}
@@ -345,13 +375,62 @@ export function PetClientsPage({ initialView = 'list' }: PetClientsPageProps) {
             >
               <form onSubmit={handleSubmit} className="space-y-5">
                 <div className="grid gap-4 xl:grid-cols-2">
-                  <FormInput label="Nome" value={name} onChange={setName} required />
+                  <FormInput
+                    id="client-name"
+                    name="name"
+                    label="Nome"
+                    value={name}
+                    onChange={setName}
+                    autoComplete="name"
+                    required
+                  />
                   <FormSelect label="Status" value={status} options={formStatusOptions} onChange={setStatus} />
-                  <FormInput label="E-mail" value={email} onChange={setEmail} type="email" />
-                  <FormInput label="Telefone" value={phone} onChange={setPhone} />
-                  <FormInput label="Documento" value={document} onChange={setDocument} />
+                  <FormInput
+                    id="client-email"
+                    name="email"
+                    label="E-mail"
+                    value={email}
+                    onChange={setEmail}
+                    type="email"
+                    autoComplete="email"
+                    inputMode="email"
+                    autoCapitalize="none"
+                    autoCorrect="off"
+                    spellCheck={false}
+                    data-lpignore="true"
+                    data-1p-ignore="true"
+                  />
+                  <FormInput
+                    id="client-phone"
+                    name="phone"
+                    label="Telefone"
+                    value={phone}
+                    onChange={(v) => setPhone(maskPhoneInput(v))}
+                    autoComplete="tel"
+                    inputMode="tel"
+                    data-lpignore="true"
+                    data-1p-ignore="true"
+                  />
+                  <FormInput
+                    id="client-document"
+                    name="document"
+                    label="Documento"
+                    value={document}
+                    onChange={setDocument}
+                    autoComplete="off"
+                    data-lpignore="true"
+                    data-1p-ignore="true"
+                  />
                   <div className="hidden xl:block" />
-                  <FormInput label="Endereco" value={address} onChange={setAddress} wrapperClassName="xl:col-span-2" />
+                  <FormInput
+                    id="client-address"
+                    name="address"
+                    label="Endereco"
+                    value={address}
+                    onChange={setAddress}
+                    autoComplete="street-address"
+                    wrapperClassName="xl:col-span-2"
+                  />
                 </div>
 
                 <div className={sharedFormActionsClass}>
@@ -371,7 +450,7 @@ export function PetClientsPage({ initialView = 'list' }: PetClientsPageProps) {
           <PageSection
             title="Base de clientes"
             description="Lista principal para pets, visitas e cobranca."
-            actions={<p className="text-sm text-[color:var(--app-shell-muted)]">Total de {totalItems} cliente(s)</p>}
+            actions={<p className="text-sm text-slate-700">Total de {totalItems} cliente(s)</p>}
           >
             <div className="space-y-5">
               <DataTable

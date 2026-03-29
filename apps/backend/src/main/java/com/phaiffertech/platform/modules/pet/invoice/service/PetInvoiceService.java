@@ -309,7 +309,7 @@ public class PetInvoiceService {
                 tenantId,
                 new FinanceInvoiceUpsertCommand(
                         FinanceSourceModule.PET,
-                        "PET_CLIENT",
+                        "PET.CLIENT",
                         client.getId(),
                         clientName(client),
                         null,

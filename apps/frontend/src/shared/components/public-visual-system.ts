@@ -13,7 +13,7 @@ import {
    ═══════════════════════════════════════════════════════════════════════════ */
 
 export const sharedShellHeaderClass =
-  'border-b border-border/80 bg-white/92 shadow-[0_8px_20px_-18px_rgba(15,23,42,0.08)] backdrop-blur-md';
+  'border-b border-slate-200/80 bg-white/95 shadow-[0_8px_24px_-20px_rgba(15,23,42,0.1)] backdrop-blur-md';
 
 export const sharedEyebrowClass = 'text-[11px] font-semibold uppercase tracking-[0.24em] text-accent';
 
@@ -21,44 +21,44 @@ export const sharedHeroTitleClass =
   'text-4xl font-semibold tracking-[-0.045em] text-foreground sm:text-5xl lg:text-[4.15rem] lg:leading-[0.98]';
 
 export const sharedPageTitleClass =
-  'text-3xl font-semibold tracking-[-0.04em] text-foreground sm:text-[2.6rem]';
+  'text-2xl font-bold tracking-[-0.035em] text-slate-900 sm:text-[2rem]';
 
-export const sharedSectionHeadingClass = 'text-lg font-semibold tracking-[-0.03em] text-foreground';
+export const sharedSectionHeadingClass = 'text-lg font-semibold tracking-[-0.02em] text-slate-900';
 
 export const sharedCardTitleClass = 'text-lg font-semibold tracking-[-0.03em] text-foreground';
 
-export const sharedBodyTextClass = 'text-base leading-7 text-slate-600 sm:text-lg sm:leading-8';
+export const sharedBodyTextClass = 'text-base leading-7 text-slate-700 sm:text-lg sm:leading-8';
 
-export const sharedSupportingTextClass = 'text-sm leading-6 text-slate-600 sm:text-[15px] sm:leading-7';
+export const sharedSupportingTextClass = 'text-sm leading-7 text-slate-600 sm:text-[15px] sm:leading-7';
 
 export const sharedCompactTextClass = 'text-sm leading-6 text-slate-600';
 
-export const sharedSurfaceClass = 'rounded-[1.4rem] border border-border bg-white shadow-xs';
+export const sharedSurfaceClass = 'rounded-2xl border border-slate-200/90 bg-white shadow-[0_14px_34px_-28px_rgba(15,23,42,0.18)]';
 
 export const sharedInteractiveSurfaceClass =
-  `${sharedSurfaceClass} transition-all duration-200 hover:border-accent/40 hover:shadow-sm`;
+  `${sharedSurfaceClass} transition-all duration-200 hover:border-[color:var(--accent)]/25 hover:shadow-[0_18px_38px_-28px_rgba(15,23,42,0.22)]`;
 
-export const sharedPanelSurfaceClass = 'ui-surface-panel rounded-[1.75rem]';
+export const sharedPanelSurfaceClass = 'rounded-2xl border border-slate-200/90 bg-white shadow-[0_18px_38px_-30px_rgba(15,23,42,0.18)]';
 
-export const sharedMutedSurfaceClass = 'ui-surface-muted rounded-[1.6rem]';
+export const sharedMutedSurfaceClass = 'rounded-2xl border border-slate-200/80 bg-slate-50/80 shadow-[0_12px_28px_-24px_rgba(15,23,42,0.12)]';
 
 export const sharedDashedSurfaceClass =
   'rounded-[1.65rem] border border-dashed border-border bg-surface-inset';
 
 export const sharedPageStackClass = 'space-y-6 xl:space-y-8';
 
-export const sharedPageHeaderClass = 'flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between';
+export const sharedPageHeaderClass = 'flex flex-col gap-4 md:flex-row md:items-end md:justify-between';
 
-export const sharedPageHeaderBodyClass = 'max-w-4xl';
+export const sharedPageHeaderBodyClass = 'max-w-3xl';
 
-export const sharedSectionSurfaceClass = 'ui-surface-panel rounded-[1.65rem] p-5 lg:p-6';
+export const sharedSectionSurfaceClass = 'rounded-2xl border border-slate-200/90 bg-white p-5 shadow-[0_16px_34px_-28px_rgba(15,23,42,0.16)] lg:p-6';
 
-export const sharedMutedSectionSurfaceClass = 'ui-surface-muted rounded-[1.7rem] p-4 lg:p-5';
+export const sharedMutedSectionSurfaceClass = 'rounded-2xl border border-slate-200/80 bg-slate-50/85 p-4 shadow-[0_12px_28px_-24px_rgba(15,23,42,0.12)] lg:p-5';
 
 export const sharedSectionHeaderClass =
-  'mb-5 flex flex-col gap-2 lg:flex-row lg:items-start lg:justify-between';
+  'mb-5 flex flex-col gap-3 md:flex-row md:items-start md:justify-between';
 
-export const sharedFilterToolbarClass = 'grid gap-3 rounded-[1.9rem] border border-border bg-surface p-4 shadow-sm xl:gap-4';
+export const sharedFilterToolbarClass = 'grid gap-3 rounded-2xl border border-slate-200/90 bg-white p-4 shadow-[0_14px_30px_-24px_rgba(15,23,42,0.14)] xl:gap-4';
 
 export const sharedFieldGroupClass = 'space-y-2';
 
@@ -66,7 +66,7 @@ export const sharedFormActionsClass = 'flex flex-wrap items-center gap-3 pt-1';
 
 export const sharedInlineActionsClass = 'flex flex-wrap items-center gap-2';
 
-export const sharedFieldHintClass = 'text-xs leading-5 text-slate-500';
+export const sharedFieldHintClass = 'text-xs leading-5 text-[color:var(--app-shell-muted)]';
 
 export const sharedPrimaryButtonClass =
   'ui-primary-button';
@@ -78,12 +78,22 @@ export const sharedCompactButtonClass =
   'ui-inline-button rounded-full px-3';
 
 export const sharedInputLabelClass =
-  'mb-1.5 block text-sm font-medium tracking-[0.01em] text-foreground';
+  'mb-1.5 block text-sm font-semibold tracking-[0.01em] text-slate-900';
 
 export const sharedInputClass =
-  'ui-input-control text-sm leading-5';
+  'ui-input-control text-sm leading-5 tracking-[0.01em]';
 
-export const sharedTextareaClass = `${sharedInputClass} min-h-32 resize-y py-3`;
+export const sharedInputLeadingAccessoryClass =
+  'pointer-events-none absolute inset-y-0 left-0 z-10 flex w-10 items-center justify-center text-slate-400';
+
+export const sharedInputTrailingAccessoryClass =
+  'absolute inset-y-0 right-0 z-10 flex min-w-[3.5rem] items-center justify-center px-4 text-slate-500';
+
+export const sharedInputWithLeadingAccessoryClass = 'pl-10';
+
+export const sharedInputWithTrailingAccessoryClass = 'pr-14';
+
+export const sharedTextareaClass = `${sharedInputClass} min-h-32 resize-y py-3.5`;
 
 export const appShellContentContainerClass = 'mx-auto w-full max-w-[1680px]';
 
