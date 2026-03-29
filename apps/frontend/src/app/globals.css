@@ -94,10 +94,10 @@
   --control-height-compact: 2.25rem;
 
   /* ─── Shadows ──────────────────────────────────────────────────────────── */
-  --shadow-xs: 0 10px 24px -22px rgba(15, 23, 42, 0.14);
-  --shadow-sm: 0 16px 34px -24px rgba(15, 23, 42, 0.12);
-  --shadow-md: 0 22px 44px -26px rgba(15, 23, 42, 0.14);
-  --shadow-lg: 0 30px 64px -34px rgba(15, 23, 42, 0.18);
+  --shadow-xs: 0 8px 22px -20px rgba(15, 23, 42, 0.12);
+  --shadow-sm: 0 12px 28px -22px rgba(15, 23, 42, 0.1);
+  --shadow-md: 0 18px 34px -24px rgba(15, 23, 42, 0.12);
+  --shadow-lg: 0 24px 48px -30px rgba(15, 23, 42, 0.15);
   --shadow-card: var(--shadow-md);
 
   /* ─── Compatibility Aliases (legacy platform vocabulary) ──────────────── */
@@ -303,18 +303,16 @@ body {
   border: 1px solid var(--app-shell-border);
   border-radius: var(--radius-2xl);
   background: var(--surface-1);
-  box-shadow:
-    var(--shadow-sm);
-  backdrop-filter: blur(14px);
+  box-shadow: var(--shadow-xs);
+  backdrop-filter: blur(8px);
 }
 
 .ui-surface-muted {
   border: 1px solid var(--app-shell-border);
   border-radius: var(--radius-2xl);
   background: var(--app-shell-panel-muted);
-  box-shadow:
-    var(--shadow-xs);
-  backdrop-filter: blur(10px);
+  box-shadow: none;
+  backdrop-filter: none;
 }
 
 .ui-input-control {
@@ -391,19 +389,19 @@ body {
 .ui-primary-button {
   background: linear-gradient(
     135deg,
-    color-mix(in srgb, var(--accent) 96%, #ffffff 4%) 0%,
-    color-mix(in srgb, var(--accent) 78%, #0f172a 22%) 100%
+    color-mix(in srgb, var(--accent) 94%, #ffffff 6%) 0%,
+    color-mix(in srgb, var(--accent) 86%, #0f172a 14%) 100%
   );
   color: #ffffff;
   box-shadow:
-    0 14px 28px -18px color-mix(in srgb, var(--accent) 40%, transparent),
+    0 10px 24px -18px color-mix(in srgb, var(--accent) 32%, transparent),
     var(--shadow-xs);
 }
 
 .ui-primary-button:hover {
-  transform: translateY(-1px);
+  transform: translateY(-0.5px);
   box-shadow:
-    0 16px 30px -18px color-mix(in srgb, var(--accent) 46%, transparent),
+    0 12px 26px -18px color-mix(in srgb, var(--accent) 38%, transparent),
     var(--shadow-sm);
 }
 

@@ -37,7 +37,7 @@ function resolveBannerToneClass(tone: BrandTone) {
     return 'border-white/10 bg-white/5 shadow-[0_28px_72px_-38px_rgba(15,23,42,0.8)] backdrop-blur';
   }
 
-  return 'border-slate-200/80 bg-slate-950 shadow-[0_24px_54px_-34px_rgba(15,23,42,0.24)]';
+  return 'border-slate-200/80 bg-slate-950 shadow-[0_18px_42px_-32px_rgba(15,23,42,0.22)]';
 }
 
 export function BrandMark({
@@ -85,12 +85,12 @@ export function BrandBanner({
       )}
     >
       <Image
-        src="/PhaifferTech_banner.png"
+        src="/PhaifferTech.png"
         alt={alt}
-        width={1330}
-        height={620}
+        width={1536}
+        height={1024}
         priority={priority}
-        className={joinClasses('h-auto w-auto max-h-full max-w-full object-contain', imageClassName)}
+        className={joinClasses('h-auto w-auto max-h-full max-w-full object-contain object-left', imageClassName)}
       />
     </span>
   );

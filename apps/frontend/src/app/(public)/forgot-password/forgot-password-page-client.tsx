@@ -88,20 +88,26 @@ export default function ForgotPasswordPageClient() {
               <p className={`mt-2 ${sharedCompactTextClass}`}>{t.description}</p>
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit} autoComplete="off" className="space-y-4">
               <div>
                 <label htmlFor="tenant-code" className={sharedInputLabelClass}>
                   {t.tenantCodeLabel}
                 </label>
                 <input
                   id="tenant-code"
+                  name="tenantCode"
                   type="text"
                   value={tenantCode}
                   onChange={(event) => handleTenantCodeChange(event.target.value)}
                   onBlur={(event) => commitTenantCodeVisual(event.target.value)}
                   className={sharedInputClass}
                   placeholder="tenant-code"
-                  autoComplete="organization"
+                  autoComplete="section-petflow organization"
+                  autoCapitalize="none"
+                  autoCorrect="off"
+                  spellCheck={false}
+                  data-lpignore="true"
+                  data-1p-ignore="true"
                   disabled={submitting}
                   required
                 />
@@ -113,12 +119,17 @@ export default function ForgotPasswordPageClient() {
                 </label>
                 <input
                   id="email"
+                  name="email"
                   type="email"
                   value={email}
                   onChange={(event) => handleEmailChange(event.target.value)}
                   className={sharedInputClass}
                   placeholder="name@company.com"
                   autoComplete="email"
+                  inputMode="email"
+                  autoCapitalize="none"
+                  autoCorrect="off"
+                  spellCheck={false}
                   disabled={submitting}
                   required
                 />

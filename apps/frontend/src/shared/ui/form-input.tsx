@@ -1,4 +1,4 @@
-import { useId } from 'react';
+import { useId, type InputHTMLAttributes } from 'react';
 import {
   sharedFieldGroupClass,
   sharedFieldHintClass,
@@ -6,32 +6,41 @@ import {
   sharedInputLabelClass
 } from '@/shared/components/public-visual-system';
 
-type FormInputProps = {
+type NativeInputProps = Omit<
+  InputHTMLAttributes<HTMLInputElement>,
+  'children' | 'size' | 'value' | 'onChange'
+>;
+
+type FormInputProps = NativeInputProps & {
   label: string;
   value: string;
   onChange: (value: string) => void;
-  placeholder?: string;
-  type?: string;
-  required?: boolean;
-  disabled?: boolean;
   description?: string;
-  className?: string;
   wrapperClassName?: string;
 };
 
 export function FormInput({
+  id,
+  name,
   label,
   value,
   onChange,
   placeholder,
   type = 'text',
+  autoComplete,
+  inputMode,
+  autoCapitalize,
+  autoCorrect,
+  spellCheck,
   required = false,
   disabled = false,
   description,
   className,
-  wrapperClassName
+  wrapperClassName,
+  ...inputProps
 }: FormInputProps) {
-  const inputId = useId();
+  const generatedInputId = useId();
+  const inputId = id ?? generatedInputId;
   const descriptionId = description ? `${inputId}-description` : undefined;
 
   return (
@@ -41,14 +50,21 @@ export function FormInput({
       </label>
       <input
         id={inputId}
+        name={name}
         type={type}
         value={value}
         onChange={(event) => onChange(event.target.value)}
         placeholder={placeholder}
+        autoComplete={autoComplete}
+        inputMode={inputMode}
+        autoCapitalize={autoCapitalize}
+        autoCorrect={autoCorrect}
+        spellCheck={spellCheck}
         required={required}
         disabled={disabled}
         aria-describedby={descriptionId}
         className={className ? `${sharedInputClass} ${className}` : sharedInputClass}
+        {...inputProps}
       />
       {description ? <span id={descriptionId} className={sharedFieldHintClass}>{description}</span> : null}
     </div>

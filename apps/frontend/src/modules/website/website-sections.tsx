@@ -46,7 +46,7 @@ export function WebsiteSection({ id, tone = 'default', children }: WebsiteSectio
         tone === 'muted' ? 'bg-surface-inset' : ''
       }`}
     >
-      <div className={`${publicSiteContainerClass} py-14 lg:py-20`}>{children}</div>
+      <div className={`${publicSiteContainerClass} py-14 lg:py-18`}>{children}</div>
     </section>
   );
 }
@@ -87,7 +87,7 @@ export function WebsiteStatStrip({ items }: WebsiteStatStripProps) {
   return (
     <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
       {items.map((item) => (
-        <div key={`${item.value}-${item.label}`} className={`${publicCardSurfaceClass} rounded-[1.75rem] p-7`}>
+        <div key={`${item.value}-${item.label}`} className={`${publicCardSurfaceClass} rounded-[1.5rem] p-6`}>
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--accent)]">{item.label}</p>
           <p className="mt-4 text-3xl font-semibold tracking-[-0.04em] text-foreground">{item.value}</p>
           <p className="mt-3 text-sm leading-7 text-muted">{item.description}</p>
@@ -103,7 +103,7 @@ export function WebsiteCardGrid({ items }: WebsiteCardGridProps) {
       {items.map((item) => (
         <article
           key={`${item.eyebrow}-${item.title}`}
-          className={`${publicInteractiveCardSurfaceClass} group flex h-full flex-col justify-between rounded-[1.75rem] p-7`}
+          className={`${publicInteractiveCardSurfaceClass} group flex h-full flex-col justify-between rounded-[1.5rem] p-6`}
         >
           <p className={publicEyebrowClass}>{item.eyebrow}</p>
           <h3 className="mt-3 text-xl font-semibold tracking-[-0.03em] text-foreground">{item.title}</h3>
@@ -151,7 +151,7 @@ export function WebsiteFullSection({
       id={id}
       className={`border-t border-border ${tone === 'muted' ? 'bg-surface-inset' : ''}`}
     >
-      <div className={`${publicSiteContainerClass} py-14 lg:py-20`}>
+      <div className={`${publicSiteContainerClass} py-14 lg:py-18`}>
         <div className="mb-10 max-w-3xl">
           {eyebrow && <p className={publicEyebrowClass}>{eyebrow}</p>}
           <h2 className={eyebrow ? `mt-3 ${publicSectionTitleClass}` : publicSectionTitleClass}>
@@ -171,7 +171,7 @@ export function WebsiteArticleGrid({ items, ctaLabel }: WebsiteArticleGridProps)
       {items.map((item) => (
         <article
           key={item.slug}
-          className={`${publicInteractiveCardSurfaceClass} group flex h-full flex-col justify-between p-7`}
+          className={`${publicInteractiveCardSurfaceClass} group flex h-full flex-col justify-between rounded-[1.5rem] p-6`}
         >
           <div className="mb-4 h-1 w-8 rounded-full bg-border transition-colors group-hover:bg-accent" />
           <div className="flex items-center justify-between gap-4">

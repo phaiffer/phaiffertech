@@ -13,7 +13,7 @@ import {
    ═══════════════════════════════════════════════════════════════════════════ */
 
 export const sharedShellHeaderClass =
-  'border-b border-border/90 bg-white/90 shadow-[0_12px_26px_-22px_rgba(15,23,42,0.12)] backdrop-blur-xl';
+  'border-b border-border/80 bg-white/92 shadow-[0_8px_20px_-18px_rgba(15,23,42,0.08)] backdrop-blur-md';
 
 export const sharedEyebrowClass = 'text-[11px] font-semibold uppercase tracking-[0.24em] text-accent';
 
@@ -33,10 +33,10 @@ export const sharedSupportingTextClass = 'text-sm leading-6 text-slate-600 sm:te
 
 export const sharedCompactTextClass = 'text-sm leading-6 text-slate-600';
 
-export const sharedSurfaceClass = 'rounded-[1.5rem] border border-border bg-surface shadow-sm';
+export const sharedSurfaceClass = 'rounded-[1.4rem] border border-border bg-white shadow-xs';
 
 export const sharedInteractiveSurfaceClass =
-  `${sharedSurfaceClass} transition-all duration-200 hover:-translate-y-0.5 hover:border-accent/60 hover:shadow-md`;
+  `${sharedSurfaceClass} transition-all duration-200 hover:border-accent/40 hover:shadow-sm`;
 
 export const sharedPanelSurfaceClass = 'ui-surface-panel rounded-[1.75rem]';
 
@@ -51,9 +51,9 @@ export const sharedPageHeaderClass = 'flex flex-col gap-4 xl:flex-row xl:items-e
 
 export const sharedPageHeaderBodyClass = 'max-w-4xl';
 
-export const sharedSectionSurfaceClass = 'ui-surface-panel rounded-[1.75rem] p-5 lg:p-6';
+export const sharedSectionSurfaceClass = 'ui-surface-panel rounded-[1.65rem] p-5 lg:p-6';
 
-export const sharedMutedSectionSurfaceClass = 'ui-surface-muted rounded-[1.9rem] p-4 lg:p-5';
+export const sharedMutedSectionSurfaceClass = 'ui-surface-muted rounded-[1.7rem] p-4 lg:p-5';
 
 export const sharedSectionHeaderClass =
   'mb-5 flex flex-col gap-2 lg:flex-row lg:items-start lg:justify-between';

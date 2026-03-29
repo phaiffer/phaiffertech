@@ -13,7 +13,6 @@ import { resolvePageItems } from '@/shared/lib/pagination';
 import { useFrontendPlatform } from '@/shared/platform/use-frontend-platform';
 import { petService } from '@/shared/services/pet-service';
 import { ClientPlan, PetAppointment, PetClient, PetInvoice, PetProduct } from '@/shared/types/pet';
-import { PageSection } from '@/shared/ui/page-section';
 
 type PetOperationsDashboardProps = {
   eyebrow: string;
@@ -114,6 +113,7 @@ function OperationsStatCard({
 }) {
   const toneClass = tone === 'accent'
     ? 'border-transparent bg-petflow-gradient text-white shadow-lg shadow-petflow/20'
+    ? 'border-transparent bg-[linear-gradient(135deg,var(--accent),#1d4ed8)] text-white shadow-xl shadow-blue-950/20'
     : tone === 'warning'
       ? 'border-warning/20 bg-white'
       : 'border-slate-200 bg-white';
@@ -137,6 +137,10 @@ function OperationsStatCard({
         </div>
       )}
       <p className={`mt-1 text-sm ${tone === 'accent' ? 'text-white/70' : 'text-muted'}`}>{detail}</p>
+    <div className={`rounded-[1.6rem] border p-6 ${toneClass}`}>
+      <p className={`text-[11px] font-semibold uppercase tracking-[0.18em] ${tone === 'accent' ? 'text-white/72' : 'text-slate-600'}`}>{label}</p>
+      <p className={`mt-4 text-3xl font-semibold tracking-[-0.04em] ${tone === 'accent' ? 'text-white' : 'text-foreground'}`}>{value}</p>
+      <p className={`mt-2 text-sm leading-6 ${tone === 'accent' ? 'text-white/80' : 'text-slate-600'}`}>{detail}</p>
     </div>
   );
 }
@@ -298,7 +302,6 @@ export function PetOperationsDashboard({
   const inProgressPets = todayAppointments.filter((appointment) => appointment.status.toUpperCase() === 'IN_PROGRESS');
   const recurringToday = todayAppointments.filter((appointment) => Boolean(appointment.clientPlanId));
   const readyWithPickupMessage = readyPets.filter((appointment) => hasPickupMessage(appointment, clientLookup)).length;
-  const readyMissingPickupMessage = readyPets.length - readyWithPickupMessage;
   const petTaxiToday = todayAppointments.filter((appointment) => hasPetTaxi(appointment));
 
   const planAlerts = useMemo(
@@ -334,7 +337,6 @@ export function PetOperationsDashboard({
     [state.invoices]
   );
 
-  const overdueInvoices = openInvoices.filter((invoice) => invoice.dueAt && new Date(invoice.dueAt).getTime() < Date.now());
   const nextCycleProjectedDue = state.nextCycleAppointments.reduce((total, appointment) => total + resolveProjectedDue(appointment), 0);
   const nextCycleRecurring = state.nextCycleAppointments.filter((appointment) => Boolean(appointment.clientPlanId)).length;
   const monthCommissionTotal = state.completedMonthAppointments.reduce((total, appointment) => total + (appointment.commissionAmount ?? 0), 0);
@@ -358,6 +360,88 @@ export function PetOperationsDashboard({
 
     return Array.from(grouped.values()).sort((left, right) => right.commission - left.commission).slice(0, 4);
   }, [state.completedMonthAppointments]);
+
+  const invoiceByClient = useMemo(() => {
+    return new Map(openInvoices.map((invoice) => [invoice.clientId, invoice]));
+  }, [openInvoices]);
+
+  const appointmentByClient = useMemo(() => {
+    return new Map(todayAppointments.map((appointment) => [appointment.clientId, appointment]));
+  }, [todayAppointments]);
+
+  const dashboardRows = useMemo(() => {
+    return planAlerts.slice(0, 5).map((plan) => {
+      const matchingInvoice = invoiceByClient.get(plan.clientId);
+      const matchingAppointment = appointmentByClient.get(plan.clientId);
+
+      return {
+        id: plan.id,
+        clientName: resolveClientName(clientLookup, plan.clientId),
+        planName: plan.planName,
+        remainingSessions: plan.remainingSessions,
+        expiresAt: plan.expiresAt,
+        outstandingAmount: matchingInvoice?.outstandingAmount ?? 0,
+        professionalName: matchingAppointment?.professionalName ?? t.queue.pendingProfessional,
+        petTaxi: matchingAppointment ? hasPetTaxi(matchingAppointment) : false
+      };
+    });
+  }, [appointmentByClient, clientLookup, invoiceByClient, planAlerts, t.queue.pendingProfessional]);
+
+  const activityItems = useMemo(() => {
+    return [
+      {
+        key: 'ready',
+        title: t.pills.pickupSent,
+        description: readyPets.length > 0
+          ? `${readyWithPickupMessage} ${t.pills.pickupSent.toLowerCase()}`
+          : t.stats.pickupMessageReady,
+        tone: 'success' as const
+      },
+      {
+        key: 'plans',
+        title: t.stats.penultimateBath,
+        description: `${penultimateBathCount} ${t.billing.remainingSessions}`,
+        tone: penultimateBathCount > 0 ? 'warning' as const : 'neutral' as const
+      },
+      {
+        key: 'taxi',
+        title: t.pills.petTaxi,
+        description: petTaxiToday.length > 0 ? `${petTaxiToday.length} ${t.queue.title.toLowerCase()}` : t.stats.petTaxiEmpty,
+        tone: petTaxiToday.length > 0 ? 'accent' as const : 'neutral' as const
+      },
+      {
+        key: 'stock',
+        title: t.stats.lowStock,
+        description: lowStockProducts.length > 0 ? `${lowStockProducts.length} ${t.inventory.title.toLowerCase()}` : t.inventory.empty,
+        tone: lowStockProducts.length > 0 ? 'danger' as const : 'neutral' as const
+      },
+      {
+        key: 'billing',
+        title: t.stats.nextCycle,
+        description: formatCurrencyForLocale(locale, nextCycleProjectedDue),
+        tone: 'accent' as const
+      }
+    ];
+  }, [
+    locale,
+    lowStockProducts.length,
+    nextCycleProjectedDue,
+    penultimateBathCount,
+    petTaxiToday.length,
+    readyPets.length,
+    readyWithPickupMessage,
+    t.billing.remainingSessions,
+    t.inventory.empty,
+    t.inventory.title,
+    t.pills.petTaxi,
+    t.pills.pickupSent,
+    t.queue.title,
+    t.stats.pickupMessageReady,
+    t.stats.lowStock,
+    t.stats.nextCycle,
+    t.stats.penultimateBath,
+    t.stats.petTaxiEmpty
+  ]);
 
   if (!canReadDashboard) {
     return <div className="ui-notice-warning">{t.noPermission}</div>;
@@ -392,6 +476,22 @@ export function PetOperationsDashboard({
             </svg>
             Novo Agendamento
           </Link>
+      <section className="rounded-[2rem] border border-slate-200 bg-white p-6 lg:p-7">
+        <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+          <div className="max-w-3xl">
+            {surfaceLabel ? <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[color:var(--accent)]">{surfaceLabel}</p> : null}
+            <p className={`${surfaceLabel ? 'mt-3 ' : ''}text-xs font-semibold uppercase tracking-[0.18em] text-slate-500`}>{eyebrow}</p>
+            <h2 className="mt-3 text-3xl font-bold tracking-[-0.04em] text-slate-900 lg:text-[2.2rem]">{title}</h2>
+            <p className="mt-3 text-sm leading-7 text-slate-600">{description}</p>
+          </div>
+          <div className="flex flex-wrap items-center gap-3">
+            <Link href="/pet/appointments" className="inline-flex items-center rounded-xl border border-slate-200 px-4 py-3 text-sm font-medium text-slate-700 transition-colors hover:border-slate-300 hover:text-slate-900">
+              {t.actions.appointments}
+            </Link>
+            <Link href="/pet/invoices" className="inline-flex items-center rounded-xl bg-[linear-gradient(135deg,var(--accent),#1d4ed8)] px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-blue-950/20">
+              {t.actions.billing}
+            </Link>
+          </div>
         </div>
       </section>
 
@@ -399,7 +499,7 @@ export function PetOperationsDashboard({
       {error ? <div className="ui-notice-error">{error}</div> : null}
 
       {!loading ? (
-        <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
+        <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
           <OperationsStatCard
             label="Consultas Hoje"
             value={String(todayAppointments.length)}
@@ -431,190 +531,215 @@ export function PetOperationsDashboard({
         </div>
       ) : null}
 
-      <div className="grid gap-6 xl:grid-cols-[minmax(0,1.55fr)_minmax(320px,1fr)]">
-        <PageSection
-          title={t.queue.title}
-          description={t.queue.description}
-        >
-          {todayAppointments.length === 0 ? (
-            <div className="ui-notice-neutral">
-              {t.queue.empty}
+      <div className="grid gap-6 xl:grid-cols-[minmax(0,1.75fr)_minmax(320px,1fr)]">
+        <section className="rounded-[2rem] border border-slate-200 bg-white p-6">
+          <div className="mb-6 flex items-center justify-between gap-4">
+            <div>
+              <h3 className="text-lg font-semibold text-slate-900">{t.queue.title}</h3>
+              <p className="mt-1 text-sm text-slate-600">{t.queue.description}</p>
             </div>
+            <Link href="/pet/appointments" className="text-sm font-semibold text-[color:var(--accent)] transition-colors hover:text-slate-900">
+              {t.actions.appointments}
+            </Link>
+          </div>
+
+          {todayAppointments.length === 0 ? (
+            <div className="ui-notice-neutral">{t.queue.empty}</div>
           ) : (
-            <div className="space-y-3">
-              {todayAppointments.slice(0, 6).map((appointment) => (
-                <div key={appointment.id} className="rounded-[1.35rem] border border-slate-200 bg-slate-50 p-4">
-                  <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                    <div className="space-y-2">
-                      <p className="text-sm font-semibold text-foreground">
-                        {formatTimeForLocale(locale, appointment.scheduledAt)} · {appointment.petName ?? appointment.petId}
-                      </p>
-                      <p className={sharedCompactTextClass}>
-                        {resolveClientName(clientLookup, appointment.clientId, appointment.clientName)} · {appointment.serviceName}
-                      </p>
-                      <div className="flex flex-wrap gap-1.5">
-                        <SignalPill
-                          label={appointment.clientPlanId ? t.pills.recurring : t.pills.oneTime}
-                          tone={appointment.clientPlanId ? 'success' : 'neutral'}
-                        />
-                        <SignalPill label={appointment.professionalName ?? t.queue.pendingProfessional} tone="accent" />
-                        {appointment.clientPlanId ? <SignalPill label={t.pills.activePlan} tone="success" /> : null}
-                        {appointment.planRemainingSessions === 2 ? <SignalPill label={t.pills.penultimateBath} tone="warning" /> : null}
-                        {hasPetTaxi(appointment) ? <SignalPill label={t.pills.petTaxi} tone="accent" /> : null}
-                        {hasPickupMessage(appointment, clientLookup) ? <SignalPill label={t.pills.pickupSent} tone="success" /> : null}
-                      </div>
-                      <p className={sharedCompactTextClass}>
-                        {appointment.professionalName ?? t.queue.missingProfessional}
-                        {appointment.extrasAmount ? ` · ${t.queue.extrasLabel} ${formatCurrencyForLocale(locale, appointment.extrasAmount)}` : ''}
-                        {appointment.commissionAmount != null ? ` · ${t.queue.commissionLabel} ${formatCurrencyForLocale(locale, appointment.commissionAmount)}` : ''}
-                      </p>
+            <div className="space-y-4">
+              {todayAppointments.slice(0, 5).map((appointment) => (
+                <div key={appointment.id} className="flex items-center gap-4 rounded-[1.35rem] border border-slate-200 p-4 transition-colors hover:bg-slate-50">
+                  <div className="min-w-[4.5rem] text-center">
+                    <p className="text-sm font-bold text-slate-900">{formatTimeForLocale(locale, appointment.scheduledAt)}</p>
+                    <p className="mt-1 text-xs font-medium text-slate-500">
+                      {appointment.status.toUpperCase() === 'COMPLETED' ? t.pills.pickupSent : appointment.status.toLowerCase()}
+                    </p>
+                  </div>
+
+                  <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl bg-slate-100 text-sm font-semibold text-slate-900">
+                    {(appointment.petName ?? appointment.petId ?? 'PF').slice(0, 2).toUpperCase()}
+                  </div>
+
+                  <div className="min-w-0 flex-1">
+                    <p className="font-semibold text-slate-900">{appointment.petName ?? appointment.petId}</p>
+                    <p className="text-sm text-slate-600">
+                      {resolveClientName(clientLookup, appointment.clientId, appointment.clientName)} · {appointment.serviceName}
+                    </p>
+                    <div className="mt-2 flex flex-wrap gap-1.5">
+                      <SignalPill label={appointment.clientPlanId ? t.pills.recurring : t.pills.oneTime} tone={appointment.clientPlanId ? 'success' : 'neutral'} />
+                      <SignalPill label={appointment.professionalName ?? t.queue.pendingProfessional} tone="accent" />
+                      {appointment.planRemainingSessions === 2 ? <SignalPill label={t.pills.penultimateBath} tone="warning" /> : null}
+                      {hasPetTaxi(appointment) ? <SignalPill label={t.pills.petTaxi} tone="accent" /> : null}
                     </div>
-                    <div className="space-y-2">
-                      <StatusBadge status={appointment.status} />
-                      <p className="text-sm font-semibold text-foreground">{formatCurrencyForLocale(locale, resolveProjectedDue(appointment))}</p>
-                    </div>
+                  </div>
+
+                  <div className="space-y-2 text-right">
+                    <StatusBadge status={appointment.status} />
+                    <p className="text-sm font-semibold text-slate-900">{formatCurrencyForLocale(locale, resolveProjectedDue(appointment))}</p>
                   </div>
                 </div>
               ))}
             </div>
           )}
-        </PageSection>
+        </section>
 
-        <PageSection
-          tone="muted"
-          title={t.billing.title}
-          description={t.billing.description}
-        >
-          <div className="space-y-3">
-            <div className="rounded-[1.35rem] border border-slate-200 bg-white px-4 py-4">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-600">{t.billing.nextCycleLabel}</p>
-              <p className="mt-2 text-2xl font-semibold tracking-[-0.03em] text-foreground">{formatCurrencyForLocale(locale, nextCycleProjectedDue)}</p>
-              <p className={`mt-2 ${sharedCompactTextClass}`}>
-                {nextCycleRecurring} {t.billing.nextCycleDetail}
-              </p>
-              <div className="mt-3 flex flex-wrap gap-1.5">
-                <SignalPill label={`${recurringToday.length} ${t.pills.recurring}`} tone="success" />
-                {petTaxiToday.length > 0 ? <SignalPill label={`${petTaxiToday.length} ${t.pills.petTaxi}`} tone="accent" /> : null}
-                {readyPets.length > 0 ? (
-                  <SignalPill
-                    label={readyMissingPickupMessage > 0 ? `${readyMissingPickupMessage} ${t.pills.pickupPending}` : t.pills.pickupSent}
-                    tone={readyMissingPickupMessage > 0 ? 'warning' : 'success'}
-                  />
-                ) : null}
-              </div>
-            </div>
+        <section className="rounded-[2rem] border border-slate-200 bg-white p-6">
+          <h3 className="text-lg font-semibold text-slate-900">{t.billing.title}</h3>
+          <p className="mt-1 text-sm text-slate-600">{t.billing.description}</p>
 
-            {planAlerts.slice(0, 3).map((plan) => (
-              <div key={plan.id} className="rounded-[1.25rem] border border-slate-200 bg-white px-4 py-4">
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <p className="text-sm font-semibold text-foreground">
-                      {resolveClientName(clientLookup, plan.clientId)} · {plan.planName}
-                    </p>
-                    <p className={`mt-1 ${sharedCompactTextClass}`}>
-                      {plan.remainingSessions} {t.billing.remainingSessions} · {t.billing.expiresAt} {formatDateForLocale(locale, plan.expiresAt, '', { day: '2-digit', month: 'short' })}
-                    </p>
-                    <div className="mt-2 flex flex-wrap gap-1.5">
-                      <SignalPill label={t.pills.activePlan} tone="success" />
-                      {plan.remainingSessions === 2 ? <SignalPill label={t.pills.penultimateBath} tone="warning" /> : null}
-                    </div>
-                  </div>
-                  <StatusBadge status={plan.remainingSessions === 2 ? 'warn' : 'pending'} />
+          <div className="mt-6 space-y-4">
+            {activityItems.map((item) => (
+              <div key={item.key} className="flex items-start gap-3">
+                <span
+                  className={`mt-0.5 inline-flex h-9 w-9 items-center justify-center rounded-xl ${
+                    item.tone === 'success'
+                      ? 'bg-emerald-100 text-emerald-700'
+                      : item.tone === 'warning'
+                        ? 'bg-amber-100 text-amber-700'
+                        : item.tone === 'danger'
+                          ? 'bg-red-100 text-red-700'
+                          : item.tone === 'accent'
+                            ? 'bg-blue-100 text-blue-700'
+                            : 'bg-slate-100 text-slate-700'
+                  }`}
+                >
+                  <span className="h-2.5 w-2.5 rounded-full bg-current" />
+                </span>
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold text-slate-900">{item.title}</p>
+                  <p className="mt-1 text-sm leading-6 text-slate-600">{item.description}</p>
                 </div>
               </div>
             ))}
-
-            {openInvoices.slice(0, 3).map((invoice) => (
-              <div key={invoice.id} className="rounded-[1.25rem] border border-slate-200 bg-white px-4 py-4">
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <p className="text-sm font-semibold text-foreground">
-                      {resolveClientName(clientLookup, invoice.clientId, invoice.clientName)}
-                    </p>
-                    <p className={`mt-1 ${sharedCompactTextClass}`}>
-                      {t.billing.dueAt} {formatDateForLocale(locale, invoice.dueAt, '', { day: '2-digit', month: 'short' })} · {t.billing.balance} {formatCurrencyForLocale(locale, invoice.outstandingAmount)}
-                    </p>
-                    <div className="mt-2 flex flex-wrap gap-1.5">
-                      <SignalPill label={t.pills.cycleCharge} tone="accent" />
-                      {overdueInvoices.some((item) => item.id === invoice.id) ? <SignalPill label={t.pills.overdue} tone="danger" /> : null}
-                    </div>
-                  </div>
-                  <StatusBadge status={overdueInvoices.some((item) => item.id === invoice.id) ? 'alert' : invoice.status} />
-                </div>
-              </div>
-            ))}
-
-            {planAlerts.length === 0 && openInvoices.length === 0 ? (
-              <div className="ui-notice-neutral">{t.billing.noAlerts}</div>
-            ) : null}
           </div>
-        </PageSection>
+
+          <div className="mt-6 rounded-[1.35rem] border border-slate-200 bg-slate-50 p-4">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">{t.billing.nextCycleLabel}</p>
+            <p className="mt-2 text-2xl font-bold tracking-[-0.03em] text-slate-900">{formatCurrencyForLocale(locale, nextCycleProjectedDue)}</p>
+            <p className={`mt-2 ${sharedCompactTextClass}`}>{nextCycleRecurring} {t.billing.nextCycleDetail}</p>
+          </div>
+        </section>
       </div>
 
-      <div className="grid gap-6 xl:grid-cols-2">
-        <PageSection
-          title={t.inventory.title}
-          description={t.inventory.description}
-        >
+      <section className="rounded-[2rem] border border-slate-200 bg-white p-6">
+        <div className="mb-6 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+          <div>
+            <h3 className="text-lg font-semibold text-slate-900">{t.billing.title}</h3>
+            <p className="mt-1 text-sm text-slate-600">
+              {t.queue.description}
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <SignalPill label={`${recurringToday.length} ${t.pills.recurring}`} tone="success" />
+            {petTaxiToday.length > 0 ? <SignalPill label={`${petTaxiToday.length} ${t.pills.petTaxi}`} tone="accent" /> : null}
+            {lowStockProducts.length > 0 ? <SignalPill label={`${lowStockProducts.length} ${t.pills.belowMinimum}`} tone="danger" /> : null}
+          </div>
+        </div>
+
+        {dashboardRows.length === 0 ? (
+          <div className="ui-notice-neutral">{t.billing.noAlerts}</div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="min-w-full">
+              <thead>
+                <tr className="border-b border-slate-200">
+                  <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">{t.pills.recurring}</th>
+                  <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">{t.pills.activePlan}</th>
+                  <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">{t.billing.nextCycleLabel}</th>
+                  <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">{t.pills.responsible}</th>
+                  <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">{t.pills.petTaxi}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {dashboardRows.map((row) => (
+                  <tr key={row.id} className="border-b border-slate-100 last:border-b-0">
+                    <td className="px-4 py-4">
+                      <div>
+                        <p className="font-semibold text-slate-900">{row.clientName}</p>
+                        <p className="mt-1 text-sm text-slate-600">{row.planName}</p>
+                      </div>
+                    </td>
+                    <td className="px-4 py-4">
+                      <div className="flex flex-wrap gap-1.5">
+                        <SignalPill label={`${row.remainingSessions} ${t.billing.remainingSessions}`} tone={row.remainingSessions === 2 ? 'warning' : 'success'} />
+                        {row.remainingSessions === 2 ? <SignalPill label={t.pills.penultimateBath} tone="warning" /> : null}
+                      </div>
+                    </td>
+                    <td className="px-4 py-4 text-sm text-slate-600">
+                      <p>{row.expiresAt ? `${t.billing.expiresAt} ${formatDateForLocale(locale, row.expiresAt, '', { day: '2-digit', month: 'short' })}` : t.billing.noAlerts}</p>
+                      <p className="mt-1 font-semibold text-slate-900">{formatCurrencyForLocale(locale, row.outstandingAmount)}</p>
+                    </td>
+                    <td className="px-4 py-4 text-sm text-slate-600">{row.professionalName}</td>
+                    <td className="px-4 py-4">
+                      {row.petTaxi ? <SignalPill label={t.pills.petTaxi} tone="accent" /> : <span className="text-sm text-slate-500">-</span>}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </section>
+
+      <div className="grid gap-6 xl:grid-cols-[minmax(0,1.2fr)_minmax(320px,0.9fr)]">
+        <section className="rounded-[2rem] border border-slate-200 bg-white p-6">
+          <div className="mb-6 flex items-center justify-between gap-4">
+            <div>
+              <h3 className="text-lg font-semibold text-slate-900">{t.inventory.title}</h3>
+              <p className="mt-1 text-sm text-slate-600">{t.inventory.description}</p>
+            </div>
+            <Link href="/pet/inventory" className="text-sm font-semibold text-[color:var(--accent)] transition-colors hover:text-slate-900">
+              {t.inventory.title}
+            </Link>
+          </div>
+
           {lowStockProducts.length === 0 ? (
             <div className="ui-notice-neutral">{t.inventory.empty}</div>
           ) : (
-            <div className="grid gap-3 md:grid-cols-2">
+            <div className="grid gap-4 md:grid-cols-2">
               {lowStockProducts.slice(0, 4).map((product) => (
                 <div key={product.id} className="rounded-[1.35rem] border border-slate-200 bg-slate-50 p-4">
                   <div className="flex items-start justify-between gap-3">
                     <div>
-                      <p className="text-sm font-semibold text-foreground">{product.name}</p>
-                      <p className={`mt-1 ${sharedCompactTextClass}`}>{t.inventory.sku} {product.sku}</p>
+                      <p className="text-sm font-semibold text-slate-900">{product.name}</p>
+                      <p className="mt-1 text-xs text-slate-500">{t.inventory.sku} {product.sku}</p>
                     </div>
                     <StatusBadge status={product.currentQuantity <= product.minimumQuantity ? 'alert' : 'warn'} />
                   </div>
-                  <p className="mt-4 text-lg font-semibold text-foreground">
-                    {product.currentQuantity} {product.unitOfMeasure}
-                  </p>
-                  <p className={`mt-2 ${sharedCompactTextClass}`}>
-                    {t.inventory.minimum} {product.minimumQuantity} · {t.inventory.reorder} {product.reorderPoint}
-                  </p>
-                  {product.currentQuantity <= product.minimumQuantity ? (
-                    <div className="mt-2 flex flex-wrap gap-1.5">
-                      <SignalPill label={t.pills.belowMinimum} tone="danger" />
-                    </div>
-                  ) : null}
+                  <p className="mt-4 text-lg font-semibold text-slate-900">{product.currentQuantity} {product.unitOfMeasure}</p>
+                  <p className={`mt-2 ${sharedCompactTextClass}`}>{t.inventory.minimum} {product.minimumQuantity} · {t.inventory.reorder} {product.reorderPoint}</p>
                 </div>
               ))}
             </div>
           )}
-        </PageSection>
+        </section>
 
-        <PageSection
-          tone="muted"
-          title={t.production.title}
-          description={t.production.description}
-        >
+        <section className="rounded-[2rem] border border-slate-200 bg-white p-6">
+          <h3 className="text-lg font-semibold text-slate-900">{t.production.title}</h3>
+          <p className="mt-1 text-sm text-slate-600">{t.production.description}</p>
+
           {productionByProfessional.length === 0 ? (
-            <div className="ui-notice-neutral">{t.production.empty}</div>
+            <div className="ui-notice-neutral mt-6">{t.production.empty}</div>
           ) : (
-            <div className="space-y-3">
+            <div className="mt-6 space-y-4">
               {productionByProfessional.map((professional) => (
-                <div key={professional.professionalName} className="rounded-[1.35rem] border border-slate-200 bg-white px-4 py-4">
+                <div key={professional.professionalName} className="rounded-[1.35rem] border border-slate-200 bg-slate-50 p-4">
                   <div className="flex items-start justify-between gap-3">
                     <div>
-                      <p className="text-sm font-semibold text-foreground">{professional.professionalName}</p>
-                      <p className={`mt-1 ${sharedCompactTextClass}`}>
-                        {professional.completed} {t.production.completed}
-                      </p>
+                      <p className="text-sm font-semibold text-slate-900">{professional.professionalName}</p>
+                      <p className="mt-1 text-sm text-slate-600">{professional.completed} {t.production.completed}</p>
                       <div className="mt-2 flex flex-wrap gap-1.5">
                         <SignalPill label={t.pills.responsible} tone="accent" />
                         <SignalPill label={t.pills.commission} tone="success" />
                       </div>
                     </div>
-                    <p className="text-sm font-semibold text-foreground">{formatCurrencyForLocale(locale, professional.commission)}</p>
+                    <p className="text-sm font-semibold text-slate-900">{formatCurrencyForLocale(locale, professional.commission)}</p>
                   </div>
                 </div>
               ))}
             </div>
           )}
-        </PageSection>
+        </section>
       </div>
     </div>
   );

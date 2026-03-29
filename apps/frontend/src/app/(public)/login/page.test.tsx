@@ -180,4 +180,36 @@ describe('LoginPage', () => {
       expect(surface.style.getPropertyValue('--tenant-accent')).toBe(String(petAccent));
     });
   });
+
+  it('renders login fields with stable autofill metadata', () => {
+    render(
+      <PublicSiteProvider>
+        <AuthProvider>
+          <LoginPage />
+        </AuthProvider>
+      </PublicSiteProvider>
+    );
+
+    const tenantInput = screen.getByLabelText('Company or workspace');
+    const emailInput = screen.getByLabelText('Email');
+    const passwordInput = screen.getByLabelText('Password');
+
+    expect(tenantInput).toHaveAttribute('name', 'tenantCode');
+    expect(tenantInput).toHaveAttribute('autocomplete', 'section-petflow organization');
+    expect(tenantInput).toHaveAttribute('autocapitalize', 'none');
+    expect(tenantInput).toHaveAttribute('autocorrect', 'off');
+    expect(tenantInput).toHaveAttribute('spellcheck', 'false');
+    expect(tenantInput).toHaveAttribute('data-lpignore', 'true');
+    expect(tenantInput).toHaveAttribute('data-1p-ignore', 'true');
+
+    expect(emailInput).toHaveAttribute('name', 'email');
+    expect(emailInput).toHaveAttribute('autocomplete', 'username');
+    expect(emailInput).toHaveAttribute('inputmode', 'email');
+    expect(emailInput).toHaveAttribute('autocapitalize', 'none');
+    expect(emailInput).toHaveAttribute('autocorrect', 'off');
+    expect(emailInput).toHaveAttribute('spellcheck', 'false');
+
+    expect(passwordInput).toHaveAttribute('name', 'password');
+    expect(passwordInput).toHaveAttribute('autocomplete', 'current-password');
+  });
 });

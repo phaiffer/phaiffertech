@@ -362,16 +362,55 @@ export function PetProfessionalsPage() {
 
         <PermissionGuard permission={editingId ? 'pet.professional.update' : 'pet.professional.create'}>
           <form onSubmit={handleSubmit} className="grid gap-3 ui-surface-panel p-4 md:grid-cols-2">
-            <FormInput label={messages.form.name} value={name} onChange={setName} required />
+            <FormInput
+              id="professional-name"
+              name="professionalName"
+              label={messages.form.name}
+              value={name}
+              onChange={setName}
+              autoComplete="section-professional off"
+              data-lpignore="true"
+              data-1p-ignore="true"
+              required
+            />
             <FormInput label={messages.form.specialty} value={specialty} onChange={setSpecialty} />
             <FormInput label={messages.form.licenseNumber} value={licenseNumber} onChange={setLicenseNumber} />
-            <FormInput label={messages.form.phone} value={phone} onChange={setPhone} />
-            <FormInput label={messages.form.email} value={email} onChange={setEmail} type="email" />
             <FormInput
+              id="professional-phone"
+              name="professionalPhone"
+              label={messages.form.phone}
+              value={phone}
+              onChange={setPhone}
+              autoComplete="section-professional tel"
+              inputMode="tel"
+              data-lpignore="true"
+              data-1p-ignore="true"
+            />
+            <FormInput
+              id="professional-email"
+              name="professionalEmail"
+              label={messages.form.email}
+              value={email}
+              onChange={setEmail}
+              type="email"
+              autoComplete="section-professional email"
+              inputMode="email"
+              autoCapitalize="none"
+              autoCorrect="off"
+              spellCheck={false}
+              data-lpignore="true"
+              data-1p-ignore="true"
+            />
+            <FormInput
+              id="professional-commission-rate"
+              name="professionalCommissionRate"
               label={messages.form.commissionRate}
               value={commissionRate}
               onChange={setCommissionRate}
               type="number"
+              autoComplete="section-professional off"
+              data-lpignore="true"
+              data-1p-ignore="true"
               placeholder={messages.form.commissionRatePlaceholder}
             />
 

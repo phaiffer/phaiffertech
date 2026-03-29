@@ -95,10 +95,10 @@ describe('Sidebar', () => {
     expect(container.textContent).toContain('PhaifferTech');
     expect(getAllByText('Workspace').length).toBeGreaterThan(0);
     expect(getByText('Platform owner tenant')).toBeTruthy();
-    expect(container.querySelector('a[href="/pet"]')).not.toBeNull();
+    expect(container.querySelector('a[href="/dashboard"]')).not.toBeNull();
+    expect(container.querySelector('a[href="/pet/appointments"]')).not.toBeNull();
     expect(container.querySelector('a[href="/crm"]')).toBeNull();
     expect(container.querySelector('a[href="/iot/dashboard"]')).toBeNull();
-    expect(container.querySelector('a[href="/pet/appointments"]')).toBeNull();
     expect(container.querySelector('a[href="/tenants"]')).toBeNull();
   });
 
@@ -110,7 +110,7 @@ describe('Sidebar', () => {
     const { container } = render(<Sidebar />);
 
     expect(container.querySelector('a[href="/tenants"]')).toBeNull();
-    expect(container.querySelector('a[href="/pet"]')).not.toBeNull();
+    expect(container.querySelector('a[href="/dashboard"]')).not.toBeNull();
     expect(container.querySelector('a[href="/crm"]')).toBeNull();
   });
 
@@ -121,7 +121,8 @@ describe('Sidebar', () => {
 
     const { container } = render(<Sidebar />);
 
-    expect(container.querySelector('a[href="/pet"]')).not.toBeNull();
+    expect(container.querySelector('a[href="/dashboard"]')).not.toBeNull();
+    expect(container.querySelector('a[href="/pet/appointments"]')).not.toBeNull();
     expect(container.querySelector('a[href="/crm"]')).toBeNull();
     expect(container.querySelector('a[href="/iot/dashboard"]')).toBeNull();
   });
@@ -136,9 +137,9 @@ describe('Sidebar', () => {
 
     const { container } = render(<Sidebar />);
 
-    expect(container.querySelector('a[href="/pet"]')).not.toBeNull();
+    expect(container.querySelector('a[href="/dashboard"]')).not.toBeNull();
     expect(container.querySelector('a[href="/pet/clients"]')).toBeNull();
-    expect(container.querySelector('a[href="/pet/appointments"]')).toBeNull();
+    expect(container.querySelector('a[href="/pet/appointments"]')).not.toBeNull();
     expect(container.querySelector('a[href="/pet/medical-records"]')).toBeNull();
   });
 });
