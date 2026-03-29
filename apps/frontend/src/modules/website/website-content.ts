@@ -22,6 +22,8 @@ export type WebsiteCard = {
   description: string;
   bullets?: string[];
   footer?: string;
+  href?: string;
+  iconName?: string;
 };
 
 export type WebsiteArticleSection = {
@@ -45,6 +47,7 @@ type WebsiteContent = {
     hero: {
       eyebrow: string;
       title: string;
+      titleHighlight?: string;
       description: string;
       highlights: string[];
       stats: WebsiteHeroStat[];
@@ -852,15 +855,14 @@ const websiteContent: Record<PublicLocale, WebsiteContent> = {
   'pt-BR': {
     home: {
       hero: {
-        eyebrow: 'PetFlow · banho e tosa recorrente · operacao pet',
-        title:
-          'PetFlow para banho e tosa recorrente e operacao de pet shop.',
+        eyebrow: 'Gestao Veterinaria Completa',
+        title: 'O sistema que sua clinica merece',
+        titleHighlight: 'clinica merece',
         description:
-          'Agenda, planos mensais, profissionais, alertas de estoque e cobranca no mesmo workspace para a rotina de banho e tosa.',
+          'Prontuario eletronico, agendamentos, gestao de vacinas e controle financeiro. Tudo em uma plataforma moderna e intuitiva para clinicas veterinarias.',
         highlights: [
-          'Planos recorrentes de banho e tosa',
-          'Estoque, cobranca e comissao',
-          'Mensagens automaticas e operacao do dia'
+          'Teste gratis por 14 dias',
+          'Setup em minutos'
         ],
         stats: [
           {
@@ -876,8 +878,8 @@ const websiteContent: Record<PublicLocale, WebsiteContent> = {
             label: 'Extras, pet taxi e contexto financeiro do ciclo'
           }
         ],
-        primaryCta: { label: 'Solicitar demo', href: '/contact' },
-        secondaryCta: { label: 'Acessar o PetFlow', href: '/login' }
+        primaryCta: { label: 'Comecar agora', href: '/register' },
+        secondaryCta: { label: 'Ver demonstracao', href: '/demo' }
       },
       signalTitle: 'Uma operacao mais clara para o seu pet business.',
       signalDescription:
@@ -902,30 +904,57 @@ const websiteContent: Record<PublicLocale, WebsiteContent> = {
             'Gerencie produtos, alertas de estoque minimo, pet taxi e cobranca mensal com mais clareza comercial.'
         }
       ],
-      productsTitle: 'Um produto visivel. Todo o ciclo de banho e tosa.',
+      productsTitle: 'Tudo que voce precisa em um so lugar',
       productsDescription:
-        'O PetFlow passa a ser a superficie oficial do produto. Ele alinha recepcao, agenda, planos recorrentes, profissionais, estoque e cobranca para pet shops e operacoes de grooming.',
+        'Gerencie toda sua clinica veterinaria com ferramentas profissionais e intuitivas.',
       products: [
         {
-          eyebrow: 'Recepcao e agenda diaria',
-          title: 'Fila de servicos com profissional responsavel',
+          eyebrow: 'Prontuario',
+          title: 'Prontuario Digital',
           description:
-            'Agende banho, tosa e adicionais com o pet, o cliente e o profissional responsavel visiveis no mesmo fluxo.',
-          bullets: ['Agenda com profissional responsavel', 'Contexto de cliente e pet em cada visita', 'Fila pronta para demo comercial']
+            'Historico completo de cada paciente com anamnese, diagnosticos, prescricoes e anexos.',
+          bullets: ['Historico medico completo', 'Anexo de exames e imagens', 'Prescricoes personalizadas'],
+          href: '/recursos/prontuario'
         },
         {
-          eyebrow: 'Clientes recorrentes e planos mensais',
-          title: 'Controle de planos com contagem de sessoes',
+          eyebrow: 'Agenda',
+          title: 'Agendamentos',
           description:
-            'Acompanhe planos ativos, sessoes restantes, alerta de penultima visita e diferenca entre cliente recorrente e cliente avulso.',
-          bullets: ['Recorrente versus avulso', 'Alerta de penultima sessao', 'Logica de aviso automatico para renovacao']
+            'Agenda inteligente com visualizacao por dia, semana ou mes. Envio automatico de lembretes.',
+          bullets: ['Agenda visual e intuitiva', 'Lembretes automaticos por SMS/Email', 'Gestao de filas e encaixes'],
+          href: '/recursos/agendamentos'
         },
         {
-          eyebrow: 'Cobranca, extras e apoio de loja',
-          title: 'Proximo ciclo de cobranca com estoque no radar',
+          eyebrow: 'Vacinas',
+          title: 'Controle de Vacinas',
           description:
-            'Mostre cobranca prevista, extras como pet taxi, produtos abaixo do minimo e comissao por atendimento sem sair do PetFlow.',
-          bullets: ['Estoque com alerta de reposicao', 'Faturamento com pet taxi e extras', 'Comissao por profissional']
+            'Carteira de vacinacao digital com alertas automaticos de reforcos e doses pendentes.',
+          bullets: ['Carteira digital completa', 'Alertas de reforcos automaticos', 'Controle de estoque de vacinas'],
+          href: '/recursos/vacinas'
+        },
+        {
+          eyebrow: 'Tutores',
+          title: 'Gestao de Tutores',
+          description:
+            'Cadastro completo de tutores com historico de todos os pets e comunicacao centralizada.',
+          bullets: ['Perfil completo do tutor', 'Visualizacao de todos os pets', 'Historico de pagamentos'],
+          href: '/recursos/tutores'
+        },
+        {
+          eyebrow: 'Financeiro',
+          title: 'Controle Financeiro',
+          description:
+            'Faturamento, fluxo de caixa e relatorios financeiros completos para sua clinica.',
+          bullets: ['Controle de receitas e despesas', 'Relatorios financeiros detalhados', 'Gestao de contas a pagar/receber'],
+          href: '/recursos/financeiro'
+        },
+        {
+          eyebrow: 'Pacientes',
+          title: 'Cadastro de Pacientes',
+          description:
+            'Ficha completa de cada pet com fotos, raca, idade, peso e informacoes medicas importantes.',
+          bullets: ['Ficha completa do paciente', 'Fotos e identificacao visual', 'Alergias e restricoes medicas'],
+          href: '/recursos/pacientes'
         }
       ],
       expertiseTitle: 'Detalhes operacionais que deixam a demo crivel.',
@@ -981,12 +1010,12 @@ const websiteContent: Record<PublicLocale, WebsiteContent> = {
         }
       ],
       cta: {
-        eyebrow: 'PetFlow disponível agora',
-        title: 'Toque o banho e tosa com mais controle.',
+        eyebrow: 'PetFlow disponivel agora',
+        title: 'Pronto para modernizar sua clinica?',
         description:
-          'Mostre uma operacao mais clara desde a primeira demo: agenda, planos recorrentes, profissionais, estoque e cobranca no mesmo sistema.',
-        primaryCta: { label: 'Entrar em contato', href: '/contact' },
-        secondaryCta: { label: 'Acessar o PetFlow', href: '/login' }
+          'Comece seu teste gratuito hoje e veja como o PetFlow pode transformar sua gestao veterinaria.',
+        primaryCta: { label: 'Comecar teste gratuito', href: '/register' },
+        secondaryCta: { label: 'Falar com especialista', href: '/contact' }
       }
     },
     about: {
@@ -1037,7 +1066,7 @@ const websiteContent: Record<PublicLocale, WebsiteContent> = {
           eyebrow: 'Em evolução',
           title: 'Fundação compartilhada e evolução guiada',
           description:
-            'Permissões, notificações, multi-tenancy e base de cobrança continuam prontas nos bastidores enquanto o produto visível permanece centrado no PetFlow.'
+            'Permissões, notificações, multi-tenancy e base de cobran��a continuam prontas nos bastidores enquanto o produto visível permanece centrado no PetFlow.'
         },
         {
           eyebrow: 'Fase futura',

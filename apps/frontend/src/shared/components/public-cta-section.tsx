@@ -1,16 +1,11 @@
+'use client';
+
 import Link from 'next/link';
-import {
-  publicHeadingColumnClass,
-  publicEyebrowClass,
-  publicPrimaryButtonClass,
-  publicSecondaryButtonClass,
-  publicSectionLayoutClass,
-  publicSectionTitleClass,
-  publicSiteContainerClass,
-} from '@/shared/components/public-visual-system';
+import { ArrowRight } from 'lucide-react';
+import { publicSiteContainerClass } from '@/shared/components/public-visual-system';
 
 type PublicCtaSectionProps = {
-  eyebrow: string;
+  eyebrow?: string;
   title: string;
   description: string;
   primaryCtaLabel: string;
@@ -20,7 +15,6 @@ type PublicCtaSectionProps = {
 };
 
 export function PublicCtaSection({
-  eyebrow,
   title,
   description,
   primaryCtaLabel,
@@ -29,28 +23,36 @@ export function PublicCtaSection({
   secondaryCtaHref,
 }: PublicCtaSectionProps) {
   return (
-    <section className="relative overflow-hidden border-t border-border py-14 lg:py-20">
-      <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(135deg,rgba(2,6,23,0.98),rgba(15,23,42,0.94))]" />
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(59,130,246,0.18),transparent_34%)]" />
+    <section className="relative overflow-hidden bg-petflow-gradient py-20 lg:py-28">
+      {/* Background Effects */}
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_30%_70%,rgba(16,185,129,0.15),transparent_50%)]" />
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_70%_30%,rgba(20,184,166,0.12),transparent_50%)]" />
+      
       <div className={publicSiteContainerClass}>
-        <div className={publicSectionLayoutClass}>
-          <div className={publicHeadingColumnClass}>
-            <p className={`${publicEyebrowClass} text-blue-200`}>{eyebrow}</p>
-            <h2 className={`${publicSectionTitleClass} text-white`}>{title}</h2>
-          </div>
+        <div className="mx-auto max-w-3xl text-center">
+          <h2 className="text-3xl font-semibold tracking-[-0.03em] text-white sm:text-4xl lg:text-5xl">
+            {title}
+          </h2>
+          
+          <p className="mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-slate-300">
+            {description}
+          </p>
 
-          <div className="relative rounded-[1.9rem] border border-white/10 bg-white/5 p-7 backdrop-blur-xl lg:p-8">
-            <p className="max-w-2xl text-base leading-7 text-slate-200">{description}</p>
-
-            <div className="mt-6 flex flex-wrap gap-3">
-              <Link href={primaryCtaHref} className={publicPrimaryButtonClass}>
-                {primaryCtaLabel}
-              </Link>
-
-              <Link href={secondaryCtaHref} className={publicSecondaryButtonClass}>
-                {secondaryCtaLabel}
-              </Link>
-            </div>
+          <div className="mt-10 flex flex-wrap items-center justify-center gap-4">
+            <Link
+              href={primaryCtaHref}
+              className="inline-flex items-center gap-2 rounded-xl bg-petflow px-8 py-4 text-base font-semibold text-white shadow-lg shadow-petflow/25 transition-all hover:-translate-y-0.5 hover:bg-petflow-dark hover:shadow-xl"
+            >
+              {primaryCtaLabel}
+              <ArrowRight className="h-5 w-5" />
+            </Link>
+            
+            <Link
+              href={secondaryCtaHref}
+              className="inline-flex items-center gap-2 rounded-xl border border-white/20 bg-white/5 px-8 py-4 text-base font-semibold text-white backdrop-blur-sm transition-all hover:bg-white/10"
+            >
+              {secondaryCtaLabel}
+            </Link>
           </div>
         </div>
       </div>
