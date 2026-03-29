@@ -51,14 +51,11 @@ export function PublicSiteShell({ children }: PublicSiteShellProps) {
   const nextLocale = locale === 'pt-BR' ? 'en-US' : 'pt-BR';
   const localeSwitchLabel = nextLocale === 'en-US' ? 'EN' : 'PT';
 
-  const navLinkClass = (active: boolean) =>
-    `inline-flex h-10 items-center rounded-2xl px-3.5 text-sm font-medium transition-all duration-200 ${
-      active
-        ? 'bg-accent-muted text-foreground shadow-sm'
-        : 'text-slate-600 hover:bg-surface-inset hover:text-slate-900'
-    }`;
-
   const localeButtonClass = publicCompactButtonClass;
+  const navLinkClass = (active: boolean) =>
+    `text-sm transition-colors ${
+      active ? 'font-semibold text-slate-900' : 'font-medium text-slate-600 hover:text-slate-900'
+    }`;
 
   if (useMinimalChrome) {
     return (
@@ -70,13 +67,13 @@ export function PublicSiteShell({ children }: PublicSiteShellProps) {
 
   return (
     <div className="min-h-screen bg-white text-foreground">
-      <header className={`sticky top-0 z-40 ${publicChromeSurfaceClass}`}>
-        <div className={`${publicSiteContainerClass} flex h-20 items-center justify-between gap-6`}>
-          <Link href="/" className="group inline-flex shrink-0 items-center gap-3">
-            <BrandMark priority className="h-11 w-11 shrink-0 sm:h-12 sm:w-12" imageClassName="scale-[1.08]" />
+      <header className={`sticky top-0 z-50 ${publicChromeSurfaceClass}`}>
+        <div className={`${publicSiteContainerClass} flex h-20 items-center justify-between gap-8`}>
+          <Link href="/" className="inline-flex shrink-0 items-center gap-3">
+            <BrandMark priority className="h-11 w-11 shrink-0 rounded-2xl sm:h-12 sm:w-12" imageClassName="scale-[1.08]" />
             <div className="min-w-0">
-              <p className="truncate text-base font-semibold tracking-[-0.03em] text-slate-900">PetFlow</p>
-              <p className="mt-0.5 truncate text-[11px] font-medium uppercase tracking-[0.18em] text-slate-600">
+              <p className="truncate text-xl font-bold tracking-[-0.03em] text-slate-900">PetFlow</p>
+              <p className="mt-0.5 truncate text-[10px] font-medium uppercase tracking-[0.18em] text-slate-500">
                 by PhaifferTech
               </p>
             </div>
@@ -84,13 +81,7 @@ export function PublicSiteShell({ children }: PublicSiteShellProps) {
 
           <nav className="hidden items-center gap-8 md:flex">
             {navigationItems.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={`text-sm transition-colors ${
-                  item.active ? 'font-semibold text-foreground' : 'font-medium text-slate-600 hover:text-slate-900'
-                }`}
-              >
+              <Link key={item.href} href={item.href} className={navLinkClass(item.active)}>
                 {item.label}
               </Link>
             ))}
@@ -106,24 +97,30 @@ export function PublicSiteShell({ children }: PublicSiteShellProps) {
               {localeSwitchLabel}
             </button>
 
+            <Link href="/login" className="hidden text-sm font-medium text-slate-600 transition-colors hover:text-slate-900 md:inline-flex">
+              {t.navLogin}
+            </Link>
+            <Link href="/contact" className={`hidden md:inline-flex ${publicPrimaryButtonClass}`}>
+              {t.footerDemoLabel}
+            </Link>
             <Link href="/login" className="text-sm font-medium text-slate-700 transition-colors hover:text-slate-900 md:hidden">
               {t.navLogin}
             </Link>
-            <div className="hidden items-center gap-3 md:flex">
-              <Link href="/login" className={publicSecondaryButtonClass}>
-                {t.navLogin}
-              </Link>
-              <Link href="/contact" className={publicPrimaryButtonClass}>
-                {t.footerDemoLabel}
-              </Link>
-            </div>
           </div>
         </div>
 
         <div className={`${publicSiteContainerClass} pb-4 md:hidden`}>
           <nav className="flex gap-2 overflow-x-auto whitespace-nowrap">
             {navigationItems.map((item) => (
-              <Link key={item.href} href={item.href} className={navLinkClass(item.active)}>
+              <Link
+                key={item.href}
+                href={item.href}
+                className={`inline-flex h-10 items-center rounded-xl border px-3.5 text-sm font-medium transition-colors ${
+                  item.active
+                    ? 'border-slate-900 bg-slate-900 text-white'
+                    : 'border-slate-200 bg-white text-slate-600 hover:text-slate-900'
+                }`}
+              >
                 {item.label}
               </Link>
             ))}
@@ -139,10 +136,7 @@ export function PublicSiteShell({ children }: PublicSiteShellProps) {
               {localeSwitchLabel}
             </button>
 
-            <Link
-              href="/login"
-              className={pathname === '/login' ? publicSecondaryButtonClass : publicPrimaryButtonClass}
-            >
+            <Link href="/login" className={pathname === '/login' ? publicSecondaryButtonClass : publicPrimaryButtonClass}>
               {t.navLogin}
             </Link>
           </div>
@@ -151,23 +145,19 @@ export function PublicSiteShell({ children }: PublicSiteShellProps) {
 
       <main>{children}</main>
 
-      <footer className="relative z-10 mt-16 border-t border-white/10 bg-slate-950 text-white">
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(59,130,246,0.16),transparent_32%)]" />
-        <div className={`${publicSiteContainerClass} relative grid gap-10 py-12 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)_minmax(0,1fr)]`}>
+      <footer className="border-t border-slate-200 bg-slate-50">
+        <div className={`${publicSiteContainerClass} grid gap-10 py-14 lg:grid-cols-[minmax(0,1.45fr)_minmax(0,0.9fr)_minmax(0,0.9fr)]`}>
           <div>
-            <BrandBanner
-              tone="dark"
-              className="h-16 w-[172px] sm:w-[188px]"
-            />
-            <p className="mt-5 text-2xs font-medium uppercase tracking-wider text-slate-400">{t.brandTitle}</p>
-            <p className="mt-4 text-sm leading-relaxed text-slate-300">{t.footerNarrativeText}</p>
+            <BrandBanner className="h-14 w-[210px] border-slate-200 bg-white sm:w-[232px]" />
+            <p className="mt-5 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">{t.brandTitle}</p>
+            <p className="mt-4 max-w-xl text-sm leading-7 text-slate-600">{t.footerNarrativeText}</p>
           </div>
 
           <div>
-            <p className="text-sm font-medium text-white">{t.navLabel}</p>
-            <div className="mt-4 flex flex-col gap-2 text-sm text-slate-300">
+            <p className="text-sm font-semibold text-slate-900">{t.navLabel}</p>
+            <div className="mt-4 flex flex-col gap-3 text-sm text-slate-600">
               {footerLinks.map((item) => (
-                <Link key={item.href} href={item.href} className="transition-colors hover:text-white">
+                <Link key={item.href} href={item.href} className="transition-colors hover:text-slate-900">
                   {item.label}
                 </Link>
               ))}
@@ -175,22 +165,18 @@ export function PublicSiteShell({ children }: PublicSiteShellProps) {
           </div>
 
           <div>
-            <p className="text-sm font-medium text-white">{t.footerProductsTitle}</p>
-            <div className="mt-4 flex flex-col gap-2 text-sm text-slate-300">
+            <p className="text-sm font-semibold text-slate-900">{t.footerProductsTitle}</p>
+            <div className="mt-4 flex flex-col gap-3 text-sm text-slate-600">
               {productLinks.map((item) => (
-                <Link
-                  key={`${item.href}-${item.label}`}
-                  href={item.href}
-                  className="transition-colors hover:text-white"
-                >
+                <Link key={`${item.href}-${item.label}`} href={item.href} className="transition-colors hover:text-slate-900">
                   {item.label}
                 </Link>
               ))}
             </div>
-            <p className="mt-8 text-sm font-medium text-white">{t.footerAccessTitle}</p>
-            <div className="mt-4 flex flex-col gap-2 text-sm text-slate-300">
+            <p className="mt-8 text-sm font-semibold text-slate-900">{t.footerAccessTitle}</p>
+            <div className="mt-4 flex flex-col gap-3 text-sm text-slate-600">
               {accessLinks.map((item) => (
-                <Link key={item.href} href={item.href} className="transition-colors hover:text-white">
+                <Link key={item.href} href={item.href} className="transition-colors hover:text-slate-900">
                   {item.label}
                 </Link>
               ))}
@@ -198,8 +184,8 @@ export function PublicSiteShell({ children }: PublicSiteShellProps) {
           </div>
         </div>
 
-        <div className="border-t border-white/10">
-          <div className={`${publicSiteContainerClass} py-5 text-sm text-slate-400`}>
+        <div className="border-t border-slate-200">
+          <div className={`${publicSiteContainerClass} py-5 text-sm text-slate-500`}>
             {t.footerCopyright}
           </div>
         </div>

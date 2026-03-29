@@ -31,18 +31,18 @@ export function PublicFeatureGrid({
 }: PublicFeatureGridProps) {
   return (
     <section id={id} className="border-t border-border bg-slate-50">
-      <div className={`${publicSiteContainerClass} py-14 lg:py-20`}>
+      <div className={`${publicSiteContainerClass} py-14 lg:py-18`}>
         <div className="mx-auto max-w-3xl text-center">
           {eyebrowLabel && <p className={publicEyebrowClass}>{eyebrowLabel}</p>}
           <h2 className={publicSectionTitleClass}>{title}</h2>
           <p className={`mx-auto ${publicSectionSupportingTextClass}`}>{description}</p>
         </div>
 
-        <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {items.map((item) => (
             <div
               key={`${item.eyebrow}-${item.title}`}
-              className={`${publicInteractiveCardSurfaceClass} h-full rounded-[1.75rem] bg-white p-7`}
+              className={`${publicInteractiveCardSurfaceClass} h-full rounded-[1.5rem] bg-white p-6`}
             >
               <p className={publicEyebrowClass}>{item.eyebrow}</p>
               <h3 className="mt-3 text-xl font-semibold tracking-[-0.03em] text-foreground">

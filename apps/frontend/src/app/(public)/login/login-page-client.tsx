@@ -162,39 +162,39 @@ export default function LoginPageClient({ nextPath }: LoginPageClientProps) {
   return (
     <div className="min-h-screen bg-white" style={loginSurfaceStyle}>
       <main className="min-h-screen lg:flex">
-        <section className="flex flex-1 flex-col justify-center px-8 py-12 sm:px-14 lg:px-20 xl:px-28">
+        <section className="flex flex-1 flex-col justify-center px-8 py-12 sm:px-16 lg:px-24 xl:px-32">
           <div className="mx-auto w-full max-w-md">
-            <div className="flex items-center justify-between gap-4">
+            <div className="mb-10 flex items-center justify-between gap-4">
               <Link href="/" className="inline-flex items-center gap-3">
                 <BrandMark
                   priority
-                  className="h-12 w-12 shrink-0 sm:h-14 sm:w-14"
+                  className="h-12 w-12 shrink-0 rounded-2xl sm:h-14 sm:w-14"
                   imageClassName="scale-[1.08]"
                   style={visualContext.brandMarkStyle}
                 />
                 <div className="min-w-0">
-                  <span className="block text-base font-semibold tracking-[-0.03em] text-slate-900">PetFlow</span>
-                  <span className="mt-0.5 block text-[11px] font-medium uppercase tracking-[0.18em] text-slate-600">
+                  <span className="block text-xl font-bold tracking-[-0.03em] text-slate-900">PetFlow</span>
+                  <span className="mt-0.5 block text-[10px] font-medium uppercase tracking-[0.18em] text-slate-500">
                     by PhaifferTech
                   </span>
                 </div>
               </Link>
-              <Link href="/" className={`hidden lg:inline-flex ${publicSecondaryButtonClass}`}>
+              <Link href="/" className="hidden text-sm font-medium text-slate-600 transition-colors hover:text-slate-900 lg:inline-flex">
                 {supportCopy.backLabel}
               </Link>
             </div>
 
-            <div className="mt-10">
+            <div>
               <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--tenant-accent)]">
                 {supportCopy.eyebrow}
               </p>
-              <h1 className="mt-4 text-4xl font-semibold tracking-[-0.04em] text-slate-900">
+              <h1 className="mt-4 text-4xl font-bold tracking-[-0.045em] text-slate-900">
                 {supportCopy.title}
               </h1>
-              <p className="mt-3 text-lg text-slate-600">{supportCopy.description}</p>
+              <p className="mt-3 text-lg leading-8 text-slate-600">{supportCopy.description}</p>
             </div>
 
-            <form onSubmit={handleSubmit} className="mt-10 space-y-5">
+            <form onSubmit={handleSubmit} autoComplete="off" className="mt-10 space-y-5">
               <div>
                 <label htmlFor="tenant-code" className={sharedInputLabelClass}>
                   {t.tenantCodeLabel}
@@ -203,10 +203,17 @@ export default function LoginPageClient({ nextPath }: LoginPageClientProps) {
                   <FieldIcon path="M3 21h18M5 21V7l7-4 7 4v14M9 21v-6h6v6" />
                   <input
                     id="tenant-code"
+                    name="tenantCode"
                     type="text"
                     value={tenantCode}
                     onChange={(event) => handleTenantCodeChange(event.target.value)}
                     onBlur={(event) => commitTenantCodeVisual(event.target.value)}
+                    autoComplete="section-petflow organization"
+                    autoCapitalize="none"
+                    autoCorrect="off"
+                    spellCheck={false}
+                    data-lpignore="true"
+                    data-1p-ignore="true"
                     className={`${sharedInputClass} pl-12`}
                     placeholder="tenant-code"
                     required
@@ -222,9 +229,15 @@ export default function LoginPageClient({ nextPath }: LoginPageClientProps) {
                   <FieldIcon path="M4 6h16v12H4z M4 7l8 6 8-6" />
                   <input
                     id="email"
+                    name="email"
                     type="email"
                     value={email}
                     onChange={(event) => setEmail(event.target.value)}
+                    autoComplete="username"
+                    inputMode="email"
+                    autoCapitalize="none"
+                    autoCorrect="off"
+                    spellCheck={false}
                     className={`${sharedInputClass} pl-12`}
                     placeholder="name@company.com"
                     required
@@ -240,9 +253,11 @@ export default function LoginPageClient({ nextPath }: LoginPageClientProps) {
                   <FieldIcon path="M7 11V8a5 5 0 0 1 10 0v3M6 11h12v10H6z" />
                   <input
                     id="password"
+                    name="password"
                     type="password"
                     value={password}
                     onChange={(event) => setPassword(event.target.value)}
+                    autoComplete="current-password"
                     className={`${sharedInputClass} pl-12`}
                     placeholder="••••••••"
                     required
@@ -272,10 +287,8 @@ export default function LoginPageClient({ nextPath }: LoginPageClientProps) {
 
               {notice ? <div className="ui-notice-info">{notice}</div> : null}
 
-              {error ? (
-                <div className="rounded-[1.1rem] border border-destructive/30 bg-destructive-muted px-3 py-2.5 text-sm text-destructive">
-                  {error}
-                </div>
+                {error ? (
+                <div className="rounded-xl border border-destructive/30 bg-destructive-muted px-4 py-3 text-sm text-destructive">{error}</div>
               ) : null}
 
               <button
@@ -299,35 +312,61 @@ export default function LoginPageClient({ nextPath }: LoginPageClientProps) {
           </div>
         </section>
 
-        <section className="relative hidden flex-1 overflow-hidden bg-[linear-gradient(135deg,#041224,#081a30_54%,#0a2342)] text-white lg:flex">
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_40%,rgba(59,130,246,0.18),transparent_58%)]" />
+        <section className="relative hidden flex-1 overflow-hidden bg-[linear-gradient(135deg,#04111f,#0b1425_58%,#111827)] text-white lg:flex">
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_48%_34%,rgba(59,130,246,0.14),transparent_52%)]" />
           <div className="relative z-10 flex w-full flex-col justify-center px-16 xl:px-24">
-            <BrandMark
-              tone="dark"
-              className="h-20 w-20"
-              imageClassName="scale-[1.08]"
-              style={visualContext.brandMarkStyle}
-            />
-
-            <h2 className="mt-10 text-5xl font-semibold tracking-[-0.05em] text-white">
+            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-blue-200">{supportCopy.eyebrow}</p>
+            <h2 className="mt-6 text-4xl font-bold tracking-[-0.05em] text-white xl:text-5xl">
               {supportCopy.heroTitle}
             </h2>
-            <p className="mt-6 max-w-lg text-xl leading-8 text-slate-300">{supportCopy.heroDescription}</p>
+            <p className="mt-5 max-w-lg text-lg leading-8 text-slate-300">{supportCopy.heroDescription}</p>
 
-            <div className="mt-10 space-y-4">
-              {[
-                [supportCopy.laneQueueTitle, supportCopy.laneQueueDescription],
-                [supportCopy.lanePlansTitle, supportCopy.lanePlansDescription],
-                [supportCopy.laneBillingTitle, supportCopy.laneBillingDescription]
-              ].map(([title, body]) => (
-                <div key={title} className="flex items-start gap-3">
-                  <span className="mt-1.5 h-2.5 w-2.5 rounded-full bg-[color:var(--tenant-accent)]" />
+            <div className="mt-10 rounded-[2rem] border border-white/10 bg-white/5 p-5 backdrop-blur-sm">
+              <div className="flex items-center justify-between gap-4 border-b border-white/10 pb-4">
+                <div className="flex items-center gap-3">
+                  <BrandMark
+                    tone="dark"
+                    className="h-12 w-12 rounded-2xl"
+                    imageClassName="scale-[1.08]"
+                    style={visualContext.brandMarkStyle}
+                  />
                   <div>
-                    <p className="text-sm font-semibold uppercase tracking-[0.18em] text-slate-200">{title}</p>
-                    <p className="mt-1 text-base leading-7 text-slate-300">{body}</p>
+                    <p className="text-base font-semibold text-white">PetFlow</p>
+                    <p className="text-[10px] font-medium uppercase tracking-[0.18em] text-slate-400">by PhaifferTech</p>
                   </div>
                 </div>
-              ))}
+                <span className="inline-flex rounded-full bg-white/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-200">
+                  Workspace
+                </span>
+              </div>
+
+              <div className="mt-5 grid gap-4">
+                {[
+                  [supportCopy.laneQueueTitle, supportCopy.laneQueueDescription],
+                  [supportCopy.lanePlansTitle, supportCopy.lanePlansDescription],
+                  [supportCopy.laneBillingTitle, supportCopy.laneBillingDescription]
+                ].map(([title, body], index) => (
+                  <div key={title} className="rounded-[1.35rem] border border-white/10 bg-slate-950/40 p-4">
+                    <div className="flex items-center gap-3">
+                      <span
+                        className={`inline-flex h-8 w-8 items-center justify-center rounded-xl text-sm font-semibold ${
+                          index === 0
+                            ? 'bg-[color:var(--tenant-accent)] text-white'
+                            : index === 1
+                              ? 'bg-white/10 text-white'
+                              : 'bg-slate-800 text-slate-200'
+                        }`}
+                      >
+                        {index + 1}
+                      </span>
+                      <div>
+                        <p className="text-sm font-semibold uppercase tracking-[0.18em] text-slate-200">{title}</p>
+                        <p className="mt-1 text-[15px] leading-7 text-slate-300">{body}</p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </section>
