@@ -128,6 +128,15 @@ export function Sidebar() {
         icon: <ShoppingCart className="h-4 w-4" />,
       },
       {
+        href: '/pet/finance',
+        label: petMessages.finance,
+        anyOf: ['finance.read', 'pet.invoice.read'],
+        anyEntitlements: petSubmoduleEntitlements,
+        moduleCode: 'PET',
+        group: 'gestao',
+        icon: <Banknote className="h-4 w-4" />,
+      },
+      {
         href: '/pet/plans',
         label: petMessages.plans,
         anyOf: ['pet.plan.read'],
@@ -182,6 +191,9 @@ export function Sidebar() {
     [
       petMessages.appointments,
       petMessages.clients,
+      petMessages.clinic,
+      petMessages.pos,
+      petMessages.finance,
       petMessages.invoices,
       petMessages.inventory,
       petMessages.pets,

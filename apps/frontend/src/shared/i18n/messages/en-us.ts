@@ -131,6 +131,7 @@ export const enUSMessages: AppMessages = {
     appointments: 'Appointments',
     clinic: 'Clinic',
     pos: 'POS',
+    finance: 'Finance',
     plans: 'Plans',
     inventory: 'Inventory',
     invoices: 'Billing',
