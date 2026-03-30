@@ -44,24 +44,24 @@ const pageSize = 10;
 const financePreviewSize = 8;
 
 const statusOptions = [
-  { value: '', label: 'All lifecycles' },
-  { value: 'DRAFT', label: 'Draft' },
-  { value: 'ISSUED', label: 'Issued' },
-  { value: 'PAID', label: 'Paid' },
-  { value: 'CANCELED', label: 'Canceled' }
+  { value: '', label: 'Todos os ciclos' },
+  { value: 'DRAFT', label: 'Rascunho' },
+  { value: 'ISSUED', label: 'Emitida' },
+  { value: 'PAID', label: 'Paga' },
+  { value: 'CANCELED', label: 'Cancelada' }
 ];
 
 const formStatusOptions = statusOptions.filter((option) => option.value);
 
 const paymentMethodOptions = [
   { value: 'PIX', label: 'PIX' },
-  { value: 'CASH', label: 'Cash' },
-  { value: 'CREDIT_CARD', label: 'Credit card' },
-  { value: 'DEBIT_CARD', label: 'Debit card' },
-  { value: 'BANK_TRANSFER', label: 'Bank transfer' },
+  { value: 'CASH', label: 'Dinheiro' },
+  { value: 'CREDIT_CARD', label: 'Cartao de credito' },
+  { value: 'DEBIT_CARD', label: 'Cartao de debito' },
+  { value: 'BANK_TRANSFER', label: 'Transferencia bancaria' },
   { value: 'BOLETO', label: 'Boleto' },
-  { value: 'MANUAL', label: 'Manual adjustment' },
-  { value: 'OTHER', label: 'Other' }
+  { value: 'MANUAL', label: 'Ajuste manual' },
+  { value: 'OTHER', label: 'Outro' }
 ];
 
 const initialPage: PageResponse<PetInvoice> = {
@@ -105,7 +105,7 @@ function toIsoDate(value: string) {
   return new Date(value).toISOString();
 }
 
-function formatDateTime(value?: string | null, fallback = 'Not recorded') {
+function formatDateTime(value?: string | null, fallback = 'Nao registrado') {
   if (!value) {
     return fallback;
   }
@@ -134,7 +134,7 @@ function getNextCycleDateRange() {
 }
 
 function formatCycleLabel(date: Date) {
-  return new Intl.DateTimeFormat('en-US', { month: 'long', year: 'numeric' }).format(date);
+  return new Intl.DateTimeFormat('pt-BR', { month: 'long', year: 'numeric' }).format(date);
 }
 
 function buildCollectionReference(clientId: string, cycleDate: Date) {
@@ -155,12 +155,30 @@ function resolveProjectedDue(appointment: PetAppointment) {
 }
 
 function formatMethodLabel(value?: string | null) {
-  return paymentMethodOptions.find((option) => option.value === value)?.label ?? value ?? 'Unknown';
+  return paymentMethodOptions.find((option) => option.value === value)?.label ?? value ?? 'Desconhecido';
 }
 
 function formatCategoryLabel(value?: string | null) {
   if (!value) {
-    return 'Uncategorized';
+    return 'Sem categoria';
+  }
+
+  const normalized = value.toUpperCase();
+  const knownLabels: Record<string, string> = {
+    APPOINTMENT: 'Atendimento',
+    CLIENT: 'Cliente',
+    INVOICE_PAYMENT: 'Pagamento de fatura',
+    INVOICE: 'Fatura',
+    MANUAL: 'Ajuste manual',
+    OTHER: 'Outro',
+    PET: 'PetFlow',
+    PLAN: 'Plano',
+    PRODUCT: 'Produto',
+    SERVICE: 'Servico'
+  };
+
+  if (knownLabels[normalized]) {
+    return knownLabels[normalized];
   }
 
   return value
@@ -170,17 +188,42 @@ function formatCategoryLabel(value?: string | null) {
     .join(' ');
 }
 
+function formatStatusLabel(value?: string | null) {
+  if (!value) {
+    return 'Nao informado';
+  }
+
+  const normalized = value.toUpperCase();
+  const knownLabels: Record<string, string> = {
+    ACTIVE: 'Ativa',
+    CANCELED: 'Cancelada',
+    CANCELLED: 'Cancelada',
+    COMPLETED: 'Concluida',
+    CONFIRMED: 'Confirmada',
+    DRAFT: 'Rascunho',
+    INACTIVE: 'Inativa',
+    ISSUED: 'Emitida',
+    OPEN: 'Em aberto',
+    OVERDUE: 'Vencida',
+    PAID: 'Paga',
+    PENDING: 'Pendente',
+    SCHEDULED: 'Agendada'
+  };
+
+  return knownLabels[normalized] ?? formatCategoryLabel(value);
+}
+
 function formatDirectionLabel(value?: string | null) {
   if (!value) {
-    return 'Unspecified';
+    return 'Nao informado';
   }
 
   if (value.toUpperCase() === 'IN') {
-    return 'Cash in';
+    return 'Entrada';
   }
 
   if (value.toUpperCase() === 'OUT') {
-    return 'Cash out';
+    return 'Saida';
   }
 
   return formatCategoryLabel(value);
@@ -212,11 +255,11 @@ const billingPanelMutedClass =
   'rounded-2xl border border-slate-200/80 bg-[linear-gradient(180deg,rgba(16,185,129,0.03),rgba(248,250,252,0.96)_120px)] p-4';
 
 const billingPanelEyebrowClass = 'text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--accent)]';
-const billingPanelTitleClass = 'mt-2 text-base font-semibold text-slate-900';
-const billingPanelTextClass = 'mt-1 text-sm leading-6 text-slate-700';
-const billingDetailLabelClass = 'text-xs font-semibold uppercase tracking-[0.16em] text-slate-700';
+const billingPanelTitleClass = 'mt-2 text-[1.15rem] font-semibold text-slate-950';
+const billingPanelTextClass = 'mt-1 text-sm leading-6 text-slate-900';
+const billingDetailLabelClass = 'text-xs font-semibold uppercase tracking-[0.16em] text-slate-800';
 const billingPrimaryValueClass = 'mt-1 text-xl font-bold tracking-[-0.03em] text-slate-900';
-const billingDetailValueClass = 'mt-1 text-sm leading-6 text-slate-700';
+const billingDetailValueClass = 'mt-1 text-sm leading-6 text-slate-900';
 
 type SnapshotCardProps = {
   icon: LucideIcon;
@@ -231,7 +274,7 @@ function SnapshotCard({ icon: Icon, label, value, detail, tone = 'default' }: Sn
     <div className={`rounded-3xl border p-4 shadow-[0_16px_34px_-28px_rgba(15,23,42,0.16)] ${statToneClass(tone)}`}>
       <div className="flex items-start justify-between gap-3">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-700">
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-800">
             {label}
           </p>
           <p className="mt-3 text-[2rem] font-bold tracking-[-0.04em] text-slate-900">{value}</p>
@@ -246,7 +289,7 @@ function SnapshotCard({ icon: Icon, label, value, detail, tone = 'default' }: Sn
           <Icon className="h-5 w-5" />
         </span>
       </div>
-      <p className="mt-3 text-sm leading-6 text-slate-700">{detail}</p>
+      <p className="mt-3 text-sm leading-6 text-slate-800">{detail}</p>
     </div>
   );
 }
@@ -302,12 +345,12 @@ export function PetInvoicesPage() {
   const canReadAppointments = hasPermission('pet.appointment.read');
 
   const clientOptions = useMemo(() => ([
-    { value: '', label: 'All clients' },
+    { value: '', label: 'Todos os clientes' },
     ...clients.map((client) => ({ value: client.id, label: client.name ?? client.fullName ?? client.id }))
   ]), [clients]);
 
   const formClientOptions = useMemo(() => ([
-    { value: '', label: 'Select a client' },
+    { value: '', label: 'Selecione um cliente' },
     ...clients.map((client) => ({ value: client.id, label: client.name ?? client.fullName ?? client.id }))
   ]), [clients]);
 
@@ -316,7 +359,7 @@ export function PetInvoicesPage() {
       setClients([]);
       setLookupIssues([{
         key: 'clients',
-        label: 'Clients',
+        label: 'Clientes',
         message: resolvePetLookupIssue(null, 'pet.client.read')
       }]);
       return;
@@ -330,7 +373,7 @@ export function PetInvoicesPage() {
       setClients([]);
       setLookupIssues([{
         key: 'clients',
-        label: 'Clients',
+        label: 'Clientes',
         message: resolvePetLookupIssue(err)
       }]);
     }
@@ -351,7 +394,7 @@ export function PetInvoicesPage() {
       });
       setPageData(result);
     } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : 'Unable to load PetFlow invoices.');
+      setError(err instanceof ApiClientError ? err.message : 'Nao foi possivel carregar as faturas do PetFlow.');
     } finally {
       setLoading(false);
     }
@@ -402,14 +445,14 @@ export function PetInvoicesPage() {
           setPreviewPlans(resolvePageItems(plansResult.value));
         } else {
           setPreviewPlans([]);
-          nextErrors.push(plansResult.reason instanceof Error ? plansResult.reason.message : 'Unable to load monthly plans for the next cycle preview.');
+          nextErrors.push(plansResult.reason instanceof Error ? plansResult.reason.message : 'Nao foi possivel carregar os planos mensais para a previsao do proximo ciclo.');
         }
 
         if (appointmentsResult.status === 'fulfilled') {
           setPreviewAppointments(resolvePageItems(appointmentsResult.value));
         } else {
           setPreviewAppointments([]);
-          nextErrors.push(appointmentsResult.reason instanceof Error ? appointmentsResult.reason.message : 'Unable to load next cycle appointments.');
+          nextErrors.push(appointmentsResult.reason instanceof Error ? appointmentsResult.reason.message : 'Nao foi possivel carregar os atendimentos do proximo ciclo.');
         }
 
         setPreviewError(nextErrors.length > 0 ? nextErrors.join(' ') : null);
@@ -480,7 +523,7 @@ export function PetInvoicesPage() {
           nextErrors.push(
             invoiceResult.reason instanceof Error
               ? invoiceResult.reason.message
-              : 'Unable to load the linked finance invoice.'
+              : 'Nao foi possivel carregar a fatura financeira vinculada.'
           );
         }
 
@@ -491,7 +534,7 @@ export function PetInvoicesPage() {
           nextErrors.push(
             cashResult.reason instanceof Error
               ? cashResult.reason.message
-              : 'Unable to load cash movements for the linked invoice.'
+              : 'Nao foi possivel carregar os movimentos de caixa da fatura vinculada.'
           );
         }
 
@@ -550,15 +593,15 @@ export function PetInvoicesPage() {
       const billingType: NextCyclePreviewRow['billingType'] = activePlan ? 'Recurring' : 'One-time';
 
       let note = activePlan
-        ? 'Base monthly plan remains active for the next cycle.'
-        : 'This client will be billed from scheduled services and extras only.';
+        ? 'O plano mensal base segue ativo para o proximo ciclo.'
+        : 'Este cliente sera cobrado apenas pelos servicos agendados e extras.';
 
       if (activePlan && activePlan.remainingSessions <= 2) {
         note = client?.email
-          ? 'Renewal email is part of the demo when the plan reaches the penultimate visit.'
-          : 'Renewal alert is ready, but this client still needs an email on file.';
+          ? 'O email de renovacao entra na demo quando o plano chega a visita penultima.'
+          : 'O alerta de renovacao esta pronto, mas este cliente ainda precisa de um email cadastrado.';
       } else if (petTaxiTotal > 0) {
-        note = 'Pet taxi is already reflected as an extra charge in the next cycle preview.';
+        note = 'O pet taxi ja esta refletido como cobranca extra na previsao do proximo ciclo.';
       }
 
       return {
@@ -616,7 +659,7 @@ export function PetInvoicesPage() {
 
   function beginEdit(item: PetInvoice) {
     if (item.status === 'PAID') {
-      setError('Paid invoices should be adjusted through a new document or a controlled finance correction.');
+      setError('Faturas pagas devem ser ajustadas por um novo documento ou por uma correcao financeira controlada.');
       return;
     }
 
@@ -662,12 +705,12 @@ export function PetInvoicesPage() {
     const isoDueAt = toIsoDate(dueAt);
 
     if (!clientId || Number.isNaN(parsedTotal) || parsedTotal < 0) {
-      setError('Select a client and enter a valid total amount.');
+      setError('Selecione um cliente e informe um valor total valido.');
       return;
     }
 
     if (status !== 'DRAFT' && !isoIssuedAt) {
-      setError('Issued or canceled invoices require an issue date.');
+      setError('Faturas emitidas ou canceladas exigem uma data de emissao.');
       return;
     }
 
@@ -685,7 +728,7 @@ export function PetInvoicesPage() {
           dueAt: isoDueAt,
           description: description || undefined
         });
-        setSuccess('Invoice updated successfully.');
+        setSuccess('Fatura atualizada com sucesso.');
       } else {
         await petService.createInvoice({
           clientId,
@@ -695,13 +738,13 @@ export function PetInvoicesPage() {
           dueAt: isoDueAt,
           description: description || undefined
         });
-        setSuccess('Invoice created successfully.');
+        setSuccess('Fatura criada com sucesso.');
       }
 
       resetForm();
       await load(pageData.page, search, clientFilterId, statusFilter);
     } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : 'Unable to save the invoice.');
+      setError(err instanceof ApiClientError ? err.message : 'Nao foi possivel salvar a fatura.');
     } finally {
       setSubmitting(false);
     }
@@ -718,7 +761,7 @@ export function PetInvoicesPage() {
     const isoReceivedAt = toIsoDate(paymentReceivedAt);
 
     if (Number.isNaN(parsedAmount) || parsedAmount <= 0 || !isoReceivedAt) {
-      setError('Enter a valid amount and received date for the payment.');
+      setError('Informe um valor e uma data de recebimento validos para o pagamento.');
       return;
     }
 
@@ -736,11 +779,11 @@ export function PetInvoicesPage() {
 
     try {
       await petService.createInvoicePayment(paymentInvoice.id, input);
-      setSuccess('Payment recorded successfully.');
+      setSuccess('Pagamento registrado com sucesso.');
       resetPaymentForm();
       await load(pageData.page, search, clientFilterId, statusFilter);
     } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : 'Unable to record the payment.');
+      setError(err instanceof ApiClientError ? err.message : 'Nao foi possivel registrar o pagamento.');
     } finally {
       setPaymentSubmitting(false);
     }
@@ -754,35 +797,35 @@ export function PetInvoicesPage() {
     try {
       await petService.deleteInvoice(deleteCandidate.id);
       setDeleteCandidate(null);
-      setSuccess('Invoice removed successfully.');
+      setSuccess('Fatura removida com sucesso.');
       if (reviewInvoiceId === deleteCandidate.id) {
         setReviewInvoiceId(null);
         resetPaymentForm();
       }
       await load(pageData.page, search, clientFilterId, statusFilter);
     } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : 'Unable to delete the selected invoice.');
+      setError(err instanceof ApiClientError ? err.message : 'Nao foi possivel remover a fatura selecionada.');
     }
   }
 
   const columns: DataTableColumn<PetInvoice>[] = [
     {
       key: 'issuedAt',
-      header: 'Document',
+      header: 'Documento',
       render: (item) => (
         <div>
           <p className="font-medium text-slate-900">
-            {formatDateTime(item.issuedAt, 'Draft not issued yet')}
+            {formatDateTime(item.issuedAt, 'Rascunho ainda nao emitido')}
           </p>
           <p className={`mt-1 ${sharedCompactTextClass}`}>
-            Due {formatDateTime(item.dueAt, 'No due date')}
+            Vence em {formatDateTime(item.dueAt, 'Sem vencimento definido')}
           </p>
         </div>
       )
     },
     {
       key: 'client',
-      header: 'Client',
+      header: 'Cliente',
       render: (item) => (
         <div>
           <p className="font-medium text-slate-900">
@@ -790,7 +833,7 @@ export function PetInvoicesPage() {
               clients,
               item.clientId,
               (client) => client.name ?? client.fullName,
-              'Client',
+              'Cliente',
               clientsLookupUnavailable
             )}
           </p>
@@ -802,57 +845,57 @@ export function PetInvoicesPage() {
     },
     {
       key: 'context',
-      header: 'Business context',
+      header: 'Contexto do negocio',
       render: (item) => (
         <div>
           <p className="font-medium text-slate-900">
-            {item.businessContextLabel ?? item.description ?? 'Manual invoice'}
+            {item.businessContextLabel ?? item.description ?? 'Fatura manual'}
           </p>
           <p className={`mt-1 ${sharedCompactTextClass}`}>
-            {item.businessContextType ? `${formatCategoryLabel(item.businessContextType)} flow` : 'Manual finance flow'} • Linked finance document {item.financeInvoiceId}
+            {item.businessContextType ? `${formatCategoryLabel(item.businessContextType)} operacional` : 'Fluxo financeiro manual'} • Documento financeiro vinculado {item.financeInvoiceId}
           </p>
         </div>
       )
     },
     {
       key: 'finance',
-      header: 'Finance position',
+      header: 'Posicao financeira',
       render: (item) => (
         <div>
           <p className="font-medium text-slate-900">
             {formatCurrency(item.totalAmount)}
           </p>
           <p className={`mt-1 ${sharedCompactTextClass}`}>
-            Paid {formatCurrency(item.paidAmount)} • Open {formatCurrency(item.outstandingAmount)}
+            Pago {formatCurrency(item.paidAmount)} • Em aberto {formatCurrency(item.outstandingAmount)}
           </p>
           <p className={`mt-1 ${sharedCompactTextClass}`}>
-            {item.outstandingAmount > 0 ? 'Collection still open in the current cycle.' : 'Financially settled.'}
+            {item.outstandingAmount > 0 ? 'A cobranca ainda esta aberta neste ciclo.' : 'Liquidada financeiramente.'}
           </p>
         </div>
       )
     },
     {
       key: 'lifecycle',
-      header: 'Lifecycle',
+      header: 'Ciclo',
       render: (item) => (
         <div className="space-y-2">
           <StatusBadge status={item.status} />
           <p className={sharedCompactTextClass}>
             {item.paidAt
-              ? `Paid on ${formatDateTime(item.paidAt)}`
+              ? `Pago em ${formatDateTime(item.paidAt)}`
               : item.canceledAt
-                ? `Canceled on ${formatDateTime(item.canceledAt)}`
-                : `${item.payments.length} payment record${item.payments.length === 1 ? '' : 's'}`}
+                ? `Cancelada em ${formatDateTime(item.canceledAt)}`
+                : `${item.payments.length} registro(s) de pagamento`}
           </p>
           {isOverdueInvoice(item) ? (
-            <p className="text-xs text-red-700">Collection overdue for this invoice.</p>
+            <p className="text-xs text-red-700">Cobranca vencida para esta fatura.</p>
           ) : null}
         </div>
       )
     },
     {
       key: 'actions',
-      header: 'Actions',
+      header: 'Acoes',
           render: (item) => (
         <div className={sharedInlineActionsClass}>
           <button
@@ -860,7 +903,7 @@ export function PetInvoicesPage() {
             onClick={() => reviewInvoice(item)}
             className="ui-inline-button"
           >
-            View finance record
+            Ver registro financeiro
           </button>
           <PermissionGuard permission="pet.invoice.update">
             {item.status !== 'PAID' ? (
@@ -869,7 +912,7 @@ export function PetInvoicesPage() {
                 onClick={() => beginEdit(item)}
                 className="ui-inline-button"
               >
-                Edit
+                Editar
               </button>
             ) : null}
           </PermissionGuard>
@@ -880,7 +923,7 @@ export function PetInvoicesPage() {
                 onClick={() => beginPayment(item)}
                 className="ui-inline-button"
               >
-                Register payment
+                Registrar pagamento
               </button>
             ) : null}
           </PermissionGuard>
@@ -890,7 +933,7 @@ export function PetInvoicesPage() {
               onClick={() => setDeleteCandidate(item)}
               className="ui-inline-danger-button"
             >
-              Delete
+              Excluir
             </button>
           </PermissionGuard>
         </div>
@@ -907,19 +950,19 @@ export function PetInvoicesPage() {
         <PetModuleSubnav />
 
         <PageTitle
-          eyebrow="PetFlow finance"
+          eyebrow="Financeiro PetFlow"
           title={messages.title}
           description={messages.description}
           actions={(
             <div className="flex flex-wrap gap-2">
               <PermissionGuard permission="pet.invoice.create">
                 <button type="button" onClick={beginCreateInvoice} className="ui-primary-button">
-                  Issue invoice
+                  Emitir fatura
                 </button>
               </PermissionGuard>
               <PermissionGuard permission="pet.dashboard.read">
                 <Link href="/pet/insights" className="ui-secondary-button">
-                  Open business insights
+                  Abrir insights do negocio
                 </Link>
               </PermissionGuard>
             </div>
@@ -932,30 +975,30 @@ export function PetInvoicesPage() {
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
           <SnapshotCard
             icon={Receipt}
-            label="Invoices in scope"
+            label="Faturas no recorte"
             value={new Intl.NumberFormat('pt-BR').format(totalItems)}
             detail={activeFilterCount > 0
-              ? 'Results reflect the current finance filters.'
-              : 'Full PetFlow invoice list for this tenant.'}
+              ? 'Os resultados refletem os filtros financeiros atuais.'
+              : 'Lista completa de faturas do PetFlow neste ambiente.'}
           />
           <SnapshotCard
             icon={ArrowUpRight}
-            label="Visible invoiced value"
+            label="Valor faturado visivel"
             value={formatCurrency(visibleTotalInvoiced)}
-            detail="Gross amount represented in the current page view."
+            detail="Montante bruto representado na visualizacao atual."
           />
           <SnapshotCard
             icon={WalletCards}
-            label="Open balance"
+            label="Saldo em aberto"
             value={formatCurrency(visibleOpenBalance)}
-            detail="Amount still expected from the visible invoice slice."
+            detail="Valor ainda esperado dentro do recorte visivel de faturas."
             tone={visibleOpenBalance > 0 ? 'warning' : 'default'}
           />
           <SnapshotCard
             icon={AlertTriangle}
-            label="Operational attention"
+            label="Atencao operacional"
             value={String(overdueCount)}
-            detail={`${paymentCount} payment record${paymentCount === 1 ? '' : 's'} currently visible across this finance slice.`}
+            detail={`${paymentCount} registro(s) de pagamento visiveis neste recorte financeiro.`}
             tone={overdueCount > 0 ? 'danger' : 'default'}
           />
         </div>
@@ -968,20 +1011,20 @@ export function PetInvoicesPage() {
           <div className={sharedFilterToolbarClass}>
             <div className="grid gap-3 xl:grid-cols-[minmax(0,1.35fr)_minmax(0,0.9fr)_minmax(0,0.7fr)] xl:items-end">
               <SearchBar
-                label="Search"
+                label="Buscar"
                 value={searchInput}
                 onChange={setSearchInput}
-                placeholder="Client name, context, or internal reference"
+                placeholder="Nome do cliente, contexto ou referencia interna"
               />
               <FormSelect
-                label="Client"
+                label="Cliente"
                 value={clientFilterId}
                 options={clientOptions}
                 onChange={setClientFilterId}
                 disabled={clientsLookupUnavailable}
               />
               <FormSelect
-                label="Lifecycle"
+                label="Ciclo"
                 value={statusFilter}
                 options={statusOptions}
                 onChange={setStatusFilter}
@@ -994,7 +1037,7 @@ export function PetInvoicesPage() {
                 onClick={() => setSearch(searchInput)}
                 className="ui-primary-button"
               >
-                Apply filters
+                Aplicar filtros
               </button>
               <button
                 type="button"
@@ -1006,7 +1049,7 @@ export function PetInvoicesPage() {
                 }}
                 className="ui-inline-button"
               >
-                Clear filters
+                Limpar filtros
               </button>
             </div>
           </div>
@@ -1015,42 +1058,42 @@ export function PetInvoicesPage() {
         <PageSection
           tone="muted"
           title={messages.nextCycleTitle}
-          description={`Use this ${nextCycleLabel} preview to explain recurring clients, covered services, pet taxi extras, and what is already ready for collection.`}
+          description={`Use esta previa de ${nextCycleLabel} para explicar clientes recorrentes, servicos cobertos, extras de pet taxi e o que ja esta pronto para cobranca.`}
         >
           {previewError ? <div className="ui-notice-warning">{previewError}</div> : null}
           {previewLoading ? (
-            <div className="ui-notice-neutral">Loading next cycle preview...</div>
+            <div className="ui-notice-neutral">Carregando a previa do proximo ciclo...</div>
           ) : nextCyclePreviewRows.length === 0 ? (
             <div className="ui-notice-neutral">
-              No recurring plan or scheduled appointment is currently shaping the next cycle.
+              Nenhum plano recorrente ou atendimento agendado esta formando o proximo ciclo neste momento.
             </div>
           ) : (
             <div className="space-y-4">
               <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
                 <SnapshotCard
                   icon={WalletCards}
-                  label="Next cycle projected"
+                  label="Projecao do proximo ciclo"
                   value={formatCurrency(nextCycleProjectedTotal)}
-                  detail="Projected charge combining plan-covered visits and extras."
+                  detail="Cobranca projetada somando visitas cobertas pelo plano e extras."
                 />
                 <SnapshotCard
                   icon={Receipt}
-                  label="Recurring clients"
+                  label="Clientes recorrentes"
                   value={String(nextCycleRecurringClients)}
-                  detail="Clients already anchored in the recurring billing lane."
+                  detail="Clientes ja ancorados na esteira recorrente de cobranca."
                 />
                 <SnapshotCard
                   icon={Clock3}
-                  label="Penultimate alerts"
+                  label="Alertas de penultimo ciclo"
                   value={String(nextCyclePenultimateClients)}
-                  detail="Clients reaching the renewal conversation right now."
+                  detail="Clientes que estao entrando agora na conversa de renovacao."
                   tone={nextCyclePenultimateClients > 0 ? 'warning' : 'default'}
                 />
                 <SnapshotCard
                   icon={ArrowUpRight}
-                  label="Pet taxi clients"
+                  label="Clientes com pet taxi"
                   value={String(nextCyclePetTaxiClients)}
-                  detail="Clients carrying pickup or delivery extras into the next cycle."
+                  detail="Clientes que levam extras de coleta ou entrega para o proximo ciclo."
                 />
               </div>
 
@@ -1059,47 +1102,47 @@ export function PetInvoicesPage() {
                   <div key={row.reference} className={billingPanelClass}>
                     <div className="flex flex-wrap items-start justify-between gap-3">
                       <div>
-                        <p className={billingPanelEyebrowClass}>Billing detail</p>
+                        <p className={billingPanelEyebrowClass}>Detalhe de cobranca</p>
                         <p className={billingPanelTitleClass}>{row.clientName}</p>
                         <p className={billingPanelTextClass}>{row.reference}</p>
                       </div>
                       <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium ${
                         row.billingType === 'Recurring'
                           ? 'bg-emerald-100 text-emerald-800'
-                          : 'bg-slate-100 text-slate-700'
+                          : 'bg-slate-100 text-slate-800'
                       }`}>
-                        {row.billingType}
+                        {row.billingType === 'Recurring' ? 'Recorrente' : 'Avulsa'}
                       </span>
                     </div>
 
                     <dl className="mt-4 grid gap-4 sm:grid-cols-2">
                       <div>
-                        <dt className={billingDetailLabelClass}>Projected due</dt>
+                        <dt className={billingDetailLabelClass}>Valor projetado</dt>
                         <dd className={billingPrimaryValueClass}>{formatCurrency(row.projectedDue)}</dd>
                       </div>
                       <div>
-                        <dt className={billingDetailLabelClass}>Appointments</dt>
+                        <dt className={billingDetailLabelClass}>Atendimentos</dt>
                         <dd className={billingDetailValueClass}>
-                          {row.appointmentCount} scheduled / {row.coveredAppointments} covered by plan
+                          {row.appointmentCount} agendado(s) / {row.coveredAppointments} coberto(s) pelo plano
                         </dd>
                       </div>
                       <div>
-                        <dt className={billingDetailLabelClass}>Plan status</dt>
+                        <dt className={billingDetailLabelClass}>Status do plano</dt>
                         <dd className={billingDetailValueClass}>
                           {row.planName
-                            ? `${row.planName} · ${row.remainingSessions ?? 0} session(s) left`
-                            : 'One-time charging only'}
+                            ? `${row.planName} · ${row.remainingSessions ?? 0} sessoes restantes`
+                            : 'Cobranca avulsa apenas'}
                         </dd>
                       </div>
                       <div>
                         <dt className={billingDetailLabelClass}>Extras</dt>
                         <dd className={billingDetailValueClass}>
-                          {formatCurrency(row.extrasTotal)}{row.petTaxiTotal > 0 ? ` · ${formatCurrency(row.petTaxiTotal)} from pet taxi` : ''}
+                          {formatCurrency(row.extrasTotal)}{row.petTaxiTotal > 0 ? ` · ${formatCurrency(row.petTaxiTotal)} de pet taxi` : ''}
                         </dd>
                       </div>
                     </dl>
 
-                    <p className={`mt-4 ${sharedCompactTextClass}`}>{row.note}</p>
+                    <p className={billingPanelTextClass}>{row.note}</p>
                   </div>
                 ))}
               </div>
@@ -1111,61 +1154,61 @@ export function PetInvoicesPage() {
 
         <div id="pet-invoice-form-section">
           <PageSection
-            title={editingId ? 'Update invoice' : 'Issue invoice'}
-            description="Connect the service delivered, customer charge, and finance record in one step."
+            title={editingId ? 'Atualizar fatura' : 'Emitir fatura'}
+            description="Conecte o servico entregue, a cobranca do cliente e o registro financeiro em um unico passo."
           >
             <PermissionGuard permission={editingId ? 'pet.invoice.update' : 'pet.invoice.create'}>
               <form onSubmit={handleSubmit} className="space-y-5">
                 <div className="grid gap-4 xl:grid-cols-2">
                   <FormSelect
-                    label="Client"
+                    label="Cliente"
                     value={clientId}
                     options={formClientOptions}
                     onChange={setClientId}
                     disabled={clientsLookupUnavailable}
                   />
                   <FormInput
-                    label="Total amount"
+                    label="Valor total"
                     value={totalAmount}
                     onChange={setTotalAmount}
                     type="number"
                     required
                   />
                   <FormSelect
-                    label="Lifecycle"
+                    label="Ciclo"
                     value={status}
                     options={formStatusOptions}
                     onChange={setStatus}
                   />
                   <DateTimeInput
-                    label="Issued at"
+                    label="Emitida em"
                     value={issuedAt}
                     onChange={setIssuedAt}
                     required={status !== 'DRAFT'}
                   />
                   <DateTimeInput
-                    label="Due at"
+                    label="Vence em"
                     value={dueAt}
                     onChange={setDueAt}
                   />
                   <FormInput
-                    label="Operational description"
+                    label="Descricao operacional"
                     value={description}
                     onChange={setDescription}
-                    placeholder="Consultation package, surgery deposit, grooming bundle..."
+                    placeholder="Pacote de consulta, sinal de cirurgia, combo de banho e tosa..."
                   />
                 </div>
 
                 <div className={sharedReminderSurfaceClass}>
-                  <p className="text-sm font-medium text-[color:var(--app-shell-heading)]">Lifecycle reminder</p>
+                  <p className="text-sm font-medium text-[color:var(--app-shell-heading)]">Lembrete do ciclo</p>
                   <p className={`mt-1 ${sharedCompactTextClass}`}>
-                    Draft keeps the invoice internal only. Issued and canceled documents should carry an issue date so finance and support teams can reconstruct the full timeline.
+                    Rascunho mantem a fatura apenas no ambito interno. Documentos emitidos ou cancelados devem ter data de emissao para que financeiro e suporte consigam reconstruir a linha do tempo completa.
                   </p>
                 </div>
 
                 {clientsLookupUnavailable ? (
                   <div className="ui-notice-warning">
-                    Client lookup access is required before issuing or editing invoices safely.
+                    O acesso ao cadastro de clientes e necessario antes de emitir ou editar faturas com seguranca.
                   </div>
                 ) : null}
 
@@ -1175,7 +1218,7 @@ export function PetInvoicesPage() {
                     disabled={submitting || clientsLookupUnavailable}
                     className="ui-primary-button"
                   >
-                    {submitting ? 'Saving invoice...' : editingId ? 'Update invoice' : 'Issue invoice'}
+                    {submitting ? 'Salvando fatura...' : editingId ? 'Atualizar fatura' : 'Emitir fatura'}
                   </button>
                   {editingId ? (
                     <button
@@ -1183,7 +1226,7 @@ export function PetInvoicesPage() {
                       onClick={resetForm}
                       className="ui-secondary-button"
                     >
-                      Cancel edit
+                      Cancelar edicao
                     </button>
                   ) : null}
                 </div>
@@ -1201,14 +1244,14 @@ export function PetInvoicesPage() {
             rows={rows}
             getRowKey={(row) => row.id}
             loading={loading}
-            loadingTitle="Loading invoice operations"
-            loadingDescription="Preparing the latest PetFlow invoice lifecycle and payment posture for this tenant."
+            loadingTitle="Carregando a operacao de cobranca"
+            loadingDescription="Preparando o ciclo mais recente das faturas e a posicao de pagamento deste ambiente."
             emptyState={{
-              title: 'No invoices yet',
-              description: 'Issue the first invoice after an appointment or service, then register one payment so open balance, next cycle billing, and finance follow-through become visible.',
+              title: 'Ainda nao ha faturas',
+              description: 'Emita a primeira fatura depois de um atendimento ou servico e registre um pagamento para tornar visiveis saldo em aberto, proximo ciclo e acompanhamento financeiro.',
               action: hasPermission('pet.invoice.create') ? (
                 <button type="button" onClick={beginCreateInvoice} className="ui-primary-button">
-                  Issue first invoice
+                  Emitir primeira fatura
                 </button>
               ) : undefined
             }}
@@ -1226,8 +1269,8 @@ export function PetInvoicesPage() {
         {reviewedInvoice ? (
           <div id="pet-invoice-finance-section">
             <PageSection
-              title="Linked finance view"
-              description="Use this panel to explain invoice status, payments, and cash movements without leaving PetFlow."
+              title="Visao financeira vinculada"
+              description="Use este painel para explicar status da fatura, pagamentos e movimentos de caixa sem sair do PetFlow."
               actions={(
                 <button
                   type="button"
@@ -1237,7 +1280,7 @@ export function PetInvoicesPage() {
                   }}
                   className="ui-secondary-button"
                 >
-                  Close finance view
+                  Fechar visao financeira
                 </button>
               )}
             >
@@ -1245,10 +1288,10 @@ export function PetInvoicesPage() {
                 <div className={billingPanelClass}>
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div>
-                      <p className={billingPanelEyebrowClass}>Summary</p>
+                      <p className={billingPanelEyebrowClass}>Resumo</p>
                       <p className={billingPanelTitleClass}>{reviewedInvoice.clientName ?? reviewedInvoice.clientId}</p>
                       <p className={billingPanelTextClass}>
-                        {reviewedInvoice.businessContextLabel ?? reviewedInvoice.description ?? 'Manual invoice with no business label yet'}
+                        {reviewedInvoice.businessContextLabel ?? reviewedInvoice.description ?? 'Fatura manual ainda sem rotulo de negocio'}
                       </p>
                     </div>
                     <StatusBadge status={reviewedInvoice.status} />
@@ -1256,23 +1299,23 @@ export function PetInvoicesPage() {
 
                   <dl className="mt-5 grid gap-4 sm:grid-cols-2">
                     <div>
-                      <dt className={billingDetailLabelClass}>Total amount</dt>
+                      <dt className={billingDetailLabelClass}>Valor total</dt>
                       <dd className={billingPrimaryValueClass}>{formatCurrency(reviewedInvoice.totalAmount)}</dd>
                     </div>
                     <div>
-                      <dt className={billingDetailLabelClass}>Outstanding</dt>
+                      <dt className={billingDetailLabelClass}>Em aberto</dt>
                       <dd className={billingPrimaryValueClass}>{formatCurrency(reviewedInvoice.outstandingAmount)}</dd>
                     </div>
                     <div>
-                      <dt className={billingDetailLabelClass}>Paid amount</dt>
+                      <dt className={billingDetailLabelClass}>Valor pago</dt>
                       <dd className={billingDetailValueClass}>{formatCurrency(reviewedInvoice.paidAmount)}</dd>
                     </div>
                     <div>
-                      <dt className={billingDetailLabelClass}>Linked finance invoice</dt>
+                      <dt className={billingDetailLabelClass}>Fatura financeira vinculada</dt>
                       <dd className={billingDetailValueClass}>{reviewedInvoice.financeInvoiceId}</dd>
                     </div>
                     <div>
-                      <dt className={billingDetailLabelClass}>Billing reference draft</dt>
+                      <dt className={billingDetailLabelClass}>Referencia de cobranca</dt>
                       <dd className={billingDetailValueClass}>
                         {buildCollectionReference(reviewedInvoice.clientId, reviewedInvoice.dueAt ? new Date(reviewedInvoice.dueAt) : new Date())}
                       </dd>
@@ -1282,31 +1325,31 @@ export function PetInvoicesPage() {
 
                 <div className={billingPanelClass}>
                   <p className={billingPanelEyebrowClass}>Status</p>
-                  <p className={billingPanelTitleClass}>Lifecycle checkpoints</p>
-                  <p className={billingPanelTextClass}>Use these timestamps to explain whether the invoice is still draft, already issued, due, settled, or canceled.</p>
+                  <p className={billingPanelTitleClass}>Marcos do ciclo</p>
+                  <p className={billingPanelTextClass}>Use estes carimbos de tempo para explicar se a fatura ainda esta em rascunho, emitida, vencida, liquidada ou cancelada.</p>
                   <div className="mt-4 space-y-3">
                     <div>
-                      <p className={billingDetailLabelClass}>Issued at</p>
+                      <p className={billingDetailLabelClass}>Emitida em</p>
                       <p className={billingDetailValueClass}>
-                        {formatDateTime(reviewedInvoice.issuedAt, 'Still in draft mode')}
+                        {formatDateTime(reviewedInvoice.issuedAt, 'Ainda em modo de rascunho')}
                       </p>
                     </div>
                     <div>
-                      <p className={billingDetailLabelClass}>Due at</p>
+                      <p className={billingDetailLabelClass}>Vence em</p>
                       <p className={billingDetailValueClass}>
-                        {formatDateTime(reviewedInvoice.dueAt, 'No due date defined')}
+                        {formatDateTime(reviewedInvoice.dueAt, 'Sem data de vencimento definida')}
                       </p>
                     </div>
                     <div>
-                      <p className={billingDetailLabelClass}>Paid at</p>
+                      <p className={billingDetailLabelClass}>Pago em</p>
                       <p className={billingDetailValueClass}>
-                        {formatDateTime(reviewedInvoice.paidAt, 'Awaiting settlement')}
+                        {formatDateTime(reviewedInvoice.paidAt, 'Aguardando liquidacao')}
                       </p>
                     </div>
                     <div>
-                      <p className={billingDetailLabelClass}>Canceled at</p>
+                      <p className={billingDetailLabelClass}>Cancelada em</p>
                       <p className={billingDetailValueClass}>
-                        {formatDateTime(reviewedInvoice.canceledAt, 'Invoice still active')}
+                        {formatDateTime(reviewedInvoice.canceledAt, 'Fatura ainda ativa')}
                       </p>
                     </div>
                   </div>
@@ -1314,7 +1357,7 @@ export function PetInvoicesPage() {
               </div>
 
               {financeLoading ? (
-                <div className="ui-notice-neutral">Loading linked finance context...</div>
+                <div className="ui-notice-neutral">Carregando o contexto financeiro vinculado...</div>
               ) : null}
 
               {financeError ? (
@@ -1324,33 +1367,33 @@ export function PetInvoicesPage() {
               {financeInvoice ? (
                 <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
                   <div className={billingPanelClass}>
-                    <p className={billingPanelEyebrowClass}>Finance record</p>
-                    <p className={billingPanelTitleClass}>Linked finance document</p>
+                    <p className={billingPanelEyebrowClass}>Registro financeiro</p>
+                    <p className={billingPanelTitleClass}>Documento financeiro vinculado</p>
                     <p className={billingPanelTextClass}>
-                      Source {financeInvoice.sourceModule} • Currency {financeInvoice.currency}
+                      Origem {formatCategoryLabel(financeInvoice.sourceModule)} • Moeda {financeInvoice.currency}
                     </p>
 
                     <dl className="mt-4 grid gap-4 sm:grid-cols-2">
                       <div>
-                        <dt className={billingDetailLabelClass}>Counterparty</dt>
+                        <dt className={billingDetailLabelClass}>Contraparte</dt>
                         <dd className={billingDetailValueClass}>
-                          {financeInvoice.counterpartyName ?? 'Tenant-side customer not labeled'}
+                          {financeInvoice.counterpartyName ?? 'Cliente do ambiente ainda sem identificacao'}
                         </dd>
                       </div>
                       <div>
-                        <dt className={billingDetailLabelClass}>Document number</dt>
+                        <dt className={billingDetailLabelClass}>Numero do documento</dt>
                         <dd className={billingDetailValueClass}>
-                          {financeInvoice.documentNumber ?? 'Not assigned'}
+                          {financeInvoice.documentNumber ?? 'Nao atribuido'}
                         </dd>
                       </div>
                       <div>
-                        <dt className={billingDetailLabelClass}>Finance status</dt>
+                        <dt className={billingDetailLabelClass}>Status financeiro</dt>
                         <dd className={billingDetailValueClass}>
-                          {financeInvoice.status}
+                          {formatStatusLabel(financeInvoice.status)}
                         </dd>
                       </div>
                       <div>
-                        <dt className={billingDetailLabelClass}>Outstanding amount</dt>
+                        <dt className={billingDetailLabelClass}>Valor em aberto</dt>
                         <dd className={billingDetailValueClass}>
                           {formatCurrency(financeInvoice.outstandingAmount, financeInvoice.currency)}
                         </dd>
@@ -1359,29 +1402,30 @@ export function PetInvoicesPage() {
                   </div>
 
                   <div className={billingPanelClass}>
-                    <p className={billingPanelEyebrowClass}>Source of truth</p>
-                    <p className={billingPanelTitleClass}>Finance baseline</p>
+                    <p className={billingPanelEyebrowClass}>Fonte de verdade</p>
+                    <p className={billingPanelTitleClass}>Base financeira</p>
                     <p className={billingPanelTextClass}>
-                      This is the backend financial source of truth attached to the PetFlow invoice.
+                      Esta e a fonte financeira de verdade no backend vinculada a esta fatura do PetFlow.
                     </p>
 
                     <div className="mt-4 space-y-3">
                       <div>
-                        <p className={billingDetailLabelClass}>Business context</p>
+                        <p className={billingDetailLabelClass}>Contexto do negocio</p>
                         <p className={billingDetailValueClass}>
-                          {financeInvoice.businessContextLabel ?? financeInvoice.description ?? 'No business label recorded'}
+                          {financeInvoice.businessContextLabel ?? financeInvoice.description ?? 'Nenhum rotulo de negocio registrado'}
                         </p>
                       </div>
                       <div>
-                        <p className={billingDetailLabelClass}>Recipient</p>
+                        <p className={billingDetailLabelClass}>Destinatario</p>
                         <p className={billingDetailValueClass}>
-                          {financeInvoice.recipientLegalName ?? financeInvoice.recipientEmail ?? 'Recipient details not captured yet'}
+                          {financeInvoice.recipientLegalName ?? financeInvoice.recipientEmail ?? 'Os dados do destinatario ainda nao foram capturados'}
                         </p>
                       </div>
                       <div>
-                        <p className={billingDetailLabelClass}>Fiscal reference</p>
+                        <p className={billingDetailLabelClass}>Referencia fiscal</p>
                         <p className={billingDetailValueClass}>
-                          {financeInvoice.fiscalReference ?? financeInvoice.fiscalStatus ?? 'No fiscal provider reference attached'}
+                          {financeInvoice.fiscalReference
+                            ?? (financeInvoice.fiscalStatus ? formatStatusLabel(financeInvoice.fiscalStatus) : 'Nenhuma referencia fiscal vinculada')}
                         </p>
                       </div>
                     </div>
@@ -1394,10 +1438,10 @@ export function PetInvoicesPage() {
                   <form onSubmit={handlePaymentSubmit} className={billingPanelClass}>
                     <div className="flex flex-wrap items-start justify-between gap-3">
                       <div>
-                        <p className={billingPanelEyebrowClass}>Action</p>
-                        <p className={billingPanelTitleClass}>Register payment</p>
+                        <p className={billingPanelEyebrowClass}>Acao</p>
+                        <p className={billingPanelTitleClass}>Registrar pagamento</p>
                         <p className={billingPanelTextClass}>
-                          Use the real received amount and timestamp so the shared finance ledger remains trustworthy.
+                          Use o valor realmente recebido e o carimbo correto para manter o ledger financeiro confiavel.
                         </p>
                       </div>
                       <button
@@ -1405,46 +1449,46 @@ export function PetInvoicesPage() {
                         onClick={resetPaymentForm}
                         className="ui-secondary-button"
                       >
-                        Close payment form
+                        Fechar formulario
                       </button>
                     </div>
 
                     <div className="mt-5 grid gap-4">
                       <FormInput
-                        label="Received amount"
+                        label="Valor recebido"
                         value={paymentAmount}
                         onChange={setPaymentAmount}
                         type="number"
                         required
                       />
                       <FormSelect
-                        label="Method"
+                        label="Metodo"
                         value={paymentMethod}
                         options={paymentMethodOptions}
                         onChange={setPaymentMethod}
                       />
                       <DateTimeInput
-                        label="Received at"
+                        label="Recebido em"
                         value={paymentReceivedAt}
                         onChange={setPaymentReceivedAt}
                         required
                       />
                       <FormInput
-                        label="Reference code"
+                        label="Codigo de referencia"
                         value={paymentReferenceCode}
                         onChange={setPaymentReferenceCode}
-                        placeholder="PIX code, receipt number, card auth..."
+                        placeholder="Codigo PIX, numero do recibo, autorizacao do cartao..."
                       />
                       <FormInput
-                        label="Operator notes"
+                        label="Observacoes do operador"
                         value={paymentNotes}
                         onChange={setPaymentNotes}
-                        placeholder="Anything support or finance might need to explain later"
+                        placeholder="Qualquer contexto que suporte ou financeiro possam precisar explicar depois"
                       />
                     </div>
 
                     <p className={`mt-4 ${sharedFieldHintClass}`}>
-                      Open balance before this payment: {formatCurrency(reviewedInvoice.outstandingAmount)}
+                      Saldo em aberto antes deste pagamento: {formatCurrency(reviewedInvoice.outstandingAmount)}
                     </p>
 
                     <div className={sharedFormActionsClass}>
@@ -1453,16 +1497,16 @@ export function PetInvoicesPage() {
                         disabled={paymentSubmitting}
                         className="ui-primary-button"
                       >
-                        {paymentSubmitting ? 'Recording payment...' : 'Confirm payment'}
+                        {paymentSubmitting ? 'Registrando pagamento...' : 'Confirmar pagamento'}
                       </button>
                     </div>
                   </form>
                 ) : (
                   <div className={billingPanelClass}>
-                    <p className={billingPanelEyebrowClass}>Action</p>
-                    <p className={billingPanelTitleClass}>Next collection action</p>
+                    <p className={billingPanelEyebrowClass}>Acao</p>
+                    <p className={billingPanelTitleClass}>Proxima acao de cobranca</p>
                     <p className={billingPanelTextClass}>
-                      Use the payment form when cash has actually been received. That keeps invoice status, payment history, and the tenant ledger aligned.
+                      Use o formulario de pagamento quando o valor realmente entrar. Isso mantem status da fatura, historico de pagamento e ledger do ambiente alinhados.
                     </p>
                     <div className="mt-5 flex flex-wrap gap-3">
                       <PermissionGuard permission="pet.invoice.update">
@@ -1472,7 +1516,7 @@ export function PetInvoicesPage() {
                             onClick={() => beginPayment(reviewedInvoice)}
                             className="ui-primary-button"
                           >
-                            Register payment
+                            Registrar pagamento
                           </button>
                         ) : null}
                       </PermissionGuard>
@@ -1482,7 +1526,7 @@ export function PetInvoicesPage() {
                           onClick={() => beginEdit(reviewedInvoice)}
                           className="ui-secondary-button"
                         >
-                          Review invoice data
+                          Revisar dados da fatura
                         </button>
                       </PermissionGuard>
                     </div>
@@ -1490,16 +1534,16 @@ export function PetInvoicesPage() {
                 )}
 
                 <div className={billingPanelClass}>
-                  <p className={billingPanelEyebrowClass}>Payments</p>
-                  <p className={billingPanelTitleClass}>Payment history</p>
+                  <p className={billingPanelEyebrowClass}>Pagamentos</p>
+                  <p className={billingPanelTitleClass}>Historico de pagamentos</p>
                   <p className={billingPanelTextClass}>
-                    These records reflect settlement events already attached to the selected invoice.
+                    Estes registros refletem os eventos de liquidacao ja vinculados a fatura selecionada.
                   </p>
 
                   <div className="mt-4 space-y-3">
                     {reviewedInvoice.payments.length === 0 ? (
                       <div className="ui-notice-warning">
-                        No payment has been recorded for this invoice yet.
+                        Ainda nao ha pagamento registrado para esta fatura.
                       </div>
                     ) : (
                       reviewedInvoice.payments.map((payment) => (
@@ -1513,14 +1557,14 @@ export function PetInvoicesPage() {
                                 {formatCurrency(payment.amount)} via {formatMethodLabel(payment.method)}
                               </p>
                               <p className={`mt-1 ${sharedCompactTextClass}`}>
-                                Received {formatDateTime(payment.receivedAt)}
+                                Recebido em {formatDateTime(payment.receivedAt)}
                               </p>
                             </div>
                             <StatusBadge status={payment.status} />
                           </div>
                           {payment.referenceCode ? (
                             <p className={`mt-3 ${sharedCompactTextClass}`}>
-                              Reference {payment.referenceCode}
+                              Referencia {payment.referenceCode}
                             </p>
                           ) : null}
                           {payment.notes ? (
@@ -1536,10 +1580,10 @@ export function PetInvoicesPage() {
               <div className={billingPanelClass}>
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>
-                    <p className={billingPanelEyebrowClass}>Ledger</p>
-                    <p className={billingPanelTitleClass}>Cash movement visibility</p>
+                    <p className={billingPanelEyebrowClass}>Caixa</p>
+                    <p className={billingPanelTitleClass}>Visibilidade dos movimentos</p>
                     <p className={billingPanelTextClass}>
-                      Review how this invoice affected the tenant cash ledger without leaving the PetFlow workflow.
+                      Revise como esta fatura afetou o caixa do ambiente sem sair do fluxo do PetFlow.
                     </p>
                   </div>
                   {canReadFinanceCash ? <StatusBadge status="info" /> : <StatusBadge status="restricted" />}
@@ -1547,11 +1591,11 @@ export function PetInvoicesPage() {
 
                 {!canReadFinanceCash ? (
                   <div className="ui-notice-neutral mt-4">
-                    Finance cash visibility requires the <strong>finance.cash.read</strong> permission.
+                    A visibilidade de caixa exige a permissao <strong>finance.cash.read</strong>.
                   </div>
                 ) : cashMovements.length === 0 ? (
                   <div className="ui-notice-warning mt-4">
-                    No cash movement has been generated for this invoice yet.
+                    Nenhum movimento de caixa foi gerado para esta fatura ate agora.
                   </div>
                 ) : (
                   <div className="mt-4 grid gap-3">
@@ -1566,13 +1610,13 @@ export function PetInvoicesPage() {
                               {formatDirectionLabel(movement.direction)} • {formatCurrency(movement.amount, movement.currency)}
                             </p>
                             <p className={`mt-1 ${sharedCompactTextClass}`}>
-                              {formatCategoryLabel(movement.category)} on {formatDateTime(movement.occurredAt)}
+                              {formatCategoryLabel(movement.category)} em {formatDateTime(movement.occurredAt)}
                             </p>
                           </div>
                           <StatusBadge status={movement.direction === 'IN' ? 'paid' : 'canceled'} />
                         </div>
                         <p className={`mt-3 ${sharedCompactTextClass}`}>
-                          {movement.description ?? 'No operator description captured for this cash movement.'}
+                          {movement.description ?? 'Nenhuma descricao operacional foi registrada para este movimento de caixa.'}
                         </p>
                       </div>
                     ))}
@@ -1585,8 +1629,8 @@ export function PetInvoicesPage() {
 
         <ConfirmDialog
           open={deleteCandidate !== null}
-          title="Delete invoice?"
-          description="The linked finance record remains part of the audit trail. Use this only when the tenant invoice itself should be removed from active operations."
+          title="Excluir fatura?"
+          description="O registro financeiro vinculado permanece na trilha de auditoria. Use esta acao apenas quando a fatura do ambiente realmente precisar sair da operacao ativa."
           onConfirm={handleConfirmDelete}
           onCancel={() => setDeleteCandidate(null)}
         />

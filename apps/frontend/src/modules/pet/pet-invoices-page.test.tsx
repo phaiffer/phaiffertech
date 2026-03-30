@@ -108,10 +108,10 @@ describe('PetInvoicesPage', () => {
         paidAmount: 50,
         outstandingAmount: 100,
         status: 'ISSUED',
-        description: 'Vaccination bundle',
+        description: 'Pacote de vacinacao',
         businessContextType: 'APPOINTMENT',
         businessContextId: 'appointment-1',
-        businessContextLabel: 'Vaccination package',
+        businessContextLabel: 'Pacote de vacinacao',
         issuedAt: '2026-03-18T10:00:00Z',
         dueAt: '2026-03-20T10:00:00Z',
         paidAt: null,
@@ -126,7 +126,7 @@ describe('PetInvoicesPage', () => {
             amount: 50,
             receivedAt: '2026-03-18T12:00:00Z',
             referenceCode: 'PIX-001',
-            notes: 'Initial deposit',
+            notes: 'Entrada inicial',
             createdAt: '2026-03-18T12:00:00Z',
             updatedAt: '2026-03-18T12:00:00Z'
           }
@@ -137,8 +137,8 @@ describe('PetInvoicesPage', () => {
       id: 'finance-1',
       sourceModule: 'PET',
       counterpartyName: 'Ana Costa',
-      businessContextLabel: 'Vaccination package',
-      description: 'Vaccination bundle',
+      businessContextLabel: 'Pacote de vacinacao',
+      description: 'Pacote de vacinacao',
       status: 'ISSUED',
       currency: 'BRL',
       totalAmount: 150,
@@ -163,7 +163,7 @@ describe('PetInvoicesPage', () => {
         amount: 50,
         currency: 'BRL',
         occurredAt: '2026-03-18T12:00:00Z',
-        description: 'PIX payment received',
+        description: 'Pagamento PIX recebido',
         createdAt: '2026-03-18T12:00:00Z',
         updatedAt: '2026-03-18T12:00:00Z'
       }
@@ -177,22 +177,22 @@ describe('PetInvoicesPage', () => {
       expect(petServiceMock.listInvoices).toHaveBeenCalledTimes(1);
     });
 
-    expect(screen.getByText('Next cycle billing preview')).toBeInTheDocument();
-    expect(screen.getByText('Banho e tosa 4x · 2 session(s) left')).toBeInTheDocument();
-    expect(screen.getByText('Renewal email is part of the demo when the plan reaches the penultimate visit.')).toBeInTheDocument();
-    expect(screen.getByText('Open balance')).toBeInTheDocument();
+    expect(screen.getByText('Projecao do proximo ciclo')).toBeInTheDocument();
+    expect(screen.getByText('Banho e tosa 4x · 2 sessoes restantes')).toBeInTheDocument();
+    expect(screen.getByText('O email de renovacao entra na demo quando o plano chega a visita penultima.')).toBeInTheDocument();
+    expect(screen.getByText('Saldo em aberto')).toBeInTheDocument();
     expect(screen.getAllByText('Ana Costa').length).toBeGreaterThan(0);
 
-    fireEvent.click(screen.getByRole('button', { name: 'View finance record' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Ver registro financeiro' }));
 
     await waitFor(() => {
       expect(financeServiceMock.getInvoice).toHaveBeenCalledWith('finance-1');
       expect(financeServiceMock.listCashMovements).toHaveBeenCalledWith(0, 8, { invoiceId: 'finance-1' });
     });
 
-    expect(screen.getByText('Linked finance view')).toBeInTheDocument();
-    expect(screen.getByText('Linked finance document')).toBeInTheDocument();
-    expect(screen.getByText('Cash movement visibility')).toBeInTheDocument();
-    expect(screen.getByText('PIX payment received')).toBeInTheDocument();
+    expect(screen.getByText('Visao financeira vinculada')).toBeInTheDocument();
+    expect(screen.getByText('Documento financeiro vinculado')).toBeInTheDocument();
+    expect(screen.getByText('Visibilidade dos movimentos')).toBeInTheDocument();
+    expect(screen.getByText('Pagamento PIX recebido')).toBeInTheDocument();
   });
 });

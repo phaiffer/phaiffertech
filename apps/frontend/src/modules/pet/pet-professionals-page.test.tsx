@@ -74,7 +74,7 @@ describe('PetProfessionalsPage', () => {
     const phoneInput = screen.getByLabelText(/phone/i);
 
     expect(phoneInput).toHaveAttribute('id', 'professional-phone');
-    expect(phoneInput).toHaveAttribute('name', 'tel');
+    expect(phoneInput).toHaveAttribute('name', 'professionalPhone');
     expect(phoneInput).toHaveAttribute('type', 'tel');
     expect(phoneInput).toHaveAttribute('autocomplete', 'section-professional tel');
     expect(phoneInput).toHaveAttribute('inputmode', 'tel');

@@ -76,10 +76,10 @@ function resolveActionCapability(action: ModuleWorkspaceAction) {
 
   if (action.available === false) {
     return unavailableCapability({
-      title: action.restrictionTitle ?? 'Unavailable in the current workspace',
+      title: action.restrictionTitle ?? 'Indisponivel no ambiente atual',
       description: action.restrictionDescription ?? action.description,
-      status: action.status ?? 'restricted',
-      actionLabel: 'Unavailable in current workspace role'
+      status: action.status ?? 'restrito',
+      actionLabel: 'Indisponivel para este perfil'
     });
   }
 
@@ -98,10 +98,10 @@ const interactiveWorkspaceCardClass =
   `${sharedMutedSurfaceClass} p-5 transition-all duration-200 hover:border-[color:var(--tenant-accent)] hover:shadow-md`;
 
 const disabledWorkspaceCardClass = `${sharedDashedSurfaceClass} p-5 opacity-90`;
-const workspaceLabelClass = 'text-xs font-semibold uppercase tracking-[0.18em] text-slate-700';
+const workspaceLabelClass = 'text-xs font-semibold uppercase tracking-[0.18em] text-slate-900';
 const workspaceValueClass = 'mt-3 text-[1.9rem] font-bold tracking-[-0.04em] text-slate-900';
-const workspaceSupportingCopyClass = 'mt-2 text-sm leading-6 text-slate-700';
-const workspaceBodyCopyClass = 'text-sm leading-6 text-slate-700';
+const workspaceSupportingCopyClass = 'mt-2 text-sm leading-6 text-slate-800';
+const workspaceBodyCopyClass = 'text-sm leading-6 text-slate-800';
 
 export function ModuleWorkspaceHero({
   eyebrow,
@@ -370,7 +370,7 @@ export function ModuleWorkspaceGuidance({
               </div>
               <p className={workspaceSupportingCopyClass}>{step.description}</p>
               <span className="mt-5 inline-flex text-sm font-semibold text-[color:var(--tenant-accent)]">
-                {href ? step.capability?.actionLabel ?? 'Open next step' : 'Guided workspace step'}
+                {href ? step.capability?.actionLabel ?? 'Abrir proximo passo' : 'Etapa guiada do ambiente'}
               </span>
             </>
           );

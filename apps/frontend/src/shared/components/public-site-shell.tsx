@@ -172,11 +172,11 @@ export function PublicSiteShell({ children }: PublicSiteShellProps) {
         <div className="border-t border-slate-200 bg-white/88">
           <div className={`${publicSiteContainerClass} flex flex-col gap-3 py-5 md:flex-row md:items-center md:justify-between`}>
             <div className="text-sm text-slate-700">{t.footerCopyright}</div>
-            <div className="flex w-full max-w-[9rem] flex-col items-start gap-2 md:items-end md:text-right">
-              <span className="text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-600">Platform signature</span>
-              <div className="flex h-[6.25rem] w-full items-center justify-center rounded-[1.25rem] bg-[linear-gradient(180deg,rgba(16,185,129,0.045),rgba(255,255,255,0.96))]">
+            <div className="flex w-full max-w-[10rem] flex-col items-start gap-2 md:items-end md:text-right">
+              <span className="text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-600">by PhaifferTech</span>
+              <div className="flex h-28 w-full items-center justify-center rounded-[1.25rem] bg-[linear-gradient(180deg,rgba(16,185,129,0.04),rgba(255,255,255,0.96))] p-2">
                 <BrandBanner
-                  className="aspect-[3/2] h-[70%] max-w-[82%] rounded-[1rem]"
+                  className="aspect-[3/2] h-full max-w-full rounded-[0.85rem]"
                   imageClassName="h-full w-full object-contain object-center"
                 />
               </div>

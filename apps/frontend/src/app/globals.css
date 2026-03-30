@@ -402,7 +402,7 @@ body {
 }
 
 .ui-input-control::placeholder {
-  color: color-mix(in srgb, var(--muted-foreground) 72%, var(--foreground) 28%);
+  color: color-mix(in srgb, var(--muted-foreground) 58%, var(--foreground) 42%);
   font-weight: 400;
   opacity: 1;
 }
@@ -489,6 +489,12 @@ select.ui-input-control option {
 
 input[type='number'].ui-input-control {
   -moz-appearance: textfield;
+}
+
+input[type='search'].ui-input-control::-webkit-search-decoration,
+input[type='search'].ui-input-control::-webkit-search-cancel-button {
+  -webkit-appearance: none;
+  display: none;
 }
 
 input[type='number'].ui-input-control::-webkit-inner-spin-button,

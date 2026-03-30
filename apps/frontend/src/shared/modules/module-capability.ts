@@ -28,10 +28,10 @@ type CapabilityInput = {
 
 type ModuleBoundaryModule = Pick<ModuleItem, 'moduleEnabled' | 'featureFlagEnabled' | 'available'>;
 
-const defaultActionLabel = 'Open workspace flow';
-const defaultLockedActionLabel = 'Unavailable in current workspace';
-const defaultRoleLockedActionLabel = 'Unavailable in current workspace role';
-const defaultSetupActionLabel = 'Open setup flow';
+const defaultActionLabel = 'Abrir fluxo do ambiente';
+const defaultLockedActionLabel = 'Indisponivel neste ambiente';
+const defaultRoleLockedActionLabel = 'Indisponivel para este perfil';
+const defaultSetupActionLabel = 'Abrir fluxo de configuracao';
 
 export function readyCapability(status?: string | null): ModuleCapability {
   return {
@@ -46,7 +46,7 @@ export function permissionCapability({
   title,
   description,
   actionLabel = defaultRoleLockedActionLabel,
-  status = 'no permission'
+  status = 'sem permissao'
 }: CapabilityInput): ModuleCapability {
   return {
     kind: 'no-permission',
@@ -62,8 +62,8 @@ export function featureDisabledCapability({
   title,
   description,
   interactive = false,
-  actionLabel = interactive ? defaultActionLabel : 'Feature disabled in workspace',
-  status = 'feature disabled'
+  actionLabel = interactive ? defaultActionLabel : 'Recurso desativado neste ambiente',
+  status = 'recurso desativado'
 }: CapabilityInput): ModuleCapability {
   return {
     kind: 'feature-disabled',
@@ -80,7 +80,7 @@ export function notConfiguredCapability({
   description,
   interactive = true,
   actionLabel = interactive ? defaultSetupActionLabel : defaultLockedActionLabel,
-  status = 'setup required'
+  status = 'configuracao necessaria'
 }: CapabilityInput): ModuleCapability {
   return {
     kind: 'not-configured',
@@ -97,7 +97,7 @@ export function noDataCapability({
   description,
   interactive = true,
   actionLabel = defaultActionLabel,
-  status = 'no data'
+  status = 'sem dados'
 }: CapabilityInput): ModuleCapability {
   return {
     kind: 'no-data',
@@ -114,7 +114,7 @@ export function unavailableCapability({
   description,
   interactive = false,
   actionLabel = defaultLockedActionLabel,
-  status = 'unavailable'
+  status = 'indisponivel'
 }: CapabilityInput): ModuleCapability {
   return {
     kind: 'unavailable',
@@ -134,24 +134,24 @@ export function resolveModuleBoundaryCapability(
     return {
       kind: 'not-contracted',
       interactive: false,
-      status: 'unavailable',
-      title: `${moduleCode} is not contracted for this workspace`,
-      description: `This tenant does not currently expose the ${moduleCode} module. Ask your tenant administrator to add it to the workspace contract before trying again.`,
+      status: 'indisponivel',
+      title: `${moduleCode} nao esta contratado neste ambiente`,
+      description: `Este ambiente nao expoe o modulo ${moduleCode} no momento. Peca ao administrador para incluir o modulo no contrato do ambiente antes de tentar novamente.`,
       actionLabel: defaultLockedActionLabel
     };
   }
 
   if (!moduleItem.featureFlagEnabled) {
     return featureDisabledCapability({
-      title: `${moduleCode} is disabled in the current workspace`,
-      description: 'The module is contracted, but feature exposure is currently disabled for this workspace. Navigation stays blocked until the feature flag is re-enabled.'
+      title: `${moduleCode} esta desativado no ambiente atual`,
+      description: 'O modulo esta contratado, mas sua exposicao esta desativada neste ambiente. A navegacao continua bloqueada ate a feature ser reativada.'
     });
   }
 
   if (!moduleItem.available) {
     return unavailableCapability({
-      title: `${moduleCode} is unavailable in the current workspace`,
-      description: 'The module is contracted, but the current workspace context is not ready to open it yet. Access remains blocked until workspace availability is restored.'
+      title: `${moduleCode} esta indisponivel no ambiente atual`,
+      description: 'O modulo esta contratado, mas o contexto atual ainda nao esta pronto para abri-lo. O acesso segue bloqueado ate a disponibilidade do ambiente ser restaurada.'
     });
   }
 

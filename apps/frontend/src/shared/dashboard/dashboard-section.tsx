@@ -1,6 +1,5 @@
 import { DashboardSection as DashboardSectionType } from '@/shared/types/dashboard';
 import {
-  sharedCompactTextClass,
   sharedPanelSurfaceClass,
   sharedSectionHeadingClass
 } from '@/shared/components/public-visual-system';
@@ -27,14 +26,14 @@ export function DashboardSection({ section }: DashboardSectionProps) {
       <div className="mb-4">
         <h2 className={sharedSectionHeadingClass}>{section.title}</h2>
         {section.description && (
-          <p className={`mt-1 ${sharedCompactTextClass}`}>{section.description}</p>
+          <p className="mt-1 text-sm leading-6 text-slate-700">{section.description}</p>
         )}
       </div>
 
       {!hasContent ? (
         <EmptyStateCard
           title={section.title}
-          description="Nenhum dado disponível para esta seção no workspace atual."
+          description="Nenhum dado disponivel para esta secao no ambiente atual."
         />
       ) : (
         <div className="space-y-4">
@@ -43,7 +42,7 @@ export function DashboardSection({ section }: DashboardSectionProps) {
           <div className="grid gap-4 lg:grid-cols-2">
             {section.metrics.length > 0 && (
               <SimpleBarChart
-                title={`${section.title} Metrics`}
+                title={`${section.title} · Metricas`}
                 metrics={section.metrics}
                 emptyMessage="Nenhuma métrica disponível."
               />
@@ -51,7 +50,7 @@ export function DashboardSection({ section }: DashboardSectionProps) {
 
             {section.items.length > 0 && (
               <RecentItemsList
-                title={`${section.title} Recent Items`}
+                title={`${section.title} · Itens recentes`}
                 items={section.items}
                 emptyMessage="Nenhum item recente disponível."
               />
@@ -59,7 +58,7 @@ export function DashboardSection({ section }: DashboardSectionProps) {
 
             {section.timeSeries.length > 0 && (
               <SimpleLineChart
-                title={`${section.title} Trend`}
+                title={`${section.title} · Tendencia`}
                 points={section.timeSeries}
                 emptyMessage="Nenhum ponto temporal disponível."
               />

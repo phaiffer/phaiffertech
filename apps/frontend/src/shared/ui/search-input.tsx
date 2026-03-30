@@ -31,7 +31,7 @@ export function SearchInput({
   const searchInputClass = [
     sharedInputClass,
     sharedInputWithLeadingAccessoryClass,
-    '[--ui-input-padding-right:3.5rem] sm:[--ui-input-padding-right:3.75rem]',
+    '[--ui-input-padding-right:1.125rem]',
     className ?? ''
   ].filter(Boolean).join(' ');
 

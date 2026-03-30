@@ -55,7 +55,7 @@ export function RecentItemsList({ title, items, emptyMessage }: RecentItemsListP
                 <StatusBadge status={item.status} />
               </div>
               {item.timestamp ? (
-                <p className="mt-3 text-xs uppercase tracking-[0.16em] text-muted">
+                <p className="mt-3 text-xs uppercase tracking-[0.16em] text-slate-700">
                   {formatDateTime(item.timestamp)}
                 </p>
               ) : null}

@@ -32,13 +32,13 @@ export const sharedBodyTextClass = 'text-base leading-7 text-slate-700 sm:text-l
 
 export const sharedSupportingTextClass = 'text-sm leading-7 text-slate-700 sm:text-[15px] sm:leading-7';
 
-export const sharedCompactTextClass = 'text-sm leading-6 text-slate-700';
+export const sharedCompactTextClass = 'text-sm leading-6 text-slate-800';
 
 export const sharedSummaryCardClass =
   'rounded-2xl border border-slate-200/90 bg-[linear-gradient(180deg,rgba(16,185,129,0.05),rgba(255,255,255,0.99)_140px)] p-5 shadow-[0_16px_34px_-28px_rgba(15,23,42,0.16)]';
 
 export const sharedSummaryCardLabelClass =
-  'text-xs font-semibold uppercase tracking-[0.16em] text-slate-600';
+  'text-xs font-semibold uppercase tracking-[0.16em] text-slate-700';
 
 export const sharedReminderSurfaceClass =
   'rounded-2xl border border-emerald-100/80 bg-[linear-gradient(180deg,rgba(16,185,129,0.05),rgba(248,250,252,0.96)_120px)] p-4 shadow-[0_12px_28px_-24px_rgba(15,23,42,0.1)]';
@@ -82,7 +82,7 @@ export const sharedFormActionsClass = 'flex flex-wrap items-center gap-3 pt-1';
 
 export const sharedInlineActionsClass = 'flex flex-wrap items-center gap-2';
 
-export const sharedFieldHintClass = 'text-xs leading-5 text-slate-700';
+export const sharedFieldHintClass = 'text-xs leading-5 text-slate-800';
 
 export const sharedPrimaryButtonClass =
   'ui-primary-button';
@@ -100,14 +100,14 @@ export const sharedInputClass =
   'ui-input-control text-sm leading-5 tracking-[0.01em]';
 
 export const sharedInputLeadingAccessoryClass =
-  'pointer-events-none absolute inset-y-0 left-0 z-10 flex w-[3.65rem] items-center justify-center text-slate-400';
+  'pointer-events-none absolute inset-y-0 left-0 z-10 flex w-[3.875rem] items-center justify-center text-slate-400';
 
 export const sharedInputTrailingAccessoryClass =
-  'pointer-events-none absolute inset-y-0 right-0 z-10 flex min-w-[4.75rem] items-center justify-center px-[1.15rem] text-slate-400';
+  'pointer-events-none absolute inset-y-0 right-0 z-10 flex min-w-[4.5rem] items-center justify-center px-[1rem] text-slate-400';
 
-export const sharedInputWithLeadingAccessoryClass = '[--ui-input-padding-left:3.65rem]';
+export const sharedInputWithLeadingAccessoryClass = '[--ui-input-padding-left:3.875rem]';
 
-export const sharedInputWithTrailingAccessoryClass = '[--ui-input-padding-right:4.75rem]';
+export const sharedInputWithTrailingAccessoryClass = '[--ui-input-padding-right:4.5rem]';
 
 export const sharedTextareaClass = `${sharedInputClass} min-h-32 resize-y py-3.5`;
 

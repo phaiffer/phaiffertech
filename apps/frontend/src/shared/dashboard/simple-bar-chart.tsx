@@ -1,5 +1,4 @@
 import {
-  sharedCompactTextClass,
   sharedPanelSurfaceClass,
   sharedSectionHeadingClass
 } from '@/shared/components/public-visual-system';
@@ -30,7 +29,7 @@ export function SimpleBarChart({ title, metrics, emptyMessage }: SimpleBarChartP
       <div className="mt-4 space-y-3">
         {metrics.map((metric) => (
           <div key={metric.key}>
-            <div className={`mb-2 flex items-center justify-between ${sharedCompactTextClass}`}>
+            <div className="mb-2 flex items-center justify-between text-sm leading-6 text-slate-800">
               <span>{metric.label}</span>
               <span className="font-semibold text-foreground">{formatValue(metric.value)}</span>
             </div>

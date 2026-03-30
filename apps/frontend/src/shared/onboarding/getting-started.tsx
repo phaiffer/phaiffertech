@@ -91,7 +91,7 @@ function actionLabelClasses(variant: 'default' | 'dark') {
 }
 
 export function GettingStartedChecklist({
-  eyebrow = 'Getting Started',
+  eyebrow = 'Primeiros passos',
   title,
   description,
   steps,
@@ -116,14 +116,14 @@ export function GettingStartedChecklist({
         </div>
         <div className="flex flex-wrap gap-2">
           <span className={`inline-flex items-center rounded-full border px-3 py-2 text-xs font-semibold uppercase tracking-[0.16em] ${accentChipClasses(variant)}`}>
-            Actionable now {actionableSteps}
+            Disponiveis agora {actionableSteps}
           </span>
           <span className={`inline-flex items-center rounded-full border px-3 py-2 text-xs font-semibold uppercase tracking-[0.16em] ${neutralChipClasses(variant)}`}>
-            Guided steps {guidedSteps}
+            Etapas guiadas {guidedSteps}
           </span>
           {blockedSteps > 0 ? (
             <span className={`inline-flex items-center rounded-full border px-3 py-2 text-xs font-semibold uppercase tracking-[0.16em] ${neutralChipClasses(variant)}`}>
-              Needs access {blockedSteps}
+              Exige acesso {blockedSteps}
             </span>
           ) : null}
         </div>
@@ -150,7 +150,7 @@ export function GettingStartedChecklist({
               </div>
               <p className={`mt-4 text-sm leading-6 ${stepDescriptionClasses(variant)}`}>{step.description}</p>
               <span className={`mt-5 inline-flex text-sm font-semibold ${actionLabelClasses(variant)}`}>
-                {step.href ? step.actionLabel ?? 'Open next step' : step.actionLabel ?? 'Guided step'}
+                {step.href ? step.actionLabel ?? 'Abrir proximo passo' : step.actionLabel ?? 'Etapa guiada'}
               </span>
             </>
           );

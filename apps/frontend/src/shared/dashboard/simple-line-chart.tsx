@@ -48,7 +48,7 @@ export function SimpleLineChart({ title, points, emptyMessage }: SimpleLineChart
             points={polyline}
           />
         </svg>
-        <div className="mt-3 grid gap-2 text-xs uppercase tracking-[0.16em] text-muted md:grid-cols-4">
+        <div className="mt-3 grid gap-2 text-xs uppercase tracking-[0.16em] text-slate-700 md:grid-cols-4">
           {points.map((point) => (
             <div key={point.label} className={`${sharedMutedSurfaceClass} px-3 py-2`} style={workspaceMutedSurfaceStyle}>
               <span className="block text-[11px]">{point.label}</span>

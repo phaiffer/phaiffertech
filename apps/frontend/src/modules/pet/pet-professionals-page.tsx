@@ -63,7 +63,7 @@ function TeamSnapshotCard({
     <div className={`rounded-2xl border p-5 shadow-[0_16px_34px_-28px_rgba(15,23,42,0.16)] ${toneClass}`}>
       <div className="flex items-start justify-between gap-3">
         <div>
-          <p className={`text-xs font-semibold uppercase tracking-[0.16em] ${tone === 'accent' ? 'text-white/80' : 'text-slate-700'}`}>
+          <p className={`text-xs font-semibold uppercase tracking-[0.16em] ${tone === 'accent' ? 'text-white/80' : 'text-slate-800'}`}>
             {label}
           </p>
           <p className={`mt-3 text-3xl font-bold tracking-[-0.03em] ${tone === 'accent' ? 'text-white' : 'text-slate-900'}`}>
@@ -255,7 +255,7 @@ export function PetProfessionalsPage() {
       render: (item) => (
         <div className="space-y-1">
           <p className="font-medium text-slate-900">{item.name}</p>
-          <p className="text-xs text-slate-700">
+          <p className="text-xs text-slate-800">
             {item.specialty ?? messages.columns.defaultSpecialty}
           </p>
         </div>
@@ -267,7 +267,7 @@ export function PetProfessionalsPage() {
       render: (item) => (
         <div className="space-y-1">
           <p className="text-sm text-slate-900">{item.email ?? messages.columns.noEmail}</p>
-          <p className="text-xs text-slate-700">{item.phone ?? messages.columns.noPhone}</p>
+          <p className="text-xs text-slate-800">{item.phone ?? messages.columns.noPhone}</p>
         </div>
       )
     },
@@ -281,12 +281,12 @@ export function PetProfessionalsPage() {
               ? `${(item.commissionRate * 100).toLocaleString(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}%`
               : '—'}
           </p>
-          <p className="text-xs text-slate-700">
+          <p className="text-xs text-slate-800">
             {monthlyAppointments[item.id]
               ? `${monthlyAppointments[item.id].count} · ${formatCurrencyForLocale(locale, monthlyAppointments[item.id].total)}`
               : messages.columns.noCompletedServices}
           </p>
-          <p className="text-xs text-slate-700">
+          <p className="text-xs text-slate-800">
             {item.commissionRate != null
               ? messages.columns.ruleVisible
               : messages.columns.defineRate}
@@ -304,7 +304,7 @@ export function PetProfessionalsPage() {
         return (
           <div className="space-y-2">
             <StatusBadge status={status} />
-            <p className="text-xs text-slate-700">
+            <p className="text-xs text-slate-800">
               {item.commissionRate == null
                 ? messages.columns.needsSetup
                 : monthlySummary
@@ -442,7 +442,7 @@ export function PetProfessionalsPage() {
             <FormInput label={messages.form.licenseNumber} value={licenseNumber} onChange={setLicenseNumber} />
             <FormInput
               id="professional-phone"
-              name="tel"
+              name="professionalPhone"
               label={messages.form.phone}
               value={phone}
               onChange={(v) => setPhone(maskPhoneInput(v))}
@@ -485,7 +485,7 @@ export function PetProfessionalsPage() {
 
             <div className={`md:col-span-2 ${sharedReminderSurfaceClass}`}>
               <p className="text-sm font-medium text-[color:var(--app-shell-heading)]">{messages.form.reminderTitle}</p>
-              <p className="mt-1 text-xs text-slate-700">
+              <p className="mt-1 text-xs text-slate-800">
                 {messages.form.reminderDescription}
               </p>
             </div>

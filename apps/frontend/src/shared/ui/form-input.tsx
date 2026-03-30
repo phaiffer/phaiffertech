@@ -69,6 +69,11 @@ export function FormInput({
         ? 'tel'
         : undefined
   );
+  const resolvedName = name ?? (
+    isEmailField
+      ? 'email'
+      : undefined
+  );
   const resolvedAutoCapitalize = autoCapitalize ?? (isEmailField || isPhoneField ? 'none' : undefined);
   const resolvedAutoCorrect = autoCorrect ?? (isEmailField || isPhoneField ? 'off' : undefined);
   const resolvedSpellCheck = spellCheck ?? (isEmailField || isPhoneField ? false : undefined);
@@ -98,7 +103,7 @@ export function FormInput({
         {leadingIcon ? <span className={sharedInputLeadingAccessoryClass}>{leadingIcon}</span> : null}
         <input
           id={inputId}
-          name={name}
+          name={resolvedName}
           type={type}
           value={value}
           onChange={(event) => onChange(event.target.value)}

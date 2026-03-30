@@ -389,12 +389,12 @@ export function PetClientsPage({ initialView = 'list' }: PetClientsPageProps) {
                   <FormSelect label="Status" value={status} options={formStatusOptions} onChange={setStatus} />
                   <FormInput
                     id="client-email"
-                    name="email"
+                    name="clientEmail"
                     label="E-mail"
                     value={email}
                     onChange={setEmail}
                     type="email"
-                    autoComplete="email"
+                    autoComplete="section-client email"
                     inputMode="email"
                     autoCapitalize="none"
                     autoCorrect="off"
@@ -404,12 +404,12 @@ export function PetClientsPage({ initialView = 'list' }: PetClientsPageProps) {
                   />
                   <FormInput
                     id="client-phone"
-                    name="tel"
+                    name="clientPhone"
                     label="Telefone"
                     value={phone}
                     onChange={(v) => setPhone(maskPhoneInput(v))}
                     type="tel"
-                    autoComplete="tel"
+                    autoComplete="section-client tel"
                     inputMode="tel"
                     autoCapitalize="none"
                     autoCorrect="off"
