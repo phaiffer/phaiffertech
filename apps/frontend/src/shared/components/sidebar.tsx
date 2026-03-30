@@ -19,6 +19,8 @@ import {
   ChevronLeft,
   ChevronRight,
   ChevronDown,
+  Stethoscope,
+  ShoppingCart,
 } from 'lucide-react';
 import { useAuth } from '@/shared/auth/use-auth';
 import { BrandMark } from '@/shared/components/brand-assets';
@@ -106,6 +108,24 @@ export function Sidebar() {
         moduleCode: 'PET',
         group: 'principal',
         icon: <Calendar className="h-4 w-4" />,
+      },
+      {
+        href: '/pet/clinic',
+        label: petMessages.clinic,
+        anyOf: ['pet.medical-record.read'],
+        anyEntitlements: petSubmoduleEntitlements,
+        moduleCode: 'PET',
+        group: 'principal',
+        icon: <Stethoscope className="h-4 w-4" />,
+      },
+      {
+        href: '/pet/pos',
+        label: petMessages.pos,
+        anyOf: ['pet.product.read', 'pet.invoice.write'],
+        anyEntitlements: petSubmoduleEntitlements,
+        moduleCode: 'PET',
+        group: 'principal',
+        icon: <ShoppingCart className="h-4 w-4" />,
       },
       {
         href: '/pet/plans',

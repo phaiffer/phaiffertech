@@ -25,6 +25,8 @@ export function PetModuleSubnav() {
     { href: '/pet/clients', label: t.clients },
     { href: '/pet/pets', label: t.pets },
     { href: '/pet/appointments', label: t.appointments },
+    { href: '/pet/clinic', label: t.clinic },
+    { href: '/pet/pos', label: t.pos },
     { href: '/pet/plans', label: t.plans },
     { href: '/pet/inventory', label: t.inventory },
     { href: '/pet/invoices', label: t.invoices },
