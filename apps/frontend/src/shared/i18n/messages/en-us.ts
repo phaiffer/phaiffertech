@@ -129,6 +129,9 @@ export const enUSMessages: AppMessages = {
     clients: 'Clients',
     pets: 'Pets',
     appointments: 'Appointments',
+    clinic: 'Clinic',
+    pos: 'POS',
+    finance: 'Finance',
     plans: 'Plans',
     inventory: 'Inventory',
     invoices: 'Billing',
@@ -662,6 +665,270 @@ export const enUSMessages: AppMessages = {
     dialog: {
       title: 'Remove team member?',
       description: '"{name}" will be removed from this workspace.'
+    }
+  },
+  petFinance: {
+    eyebrow: 'Financial Management',
+    title: 'Cash and Finance',
+    description: 'Track income, expenses, payments, and the cash flow of your petshop.',
+    noPermission: 'You do not have permission to access the financial module.',
+    loading: 'Loading financial data...',
+    actions: {
+      newMovement: 'New movement',
+      newInvoice: 'New invoice',
+      viewReport: 'View report',
+      exportData: 'Export'
+    },
+    stats: {
+      todayBalance: 'Today balance',
+      todayIncome: 'Today income',
+      todayExpenses: 'Today expenses',
+      pendingPayments: 'Pending payments',
+      monthRevenue: 'Month revenue',
+      openInvoices: 'Open invoices'
+    },
+    cashMovements: {
+      title: 'Cash movements',
+      description: 'History of cash inflows and outflows.',
+      empty: 'No movements recorded today.',
+      emptyDescription: 'Record the first inflow or outflow to start tracking.',
+      inbound: 'Inbound',
+      outbound: 'Outbound',
+      categories: {
+        sale: 'Sale',
+        service: 'Service',
+        refund: 'Refund',
+        expense: 'Expense',
+        withdrawal: 'Withdrawal',
+        deposit: 'Deposit',
+        adjustment: 'Adjustment',
+        other: 'Other'
+      }
+    },
+    invoices: {
+      title: 'Recent invoices',
+      description: 'Track the status of issued invoices.',
+      empty: 'No invoices found.',
+      status: {
+        draft: 'Draft',
+        issued: 'Issued',
+        paid: 'Paid',
+        partiallyPaid: 'Partially paid',
+        overdue: 'Overdue',
+        canceled: 'Canceled'
+      }
+    },
+    payments: {
+      title: 'Recent payments',
+      description: 'Latest payments received.',
+      empty: 'No payments recorded.',
+      methods: {
+        cash: 'Cash',
+        credit: 'Credit',
+        debit: 'Debit',
+        pix: 'PIX',
+        transfer: 'Transfer',
+        check: 'Check',
+        other: 'Other'
+      }
+    },
+    form: {
+      direction: 'Direction',
+      category: 'Category',
+      amount: 'Amount',
+      description: 'Description',
+      descriptionPlaceholder: 'Describe the movement...',
+      date: 'Date',
+      save: 'Save',
+      cancel: 'Cancel'
+    },
+    filters: {
+      title: 'Filters',
+      period: 'Period',
+      direction: 'Direction',
+      category: 'Category',
+      today: 'Today',
+      thisWeek: 'This week',
+      thisMonth: 'This month',
+      lastMonth: 'Last month',
+      allDirections: 'All directions',
+      allCategories: 'All categories'
+    }
+  },
+  petTimeline: {
+    eyebrow: 'Clinical History',
+    title: 'Pet Timeline',
+    description: 'Complete history of appointments, vaccinations, medical records, and prescriptions.',
+    noPermission: 'You do not have permission to view the clinical history.',
+    loading: 'Loading clinical history...',
+    petNotFound: 'Pet not found.',
+    backToPets: 'Back to pets',
+    filters: {
+      title: 'Filters',
+      allTypes: 'All types',
+      period: 'Period',
+      allTime: 'All time',
+      lastWeek: 'Last week',
+      lastMonth: 'Last month',
+      last3Months: 'Last 3 months',
+      lastYear: 'Last year'
+    },
+    events: {
+      empty: 'No clinical events recorded for this pet.',
+      emptyDescription: 'Register medical records, vaccinations, or prescriptions to build the clinical history.',
+      medicalRecord: 'Medical Record',
+      vaccination: 'Vaccination',
+      prescription: 'Prescription',
+      appointment: 'Appointment'
+    },
+    sections: {
+      summary: 'Clinical summary',
+      vaccinations: 'Vaccination card',
+      prescriptions: 'Recent prescriptions',
+      records: 'Medical records'
+    },
+    stats: {
+      totalEvents: 'Total events',
+      vaccinations: 'Vaccines applied',
+      records: 'Medical records',
+      prescriptions: 'Prescriptions',
+      lastVisit: 'Last visit'
+    },
+    actions: {
+      addRecord: 'New record',
+      addVaccine: 'Add vaccine',
+      addPrescription: 'New prescription',
+      viewDetails: 'View details',
+      printHistory: 'Print history'
+    }
+  },
+  petPOS: {
+    eyebrow: 'Point of Sale',
+    title: 'POS - Sales',
+    description: 'Quick interface for selling products and services at the petshop counter.',
+    noPermission: 'You do not have permission to access the POS.',
+    loading: 'Loading products...',
+    actions: {
+      newSale: 'New sale',
+      checkout: 'Checkout',
+      cancel: 'Cancel',
+      addItem: 'Add',
+      removeItem: 'Remove',
+      clearCart: 'Clear cart'
+    },
+    cart: {
+      title: 'Cart',
+      empty: 'Cart is empty',
+      emptyDescription: 'Add products or services to start a sale.',
+      items: 'items',
+      subtotal: 'Subtotal',
+      discount: 'Discount',
+      total: 'Total',
+      quantity: 'Qty'
+    },
+    products: {
+      title: 'Products',
+      search: 'Search product...',
+      category: 'Category',
+      allCategories: 'All categories',
+      empty: 'No products found.',
+      inStock: 'In stock',
+      outOfStock: 'Out of stock',
+      lowStock: 'Low stock'
+    },
+    services: {
+      title: 'Services',
+      empty: 'No services registered.'
+    },
+    client: {
+      title: 'Client',
+      select: 'Select client',
+      search: 'Search client...',
+      noClient: 'Sale without client',
+      selected: 'Client selected'
+    },
+    payment: {
+      title: 'Payment',
+      method: 'Payment method',
+      methods: {
+        cash: 'Cash',
+        credit: 'Credit',
+        debit: 'Debit',
+        pix: 'PIX',
+        transfer: 'Transfer'
+      },
+      received: 'Amount received',
+      change: 'Change'
+    },
+    checkout: {
+      title: 'Checkout',
+      description: 'Review items and select payment method.',
+      confirm: 'Confirm sale',
+      processing: 'Processing...',
+      success: 'Sale completed successfully!',
+      error: 'Error processing sale.',
+      printReceipt: 'Print receipt'
+    },
+    stats: {
+      todaySales: 'Today sales',
+      todayRevenue: 'Today revenue',
+      avgTicket: 'Average ticket',
+      itemsSold: 'Items sold'
+    }
+  },
+  petClinic: {
+    eyebrow: 'Veterinary Clinic',
+    title: 'Clinical Dashboard',
+    description: 'Track clinical appointments, pending vaccinations, medical records, and prescriptions in one operational view.',
+    noPermission: 'You do not have permission to view the clinical dashboard.',
+    loading: 'Loading the clinical overview...',
+    actions: {
+      viewTimeline: 'View timeline',
+      newRecord: 'New record',
+      newVaccination: 'Add vaccination',
+      newPrescription: 'New prescription'
+    },
+    stats: {
+      clinicalAppointments: 'Clinical appointments',
+      clinicalAppointmentsDetail: 'consultations and procedures today',
+      pendingVaccinations: 'Pending vaccinations',
+      pendingVaccinationsDetail: 'next 14 days',
+      todayRecords: 'Today records',
+      todayRecordsDetail: 'clinical records created',
+      activePrescriptions: 'Active prescriptions',
+      activePrescriptionsDetail: 'last 30 days'
+    },
+    vaccinations: {
+      title: 'Pending vaccinations',
+      description: 'Pets with vaccinations due soon or already overdue',
+      empty: 'No pending vaccinations in the next 14 days.',
+      dueIn: 'Due in {days} days',
+      dueToday: 'Due today',
+      overdue: 'Overdue by {days} days',
+      scheduleAction: 'Schedule',
+      viewPet: 'View pet'
+    },
+    timeline: {
+      title: 'Recent clinical timeline',
+      description: 'Latest clinical events recorded',
+      viewAll: 'View full timeline',
+      empty: 'No clinical events recorded.',
+      types: {
+        medicalRecord: 'Medical Record',
+        vaccination: 'Vaccination',
+        prescription: 'Prescription'
+      }
+    },
+    appointments: {
+      title: 'Clinical appointments today',
+      description: 'Scheduled veterinary consultations and procedures',
+      empty: 'No clinical appointments scheduled for today.'
+    },
+    errors: {
+      timeline: 'Unable to load the clinical timeline.',
+      vaccinations: 'Unable to load pending vaccinations.',
+      records: 'Unable to load medical records.',
+      prescriptions: 'Unable to load prescriptions.'
     }
   },
   petInvoices: {

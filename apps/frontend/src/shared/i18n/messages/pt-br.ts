@@ -135,6 +135,9 @@ const ptBRMessages = {
     clients: 'Clientes',
     pets: 'Pets',
     appointments: 'Atendimentos',
+    clinic: 'Clínica',
+    pos: 'PDV',
+    finance: 'Financeiro',
     plans: 'Planos',
     inventory: 'Estoque',
     invoices: 'Cobranca',
@@ -668,6 +671,270 @@ const ptBRMessages = {
     dialog: {
       title: 'Remover profissional?',
       description: '"{name}" sera removido deste workspace.'
+    }
+  },
+  petFinance: {
+    eyebrow: 'Gestao Financeira',
+    title: 'Caixa e Financeiro',
+    description: 'Acompanhe entradas, saidas, pagamentos e o fluxo de caixa do seu petshop.',
+    noPermission: 'Voce nao possui permissao para acessar o modulo financeiro.',
+    loading: 'Carregando dados financeiros...',
+    actions: {
+      newMovement: 'Nova movimentacao',
+      newInvoice: 'Nova fatura',
+      viewReport: 'Ver relatorio',
+      exportData: 'Exportar'
+    },
+    stats: {
+      todayBalance: 'Saldo do dia',
+      todayIncome: 'Entradas hoje',
+      todayExpenses: 'Saidas hoje',
+      pendingPayments: 'Pagamentos pendentes',
+      monthRevenue: 'Receita do mes',
+      openInvoices: 'Faturas em aberto'
+    },
+    cashMovements: {
+      title: 'Movimentacoes de caixa',
+      description: 'Historico de entradas e saidas do caixa.',
+      empty: 'Nenhuma movimentacao registrada hoje.',
+      emptyDescription: 'Registre a primeira entrada ou saida para iniciar o controle.',
+      inbound: 'Entrada',
+      outbound: 'Saida',
+      categories: {
+        sale: 'Venda',
+        service: 'Servico',
+        refund: 'Reembolso',
+        expense: 'Despesa',
+        withdrawal: 'Retirada',
+        deposit: 'Deposito',
+        adjustment: 'Ajuste',
+        other: 'Outros'
+      }
+    },
+    invoices: {
+      title: 'Faturas recentes',
+      description: 'Acompanhe o status das faturas emitidas.',
+      empty: 'Nenhuma fatura encontrada.',
+      status: {
+        draft: 'Rascunho',
+        issued: 'Emitida',
+        paid: 'Paga',
+        partiallyPaid: 'Parcialmente paga',
+        overdue: 'Vencida',
+        canceled: 'Cancelada'
+      }
+    },
+    payments: {
+      title: 'Pagamentos recentes',
+      description: 'Ultimos pagamentos recebidos.',
+      empty: 'Nenhum pagamento registrado.',
+      methods: {
+        cash: 'Dinheiro',
+        credit: 'Credito',
+        debit: 'Debito',
+        pix: 'PIX',
+        transfer: 'Transferencia',
+        check: 'Cheque',
+        other: 'Outros'
+      }
+    },
+    form: {
+      direction: 'Direcao',
+      category: 'Categoria',
+      amount: 'Valor',
+      description: 'Descricao',
+      descriptionPlaceholder: 'Descreva a movimentacao...',
+      date: 'Data',
+      save: 'Salvar',
+      cancel: 'Cancelar'
+    },
+    filters: {
+      title: 'Filtros',
+      period: 'Periodo',
+      direction: 'Direcao',
+      category: 'Categoria',
+      today: 'Hoje',
+      thisWeek: 'Esta semana',
+      thisMonth: 'Este mes',
+      lastMonth: 'Mes passado',
+      allDirections: 'Todas as direcoes',
+      allCategories: 'Todas as categorias'
+    }
+  },
+  petTimeline: {
+    eyebrow: 'Historico Clinico',
+    title: 'Timeline do Pet',
+    description: 'Historico completo de atendimentos, vacinas, prontuarios e prescricoes.',
+    noPermission: 'Voce nao possui permissao para visualizar o historico clinico.',
+    loading: 'Carregando historico clinico...',
+    petNotFound: 'Pet nao encontrado.',
+    backToPets: 'Voltar para pets',
+    filters: {
+      title: 'Filtros',
+      allTypes: 'Todos os tipos',
+      period: 'Periodo',
+      allTime: 'Todo o periodo',
+      lastWeek: 'Ultima semana',
+      lastMonth: 'Ultimo mes',
+      last3Months: 'Ultimos 3 meses',
+      lastYear: 'Ultimo ano'
+    },
+    events: {
+      empty: 'Nenhum evento clinico registrado para este pet.',
+      emptyDescription: 'Registre prontuarios, vacinas ou prescricoes para construir o historico clinico.',
+      medicalRecord: 'Prontuario Medico',
+      vaccination: 'Vacinacao',
+      prescription: 'Prescricao',
+      appointment: 'Atendimento'
+    },
+    sections: {
+      summary: 'Resumo clinico',
+      vaccinations: 'Carteira de vacinacao',
+      prescriptions: 'Prescricoes recentes',
+      records: 'Prontuarios'
+    },
+    stats: {
+      totalEvents: 'Total de eventos',
+      vaccinations: 'Vacinas aplicadas',
+      records: 'Prontuarios',
+      prescriptions: 'Prescricoes',
+      lastVisit: 'Ultima visita'
+    },
+    actions: {
+      addRecord: 'Novo prontuario',
+      addVaccine: 'Registrar vacina',
+      addPrescription: 'Nova prescricao',
+      viewDetails: 'Ver detalhes',
+      printHistory: 'Imprimir historico'
+    }
+  },
+  petPOS: {
+    eyebrow: 'Ponto de Venda',
+    title: 'PDV - Vendas',
+    description: 'Interface rápida para vendas de produtos e serviços no balcão do petshop.',
+    noPermission: 'Você não possui permissão para acessar o PDV.',
+    loading: 'Carregando produtos...',
+    actions: {
+      newSale: 'Nova venda',
+      checkout: 'Finalizar venda',
+      cancel: 'Cancelar',
+      addItem: 'Adicionar',
+      removeItem: 'Remover',
+      clearCart: 'Limpar carrinho'
+    },
+    cart: {
+      title: 'Carrinho',
+      empty: 'Carrinho vazio',
+      emptyDescription: 'Adicione produtos ou serviços para iniciar uma venda.',
+      items: 'itens',
+      subtotal: 'Subtotal',
+      discount: 'Desconto',
+      total: 'Total',
+      quantity: 'Qtd'
+    },
+    products: {
+      title: 'Produtos',
+      search: 'Buscar produto...',
+      category: 'Categoria',
+      allCategories: 'Todas as categorias',
+      empty: 'Nenhum produto encontrado.',
+      inStock: 'Em estoque',
+      outOfStock: 'Sem estoque',
+      lowStock: 'Estoque baixo'
+    },
+    services: {
+      title: 'Serviços',
+      empty: 'Nenhum serviço cadastrado.'
+    },
+    client: {
+      title: 'Cliente',
+      select: 'Selecionar cliente',
+      search: 'Buscar cliente...',
+      noClient: 'Venda sem cliente',
+      selected: 'Cliente selecionado'
+    },
+    payment: {
+      title: 'Pagamento',
+      method: 'Forma de pagamento',
+      methods: {
+        cash: 'Dinheiro',
+        credit: 'Crédito',
+        debit: 'Débito',
+        pix: 'PIX',
+        transfer: 'Transferência'
+      },
+      received: 'Valor recebido',
+      change: 'Troco'
+    },
+    checkout: {
+      title: 'Finalizar venda',
+      description: 'Revise os itens e selecione a forma de pagamento.',
+      confirm: 'Confirmar venda',
+      processing: 'Processando...',
+      success: 'Venda realizada com sucesso!',
+      error: 'Erro ao processar a venda.',
+      printReceipt: 'Imprimir comprovante'
+    },
+    stats: {
+      todaySales: 'Vendas hoje',
+      todayRevenue: 'Faturamento hoje',
+      avgTicket: 'Ticket médio',
+      itemsSold: 'Itens vendidos'
+    }
+  },
+  petClinic: {
+    eyebrow: 'Clínica Veterinária',
+    title: 'Dashboard Clínico',
+    description: 'Acompanhe atendimentos clínicos, vacinas pendentes, prontuários e prescrições em uma única visão operacional.',
+    noPermission: 'Você não possui permissão para visualizar o dashboard clínico.',
+    loading: 'Carregando o panorama clínico...',
+    actions: {
+      viewTimeline: 'Ver timeline',
+      newRecord: 'Novo prontuário',
+      newVaccination: 'Registrar vacina',
+      newPrescription: 'Nova prescrição'
+    },
+    stats: {
+      clinicalAppointments: 'Atendimentos clínicos',
+      clinicalAppointmentsDetail: 'consultas e procedimentos hoje',
+      pendingVaccinations: 'Vacinas pendentes',
+      pendingVaccinationsDetail: 'próximos 14 dias',
+      todayRecords: 'Prontuários hoje',
+      todayRecordsDetail: 'registros clínicos criados',
+      activePrescriptions: 'Prescrições ativas',
+      activePrescriptionsDetail: 'últimos 30 dias'
+    },
+    vaccinations: {
+      title: 'Vacinas pendentes',
+      description: 'Pets com vacinas próximas do vencimento ou já vencidas',
+      empty: 'Nenhuma vacina pendente nos próximos 14 dias.',
+      dueIn: 'Vence em {days} dias',
+      dueToday: 'Vence hoje',
+      overdue: 'Vencida há {days} dias',
+      scheduleAction: 'Agendar',
+      viewPet: 'Ver pet'
+    },
+    timeline: {
+      title: 'Timeline clínica recente',
+      description: 'Últimos eventos clínicos registrados',
+      viewAll: 'Ver timeline completa',
+      empty: 'Nenhum evento clínico registrado.',
+      types: {
+        medicalRecord: 'Prontuário',
+        vaccination: 'Vacinação',
+        prescription: 'Prescrição'
+      }
+    },
+    appointments: {
+      title: 'Atendimentos clínicos hoje',
+      description: 'Consultas e procedimentos veterinários agendados',
+      empty: 'Nenhum atendimento clínico agendado para hoje.'
+    },
+    errors: {
+      timeline: 'Não foi possível carregar a timeline clínica.',
+      vaccinations: 'Não foi possível carregar as vacinas pendentes.',
+      records: 'Não foi possível carregar os prontuários.',
+      prescriptions: 'Não foi possível carregar as prescrições.'
     }
   },
   petInvoices: {
