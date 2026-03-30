@@ -8,14 +8,15 @@ import {
 } from '@/shared/lib/visual-profile';
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   PhaifferTech Public Site Visual System
-   Unified with the platform design system
+   PetFlow Visual System
+   Shared foundation for public, auth, and logged product surfaces
    ═══════════════════════════════════════════════════════════════════════════ */
 
 export const sharedShellHeaderClass =
-  'border-b border-slate-200/80 bg-white/95 shadow-[0_8px_24px_-20px_rgba(15,23,42,0.1)] backdrop-blur-md';
+  'border-b border-slate-200/80 bg-white/92 shadow-[0_8px_24px_-20px_rgba(15,23,42,0.08)] backdrop-blur-sm';
 
-export const sharedEyebrowClass = 'text-[11px] font-semibold uppercase tracking-[0.24em] text-accent';
+export const sharedEyebrowClass =
+  'inline-flex w-fit items-center rounded-full bg-[color:var(--accent)]/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-[color:var(--accent)]';
 
 export const sharedHeroTitleClass =
   'text-4xl font-semibold tracking-[-0.045em] text-foreground sm:text-5xl lg:text-[4.15rem] lg:leading-[0.98]';
@@ -29,18 +30,30 @@ export const sharedCardTitleClass = 'text-lg font-semibold tracking-[-0.03em] te
 
 export const sharedBodyTextClass = 'text-base leading-7 text-slate-700 sm:text-lg sm:leading-8';
 
-export const sharedSupportingTextClass = 'text-sm leading-7 text-slate-600 sm:text-[15px] sm:leading-7';
+export const sharedSupportingTextClass = 'text-sm leading-7 text-slate-700 sm:text-[15px] sm:leading-7';
 
-export const sharedCompactTextClass = 'text-sm leading-6 text-slate-600';
+export const sharedCompactTextClass = 'text-sm leading-6 text-slate-700';
 
-export const sharedSurfaceClass = 'rounded-2xl border border-slate-200/90 bg-white shadow-[0_14px_34px_-28px_rgba(15,23,42,0.18)] [color-scheme:light]';
+export const sharedSummaryCardClass =
+  'rounded-2xl border border-slate-200/90 bg-[linear-gradient(180deg,rgba(16,185,129,0.05),rgba(255,255,255,0.99)_140px)] p-5 shadow-[0_16px_34px_-28px_rgba(15,23,42,0.16)]';
+
+export const sharedSummaryCardLabelClass =
+  'text-xs font-semibold uppercase tracking-[0.16em] text-slate-600';
+
+export const sharedReminderSurfaceClass =
+  'rounded-2xl border border-emerald-100/80 bg-[linear-gradient(180deg,rgba(16,185,129,0.05),rgba(248,250,252,0.96)_120px)] p-4 shadow-[0_12px_28px_-24px_rgba(15,23,42,0.1)]';
+
+export const sharedSurfaceClass =
+  'rounded-2xl border border-slate-200/90 bg-[linear-gradient(180deg,rgba(16,185,129,0.04),rgba(255,255,255,0.98)_120px)] shadow-[0_14px_34px_-28px_rgba(15,23,42,0.16)] [color-scheme:light]';
 
 export const sharedInteractiveSurfaceClass =
   `${sharedSurfaceClass} transition-all duration-200 hover:border-[color:var(--accent)]/25 hover:shadow-[0_18px_38px_-28px_rgba(15,23,42,0.22)]`;
 
-export const sharedPanelSurfaceClass = 'rounded-2xl border border-slate-200/90 bg-white shadow-[0_18px_38px_-30px_rgba(15,23,42,0.18)]';
+export const sharedPanelSurfaceClass =
+  'rounded-2xl border border-slate-200/90 bg-[linear-gradient(180deg,rgba(16,185,129,0.05),rgba(255,255,255,0.985)_140px)] shadow-[0_18px_38px_-30px_rgba(15,23,42,0.16)]';
 
-export const sharedMutedSurfaceClass = 'rounded-2xl border border-slate-200/80 bg-slate-50/80 shadow-[0_12px_28px_-24px_rgba(15,23,42,0.12)]';
+export const sharedMutedSurfaceClass =
+  'rounded-2xl border border-slate-200/80 bg-[linear-gradient(180deg,rgba(16,185,129,0.05),rgba(248,250,252,0.92)_120px)] shadow-[0_12px_28px_-24px_rgba(15,23,42,0.1)]';
 
 export const sharedDashedSurfaceClass =
   'rounded-[1.65rem] border border-dashed border-border bg-surface-inset';
@@ -51,14 +64,17 @@ export const sharedPageHeaderClass = 'flex flex-col gap-4 md:flex-row md:items-e
 
 export const sharedPageHeaderBodyClass = 'max-w-3xl';
 
-export const sharedSectionSurfaceClass = 'rounded-2xl border border-slate-200/90 bg-white p-5 shadow-[0_16px_34px_-28px_rgba(15,23,42,0.16)] lg:p-6';
+export const sharedSectionSurfaceClass =
+  'rounded-2xl border border-slate-200/90 bg-[linear-gradient(180deg,rgba(16,185,129,0.045),rgba(255,255,255,0.99)_140px)] p-5 shadow-[0_16px_34px_-28px_rgba(15,23,42,0.14)] lg:p-6';
 
-export const sharedMutedSectionSurfaceClass = 'rounded-2xl border border-slate-200/80 bg-slate-50/85 p-4 shadow-[0_12px_28px_-24px_rgba(15,23,42,0.12)] lg:p-5';
+export const sharedMutedSectionSurfaceClass =
+  'rounded-2xl border border-slate-200/80 bg-[linear-gradient(180deg,rgba(16,185,129,0.05),rgba(248,250,252,0.94)_120px)] p-4 shadow-[0_12px_28px_-24px_rgba(15,23,42,0.1)] lg:p-5';
 
 export const sharedSectionHeaderClass =
   'mb-5 flex flex-col gap-3 md:flex-row md:items-start md:justify-between';
 
-export const sharedFilterToolbarClass = 'grid gap-3 rounded-2xl border border-slate-200/90 bg-white p-4 shadow-[0_14px_30px_-24px_rgba(15,23,42,0.14)] xl:gap-4';
+export const sharedFilterToolbarClass =
+  'grid gap-3 rounded-2xl border border-slate-200/90 bg-[linear-gradient(180deg,rgba(16,185,129,0.035),rgba(255,255,255,0.985)_120px)] p-4 shadow-[0_14px_30px_-24px_rgba(15,23,42,0.12)] xl:gap-4';
 
 export const sharedFieldGroupClass = 'space-y-2';
 
@@ -66,7 +82,7 @@ export const sharedFormActionsClass = 'flex flex-wrap items-center gap-3 pt-1';
 
 export const sharedInlineActionsClass = 'flex flex-wrap items-center gap-2';
 
-export const sharedFieldHintClass = 'text-xs leading-5 text-[color:var(--app-shell-muted)]';
+export const sharedFieldHintClass = 'text-xs leading-5 text-slate-700';
 
 export const sharedPrimaryButtonClass =
   'ui-primary-button';
@@ -84,14 +100,14 @@ export const sharedInputClass =
   'ui-input-control text-sm leading-5 tracking-[0.01em]';
 
 export const sharedInputLeadingAccessoryClass =
-  'pointer-events-none absolute inset-y-0 left-0 z-10 flex w-10 items-center justify-center text-slate-400';
+  'pointer-events-none absolute inset-y-0 left-0 z-10 flex w-[3.65rem] items-center justify-center text-slate-400';
 
 export const sharedInputTrailingAccessoryClass =
-  'absolute inset-y-0 right-0 z-10 flex min-w-[3.5rem] items-center justify-center px-4 text-slate-500';
+  'pointer-events-none absolute inset-y-0 right-0 z-10 flex min-w-[4.75rem] items-center justify-center px-[1.15rem] text-slate-400';
 
-export const sharedInputWithLeadingAccessoryClass = 'pl-10';
+export const sharedInputWithLeadingAccessoryClass = '[--ui-input-padding-left:3.65rem]';
 
-export const sharedInputWithTrailingAccessoryClass = 'pr-14';
+export const sharedInputWithTrailingAccessoryClass = '[--ui-input-padding-right:4.75rem]';
 
 export const sharedTextareaClass = `${sharedInputClass} min-h-32 resize-y py-3.5`;
 
@@ -100,11 +116,11 @@ export const appShellContentContainerClass = 'mx-auto w-full max-w-[1680px]';
 /* ─── Drawer (Slide-out panel) ─────────────────────────────────────────── */
 
 export const sharedDrawerContainerClass =
-  'relative h-full w-full max-w-xl overflow-y-auto ui-surface-panel border-l border-border p-6 shadow-2xl animate-in slide-in-from-right duration-300';
+  'relative h-full w-full max-w-xl overflow-y-auto ui-surface-panel border-l border-border p-6 shadow-[0_32px_72px_-44px_rgba(15,23,42,0.32)] animate-in slide-in-from-right duration-300';
 
 export const sharedDrawerHeaderClass = 'mb-6 flex items-center justify-between'
 
-export const sharedDrawerOverlayClass = 'fixed inset-0 z-50 flex justify-end bg-black/40 backdrop-blur-sm';
+export const sharedDrawerOverlayClass = 'fixed inset-0 z-50 flex justify-end bg-slate-950/18 backdrop-blur-[2px]';
 
 
 
@@ -154,10 +170,16 @@ type LoginVisualContextInput = string | VisualProfileResolutionInput | undefined
 
 function normalizeLoginVisualInput(input?: LoginVisualContextInput): VisualProfileResolutionInput {
   if (typeof input === 'string') {
-    return { tenantCode: input };
+    return {
+      tenantCode: input,
+      defaultProfile: 'pet-grooming'
+    };
   }
 
-  return input ?? {};
+  return {
+    defaultProfile: 'pet-grooming',
+    ...(input ?? {})
+  };
 }
 
 export function resolveLoginVisualPreset(input?: LoginVisualContextInput): LoginVisualPresetKey {

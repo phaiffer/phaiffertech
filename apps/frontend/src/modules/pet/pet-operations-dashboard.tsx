@@ -120,10 +120,10 @@ function OperationsStatCard({
     <div className={`rounded-[1.6rem] border p-6 ${toneClass}`}>
       <div className="flex items-start justify-between gap-4">
         <div>
-          <p className={`text-[11px] font-semibold uppercase tracking-[0.18em] ${tone === 'accent' ? 'text-white/72' : 'text-slate-500'}`}>
+          <p className={`text-[11px] font-semibold uppercase tracking-[0.18em] ${tone === 'accent' ? 'text-white/78' : 'text-slate-700'}`}>
             {label}
           </p>
-          <p className={`mt-4 text-3xl font-semibold tracking-[-0.04em] ${tone === 'accent' ? 'text-white' : 'text-foreground'}`}>
+          <p className={`mt-4 text-3xl font-bold tracking-[-0.04em] ${tone === 'accent' ? 'text-white' : 'text-slate-900'}`}>
             {value}
           </p>
         </div>
@@ -137,7 +137,7 @@ function OperationsStatCard({
           </span>
         ) : null}
       </div>
-      <p className={`mt-3 text-sm leading-6 ${tone === 'accent' ? 'text-white/80' : 'text-slate-600'}`}>{detail}</p>
+      <p className={`mt-3 text-sm leading-6 ${tone === 'accent' ? 'text-white/84' : 'text-slate-700'}`}>{detail}</p>
     </div>
   );
 }
@@ -494,11 +494,11 @@ export function PetOperationsDashboard({
                 {surfaceLabel}
               </p>
             ) : null}
-            <p className={`${surfaceLabel ? 'mt-3 ' : ''}text-xs font-semibold uppercase tracking-[0.18em] text-slate-500`}>
+            <p className={`${surfaceLabel ? 'mt-3 ' : ''}text-xs font-semibold uppercase tracking-[0.18em] text-slate-700`}>
               {eyebrow}
             </p>
             <h1 className="mt-3 text-3xl font-bold tracking-[-0.04em] text-slate-900 lg:text-[2.2rem]">{title}</h1>
-            <p className="mt-3 text-sm leading-7 text-slate-600">{description}</p>
+            <p className="mt-3 text-sm leading-7 text-slate-700">{description}</p>
           </div>
           <div className="flex flex-wrap items-center gap-3">
             <Link
@@ -556,7 +556,7 @@ export function PetOperationsDashboard({
               <div className="mb-6 flex items-center justify-between gap-4">
                 <div>
                   <h2 className="text-lg font-semibold text-slate-900">{t.queue.title}</h2>
-                  <p className="mt-1 text-sm text-slate-600">{t.queue.description}</p>
+                  <p className="mt-1 text-sm text-slate-700">{t.queue.description}</p>
                 </div>
                 <Link href="/pet/appointments" className="text-sm font-semibold text-[color:var(--accent)] transition-colors hover:text-slate-900">
                   {t.actions.appointments}
@@ -571,7 +571,7 @@ export function PetOperationsDashboard({
                     <div key={appointment.id} className="flex items-center gap-4 rounded-[1.35rem] border border-slate-200/80 bg-white p-4 transition-colors hover:border-[color:var(--accent)]/15 hover:bg-[color:var(--accent)]/5">
                       <div className="min-w-[4.5rem] text-center">
                         <p className="text-sm font-bold text-slate-900">{formatTimeForLocale(locale, appointment.scheduledAt)}</p>
-                        <p className="mt-1 text-xs font-medium text-slate-500">{appointment.serviceName}</p>
+                        <p className="mt-1 text-xs font-medium text-slate-700">{appointment.serviceName}</p>
                       </div>
 
                       <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[color:var(--accent)]/10 text-sm font-semibold text-[color:var(--accent)]">
@@ -580,7 +580,7 @@ export function PetOperationsDashboard({
 
                       <div className="min-w-0 flex-1">
                         <p className="font-semibold text-slate-900">{appointment.petName ?? appointment.petId}</p>
-                        <p className="text-sm text-slate-600">
+                        <p className="text-sm text-slate-700">
                           {resolveClientName(clientLookup, appointment.clientId, appointment.clientName)} · {appointment.professionalName ?? t.queue.missingProfessional}
                         </p>
                         <div className="mt-2 flex flex-wrap gap-1.5">
@@ -615,7 +615,7 @@ export function PetOperationsDashboard({
 
             <section className="rounded-[2rem] border border-slate-200/80 bg-white/95 p-6 shadow-[0_22px_48px_-40px_rgba(15,23,42,0.12)]">
               <h2 className="text-lg font-semibold text-slate-900">{t.billing.title}</h2>
-              <p className="mt-1 text-sm text-slate-600">{t.billing.description}</p>
+              <p className="mt-1 text-sm text-slate-700">{t.billing.description}</p>
 
               <div className="mt-6 space-y-4">
                 {activityItems.map((item) => (
@@ -637,7 +637,7 @@ export function PetOperationsDashboard({
                     </span>
                     <div className="min-w-0">
                       <p className="text-sm font-semibold text-slate-900">{item.title}</p>
-                      <p className="mt-1 text-sm leading-6 text-slate-600">{item.description}</p>
+                      <p className="mt-1 text-sm leading-6 text-slate-700">{item.description}</p>
                     </div>
                   </div>
                 ))}
@@ -657,7 +657,7 @@ export function PetOperationsDashboard({
             <div className="mb-6 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
               <div>
                 <h2 className="text-lg font-semibold text-slate-900">{t.billing.title}</h2>
-                <p className="mt-1 text-sm text-slate-600">{t.billing.description}</p>
+                <p className="mt-1 text-sm text-slate-700">{t.billing.description}</p>
               </div>
               <div className="flex flex-wrap gap-2">
                 <SignalPill label={`${recurringToday.length} ${t.pills.recurring}`} tone="success" />
@@ -677,19 +677,19 @@ export function PetOperationsDashboard({
                 <table className="min-w-full">
                   <thead>
                     <tr className="border-b border-slate-200 bg-slate-50/80">
-                      <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+                      <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-700">
                         {t.pills.recurring}
                       </th>
-                      <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+                      <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-700">
                         {t.pills.activePlan}
                       </th>
-                      <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+                      <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-700">
                         {t.billing.nextCycleLabel}
                       </th>
-                      <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+                      <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-700">
                         {t.pills.responsible}
                       </th>
-                      <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+                      <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-700">
                         {t.pills.petTaxi}
                       </th>
                     </tr>
@@ -700,7 +700,7 @@ export function PetOperationsDashboard({
                         <td className="px-4 py-4">
                           <div>
                             <p className="font-semibold text-slate-900">{row.clientName}</p>
-                            <p className="mt-1 text-sm text-slate-600">{row.planName}</p>
+                            <p className="mt-1 text-sm text-slate-700">{row.planName}</p>
                           </div>
                         </td>
                         <td className="px-4 py-4">
@@ -712,7 +712,7 @@ export function PetOperationsDashboard({
                             {row.remainingSessions === 2 ? <SignalPill label={t.pills.penultimateBath} tone="warning" /> : null}
                           </div>
                         </td>
-                        <td className="px-4 py-4 text-sm text-slate-600">
+                        <td className="px-4 py-4 text-sm text-slate-700">
                           <p>
                             {row.expiresAt
                               ? `${t.billing.expiresAt} ${formatDateForLocale(locale, row.expiresAt, '', { day: '2-digit', month: 'short' })}`
@@ -722,9 +722,9 @@ export function PetOperationsDashboard({
                             {formatCurrencyForLocale(locale, row.outstandingAmount)}
                           </p>
                         </td>
-                        <td className="px-4 py-4 text-sm text-slate-600">{row.professionalName}</td>
+                        <td className="px-4 py-4 text-sm text-slate-700">{row.professionalName}</td>
                         <td className="px-4 py-4">
-                          {row.petTaxi ? <SignalPill label={t.pills.petTaxi} tone="accent" /> : <span className="text-sm text-slate-500">-</span>}
+                          {row.petTaxi ? <SignalPill label={t.pills.petTaxi} tone="accent" /> : <span className="text-sm text-slate-700">-</span>}
                         </td>
                       </tr>
                     ))}
@@ -739,7 +739,7 @@ export function PetOperationsDashboard({
               <div className="mb-6 flex items-center justify-between gap-4">
                 <div>
                   <h2 className="text-lg font-semibold text-slate-900">{t.inventory.title}</h2>
-                  <p className="mt-1 text-sm text-slate-600">{t.inventory.description}</p>
+                  <p className="mt-1 text-sm text-slate-700">{t.inventory.description}</p>
                 </div>
                 <Link href="/pet/inventory" className="text-sm font-semibold text-[color:var(--accent)] transition-colors hover:text-slate-900">
                   {t.inventory.title}
@@ -755,7 +755,7 @@ export function PetOperationsDashboard({
                       <div className="flex items-start justify-between gap-3">
                         <div>
                           <p className="text-sm font-semibold text-slate-900">{product.name}</p>
-                          <p className="mt-1 text-xs text-slate-500">{t.inventory.sku} {product.sku}</p>
+                          <p className="mt-1 text-xs text-slate-700">{t.inventory.sku} {product.sku}</p>
                         </div>
                         <StatusBadge status={product.currentQuantity <= product.minimumQuantity ? 'alert' : 'warn'} />
                       </div>
@@ -773,7 +773,7 @@ export function PetOperationsDashboard({
 
             <section className="rounded-[2rem] border border-slate-200/80 bg-white/95 p-6 shadow-[0_22px_48px_-40px_rgba(15,23,42,0.12)]">
               <h2 className="text-lg font-semibold text-slate-900">{t.production.title}</h2>
-              <p className="mt-1 text-sm text-slate-600">{t.production.description}</p>
+              <p className="mt-1 text-sm text-slate-700">{t.production.description}</p>
 
               {productionByProfessional.length === 0 ? (
                 <div className="ui-notice-neutral mt-6">{t.production.empty}</div>
@@ -784,7 +784,7 @@ export function PetOperationsDashboard({
                       <div className="flex items-start justify-between gap-3">
                         <div>
                           <p className="text-sm font-semibold text-slate-900">{professional.professionalName}</p>
-                          <p className="mt-1 text-sm text-slate-600">
+                          <p className="mt-1 text-sm text-slate-700">
                             {professional.completed} {t.production.completed}
                           </p>
                           <div className="mt-2 flex flex-wrap gap-1.5">

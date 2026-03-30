@@ -53,7 +53,7 @@ export function PublicBenefitsSection() {
 
           {/* Benefits Column */}
           <div className="space-y-2">
-            <p className="text-lg leading-relaxed text-muted">
+            <p className="text-lg leading-relaxed text-slate-700">
               Automatize processos administrativos e foque no que realmente importa: o bem-estar dos animais.
             </p>
 
@@ -69,7 +69,7 @@ export function PublicBenefitsSection() {
                       <h3 className="text-lg font-semibold text-foreground">
                         {benefit.title}
                       </h3>
-                      <p className="mt-1 text-base text-muted">
+                      <p className="mt-1 text-base text-slate-700">
                         {benefit.description}
                       </p>
                     </div>

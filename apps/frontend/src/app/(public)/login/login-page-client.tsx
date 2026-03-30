@@ -5,7 +5,7 @@ import { useEffect, useMemo, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { BrandMark } from '@/shared/components/brand-assets';
+import { BrandMark, PetFlowMark } from '@/shared/components/brand-assets';
 import {
   buildLoginVisualContext,
   publicPrimaryButtonClass,
@@ -139,15 +139,18 @@ export default function LoginPageClient({ nextPath }: LoginPageClientProps) {
           <div className="mx-auto w-full max-w-md">
             <div className="mb-10 flex items-center justify-between gap-4">
               <Link href="/" className="inline-flex items-center gap-2.5 text-foreground">
-                <BrandMark
-                  priority
-                  className="h-11 w-11 shrink-0 rounded-[1.15rem]"
-                  imageClassName="scale-[1.08]"
-                  style={visualContext.brandMarkStyle}
-                />
+                <PetFlowMark className="h-11 w-11 shrink-0 rounded-[1.15rem]" />
                 <div>
                   <span className="block text-lg font-semibold tracking-tight text-slate-900">PetFlow</span>
-                  <span className="block text-[11px] uppercase tracking-[0.18em] text-slate-700">by PhaifferTech</span>
+                  <span className="mt-1 inline-flex items-center gap-1.5 text-[10px] font-medium uppercase tracking-[0.16em] text-slate-600">
+                    <BrandMark
+                      priority
+                      className="h-4 w-4 rounded-[0.45rem] p-[0.08rem]"
+                      imageClassName="scale-[1.08]"
+                      style={visualContext.brandMarkStyle}
+                    />
+                    PhaifferTech
+                  </span>
                 </div>
               </Link>
               <Link href="/" className="hidden text-sm font-medium text-slate-700 transition-colors hover:text-foreground lg:inline-flex">

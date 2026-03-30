@@ -12,7 +12,8 @@ import {
   sharedFilterToolbarClass,
   sharedFormActionsClass,
   sharedInlineActionsClass,
-  sharedPageStackClass
+  sharedPageStackClass,
+  sharedReminderSurfaceClass
 } from '@/shared/components/public-visual-system';
 import { StatusBadge } from '@/shared/dashboard/status-badge';
 import { useAppMessages } from '@/shared/i18n/app-i18n-provider';
@@ -194,15 +195,28 @@ function isOverdueInvoice(invoice: PetInvoice) {
 
 function statToneClass(tone: 'default' | 'warning' | 'danger' = 'default') {
   if (tone === 'warning') {
-    return 'border-[color:var(--status-warning-weak)] bg-[color:var(--status-warning-soft)]';
+    return 'border-amber-200/80 bg-[linear-gradient(180deg,rgba(251,191,36,0.12),rgba(255,255,255,0.98))]';
   }
 
   if (tone === 'danger') {
-    return 'border-[color:var(--status-danger-weak)] bg-[color:var(--status-danger-soft)]';
+    return 'border-red-200/80 bg-[linear-gradient(180deg,rgba(248,113,113,0.12),rgba(255,255,255,0.98))]';
   }
 
-  return 'border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-panel)]';
+  return 'border-slate-200/90 bg-[linear-gradient(180deg,rgba(16,185,129,0.05),rgba(255,255,255,0.99)_140px)]';
 }
+
+const billingPanelClass =
+  'rounded-3xl border border-slate-200/90 bg-[linear-gradient(180deg,rgba(16,185,129,0.045),rgba(255,255,255,0.99)_140px)] p-5 shadow-[0_18px_36px_-30px_rgba(15,23,42,0.14)]';
+
+const billingPanelMutedClass =
+  'rounded-2xl border border-slate-200/80 bg-[linear-gradient(180deg,rgba(16,185,129,0.03),rgba(248,250,252,0.96)_120px)] p-4';
+
+const billingPanelEyebrowClass = 'text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--accent)]';
+const billingPanelTitleClass = 'mt-2 text-base font-semibold text-slate-900';
+const billingPanelTextClass = 'mt-1 text-sm leading-6 text-slate-700';
+const billingDetailLabelClass = 'text-xs font-semibold uppercase tracking-[0.16em] text-slate-700';
+const billingPrimaryValueClass = 'mt-1 text-xl font-bold tracking-[-0.03em] text-slate-900';
+const billingDetailValueClass = 'mt-1 text-sm leading-6 text-slate-700';
 
 type SnapshotCardProps = {
   icon: LucideIcon;
@@ -214,13 +228,13 @@ type SnapshotCardProps = {
 
 function SnapshotCard({ icon: Icon, label, value, detail, tone = 'default' }: SnapshotCardProps) {
   return (
-    <div className={`rounded-3xl border p-4 shadow-xs ${statToneClass(tone)}`}>
+    <div className={`rounded-3xl border p-4 shadow-[0_16px_34px_-28px_rgba(15,23,42,0.16)] ${statToneClass(tone)}`}>
       <div className="flex items-start justify-between gap-3">
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-700">
             {label}
           </p>
-          <p className="mt-3 text-2xl font-semibold text-[color:var(--app-shell-heading)]">{value}</p>
+          <p className="mt-3 text-[2rem] font-bold tracking-[-0.04em] text-slate-900">{value}</p>
         </div>
         <span className={`flex h-11 w-11 items-center justify-center rounded-2xl ${
           tone === 'danger'
@@ -232,7 +246,7 @@ function SnapshotCard({ icon: Icon, label, value, detail, tone = 'default' }: Sn
           <Icon className="h-5 w-5" />
         </span>
       </div>
-      <p className={`mt-2 ${sharedCompactTextClass}`}>{detail}</p>
+      <p className="mt-3 text-sm leading-6 text-slate-700">{detail}</p>
     </div>
   );
 }
@@ -1042,11 +1056,12 @@ export function PetInvoicesPage() {
 
               <div className="grid gap-4 lg:grid-cols-2">
                 {nextCyclePreviewRows.slice(0, 6).map((row) => (
-                  <div key={row.reference} className="rounded-3xl border border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-panel)] p-5">
+                  <div key={row.reference} className={billingPanelClass}>
                     <div className="flex flex-wrap items-start justify-between gap-3">
                       <div>
-                        <p className="text-sm font-semibold text-[color:var(--app-shell-heading)]">{row.clientName}</p>
-                        <p className={`mt-1 ${sharedCompactTextClass}`}>{row.reference}</p>
+                        <p className={billingPanelEyebrowClass}>Billing detail</p>
+                        <p className={billingPanelTitleClass}>{row.clientName}</p>
+                        <p className={billingPanelTextClass}>{row.reference}</p>
                       </div>
                       <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium ${
                         row.billingType === 'Recurring'
@@ -1059,26 +1074,26 @@ export function PetInvoicesPage() {
 
                     <dl className="mt-4 grid gap-4 sm:grid-cols-2">
                       <div>
-                        <dt className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-700">Projected due</dt>
-                        <dd className="mt-1 text-lg font-semibold text-[color:var(--app-shell-heading)]">{formatCurrency(row.projectedDue)}</dd>
+                        <dt className={billingDetailLabelClass}>Projected due</dt>
+                        <dd className={billingPrimaryValueClass}>{formatCurrency(row.projectedDue)}</dd>
                       </div>
                       <div>
-                        <dt className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-700">Appointments</dt>
-                        <dd className="mt-1 text-sm text-[color:var(--app-shell-text)]">
+                        <dt className={billingDetailLabelClass}>Appointments</dt>
+                        <dd className={billingDetailValueClass}>
                           {row.appointmentCount} scheduled / {row.coveredAppointments} covered by plan
                         </dd>
                       </div>
                       <div>
-                        <dt className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-700">Plan status</dt>
-                        <dd className="mt-1 text-sm text-[color:var(--app-shell-text)]">
+                        <dt className={billingDetailLabelClass}>Plan status</dt>
+                        <dd className={billingDetailValueClass}>
                           {row.planName
                             ? `${row.planName} · ${row.remainingSessions ?? 0} session(s) left`
                             : 'One-time charging only'}
                         </dd>
                       </div>
                       <div>
-                        <dt className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-700">Extras</dt>
-                        <dd className="mt-1 text-sm text-[color:var(--app-shell-text)]">
+                        <dt className={billingDetailLabelClass}>Extras</dt>
+                        <dd className={billingDetailValueClass}>
                           {formatCurrency(row.extrasTotal)}{row.petTaxiTotal > 0 ? ` · ${formatCurrency(row.petTaxiTotal)} from pet taxi` : ''}
                         </dd>
                       </div>
@@ -1141,7 +1156,7 @@ export function PetInvoicesPage() {
                   />
                 </div>
 
-                <div className="rounded-2xl border border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-panel-muted)] p-4">
+                <div className={sharedReminderSurfaceClass}>
                   <p className="text-sm font-medium text-[color:var(--app-shell-heading)]">Lifecycle reminder</p>
                   <p className={`mt-1 ${sharedCompactTextClass}`}>
                     Draft keeps the invoice internal only. Issued and canceled documents should carry an issue date so finance and support teams can reconstruct the full timeline.
@@ -1227,13 +1242,12 @@ export function PetInvoicesPage() {
               )}
             >
               <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
-                <div className="rounded-3xl border border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-panel)] p-5">
+                <div className={billingPanelClass}>
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div>
-                      <p className="text-sm font-semibold text-[color:var(--app-shell-heading)]">
-                        {reviewedInvoice.clientName ?? reviewedInvoice.clientId}
-                      </p>
-                      <p className={`mt-1 ${sharedCompactTextClass}`}>
+                      <p className={billingPanelEyebrowClass}>Summary</p>
+                      <p className={billingPanelTitleClass}>{reviewedInvoice.clientName ?? reviewedInvoice.clientId}</p>
+                      <p className={billingPanelTextClass}>
                         {reviewedInvoice.businessContextLabel ?? reviewedInvoice.description ?? 'Manual invoice with no business label yet'}
                       </p>
                     </div>
@@ -1242,80 +1256,56 @@ export function PetInvoicesPage() {
 
                   <dl className="mt-5 grid gap-4 sm:grid-cols-2">
                     <div>
-                      <dt className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-700">
-                        Total amount
-                      </dt>
-                      <dd className="mt-1 text-lg font-semibold text-[color:var(--app-shell-heading)]">
-                        {formatCurrency(reviewedInvoice.totalAmount)}
-                      </dd>
+                      <dt className={billingDetailLabelClass}>Total amount</dt>
+                      <dd className={billingPrimaryValueClass}>{formatCurrency(reviewedInvoice.totalAmount)}</dd>
                     </div>
                     <div>
-                      <dt className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-700">
-                        Outstanding
-                      </dt>
-                      <dd className="mt-1 text-lg font-semibold text-[color:var(--app-shell-heading)]">
-                        {formatCurrency(reviewedInvoice.outstandingAmount)}
-                      </dd>
+                      <dt className={billingDetailLabelClass}>Outstanding</dt>
+                      <dd className={billingPrimaryValueClass}>{formatCurrency(reviewedInvoice.outstandingAmount)}</dd>
                     </div>
                     <div>
-                      <dt className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-700">
-                        Paid amount
-                      </dt>
-                      <dd className="mt-1 text-sm text-[color:var(--app-shell-text)]">
-                        {formatCurrency(reviewedInvoice.paidAmount)}
-                      </dd>
+                      <dt className={billingDetailLabelClass}>Paid amount</dt>
+                      <dd className={billingDetailValueClass}>{formatCurrency(reviewedInvoice.paidAmount)}</dd>
                     </div>
                     <div>
-                      <dt className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-700">
-                        Linked finance invoice
-                      </dt>
-                      <dd className="mt-1 text-sm text-[color:var(--app-shell-text)]">
-                        {reviewedInvoice.financeInvoiceId}
-                      </dd>
+                      <dt className={billingDetailLabelClass}>Linked finance invoice</dt>
+                      <dd className={billingDetailValueClass}>{reviewedInvoice.financeInvoiceId}</dd>
                     </div>
                     <div>
-                      <dt className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-700">
-                        Billing reference draft
-                      </dt>
-                      <dd className="mt-1 text-sm text-[color:var(--app-shell-text)]">
+                      <dt className={billingDetailLabelClass}>Billing reference draft</dt>
+                      <dd className={billingDetailValueClass}>
                         {buildCollectionReference(reviewedInvoice.clientId, reviewedInvoice.dueAt ? new Date(reviewedInvoice.dueAt) : new Date())}
                       </dd>
                     </div>
                   </dl>
                 </div>
 
-                <div className="rounded-3xl border border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-panel)] p-5">
-                  <p className="text-sm font-semibold text-[color:var(--app-shell-heading)]">Lifecycle checkpoints</p>
+                <div className={billingPanelClass}>
+                  <p className={billingPanelEyebrowClass}>Status</p>
+                  <p className={billingPanelTitleClass}>Lifecycle checkpoints</p>
+                  <p className={billingPanelTextClass}>Use these timestamps to explain whether the invoice is still draft, already issued, due, settled, or canceled.</p>
                   <div className="mt-4 space-y-3">
                     <div>
-                      <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-700">
-                        Issued at
-                      </p>
-                      <p className="mt-1 text-sm text-[color:var(--app-shell-text)]">
+                      <p className={billingDetailLabelClass}>Issued at</p>
+                      <p className={billingDetailValueClass}>
                         {formatDateTime(reviewedInvoice.issuedAt, 'Still in draft mode')}
                       </p>
                     </div>
                     <div>
-                      <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-700">
-                        Due at
-                      </p>
-                      <p className="mt-1 text-sm text-[color:var(--app-shell-text)]">
+                      <p className={billingDetailLabelClass}>Due at</p>
+                      <p className={billingDetailValueClass}>
                         {formatDateTime(reviewedInvoice.dueAt, 'No due date defined')}
                       </p>
                     </div>
                     <div>
-                      <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-700">
-                        Paid at
-                      </p>
-                      <p className="mt-1 text-sm text-[color:var(--app-shell-text)]">
+                      <p className={billingDetailLabelClass}>Paid at</p>
+                      <p className={billingDetailValueClass}>
                         {formatDateTime(reviewedInvoice.paidAt, 'Awaiting settlement')}
                       </p>
                     </div>
                     <div>
-                      <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-700">
-                        Canceled at
-                      </p>
-                      <p className="mt-1 text-sm text-[color:var(--app-shell-text)]">
+                      <p className={billingDetailLabelClass}>Canceled at</p>
+                      <p className={billingDetailValueClass}>
                         {formatDateTime(reviewedInvoice.canceledAt, 'Invoice still active')}
                       </p>
                     </div>
@@ -1333,76 +1323,64 @@ export function PetInvoicesPage() {
 
               {financeInvoice ? (
                 <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
-                  <div className="rounded-3xl border border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-panel)] p-5">
-                    <p className="text-sm font-semibold text-[color:var(--app-shell-heading)]">Linked finance document</p>
-                    <p className={`mt-1 ${sharedCompactTextClass}`}>
+                  <div className={billingPanelClass}>
+                    <p className={billingPanelEyebrowClass}>Finance record</p>
+                    <p className={billingPanelTitleClass}>Linked finance document</p>
+                    <p className={billingPanelTextClass}>
                       Source {financeInvoice.sourceModule} • Currency {financeInvoice.currency}
                     </p>
 
                     <dl className="mt-4 grid gap-4 sm:grid-cols-2">
                       <div>
-                        <dt className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-700">
-                          Counterparty
-                        </dt>
-                        <dd className="mt-1 text-sm text-[color:var(--app-shell-text)]">
+                        <dt className={billingDetailLabelClass}>Counterparty</dt>
+                        <dd className={billingDetailValueClass}>
                           {financeInvoice.counterpartyName ?? 'Tenant-side customer not labeled'}
                         </dd>
                       </div>
                       <div>
-                        <dt className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-700">
-                          Document number
-                        </dt>
-                        <dd className="mt-1 text-sm text-[color:var(--app-shell-text)]">
+                        <dt className={billingDetailLabelClass}>Document number</dt>
+                        <dd className={billingDetailValueClass}>
                           {financeInvoice.documentNumber ?? 'Not assigned'}
                         </dd>
                       </div>
                       <div>
-                        <dt className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-700">
-                          Finance status
-                        </dt>
-                        <dd className="mt-1 text-sm text-[color:var(--app-shell-text)]">
+                        <dt className={billingDetailLabelClass}>Finance status</dt>
+                        <dd className={billingDetailValueClass}>
                           {financeInvoice.status}
                         </dd>
                       </div>
                       <div>
-                        <dt className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-700">
-                          Outstanding amount
-                        </dt>
-                        <dd className="mt-1 text-sm text-[color:var(--app-shell-text)]">
+                        <dt className={billingDetailLabelClass}>Outstanding amount</dt>
+                        <dd className={billingDetailValueClass}>
                           {formatCurrency(financeInvoice.outstandingAmount, financeInvoice.currency)}
                         </dd>
                       </div>
                     </dl>
                   </div>
 
-                  <div className="rounded-3xl border border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-panel)] p-5">
-                    <p className="text-sm font-semibold text-[color:var(--app-shell-heading)]">Finance baseline</p>
-                    <p className={`mt-1 ${sharedCompactTextClass}`}>
+                  <div className={billingPanelClass}>
+                    <p className={billingPanelEyebrowClass}>Source of truth</p>
+                    <p className={billingPanelTitleClass}>Finance baseline</p>
+                    <p className={billingPanelTextClass}>
                       This is the backend financial source of truth attached to the PetFlow invoice.
                     </p>
 
                     <div className="mt-4 space-y-3">
                       <div>
-                        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-700">
-                          Business context
-                        </p>
-                        <p className="mt-1 text-sm text-[color:var(--app-shell-text)]">
+                        <p className={billingDetailLabelClass}>Business context</p>
+                        <p className={billingDetailValueClass}>
                           {financeInvoice.businessContextLabel ?? financeInvoice.description ?? 'No business label recorded'}
                         </p>
                       </div>
                       <div>
-                        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-700">
-                          Recipient
-                        </p>
-                        <p className="mt-1 text-sm text-[color:var(--app-shell-text)]">
+                        <p className={billingDetailLabelClass}>Recipient</p>
+                        <p className={billingDetailValueClass}>
                           {financeInvoice.recipientLegalName ?? financeInvoice.recipientEmail ?? 'Recipient details not captured yet'}
                         </p>
                       </div>
                       <div>
-                        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-700">
-                          Fiscal reference
-                        </p>
-                        <p className="mt-1 text-sm text-[color:var(--app-shell-text)]">
+                        <p className={billingDetailLabelClass}>Fiscal reference</p>
+                        <p className={billingDetailValueClass}>
                           {financeInvoice.fiscalReference ?? financeInvoice.fiscalStatus ?? 'No fiscal provider reference attached'}
                         </p>
                       </div>
@@ -1413,11 +1391,12 @@ export function PetInvoicesPage() {
 
               <div className="grid gap-4 xl:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)]">
                 {paymentInvoice?.id === reviewedInvoice.id ? (
-                  <form onSubmit={handlePaymentSubmit} className="rounded-3xl border border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-panel)] p-5">
+                  <form onSubmit={handlePaymentSubmit} className={billingPanelClass}>
                     <div className="flex flex-wrap items-start justify-between gap-3">
                       <div>
-                        <p className="text-sm font-semibold text-[color:var(--app-shell-heading)]">Register payment</p>
-                        <p className={`mt-1 ${sharedCompactTextClass}`}>
+                        <p className={billingPanelEyebrowClass}>Action</p>
+                        <p className={billingPanelTitleClass}>Register payment</p>
+                        <p className={billingPanelTextClass}>
                           Use the real received amount and timestamp so the shared finance ledger remains trustworthy.
                         </p>
                       </div>
@@ -1479,9 +1458,10 @@ export function PetInvoicesPage() {
                     </div>
                   </form>
                 ) : (
-                  <div className="rounded-3xl border border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-panel)] p-5">
-                    <p className="text-sm font-semibold text-[color:var(--app-shell-heading)]">Next collection action</p>
-                    <p className={`mt-1 ${sharedCompactTextClass}`}>
+                  <div className={billingPanelClass}>
+                    <p className={billingPanelEyebrowClass}>Action</p>
+                    <p className={billingPanelTitleClass}>Next collection action</p>
+                    <p className={billingPanelTextClass}>
                       Use the payment form when cash has actually been received. That keeps invoice status, payment history, and the tenant ledger aligned.
                     </p>
                     <div className="mt-5 flex flex-wrap gap-3">
@@ -1509,9 +1489,10 @@ export function PetInvoicesPage() {
                   </div>
                 )}
 
-                <div className="rounded-3xl border border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-panel)] p-5">
-                  <p className="text-sm font-semibold text-[color:var(--app-shell-heading)]">Payment history</p>
-                  <p className={`mt-1 ${sharedCompactTextClass}`}>
+                <div className={billingPanelClass}>
+                  <p className={billingPanelEyebrowClass}>Payments</p>
+                  <p className={billingPanelTitleClass}>Payment history</p>
+                  <p className={billingPanelTextClass}>
                     These records reflect settlement events already attached to the selected invoice.
                   </p>
 
@@ -1524,7 +1505,7 @@ export function PetInvoicesPage() {
                       reviewedInvoice.payments.map((payment) => (
                         <div
                           key={payment.id}
-                          className="rounded-2xl border border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-panel-muted)] p-4"
+                          className={billingPanelMutedClass}
                         >
                           <div className="flex flex-wrap items-start justify-between gap-3">
                             <div>
@@ -1552,11 +1533,12 @@ export function PetInvoicesPage() {
                 </div>
               </div>
 
-              <div className="rounded-3xl border border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-panel)] p-5">
+              <div className={billingPanelClass}>
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>
-                    <p className="text-sm font-semibold text-[color:var(--app-shell-heading)]">Cash movement visibility</p>
-                    <p className={`mt-1 ${sharedCompactTextClass}`}>
+                    <p className={billingPanelEyebrowClass}>Ledger</p>
+                    <p className={billingPanelTitleClass}>Cash movement visibility</p>
+                    <p className={billingPanelTextClass}>
                       Review how this invoice affected the tenant cash ledger without leaving the PetFlow workflow.
                     </p>
                   </div>
@@ -1576,7 +1558,7 @@ export function PetInvoicesPage() {
                     {cashMovements.map((movement) => (
                       <div
                         key={movement.id}
-                        className="rounded-2xl border border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-panel-muted)] p-4"
+                        className={billingPanelMutedClass}
                       >
                         <div className="flex flex-wrap items-start justify-between gap-3">
                           <div>

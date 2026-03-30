@@ -20,8 +20,16 @@ import {
   Activity
 } from 'lucide-react';
 import { PetModuleSubnav } from '@/modules/pet/pet-module-subnav';
-import { sharedPageStackClass } from '@/shared/components/public-visual-system';
-import { useAppI18n, useAppMessages } from '@/shared/i18n/app-i18n-provider';
+import {
+  sharedInputClass,
+  sharedInputLabelClass,
+  sharedInputLeadingAccessoryClass,
+  sharedInputTrailingAccessoryClass,
+  sharedInputWithLeadingAccessoryClass,
+  sharedInputWithTrailingAccessoryClass,
+  sharedPageStackClass
+} from '@/shared/components/public-visual-system';
+import { useAppI18n, useAppMessages, type AppLocale } from '@/shared/i18n/app-i18n-provider';
 import { formatDateForLocale, formatTimeForLocale } from '@/shared/i18n/formatters';
 import { resolvePageItems } from '@/shared/lib/pagination';
 import { useFrontendPlatform } from '@/shared/platform/use-frontend-platform';
@@ -182,7 +190,7 @@ function VaccinationCard({
   locale
 }: {
   vaccination: PetVaccination;
-  locale: string;
+  locale: AppLocale;
 }) {
   const today = startOfDay();
   const nextDue = vaccination.nextDueAt ? startOfDay(new Date(vaccination.nextDueAt)) : null;
@@ -444,37 +452,43 @@ export function PetTimelinePage({ petId, showSubnav = false }: PetTimelinePagePr
         <section className="rounded-[2rem] border border-slate-200/80 bg-white p-6 shadow-[0_18px_38px_-32px_rgba(15,23,42,0.10)]">
           <div className="grid gap-4 md:grid-cols-2">
             <div>
-              <label htmlFor="type-filter" className="mb-2 block text-xs font-semibold uppercase tracking-wider text-slate-500">
+              <label htmlFor="type-filter" className={sharedInputLabelClass}>
                 Tipo de evento
               </label>
               <div className="relative">
-                <Activity className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                <span className={sharedInputLeadingAccessoryClass}>
+                  <Activity className="h-4 w-4" />
+                </span>
                 <select
                   id="type-filter"
                   value={filters.eventType}
                   onChange={(e) => setFilters((f) => ({ ...f, eventType: e.target.value }))}
-                  className="w-full appearance-none rounded-xl border border-slate-200 bg-white py-3 pl-10 pr-10 text-sm text-slate-700 focus:border-[color:var(--accent)] focus:outline-none focus:ring-2 focus:ring-[color:var(--accent)]/20"
+                  className={`${sharedInputClass} ${sharedInputWithLeadingAccessoryClass} ${sharedInputWithTrailingAccessoryClass}`}
                 >
                   <option value="">{t.filters.allTypes}</option>
                   <option value="MEDICAL_RECORD">{t.events.medicalRecord}</option>
                   <option value="VACCINATION">{t.events.vaccination}</option>
                   <option value="PRESCRIPTION">{t.events.prescription}</option>
                 </select>
-                <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                <span className={sharedInputTrailingAccessoryClass}>
+                  <ChevronDown className="h-4 w-4" />
+                </span>
               </div>
             </div>
 
             <div>
-              <label htmlFor="period-filter" className="mb-2 block text-xs font-semibold uppercase tracking-wider text-slate-500">
+              <label htmlFor="period-filter" className={sharedInputLabelClass}>
                 {t.filters.period}
               </label>
               <div className="relative">
-                <Calendar className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                <span className={sharedInputLeadingAccessoryClass}>
+                  <Calendar className="h-4 w-4" />
+                </span>
                 <select
                   id="period-filter"
                   value={filters.period}
                   onChange={(e) => setFilters((f) => ({ ...f, period: e.target.value }))}
-                  className="w-full appearance-none rounded-xl border border-slate-200 bg-white py-3 pl-10 pr-10 text-sm text-slate-700 focus:border-[color:var(--accent)] focus:outline-none focus:ring-2 focus:ring-[color:var(--accent)]/20"
+                  className={`${sharedInputClass} ${sharedInputWithLeadingAccessoryClass} ${sharedInputWithTrailingAccessoryClass}`}
                 >
                   <option value="">{t.filters.allTime}</option>
                   <option value="week">{t.filters.lastWeek}</option>
@@ -482,7 +496,9 @@ export function PetTimelinePage({ petId, showSubnav = false }: PetTimelinePagePr
                   <option value="3months">{t.filters.last3Months}</option>
                   <option value="year">{t.filters.lastYear}</option>
                 </select>
-                <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                <span className={sharedInputTrailingAccessoryClass}>
+                  <ChevronDown className="h-4 w-4" />
+                </span>
               </div>
             </div>
           </div>

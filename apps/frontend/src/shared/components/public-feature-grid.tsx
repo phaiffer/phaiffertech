@@ -10,11 +10,11 @@ import {
 } from '@/shared/components/public-visual-system';
 
 const iconColorVariants = [
-  { bg: 'bg-emerald-100', icon: 'text-emerald-600' },
-  { bg: 'bg-blue-100', icon: 'text-blue-600' },
-  { bg: 'bg-amber-100', icon: 'text-amber-600' },
-  { bg: 'bg-rose-100', icon: 'text-rose-600' },
-  { bg: 'bg-violet-100', icon: 'text-violet-600' },
+  { bg: 'bg-emerald-100', icon: 'text-emerald-700' },
+  { bg: 'bg-teal-100', icon: 'text-teal-700' },
+  { bg: 'bg-cyan-100', icon: 'text-cyan-700' },
+  { bg: 'bg-emerald-50', icon: 'text-emerald-800' },
+  { bg: 'bg-teal-50', icon: 'text-teal-800' },
   { bg: 'bg-slate-100', icon: 'text-slate-700' }
 ];
 
@@ -44,14 +44,14 @@ export function PublicFeatureGrid({
   items
 }: PublicFeatureGridProps) {
   return (
-    <section id={id} className="border-t border-border bg-surface-inset">
+    <section id={id} className="border-t border-border bg-[linear-gradient(180deg,rgba(16,185,129,0.03),rgba(248,250,252,0.85))]">
       <div className={`${publicSiteContainerClass} py-14 lg:py-18`}>
         <div className="mx-auto max-w-3xl text-center">
           {eyebrowLabel ? <p className={publicEyebrowClass}>{eyebrowLabel}</p> : null}
           <h2 className="mt-3 text-3xl font-semibold tracking-[-0.03em] text-foreground sm:text-4xl lg:text-[2.75rem]">
             {title}
           </h2>
-          <p className="mx-auto mt-5 max-w-2xl text-base leading-8 text-[color:var(--muted)] sm:text-lg">{description}</p>
+          <p className="mx-auto mt-5 max-w-2xl text-base leading-8 text-slate-700 sm:text-lg">{description}</p>
         </div>
 
         <div className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
@@ -62,7 +62,7 @@ export function PublicFeatureGrid({
             return (
               <article
                 key={`${item.eyebrow ?? item.title}-${item.title}`}
-                className={`${publicInteractiveCardSurfaceClass} flex h-full flex-col rounded-[1.5rem] bg-white p-6`}
+                className={`${publicInteractiveCardSurfaceClass} flex h-full flex-col rounded-[1.5rem] bg-[linear-gradient(180deg,rgba(16,185,129,0.035),rgba(255,255,255,0.99)_140px)] p-6`}
               >
                 {Icon ? (
                   <span className={`inline-flex h-14 w-14 items-center justify-center rounded-2xl ${colorVariant.bg}`}>
@@ -72,7 +72,7 @@ export function PublicFeatureGrid({
 
                 {item.eyebrow ? <p className={`mt-5 ${publicEyebrowClass}`}>{item.eyebrow}</p> : null}
                 <h3 className="mt-3 text-xl font-semibold tracking-[-0.03em] text-slate-900">{item.title}</h3>
-                <p className="mt-4 text-sm leading-7 text-slate-600">{item.description}</p>
+                <p className="mt-4 text-sm leading-7 text-slate-700">{item.description}</p>
 
                 {item.bullets?.length ? (
                   <ul className="mt-5 space-y-3">
@@ -90,7 +90,7 @@ export function PublicFeatureGrid({
                 {item.href ? (
                   <Link
                     href={item.href}
-                    className="mt-6 inline-flex items-center gap-1.5 text-sm font-medium text-accent transition-colors hover:text-foreground"
+                    className="mt-6 inline-flex items-center gap-1.5 text-sm font-medium text-[color:var(--accent)] transition-colors hover:text-slate-900"
                   >
                     <span>Learn more</span>
                     <ArrowRight className="h-4 w-4" />

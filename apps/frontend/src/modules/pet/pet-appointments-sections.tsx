@@ -45,7 +45,7 @@ function AppointmentSignalPill({
   tone?: 'neutral' | 'accent' | 'success' | 'warning' | 'danger';
 }) {
   const toneClass = tone === 'accent'
-    ? 'bg-blue-100 text-blue-800'
+    ? 'bg-teal-100 text-teal-800'
     : tone === 'success'
       ? 'bg-emerald-100 text-emerald-800'
       : tone === 'warning'

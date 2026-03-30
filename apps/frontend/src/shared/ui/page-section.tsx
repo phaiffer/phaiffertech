@@ -40,7 +40,7 @@ export function PageSection({
         <div className={sharedSectionHeaderClass}>
           <div className="max-w-3xl">
             {title ? <h2 className={sharedSectionHeadingClass}>{title}</h2> : null}
-            {description ? <p className={`mt-1.5 ${sharedCompactTextClass}`}>{description}</p> : null}
+            {description ? <p className={`mt-2 ${sharedCompactTextClass}`}>{description}</p> : null}
           </div>
           {actions ? <div className="flex flex-wrap items-center gap-3">{actions}</div> : null}
         </div>

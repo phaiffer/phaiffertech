@@ -36,7 +36,12 @@ import { DataTable } from '@/shared/ui/data-table';
 import { PageSection } from '@/shared/ui/page-section';
 import { PageTitle } from '@/shared/ui/page-title';
 import { Pagination } from '@/shared/ui/pagination';
-import { sharedPageStackClass } from '@/shared/components/public-visual-system';
+import {
+  sharedDrawerContainerClass,
+  sharedDrawerHeaderClass,
+  sharedDrawerOverlayClass,
+  sharedPageStackClass
+} from '@/shared/components/public-visual-system';
 
 const pageSize = 10;
 
@@ -67,13 +72,13 @@ function AppointmentFocusCard({
     ? 'border-transparent bg-[linear-gradient(135deg,var(--accent),var(--petflow-teal))] text-white shadow-[0_20px_40px_-28px_rgba(16,185,129,0.5)]'
     : tone === 'warning'
       ? 'border-amber-200/80 bg-[linear-gradient(180deg,rgba(251,191,36,0.12),rgba(255,255,255,0.98))]'
-      : 'border-slate-200/90 bg-white';
+      : 'border-slate-200/90 bg-[linear-gradient(180deg,rgba(16,185,129,0.05),rgba(255,255,255,0.99)_140px)]';
 
   return (
     <div className={`rounded-2xl border p-5 shadow-[0_16px_34px_-28px_rgba(15,23,42,0.16)] ${toneClass}`}>
       <div className="flex items-start justify-between gap-3">
         <div>
-          <p className={`text-xs font-semibold uppercase tracking-[0.16em] ${tone === 'accent' ? 'text-white/72' : 'text-slate-500'}`}>
+          <p className={`text-xs font-semibold uppercase tracking-[0.16em] ${tone === 'accent' ? 'text-white/72' : 'text-slate-600'}`}>
             {label}
           </p>
           <p className={`mt-3 text-3xl font-bold tracking-[-0.03em] ${tone === 'accent' ? 'text-white' : 'text-slate-900'}`}>
@@ -92,7 +97,7 @@ function AppointmentFocusCard({
           <Icon className="h-5 w-5" />
         </span>
       </div>
-      <p className={`mt-3 ${tone === 'accent' ? 'text-sm leading-6 text-white/80' : 'text-sm leading-6 text-slate-600'}`}>{detail}</p>
+      <p className={`mt-3 ${tone === 'accent' ? 'text-sm leading-6 text-white/80' : 'text-sm leading-6 text-slate-700'}`}>{detail}</p>
     </div>
   );
 }
@@ -695,20 +700,20 @@ export function PetAppointmentsPage() {
 
         {/* SIDE DRAWER FOR APPOINTMENT */}
         {isEditorOpen && (
-          <div className="fixed inset-0 z-50 flex justify-end bg-black/40 backdrop-blur-sm">
-            <div className="w-full max-w-lg h-full overflow-y-auto ui-surface-panel p-6 shadow-2xl animate-in slide-in-from-right duration-300 border-l border-border relative">
-              <div className="mb-6 flex items-center justify-between">
+          <div className={sharedDrawerOverlayClass}>
+            <div className={`${sharedDrawerContainerClass} max-w-lg`}>
+              <div className={sharedDrawerHeaderClass}>
                 <div>
-                  <h2 className="text-xl font-semibold tracking-tight text-foreground">
+                  <h2 className="text-xl font-semibold tracking-tight text-slate-900">
                     {editingId ? messages.drawer.editTitle : messages.drawer.createTitle}
                   </h2>
-                  <p className="text-sm mt-1 text-muted">
+                  <p className="mt-1 text-sm text-slate-700">
                     {messages.drawer.description}
                   </p>
                 </div>
                 <button
                   onClick={() => setIsEditorOpen(false)}
-                  className="rounded-full p-2 text-muted hover:bg-surface-inset hover:text-foreground transition-colors duration-200"
+                  className="rounded-full p-2 text-slate-600 transition-colors duration-200 hover:bg-surface-inset hover:text-slate-900"
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
                 </button>

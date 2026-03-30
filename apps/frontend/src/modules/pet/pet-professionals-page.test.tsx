@@ -63,4 +63,25 @@ describe('PetProfessionalsPage', () => {
     expect(emailInput).toHaveAttribute('data-lpignore', 'true');
     expect(emailInput).toHaveAttribute('data-1p-ignore', 'true');
   });
+
+  it('renders the professional phone field as a real tel field with safe browser hints', async () => {
+    render(<PetProfessionalsPage />);
+
+    await waitFor(() => {
+      expect(petServiceMock.listProfessionals).toHaveBeenCalledTimes(1);
+    });
+
+    const phoneInput = screen.getByLabelText(/phone/i);
+
+    expect(phoneInput).toHaveAttribute('id', 'professional-phone');
+    expect(phoneInput).toHaveAttribute('name', 'tel');
+    expect(phoneInput).toHaveAttribute('type', 'tel');
+    expect(phoneInput).toHaveAttribute('autocomplete', 'section-professional tel');
+    expect(phoneInput).toHaveAttribute('inputmode', 'tel');
+    expect(phoneInput).toHaveAttribute('autocapitalize', 'none');
+    expect(phoneInput).toHaveAttribute('autocorrect', 'off');
+    expect(phoneInput).toHaveAttribute('spellcheck', 'false');
+    expect(phoneInput).toHaveAttribute('data-lpignore', 'true');
+    expect(phoneInput).toHaveAttribute('data-1p-ignore', 'true');
+  });
 });

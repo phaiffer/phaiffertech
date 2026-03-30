@@ -87,7 +87,7 @@ export function WorkspaceConfigurationOverview() {
   return (
     <div className={sharedPageStackClass}>
       <PageTitle 
-        eyebrow="Settings" 
+        eyebrow="PetFlow settings" 
         title="Workspace Configuration" 
         description={overview.pageDescription}
         actions={
@@ -135,7 +135,7 @@ export function WorkspaceConfigurationOverview() {
       </div>
 
       <div className="grid gap-5 xl:grid-cols-[minmax(0,1.12fr)_minmax(0,0.88fr)]">
-        <PageSection title="Branding Preview" description={overview.brandingDescription}>
+        <PageSection title="PetFlow Branding Preview" description={overview.brandingDescription}>
           <div className="grid gap-4 xl:grid-cols-[1.2fr,0.8fr]" style={platform.branding.style}>
             <div className="ui-surface-muted p-5 overflow-hidden">
               <div className="flex items-center gap-4">

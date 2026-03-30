@@ -20,8 +20,14 @@ import {
   Receipt
 } from 'lucide-react';
 import { PetModuleSubnav } from '@/modules/pet/pet-module-subnav';
-import { sharedPageStackClass } from '@/shared/components/public-visual-system';
-import { useAppI18n, useAppMessages } from '@/shared/i18n/app-i18n-provider';
+import {
+  sharedInputClass,
+  sharedInputLeadingAccessoryClass,
+  sharedInputWithLeadingAccessoryClass,
+  sharedInputWithTrailingAccessoryClass,
+  sharedPageStackClass
+} from '@/shared/components/public-visual-system';
+import { useAppI18n, useAppMessages, type AppLocale } from '@/shared/i18n/app-i18n-provider';
 import { formatCurrencyForLocale } from '@/shared/i18n/formatters';
 import { resolvePageItems } from '@/shared/lib/pagination';
 import { useFrontendPlatform } from '@/shared/platform/use-frontend-platform';
@@ -68,7 +74,7 @@ function POSStatCard({
         </span>
         <div>
           <p className={`text-xs font-semibold uppercase tracking-wider ${
-            tone === 'accent' ? 'text-white/70' : 'text-slate-500'
+            tone === 'accent' ? 'text-white/70' : 'text-slate-600'
           }`}>
             {label}
           </p>
@@ -90,7 +96,7 @@ function ProductCard({
 }: {
   product: PetProduct;
   onAdd: () => void;
-  locale: string;
+  locale: AppLocale;
 }) {
   const t = useAppMessages().petPOS;
   const isLowStock = product.currentQuantity <= product.reorderPoint;
@@ -119,7 +125,7 @@ function ProductCard({
 
       <div className="mt-3">
         <h3 className="font-semibold text-slate-900">{product.name}</h3>
-        <p className="mt-1 text-xs text-slate-500">
+        <p className="mt-1 text-xs text-slate-600">
           {t.products.inStock}: {product.currentQuantity} {product.unitOfMeasure}
         </p>
       </div>
@@ -148,7 +154,7 @@ function ServiceCard({
 }: {
   service: PetServiceCatalog;
   onAdd: () => void;
-  locale: string;
+  locale: AppLocale;
 }) {
   return (
     <div className="group relative rounded-2xl border border-slate-200/80 bg-white p-4 transition-all hover:border-[color:var(--accent)]/30 hover:shadow-[0_8px_24px_-16px_rgba(16,185,129,0.2)]">
@@ -164,7 +170,7 @@ function ServiceCard({
       <div className="mt-3">
         <h3 className="font-semibold text-slate-900">{service.name}</h3>
         {service.description ? (
-          <p className="mt-1 line-clamp-2 text-xs text-slate-500">{service.description}</p>
+          <p className="mt-1 line-clamp-2 text-xs text-slate-600">{service.description}</p>
         ) : null}
       </div>
 
@@ -195,7 +201,7 @@ function CartItemRow({
   onIncrease: () => void;
   onDecrease: () => void;
   onRemove: () => void;
-  locale: string;
+  locale: AppLocale;
 }) {
   const canIncrease = !item.maxQuantity || item.quantity < item.maxQuantity;
 
@@ -211,7 +217,7 @@ function CartItemRow({
 
       <div className="min-w-0 flex-1">
         <p className="truncate text-sm font-medium text-slate-900">{item.name}</p>
-        <p className="text-xs text-slate-500">
+        <p className="text-xs text-slate-600">
           {formatCurrencyForLocale(locale, item.price)} cada
         </p>
       </div>
@@ -475,13 +481,15 @@ export function POSPage({ showSubnav = false }: POSPageProps) {
           {/* Search and Filters */}
           <div className="flex flex-wrap items-center gap-3">
             <div className="relative flex-1">
-              <Search className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
+              <span className={sharedInputLeadingAccessoryClass}>
+                <Search className="h-4 w-4" />
+              </span>
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder={activeTab === 'products' ? t.products.search : 'Buscar servico...'}
-                className="h-12 w-full rounded-xl border border-slate-200 bg-white pl-12 pr-4 text-sm text-slate-900 placeholder:text-slate-400 focus:border-[color:var(--accent)] focus:outline-none focus:ring-2 focus:ring-[color:var(--accent)]/20"
+                className={`${sharedInputClass} ${sharedInputWithLeadingAccessoryClass}`}
               />
             </div>
 
@@ -489,7 +497,7 @@ export function POSPage({ showSubnav = false }: POSPageProps) {
               <select
                 value={selectedCategory}
                 onChange={(e) => setSelectedCategory(e.target.value)}
-                className="h-12 rounded-xl border border-slate-200 bg-white px-4 text-sm text-slate-700 focus:border-[color:var(--accent)] focus:outline-none focus:ring-2 focus:ring-[color:var(--accent)]/20"
+                className={`${sharedInputClass} min-w-[12rem] ${sharedInputWithTrailingAccessoryClass}`}
               >
                 <option value="">{t.products.allCategories}</option>
                 {categories.map((cat) => (
@@ -609,7 +617,7 @@ export function POSPage({ showSubnav = false }: POSPageProps) {
 
             {/* Client Selection */}
             <div className="border-b border-slate-100 p-4">
-              <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-slate-500">
+              <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-slate-600">
                 {t.client.title}
               </p>
               {selectedClient ? (
@@ -620,7 +628,7 @@ export function POSPage({ showSubnav = false }: POSPageProps) {
                     </div>
                     <div>
                       <p className="text-sm font-medium text-slate-900">{selectedClient.name}</p>
-                      <p className="text-xs text-slate-500">{selectedClient.email ?? selectedClient.phone}</p>
+                      <p className="text-xs text-slate-600">{selectedClient.email ?? selectedClient.phone}</p>
                     </div>
                   </div>
                   <button
@@ -633,6 +641,9 @@ export function POSPage({ showSubnav = false }: POSPageProps) {
                 </div>
               ) : (
                 <div className="relative">
+                  <span className={sharedInputLeadingAccessoryClass}>
+                    <User className="h-4 w-4" />
+                  </span>
                   <input
                     type="text"
                     value={clientSearchQuery}
@@ -642,9 +653,8 @@ export function POSPage({ showSubnav = false }: POSPageProps) {
                     }}
                     onFocus={() => setShowClientSearch(true)}
                     placeholder={t.client.search}
-                    className="h-10 w-full rounded-xl border border-slate-200 bg-slate-50 pl-10 pr-4 text-sm placeholder:text-slate-400 focus:border-[color:var(--accent)] focus:bg-white focus:outline-none"
+                    className={`${sharedInputClass} ${sharedInputWithLeadingAccessoryClass}`}
                   />
-                  <User className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
 
                   {showClientSearch && filteredClients.length > 0 ? (
                     <div className="absolute left-0 right-0 top-full z-10 mt-1 max-h-48 overflow-y-auto rounded-xl border border-slate-200 bg-white shadow-lg">
@@ -662,7 +672,7 @@ export function POSPage({ showSubnav = false }: POSPageProps) {
                           <User className="h-4 w-4 text-slate-400" />
                           <div>
                             <p className="text-sm font-medium text-slate-900">{client.name}</p>
-                            <p className="text-xs text-slate-500">{client.email ?? client.phone}</p>
+                            <p className="text-xs text-slate-600">{client.email ?? client.phone}</p>
                           </div>
                         </button>
                       ))}
@@ -677,8 +687,8 @@ export function POSPage({ showSubnav = false }: POSPageProps) {
               {cart.length === 0 ? (
                 <div className="py-8 text-center">
                   <ShoppingCart className="mx-auto mb-2 h-10 w-10 text-slate-300" />
-                  <p className="text-sm font-medium text-slate-500">{t.cart.empty}</p>
-                  <p className="mt-1 text-xs text-slate-400">{t.cart.emptyDescription}</p>
+                  <p className="text-sm font-medium text-slate-600">{t.cart.empty}</p>
+                  <p className="mt-1 text-xs text-slate-500">{t.cart.emptyDescription}</p>
                 </div>
               ) : (
                 <div className="space-y-3">

@@ -16,7 +16,7 @@ type PageTitleProps = {
 
 export function PageTitle({ title, description, eyebrow, actions }: PageTitleProps) {
   return (
-    <section>
+    <section className="space-y-1">
       <div className={sharedPageHeaderClass}>
         <div className={sharedPageHeaderBodyClass}>
           {eyebrow ? <p className={sharedEyebrowClass}>{eyebrow}</p> : null}

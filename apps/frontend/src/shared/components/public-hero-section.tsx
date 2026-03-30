@@ -3,7 +3,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { ArrowRight, Check } from 'lucide-react';
-import { BrandMark } from '@/shared/components/brand-assets';
+import { BrandMark, PetFlowMark } from '@/shared/components/brand-assets';
 import {
   publicEyebrowClass,
   publicHeroTitleClass,
@@ -108,14 +108,19 @@ export function PublicHeroSection({
           </div>
 
           <div className="relative">
-            <div className="absolute inset-0 rounded-[2.2rem] bg-[radial-gradient(circle_at_center,rgba(16,185,129,0.12),transparent_72%)] blur-3xl" />
-            <div className="relative overflow-hidden rounded-[2.2rem] border border-slate-200/80 bg-white/92 p-5 shadow-[0_30px_72px_-42px_rgba(15,23,42,0.22)] backdrop-blur-sm">
+            <div className="absolute inset-0 rounded-[2.2rem] bg-[radial-gradient(circle_at_center,rgba(16,185,129,0.12),transparent_72%)] blur-2xl" />
+            <div className="relative overflow-hidden rounded-[2.2rem] border border-slate-200/80 bg-[linear-gradient(180deg,rgba(16,185,129,0.04),rgba(255,255,255,0.985)_140px)] p-5 shadow-[0_30px_72px_-42px_rgba(15,23,42,0.22)]">
               <div className="flex items-center justify-between gap-4 border-b border-slate-200/80 pb-4">
                 <div className="flex items-center gap-3">
-                  <BrandMark priority className="h-11 w-11 shrink-0 rounded-2xl" imageClassName="scale-[1.08]" />
+                  <PetFlowMark className="h-11 w-11 shrink-0 rounded-2xl" iconClassName="scale-95" />
                   <div>
                     <p className="text-sm font-semibold tracking-[-0.02em] text-slate-900">PetFlow</p>
                     <p className="text-[10px] font-medium uppercase tracking-[0.18em] text-slate-700">banho, tosa e recorrência</p>
+                    <p className="mt-1 flex items-center gap-1 text-[10px] font-medium uppercase tracking-[0.16em] text-slate-600">
+                      by
+                      <BrandMark className="h-3.5 w-3.5 rounded-[0.65rem]" imageClassName="scale-[1.08]" />
+                      PhaifferTech
+                    </p>
                   </div>
                 </div>
                 <span className="inline-flex rounded-full bg-[color:var(--accent)]/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-[color:var(--accent)]">
@@ -125,12 +130,12 @@ export function PublicHeroSection({
 
               <div className="mt-5 grid gap-3 sm:grid-cols-3">
                 {heroStats.length > 0 ? heroStats.map((stat) => (
-                  <div key={`${stat.value}-${stat.label}`} className="rounded-[1.35rem] border border-slate-200 bg-slate-50/90 px-4 py-3.5">
+                  <div key={`${stat.value}-${stat.label}`} className="rounded-[1.35rem] border border-slate-200/90 bg-[linear-gradient(180deg,rgba(16,185,129,0.05),rgba(248,250,252,0.96)_120px)] px-4 py-3.5">
                     <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[color:var(--accent)]">{stat.value}</p>
                     <p className={`mt-2 ${sharedCompactTextClass}`}>{stat.label}</p>
                   </div>
                 )) : (
-                  <div className="rounded-[1.35rem] border border-slate-200 bg-slate-50/90 px-4 py-3.5 sm:col-span-3">
+                  <div className="rounded-[1.35rem] border border-slate-200/90 bg-[linear-gradient(180deg,rgba(16,185,129,0.05),rgba(248,250,252,0.96)_120px)] px-4 py-3.5 sm:col-span-3">
                     <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[color:var(--accent)]">PetFlow</p>
                     <p className={`mt-2 ${sharedCompactTextClass}`}>
                       Daily queue, recurring plans, billing, and inventory in one product surface.
@@ -140,7 +145,7 @@ export function PublicHeroSection({
               </div>
 
               <div className="mt-5 grid gap-4 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)]">
-                <div className="rounded-[1.5rem] border border-slate-200 bg-slate-50/90 p-4">
+                <div className="rounded-[1.5rem] border border-slate-200/90 bg-[linear-gradient(180deg,rgba(16,185,129,0.05),rgba(248,250,252,0.95)_120px)] p-4">
                   <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-700">Operação visível</p>
                   <div className="mt-4 space-y-3">
                     {heroHighlights.slice(0, 3).map((item, index) => (
@@ -166,10 +171,10 @@ export function PublicHeroSection({
                     priority
                     className="object-cover"
                   />
-                  <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(15,23,42,0.02),rgba(15,23,42,0.42))]" />
-                  <div className="absolute inset-x-4 bottom-4 rounded-[1.35rem] border border-white/20 bg-slate-950/55 px-4 py-4 text-white backdrop-blur-sm">
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-emerald-200">PetFlow no centro</p>
-                    <p className="mt-2 text-sm leading-6 text-slate-200">
+                  <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(15,23,42,0.02),rgba(15,23,42,0.18))]" />
+                  <div className="absolute inset-x-4 bottom-4 rounded-[1.35rem] border border-white/70 bg-white/88 px-4 py-4 text-slate-900 shadow-[0_18px_40px_-28px_rgba(15,23,42,0.28)] backdrop-blur-[2px]">
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[color:var(--accent)]">PetFlow no centro</p>
+                    <p className="mt-2 text-sm leading-6 text-slate-700">
                       Fila de banho e tosa, pet taxi, estoque, cobrança e comissão seguem visíveis sem sair da mesma superfície.
                     </p>
                   </div>

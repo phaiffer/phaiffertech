@@ -3,7 +3,7 @@
 import type { ReactNode } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { BrandMark } from '@/shared/components/brand-assets';
+import { BrandBanner, BrandMark, PetFlowMark } from '@/shared/components/brand-assets';
 import { publicSiteContainerClass } from '@/shared/components/public-visual-system';
 import { getPublicSiteMessages } from '@/shared/public/public-site-messages';
 import { usePublicSite } from '@/shared/public/public-site-provider';
@@ -45,21 +45,13 @@ export function PublicSiteShell({ children }: PublicSiteShellProps) {
 
   return (
     <div className="min-h-screen bg-white text-foreground">
-      <header className="sticky top-0 z-40 border-b border-slate-200/80 bg-white/95 backdrop-blur-xl">
+      <header className="sticky top-0 z-40 border-b border-slate-200/80 bg-white/92 shadow-[0_8px_24px_-20px_rgba(15,23,42,0.08)] backdrop-blur-sm">
         <div className={`${publicSiteContainerClass} flex h-16 items-center justify-between gap-6`}>
           <Link href="/" className="inline-flex shrink-0 items-center gap-2.5">
-            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[color:var(--accent)]/10 text-[color:var(--accent)]">
-              <svg viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5" aria-hidden="true">
-                <ellipse cx="12" cy="17" rx="4.5" ry="3.5" />
-                <ellipse cx="7" cy="13.5" rx="2" ry="2.5" />
-                <ellipse cx="17" cy="13.5" rx="2" ry="2.5" />
-                <ellipse cx="9.5" cy="10" rx="2" ry="2.5" />
-                <ellipse cx="14.5" cy="10" rx="2" ry="2.5" />
-              </svg>
-            </span>
+            <PetFlowMark className="h-9 w-9 shrink-0" iconClassName="scale-95" />
             <div className="flex flex-col leading-none">
               <span className="text-base font-bold tracking-tight text-slate-900">PetFlow</span>
-              <span className="mt-0.5 flex items-center gap-1 text-[10px] font-medium uppercase tracking-[0.14em] text-slate-500">
+              <span className="mt-0.5 flex items-center gap-1 text-[10px] font-medium uppercase tracking-[0.14em] text-slate-600">
                 by
                 <BrandMark className="h-3.5 w-3.5 rounded-sm" imageClassName="scale-110" />
                 PhaifferTech
@@ -93,9 +85,6 @@ export function PublicSiteShell({ children }: PublicSiteShellProps) {
               {localeSwitchLabel}
             </button>
 
-            <Link href="/contact" className="hidden text-sm font-medium text-slate-600 transition-colors hover:text-slate-900 md:inline-flex">
-              {t.navContact}
-            </Link>
             <Link
               href="/login"
               className="inline-flex items-center rounded-xl bg-[linear-gradient(135deg,var(--accent),var(--petflow-teal))] px-4 py-2.5 text-sm font-semibold text-white shadow-[0_18px_38px_-26px_rgba(16,185,129,0.52)] transition-transform hover:-translate-y-0.5"
@@ -126,29 +115,21 @@ export function PublicSiteShell({ children }: PublicSiteShellProps) {
 
       <main>{children}</main>
 
-      <footer className="border-t border-slate-200 bg-slate-50/70">
+      <footer className="border-t border-slate-200 bg-[linear-gradient(180deg,rgba(16,185,129,0.04),rgba(248,250,252,0.82))]">
         <div className={`${publicSiteContainerClass} grid gap-10 py-12 md:grid-cols-4`}>
           <div>
             <Link href="/" className="inline-flex items-center gap-2.5">
-              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[color:var(--accent)]/10 text-[color:var(--accent)]">
-                <svg viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5" aria-hidden="true">
-                  <ellipse cx="12" cy="17" rx="4.5" ry="3.5" />
-                  <ellipse cx="7" cy="13.5" rx="2" ry="2.5" />
-                  <ellipse cx="17" cy="13.5" rx="2" ry="2.5" />
-                  <ellipse cx="9.5" cy="10" rx="2" ry="2.5" />
-                  <ellipse cx="14.5" cy="10" rx="2" ry="2.5" />
-                </svg>
-              </span>
+              <PetFlowMark className="h-9 w-9 shrink-0" iconClassName="scale-95" />
               <div className="flex flex-col leading-none">
                 <span className="text-base font-bold tracking-tight text-slate-900">PetFlow</span>
-                <span className="mt-0.5 flex items-center gap-1 text-[10px] font-medium uppercase tracking-[0.14em] text-slate-500">
+                <span className="mt-0.5 flex items-center gap-1 text-[10px] font-medium uppercase tracking-[0.14em] text-slate-600">
                   by
                   <BrandMark className="h-3.5 w-3.5 rounded-sm" imageClassName="scale-110" />
                   PhaifferTech
                 </span>
               </div>
             </Link>
-            <p className="mt-4 max-w-xs text-sm leading-7 text-slate-600">{t.footerNarrativeText}</p>
+            <p className="mt-4 max-w-xs text-sm leading-7 text-slate-700">{t.footerNarrativeText}</p>
           </div>
 
           <div>
@@ -188,8 +169,19 @@ export function PublicSiteShell({ children }: PublicSiteShellProps) {
           </div>
         </div>
 
-        <div className="border-t border-slate-200 bg-white/80">
-          <div className={`${publicSiteContainerClass} py-5 text-sm text-slate-700`}>{t.footerCopyright}</div>
+        <div className="border-t border-slate-200 bg-white/88">
+          <div className={`${publicSiteContainerClass} flex flex-col gap-3 py-5 md:flex-row md:items-center md:justify-between`}>
+            <div className="text-sm text-slate-700">{t.footerCopyright}</div>
+            <div className="flex w-full max-w-[9rem] flex-col items-start gap-2 md:items-end md:text-right">
+              <span className="text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-600">Platform signature</span>
+              <div className="flex h-[6.25rem] w-full items-center justify-center rounded-[1.25rem] bg-[linear-gradient(180deg,rgba(16,185,129,0.045),rgba(255,255,255,0.96))]">
+                <BrandBanner
+                  className="aspect-[3/2] h-[70%] max-w-[82%] rounded-[1rem]"
+                  imageClassName="h-full w-full object-contain object-center"
+                />
+              </div>
+            </div>
+          </div>
         </div>
       </footer>
     </div>

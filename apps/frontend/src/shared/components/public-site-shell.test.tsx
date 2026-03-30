@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { PublicSiteShell } from '@/shared/components/public-site-shell';
 import { PublicSiteProvider } from '@/shared/public/public-site-provider';
@@ -30,9 +30,14 @@ describe('PublicSiteShell', () => {
 
     const productLinks = await screen.findAllByRole('link', { name: 'Products' });
     const accessLinks = screen.getAllByRole('link', { name: 'PetFlow access' });
+    const header = screen.getByRole('banner');
+    const headerAccessLink = within(header).getByRole('link', { name: 'PetFlow access' });
+    const headerActions = headerAccessLink.parentElement;
 
     expect(productLinks[0]).toHaveAttribute('href', '/products');
     expect(accessLinks[0]).toHaveAttribute('href', '/login');
+    expect(headerActions).not.toBeNull();
+    expect(within(headerActions as HTMLElement).queryByRole('link', { name: 'Contact' })).not.toBeInTheDocument();
     expect(screen.getAllByText('PetFlow').length).toBeGreaterThan(0);
     expect(screen.queryByRole('link', { name: 'About' })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Light' })).not.toBeInTheDocument();

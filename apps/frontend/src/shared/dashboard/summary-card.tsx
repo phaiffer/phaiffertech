@@ -21,14 +21,14 @@ function SummaryCardBody({ card }: SummaryCardProps) {
     <>
       <div className="flex items-start justify-between gap-3">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">{card.label}</p>
-          <p className="mt-2 text-3xl font-bold tabular-nums text-slate-900">
+          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-700">{card.label}</p>
+          <p className="mt-2 text-[2.15rem] font-bold tabular-nums tracking-[-0.04em] text-slate-900">
             {formatValue(card.value)}
           </p>
         </div>
         <StatusBadge status={card.status} />
       </div>
-      {card.trend ? <p className={`mt-3 ${sharedCompactTextClass}`}>{card.trend}</p> : null}
+      {card.trend ? <p className="mt-3 text-sm leading-6 text-slate-700">{card.trend}</p> : null}
     </>
   );
 }

@@ -14,6 +14,12 @@ vi.mock('@/shared/components/impersonation-banner', () => ({
   ImpersonationBanner: () => null
 }));
 
+vi.mock('@/shared/auth/use-auth', () => ({
+  useAuth: () => ({
+    signOut: vi.fn()
+  })
+}));
+
 vi.mock('@/shared/platform/use-frontend-platform', () => ({
   useFrontendPlatform: () => ({
     user: {
@@ -71,10 +77,13 @@ describe('AppShell', () => {
       </AppShell>
     );
 
-    expect(screen.getByRole('heading', { name: 'Overview' })).toBeInTheDocument();
-    expect(screen.getByText('Tenant One')).toBeInTheDocument();
-    expect(screen.getByText('Contracted SaaS workspace')).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Overview' })).toHaveAttribute('href', '/dashboard');
-    expect(screen.getByTestId('sidebar').parentElement).toHaveStyle({ '--tenant-accent': '#2563eb' });
+    expect(screen.getByText('Overview')).toBeInTheDocument();
+    expect(screen.getByText('Dashboard content')).toBeInTheDocument();
+    expect(screen.getByText('PetFlow')).toBeInTheDocument();
+    expect(screen.getByText('by PhaifferTech')).toBeInTheDocument();
+
+    const shell = screen.getByTestId('sidebar').parentElement;
+    expect(shell).not.toBeNull();
+    expect(shell?.style.getPropertyValue('--tenant-accent')).toBe('var(--petflow-primary)');
   });
 });

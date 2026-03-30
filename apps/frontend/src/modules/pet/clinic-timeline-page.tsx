@@ -15,7 +15,15 @@ import {
   ChevronDown
 } from 'lucide-react';
 import { PetModuleSubnav } from '@/modules/pet/pet-module-subnav';
-import { sharedPageStackClass } from '@/shared/components/public-visual-system';
+import {
+  sharedInputClass,
+  sharedInputLabelClass,
+  sharedInputLeadingAccessoryClass,
+  sharedInputTrailingAccessoryClass,
+  sharedInputWithLeadingAccessoryClass,
+  sharedInputWithTrailingAccessoryClass,
+  sharedPageStackClass
+} from '@/shared/components/public-visual-system';
 import { useAppI18n, useAppMessages } from '@/shared/i18n/app-i18n-provider';
 import { formatDateForLocale, formatTimeForLocale } from '@/shared/i18n/formatters';
 import { resolvePageItems } from '@/shared/lib/pagination';
@@ -252,16 +260,18 @@ export function ClinicTimelinePage({ showSubnav = false }: ClinicTimelinePagePro
         <section className="rounded-[2rem] border border-slate-200/80 bg-white p-6 shadow-[0_18px_38px_-32px_rgba(15,23,42,0.10)]">
           <div className="grid gap-4 md:grid-cols-3">
             <div>
-              <label htmlFor="pet-filter" className="mb-2 block text-xs font-semibold uppercase tracking-wider text-slate-500">
+              <label htmlFor="pet-filter" className={sharedInputLabelClass}>
                 Pet
               </label>
               <div className="relative">
-                <PawPrint className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                <span className={sharedInputLeadingAccessoryClass}>
+                  <PawPrint className="h-4 w-4" />
+                </span>
                 <select
                   id="pet-filter"
                   value={filters.petId}
                   onChange={(e) => setFilters((f) => ({ ...f, petId: e.target.value }))}
-                  className="w-full appearance-none rounded-xl border border-slate-200 bg-white py-3 pl-10 pr-10 text-sm text-slate-700 transition-colors hover:border-slate-300 focus:border-[color:var(--accent)] focus:outline-none focus:ring-2 focus:ring-[color:var(--accent)]/20"
+                  className={`${sharedInputClass} ${sharedInputWithLeadingAccessoryClass} ${sharedInputWithTrailingAccessoryClass}`}
                 >
                   <option value="">Todos os pets</option>
                   {pets.map((pet) => (
@@ -270,42 +280,50 @@ export function ClinicTimelinePage({ showSubnav = false }: ClinicTimelinePagePro
                     </option>
                   ))}
                 </select>
-                <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                <span className={sharedInputTrailingAccessoryClass}>
+                  <ChevronDown className="h-4 w-4" />
+                </span>
               </div>
             </div>
 
             <div>
-              <label htmlFor="type-filter" className="mb-2 block text-xs font-semibold uppercase tracking-wider text-slate-500">
+              <label htmlFor="type-filter" className={sharedInputLabelClass}>
                 Tipo de evento
               </label>
               <div className="relative">
-                <Calendar className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                <span className={sharedInputLeadingAccessoryClass}>
+                  <Calendar className="h-4 w-4" />
+                </span>
                 <select
                   id="type-filter"
                   value={filters.eventType}
                   onChange={(e) => setFilters((f) => ({ ...f, eventType: e.target.value }))}
-                  className="w-full appearance-none rounded-xl border border-slate-200 bg-white py-3 pl-10 pr-10 text-sm text-slate-700 transition-colors hover:border-slate-300 focus:border-[color:var(--accent)] focus:outline-none focus:ring-2 focus:ring-[color:var(--accent)]/20"
+                  className={`${sharedInputClass} ${sharedInputWithLeadingAccessoryClass} ${sharedInputWithTrailingAccessoryClass}`}
                 >
                   <option value="">Todos os tipos</option>
                   <option value="MEDICAL_RECORD">{t.timeline.types.medicalRecord}</option>
                   <option value="VACCINATION">{t.timeline.types.vaccination}</option>
                   <option value="PRESCRIPTION">{t.timeline.types.prescription}</option>
                 </select>
-                <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                <span className={sharedInputTrailingAccessoryClass}>
+                  <ChevronDown className="h-4 w-4" />
+                </span>
               </div>
             </div>
 
             <div>
-              <label htmlFor="professional-filter" className="mb-2 block text-xs font-semibold uppercase tracking-wider text-slate-500">
+              <label htmlFor="professional-filter" className={sharedInputLabelClass}>
                 Profissional
               </label>
               <div className="relative">
-                <User className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                <span className={sharedInputLeadingAccessoryClass}>
+                  <User className="h-4 w-4" />
+                </span>
                 <select
                   id="professional-filter"
                   value={filters.professionalId}
                   onChange={(e) => setFilters((f) => ({ ...f, professionalId: e.target.value }))}
-                  className="w-full appearance-none rounded-xl border border-slate-200 bg-white py-3 pl-10 pr-10 text-sm text-slate-700 transition-colors hover:border-slate-300 focus:border-[color:var(--accent)] focus:outline-none focus:ring-2 focus:ring-[color:var(--accent)]/20"
+                  className={`${sharedInputClass} ${sharedInputWithLeadingAccessoryClass} ${sharedInputWithTrailingAccessoryClass}`}
                 >
                   <option value="">Todos os profissionais</option>
                   {professionals.map((prof) => (
@@ -314,7 +332,9 @@ export function ClinicTimelinePage({ showSubnav = false }: ClinicTimelinePagePro
                     </option>
                   ))}
                 </select>
-                <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                <span className={sharedInputTrailingAccessoryClass}>
+                  <ChevronDown className="h-4 w-4" />
+                </span>
               </div>
             </div>
           </div>

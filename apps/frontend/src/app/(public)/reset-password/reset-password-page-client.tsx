@@ -3,7 +3,7 @@
 import { FormEvent, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { BrandMark } from '@/shared/components/brand-assets';
+import { BrandMark, PetFlowMark } from '@/shared/components/brand-assets';
 import {
   clearImpersonationBackupSession,
   clearSession,
@@ -93,15 +93,19 @@ export default function ResetPasswordPageClient({ token }: ResetPasswordPageClie
       <main className="mx-auto flex min-h-screen w-full max-w-5xl items-center justify-center px-6 py-12">
         <div className="w-full max-w-[420px]">
           <Link href="/" className="mb-8 inline-flex items-center gap-3 text-foreground">
-            <BrandMark
-              priority
-              className="h-14 w-14"
-              imageClassName="scale-[1.08]"
-              style={visualContext.brandMarkStyle}
-            />
+            <PetFlowMark className="h-14 w-14" />
             <div>
-              <span className="block text-lg font-semibold tracking-tight">PhaifferTech</span>
-              <span className="block text-[11px] uppercase tracking-[0.18em] text-muted">{t.title}</span>
+              <span className="block text-lg font-semibold tracking-tight">PetFlow</span>
+              <span className="mt-1 inline-flex items-center gap-1.5 text-[10px] font-medium uppercase tracking-[0.16em] text-slate-500">
+                <BrandMark
+                  priority
+                  className="h-4 w-4 rounded-[0.45rem] p-[0.08rem]"
+                  imageClassName="scale-[1.08]"
+                  style={visualContext.brandMarkStyle}
+                />
+                PhaifferTech
+              </span>
+              <span className="mt-1 block text-[11px] uppercase tracking-[0.18em] text-muted">{t.title}</span>
             </div>
           </Link>
 
@@ -113,7 +117,11 @@ export default function ResetPasswordPageClient({ token }: ResetPasswordPageClie
                   <p className={`mt-2 ${sharedCompactTextClass}`}>{t.invalidDescription}</p>
                 </div>
                 <div className="flex flex-col gap-3 sm:flex-row">
-                  <Link href="/forgot-password" className={publicPrimaryButtonClass} style={{ backgroundColor: 'var(--tenant-accent)' }}>
+                  <Link
+                    href="/forgot-password"
+                    className={publicPrimaryButtonClass}
+                    style={{ backgroundImage: 'linear-gradient(135deg, var(--tenant-accent), var(--petflow-teal))' }}
+                  >
                     {t.requestNewLinkLabel}
                   </Link>
                   <Link href="/login" className={sharedSecondaryButtonClass}>
@@ -175,7 +183,7 @@ export default function ResetPasswordPageClient({ token }: ResetPasswordPageClie
                     type="submit"
                     disabled={submitting}
                     className={`${publicPrimaryButtonClass} w-full disabled:cursor-not-allowed disabled:opacity-50`}
-                    style={{ backgroundColor: 'var(--tenant-accent)' }}
+                    style={{ backgroundImage: 'linear-gradient(135deg, var(--tenant-accent), var(--petflow-teal))' }}
                   >
                     {submitting ? t.loadingLabel : t.submitLabel}
                   </button>

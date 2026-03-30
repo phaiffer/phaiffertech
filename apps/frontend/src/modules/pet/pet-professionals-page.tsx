@@ -8,7 +8,8 @@ import { PermissionGuard } from '@/shared/auth/PermissionGuard';
 import {
   sharedCompactTextClass,
   sharedFilterToolbarClass,
-  sharedPageStackClass
+  sharedPageStackClass,
+  sharedReminderSurfaceClass
 } from '@/shared/components/public-visual-system';
 import { StatusBadge } from '@/shared/dashboard/status-badge';
 import { useAppI18n, useAppMessages } from '@/shared/i18n/app-i18n-provider';
@@ -56,13 +57,13 @@ function TeamSnapshotCard({
     ? 'border-transparent bg-[linear-gradient(135deg,var(--accent),var(--petflow-teal))] text-white shadow-[0_20px_40px_-28px_rgba(16,185,129,0.5)]'
     : tone === 'warning'
       ? 'border-amber-200/80 bg-[linear-gradient(180deg,rgba(251,191,36,0.12),rgba(255,255,255,0.98))]'
-      : 'border-slate-200/90 bg-white';
+      : 'border-slate-200/90 bg-[linear-gradient(180deg,rgba(16,185,129,0.05),rgba(255,255,255,0.99)_140px)]';
 
   return (
     <div className={`rounded-2xl border p-5 shadow-[0_16px_34px_-28px_rgba(15,23,42,0.16)] ${toneClass}`}>
       <div className="flex items-start justify-between gap-3">
         <div>
-          <p className={`text-xs font-semibold uppercase tracking-[0.16em] ${tone === 'accent' ? 'text-white/72' : 'text-slate-500'}`}>
+          <p className={`text-xs font-semibold uppercase tracking-[0.16em] ${tone === 'accent' ? 'text-white/80' : 'text-slate-700'}`}>
             {label}
           </p>
           <p className={`mt-3 text-3xl font-bold tracking-[-0.03em] ${tone === 'accent' ? 'text-white' : 'text-slate-900'}`}>
@@ -441,12 +442,16 @@ export function PetProfessionalsPage() {
             <FormInput label={messages.form.licenseNumber} value={licenseNumber} onChange={setLicenseNumber} />
             <FormInput
               id="professional-phone"
-              name="professionalPhone"
+              name="tel"
               label={messages.form.phone}
               value={phone}
               onChange={(v) => setPhone(maskPhoneInput(v))}
+              type="tel"
               autoComplete="section-professional tel"
               inputMode="tel"
+              autoCapitalize="none"
+              autoCorrect="off"
+              spellCheck={false}
               data-lpignore="true"
               data-1p-ignore="true"
             />
@@ -478,7 +483,7 @@ export function PetProfessionalsPage() {
               placeholder={messages.form.commissionRatePlaceholder}
             />
 
-            <div className="md:col-span-2 rounded-2xl border border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-panel-muted)] p-4">
+            <div className={`md:col-span-2 ${sharedReminderSurfaceClass}`}>
               <p className="text-sm font-medium text-[color:var(--app-shell-heading)]">{messages.form.reminderTitle}</p>
               <p className="mt-1 text-xs text-slate-700">
                 {messages.form.reminderDescription}

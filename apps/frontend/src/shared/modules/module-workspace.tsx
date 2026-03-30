@@ -98,6 +98,10 @@ const interactiveWorkspaceCardClass =
   `${sharedMutedSurfaceClass} p-5 transition-all duration-200 hover:border-[color:var(--tenant-accent)] hover:shadow-md`;
 
 const disabledWorkspaceCardClass = `${sharedDashedSurfaceClass} p-5 opacity-90`;
+const workspaceLabelClass = 'text-xs font-semibold uppercase tracking-[0.18em] text-slate-700';
+const workspaceValueClass = 'mt-3 text-[1.9rem] font-bold tracking-[-0.04em] text-slate-900';
+const workspaceSupportingCopyClass = 'mt-2 text-sm leading-6 text-slate-700';
+const workspaceBodyCopyClass = 'text-sm leading-6 text-slate-700';
 
 export function ModuleWorkspaceHero({
   eyebrow,
@@ -166,15 +170,15 @@ export function ModuleWorkspaceFactList({ facts }: { facts: ModuleWorkspaceFact[
         >
           <div className="flex items-start justify-between gap-3">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--app-shell-muted)]">
+              <p className={workspaceLabelClass}>
                 {fact.label}
               </p>
-              <p className={`mt-2 ${sharedSectionHeadingClass}`}>{fact.value}</p>
+              <p className={workspaceValueClass}>{fact.value}</p>
             </div>
             {fact.status ? <StatusBadge status={fact.status} /> : null}
           </div>
           {fact.description ? (
-            <p className={`mt-2 ${sharedCompactTextClass}`}>{fact.description}</p>
+            <p className={workspaceSupportingCopyClass}>{fact.description}</p>
           ) : null}
         </div>
       ))}
@@ -193,23 +197,23 @@ export function ModuleWorkspaceOverviewGrid({ cards }: { cards: ModuleWorkspaceO
         >
           <div className="flex items-start justify-between gap-3">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--app-shell-muted)]">
+              <p className={workspaceLabelClass}>
                 {card.label}
               </p>
-              <p className="mt-4 text-2xl font-semibold tracking-tight text-[color:var(--app-shell-heading)]">
+              <p className={workspaceValueClass}>
                 {card.value}
               </p>
             </div>
             {card.status ? <StatusBadge status={card.status} /> : null}
           </div>
-          <p className={`mt-3 ${sharedCompactTextClass}`}>{card.description}</p>
+          <p className={workspaceSupportingCopyClass}>{card.description}</p>
           {!isCapabilityReady(card.capability) && (card.capability?.title || card.capability?.description) ? (
             <div className={`mt-4 ${sharedDashedSurfaceClass} px-4 py-3`} style={workspaceDashedSurfaceStyle}>
               {card.capability?.title ? (
                 <p className={sharedSectionHeadingClass}>{card.capability.title}</p>
               ) : null}
               {card.capability?.description ? (
-                <p className={`mt-1 ${sharedCompactTextClass}`}>{card.capability.description}</p>
+                <p className={workspaceSupportingCopyClass}>{card.capability.description}</p>
               ) : null}
             </div>
           ) : null}
@@ -279,7 +283,7 @@ export function ModuleWorkspaceQuickActionGrid({
                   </div>
                   <StatusBadge status={capability.status ?? action.status ?? null} />
                 </div>
-                <p className="mt-3 text-sm leading-6 text-[color:var(--app-shell-muted)]">{action.description}</p>
+                <p className={workspaceSupportingCopyClass}>{action.description}</p>
                 {!isCapabilityReady(capability) && (capability.title || capability.description) ? (
                   <div
                     className="mt-4 rounded-2xl border border-dashed border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-panel)] px-4 py-3"
@@ -289,7 +293,7 @@ export function ModuleWorkspaceQuickActionGrid({
                       <p className="text-sm font-semibold text-[color:var(--app-shell-heading)]">{capability.title}</p>
                     ) : null}
                     {capability.description ? (
-                      <p className="mt-1 text-sm text-[color:var(--app-shell-muted)]">{capability.description}</p>
+                      <p className={workspaceSupportingCopyClass}>{capability.description}</p>
                     ) : null}
                   </div>
                 ) : null}
@@ -364,7 +368,7 @@ export function ModuleWorkspaceGuidance({
                 </div>
                 {step.status ? <StatusBadge status={step.status} /> : null}
               </div>
-              <p className="mt-3 text-sm leading-6 text-[color:var(--app-shell-muted)]">{step.description}</p>
+              <p className={workspaceSupportingCopyClass}>{step.description}</p>
               <span className="mt-5 inline-flex text-sm font-semibold text-[color:var(--tenant-accent)]">
                 {href ? step.capability?.actionLabel ?? 'Open next step' : 'Guided workspace step'}
               </span>
@@ -413,7 +417,7 @@ export function ModuleWorkspaceState({
       className={
         tone === 'error'
           ? 'rounded-2xl border border-destructive/30 bg-destructive-muted px-4 py-3 text-sm text-destructive'
-          : `${sharedMutedSurfaceClass} px-4 py-3 text-sm text-[color:var(--app-shell-muted)]`
+          : `${sharedMutedSurfaceClass} px-4 py-3 ${workspaceBodyCopyClass}`
       }
       style={tone === 'error' ? undefined : workspaceMutedSurfaceStyle}
     >

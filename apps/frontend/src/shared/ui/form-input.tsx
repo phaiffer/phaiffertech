@@ -52,6 +52,7 @@ export function FormInput({
   const inputId = id ?? generatedInputId;
   const descriptionId = description ? `${inputId}-description` : undefined;
   const isEmailField = type === 'email';
+  const isPhoneField = type === 'tel';
   const resolvedInputMode = inputMode ?? (
     isEmailField
       ? 'email'
@@ -61,18 +62,32 @@ export function FormInput({
           ? 'tel'
           : undefined
   );
-  const resolvedAutoComplete = autoComplete ?? (isEmailField ? 'email' : undefined);
-  const resolvedAutoCapitalize = autoCapitalize ?? (isEmailField ? 'none' : undefined);
-  const resolvedAutoCorrect = autoCorrect ?? (isEmailField ? 'off' : undefined);
-  const resolvedSpellCheck = spellCheck ?? (isEmailField ? false : undefined);
+  const resolvedAutoComplete = autoComplete ?? (
+    isEmailField
+      ? 'email'
+      : type === 'tel'
+        ? 'tel'
+        : undefined
+  );
+  const resolvedAutoCapitalize = autoCapitalize ?? (isEmailField || isPhoneField ? 'none' : undefined);
+  const resolvedAutoCorrect = autoCorrect ?? (isEmailField || isPhoneField ? 'off' : undefined);
+  const resolvedSpellCheck = spellCheck ?? (isEmailField || isPhoneField ? false : undefined);
   const resolvedStep = type === 'number' && inputProps.step === undefined ? 'any' : inputProps.step;
+  const reserveEmailAccessorySpace = isEmailField && !trailingAccessory;
+  const hasValue = value.length > 0;
   const inputClassName = [
     sharedInputClass,
     'min-w-0',
     leadingIcon ? sharedInputWithLeadingAccessoryClass : '',
-    trailingAccessory ? sharedInputWithTrailingAccessoryClass : '',
+    trailingAccessory || reserveEmailAccessorySpace ? sharedInputWithTrailingAccessoryClass : '',
     className ?? ''
   ].filter(Boolean).join(' ');
+  const canMoveCaretToEnd = type === 'text'
+    || type === 'search'
+    || type === 'url'
+    || type === 'tel'
+    || type === 'password'
+    || type === 'email';
 
   return (
     <div className={wrapperClassName ? `${sharedFieldGroupClass} ${wrapperClassName}` : sharedFieldGroupClass}>
@@ -88,8 +103,14 @@ export function FormInput({
           value={value}
           onChange={(event) => onChange(event.target.value)}
           onFocus={(e) => {
-            const len = e.target.value.length;
-            e.target.setSelectionRange(len, len);
+            if (canMoveCaretToEnd && typeof e.target.setSelectionRange === 'function') {
+              const len = e.target.value.length;
+              try {
+                e.target.setSelectionRange(len, len);
+              } catch {
+                // Ignore input types that do not support manual caret control.
+              }
+            }
             onFocusProp?.(e);
           }}
           placeholder={placeholder}
@@ -99,6 +120,7 @@ export function FormInput({
           autoCorrect={resolvedAutoCorrect}
           spellCheck={resolvedSpellCheck}
           step={resolvedStep}
+          data-filled={hasValue ? 'true' : 'false'}
           required={required}
           disabled={disabled}
           aria-describedby={descriptionId}

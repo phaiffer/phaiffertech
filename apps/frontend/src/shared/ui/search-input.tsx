@@ -1,8 +1,11 @@
+import { Search } from 'lucide-react';
 import {
   sharedFieldGroupClass,
   sharedFieldHintClass,
   sharedInputClass,
-  sharedInputLabelClass
+  sharedInputLeadingAccessoryClass,
+  sharedInputLabelClass,
+  sharedInputWithLeadingAccessoryClass
 } from '@/shared/components/public-visual-system';
 
 type SearchInputProps = {
@@ -24,16 +27,31 @@ export function SearchInput({
   className,
   wrapperClassName
 }: SearchInputProps) {
+  const hasValue = value.length > 0;
+  const searchInputClass = [
+    sharedInputClass,
+    sharedInputWithLeadingAccessoryClass,
+    '[--ui-input-padding-right:3.5rem] sm:[--ui-input-padding-right:3.75rem]',
+    className ?? ''
+  ].filter(Boolean).join(' ');
+
   return (
     <label className={wrapperClassName ? `${sharedFieldGroupClass} ${wrapperClassName}` : sharedFieldGroupClass}>
       <span className={sharedInputLabelClass}>{label}</span>
       <div className="relative">
+        <span className={sharedInputLeadingAccessoryClass}>
+          <Search className="h-4 w-4" />
+        </span>
         <input
           type="search"
           value={value}
           onChange={(event) => onChange(event.target.value)}
           placeholder={placeholder}
-          className={className ? `${sharedInputClass} ${className}` : sharedInputClass}
+          autoComplete="off"
+          enterKeyHint="search"
+          spellCheck={false}
+          data-filled={hasValue ? 'true' : 'false'}
+          className={searchInputClass}
         />
       </div>
       {description ? <span className={sharedFieldHintClass}>{description}</span> : null}

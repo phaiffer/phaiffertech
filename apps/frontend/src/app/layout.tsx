@@ -1,25 +1,14 @@
 import type { Metadata, Viewport } from 'next';
-import { Inter, JetBrains_Mono } from 'next/font/google';
 import './globals.css';
 import { Providers } from '@/shared/components/providers';
 
-const inter = Inter({
-  subsets: ['latin'],
-  variable: '--font-geist-sans',
-});
-
-const jetbrainsMono = JetBrains_Mono({
-  subsets: ['latin'],
-  variable: '--font-geist-mono',
-});
-
 export const metadata: Metadata = {
   title: {
-    default: 'PhaifferTech',
-    template: '%s | PhaifferTech',
+    default: 'PetFlow',
+    template: '%s | PetFlow',
   },
   description:
-    'Modular SaaS platform for operational systems, cloud architecture, data engineering and applied research.',
+    'PetFlow by PhaifferTech for pet operations, scheduling, recurring plans, inventory, and billing.',
   icons: {
     icon: [
       { url: '/favicon.ico', sizes: 'any' },
@@ -33,8 +22,8 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   themeColor: [
-    { media: '(prefers-color-scheme: light)', color: '#fafafa' },
-    { media: '(prefers-color-scheme: dark)', color: '#09090b' },
+    { media: '(prefers-color-scheme: light)', color: '#f5f8f6' },
+    { media: '(prefers-color-scheme: dark)', color: '#064e3b' },
   ],
   width: 'device-width',
   initialScale: 1,
@@ -43,9 +32,7 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="pt-BR" suppressHydrationWarning>
-      <body
-        className={`${inter.variable} ${jetbrainsMono.variable} font-sans bg-background text-foreground antialiased`}
-      >
+      <body className="font-sans bg-background text-foreground antialiased">
         <Providers>{children}</Providers>
       </body>
     </html>

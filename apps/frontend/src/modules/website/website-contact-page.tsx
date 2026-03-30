@@ -47,6 +47,7 @@ export function WebsiteContactPage() {
       </WebsiteFullSection>
 
       <WebsiteFullSection
+        tone="muted"
         eyebrow={labels.readiness}
         title={content.readinessTitle}
         description={content.readinessDescription}

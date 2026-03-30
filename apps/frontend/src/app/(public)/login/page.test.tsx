@@ -167,8 +167,8 @@ describe('LoginPage', () => {
 
     const surface = container.firstElementChild as HTMLElement;
     const tenantInput = screen.getByLabelText('Company or workspace');
-    const defaultAccent = buildLoginVisualContext('').containerStyle['--tenant-accent'];
-    const petAccent = buildLoginVisualContext('pet-spa').containerStyle['--tenant-accent'];
+    const defaultAccent = (buildLoginVisualContext('').containerStyle as Record<string, string | undefined>)['--tenant-accent'];
+    const petAccent = (buildLoginVisualContext('pet-spa').containerStyle as Record<string, string | undefined>)['--tenant-accent'];
 
     expect(surface.style.getPropertyValue('--tenant-accent')).toBe(String(defaultAccent));
 

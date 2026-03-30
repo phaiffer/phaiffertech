@@ -215,8 +215,8 @@ export const iotIndustrialProfile: VisualProfilePreset = {
 export const petClinicProfile: VisualProfilePreset = {
   key: 'pet-clinic',
   label: 'Pet Clinic',
-  accentFallback: '#2563eb',
-  primaryFallback: '#0f172a',
+  accentFallback: '#10b981',
+  primaryFallback: '#0f766e',
   accentTone: {
     emphasis: 'clinical',
     softAlpha: 0.2,
@@ -259,8 +259,8 @@ export const petClinicProfile: VisualProfilePreset = {
 export const petGroomingProfile: VisualProfilePreset = {
   key: 'pet-grooming',
   label: 'Pet Grooming',
-  accentFallback: '#3b82f6',
-  primaryFallback: '#0f172a',
+  accentFallback: '#10b981',
+  primaryFallback: '#0f766e',
   accentTone: {
     emphasis: 'care',
     softAlpha: 0.22,
