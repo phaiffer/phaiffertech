@@ -403,7 +403,7 @@ export function PetInventoryPage() {
       header: messages.columns.recorded,
       render: (item) => (
         <div>
-          <p className="font-medium text-[color:var(--app-shell-heading)]">
+          <p className="font-medium text-slate-900">
             {formatDateTimeForLocale(locale, item.createdAt)}
           </p>
           <p className={`mt-1 ${sharedCompactTextClass}`}>
@@ -421,7 +421,7 @@ export function PetInventoryPage() {
 
         return (
           <div>
-            <p className="font-medium text-[color:var(--app-shell-heading)]">
+            <p className="font-medium text-slate-900">
               {item.productName
                 ? (item.productSku ? `${item.productName} (${item.productSku})` : item.productName)
                 : resolvePetLookupLabel(products, item.productId, (entry) => entry.name, messages.columns.product, productsLookupUnavailable)}
@@ -467,7 +467,7 @@ export function PetInventoryPage() {
       header: messages.columns.source,
       render: (item) => (
         <div>
-          <p className="font-medium text-[color:var(--app-shell-heading)]">
+          <p className="font-medium text-slate-900">
             {formatMovementSource(item.sourceType, messages)}
           </p>
           <p className={`mt-1 ${sharedCompactTextClass}`}>
@@ -484,7 +484,7 @@ export function PetInventoryPage() {
       header: messages.columns.balanceImpact,
       render: (item) => (
         <div>
-          <p className="font-medium text-[color:var(--app-shell-heading)]">
+          <p className="font-medium text-slate-900">
             {item.quantityBefore} to {item.quantityAfter}
           </p>
           <p className={`mt-1 ${sharedCompactTextClass}`}>

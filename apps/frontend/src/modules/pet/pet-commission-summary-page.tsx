@@ -68,7 +68,7 @@ export function PetCommissionSummaryPage() {
     setLoading(true);
     setError(null);
     try {
-      const result = await petService.listAppointments(0, 500, '', {
+      const result = await petService.listAppointments(0, 200, '', {
         status: 'COMPLETED',
         scheduledFrom: new Date(`${from}T00:00:00`).toISOString(),
         scheduledTo: new Date(`${to}T23:59:59`).toISOString()

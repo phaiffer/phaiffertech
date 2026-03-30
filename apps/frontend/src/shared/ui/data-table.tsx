@@ -56,7 +56,7 @@ export function DataTable<T>({
   );
 
   return (
-    <div className="overflow-x-auto rounded-2xl border border-slate-200/90 bg-white shadow-[0_16px_34px_-28px_rgba(15,23,42,0.16)]">
+    <div className="overflow-x-auto rounded-2xl border border-slate-200/90 bg-white shadow-[0_16px_34px_-28px_rgba(15,23,42,0.16)] [color-scheme:light]">
       <table className="min-w-full divide-y divide-slate-200">
         <thead className="bg-slate-50/85">
           <tr>

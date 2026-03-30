@@ -757,7 +757,7 @@ export function PetInvoicesPage() {
       header: 'Document',
       render: (item) => (
         <div>
-          <p className="font-medium text-[color:var(--app-shell-heading)]">
+          <p className="font-medium text-slate-900">
             {formatDateTime(item.issuedAt, 'Draft not issued yet')}
           </p>
           <p className={`mt-1 ${sharedCompactTextClass}`}>
@@ -771,7 +771,7 @@ export function PetInvoicesPage() {
       header: 'Client',
       render: (item) => (
         <div>
-          <p className="font-medium text-[color:var(--app-shell-heading)]">
+          <p className="font-medium text-slate-900">
             {item.clientName ?? resolvePetLookupLabel(
               clients,
               item.clientId,
@@ -791,7 +791,7 @@ export function PetInvoicesPage() {
       header: 'Business context',
       render: (item) => (
         <div>
-          <p className="font-medium text-[color:var(--app-shell-heading)]">
+          <p className="font-medium text-slate-900">
             {item.businessContextLabel ?? item.description ?? 'Manual invoice'}
           </p>
           <p className={`mt-1 ${sharedCompactTextClass}`}>
@@ -805,7 +805,7 @@ export function PetInvoicesPage() {
       header: 'Finance position',
       render: (item) => (
         <div>
-          <p className="font-medium text-[color:var(--app-shell-heading)]">
+          <p className="font-medium text-slate-900">
             {formatCurrency(item.totalAmount)}
           </p>
           <p className={`mt-1 ${sharedCompactTextClass}`}>

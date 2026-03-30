@@ -49,7 +49,7 @@ function renderClinicalAppointmentLabel(
 
   return (
     <div>
-      <div className="font-medium text-[color:var(--app-shell-heading)]">
+      <div className="font-medium text-slate-900">
         {appointmentServiceName ?? 'Atendimento vinculado'}
       </div>
       <div className="text-xs text-[color:var(--app-shell-muted)]">{appointmentDate}</div>

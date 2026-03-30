@@ -137,7 +137,7 @@ export function PetProfessionalsPage() {
 
     setSummaryLoading(true);
 
-    petService.listAppointments(0, 500, '', {
+    petService.listAppointments(0, 200, '', {
       status: 'COMPLETED',
       scheduledFrom: start,
       scheduledTo: end
@@ -253,7 +253,7 @@ export function PetProfessionalsPage() {
       header: messages.columns.professional,
       render: (item) => (
         <div className="space-y-1">
-          <p className="font-medium text-[color:var(--app-shell-heading)]">{item.name}</p>
+          <p className="font-medium text-slate-900">{item.name}</p>
           <p className="text-xs text-slate-700">
             {item.specialty ?? messages.columns.defaultSpecialty}
           </p>
@@ -265,7 +265,7 @@ export function PetProfessionalsPage() {
       header: messages.columns.contact,
       render: (item) => (
         <div className="space-y-1">
-          <p className="text-sm text-[color:var(--app-shell-heading)]">{item.email ?? messages.columns.noEmail}</p>
+          <p className="text-sm text-slate-900">{item.email ?? messages.columns.noEmail}</p>
           <p className="text-xs text-slate-700">{item.phone ?? messages.columns.noPhone}</p>
         </div>
       )
@@ -275,7 +275,7 @@ export function PetProfessionalsPage() {
       header: messages.columns.commission,
       render: (item) => (
         <div className="space-y-1">
-          <p className="font-medium text-[color:var(--app-shell-heading)]">
+          <p className="font-medium text-slate-900">
             {item.commissionRate != null
               ? `${(item.commissionRate * 100).toLocaleString(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}%`
               : '—'}

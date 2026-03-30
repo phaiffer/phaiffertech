@@ -222,7 +222,7 @@ export function PetProductsPage() {
       header: 'Product',
       render: (item) => (
         <div>
-          <p className="font-medium text-[color:var(--app-shell-heading)]">{item.name}</p>
+          <p className="font-medium text-slate-900">{item.name}</p>
           <p className="mt-1 text-sm text-[color:var(--app-shell-muted)]">SKU {item.sku}</p>
         </div>
       )
@@ -242,7 +242,7 @@ export function PetProductsPage() {
       header: 'Inventory',
       render: (item) => (
         <div>
-          <p className="font-medium text-[color:var(--app-shell-heading)]">
+          <p className="font-medium text-slate-900">
             {item.currentQuantity} {item.unitOfMeasure}
           </p>
           <p className="mt-1 text-sm text-[color:var(--app-shell-muted)]">

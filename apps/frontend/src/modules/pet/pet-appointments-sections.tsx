@@ -434,7 +434,7 @@ export function createPetAppointmentColumns({
       header: messages.columns.scheduled,
       render: (appointment) => (
         <div className="space-y-1">
-          <p className="font-medium text-[color:var(--app-shell-heading)]">
+          <p className="font-medium text-slate-900">
             {formatDateTimeForLocale(locale, appointment.scheduledAt)}
           </p>
           <p className="text-xs text-[color:var(--app-shell-muted)]">
@@ -601,7 +601,7 @@ export function createPetAppointmentColumns({
         if (appointment.clientName) {
           return (
             <div className="space-y-1">
-              <p className="font-medium text-[color:var(--app-shell-heading)]">{clientLabel}</p>
+              <p className="font-medium text-slate-900">{clientLabel}</p>
               <AppointmentSignalPill
                 label={appointment.clientPlanId ? messages.columns.recurring : messages.columns.oneTime}
                 tone={appointment.clientPlanId ? 'success' : 'neutral'}
@@ -612,7 +612,7 @@ export function createPetAppointmentColumns({
 
         return (
           <div className="space-y-1">
-            <p className="font-medium text-[color:var(--app-shell-heading)]">{clientLabel}</p>
+            <p className="font-medium text-slate-900">{clientLabel}</p>
             <AppointmentSignalPill
               label={appointment.clientPlanId ? messages.columns.recurring : messages.columns.oneTime}
               tone={appointment.clientPlanId ? 'success' : 'neutral'}
@@ -626,7 +626,7 @@ export function createPetAppointmentColumns({
       header: messages.columns.professional,
       render: (appointment) => (
         <div className="space-y-1">
-          <p className="font-medium text-[color:var(--app-shell-heading)]">
+          <p className="font-medium text-slate-900">
             {appointment.professionalName ??
               resolvePetLookupLabel(
                 professionals,

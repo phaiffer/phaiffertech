@@ -273,7 +273,7 @@ export function PetProfilesPage({ initialView = 'list' }: PetProfilesPageProps) 
       header: 'Pet',
       render: (profile) => (
         <div>
-          <p className="font-medium text-[color:var(--app-shell-heading)]">{profile.name}</p>
+          <p className="font-medium text-slate-900">{profile.name}</p>
           <p className={`mt-1 ${sharedCompactTextClass}`}>
             {profile.species}{profile.breed ? ` · ${profile.breed}` : ''}
           </p>
@@ -288,7 +288,7 @@ export function PetProfilesPage({ initialView = 'list' }: PetProfilesPageProps) 
 
         return (
           <div>
-            <p className="font-medium text-[color:var(--app-shell-heading)]">{client?.name ?? client?.fullName ?? profile.clientId}</p>
+            <p className="font-medium text-slate-900">{client?.name ?? client?.fullName ?? profile.clientId}</p>
             <p className={`mt-1 ${sharedCompactTextClass}`}>Nascimento: {formatDate(profile.birthDate)}</p>
           </div>
         );
@@ -299,7 +299,7 @@ export function PetProfilesPage({ initialView = 'list' }: PetProfilesPageProps) 
       header: 'Detalhes',
       render: (profile) => (
         <div>
-          <p className="font-medium text-[color:var(--app-shell-heading)]">{profile.color ?? 'Cor nao informada'}</p>
+          <p className="font-medium text-slate-900">{profile.color ?? 'Cor nao informada'}</p>
           <p className={`mt-1 ${sharedCompactTextClass}`}>
             {profile.weight === undefined ? 'Peso nao informado' : `${profile.weight} kg`}
           </p>

@@ -196,7 +196,7 @@ export function PetServicesPage() {
       header: 'Service',
       render: (item) => (
         <div>
-          <p className="font-medium text-[color:var(--app-shell-heading)]">{item.name}</p>
+          <p className="font-medium text-slate-900">{item.name}</p>
           <p className="mt-1 text-sm text-[color:var(--app-shell-muted)]">{item.description ?? 'No service summary recorded yet'}</p>
         </div>
       )

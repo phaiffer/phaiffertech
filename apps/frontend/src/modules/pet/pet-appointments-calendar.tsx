@@ -73,7 +73,7 @@ export function PetAppointmentsCalendar({
   return (
     <div className="ui-surface-panel p-4 flex flex-col h-full min-h-[600px]">
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-xl font-bold text-[color:var(--app-shell-heading)]">
+        <h2 className="text-xl font-bold text-slate-900">
           {currentMonth.toLocaleDateString('default', { month: 'long', year: 'numeric' })}
         </h2>
         <div className="flex gap-2">

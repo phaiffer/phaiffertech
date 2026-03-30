@@ -215,7 +215,7 @@ export function PetOperationsDashboard({
           })
         : Promise.resolve(null),
       canReadAppointments
-        ? petService.listAppointments(0, 500, '', {
+        ? petService.listAppointments(0, 200, '', {
             status: 'COMPLETED',
             scheduledFrom: monthStart.toISOString(),
             scheduledTo: monthEnd.toISOString()

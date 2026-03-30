@@ -229,7 +229,7 @@ export function PetClientsPage({ initialView = 'list' }: PetClientsPageProps) {
       header: 'Cliente',
       render: (client) => (
         <div>
-          <p className="font-medium text-[color:var(--app-shell-heading)]">{client.name ?? client.fullName ?? '-'}</p>
+          <p className="font-medium text-slate-900">{client.name ?? client.fullName ?? '-'}</p>
           <p className={`mt-1 ${sharedCompactTextClass}`}>Documento: {client.document ?? 'Nao informado'}</p>
         </div>
       )
@@ -239,7 +239,7 @@ export function PetClientsPage({ initialView = 'list' }: PetClientsPageProps) {
       header: 'Contato',
       render: (client) => (
         <div>
-          <p className="font-medium text-[color:var(--app-shell-heading)]">{client.email ?? 'Sem e-mail'}</p>
+          <p className="font-medium text-slate-900">{client.email ?? 'Sem e-mail'}</p>
           <p className={`mt-1 ${sharedCompactTextClass}`}>
             {client.phone ? formatPhoneDisplay(client.phone) : 'Sem telefone'}
           </p>
@@ -251,7 +251,7 @@ export function PetClientsPage({ initialView = 'list' }: PetClientsPageProps) {
       header: 'Endereco e atualizacao',
       render: (client) => (
         <div>
-          <p className="font-medium text-[color:var(--app-shell-heading)]">{client.address ?? 'Sem endereco'}</p>
+          <p className="font-medium text-slate-900">{client.address ?? 'Sem endereco'}</p>
           <p className={`mt-1 ${sharedCompactTextClass}`}>Atualizado em {formatDateTime(client.updatedAt)}</p>
         </div>
       )

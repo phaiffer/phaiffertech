@@ -33,7 +33,7 @@ export const sharedSupportingTextClass = 'text-sm leading-7 text-slate-600 sm:te
 
 export const sharedCompactTextClass = 'text-sm leading-6 text-slate-600';
 
-export const sharedSurfaceClass = 'rounded-2xl border border-slate-200/90 bg-white shadow-[0_14px_34px_-28px_rgba(15,23,42,0.18)]';
+export const sharedSurfaceClass = 'rounded-2xl border border-slate-200/90 bg-white shadow-[0_14px_34px_-28px_rgba(15,23,42,0.18)] [color-scheme:light]';
 
 export const sharedInteractiveSurfaceClass =
   `${sharedSurfaceClass} transition-all duration-200 hover:border-[color:var(--accent)]/25 hover:shadow-[0_18px_38px_-28px_rgba(15,23,42,0.22)]`;

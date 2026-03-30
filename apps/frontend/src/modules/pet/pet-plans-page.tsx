@@ -263,7 +263,7 @@ export function PetPlansPage() {
       header: messages.form.client,
       render: (plan) => (
         <div className="space-y-1">
-          <p className="font-medium text-[color:var(--app-shell-heading)]">{resolveClientName(plan)}</p>
+          <p className="font-medium text-slate-900">{resolveClientName(plan)}</p>
           <p className="text-xs text-[color:var(--app-shell-muted)]">
             {resolveClientEmail(plan) ?? messages.columns.noRenewalEmail}
           </p>
@@ -341,7 +341,7 @@ export function PetPlansPage() {
       header: messages.form.expiresOn,
       render: (plan) => (
         <div className="space-y-1">
-          <p className="font-medium text-[color:var(--app-shell-heading)]">
+          <p className="font-medium text-slate-900">
             {formatExpiryLabel(locale, plan.expiresAt, messages.filters.noExpiry)}
           </p>
           <p className="text-xs text-[color:var(--app-shell-muted)]">
