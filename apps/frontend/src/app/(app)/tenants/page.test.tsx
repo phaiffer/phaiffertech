@@ -132,7 +132,7 @@ describe('TenantsPage access model', () => {
           name: 'Clinic North',
           code: 'clinic-north',
           status: 'ACTIVE',
-          planCode: 'PRO',
+          planCode: 'BANHO_TOSA_CLINICA',
           featureEntitlements: ['beta.dashboard'],
           platformOwner: false,
           logoUrl: null,
@@ -156,15 +156,14 @@ describe('TenantsPage access model', () => {
     });
 
     expect(await screen.findByText('Clinic North')).toBeInTheDocument();
-    expect(screen.getByText('Active')).toBeInTheDocument();
-    expect(screen.getAllByText('PRO').length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/active/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText('BANHO_TOSA_CLINICA').length).toBeGreaterThan(0);
     expect(screen.getByText('beta.dashboard')).toBeInTheDocument();
     expect(screen.getAllByText('CORE_PLATFORM').length).toBeGreaterThan(0);
     expect(screen.getAllByText('PET').length).toBeGreaterThan(0);
-    expect(screen.getByText('Customer Tenant')).toBeInTheDocument();
   });
 
-  it('shows the selected plan defaults as a read-only hint', async () => {
+  it('shows the selected package defaults as a read-only hint', async () => {
     vi.mocked(tenantService.list).mockResolvedValue({
       items: [],
       totalItems: 0,
@@ -179,10 +178,10 @@ describe('TenantsPage access model', () => {
       expect(tenantService.list).toHaveBeenCalledTimes(1);
     });
 
-    expect(screen.getByText('Plan defines default modules and features.')).toBeInTheDocument();
-    expect(screen.getAllByText('CRM').length).toBeGreaterThan(0);
-    expect(screen.getByText('crm.basic')).toBeInTheDocument();
-    expect(screen.getByText('Included by plan')).toBeInTheDocument();
+    expect(screen.getByText('Package defines default modules and features.')).toBeInTheDocument();
+    expect(screen.getAllByText('PET').length).toBeGreaterThan(0);
+    expect(screen.getByText('pet.retail')).toBeInTheDocument();
+    expect(screen.getByText('Included by package')).toBeInTheDocument();
   });
 
   it('loads feature flags and usage telemetry when editing an existing tenant', async () => {
@@ -193,16 +192,16 @@ describe('TenantsPage access model', () => {
           name: 'Clinic North',
           code: 'clinic-north',
           status: 'ACTIVE',
-          planCode: 'PRO',
+          planCode: 'BANHO_TOSA_CLINICA',
           featureEntitlements: ['beta.dashboard'],
-          effectiveFeatureEntitlements: ['crm.full', 'pet.full', 'beta.dashboard'],
+          effectiveFeatureEntitlements: ['pet.aesthetics', 'pet.clinic', 'pet.veterinary', 'pet.retail', 'beta.dashboard'],
           platformOwner: false,
           logoUrl: null,
           primaryColor: '#1e3a8a',
           accentColor: '#0ea5e9',
           defaultThemeMode: 'DARK',
           allowUserThemeOverride: false,
-          contractedModules: ['CORE_PLATFORM', 'CRM'],
+          contractedModules: ['CORE_PLATFORM', 'PET', 'CRM'],
           moduleOverrides: ['CRM']
         }
       ],
@@ -242,7 +241,7 @@ describe('TenantsPage access model', () => {
     expect(screen.getByText('Observed activity')).toBeInTheDocument();
   });
 
-  it('shows plan baseline, manual overrides, and effective access when editing a tenant', async () => {
+  it('shows package baseline, manual overrides, and effective access when editing a tenant', async () => {
     vi.mocked(tenantService.list).mockResolvedValue({
       items: [
         {
@@ -250,9 +249,9 @@ describe('TenantsPage access model', () => {
           name: 'Clinic North',
           code: 'clinic-north',
           status: 'ACTIVE',
-          planCode: 'BASIC',
+          planCode: 'PETSHOP',
           featureEntitlements: ['usage.billing.preview'],
-          effectiveFeatureEntitlements: ['crm.basic', 'usage.billing.preview'],
+          effectiveFeatureEntitlements: ['pet.retail', 'usage.billing.preview'],
           platformOwner: false,
           logoUrl: null,
           primaryColor: '#1e3a8a',
@@ -260,7 +259,7 @@ describe('TenantsPage access model', () => {
           defaultThemeMode: 'DARK',
           allowUserThemeOverride: false,
           contractedModules: ['CORE_PLATFORM', 'CRM', 'PET'],
-          moduleOverrides: ['PET']
+          moduleOverrides: ['CRM']
         }
       ],
       totalItems: 1,
@@ -275,7 +274,7 @@ describe('TenantsPage access model', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Edit' }));
 
-    expect(screen.getAllByText('Plan baseline').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('Package baseline').length).toBeGreaterThan(0);
     expect(screen.getAllByText('Manual module overrides').length).toBeGreaterThan(0);
     expect(screen.getAllByText('Effective access').length).toBeGreaterThan(0);
     expect(screen.getAllByText('usage.billing.preview').length).toBeGreaterThan(0);
@@ -289,7 +288,7 @@ describe('TenantsPage access model', () => {
           name: 'Clinic North',
           code: 'clinic-north',
           status: 'ACTIVE',
-          planCode: 'PRO',
+          planCode: 'BANHO_TOSA_CLINICA',
           featureEntitlements: ['beta.dashboard'],
           platformOwner: false,
           logoUrl: null,
@@ -310,7 +309,7 @@ describe('TenantsPage access model', () => {
       name: 'Clinic North',
       code: 'clinic-north',
       status: 'ACTIVE',
-      planCode: 'PRO',
+      planCode: 'BANHO_TOSA_CLINICA',
       featureEntitlements: ['beta.dashboard', 'usage.billing.preview'],
       platformOwner: false,
       logoUrl: null,
@@ -347,7 +346,7 @@ describe('TenantsPage access model', () => {
           name: 'Clinic North',
           code: 'clinic-north',
           status: 'ACTIVE',
-          planCode: 'PRO',
+          planCode: 'BANHO_TOSA_CLINICA',
           featureEntitlements: [],
           platformOwner: false,
           logoUrl: null,

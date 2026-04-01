@@ -20,86 +20,87 @@ class TenantManagementIntegrationTest extends AbstractIntegrationTest {
         ResponseEntity<JsonNode> createResponse = post("/tenants", Map.of(
                 "name", "Clinic North",
                 "code", "clinic-north",
-                "planCode", "BASIC",
+                "planCode", "PETSHOP",
                 "logoUrl", "/branding/clinic-north.png",
                 "primaryColor", "#1e3a8a",
                 "accentColor", "#0ea5e9",
                 "defaultThemeMode", "DARK",
                 "allowUserThemeOverride", false,
-                "contractedModules", List.of("CRM", "PET"),
+                "contractedModules", List.of("PET", "CRM"),
                 "featureEntitlements", List.of("beta.dashboard", "usage.billing.preview")
         ), session);
 
         assertEquals(200, createResponse.getStatusCode().value());
         JsonNode created = requireBody(createResponse).path("data");
         assertEquals("clinic-north", created.path("code").asText());
-        assertEquals("BASIC", created.path("planCode").asText());
+        assertEquals("PETSHOP", created.path("planCode").asText());
         assertEquals("/branding/clinic-north.png", created.path("logoUrl").asText());
         assertEquals("#1e3a8a", created.path("primaryColor").asText());
         assertEquals("#0ea5e9", created.path("accentColor").asText());
         assertEquals("DARK", created.path("defaultThemeMode").asText());
         assertTrue(containsValue(created.path("contractedModules"), "CORE_PLATFORM"));
-        assertTrue(containsValue(created.path("contractedModules"), "CRM"));
         assertTrue(containsValue(created.path("contractedModules"), "PET"));
+        assertTrue(containsValue(created.path("contractedModules"), "CRM"));
         assertEquals(1, created.path("moduleOverrides").size());
-        assertTrue(containsValue(created.path("moduleOverrides"), "PET"));
+        assertTrue(containsValue(created.path("moduleOverrides"), "CRM"));
         assertTrue(containsValue(created.path("featureEntitlements"), "beta.dashboard"));
         assertTrue(containsValue(created.path("featureEntitlements"), "usage.billing.preview"));
-        assertTrue(containsValue(created.path("effectiveFeatureEntitlements"), "crm.basic"));
+        assertTrue(containsValue(created.path("effectiveFeatureEntitlements"), "pet.retail"));
         assertTrue(containsValue(created.path("effectiveFeatureEntitlements"), "beta.dashboard"));
 
         String tenantId = created.path("id").asText();
         ResponseEntity<JsonNode> updateResponse = put("/tenants/" + tenantId, Map.of(
                 "name", "Clinic North Updated",
                 "code", "clinic-north",
-                "planCode", "PRO",
+                "planCode", "BANHO_TOSA_CLINICA",
                 "logoUrl", "",
                 "primaryColor", "#1e40af",
                 "accentColor", "#06b6d4",
                 "defaultThemeMode", "LIGHT",
                 "allowUserThemeOverride", true,
-                "contractedModules", List.of("CRM", "PET", "IOT"),
+                "contractedModules", List.of("PET", "CRM"),
                 "featureEntitlements", List.of("usage.billing.preview")
         ), session);
 
         assertEquals(200, updateResponse.getStatusCode().value());
         JsonNode updated = requireBody(updateResponse).path("data");
         assertEquals("Clinic North Updated", updated.path("name").asText());
-        assertEquals("PRO", updated.path("planCode").asText());
+        assertEquals("BANHO_TOSA_CLINICA", updated.path("planCode").asText());
         assertEquals("LIGHT", updated.path("defaultThemeMode").asText());
         assertTrue(containsValue(updated.path("contractedModules"), "CORE_PLATFORM"));
-        assertTrue(containsValue(updated.path("contractedModules"), "CRM"));
         assertTrue(containsValue(updated.path("contractedModules"), "PET"));
-        assertTrue(containsValue(updated.path("contractedModules"), "IOT"));
-        assertTrue(containsValue(updated.path("moduleOverrides"), "PET"));
+        assertTrue(containsValue(updated.path("contractedModules"), "CRM"));
+        assertTrue(containsValue(updated.path("moduleOverrides"), "CRM"));
         assertEquals(1, updated.path("featureEntitlements").size());
         assertTrue(containsValue(updated.path("featureEntitlements"), "usage.billing.preview"));
-        assertTrue(containsValue(updated.path("effectiveFeatureEntitlements"), "crm.full"));
-        assertTrue(containsValue(updated.path("effectiveFeatureEntitlements"), "pet.full"));
-        assertTrue(containsValue(updated.path("effectiveFeatureEntitlements"), "iot.basic"));
+        assertTrue(containsValue(updated.path("effectiveFeatureEntitlements"), "pet.aesthetics"));
+        assertTrue(containsValue(updated.path("effectiveFeatureEntitlements"), "pet.clinic"));
+        assertTrue(containsValue(updated.path("effectiveFeatureEntitlements"), "pet.veterinary"));
+        assertTrue(containsValue(updated.path("effectiveFeatureEntitlements"), "pet.retail"));
 
         ResponseEntity<JsonNode> downgradeResponse = put("/tenants/" + tenantId, Map.of(
                 "name", "Clinic North Updated",
                 "code", "clinic-north",
-                "planCode", "BASIC",
+                "planCode", "PETSHOP",
                 "logoUrl", "",
                 "primaryColor", "#1e40af",
                 "accentColor", "#06b6d4",
                 "defaultThemeMode", "LIGHT",
                 "allowUserThemeOverride", true,
-                "contractedModules", List.of("CRM", "PET"),
+                "contractedModules", List.of("PET", "CRM"),
                 "featureEntitlements", List.of("usage.billing.preview")
         ), session);
 
         assertEquals(200, downgradeResponse.getStatusCode().value());
         JsonNode downgraded = requireBody(downgradeResponse).path("data");
-        assertEquals("BASIC", downgraded.path("planCode").asText());
-        assertTrue(containsValue(downgraded.path("contractedModules"), "CRM"));
+        assertEquals("PETSHOP", downgraded.path("planCode").asText());
         assertTrue(containsValue(downgraded.path("contractedModules"), "PET"));
-        assertFalse(containsValue(downgraded.path("contractedModules"), "IOT"));
-        assertTrue(containsValue(downgraded.path("moduleOverrides"), "PET"));
-        assertTrue(containsValue(downgraded.path("effectiveFeatureEntitlements"), "crm.basic"));
-        assertFalse(containsValue(downgraded.path("effectiveFeatureEntitlements"), "iot.basic"));
+        assertTrue(containsValue(downgraded.path("contractedModules"), "CRM"));
+        assertTrue(containsValue(downgraded.path("moduleOverrides"), "CRM"));
+        assertTrue(containsValue(downgraded.path("effectiveFeatureEntitlements"), "pet.retail"));
+        assertFalse(containsValue(downgraded.path("effectiveFeatureEntitlements"), "pet.aesthetics"));
+        assertFalse(containsValue(downgraded.path("effectiveFeatureEntitlements"), "pet.clinic"));
+        assertFalse(containsValue(downgraded.path("effectiveFeatureEntitlements"), "pet.veterinary"));
     }
 
     @Test
@@ -109,10 +110,10 @@ class TenantManagementIntegrationTest extends AbstractIntegrationTest {
         ResponseEntity<JsonNode> createResponse = post("/tenants", Map.of(
                 "name", "Clinic West",
                 "code", "clinic-west",
-                "planCode", "PRO",
+                "planCode", "BANHO_TOSA_CLINICA",
                 "defaultThemeMode", "SYSTEM",
                 "allowUserThemeOverride", true,
-                "contractedModules", List.of("CRM", "PET", "IOT"),
+                "contractedModules", List.of("PET", "CRM", "IOT"),
                 "featureEntitlements", List.of()
         ), session);
 
@@ -123,18 +124,18 @@ class TenantManagementIntegrationTest extends AbstractIntegrationTest {
         ResponseEntity<JsonNode> updateResponse = put("/tenants/" + tenantId, Map.of(
                 "name", "Clinic West",
                 "code", "clinic-west",
-                "planCode", "BASIC",
+                "planCode", "PETSHOP",
                 "defaultThemeMode", "SYSTEM",
                 "allowUserThemeOverride", true,
-                "contractedModules", List.of("CRM"),
+                "contractedModules", List.of("PET"),
                 "featureEntitlements", List.of()
         ), session);
 
         assertEquals(200, updateResponse.getStatusCode().value());
         JsonNode updated = requireBody(updateResponse).path("data");
         assertTrue(containsValue(updated.path("contractedModules"), "CORE_PLATFORM"));
-        assertTrue(containsValue(updated.path("contractedModules"), "CRM"));
-        assertFalse(containsValue(updated.path("contractedModules"), "PET"));
+        assertTrue(containsValue(updated.path("contractedModules"), "PET"));
+        assertFalse(containsValue(updated.path("contractedModules"), "CRM"));
         assertFalse(containsValue(updated.path("contractedModules"), "IOT"));
 
         assertEquals(4, countRows("SELECT COUNT(*) FROM tenant_modules WHERE tenant_id = ?", tenantId));
@@ -166,10 +167,10 @@ class TenantManagementIntegrationTest extends AbstractIntegrationTest {
         ResponseEntity<JsonNode> createResponse = post("/tenants", Map.of(
                 "name", "Clinic South",
                 "code", "clinic-south",
-                "planCode", "BASIC",
+                "planCode", "PETSHOP",
                 "defaultThemeMode", "SYSTEM",
                 "allowUserThemeOverride", true,
-                "contractedModules", List.of("CRM"),
+                "contractedModules", List.of("PET", "CRM"),
                 "featureEntitlements", List.of("beta.dashboard")
         ), session);
 
@@ -177,7 +178,7 @@ class TenantManagementIntegrationTest extends AbstractIntegrationTest {
         JsonNode created = requireBody(createResponse).path("data");
         String tenantId = created.path("id").asText();
 
-        assertEquals(2, countRows("SELECT COUNT(*) FROM tenant_modules WHERE tenant_id = ?", tenantId));
+        assertEquals(3, countRows("SELECT COUNT(*) FROM tenant_modules WHERE tenant_id = ?", tenantId));
 
         executeSql(
                 """
@@ -197,10 +198,10 @@ class TenantManagementIntegrationTest extends AbstractIntegrationTest {
         ResponseEntity<JsonNode> updateResponse = put("/tenants/" + tenantId, Map.of(
                 "name", "Clinic South",
                 "code", "clinic-south",
-                "planCode", "BASIC",
+                "planCode", "PETSHOP",
                 "defaultThemeMode", "SYSTEM",
                 "allowUserThemeOverride", true,
-                "contractedModules", List.of("CRM"),
+                "contractedModules", List.of("PET", "CRM"),
                 "featureEntitlements", List.of("beta.dashboard")
         ), session);
 
@@ -208,7 +209,7 @@ class TenantManagementIntegrationTest extends AbstractIntegrationTest {
         JsonNode updated = requireBody(updateResponse).path("data");
         assertTrue(containsValue(updated.path("contractedModules"), "CRM"));
 
-        assertEquals(2, countRows("SELECT COUNT(*) FROM tenant_modules WHERE tenant_id = ?", tenantId));
+        assertEquals(3, countRows("SELECT COUNT(*) FROM tenant_modules WHERE tenant_id = ?", tenantId));
         assertEquals(1, countRows(
                 """
                 SELECT COUNT(*)

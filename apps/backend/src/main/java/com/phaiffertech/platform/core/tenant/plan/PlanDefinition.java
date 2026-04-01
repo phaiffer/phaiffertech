@@ -4,25 +4,45 @@ import com.phaiffertech.platform.core.tenant.entitlement.TenantEntitlementKeys;
 import java.util.List;
 
 public enum PlanDefinition {
-    BASIC(
-            "BASIC",
-            List.of("CRM"),
-            List.of(TenantEntitlementKeys.CRM_BASIC)
+    PETSHOP(
+            "PETSHOP",
+            List.of("PET"),
+            List.of(TenantEntitlementKeys.PET_RETAIL)
     ),
-    STANDARD(
-            "STANDARD",
-            List.of("CRM", "PET"),
-            List.of(TenantEntitlementKeys.CRM_FULL, TenantEntitlementKeys.PET_BASIC)
+    BANHO_TOSA(
+            "BANHO_TOSA",
+            List.of("PET"),
+            List.of(
+                    TenantEntitlementKeys.PET_AESTHETICS,
+                    TenantEntitlementKeys.PET_RETAIL
+            )
     ),
-    PRO(
-            "PRO",
-            List.of("CRM", "PET", "IOT"),
-            List.of(TenantEntitlementKeys.CRM_FULL, TenantEntitlementKeys.PET_FULL, TenantEntitlementKeys.IOT_BASIC)
+    CLINICA_VETERINARIA(
+            "CLINICA_VETERINARIA",
+            List.of("PET"),
+            List.of(
+                    TenantEntitlementKeys.PET_CLINIC,
+                    TenantEntitlementKeys.PET_VETERINARY,
+                    TenantEntitlementKeys.PET_RETAIL
+            )
     ),
-    ENTERPRISE(
-            "ENTERPRISE",
-            List.of("CRM", "PET", "IOT"),
-            List.of(TenantEntitlementKeys.ANY)
+    PETSHOP_BANHO_TOSA(
+            "PETSHOP_BANHO_TOSA",
+            List.of("PET"),
+            List.of(
+                    TenantEntitlementKeys.PET_AESTHETICS,
+                    TenantEntitlementKeys.PET_RETAIL
+            )
+    ),
+    BANHO_TOSA_CLINICA(
+            "BANHO_TOSA_CLINICA",
+            List.of("PET"),
+            List.of(
+                    TenantEntitlementKeys.PET_AESTHETICS,
+                    TenantEntitlementKeys.PET_CLINIC,
+                    TenantEntitlementKeys.PET_VETERINARY,
+                    TenantEntitlementKeys.PET_RETAIL
+            )
     );
 
     private final String code;
