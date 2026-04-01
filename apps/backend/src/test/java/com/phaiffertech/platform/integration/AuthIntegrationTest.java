@@ -3,6 +3,7 @@ package com.phaiffertech.platform.integration;
 import com.phaiffertech.platform.support.AbstractIntegrationTest;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import java.time.LocalDate;
 import java.util.Map;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
@@ -122,6 +123,86 @@ class AuthIntegrationTest extends AbstractIntegrationTest {
     }
 
     @Test
+    void loginShouldAllowActiveTenantAccess() {
+        String suffix = UUID.randomUUID().toString().substring(0, 8);
+        String tenantId = UUID.randomUUID().toString();
+        String userId = UUID.randomUUID().toString();
+        String tenantCode = "tenant-active-" + suffix;
+        String email = "active-" + suffix + "@local.test";
+
+        insertTenant(tenantId, tenantCode, "ACTIVE", null);
+        insertUser(userId, email, "Active Tenant " + suffix);
+        grantRoleToTenant(tenantId, userId, "TENANT_ADMIN");
+
+        ResponseEntity<JsonNode> response = login(tenantCode, email, DEFAULT_PASSWORD);
+
+        assertEquals(200, response.getStatusCode().value());
+    }
+
+    @Test
+    void loginShouldRejectSuspendedTenantAccess() {
+        String suffix = UUID.randomUUID().toString().substring(0, 8);
+        String tenantId = UUID.randomUUID().toString();
+        String userId = UUID.randomUUID().toString();
+        String tenantCode = "tenant-suspended-" + suffix;
+        String email = "suspended-" + suffix + "@local.test";
+
+        insertTenant(tenantId, tenantCode, "SUSPENDED", null);
+        insertUser(userId, email, "Suspended Tenant " + suffix);
+        grantRoleToTenant(tenantId, userId, "TENANT_ADMIN");
+
+        ResponseEntity<JsonNode> response = login(tenantCode, email, DEFAULT_PASSWORD);
+
+        assertEquals(403, response.getStatusCode().value());
+        assertEquals(
+                "Tenant access is suspended. Please contact the commercial team to restore access.",
+                requireBody(response).path("message").asText()
+        );
+    }
+
+    @Test
+    void loginShouldRejectCancelledTenantAccess() {
+        String suffix = UUID.randomUUID().toString().substring(0, 8);
+        String tenantId = UUID.randomUUID().toString();
+        String userId = UUID.randomUUID().toString();
+        String tenantCode = "tenant-cancelled-" + suffix;
+        String email = "cancelled-" + suffix + "@local.test";
+
+        insertTenant(tenantId, tenantCode, "CANCELLED", null);
+        insertUser(userId, email, "Cancelled Tenant " + suffix);
+        grantRoleToTenant(tenantId, userId, "TENANT_ADMIN");
+
+        ResponseEntity<JsonNode> response = login(tenantCode, email, DEFAULT_PASSWORD);
+
+        assertEquals(403, response.getStatusCode().value());
+        assertEquals(
+                "Tenant access has been cancelled. Please contact the commercial team if you need to reactivate it.",
+                requireBody(response).path("message").asText()
+        );
+    }
+
+    @Test
+    void loginShouldRejectExpiredTrialTenantAccess() {
+        String suffix = UUID.randomUUID().toString().substring(0, 8);
+        String tenantId = UUID.randomUUID().toString();
+        String userId = UUID.randomUUID().toString();
+        String tenantCode = "tenant-trial-" + suffix;
+        String email = "trial-" + suffix + "@local.test";
+
+        insertTenant(tenantId, tenantCode, "TRIAL", LocalDate.now().minusDays(1));
+        insertUser(userId, email, "Trial Tenant " + suffix);
+        grantRoleToTenant(tenantId, userId, "TENANT_ADMIN");
+
+        ResponseEntity<JsonNode> response = login(tenantCode, email, DEFAULT_PASSWORD);
+
+        assertEquals(403, response.getStatusCode().value());
+        assertEquals(
+                "Tenant trial has expired. Please contact the commercial team to continue using the platform.",
+                requireBody(response).path("message").asText()
+        );
+    }
+
+    @Test
     void changePasswordShouldRevokeRefreshTokensAcrossTenantSessionsAndRequireNewLogin() {
         String suffix = UUID.randomUUID().toString().substring(0, 8);
         String email = "auth-change-" + suffix + "@local.test";
@@ -215,11 +296,17 @@ class AuthIntegrationTest extends AbstractIntegrationTest {
     }
 
     private void insertTenant(String tenantId, String tenantCode) {
+        insertTenant(tenantId, tenantCode, "ACTIVE", null);
+    }
+
+    private void insertTenant(String tenantId, String tenantCode, String status, LocalDate trialEndDate) {
         executeSql(
-                "INSERT INTO tenants (id, name, code, status) VALUES (?, ?, ?, 'ACTIVE')",
+                "INSERT INTO tenants (id, name, code, status, trial_end_date) VALUES (?, ?, ?, ?, ?)",
                 tenantId,
                 "Tenant " + tenantCode,
-                tenantCode
+                tenantCode,
+                status,
+                trialEndDate
         );
     }
 

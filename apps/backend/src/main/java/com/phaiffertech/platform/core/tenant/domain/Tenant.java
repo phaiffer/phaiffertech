@@ -19,7 +19,7 @@ public class Tenant extends BaseEntity {
     private String code;
 
     @Column(name = "status", nullable = false, length = 30)
-    private String status;
+    private String status = TenantCommercialStatus.ACTIVE.name();
 
     @Column(name = "plan_code", nullable = false, length = 80)
     private String planCode = "PETSHOP";
@@ -67,7 +67,11 @@ public class Tenant extends BaseEntity {
     }
 
     public void setStatus(String status) {
-        this.status = status;
+        this.status = TenantCommercialStatus.from(status).name();
+    }
+
+    public TenantCommercialStatus getCommercialStatus() {
+        return TenantCommercialStatus.from(status);
     }
 
     public String getPlanCode() {
@@ -132,5 +136,11 @@ public class Tenant extends BaseEntity {
 
     public void setTrialEndDate(LocalDate trialEndDate) {
         this.trialEndDate = trialEndDate;
+    }
+
+    public boolean isTrialExpired(LocalDate referenceDate) {
+        return getCommercialStatus() == TenantCommercialStatus.TRIAL
+                && trialEndDate != null
+                && referenceDate.isAfter(trialEndDate);
     }
 }
