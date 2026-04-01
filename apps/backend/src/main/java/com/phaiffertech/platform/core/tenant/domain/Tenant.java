@@ -6,6 +6,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.Table;
+import java.time.LocalDate;
 
 @Entity
 @Table(name = "tenants")
@@ -41,6 +42,9 @@ public class Tenant extends BaseEntity {
 
     @Column(name = "platform_owner", nullable = false)
     private boolean platformOwner;
+
+    @Column(name = "trial_end_date")
+    private LocalDate trialEndDate;
 
     public String getName() {
         return name;
@@ -120,5 +124,13 @@ public class Tenant extends BaseEntity {
 
     public void setPlatformOwner(boolean platformOwner) {
         this.platformOwner = platformOwner;
+    }
+
+    public LocalDate getTrialEndDate() {
+        return trialEndDate;
+    }
+
+    public void setTrialEndDate(LocalDate trialEndDate) {
+        this.trialEndDate = trialEndDate;
     }
 }

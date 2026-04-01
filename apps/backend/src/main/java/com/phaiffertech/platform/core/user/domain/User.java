@@ -21,6 +21,9 @@ public class User extends BaseEntity {
     @Column(name = "active", nullable = false)
     private boolean active = true;
 
+    @Column(name = "require_password_change_on_first_access", nullable = false)
+    private boolean requirePasswordChangeOnFirstAccess;
+
     public String getEmail() {
         return email;
     }
@@ -51,5 +54,13 @@ public class User extends BaseEntity {
 
     public void setActive(boolean active) {
         this.active = active;
+    }
+
+    public boolean isRequirePasswordChangeOnFirstAccess() {
+        return requirePasswordChangeOnFirstAccess;
+    }
+
+    public void setRequirePasswordChangeOnFirstAccess(boolean requirePasswordChangeOnFirstAccess) {
+        this.requirePasswordChangeOnFirstAccess = requirePasswordChangeOnFirstAccess;
     }
 }

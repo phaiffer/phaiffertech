@@ -23,6 +23,7 @@ export type AuthenticatedUser = {
   tenantAllowUserThemeOverride: boolean;
   platformOwner: boolean;
   platformAdmin: boolean;
+  requirePasswordChangeOnFirstAccess?: boolean;
   role: string;
   roles?: string[];
   permissions: string[];

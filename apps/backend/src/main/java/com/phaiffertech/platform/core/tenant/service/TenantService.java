@@ -10,11 +10,13 @@ import com.phaiffertech.platform.core.tenant.entitlement.service.TenantEntitleme
 import com.phaiffertech.platform.core.tenant.mapper.TenantMapper;
 import com.phaiffertech.platform.core.tenant.plan.PlanResolutionService;
 import com.phaiffertech.platform.core.tenant.repository.TenantRepository;
+import com.phaiffertech.platform.core.user.service.UserService;
 import com.phaiffertech.platform.shared.domain.enums.AuditActionType;
 import com.phaiffertech.platform.shared.exception.ResourceNotFoundException;
 import com.phaiffertech.platform.shared.pagination.PageRequestDto;
 import com.phaiffertech.platform.shared.pagination.PageResponseDto;
 import com.phaiffertech.platform.shared.pagination.PaginationUtils;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -31,19 +33,22 @@ public class TenantService {
     private final TenantEntitlementService tenantEntitlementService;
     private final PlatformAccessService platformAccessService;
     private final PlanResolutionService planResolutionService;
+    private final UserService userService;
 
     public TenantService(
             TenantRepository tenantRepository,
             TenantModuleContractService tenantModuleContractService,
             TenantEntitlementService tenantEntitlementService,
             PlatformAccessService platformAccessService,
-            PlanResolutionService planResolutionService
+            PlanResolutionService planResolutionService,
+            UserService userService
     ) {
         this.tenantRepository = tenantRepository;
         this.tenantModuleContractService = tenantModuleContractService;
         this.tenantEntitlementService = tenantEntitlementService;
         this.platformAccessService = platformAccessService;
         this.planResolutionService = planResolutionService;
+        this.userService = userService;
     }
 
     @Transactional
@@ -66,6 +71,8 @@ public class TenantService {
                 request.accentColor(),
                 request.defaultThemeMode(),
                 request.allowUserThemeOverride(),
+                request.trialEndDate(),
+                false,
                 false
         );
         tenant.setStatus("ACTIVE");
@@ -73,6 +80,13 @@ public class TenantService {
 
         tenantModuleContractService.syncEffectiveModules(tenant.getId(), tenant.getPlanCode(), request.contractedModules());
         tenantEntitlementService.syncManualEntitlements(tenant.getId(), tenant.getPlanCode(), request.featureEntitlements());
+        userService.createTenantAdministrator(
+                tenant.getId(),
+                request.initialAdminFullName(),
+                request.initialAdminEmail(),
+                request.temporaryPassword(),
+                Boolean.TRUE.equals(request.requirePasswordChangeOnFirstAccess())
+        );
 
         return toResponse(tenant);
     }
@@ -99,6 +113,8 @@ public class TenantService {
                 request.accentColor(),
                 request.defaultThemeMode(),
                 request.allowUserThemeOverride(),
+                request.trialEndDate(),
+                true,
                 true
         );
         tenant = tenantRepository.save(tenant);
@@ -161,6 +177,8 @@ public class TenantService {
             String accentColor,
             TenantThemeMode defaultThemeMode,
             Boolean allowUserThemeOverride,
+            LocalDate trialEndDate,
+            boolean preserveExistingTrialEndDate,
             boolean preserveExistingPlanCode
     ) {
         tenant.setName(name.trim());
@@ -174,6 +192,7 @@ public class TenantService {
         tenant.setAccentColor(normalizeOptionalValue(accentColor));
         tenant.setDefaultThemeMode(defaultThemeMode == null ? TenantThemeMode.SYSTEM : defaultThemeMode);
         tenant.setAllowUserThemeOverride(allowUserThemeOverride == null || allowUserThemeOverride);
+        tenant.setTrialEndDate(resolveTrialEndDate(trialEndDate, tenant, preserveExistingTrialEndDate));
     }
 
     private String normalizeOptionalValue(String value) {
@@ -181,5 +200,12 @@ public class TenantService {
             return null;
         }
         return value.trim();
+    }
+
+    private LocalDate resolveTrialEndDate(LocalDate trialEndDate, Tenant tenant, boolean preserveExistingTrialEndDate) {
+        if (trialEndDate != null) {
+            return trialEndDate;
+        }
+        return preserveExistingTrialEndDate ? tenant.getTrialEndDate() : null;
     }
 }

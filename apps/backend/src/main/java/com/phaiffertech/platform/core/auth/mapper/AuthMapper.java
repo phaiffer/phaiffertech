@@ -44,44 +44,7 @@ public final class AuthMapper {
                 tenant.isAllowUserThemeOverride(),
                 tenant.isPlatformOwner(),
                 isPlatformAdmin(principal, tenant),
-                principal.role(),
-                principal.roles(),
-                principal.permissions(),
-                featureEntitlements,
-                impersonation
-        );
-    }
-
-    public static AuthenticatedUserResponse toAuthenticatedUserResponse(
-            AuthenticatedUser principal,
-            String fullName,
-            Tenant tenant,
-            List<String> featureEntitlements
-    ) {
-        return toAuthenticatedUserResponse(principal, fullName, tenant, featureEntitlements, null);
-    }
-
-    public static AuthenticatedUserResponse toAuthenticatedUserResponse(
-            AuthenticatedUser principal,
-            String fullName,
-            Tenant tenant,
-            List<String> featureEntitlements,
-            SupportImpersonationContextResponse impersonation
-    ) {
-        return new AuthenticatedUserResponse(
-                principal.userId(),
-                principal.email(),
-                fullName,
-                principal.tenantId(),
-                tenant.getName(),
-                tenant.getCode(),
-                tenant.getLogoUrl(),
-                tenant.getPrimaryColor(),
-                tenant.getAccentColor(),
-                tenant.getDefaultThemeMode(),
-                tenant.isAllowUserThemeOverride(),
-                tenant.isPlatformOwner(),
-                isPlatformAdmin(principal, tenant),
+                user.isRequirePasswordChangeOnFirstAccess(),
                 principal.role(),
                 principal.roles(),
                 principal.permissions(),

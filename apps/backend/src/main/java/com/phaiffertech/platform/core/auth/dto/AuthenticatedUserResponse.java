@@ -19,6 +19,7 @@ public record AuthenticatedUserResponse(
         boolean tenantAllowUserThemeOverride,
         boolean platformOwner,
         boolean platformAdmin,
+        boolean requirePasswordChangeOnFirstAccess,
         String role,
         Set<String> roles,
         Set<String> permissions,

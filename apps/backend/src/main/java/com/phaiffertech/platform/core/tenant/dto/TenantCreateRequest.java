@@ -1,8 +1,11 @@
 package com.phaiffertech.platform.core.tenant.dto;
 
 import com.phaiffertech.platform.core.tenant.domain.TenantThemeMode;
+import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
+import java.time.LocalDate;
 import java.util.List;
 
 public record TenantCreateRequest(
@@ -15,6 +18,11 @@ public record TenantCreateRequest(
         TenantThemeMode defaultThemeMode,
         Boolean allowUserThemeOverride,
         List<String> contractedModules,
-        List<String> featureEntitlements
+        List<String> featureEntitlements,
+        @NotBlank String initialAdminFullName,
+        @Email @NotBlank String initialAdminEmail,
+        @NotBlank String temporaryPassword,
+        @NotNull Boolean requirePasswordChangeOnFirstAccess,
+        @NotNull LocalDate trialEndDate
 ) {
 }
