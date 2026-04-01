@@ -14,9 +14,14 @@ describe('WebsiteHomePage', () => {
       </PublicSiteProvider>
     );
 
-    expect(await screen.findByRole('heading', { name: /PetFlow for recurring grooming and pet shop operations/i })).toBeInTheDocument();
+    expect(
+      await screen.findByRole('heading', {
+        name: /PetFlow for PetShop, grooming, veterinary clinic, and combined packages/i
+      })
+    ).toBeInTheDocument();
     expect(screen.getByText('Solutions')).toBeInTheDocument();
-    expect(screen.getByText('One visible product. The full bath and grooming cycle.')).toBeInTheDocument();
+    expect(screen.getByText('One system. Four commercial fronts for real pet operations.')).toBeInTheDocument();
+    expect(screen.getByText('Combined packages')).toBeInTheDocument();
     expect(screen.getAllByRole('link', { name: 'Request a demo' })[0]).toHaveAttribute('href', '/contact');
   });
 });

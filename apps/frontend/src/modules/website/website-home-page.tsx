@@ -3,13 +3,13 @@
 import Link from 'next/link';
 import {
   ArrowRight,
-  CalendarCheck,
   Car,
   CheckCircle2,
   CreditCard,
   Package,
   Scissors,
   ShoppingBag,
+  Stethoscope,
   TrendingUp,
   Users
 } from 'lucide-react';
@@ -21,7 +21,7 @@ import { getWebsiteContent } from './website-content';
 export function WebsiteHomePage() {
   const { locale } = usePublicSite();
   const content = getWebsiteContent(locale).home;
-  const featureIcons = [Scissors, ShoppingBag, CalendarCheck];
+  const featureIcons = [ShoppingBag, Scissors, Stethoscope, Package];
   const operationalIcons = [Car, Package, CreditCard, Users, TrendingUp, CheckCircle2];
 
   return (

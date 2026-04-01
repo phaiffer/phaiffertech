@@ -171,103 +171,110 @@ const websiteContent: Record<PublicLocale, WebsiteContent> = {
   'en-US': {
     home: {
       hero: {
-        eyebrow: 'PetFlow · recurring grooming · pet shop operations',
+        eyebrow: 'PetFlow · PetShop · grooming · veterinary clinic',
         title:
-          'PetFlow for recurring grooming and pet shop operations.',
+          'PetFlow for PetShop, grooming, veterinary clinic, and combined packages.',
         description:
-          'Keep appointments, monthly plans, professionals, stock alerts, and billing in one PetFlow workspace built for bath and grooming routines.',
+          'Run PetShop, Banho e Tosa, veterinary clinic routines, and combined packages in one PetFlow workspace with scheduling, stock, care context, and billing connected.',
         highlights: [
-          'Recurring grooming plans',
-          'Stock, billing, and commission',
-          'Automated reminders and pickup messages'
+          'PetShop, grooming, and clinic workflows in one place',
+          'Combined packages and recurring service control',
+          'Stock, billing, and professional accountability'
         ],
         stats: [
           {
-            value: 'Queue',
-            label: 'Daily appointments with the assigned professional'
+            value: 'Operation',
+            label: 'PetShop counter, grooming queue, and clinic schedule'
           },
           {
-            value: 'Plans',
-            label: 'Recurring clients, penultimate visits, and renewals'
+            value: 'Packages',
+            label: 'Combined packages, recurring clients, and renewals'
           },
           {
             value: 'Billing',
-            label: 'Pet taxi extras, stock alerts, and collection context'
+            label: 'Products, services, clinical care, and extras in one flow'
           }
         ],
         primaryCta: { label: 'Request a demo', href: '/contact' },
         secondaryCta: { label: 'PetFlow access', href: '/login' }
       },
-      signalTitle: 'A clearer operating system for pet businesses.',
+      signalTitle: 'A clearer operating system for real pet businesses.',
       signalDescription:
-        'PetFlow keeps reception, service execution, recurring plans, stock, and billing on the same workflow so a grooming operation can run without fragmented tools.',
+        'PetFlow keeps retail, service execution, clinical care, combined packages, stock, and billing on the same workflow so pet businesses do not need fragmented tools.',
       signals: [
         {
-          value: 'Scheduling',
-          label: 'Appointments & scheduling',
+          value: 'Operation',
+          label: 'Counter, schedule, and care flow',
           description:
-            'Clients, pets, bath and grooming services, professionals, and daily queue control in one place. No notebook, no spreadsheet.'
+            'Clients, pets, retail service, grooming services, clinical appointments, and professionals stay in one operating view. No notebook, no spreadsheet.'
         },
         {
-          value: 'Plans',
-          label: 'Recurring plans & loyalty',
+          value: 'Packages',
+          label: 'Recurring and combined packages',
           description:
-            'Separate recurring clients from one-time visits, track remaining sessions, and warn the team when the client is close to the final visits of the monthly plan.'
+            'Track recurring packages, combined offers, remaining sessions, and the right moment to renew hybrid service plans.'
         },
         {
           value: 'Billing',
-          label: 'Billing, extras, and stock alerts',
+          label: 'Billing, stock, and package follow-through',
           description:
-            'Manage products, low-stock alerts, pet taxi extras, and monthly billing with a cleaner operational view.'
+            'Manage products, low-stock alerts, clinical and service charges, and package billing with a cleaner operational view.'
         }
       ],
-      productsTitle: 'One visible product. The full bath and grooming cycle.',
+      productsTitle: 'One system. Four commercial fronts for real pet operations.',
       productsDescription:
-        'PetFlow is now the official visible product. It keeps reception, appointments, recurring plans, professionals, stock, and billing aligned for pet shops and grooming teams.',
+        'PetFlow presents PetShop, Banho e Tosa, veterinary clinic, and combined packages in one coherent commercial offer with one operating system behind it.',
       products: [
         {
-          eyebrow: 'Reception and daily schedule',
-          title: 'Service queue with responsible professional',
+          eyebrow: 'PetShop',
+          title: 'Retail, stock, and counter operation',
           description:
-            'Book baths, grooming, and add-ons with the pet, client, and responsible professional visible in the same flow.',
-          bullets: ['Daily schedule with professional assignment', 'Pet and client context on every visit', 'Operational queue ready for demo']
+            'Manage catalog, stock alerts, add-ons, and front-desk flow with the client and pet context visible in the same workspace.',
+          bullets: ['Product catalog with stock visibility', 'Retail linked to client and pet history', 'Counter operation inside PetFlow']
         },
         {
-          eyebrow: 'Recurring clients and monthly plans',
-          title: 'Plan control with session countdown',
+          eyebrow: 'Banho e Tosa',
+          title: 'Scheduling, queue, and professionals',
           description:
-            'Track active plans, sessions remaining, penultimate-visit alerts, and the difference between recurring and one-time customers.',
-          bullets: ['Recurring versus one-time visibility', 'Penultimate-session alert', 'Automatic renewal notice logic']
+            'Book baths, grooming, and add-ons with the assigned professional, service queue, and pet context visible from start to finish.',
+          bullets: ['Daily schedule with responsible professional', 'Pet and client context on every visit', 'Operational queue ready for demo']
         },
         {
-          eyebrow: 'Billing, extras, and retail support',
-          title: 'Next cycle billing with stock awareness',
+          eyebrow: 'Veterinary clinic',
+          title: 'Appointments, care records, and billing',
           description:
-            'Show projected charges, pet taxi extras, low-stock products, and service commissions without leaving the PetFlow workspace.',
-          bullets: ['Inventory with reorder alerts', 'Billing with pet taxi and extras', 'Commission by professional']
+            'Keep consultations, care records, prescriptions, and billing in the same workspace used for the commercial and operational routine.',
+          bullets: ['Clinical scheduling with pet history', 'Care context connected to the customer record', 'Billing inside the same system']
+        },
+        {
+          eyebrow: 'Combined packages',
+          title: 'One offer for hybrid pet businesses',
+          description:
+            'Sell combined packages that mix PetShop, grooming, and veterinary clinic services with unified follow-through and billing.',
+          bullets: ['Combined packages for hybrid operations', 'Shared pet and customer history', 'One billing flow across products and services']
         }
       ],
       expertiseTitle: 'Operational details that make the demo credible.',
       expertiseDescription:
-        'PetFlow sells better when the story sounds like a real operation: reception rhythm, recurring plans, stock pressure, billing follow-through, and a solid technical base underneath.',
+        'PetFlow sells better when the story sounds like a real operation: PetShop rhythm, Banho e Tosa execution, clinic routine, combined packages, billing follow-through, and a solid technical base underneath.',
       expertise: [
         {
-          eyebrow: 'Front desk and service queue',
-          title: 'A clearer rhythm for appointments, pets, and responsible professionals',
+          eyebrow: 'Counter, queue, and clinic schedule',
+          title: 'A clearer rhythm for appointments, pets, products, and responsible professionals',
           description:
-            'The product keeps client, pet, service, professional, and daily schedule context tied together so the operation does not collapse into WhatsApp and spreadsheets.'
+            'The product keeps client, pet, service, retail, professional, and daily schedule context tied together so the operation does not collapse into WhatsApp and spreadsheets.'
         },
         {
-          eyebrow: 'Recurring plans',
-          title: 'Monthly loyalty with penultimate-visit alerts',
+          eyebrow: 'Recurring and combined packages',
+          title: 'Package control with remaining sessions and renewal visibility',
           description:
-            'Recurring versus one-time clients stay visible, remaining sessions stay readable, and the team can act before the plan ends.'
+            'Recurring and hybrid packages stay visible, remaining sessions stay readable, and the team can act before the package ends.'
         },
         {
-          eyebrow: 'Stock, extras, and commission',
+          eyebrow: 'Stock, services, and clinic billing',
           title: 'Operational billing without leaving the PetFlow flow',
           description:
-            'Pet taxi add-ons, stock alerts, invoices, and professional commission remain part of the same commercial story instead of separate disconnected tools.'
+            'Product sales, service add-ons, clinical charges, invoices, and professional commission remain part of the same commercial story instead of separate disconnected tools.'
         },
         {
           eyebrow: 'Technical foundation preserved',
@@ -301,9 +308,9 @@ const websiteContent: Record<PublicLocale, WebsiteContent> = {
       ],
       cta: {
         eyebrow: 'PetFlow available now',
-        title: 'Run bath and grooming with more control.',
+        title: 'Run PetShop, grooming, and clinic operations with more control.',
         description:
-          'Show a clearer operation from the first demo: appointments, recurring plans, professionals, stock, and billing in one system.',
+          'Show a clearer offer from the first conversation: PetShop, Banho e Tosa, veterinary clinic, and combined packages in one system.',
         primaryCta: { label: 'Get in touch', href: '/contact' },
         secondaryCta: { label: 'PetFlow access', href: '/login' }
       }
@@ -437,7 +444,7 @@ const websiteContent: Record<PublicLocale, WebsiteContent> = {
           eyebrow: 'Visible product',
           title: 'PetFlow owns the commercial story',
           description:
-            'The platform stays behind the scenes while PetFlow carries the visible story for grooming, recurring plans, stock, and billing.'
+            'The platform stays behind the scenes while PetFlow carries the visible story for PetShop, grooming, veterinary clinic routines, combined packages, stock, and billing.'
         }
       ],
       modulesTitle: 'What is visible on this foundation now',
@@ -446,9 +453,9 @@ const websiteContent: Record<PublicLocale, WebsiteContent> = {
       modules: [
         {
           eyebrow: 'PetFlow · primary product',
-          title: 'Operations for grooming, pet retail, and recurring service routines',
+          title: 'Operations for PetShop, grooming, veterinary clinic, and combined packages',
           description:
-            'PetFlow connects appointments, monthly plans, professionals, stock alerts, billing, and customer follow-through — the current commercial focus of the platform.'
+            'PetFlow connects appointments, combined packages, professionals, stock alerts, billing, and customer follow-through — the current commercial focus of the platform.'
         },
         {
           eyebrow: 'Shared foundation',
@@ -460,32 +467,38 @@ const websiteContent: Record<PublicLocale, WebsiteContent> = {
     },
     products: {
       eyebrow: 'Products',
-      title: 'PetFlow is the official product surface now.',
+      title: 'PetFlow packages the real pet operation in one offer.',
       description:
-        'PhaifferTech now focuses its commercial execution on PetFlow — operational software for grooming, pet shops, and recurring service environments.',
+        'PhaifferTech now focuses its commercial execution on PetFlow for PetShop, Banho e Tosa, veterinary clinic routines, and combined packages.',
       products: [
         {
-          eyebrow: 'Bath and grooming operation',
-          title: 'PetFlow',
+          eyebrow: 'PetShop',
+          title: 'Retail, stock, and counter routine',
           description:
-            'Scheduling, monthly plans, inventory, professionals and billing in one system. Built for pet shops and grooming services.'
+            'Organize products, stock signals, counter activity, and customer context in the same workspace used by the rest of the operation.'
         },
         {
-          eyebrow: 'Recurring revenue',
-          title: 'Monthly plans and billing follow-through',
+          eyebrow: 'Banho e Tosa',
+          title: 'Scheduling, queue, and responsible professionals',
           description:
-            'Separate recurring clients from one-time visits, track sessions left, warn at the penultimate visit, and prepare the next billing cycle.'
+            'Keep baths, grooming services, assigned professionals, and service flow visible from booking to billing.'
         },
         {
-          eyebrow: 'Stock and service delivery',
-          title: 'Retail support and team accountability',
+          eyebrow: 'Veterinary clinic',
+          title: 'Appointments, care history, and billing',
           description:
-            'Keep products above minimum stock, attach a professional to each procedure, and explain commission by appointment and by professional.'
+            'Run consultations, care records, prescriptions, and financial follow-through without splitting clinic work into another system.'
+        },
+        {
+          eyebrow: 'Combined packages',
+          title: 'One commercial offer for hybrid businesses',
+          description:
+            'Bundle PetShop, grooming, and clinic services with combined packages, recurring follow-through, and one billing story.'
         }
       ],
       fitTitle: 'Built for the way pet businesses actually work',
       fitDescription:
-        'Whether you run a grooming salon, a pet shop, or a pet operation with monthly loyalty plans, PetFlow adapts to the daily routine without forcing generic workflows.',
+        'Whether you run PetShop, Banho e Tosa, veterinary clinic routines, or a hybrid operation with combined packages, PetFlow adapts to the daily routine without forcing generic workflows.',
       fit: [
         {
           eyebrow: 'Veterinary clinic',
@@ -506,10 +519,10 @@ const websiteContent: Record<PublicLocale, WebsiteContent> = {
             'Manage SKUs, pricing, stock levels, and reorder signals alongside client and appointment workflows — all in PetFlow.'
         },
         {
-          eyebrow: 'Hybrid operation',
+          eyebrow: 'Combined packages',
           title: 'One system for services, care, products, and sales',
           description:
-            'Combine services, products, care records, and billing in a single workspace for businesses that do more than one thing.'
+            'Combine services, products, care records, and billing in a single workspace for businesses that sell more than one package.'
         }
       ]
     },
@@ -793,165 +806,172 @@ const websiteContent: Record<PublicLocale, WebsiteContent> = {
     },
     contact: {
       eyebrow: 'Contact',
-      title: 'Interested in PetFlow? Let\'s talk.',
+      title: 'Request a quote, hiring plan, or demo for PetFlow.',
       description:
-        'Get in touch to learn about the system, schedule a demo or understand how PetFlow fits your pet business.',
-      lanesTitle: 'Where the conversation can start',
+        'Talk to PhaifferTech about PetShop, Banho e Tosa, veterinary clinic routines, or combined packages. Email willian.phaiffer@phaiffertech.com.br or call +55 41 9629-4533.',
+      lanesTitle: 'What you can request here',
       lanesDescription:
-        'Each lane reflects a credible entry point into the company narrative without pretending that every interaction is the same.',
+        'The contact page supports the three commercial requests that matter right now for the real PetFlow offer.',
       lanes: [
         {
-          eyebrow: 'Commercial',
-          title: 'PetFlow demo for grooming operations',
+          eyebrow: 'Quotation',
+          title: 'Request a quote for your operation',
           description:
-            'For conversations centered on bath and grooming flow, recurring plans, stock alerts, pet taxi extras, and billing.'
+            'Ask for pricing and scope for PetShop, Banho e Tosa, veterinary clinic routines, or combined packages.'
         },
         {
-          eyebrow: 'Technical',
-          title: 'Architecture and engineering alignment',
+          eyebrow: 'Hiring',
+          title: 'Plan the PetFlow hiring and rollout',
           description:
-            'For discussions centered on software architecture, data engineering, modular integration and cloud/platform strategy.'
+            'Use this lane when you want to understand onboarding, rollout timing, package mix, and how PetFlow lands in your business.'
         },
         {
-          eyebrow: 'Research',
-          title: 'Applied studies and academic direction',
+          eyebrow: 'Demo',
+          title: 'Book a guided commercial demonstration',
           description:
-            'For technical studies, architecture notes, postgraduate continuity and future research collaboration.'
+            'Schedule a guided demo focused on the operational flow that matters most for your PetShop, grooming, clinic, or hybrid routine.'
         }
       ],
-      readinessTitle: 'What helps before the first interaction',
+      readinessTitle: 'Direct contact channels',
       readinessDescription:
-        'The contact page is also a qualification layer: it helps frame the kind of information that makes the first conversation more productive.',
+        'Use the channel that fits your pace and include the operation type you want to cover so the first response lands faster.',
       readiness: [
         {
-          eyebrow: 'Operational context',
-          title: 'Clarify the environment and the pressure points',
+          eyebrow: 'Email',
+          title: 'willian.phaiffer@phaiffertech.com.br',
           description:
-            'What kind of operation is involved, what visibility is missing and which workflows are currently fragile.'
+            'Best for quotation requests, hiring conversations, and combined package discussions that need a written follow-up.'
         },
         {
-          eyebrow: 'Technical scope',
-          title: 'Define whether the need is product, integration or architecture',
+          eyebrow: 'Phone',
+          title: '+55 41 9629-4533',
           description:
-            'This helps distinguish between platform access, module evaluation and deeper engineering discussions.'
+            'Best for faster contact, commercial alignment, and demo scheduling with the PhaifferTech team.'
         },
         {
-          eyebrow: 'Expected next step',
-          title: 'Know whether the first step is discovery, validation or protected access',
+          eyebrow: 'Tell us your mix',
+          title: 'Mention PetShop, Banho e Tosa, clinic, or combined packages',
           description:
-            'Some conversations start with the live demo, others with rollout validation, and others with protected PetFlow access.'
+            'That helps us prepare the right quotation, hiring path, or demo narrative before the first interaction.'
         }
       ],
       cta: {
         eyebrow: 'Contact',
-        title: 'Interested in PetFlow? Let\'s talk.',
+        title: 'Contact PhaifferTech about the real PetFlow offer.',
         description:
-          'Get in touch to learn about the system, schedule a demo or understand how PetFlow fits your pet business.',
-        primaryCta: { label: 'Send a message', href: 'mailto:contato@phaiffertech.com.br' },
-        secondaryCta: { label: 'PetFlow access', href: '/login' }
+          'Use email for quotation and hiring requests, or call to speed up demo scheduling and commercial follow-up.',
+        primaryCta: { label: 'Send email', href: 'mailto:willian.phaiffer@phaiffertech.com.br' },
+        secondaryCta: { label: 'Call now', href: 'tel:+554196294533' }
       }
     }
   },
   'pt-BR': {
     home: {
       hero: {
-        eyebrow: 'PetFlow · banho e tosa · pet shop · recorrencia',
-        title: 'PetFlow para banho e tosa, loja pet e recorrencia.',
-        titleHighlight: 'banho e tosa',
+        eyebrow: 'PetFlow · PetShop · Banho e Tosa · Clinica Veterinaria',
+        title: 'PetFlow para PetShop, Banho e Tosa, Clinica Veterinaria e pacotes combinados.',
+        titleHighlight: 'PetShop',
         description:
-          'Organize agenda do dia, planos mensais, pet taxi, estoque, cobranca, profissionais e comissao em um unico fluxo operacional.',
+          'Organize PetShop, Banho e Tosa, Clinica Veterinaria e pacotes combinados em um unico fluxo operacional com agenda, estoque, contexto clinico e cobranca conectados.',
         highlights: [
-          'Recorrencia mensal sem planilha paralela',
-          'Pet taxi, estoque e cobranca no mesmo ritmo',
-          'Profissionais e comissao ligados a cada atendimento'
+          'PetShop, grooming e clinica no mesmo workspace',
+          'Pacotes combinados e recorrencia sem planilha paralela',
+          'Estoque, cobranca e responsabilidade por profissional'
         ],
         stats: [
           {
-            value: 'Fila',
-            label: 'Atendimentos do dia com profissional responsavel'
+            value: 'Operacao',
+            label: 'Balcao do PetShop, fila do Banho e Tosa e agenda clinica'
           },
           {
-            value: 'Planos',
-            label: 'Recorrentes, penultimo banho e renovacao'
+            value: 'Pacotes',
+            label: 'Pacotes combinados, recorrentes e renovacao'
           },
           {
             value: 'Cobranca',
-            label: 'Extras, pet taxi e contexto financeiro do ciclo'
+            label: 'Produtos, servicos, clinica e extras no mesmo fluxo'
           }
         ],
         primaryCta: { label: 'Solicitar demo', href: '/contact' },
         secondaryCta: { label: 'Acesso PetFlow', href: '/login' }
       },
-      signalTitle: 'Uma operacao mais clara para o seu pet business.',
+      signalTitle: 'Uma operacao mais clara para o pet business real.',
       signalDescription:
-        'O PetFlow conecta recepcao, execucao do servico, planos recorrentes, estoque e cobranca no mesmo fluxo para evitar operacao fragmentada.',
+        'O PetFlow conecta varejo, execucao de servicos, rotina clinica, pacotes combinados, estoque e cobranca no mesmo fluxo para evitar operacao fragmentada.',
       signals: [
         {
-          value: 'Agenda',
-          label: 'Fila de servicos com cliente, pet e profissional',
+          value: 'Operacao',
+          label: 'Balcao, agenda e atendimento clinico no mesmo fluxo',
           description:
-            'Clientes, pets, banho, tosa e adicionais no mesmo fluxo. Sem caderno, sem planilha.'
+            'Clientes, pets, varejo, Banho e Tosa, atendimentos clinicos e profissionais no mesmo fluxo. Sem caderno, sem planilha.'
         },
         {
-          value: 'Planos',
-          label: 'Recorrentes e avulsos sem confusao operacional',
+          value: 'Pacotes',
+          label: 'Recorrentes e combinados sem confusao operacional',
           description:
-            'Separe clientes de plano mensal dos avulsos, acompanhe sessoes restantes e receba aviso na penultima visita.'
+            'Separe recorrentes, pacotes combinados e avulsos, acompanhe sessoes restantes e prepare a renovacao do jeito certo.'
         },
         {
           value: 'Cobranca',
-          label: 'Estoque, extras e faturamento no mesmo ritmo da operacao',
+          label: 'Estoque, servicos e faturamento no mesmo ritmo da operacao',
           description:
-            'Gerencie produtos, alertas de estoque minimo, pet taxi e cobranca mensal com mais clareza comercial.'
+            'Gerencie produtos, alertas de estoque minimo, cobranca de servicos e contexto clinico com mais clareza comercial.'
         }
       ],
-      productsTitle: 'Um produto visivel. O ciclo completo do banho e tosa.',
+      productsTitle: 'Um sistema. Quatro frentes comerciais para a operacao pet real.',
       productsDescription:
-        'O PetFlow concentra recepcao, agenda, recorrencia, estoque, cobranca, profissionais e comissao para pet shops e operacoes de banho e tosa.',
+        'O PetFlow apresenta PetShop, Banho e Tosa, Clinica Veterinaria e pacotes combinados na mesma oferta comercial e no mesmo sistema operacional.',
       products: [
         {
-          eyebrow: 'Recepcao e agenda do dia',
-          title: 'Fila de servicos com pet, cliente e profissional',
+          eyebrow: 'PetShop',
+          title: 'Varejo, estoque e operacao de balcao',
           description:
-            'Visualize banho, tosa e adicionais com o cliente, o pet e o profissional responsavel no mesmo fluxo operacional.',
+            'Organize catalogo, alertas de estoque, adicionais e atendimento de balcao com cliente e pet no mesmo workspace.',
+          bullets: ['Catalogo de produtos com visibilidade de estoque', 'Varejo conectado ao historico do cliente e do pet', 'Operacao de balcao dentro do PetFlow']
+        },
+        {
+          eyebrow: 'Banho e Tosa',
+          title: 'Agenda, fila e profissionais responsaveis',
+          description:
+            'Visualize Banho e Tosa, adicionais e profissional responsavel no mesmo fluxo operacional, do agendamento ao fechamento.',
           bullets: ['Agenda do dia com responsavel visivel', 'Pet e cliente conectados em cada visita', 'Fila pronta para apresentacao comercial']
         },
         {
-          eyebrow: 'Recorrencia e fidelizacao',
-          title: 'Planos mensais com sessoes restantes e renovacao',
+          eyebrow: 'Clinica Veterinaria',
+          title: 'Atendimentos, prontuarios e faturamento',
           description:
-            'Separe recorrentes de avulsos, acompanhe sessoes restantes e mantenha o penultimo banho visivel antes da renovacao.',
-          bullets: ['Recorrentes versus avulsos', 'Alerta de penultimo banho', 'Renovacao preparada no ritmo da operacao']
+            'Mantenha consultas, prontuarios, prescricoes e cobranca no mesmo workspace usado pela rotina comercial e operacional.',
+          bullets: ['Agenda clinica com historico do pet', 'Contexto de cuidado conectado ao cadastro do cliente', 'Faturamento dentro do mesmo sistema']
         },
         {
-          eyebrow: 'Cobranca, extras e apoio de loja',
-          title: 'Estoque, pet taxi, faturamento e comissao',
+          eyebrow: 'Pacotes combinados',
+          title: 'Uma oferta unica para negocios pet hibridos',
           description:
-            'Mostre cobranca do proximo ciclo, extras de pet taxi, alerta de estoque e comissao do time sem sair do workspace.',
-          bullets: ['Estoque com ponto de reposicao', 'Cobranca com extras e contexto comercial', 'Comissao por profissional']
+            'Venda pacotes que combinam PetShop, Banho e Tosa e Clinica Veterinaria com follow-up e cobranca unificados.',
+          bullets: ['Pacotes combinados para operacoes hibridas', 'Historico compartilhado de pet e cliente', 'Uma cobranca para produtos e servicos']
         }
       ],
       expertiseTitle: 'Detalhes operacionais que deixam a demo crivel.',
       expertiseDescription:
-        'O PetFlow vende melhor quando a historia parece operacao real: recepcao, recorrencia, estoque, cobranca, mensagens automaticas e uma base tecnica firme por tras.',
+        'O PetFlow vende melhor quando a historia parece operacao real: ritmo de PetShop, execucao de Banho e Tosa, rotina clinica, pacotes combinados, cobranca e uma base tecnica firme por tras.',
       expertise: [
         {
-          eyebrow: 'Recepcao e fila operacional',
-          title: 'Uma rotina mais clara para agenda, pets e profissionais',
+          eyebrow: 'Balcao, fila e agenda clinica',
+          title: 'Uma rotina mais clara para agenda, pets, produtos e profissionais',
           description:
-            'Cliente, pet, servico, profissional e horario ficam no mesmo fluxo para que a operacao nao dependa de caderno, WhatsApp e planilhas soltas.'
+            'Cliente, pet, servico, varejo, profissional e horario ficam no mesmo fluxo para que a operacao nao dependa de caderno, WhatsApp e planilhas soltas.'
         },
         {
-          eyebrow: 'Planos recorrentes',
-          title: 'Mensalidade com alerta de penultimo banho',
+          eyebrow: 'Recorrencia e pacotes combinados',
+          title: 'Controle de pacotes com sessoes restantes e renovacao visivel',
           description:
-            'Recorrentes versus avulsos ficam visiveis, sessoes restantes ficam legiveis e a equipe consegue agir antes do fim do plano.'
+            'Recorrentes, combinados e avulsos ficam visiveis, sessoes restantes ficam legiveis e a equipe consegue agir antes do fim do pacote.'
         },
         {
-          eyebrow: 'Estoque, extras e comissao',
+          eyebrow: 'Estoque, servicos e clinica',
           title: 'Cobranca operacional sem sair do fluxo do PetFlow',
           description:
-            'Pet taxi, adicionais, estoque baixo, invoices e comissao por profissional entram na mesma narrativa comercial.'
+            'Produtos, adicionais, cobranca clinica, invoices e comissao por profissional entram na mesma narrativa comercial.'
         },
         {
           eyebrow: 'Base tecnica preservada',
@@ -985,9 +1005,9 @@ const websiteContent: Record<PublicLocale, WebsiteContent> = {
       ],
       cta: {
         eyebrow: 'PetFlow disponivel agora',
-        title: 'Pronto para apresentar o PetFlow?',
+        title: 'Pronto para operar PetShop, Banho e Tosa e Clinica com mais controle?',
         description:
-          'Mostre uma operacao de banho e tosa, pet shop e recorrencia mensal com narrativa comercial mais clara e uma base tecnica real por tras.',
+          'Mostre desde a primeira conversa uma oferta mais clara: PetShop, Banho e Tosa, Clinica Veterinaria e pacotes combinados no mesmo sistema.',
         primaryCta: { label: 'Solicitar demo', href: '/contact' },
         secondaryCta: { label: 'Acesso PetFlow', href: '/login' }
       }
@@ -1121,7 +1141,7 @@ const websiteContent: Record<PublicLocale, WebsiteContent> = {
           eyebrow: 'Produto visivel',
           title: 'PetFlow conduz a historia comercial',
           description:
-            'A plataforma fica nos bastidores enquanto o PetFlow carrega a historia visivel de agenda, planos recorrentes, estoque e cobranca.'
+            'A plataforma fica nos bastidores enquanto o PetFlow carrega a historia visivel de PetShop, Banho e Tosa, Clinica Veterinaria, pacotes combinados, estoque e cobranca.'
         }
       ],
       modulesTitle: 'O que fica visivel nesta fundacao agora',
@@ -1130,9 +1150,9 @@ const websiteContent: Record<PublicLocale, WebsiteContent> = {
       modules: [
         {
           eyebrow: 'PetFlow · produto principal',
-          title: 'Operacao para banho e tosa, loja pet e recorrencia mensal',
+          title: 'Operacao para PetShop, Banho e Tosa, Clinica Veterinaria e pacotes combinados',
           description:
-            'O PetFlow conecta appointments, planos mensais, profissionais, alertas de estoque, cobranca e follow-up com clientes — foco comercial atual da plataforma.'
+            'O PetFlow conecta appointments, pacotes combinados, profissionais, alertas de estoque, cobranca e follow-up com clientes — foco comercial atual da plataforma.'
         },
         {
           eyebrow: 'Fundacao compartilhada',
@@ -1144,32 +1164,38 @@ const websiteContent: Record<PublicLocale, WebsiteContent> = {
     },
     products: {
       eyebrow: 'Produtos',
-      title: 'PetFlow e a superficie oficial do produto agora.',
+      title: 'PetFlow empacota a operacao pet real em uma unica oferta.',
       description:
-        'A PhaifferTech concentra sua execucao comercial no PetFlow — software operacional para banho e tosa, pet shops e servicos recorrentes.',
+        'A PhaifferTech concentra sua execucao comercial no PetFlow para PetShop, Banho e Tosa, Clinica Veterinaria e pacotes combinados.',
       products: [
         {
-          eyebrow: 'Operacao de banho e tosa',
-          title: 'PetFlow',
+          eyebrow: 'PetShop',
+          title: 'Varejo, estoque e rotina de balcao',
           description:
-            'Agenda, planos mensais, estoque, profissionais e faturamento em um unico sistema. Feito para grooming e pet shop.'
+            'Organize produtos, sinais de estoque, atendimento de balcao e contexto do cliente no mesmo workspace usado pelo restante da operacao.'
         },
         {
-          eyebrow: 'Receita recorrente',
-          title: 'Planos mensais e cobranca do proximo ciclo',
+          eyebrow: 'Banho e Tosa',
+          title: 'Agenda, fila e profissionais responsaveis',
           description:
-            'Separe recorrentes de avulsos, acompanhe sessoes restantes, avise na penultima visita e prepare a cobranca do proximo mes.'
+            'Mantenha Banho e Tosa, profissionais responsaveis e fluxo de servico visiveis do agendamento ao faturamento.'
         },
         {
-          eyebrow: 'Entrega do servico e apoio de loja',
-          title: 'Estoque, extras e responsabilidade por profissional',
+          eyebrow: 'Clinica Veterinaria',
+          title: 'Atendimentos, historico de cuidado e faturamento',
           description:
-            'Mantenha produtos acima do minimo, associe profissional a cada procedimento e explique comissao por atendimento e por profissional.'
+            'Execute consultas, prontuarios, prescricoes e follow-up financeiro sem jogar a rotina clinica para outro sistema.'
+        },
+        {
+          eyebrow: 'Pacotes combinados',
+          title: 'Uma oferta comercial para negocios pet hibridos',
+          description:
+            'Combine PetShop, Banho e Tosa e clinica em pacotes combinados com recorrencia, follow-up e cobranca na mesma narrativa.'
         }
       ],
       fitTitle: 'Feito para o jeito que negocios pet realmente funcionam',
       fitDescription:
-        'Seja um salao de banho e tosa, um pet shop ou uma operacao com planos recorrentes, o PetFlow se adapta ao ritmo diario sem impor fluxo generico.',
+        'Seja um PetShop, uma operacao de Banho e Tosa, uma Clinica Veterinaria ou um negocio com pacotes combinados, o PetFlow se adapta ao ritmo diario sem impor fluxo generico.',
       fit: [
         {
           eyebrow: 'Clínica veterinária',
@@ -1190,10 +1216,10 @@ const websiteContent: Record<PublicLocale, WebsiteContent> = {
             'Gerencie SKUs, preços, níveis de estoque e pontos de reposição integrados aos fluxos de clientes e atendimentos.'
         },
         {
-          eyebrow: 'Operação híbrida',
+          eyebrow: 'Pacotes combinados',
           title: 'Um sistema para serviços, cuidados, produtos e vendas',
           description:
-            'Combine serviços, produtos, prontuários e faturamento em um único workspace para negócios que fazem mais de uma coisa.'
+            'Combine serviços, produtos, prontuários e faturamento em um único workspace para negócios que vendem mais de um pacote.'
         }
       ]
     },
@@ -1477,62 +1503,62 @@ const websiteContent: Record<PublicLocale, WebsiteContent> = {
     },
     contact: {
       eyebrow: 'Contato',
-      title: 'Interessado no PetFlow? Vamos conversar.',
+      title: 'Solicite cotacao, contratacao ou demo do PetFlow.',
       description:
-        'Entre em contato para conhecer o sistema, agendar uma demonstração ou entender como o PetFlow se encaixa no seu pet business.',
-      lanesTitle: 'Onde a conversa pode começar',
+        'Fale com a PhaifferTech sobre PetShop, Banho e Tosa, Clinica Veterinaria ou pacotes combinados. Escreva para willian.phaiffer@phaiffertech.com.br ou ligue para +55 41 9629-4533.',
+      lanesTitle: 'O que voce pode solicitar aqui',
       lanesDescription:
-        'Cada trilha reflete um ponto de entrada crível para a narrativa da empresa sem fingir que toda interação é igual.',
+        'A pagina de contato cobre os tres pedidos comerciais que importam agora para a oferta real do PetFlow.',
       lanes: [
         {
-          eyebrow: 'Comercial',
-          title: 'Demo PetFlow para banho e tosa',
+          eyebrow: 'Cotacao',
+          title: 'Solicite uma proposta para a sua operacao',
           description:
-            'Para conversas centradas em agenda, planos recorrentes, alertas de estoque, pet taxi e cobranca do banho e tosa.'
+            'Peça precificacao e escopo para PetShop, Banho e Tosa, Clinica Veterinaria ou pacotes combinados.'
         },
         {
-          eyebrow: 'Técnico',
-          title: 'Alinhamento de arquitetura e engineering',
+          eyebrow: 'Contratacao',
+          title: 'Planeje a entrada do PetFlow no negocio',
           description:
-            'Para discussões centradas em software architecture, data engineering, integração modular e estratégia de cloud/platform.'
+            'Use esta trilha para entender onboarding, prazo de rollout, combinacao de pacotes e como o PetFlow entra na sua operacao.'
         },
         {
-          eyebrow: 'Pesquisa',
-          title: 'Estudos aplicados e direção acadêmica',
+          eyebrow: 'Demo',
+          title: 'Agende uma demonstracao comercial guiada',
           description:
-            'Para estudos técnicos, notas de arquitetura, continuidade de pós-graduação e futura colaboração em pesquisa.'
+            'Marque uma demo guiada focada no fluxo operacional que mais importa para o seu PetShop, Banho e Tosa, clinica ou rotina hibrida.'
         }
       ],
-      readinessTitle: 'O que ajuda antes da primeira interação',
+      readinessTitle: 'Canais diretos de contato',
       readinessDescription:
-        'A página de contato também funciona como camada de qualificação: ela ajuda a enquadrar que tipo de informação torna a primeira conversa mais produtiva.',
+        'Use o canal que combina com o seu ritmo e informe qual tipo de operacao deseja cobrir para acelerar a primeira resposta.',
       readiness: [
         {
-          eyebrow: 'Contexto operacional',
-          title: 'Esclareça o ambiente e os pontos de pressão',
+          eyebrow: 'E-mail',
+          title: 'willian.phaiffer@phaiffertech.com.br',
           description:
-            'Que tipo de operação está envolvida, que visibilidade falta hoje e quais workflows estão frágeis.'
+            'Melhor canal para cotacoes, conversas de contratacao e pedidos de pacotes combinados que pedem retorno por escrito.'
         },
         {
-          eyebrow: 'Escopo técnico',
-          title: 'Defina se a necessidade é produto, integração ou arquitetura',
+          eyebrow: 'Telefone',
+          title: '+55 41 9629-4533',
           description:
-            'Isso ajuda a separar acesso à plataforma, avaliação de módulo e discussões mais profundas de engineering.'
+            'Melhor canal para contato mais rapido, alinhamento comercial e agendamento de demonstracao com a equipe da PhaifferTech.'
         },
         {
-          eyebrow: 'Próximo passo esperado',
-          title: 'Saiba se o primeiro passo é descoberta, validação ou acesso protegido',
+          eyebrow: 'Informe sua mistura',
+          title: 'Mencione PetShop, Banho e Tosa, clinica ou pacotes combinados',
           description:
-            'Algumas conversas comecam pela demo ao vivo, outras pela validacao do rollout e outras por acesso protegido ao PetFlow.'
+            'Isso ajuda a preparar a cotacao, a contratacao ou a narrativa da demo antes da primeira interacao.'
         }
       ],
       cta: {
         eyebrow: 'Contato',
-        title: 'Interessado no PetFlow? Vamos conversar.',
+        title: 'Fale com a PhaifferTech sobre a oferta real do PetFlow.',
         description:
-          'Entre em contato para conhecer o sistema, agendar uma demonstração ou entender como o PetFlow se encaixa no seu pet business.',
-        primaryCta: { label: 'Enviar mensagem', href: 'mailto:contato@phaiffertech.com.br' },
-        secondaryCta: { label: 'Acessar o PetFlow', href: '/login' }
+          'Use o e-mail para cotacao e contratacao, ou ligue para acelerar o agendamento de demo e o follow-up comercial.',
+        primaryCta: { label: 'Enviar e-mail', href: 'mailto:willian.phaiffer@phaiffertech.com.br' },
+        secondaryCta: { label: 'Ligar agora', href: 'tel:+554196294533' }
       }
     }
   }
