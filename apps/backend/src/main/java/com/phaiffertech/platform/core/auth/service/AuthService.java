@@ -13,8 +13,9 @@ import com.phaiffertech.platform.core.auth.repository.RefreshTokenRepository;
 import com.phaiffertech.platform.core.iam.domain.UserTenant;
 import com.phaiffertech.platform.core.iam.repository.UserTenantRepository;
 import com.phaiffertech.platform.core.iam.service.TenantAuthorizationResolver;
-import com.phaiffertech.platform.core.tenant.entitlement.service.TenantEntitlementService;
 import com.phaiffertech.platform.core.tenant.domain.Tenant;
+import com.phaiffertech.platform.core.tenant.domain.TenantCommercialStatus;
+import com.phaiffertech.platform.core.tenant.entitlement.service.TenantEntitlementService;
 import com.phaiffertech.platform.core.tenant.repository.TenantRepository;
 import com.phaiffertech.platform.core.user.domain.User;
 import com.phaiffertech.platform.core.user.repository.UserRepository;
@@ -27,6 +28,7 @@ import com.phaiffertech.platform.shared.security.JwtProperties;
 import com.phaiffertech.platform.shared.security.JwtService;
 import com.phaiffertech.platform.shared.usage.UsageTelemetryService;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.Map;
 import java.util.UUID;
 import com.phaiffertech.platform.core.module.featureflag.service.FeatureFlagService;
@@ -127,6 +129,7 @@ public class AuthService {
                     platformMetricsService.recordAuthenticationAttempt(false);
                     return new ResourceNotFoundException("Tenant not found.");
                 });
+        assertTenantAllowsLogin(tenant);
 
         User user = userRepository.findByEmailIgnoreCase(request.email())
                 .orElseThrow(() -> {
@@ -352,6 +355,37 @@ public class AuthService {
 
         activeTokens.forEach(token -> token.setRevokedAt(revokedAt));
         refreshTokenRepository.saveAll(activeTokens);
+    }
+
+    private void assertTenantAllowsLogin(Tenant tenant) {
+        LocalDate currentDate = LocalDate.now();
+        TenantCommercialStatus commercialStatus = tenant.getCommercialStatus();
+
+        if (commercialStatus == TenantCommercialStatus.ACTIVE) {
+            return;
+        }
+
+        if (commercialStatus == TenantCommercialStatus.TRIAL && !tenant.isTrialExpired(currentDate)) {
+            return;
+        }
+
+        platformMetricsService.recordAuthenticationAttempt(false);
+        throw new ForbiddenOperationException(resolveTenantAccessBlockedMessage(tenant, commercialStatus, currentDate));
+    }
+
+    private String resolveTenantAccessBlockedMessage(
+            Tenant tenant,
+            TenantCommercialStatus commercialStatus,
+            LocalDate currentDate
+    ) {
+        return switch (commercialStatus) {
+            case SUSPENDED -> "Tenant access is suspended. Please contact the commercial team to restore access.";
+            case CANCELLED -> "Tenant access has been cancelled. Please contact the commercial team if you need to reactivate it.";
+            case TRIAL -> tenant.isTrialExpired(currentDate)
+                    ? "Tenant trial has expired. Please contact the commercial team to continue using the platform."
+                    : "Tenant access is unavailable.";
+            case ACTIVE -> "Tenant access is available.";
+        };
     }
 
     private SupportImpersonationContextResponse resolveImpersonationContext(AuthenticatedUser principal) {
