@@ -28,6 +28,7 @@ public final class TenantMapper {
                 tenant.getAccentColor(),
                 tenant.getDefaultThemeMode(),
                 tenant.isAllowUserThemeOverride(),
+                tenant.getTrialEndDate(),
                 contractedModules,
                 featureEntitlements,
                 moduleOverrides,

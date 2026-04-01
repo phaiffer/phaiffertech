@@ -140,7 +140,7 @@ public class SupportImpersonationService {
 
         logLifecycleEvent("START", session, sourceTenant, targetTenant);
 
-        return issueAccessTokenResponse(impersonatedPrincipal, user.getFullName(), targetTenant, expiresAt, sourceTenant);
+        return issueAccessTokenResponse(impersonatedPrincipal, user, targetTenant, expiresAt, sourceTenant);
     }
 
     @Transactional
@@ -177,7 +177,7 @@ public class SupportImpersonationService {
 
         logLifecycleEvent("STOP", session, sourceTenant, targetTenant);
 
-        return issueAccessTokenResponse(restoredPrincipal, user.getFullName(), sourceTenant, null, null);
+        return issueAccessTokenResponse(restoredPrincipal, user, sourceTenant, null, null);
     }
 
     @Transactional
@@ -240,7 +240,7 @@ public class SupportImpersonationService {
 
     private AuthTokenResponse issueAccessTokenResponse(
             AuthenticatedUser principal,
-            String fullName,
+            User user,
             Tenant tenant,
             Instant customExpiry,
             Tenant sourceTenant
@@ -254,8 +254,8 @@ public class SupportImpersonationService {
                 ? null
                 : AuthMapper.toSupportImpersonationContextResponse(principal.impersonation(), sourceTenant);
         AuthenticatedUserResponse userResponse = AuthMapper.toAuthenticatedUserResponse(
+                user,
                 principal,
-                fullName,
                 tenant,
                 tenantEntitlementService.resolveEffectiveEntitlements(tenant.getId()),
                 impersonation

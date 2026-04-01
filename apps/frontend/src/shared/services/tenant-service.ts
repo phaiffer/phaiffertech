@@ -3,7 +3,7 @@ import { PageResponse } from '@/shared/types/common';
 import { Tenant } from '@/shared/types/tenant';
 import { TenantThemeMode } from '@/shared/types/auth';
 
-export type TenantUpsertInput = {
+export type TenantBaseInput = {
   name: string;
   code: string;
   logoUrl?: string | null;
@@ -14,6 +14,25 @@ export type TenantUpsertInput = {
   contractedModules: string[];
   planCode?: string;
   featureEntitlements?: string[];
+  trialEndDate?: string | null;
+};
+
+export type TenantCreateInput = TenantBaseInput & {
+  initialAdminFullName: string;
+  initialAdminEmail: string;
+  temporaryPassword: string;
+  requirePasswordChangeOnFirstAccess: boolean;
+  trialEndDate: string;
+};
+
+export type TenantUpdateInput = TenantBaseInput;
+
+export type TenantFormInput = TenantBaseInput & {
+  initialAdminFullName: string;
+  initialAdminEmail: string;
+  temporaryPassword: string;
+  requirePasswordChangeOnFirstAccess: boolean;
+  trialEndDate: string;
 };
 
 export type TenantUsageMetric = {
@@ -27,8 +46,8 @@ export type TenantUsageMetric = {
 
 export const tenantService = {
   list: (page = 0, size = 20) => apiClient.get<PageResponse<Tenant>>(`/tenants?page=${page}&size=${size}`),
-  create: (input: TenantUpsertInput) => apiClient.post<Tenant>('/tenants', input),
-  update: (tenantId: string, input: TenantUpsertInput) => apiClient.put<Tenant>(`/tenants/${tenantId}`, input),
+  create: (input: TenantCreateInput) => apiClient.post<Tenant>('/tenants', input),
+  update: (tenantId: string, input: TenantUpdateInput) => apiClient.put<Tenant>(`/tenants/${tenantId}`, input),
   listUsageMetrics: (tenantId: string, days = 30, limit = 12) =>
     apiClient.get<TenantUsageMetric[]>(`/tenants/${tenantId}/usage-metrics?days=${days}&limit=${limit}`)
 };

@@ -1,6 +1,7 @@
 package com.phaiffertech.platform.core.tenant.dto;
 
 import com.phaiffertech.platform.core.tenant.domain.TenantThemeMode;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
@@ -16,6 +17,7 @@ public record TenantResponse(
         String accentColor,
         TenantThemeMode defaultThemeMode,
         boolean allowUserThemeOverride,
+        LocalDate trialEndDate,
         List<String> contractedModules,
         List<String> featureEntitlements,
         List<String> moduleOverrides,

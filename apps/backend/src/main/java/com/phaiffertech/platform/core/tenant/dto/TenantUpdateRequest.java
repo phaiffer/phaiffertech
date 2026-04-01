@@ -3,6 +3,7 @@ package com.phaiffertech.platform.core.tenant.dto;
 import com.phaiffertech.platform.core.tenant.domain.TenantThemeMode;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
+import java.time.LocalDate;
 import java.util.List;
 
 public record TenantUpdateRequest(
@@ -15,6 +16,7 @@ public record TenantUpdateRequest(
         TenantThemeMode defaultThemeMode,
         Boolean allowUserThemeOverride,
         List<String> contractedModules,
-        List<String> featureEntitlements
+        List<String> featureEntitlements,
+        LocalDate trialEndDate
 ) {
 }

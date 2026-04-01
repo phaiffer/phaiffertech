@@ -40,6 +40,7 @@ class AuthDtoRedactionTest {
                         true,
                         true,
                         true,
+                        false,
                         "ADMIN",
                         Set.of("ADMIN"),
                         Set.of("tenant.read"),

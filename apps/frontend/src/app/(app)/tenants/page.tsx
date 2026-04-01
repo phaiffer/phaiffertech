@@ -18,7 +18,13 @@ import { resolvePageItems, resolveTotalItems } from '@/shared/lib/pagination';
 import { useModuleCatalog } from '@/shared/modules/use-module-catalog';
 import { featureFlagService, TenantFeatureFlag } from '@/shared/services/feature-flag-service';
 import { supportImpersonationService } from '@/shared/services/support-impersonation-service';
-import { tenantService, TenantUpsertInput, TenantUsageMetric } from '@/shared/services/tenant-service';
+import {
+  tenantService,
+  TenantCreateInput,
+  TenantFormInput,
+  TenantUpdateInput,
+  TenantUsageMetric
+} from '@/shared/services/tenant-service';
 import { PageResponse } from '@/shared/types/common';
 import { TenantThemeMode } from '@/shared/types/auth';
 import { DashboardSummaryCard } from '@/shared/types/dashboard';
@@ -39,7 +45,7 @@ const initialPage: PageResponse<Tenant> = {
   size: pageSize
 };
 
-const emptyTenantForm: TenantUpsertInput = {
+const emptyTenantForm: TenantFormInput = {
   name: '',
   code: '',
   logoUrl: '',
@@ -48,9 +54,13 @@ const emptyTenantForm: TenantUpsertInput = {
   defaultThemeMode: 'SYSTEM',
   allowUserThemeOverride: true,
   contractedModules: [],
-
   planCode: 'PETSHOP',
   featureEntitlements: [],
+  trialEndDate: '',
+  initialAdminFullName: '',
+  initialAdminEmail: '',
+  temporaryPassword: '',
+  requirePasswordChangeOnFirstAccess: true
 };
 
 /** Available commercial packages exposed to platform administrators. */
@@ -91,7 +101,7 @@ function resolveEffectiveModuleSelection(planCode: string | undefined, moduleOve
   ]));
 }
 
-function normalizeTenantInput(form: TenantUpsertInput): TenantUpsertInput {
+function normalizeTenantInput(form: TenantFormInput): TenantFormInput {
   const planDetails = resolvePlanDetails(form.planCode);
   const manualOverrides = Array.from(new Set(
     form.contractedModules
@@ -107,12 +117,47 @@ function normalizeTenantInput(form: TenantUpsertInput): TenantUpsertInput {
     logoUrl: form.logoUrl?.trim() ? form.logoUrl.trim() : null,
     primaryColor: form.primaryColor?.trim() ? form.primaryColor.trim() : null,
     accentColor: form.accentColor?.trim() ? form.accentColor.trim() : null,
+    trialEndDate: form.trialEndDate.trim(),
+    initialAdminFullName: form.initialAdminFullName.trim(),
+    initialAdminEmail: form.initialAdminEmail.trim().toLowerCase(),
+    requirePasswordChangeOnFirstAccess: Boolean(form.requirePasswordChangeOnFirstAccess),
     contractedModules: resolveEffectiveModuleSelection(form.planCode, manualOverrides),
     featureEntitlements: Array.from(new Set(
       (form.featureEntitlements ?? [])
         .map((featureKey) => featureKey.trim().toLowerCase())
         .filter(Boolean)
     ))
+  };
+}
+
+function toTenantCreateInput(form: TenantFormInput): TenantCreateInput {
+  const normalized = normalizeTenantInput(form);
+
+  return {
+    ...toTenantUpdateInput(normalized),
+    trialEndDate: normalized.trialEndDate,
+    initialAdminFullName: normalized.initialAdminFullName,
+    initialAdminEmail: normalized.initialAdminEmail,
+    temporaryPassword: normalized.temporaryPassword,
+    requirePasswordChangeOnFirstAccess: normalized.requirePasswordChangeOnFirstAccess
+  };
+}
+
+function toTenantUpdateInput(form: TenantFormInput): TenantUpdateInput {
+  const normalized = normalizeTenantInput(form);
+
+  return {
+    name: normalized.name,
+    code: normalized.code,
+    logoUrl: normalized.logoUrl,
+    primaryColor: normalized.primaryColor,
+    accentColor: normalized.accentColor,
+    defaultThemeMode: normalized.defaultThemeMode,
+    allowUserThemeOverride: normalized.allowUserThemeOverride,
+    contractedModules: normalized.contractedModules,
+    planCode: normalized.planCode,
+    featureEntitlements: normalized.featureEntitlements,
+    trialEndDate: normalized.trialEndDate || null
   };
 }
 
@@ -168,7 +213,7 @@ export default function TenantsPage() {
   const [pageData, setPageData] = useState<PageResponse<Tenant>>(initialPage);
   const [loading, setLoading] = useState(false);
   const [editingTenantId, setEditingTenantId] = useState<string | null>(null);
-  const [form, setForm] = useState<TenantUpsertInput>(emptyTenantForm);
+  const [form, setForm] = useState<TenantFormInput>(emptyTenantForm);
   const [featureEntitlementDraft, setFeatureEntitlementDraft] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
@@ -309,13 +354,18 @@ export default function TenantsPage() {
       accentColor: tenant.accentColor ?? '#2563eb',
       defaultThemeMode: tenant.defaultThemeMode,
       allowUserThemeOverride: tenant.allowUserThemeOverride,
+      trialEndDate: tenant.trialEndDate ?? '',
       contractedModules: tenant.moduleOverrides
         ?? tenant.contractedModules.filter((moduleCode) => (
           moduleCode !== 'CORE_PLATFORM'
           && !resolvePlanDetails(tenant.planCode).defaultModules.includes(moduleCode)
         )),
       planCode: tenant.planCode ?? 'PETSHOP',
-      featureEntitlements: tenant.featureEntitlements ?? []
+      featureEntitlements: tenant.featureEntitlements ?? [],
+      initialAdminFullName: '',
+      initialAdminEmail: '',
+      temporaryPassword: '',
+      requirePasswordChangeOnFirstAccess: true
     });
     setFeatureEntitlementDraft('');
     setImpersonationReason('');
@@ -344,17 +394,16 @@ export default function TenantsPage() {
     setSuccess(null);
     setSubmitting(true);
     try {
-      const payload = normalizeTenantInput(form);
       let savedTenant: Tenant;
       if (editingTenantId) {
-        savedTenant = await tenantService.update(editingTenantId, payload);
+        savedTenant = await tenantService.update(editingTenantId, toTenantUpdateInput(form));
         setSuccess(
           `Workspace ${savedTenant.name} updated. Contracted modules, package defaults, and admin overrides are now aligned.`
         );
       } else {
-        savedTenant = await tenantService.create(payload);
+        savedTenant = await tenantService.create(toTenantCreateInput(form));
         setSuccess(
-          `Workspace ${savedTenant.name} created. Review package defaults, feature entitlements, and rollout overrides before handoff.`
+          `Workspace ${savedTenant.name} created with initial admin access. Share the temporary password securely before handoff.`
         );
       }
       resetForm();
@@ -875,18 +924,31 @@ export default function TenantsPage() {
 
                 <div className="space-y-5">
                   <div className="ui-surface-muted space-y-4 p-4 lg:p-5">
-                    <label className="space-y-2">
-                      <span className={sharedInputLabelClass}>Package</span>
-                      <select
-                        value={form.planCode ?? 'PETSHOP'}
-                        onChange={(event) => setForm((current) => ({ ...current, planCode: event.target.value }))}
-                        className={sharedInputClass}
-                      >
-                        {PLAN_CODES.map((code) => (
-                          <option key={code} value={code}>{code}</option>
-                        ))}
-                      </select>
-                    </label>
+                    <div className="grid gap-4 md:grid-cols-2">
+                      <label className="space-y-2">
+                        <span className={sharedInputLabelClass}>Package</span>
+                        <select
+                          value={form.planCode ?? 'PETSHOP'}
+                          onChange={(event) => setForm((current) => ({ ...current, planCode: event.target.value }))}
+                          className={sharedInputClass}
+                        >
+                          {PLAN_CODES.map((code) => (
+                            <option key={code} value={code}>{code}</option>
+                          ))}
+                        </select>
+                      </label>
+
+                      <label className="space-y-2">
+                        <span className={sharedInputLabelClass}>Trial end date</span>
+                        <input
+                          type="date"
+                          value={form.trialEndDate}
+                          onChange={(event) => setForm((current) => ({ ...current, trialEndDate: event.target.value }))}
+                          className={sharedInputClass}
+                          required={!editingTenantId}
+                        />
+                      </label>
+                    </div>
 
                     <div className="ui-surface-panel space-y-2 px-4 py-4 text-sm">
                       <p className="font-medium text-[color:var(--app-shell-heading)]">
@@ -994,6 +1056,71 @@ export default function TenantsPage() {
                         </div>
                       </div>
                     </div>
+
+                    {!editingTenantId ? (
+                      <div className="ui-surface-panel space-y-4 px-4 py-4 text-sm">
+                        <div>
+                          <p className="font-medium text-[color:var(--app-shell-heading)]">
+                            Initial admin access
+                          </p>
+                          <p className="mt-1 text-[color:var(--app-shell-muted)]">
+                            The bootstrap admin account is created with the workspace and the temporary password is stored as a hash.
+                          </p>
+                        </div>
+
+                        <div className="grid gap-4 md:grid-cols-2">
+                          <label className="space-y-2">
+                            <span className={sharedInputLabelClass}>Initial admin full name</span>
+                            <input
+                              value={form.initialAdminFullName}
+                              onChange={(event) => setForm((current) => ({ ...current, initialAdminFullName: event.target.value }))}
+                              className={sharedInputClass}
+                              placeholder="Jordan Smith"
+                              required
+                            />
+                          </label>
+
+                          <label className="space-y-2">
+                            <span className={sharedInputLabelClass}>Initial admin email</span>
+                            <input
+                              type="email"
+                              value={form.initialAdminEmail}
+                              onChange={(event) => setForm((current) => ({ ...current, initialAdminEmail: event.target.value }))}
+                              className={sharedInputClass}
+                              placeholder="admin@tenant.test"
+                              autoComplete="email"
+                              required
+                            />
+                          </label>
+
+                          <label className="space-y-2 md:col-span-2">
+                            <span className={sharedInputLabelClass}>Temporary password</span>
+                            <input
+                              type="password"
+                              value={form.temporaryPassword}
+                              onChange={(event) => setForm((current) => ({ ...current, temporaryPassword: event.target.value }))}
+                              className={sharedInputClass}
+                              placeholder="TempPassword@123"
+                              autoComplete="new-password"
+                              required
+                            />
+                          </label>
+                        </div>
+
+                        <label className="flex items-center gap-3 rounded-2xl border border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-panel-muted)] px-4 py-3 text-sm text-[color:var(--app-shell-text)]">
+                          <input
+                            type="checkbox"
+                            checked={form.requirePasswordChangeOnFirstAccess}
+                            onChange={(event) => setForm((current) => ({
+                              ...current,
+                              requirePasswordChangeOnFirstAccess: event.target.checked
+                            }))}
+                            className="h-4 w-4 rounded border-[color:var(--app-shell-border)]"
+                          />
+                          Require password change on first access
+                        </label>
+                      </div>
+                    ) : null}
                   </div>
 
                   <div className="ui-surface-muted space-y-4 p-4 lg:p-5">

@@ -184,6 +184,79 @@ describe('TenantsPage access model', () => {
     expect(screen.getByText('Included by package')).toBeInTheDocument();
   });
 
+  it('submits tenant creation with initial admin access details', async () => {
+    vi.mocked(tenantService.list).mockResolvedValue({
+      items: [],
+      totalItems: 0,
+      totalPages: 0,
+      page: 0,
+      size: 20
+    });
+    vi.mocked(tenantService.create).mockResolvedValue({
+      id: 'tenant-new',
+      name: 'Clinic East',
+      code: 'clinic-east',
+      status: 'ACTIVE',
+      planCode: 'PETSHOP',
+      trialEndDate: '2026-09-30',
+      featureEntitlements: [],
+      platformOwner: false,
+      logoUrl: null,
+      primaryColor: '#0f172a',
+      accentColor: '#2563eb',
+      defaultThemeMode: 'SYSTEM',
+      allowUserThemeOverride: true,
+      contractedModules: ['CORE_PLATFORM', 'PET']
+    });
+
+    render(<TenantsPage />);
+
+    await waitFor(() => {
+      expect(tenantService.list).toHaveBeenCalledTimes(1);
+    });
+
+    fireEvent.change(screen.getByLabelText('Workspace name'), {
+      target: { value: ' Clinic East ' }
+    });
+    fireEvent.change(screen.getByLabelText('Workspace code'), {
+      target: { value: ' CLINIC-EAST ' }
+    });
+    fireEvent.change(screen.getByLabelText('Trial end date'), {
+      target: { value: '2026-09-30' }
+    });
+    fireEvent.change(screen.getByLabelText('Initial admin full name'), {
+      target: { value: ' Jordan East ' }
+    });
+    fireEvent.change(screen.getByLabelText('Initial admin email'), {
+      target: { value: ' ADMIN@Clinic-East.test ' }
+    });
+    fireEvent.change(screen.getByLabelText('Temporary password'), {
+      target: { value: 'TempClinicEast@123' }
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: 'Create workspace' }));
+
+    await waitFor(() => {
+      expect(tenantService.create).toHaveBeenCalledWith({
+        name: 'Clinic East',
+        code: 'clinic-east',
+        logoUrl: null,
+        primaryColor: '#0f172a',
+        accentColor: '#2563eb',
+        defaultThemeMode: 'SYSTEM',
+        allowUserThemeOverride: true,
+        contractedModules: ['PET'],
+        planCode: 'PETSHOP',
+        featureEntitlements: [],
+        trialEndDate: '2026-09-30',
+        initialAdminFullName: 'Jordan East',
+        initialAdminEmail: 'admin@clinic-east.test',
+        temporaryPassword: 'TempClinicEast@123',
+        requirePasswordChangeOnFirstAccess: true
+      });
+    });
+  });
+
   it('loads feature flags and usage telemetry when editing an existing tenant', async () => {
     vi.mocked(tenantService.list).mockResolvedValue({
       items: [

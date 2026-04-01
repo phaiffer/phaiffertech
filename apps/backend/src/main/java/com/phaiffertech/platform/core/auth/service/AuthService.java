@@ -155,7 +155,7 @@ public class AuthService {
                 resolved.permissions()
         );
 
-        AuthSessionResult response = createTokenResponse(principal, user.getFullName(), tenant);
+        AuthSessionResult response = createTokenResponse(principal, user, tenant);
         platformMetricsService.recordAuthenticationAttempt(true);
         usageTelemetryService.recordLoginSuccess(tenant.getId());
 
@@ -207,7 +207,7 @@ public class AuthService {
                 resolved.permissions()
         );
 
-        AuthSessionResult response = createTokenResponse(principal, user.getFullName(), tenant);
+        AuthSessionResult response = createTokenResponse(principal, user, tenant);
 
         auditLogService.logEvent(
                 storedToken.getTenantId(),
@@ -264,6 +264,7 @@ public class AuthService {
         }
 
         user.setPasswordHash(passwordEncoder.encode(request.newPassword()));
+        user.setRequirePasswordChangeOnFirstAccess(false);
         userRepository.save(user);
 
         int revokedRefreshSessions = revokeAllActiveRefreshTokensForUser(authenticatedUser.userId());
@@ -296,7 +297,7 @@ public class AuthService {
         );
     }
 
-    private AuthSessionResult createTokenResponse(AuthenticatedUser principal, String fullName, Tenant tenant) {
+    private AuthSessionResult createTokenResponse(AuthenticatedUser principal, User user, Tenant tenant) {
         revokeActiveRefreshTokens(principal.tenantId(), principal.userId());
 
         String accessToken = jwtService.generateAccessToken(principal);
@@ -310,8 +311,8 @@ public class AuthService {
         refreshTokenRepository.save(refreshTokenEntity);
 
         AuthenticatedUserResponse userResponse = AuthMapper.toAuthenticatedUserResponse(
+                user,
                 principal,
-                fullName,
                 tenant,
                 tenantEntitlementService.resolveEffectiveEntitlements(tenant.getId()),
                 resolveImpersonationContext(principal)

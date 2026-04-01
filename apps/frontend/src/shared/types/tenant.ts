@@ -11,6 +11,7 @@ export type Tenant = {
   accentColor?: string | null;
   defaultThemeMode: TenantThemeMode;
   allowUserThemeOverride: boolean;
+  trialEndDate?: string | null;
   contractedModules: string[];
   moduleOverrides?: string[];
 

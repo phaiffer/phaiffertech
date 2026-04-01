@@ -144,6 +144,7 @@ public class PasswordResetService {
         }
 
         user.setPasswordHash(passwordEncoder.encode(request.newPassword()));
+        user.setRequirePasswordChangeOnFirstAccess(false);
         userRepository.save(user);
 
         token.setUsedAt(Instant.now());

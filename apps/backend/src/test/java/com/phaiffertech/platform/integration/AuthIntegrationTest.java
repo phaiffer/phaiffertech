@@ -10,6 +10,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -99,6 +100,28 @@ class AuthIntegrationTest extends AbstractIntegrationTest {
     }
 
     @Test
+    void loginShouldExposeFirstAccessPasswordChangeRequirementWhenFlagged() {
+        String suffix = UUID.randomUUID().toString().substring(0, 8);
+        String tenantId = UUID.randomUUID().toString();
+        String userId = UUID.randomUUID().toString();
+        String tenantCode = "tenant-first-access-" + suffix;
+        String email = "first-access-" + suffix + "@local.test";
+
+        insertTenant(tenantId, tenantCode);
+        insertUser(userId, email, "First Access " + suffix);
+        executeSql(
+                "UPDATE users SET require_password_change_on_first_access = TRUE WHERE id = ?",
+                userId
+        );
+        grantRoleToTenant(tenantId, userId, "TENANT_ADMIN");
+
+        ResponseEntity<JsonNode> response = login(tenantCode, email, DEFAULT_PASSWORD);
+
+        assertEquals(200, response.getStatusCode().value());
+        assertTrue(requireBody(response).path("data").path("user").path("requirePasswordChangeOnFirstAccess").asBoolean());
+    }
+
+    @Test
     void changePasswordShouldRevokeRefreshTokensAcrossTenantSessionsAndRequireNewLogin() {
         String suffix = UUID.randomUUID().toString().substring(0, 8);
         String email = "auth-change-" + suffix + "@local.test";
@@ -111,10 +134,16 @@ class AuthIntegrationTest extends AbstractIntegrationTest {
         insertTenant(firstTenantId, firstTenantCode);
         insertTenant(secondTenantId, secondTenantCode);
         insertUser(userId, email, "Password Rotation " + suffix);
+        executeSql(
+                "UPDATE users SET require_password_change_on_first_access = TRUE WHERE id = ?",
+                userId
+        );
         grantRoleToTenant(firstTenantId, userId, "TENANT_ADMIN");
         grantRoleToTenant(secondTenantId, userId, "TENANT_ADMIN");
 
-        AuthSession firstSession = sessionFromLoginResponse(login(firstTenantCode, email, DEFAULT_PASSWORD));
+        ResponseEntity<JsonNode> firstLoginResponse = login(firstTenantCode, email, DEFAULT_PASSWORD);
+        assertTrue(requireBody(firstLoginResponse).path("data").path("user").path("requirePasswordChangeOnFirstAccess").asBoolean());
+        AuthSession firstSession = sessionFromLoginResponse(firstLoginResponse);
         AuthSession secondSession = sessionFromLoginResponse(login(secondTenantCode, email, DEFAULT_PASSWORD));
 
         ResponseEntity<JsonNode> changePasswordResponse = post("/auth/change-password", Map.of(
@@ -139,6 +168,7 @@ class AuthIntegrationTest extends AbstractIntegrationTest {
 
         ResponseEntity<JsonNode> newPasswordLogin = login(secondTenantCode, email, UPDATED_PASSWORD);
         assertEquals(200, newPasswordLogin.getStatusCode().value());
+        assertFalse(requireBody(newPasswordLogin).path("data").path("user").path("requirePasswordChangeOnFirstAccess").asBoolean());
     }
 
     @Test

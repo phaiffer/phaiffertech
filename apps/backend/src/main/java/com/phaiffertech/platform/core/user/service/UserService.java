@@ -65,44 +65,36 @@ public class UserService {
     @AuditableAction(action = AuditActionType.CREATE, entity = "user")
     public UserResponse create(UserCreateRequest request) {
         UUID tenantId = TenantContext.getRequiredTenantId();
+        CreatedUserAccess createdAccess = createUserAccess(
+                tenantId,
+                request.email(),
+                request.fullName(),
+                request.password(),
+                request.roleCode(),
+                RoleCode.OPERATOR.name(),
+                false
+        );
 
-        if (userRepository.existsByEmailIgnoreCase(request.email())) {
-            throw new IllegalArgumentException("User email already exists.");
-        }
+        return UserMapper.toResponse(createdAccess.user(), createdAccess.role());
+    }
 
-        String roleCode = request.roleCode() == null || request.roleCode().isBlank()
-                ? RoleCode.OPERATOR.name()
-                : request.roleCode();
-
-        if (RoleCode.PLATFORM_ADMIN.name().equals(roleCode) && !platformAccessService.isPlatformAdministrator()) {
-            throw new ForbiddenOperationException("PLATFORM_ADMIN can only be assigned by platform owner administrators.");
-        }
-
-        Role role = roleRepository.findByCode(roleCode)
-                .orElseThrow(() -> new ResourceNotFoundException("Role not found: " + roleCode));
-
-        User user = new User();
-        user.setEmail(request.email().trim().toLowerCase());
-        user.setFullName(request.fullName());
-        user.setPasswordHash(passwordEncoder.encode(request.password()));
-        user.setActive(true);
-        user = userRepository.save(user);
-
-        UserTenant userTenant = new UserTenant();
-        userTenant.setTenantId(tenantId);
-        userTenant.setUserId(user.getId());
-        userTenant.setRoleId(role.getId());
-        userTenant.setActive(true);
-        userTenant = userTenantRepository.save(userTenant);
-
-        if (!userTenantRoleRepository.existsByUserTenantIdAndRoleId(userTenant.getId(), role.getId())) {
-            UserTenantRole userTenantRole = new UserTenantRole();
-            userTenantRole.setUserTenantId(userTenant.getId());
-            userTenantRole.setRoleId(role.getId());
-            userTenantRoleRepository.save(userTenantRole);
-        }
-
-        return UserMapper.toResponse(user, role);
+    @Transactional
+    public void createTenantAdministrator(
+            UUID tenantId,
+            String fullName,
+            String email,
+            String temporaryPassword,
+            boolean requirePasswordChangeOnFirstAccess
+    ) {
+        createUserAccess(
+                tenantId,
+                email,
+                fullName,
+                temporaryPassword,
+                RoleCode.TENANT_ADMIN.name(),
+                RoleCode.TENANT_ADMIN.name(),
+                requirePasswordChangeOnFirstAccess
+        );
     }
 
     @Transactional(readOnly = true)
@@ -130,5 +122,57 @@ public class UserService {
         });
 
         return PaginationUtils.fromPage(mappedResult);
+    }
+
+    private CreatedUserAccess createUserAccess(
+            UUID tenantId,
+            String email,
+            String fullName,
+            String password,
+            String requestedRoleCode,
+            String fallbackRoleCode,
+            boolean requirePasswordChangeOnFirstAccess
+    ) {
+        if (userRepository.existsByEmailIgnoreCase(email)) {
+            throw new IllegalArgumentException("User email already exists.");
+        }
+
+        String roleCode = requestedRoleCode == null || requestedRoleCode.isBlank()
+                ? fallbackRoleCode
+                : requestedRoleCode.trim().toUpperCase();
+
+        if (RoleCode.PLATFORM_ADMIN.name().equals(roleCode) && !platformAccessService.isPlatformAdministrator()) {
+            throw new ForbiddenOperationException("PLATFORM_ADMIN can only be assigned by platform owner administrators.");
+        }
+
+        Role role = roleRepository.findByCode(roleCode)
+                .orElseThrow(() -> new ResourceNotFoundException("Role not found: " + roleCode));
+
+        User user = new User();
+        user.setEmail(email.trim().toLowerCase());
+        user.setFullName(fullName.trim());
+        user.setPasswordHash(passwordEncoder.encode(password));
+        user.setActive(true);
+        user.setRequirePasswordChangeOnFirstAccess(requirePasswordChangeOnFirstAccess);
+        user = userRepository.save(user);
+
+        UserTenant userTenant = new UserTenant();
+        userTenant.setTenantId(tenantId);
+        userTenant.setUserId(user.getId());
+        userTenant.setRoleId(role.getId());
+        userTenant.setActive(true);
+        userTenant = userTenantRepository.save(userTenant);
+
+        if (!userTenantRoleRepository.existsByUserTenantIdAndRoleId(userTenant.getId(), role.getId())) {
+            UserTenantRole userTenantRole = new UserTenantRole();
+            userTenantRole.setUserTenantId(userTenant.getId());
+            userTenantRole.setRoleId(role.getId());
+            userTenantRoleRepository.save(userTenantRole);
+        }
+
+        return new CreatedUserAccess(user, role);
+    }
+
+    private record CreatedUserAccess(User user, Role role) {
     }
 }
