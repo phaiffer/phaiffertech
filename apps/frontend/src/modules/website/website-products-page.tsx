@@ -61,26 +61,26 @@ export function WebsiteProductsPage() {
   const labels =
     locale === 'pt-BR'
       ? {
-          platform: 'Solicitar demo',
-          contact: 'Contato',
-          portfolio: 'PetFlow',
+          platform: 'Solicitar cotacao',
+          contact: 'Agendar demo',
+          portfolio: 'Oferta PetFlow',
           nextStep: 'Próximo passo',
-          ctaTitle: 'Pronto para ver o PetFlow em ação?',
+          ctaTitle: 'Pronto para montar sua oferta PetFlow?',
           ctaDescription:
-            'O PetFlow está operacional e aceitando os primeiros clientes. Entre em contato para agendar uma demonstração ou solicitar acesso para o seu negócio.',
-          ctaPrimary: 'Entrar em contato',
-          ctaSecondary: 'Acessar o PetFlow',
+            'Fale com a PhaifferTech sobre PetShop, Banho e Tosa, Clínica Veterinária e pacotes combinados no mesmo sistema.',
+          ctaPrimary: 'Pedir proposta',
+          ctaSecondary: 'Agendar demonstracao',
         }
       : {
-          platform: 'Request a demo',
-          contact: 'Contact',
-          portfolio: 'PetFlow',
+          platform: 'Request a quote',
+          contact: 'Book a demo',
+          portfolio: 'PetFlow offer',
           nextStep: 'Next step',
-          ctaTitle: 'Ready to see PetFlow in action?',
+          ctaTitle: 'Ready to shape your PetFlow offer?',
           ctaDescription:
-            'PetFlow is operational and accepting early customers. Reach out to schedule a demo or request access for your pet business.',
-          ctaPrimary: 'Get in touch',
-          ctaSecondary: 'PetFlow access',
+            'Talk to PhaifferTech about PetShop, grooming, veterinary clinic, and combined packages in the same system.',
+          ctaPrimary: 'Request proposal',
+          ctaSecondary: 'Book demo',
         };
 
   return (
@@ -107,7 +107,7 @@ export function WebsiteProductsPage() {
         primaryCtaLabel={labels.ctaPrimary}
         primaryCtaHref="/contact"
         secondaryCtaLabel={labels.ctaSecondary}
-        secondaryCtaHref="/login"
+        secondaryCtaHref="/contact"
       />
     </>
   );

@@ -6,7 +6,7 @@ export const publicSiteMessages = {
       brandEyebrow: 'PhaifferTech',
       brandTitle: 'PetFlow para operacoes pet reais',
       brandSubtitle:
-        'Software para banho e tosa, recorrencia mensal e operacao de pet shop com base tecnica solida.',
+        'Software para PetShop, Banho e Tosa, Clinica Veterinaria e pacotes combinados com base tecnica solida.',
       navHome: 'Início',
       navAbout: 'Sobre',
       navPlatform: 'Plataforma',
@@ -21,12 +21,12 @@ export const publicSiteMessages = {
       localeLabel: 'Idioma',
       footerNarrativeTitle: 'PhaifferTech',
       footerNarrativeText:
-        'PhaifferTech apresenta o PetFlow como produto principal para agenda, planos mensais, estoque e cobranca de operacoes pet.',
+        'A PhaifferTech apresenta o PetFlow para PetShop, Banho e Tosa, Clinica Veterinaria e pacotes combinados em uma unica operacao.',
       footerExploreTitle: 'Explorar',
       footerProductsTitle: 'Produtos',
       footerAccessTitle: 'Acesso',
       footerCopyright:
-        'PhaifferTech · PetFlow para banho e tosa, pet shop e operacao recorrente, sustentado por fundacao SaaS multi-tenant.'
+        'PhaifferTech · PetFlow para PetShop, Banho e Tosa, Clinica Veterinaria e pacotes combinados, sustentado por fundacao SaaS multi-tenant.'
     },
     login: {
       title: 'Acessar workspace',
@@ -76,7 +76,7 @@ export const publicSiteMessages = {
       brandEyebrow: 'PhaifferTech',
       brandTitle: 'PetFlow for real pet operations',
       brandSubtitle:
-        'Software for grooming, recurring plans, pet retail, and operational billing on a solid technical foundation.',
+        'Software for PetShop, grooming, veterinary clinics, and combined packages on a solid technical foundation.',
       navHome: 'Home',
       navAbout: 'About',
       navPlatform: 'Platform',
@@ -91,12 +91,12 @@ export const publicSiteMessages = {
       localeLabel: 'Language',
       footerNarrativeTitle: 'PhaifferTech',
       footerNarrativeText:
-        'PhaifferTech now presents PetFlow as the main product surface for scheduling, recurring plans, stock control, and billing in pet operations.',
+        'PhaifferTech now presents PetFlow for PetShop, grooming, veterinary clinics, and combined packages in one operational system.',
       footerExploreTitle: 'Explore',
       footerProductsTitle: 'Products',
       footerAccessTitle: 'Access',
       footerCopyright:
-        'PhaifferTech · PetFlow for grooming, pet shops, and recurring service operations, powered by a multi-tenant SaaS foundation.'
+        'PhaifferTech · PetFlow for PetShop, grooming, veterinary clinics, and combined packages, powered by a multi-tenant SaaS foundation.'
     },
     login: {
       title: 'Access workspace',

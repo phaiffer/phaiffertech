@@ -15,16 +15,12 @@ export function WebsiteContactPage() {
   const labels =
     locale === 'pt-BR'
       ? {
-          openPlatform: 'Abrir acesso à plataforma',
-          reviewPlatform: 'Ler visão da plataforma',
-          lanes: 'Trilhas de conversa',
-          readiness: 'Preparação'
+          lanes: 'Solicitacoes',
+          readiness: 'Canais diretos'
         }
       : {
-          openPlatform: 'Open platform access',
-          reviewPlatform: 'Review the platform overview',
-          lanes: 'Conversation lanes',
-          readiness: 'Readiness'
+          lanes: 'Request types',
+          readiness: 'Direct channels'
         };
 
   return (
@@ -33,8 +29,8 @@ export function WebsiteContactPage() {
         eyebrow={content.eyebrow}
         title={content.title}
         description={content.description}
-        primaryCta={{ label: labels.openPlatform, href: '/login' }}
-        secondaryCta={{ label: labels.reviewPlatform, href: '/platform' }}
+        primaryCta={content.cta.primaryCta}
+        secondaryCta={content.cta.secondaryCta}
       />
 
       <WebsiteFullSection
