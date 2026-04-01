@@ -21,7 +21,7 @@ public class Tenant extends BaseEntity {
     private String status;
 
     @Column(name = "plan_code", nullable = false, length = 80)
-    private String planCode = "STANDARD";
+    private String planCode = "PETSHOP";
 
     @Column(name = "logo_url", length = 512)
     private String logoUrl;

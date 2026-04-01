@@ -56,7 +56,7 @@ public abstract class AbstractIntegrationTest extends IntegrationTestContainersC
         String userId = UUID.randomUUID().toString();
 
         executeSql(
-                "INSERT INTO tenants (id, name, code, status, plan_code) VALUES (?, ?, ?, 'ACTIVE', 'ENTERPRISE')",
+                "INSERT INTO tenants (id, name, code, status, plan_code) VALUES (?, ?, ?, 'ACTIVE', 'BANHO_TOSA_CLINICA')",
                 tenantId,
                 "Tenant " + tenantCode,
                 tenantCode
@@ -101,7 +101,7 @@ public abstract class AbstractIntegrationTest extends IntegrationTestContainersC
         String roleCode = "TEST_" + tenantCode.toUpperCase().replace('-', '_') + "_" + UUID.randomUUID().toString().substring(0, 8);
 
         executeSql(
-                "INSERT INTO tenants (id, name, code, status, plan_code) VALUES (?, ?, ?, 'ACTIVE', 'ENTERPRISE')",
+                "INSERT INTO tenants (id, name, code, status, plan_code) VALUES (?, ?, ?, 'ACTIVE', 'BANHO_TOSA_CLINICA')",
                 tenantId,
                 "Tenant " + tenantCode,
                 tenantCode

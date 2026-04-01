@@ -4,28 +4,45 @@ import com.phaiffertech.platform.core.tenant.entitlement.TenantEntitlementKeys;
 import java.util.List;
 
 public enum ProductPackageDefinition {
-    PET_ONLY(
-            "PET_ONLY",
+    PETSHOP(
+            "PETSHOP",
             List.of("PET"),
-            TenantEntitlementKeys.PET_SUBMODULES
+            List.of(TenantEntitlementKeys.PET_RETAIL)
     ),
-    VET_PLUS(
-            "VET_PLUS",
+    BANHO_TOSA(
+            "BANHO_TOSA",
+            List.of("PET"),
+            List.of(
+                    TenantEntitlementKeys.PET_AESTHETICS,
+                    TenantEntitlementKeys.PET_RETAIL
+            )
+    ),
+    CLINICA_VETERINARIA(
+            "CLINICA_VETERINARIA",
             List.of("PET"),
             List.of(
                     TenantEntitlementKeys.PET_CLINIC,
-                    TenantEntitlementKeys.PET_VETERINARY
+                    TenantEntitlementKeys.PET_VETERINARY,
+                    TenantEntitlementKeys.PET_RETAIL
             )
     ),
-    IOT_MONITOR(
-            "IOT_MONITOR",
-            List.of("IOT"),
-            List.of(TenantEntitlementKeys.IOT_BASIC)
+    PETSHOP_BANHO_TOSA(
+            "PETSHOP_BANHO_TOSA",
+            List.of("PET"),
+            List.of(
+                    TenantEntitlementKeys.PET_AESTHETICS,
+                    TenantEntitlementKeys.PET_RETAIL
+            )
     ),
-    ENTERPRISE_FULL(
-            "ENTERPRISE_FULL",
-            List.of("CRM", "PET", "IOT"),
-            List.of(TenantEntitlementKeys.ANY)
+    BANHO_TOSA_CLINICA(
+            "BANHO_TOSA_CLINICA",
+            List.of("PET"),
+            List.of(
+                    TenantEntitlementKeys.PET_AESTHETICS,
+                    TenantEntitlementKeys.PET_CLINIC,
+                    TenantEntitlementKeys.PET_VETERINARY,
+                    TenantEntitlementKeys.PET_RETAIL
+            )
     );
 
     private final String code;

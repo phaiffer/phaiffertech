@@ -13,6 +13,7 @@ import com.phaiffertech.platform.core.module.domain.ModuleDefinition;
 import com.phaiffertech.platform.core.module.repository.ModuleDefinitionRepository;
 import com.phaiffertech.platform.core.module.domain.TenantModule;
 import com.phaiffertech.platform.core.module.repository.TenantModuleRepository;
+import com.phaiffertech.platform.core.tenant.entitlement.TenantEntitlementKeys;
 import com.phaiffertech.platform.core.tenant.entitlement.service.TenantEntitlementService;
 import com.phaiffertech.platform.core.tenant.domain.Tenant;
 import com.phaiffertech.platform.core.tenant.repository.TenantRepository;
@@ -157,10 +158,14 @@ public class DevelopmentDataSeeder implements CommandLineRunner {
             tenantModuleRepository.save(tenantModule);
         }
 
-        tenant.setPlanCode("ENTERPRISE");
+        tenant.setPlanCode("BANHO_TOSA_CLINICA");
         tenantRepository.save(tenant);
-        tenantModuleContractService.syncEffectiveModules(tenant.getId(), tenant.getPlanCode(), List.of());
-        tenantEntitlementService.syncManualEntitlements(tenant.getId(), tenant.getPlanCode(), List.of());
+        tenantModuleContractService.syncEffectiveModules(tenant.getId(), tenant.getPlanCode(), List.of("CRM", "IOT"));
+        tenantEntitlementService.syncManualEntitlements(
+                tenant.getId(),
+                tenant.getPlanCode(),
+                List.of(TenantEntitlementKeys.CRM_FULL, TenantEntitlementKeys.IOT_BASIC)
+        );
     }
 
     private ModuleDefinition ensureModule(String code, String name, String description) {

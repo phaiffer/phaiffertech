@@ -10,6 +10,7 @@ import com.phaiffertech.platform.core.module.domain.ModuleDefinition;
 import com.phaiffertech.platform.core.module.domain.TenantModule;
 import com.phaiffertech.platform.core.module.repository.ModuleDefinitionRepository;
 import com.phaiffertech.platform.core.module.repository.TenantModuleRepository;
+import com.phaiffertech.platform.core.tenant.entitlement.TenantEntitlementKeys;
 import com.phaiffertech.platform.core.tenant.entitlement.service.TenantEntitlementService;
 import com.phaiffertech.platform.core.tenant.domain.Tenant;
 import com.phaiffertech.platform.core.tenant.domain.TenantThemeMode;
@@ -182,8 +183,11 @@ public class DemoCommercialEnvironmentService {
                 UserTenant userTenant = ensureUserTenant(tenant, user, tenantAdminRole);
                 ensureUserTenantRole(userTenant, tenantAdminRole);
                 enableModules(tenant.getId());
-                tenantModuleContractService.syncEffectiveModules(tenant.getId(), tenant.getPlanCode(), List.of());
-                tenantEntitlementService.syncManualEntitlements(tenant.getId(), tenant.getPlanCode(), List.of());
+                tenantModuleContractService.syncEffectiveModules(tenant.getId(), tenant.getPlanCode(), List.of("CRM", "IOT"));
+                tenantEntitlementService.syncManualEntitlements(
+                                tenant.getId(),
+                                tenant.getPlanCode(),
+                                List.of(TenantEntitlementKeys.CRM_FULL, TenantEntitlementKeys.IOT_BASIC));
                 flushPersistenceState();
 
                 Tenant persistedTenant = tenant;
@@ -221,7 +225,7 @@ public class DemoCommercialEnvironmentService {
                 tenant.setDefaultThemeMode(TenantThemeMode.DARK);
                 tenant.setAllowUserThemeOverride(true);
                 tenant.setPlatformOwner(false);
-                tenant.setPlanCode("ENTERPRISE");
+                tenant.setPlanCode("BANHO_TOSA_CLINICA");
                 tenant.setDeletedAt(null);
                 return tenantRepository.saveAndFlush(tenant);
         }

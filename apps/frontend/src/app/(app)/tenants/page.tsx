@@ -49,35 +49,39 @@ const emptyTenantForm: TenantUpsertInput = {
   allowUserThemeOverride: true,
   contractedModules: [],
 
-  planCode: 'BASIC',
+  planCode: 'PETSHOP',
   featureEntitlements: [],
 };
 
-/** Available plan tiers exposed to platform administrators. */
-const PLAN_CODES = ['BASIC', 'STANDARD', 'PRO', 'ENTERPRISE'] as const;
+/** Available commercial packages exposed to platform administrators. */
+const PLAN_CODES = ['PETSHOP', 'BANHO_TOSA', 'CLINICA_VETERINARIA', 'PETSHOP_BANHO_TOSA', 'BANHO_TOSA_CLINICA'] as const;
 
 const PLAN_DETAILS: Record<typeof PLAN_CODES[number], { defaultModules: string[]; defaultEntitlements: string[] }> = {
-  BASIC: {
-    defaultModules: ['CRM'],
-    defaultEntitlements: ['crm.basic']
+  PETSHOP: {
+    defaultModules: ['PET'],
+    defaultEntitlements: ['pet.retail']
   },
-  STANDARD: {
-    defaultModules: ['CRM', 'PET'],
-    defaultEntitlements: ['crm.full', 'pet.basic']
+  BANHO_TOSA: {
+    defaultModules: ['PET'],
+    defaultEntitlements: ['pet.aesthetics', 'pet.retail']
   },
-  PRO: {
-    defaultModules: ['CRM', 'PET', 'IOT'],
-    defaultEntitlements: ['crm.full', 'pet.full', 'iot.basic']
+  CLINICA_VETERINARIA: {
+    defaultModules: ['PET'],
+    defaultEntitlements: ['pet.clinic', 'pet.veterinary', 'pet.retail']
   },
-  ENTERPRISE: {
-    defaultModules: ['CRM', 'PET', 'IOT'],
-    defaultEntitlements: ['*']
+  PETSHOP_BANHO_TOSA: {
+    defaultModules: ['PET'],
+    defaultEntitlements: ['pet.aesthetics', 'pet.retail']
+  },
+  BANHO_TOSA_CLINICA: {
+    defaultModules: ['PET'],
+    defaultEntitlements: ['pet.aesthetics', 'pet.clinic', 'pet.veterinary', 'pet.retail']
   }
 };
 
 function resolvePlanDetails(planCode?: string) {
-  const normalizedCode = (planCode ?? 'STANDARD').toUpperCase() as keyof typeof PLAN_DETAILS;
-  return PLAN_DETAILS[normalizedCode] ?? PLAN_DETAILS.STANDARD;
+  const normalizedCode = (planCode ?? 'PETSHOP').toUpperCase() as keyof typeof PLAN_DETAILS;
+  return PLAN_DETAILS[normalizedCode] ?? PLAN_DETAILS.PETSHOP;
 }
 
 function resolveEffectiveModuleSelection(planCode: string | undefined, moduleOverrides: string[]) {
@@ -297,7 +301,7 @@ export default function TenantsPage() {
     setEditingTenantId(tenant.id);
     setError(null);
     setSuccess(null);
-    setForm({
+      setForm({
       name: tenant.name,
       code: tenant.code,
       logoUrl: tenant.logoUrl ?? '',
@@ -310,7 +314,7 @@ export default function TenantsPage() {
           moduleCode !== 'CORE_PLATFORM'
           && !resolvePlanDetails(tenant.planCode).defaultModules.includes(moduleCode)
         )),
-      planCode: tenant.planCode ?? 'BASIC',
+      planCode: tenant.planCode ?? 'PETSHOP',
       featureEntitlements: tenant.featureEntitlements ?? []
     });
     setFeatureEntitlementDraft('');
@@ -345,12 +349,12 @@ export default function TenantsPage() {
       if (editingTenantId) {
         savedTenant = await tenantService.update(editingTenantId, payload);
         setSuccess(
-          `Workspace ${savedTenant.name} updated. Contracted modules, branding defaults, and admin overrides are now aligned.`
+          `Workspace ${savedTenant.name} updated. Contracted modules, package defaults, and admin overrides are now aligned.`
         );
       } else {
         savedTenant = await tenantService.create(payload);
         setSuccess(
-          `Workspace ${savedTenant.name} created. Review plan defaults, feature entitlements, and rollout overrides before handoff.`
+          `Workspace ${savedTenant.name} created. Review package defaults, feature entitlements, and rollout overrides before handoff.`
         );
       }
       resetForm();
@@ -459,13 +463,13 @@ export default function TenantsPage() {
         key: 'tenant-overrides',
         label: 'Manual module overrides',
         value: tenantsWithOverrides,
-        trend: 'Workspaces extending plan defaults with additional module access.'
+        trend: 'Workspaces extending package defaults with additional module access.'
       },
       {
         key: 'tenant-entitlements',
         label: 'Custom entitlements',
         value: tenantsWithCustomEntitlements,
-        trend: 'Workspaces with extra commercial access beyond the plan baseline.'
+        trend: 'Workspaces with extra commercial access beyond the package baseline.'
       },
       {
         key: 'tenant-enterprise',
@@ -583,7 +587,7 @@ export default function TenantsPage() {
             {tenant.planCode ?? '-'}
           </span>
           <p className={sharedCompactTextClass}>
-            Plan modules {resolvePlanDetails(tenant.planCode).defaultModules.length} • Manual overrides {resolveManualModuleOverrides(tenant).length}
+            Package modules {resolvePlanDetails(tenant.planCode).defaultModules.length} • Manual overrides {resolveManualModuleOverrides(tenant).length}
           </p>
           <div className="flex flex-wrap gap-1.5">
             {(tenant.featureEntitlements ?? []).length > 0 ? (
@@ -708,7 +712,7 @@ export default function TenantsPage() {
           <PageTitle
             eyebrow="Platform administration"
             title="Workspaces"
-            description="Manage contracted modules, plan baselines, commercial overrides, and workspace experience defaults from the platform owner view."
+            description="Manage contracted modules, package baselines, commercial overrides, and workspace experience defaults from the platform owner view."
           />
 
           <MetricGrid cards={tenantSummaryCards} columns="md:grid-cols-2 xl:grid-cols-4" />
@@ -727,7 +731,7 @@ export default function TenantsPage() {
 
           <PageSection
             title={editingTenantId ? 'Update workspace' : 'Create workspace'}
-            description="Core platform access stays active by default. Contracted products and branding remain controlled here."
+            description="Core platform access stays active by default. Package contracts and branding remain controlled here."
             actions={editingTenantId ? (
               <button
                 type="button"
@@ -779,7 +783,7 @@ export default function TenantsPage() {
                     <div>
                       <p className="text-sm font-medium text-[color:var(--app-shell-heading)]">Feature entitlements</p>
                       <p className="mt-1 text-sm text-[color:var(--app-shell-muted)]">
-                        Plan and commercial capability grants stay separate from contracted modules and rollout flags.
+                        Package and commercial capability grants stay separate from contracted modules and rollout flags.
                       </p>
                     </div>
 
@@ -827,7 +831,7 @@ export default function TenantsPage() {
                     <div>
                       <p className="text-sm font-medium text-[color:var(--app-shell-heading)]">Contracted modules</p>
                       <p className="mt-1 text-sm text-[color:var(--app-shell-muted)]">
-                        CORE_PLATFORM remains active for every workspace. Modules included by the selected plan stay enabled, and additional products remain explicit overrides.
+                        CORE_PLATFORM remains active for every workspace. Modules included by the selected package stay enabled, and additional products remain explicit overrides.
                       </p>
                     </div>
 
@@ -860,7 +864,7 @@ export default function TenantsPage() {
                                 className="h-4 w-4 rounded border-[color:var(--app-shell-border)]"
                               />
                               {moduleItem.code}
-                              {includedByPlan ? <span className="text-[10px] text-[color:var(--app-shell-muted)]">Included by plan</span> : null}
+                              {includedByPlan ? <span className="text-[10px] text-[color:var(--app-shell-muted)]">Included by package</span> : null}
                             </label>
                           );
                         })
@@ -872,9 +876,9 @@ export default function TenantsPage() {
                 <div className="space-y-5">
                   <div className="ui-surface-muted space-y-4 p-4 lg:p-5">
                     <label className="space-y-2">
-                      <span className={sharedInputLabelClass}>Plan</span>
+                      <span className={sharedInputLabelClass}>Package</span>
                       <select
-                        value={form.planCode ?? 'BASIC'}
+                        value={form.planCode ?? 'PETSHOP'}
                         onChange={(event) => setForm((current) => ({ ...current, planCode: event.target.value }))}
                         className={sharedInputClass}
                       >
@@ -886,7 +890,7 @@ export default function TenantsPage() {
 
                     <div className="ui-surface-panel space-y-2 px-4 py-4 text-sm">
                       <p className="font-medium text-[color:var(--app-shell-heading)]">
-                        Plan defines default modules and features.
+                        Package defines default modules and features.
                       </p>
                       <div className="flex flex-wrap gap-2">
                         {selectedPlanDetails.defaultModules.map((moduleCode) => (
@@ -916,13 +920,13 @@ export default function TenantsPage() {
                           Contract preview
                         </p>
                         <p className="mt-1 text-[color:var(--app-shell-muted)]">
-                          Separate the commercial baseline from manual overrides before saving the workspace contract.
+                          Separate the commercial package baseline from manual overrides before saving the workspace contract.
                         </p>
                       </div>
 
                       <div>
                         <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--app-shell-muted)]">
-                          Plan baseline
+                          Package baseline
                         </p>
                         <div className="mt-2 flex flex-wrap gap-2">
                           {selectedPlanDetails.defaultModules.map((moduleCode) => (
@@ -1076,17 +1080,17 @@ export default function TenantsPage() {
                     <div>
                       <p className="text-sm font-medium text-[color:var(--app-shell-heading)]">Contract review</p>
                       <p className="mt-1 text-sm text-[color:var(--app-shell-muted)]">
-                        Review the workspace baseline, manual overrides, effective entitlements, and observed usage before approving the contract state.
+                        Review the workspace package baseline, manual overrides, effective entitlements, and observed usage before approving the contract state.
                       </p>
                     </div>
 
                     <div className="grid gap-4 xl:grid-cols-3">
                       <div className="rounded-2xl border border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-panel)] p-4">
                         <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--app-shell-muted)]">
-                          Plan baseline
+                          Package baseline
                         </p>
                         <p className="mt-2 text-sm font-semibold text-[color:var(--app-shell-heading)]">
-                          {editingTenant?.planCode ?? 'No plan assigned'}
+                          {editingTenant?.planCode ?? 'No package assigned'}
                         </p>
                         <div className="mt-3 flex flex-wrap gap-2">
                           {(editingTenantPlanDetails?.defaultModules ?? []).map((moduleCode) => (

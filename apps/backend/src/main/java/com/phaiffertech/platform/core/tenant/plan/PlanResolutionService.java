@@ -8,7 +8,7 @@ import org.springframework.stereotype.Service;
 @Service
 public class PlanResolutionService {
 
-    public static final String DEFAULT_PLAN_CODE = PlanDefinition.STANDARD.getCode();
+    public static final String DEFAULT_PLAN_CODE = PlanDefinition.PETSHOP.getCode();
 
     public String normalizePlanCode(String planCode, String fallbackPlanCode) {
         String candidate = normalizeValue(planCode);
@@ -25,7 +25,7 @@ public class PlanResolutionService {
     public PlanDefinition resolve(String planCode) {
         String normalizedCode = normalizeValue(planCode);
         if (normalizedCode == null) {
-            return PlanDefinition.STANDARD;
+            return PlanDefinition.PETSHOP;
         }
 
         return Arrays.stream(PlanDefinition.values())
