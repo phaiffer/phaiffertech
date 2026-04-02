@@ -37,6 +37,7 @@ public final class AuthMapper {
                 principal.tenantId(),
                 tenant.getName(),
                 tenant.getCode(),
+                tenant.getPlanCode(),
                 tenant.getLogoUrl(),
                 tenant.getPrimaryColor(),
                 tenant.getAccentColor(),

@@ -12,6 +12,7 @@ public record AuthenticatedUserResponse(
         UUID tenantId,
         String tenantName,
         String tenantCode,
+        String tenantPlanCode,
         String tenantLogoUrl,
         String tenantPrimaryColor,
         String tenantAccentColor,

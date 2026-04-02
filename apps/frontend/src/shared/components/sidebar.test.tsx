@@ -14,6 +14,7 @@ const { navigationState, signOutMock, currentUser } = vi.hoisted(() => ({
     tenantId: '11111111-1111-1111-1111-111111111111',
     tenantName: 'PhaifferTech',
     tenantCode: 'default',
+    tenantPlanCode: 'BANHO_TOSA_CLINICA',
     tenantLogoUrl: null,
     tenantPrimaryColor: '#0f172a',
     tenantAccentColor: '#2563eb',
@@ -82,9 +83,11 @@ describe('Sidebar', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     navigationState.pathname = '/crm/tasks';
+    currentUser.email = 'jane@phaiffer.test';
     currentUser.role = 'PLATFORM_ADMIN';
     currentUser.platformAdmin = true;
     currentUser.platformOwner = true;
+    currentUser.tenantPlanCode = 'BANHO_TOSA_CLINICA';
     currentUser.permissions = ['TENANT_READ', 'USER_READ', 'crm.task.read', 'pet.appointment.read', 'crm.dashboard.read', 'pet.dashboard.read'];
     currentUser.featureEntitlements = ['crm.full', 'pet.full', 'iot.basic'];
   });
@@ -130,7 +133,19 @@ describe('Sidebar', () => {
     currentUser.role = 'TENANT_ADMIN';
     currentUser.platformAdmin = false;
     currentUser.platformOwner = false;
-    currentUser.permissions = ['pet.client.read', 'pet.appointment.read', 'pet.medical-record.read'];
+    currentUser.tenantPlanCode = 'BANHO_TOSA';
+    currentUser.permissions = [
+      'pet.dashboard.read',
+      'pet.client.read',
+      'pet.profile.read',
+      'pet.appointment.read',
+      'pet.medical-record.read',
+      'finance.read',
+      'pet.plan.read',
+      'pet.product.read',
+      'pet.invoice.read',
+      'pet.professional.read'
+    ];
     currentUser.featureEntitlements = ['pet.aesthetics', 'pet.retail'];
     navigationState.pathname = '/pet/dashboard';
 
@@ -138,7 +153,30 @@ describe('Sidebar', () => {
 
     expect(container.querySelector('a[href="/dashboard"]')).not.toBeNull();
     expect(container.querySelector('a[href="/pet/clients"]')).not.toBeNull();
+    expect(container.querySelector('a[href="/pet/pets"]')).not.toBeNull();
     expect(container.querySelector('a[href="/pet/appointments"]')).not.toBeNull();
-    expect(container.querySelector('a[href="/pet/medical-records"]')).toBeNull();
+    expect(container.querySelector('a[href="/pet/finance"]')).not.toBeNull();
+    expect(container.querySelector('a[href="/pet/plans"]')).not.toBeNull();
+    expect(container.querySelector('a[href="/pet/inventory"]')).not.toBeNull();
+    expect(container.querySelector('a[href="/pet/invoices"]')).not.toBeNull();
+    expect(container.querySelector('a[href="/pet/professionals"]')).not.toBeNull();
+    expect(container.querySelector('a[href="/pet/clinic"]')).toBeNull();
+    expect(container.querySelector('a[href="/pet/pos"]')).toBeNull();
+  });
+
+  it('keeps package-scoped navigation visible for wildcard local access even on restricted tenant packages', () => {
+    currentUser.email = 'admin@local.test';
+    currentUser.role = 'TENANT_ADMIN';
+    currentUser.platformAdmin = false;
+    currentUser.platformOwner = false;
+    currentUser.tenantPlanCode = 'BANHO_TOSA';
+    currentUser.permissions = ['pet.medical-record.read', 'pet.product.read', 'pet.invoice.write'];
+    currentUser.featureEntitlements = ['*'];
+    navigationState.pathname = '/pet/dashboard';
+
+    const { container } = render(<Sidebar />);
+
+    expect(container.querySelector('a[href="/pet/clinic"]')).not.toBeNull();
+    expect(container.querySelector('a[href="/pet/pos"]')).not.toBeNull();
   });
 });

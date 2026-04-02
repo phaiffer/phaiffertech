@@ -2,7 +2,14 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import {
+  petClinicalEntitlements,
+  petRetailEntitlements,
+  petSubmoduleEntitlements
+} from '@/shared/entitlements/tenant-entitlements';
 import { useAppMessages } from '@/shared/i18n/app-i18n-provider';
+import { filterSidebarItems, petClinicNavigationPlanCodes, petPosNavigationPlanCodes } from '@/shared/platform/sidebar-navigation';
+import { useFrontendPlatform } from '@/shared/platform/use-frontend-platform';
 
 function isActive(pathname: string | null, href: string) {
   if (!pathname) {
@@ -19,20 +26,110 @@ function isActive(pathname: string | null, href: string) {
 export function PetModuleSubnav() {
   const pathname = usePathname();
   const t = useAppMessages().petSubnav;
-  const items = [
-    { href: '/pet', label: t.workspace },
-    { href: '/pet/dashboard', label: t.dashboard },
-    { href: '/pet/clients', label: t.clients },
-    { href: '/pet/pets', label: t.pets },
-    { href: '/pet/appointments', label: t.appointments },
-    { href: '/pet/clinic', label: t.clinic },
-    { href: '/pet/pos', label: t.pos },
-    { href: '/pet/finance', label: t.finance },
-    { href: '/pet/plans', label: t.plans },
-    { href: '/pet/inventory', label: t.inventory },
-    { href: '/pet/invoices', label: t.invoices },
-    { href: '/pet/professionals', label: t.professionals }
-  ];
+  const platform = useFrontendPlatform();
+  const items = filterSidebarItems([
+    { href: '/pet', label: t.workspace, group: 'pet' as const },
+    {
+      href: '/pet/dashboard',
+      label: t.dashboard,
+      anyOf: ['pet.dashboard.read', 'pet.appointment.read', 'pet.invoice.read'],
+      anyEntitlements: petSubmoduleEntitlements,
+      moduleCode: 'PET',
+      group: 'pet' as const
+    },
+    {
+      href: '/pet/clients',
+      label: t.clients,
+      anyOf: ['pet.client.read'],
+      anyEntitlements: petSubmoduleEntitlements,
+      moduleCode: 'PET',
+      group: 'pet' as const
+    },
+    {
+      href: '/pet/pets',
+      label: t.pets,
+      anyOf: ['pet.profile.read'],
+      anyEntitlements: petSubmoduleEntitlements,
+      moduleCode: 'PET',
+      group: 'pet' as const
+    },
+    {
+      href: '/pet/appointments',
+      label: t.appointments,
+      anyOf: ['pet.appointment.read'],
+      anyEntitlements: petSubmoduleEntitlements,
+      moduleCode: 'PET',
+      group: 'pet' as const
+    },
+    {
+      href: '/pet/clinic',
+      label: t.clinic,
+      anyOf: ['pet.medical-record.read'],
+      anyEntitlements: petClinicalEntitlements,
+      allowedPlanCodes: petClinicNavigationPlanCodes,
+      moduleCode: 'PET',
+      group: 'pet' as const
+    },
+    {
+      href: '/pet/pos',
+      label: t.pos,
+      anyOf: ['pet.product.read', 'pet.invoice.write'],
+      anyEntitlements: petRetailEntitlements,
+      allowedPlanCodes: petPosNavigationPlanCodes,
+      moduleCode: 'PET',
+      group: 'pet' as const
+    },
+    {
+      href: '/pet/finance',
+      label: t.finance,
+      anyOf: ['finance.read', 'pet.invoice.read'],
+      anyEntitlements: petSubmoduleEntitlements,
+      moduleCode: 'PET',
+      group: 'pet' as const
+    },
+    {
+      href: '/pet/plans',
+      label: t.plans,
+      anyOf: ['pet.plan.read'],
+      anyEntitlements: petSubmoduleEntitlements,
+      moduleCode: 'PET',
+      group: 'pet' as const
+    },
+    {
+      href: '/pet/inventory',
+      label: t.inventory,
+      anyOf: ['pet.product.read'],
+      anyEntitlements: petSubmoduleEntitlements,
+      moduleCode: 'PET',
+      group: 'pet' as const
+    },
+    {
+      href: '/pet/invoices',
+      label: t.invoices,
+      anyOf: ['pet.invoice.read'],
+      anyEntitlements: petSubmoduleEntitlements,
+      moduleCode: 'PET',
+      group: 'pet' as const
+    },
+    {
+      href: '/pet/professionals',
+      label: t.professionals,
+      anyOf: ['pet.professional.read'],
+      anyEntitlements: petSubmoduleEntitlements,
+      moduleCode: 'PET',
+      group: 'pet' as const
+    }
+  ], {
+    user: platform.user,
+    modules: {
+      availableCodes: platform.modules.availableCodes,
+      loading: platform.modules.loading
+    },
+    workspace: {
+      canManagePlatformAdministration: platform.workspace.canManagePlatformAdministration,
+      hasFullPlatformVisibility: platform.workspace.hasFullPlatformVisibility
+    }
+  });
 
   return (
     <nav className="overflow-x-auto rounded-[calc(var(--radius-2xl)-0.1rem)] border border-slate-200 bg-white px-2 py-2 shadow-sm">
