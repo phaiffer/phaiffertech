@@ -8,7 +8,8 @@ public record PetClientUpdateRequest(
         @NotBlank @JsonAlias("fullName") String name,
         @Email String email,
         String phone,
-        String document,
+        @NotBlank String documentType,
+        @NotBlank String document,
         String address,
         @NotBlank String status
 ) {

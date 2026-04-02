@@ -26,6 +26,7 @@ class FinanceFoundationIntegrationTest extends AbstractIntegrationTest {
                 "name", "Tutor " + marker,
                 "email", "tutor." + marker + "@example.test",
                 "phone", "+5511999999999",
+                "documentType", "RG",
                 "document", "DOC-" + marker,
                 "address", "Street " + marker,
                 "status", "ACTIVE"

@@ -1,11 +1,14 @@
 import { DashboardCountMetric, DashboardSection, DashboardSummaryCard } from '@/shared/types/dashboard';
 
+export type PetClientDocumentType = 'CPF' | 'RG';
+
 export type PetClient = {
   id: string;
   name: string;
   fullName?: string;
   email?: string;
   phone?: string;
+  documentType?: PetClientDocumentType;
   document?: string;
   address?: string;
   status: string;
