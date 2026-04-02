@@ -66,28 +66,56 @@ const emptyTenantForm: TenantFormInput = {
 /** Available commercial packages exposed to platform administrators. */
 const PLAN_CODES = ['PETSHOP', 'BANHO_TOSA', 'CLINICA_VETERINARIA', 'PETSHOP_BANHO_TOSA', 'BANHO_TOSA_CLINICA'] as const;
 
-const PLAN_DETAILS: Record<typeof PLAN_CODES[number], { defaultModules: string[]; defaultEntitlements: string[] }> = {
+type ProductPackageCode = typeof PLAN_CODES[number];
+
+type PlanDetails = {
+  label: string;
+  description: string;
+  defaultModules: string[];
+  defaultEntitlements: string[];
+};
+
+const PLAN_DETAILS: Record<ProductPackageCode, PlanDetails> = {
   PETSHOP: {
+    label: 'Pet retail workspace',
+    description: 'Retail-led PetFlow operation for storefront sales, service add-ons, and front-desk follow-through.',
     defaultModules: ['PET'],
     defaultEntitlements: ['pet.retail']
   },
   BANHO_TOSA: {
+    label: 'Bath and grooming workspace',
+    description: 'Banho e Tosa flow with aesthetics routines, recurring execution, and retail support in the same contract.',
     defaultModules: ['PET'],
     defaultEntitlements: ['pet.aesthetics', 'pet.retail']
   },
   CLINICA_VETERINARIA: {
+    label: 'Veterinary clinic workspace',
+    description: 'Clinical care with medical context, veterinary records, and retail support visible inside the same workspace.',
     defaultModules: ['PET'],
     defaultEntitlements: ['pet.clinic', 'pet.veterinary', 'pet.retail']
   },
   PETSHOP_BANHO_TOSA: {
+    label: 'Retail plus grooming workspace',
+    description: 'Hybrid PetShop and Banho e Tosa contract for stores that sell products and execute grooming operations together.',
     defaultModules: ['PET'],
     defaultEntitlements: ['pet.aesthetics', 'pet.retail']
   },
   BANHO_TOSA_CLINICA: {
+    label: 'Grooming plus clinic workspace',
+    description: 'Combined Banho e Tosa and clinic contract with grooming execution, veterinary care, and retail continuity.',
     defaultModules: ['PET'],
     defaultEntitlements: ['pet.aesthetics', 'pet.clinic', 'pet.veterinary', 'pet.retail']
   }
 };
+
+const autofillIgnoreProps = {
+  'data-lpignore': 'true',
+  'data-1p-ignore': 'true'
+} as const;
+
+const panelCopyClass = 'text-sm leading-6 text-[color:var(--app-shell-text)]';
+const compactPanelCopyClass = 'text-xs leading-5 text-[color:var(--app-shell-text)]';
+const detailPanelClass = 'ui-surface-panel space-y-4 px-4 py-4 text-sm text-[color:var(--app-shell-text)]';
 
 function resolvePlanDetails(planCode?: string) {
   const normalizedCode = (planCode ?? 'PETSHOP').toUpperCase() as keyof typeof PLAN_DETAILS;
@@ -181,6 +209,10 @@ function formatTokenLabel(value: string) {
     .join(' ');
 }
 
+function resolveFilledState(value?: string | null) {
+  return value && value.length > 0 ? 'true' : 'false';
+}
+
 function resolveManualModuleOverrides(tenant: Tenant) {
   return tenant.moduleOverrides
     ?? tenant.contractedModules.filter((moduleCode) => (
@@ -233,9 +265,20 @@ export default function TenantsPage() {
     () => resolvePlanDetails(form.planCode),
     [form.planCode]
   );
+  const selectedManualModuleOverrides = useMemo(
+    () => (form.contractedModules ?? []).filter((moduleCode) => !selectedPlanDetails.defaultModules.includes(moduleCode)),
+    [form.contractedModules, selectedPlanDetails]
+  );
   const effectiveSelectedModules = useMemo(
     () => resolveEffectiveModuleSelection(form.planCode, form.contractedModules),
     [form.contractedModules, form.planCode]
+  );
+  const effectiveSelectedEntitlements = useMemo(
+    () => Array.from(new Set([
+      ...selectedPlanDetails.defaultEntitlements,
+      ...(form.featureEntitlements ?? [])
+    ])),
+    [form.featureEntitlements, selectedPlanDetails]
   );
   const usageMetricGroups = useMemo(() => {
     const groups = new Map<string, TenantUsageMetric[]>();
@@ -791,59 +834,90 @@ export default function TenantsPage() {
               </button>
             ) : undefined}
           >
-            <form onSubmit={handleSubmit} className="space-y-6">
+            <form onSubmit={handleSubmit} autoComplete="off" className="space-y-6">
               <div className="grid gap-5 xl:grid-cols-[minmax(0,1.18fr)_minmax(0,0.82fr)]">
                 <div className="space-y-5">
                   <div className="grid gap-4 md:grid-cols-2">
-                    <label className="space-y-2">
+                    <label htmlFor="tenant-workspace-name" className="space-y-2">
                       <span className={sharedInputLabelClass}>Workspace name</span>
                       <input
+                        id="tenant-workspace-name"
+                        name="tenantName"
                         value={form.name}
                         onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))}
+                        autoComplete="section-tenant organization"
+                        data-filled={resolveFilledState(form.name)}
                         className={sharedInputClass}
                         placeholder="PhaifferTech Clinic Network"
+                        {...autofillIgnoreProps}
                         required
                       />
                     </label>
 
-                    <label className="space-y-2">
+                    <label htmlFor="tenant-workspace-code" className="space-y-2">
                       <span className={sharedInputLabelClass}>Workspace code</span>
                       <input
+                        id="tenant-workspace-code"
+                        name="tenantCode"
                         value={form.code}
                         onChange={(event) => setForm((current) => ({ ...current, code: event.target.value }))}
+                        autoComplete="section-tenant off"
+                        autoCapitalize="none"
+                        autoCorrect="off"
+                        spellCheck={false}
+                        data-filled={resolveFilledState(form.code)}
                         className={sharedInputClass}
                         placeholder="tenant-code"
+                        {...autofillIgnoreProps}
                         required
                       />
                     </label>
 
-                    <label className="space-y-2 md:col-span-2">
+                    <label htmlFor="tenant-logo-url" className="space-y-2 md:col-span-2">
                       <span className={sharedInputLabelClass}>Logo URL</span>
                       <input
+                        id="tenant-logo-url"
+                        name="tenantLogoUrl"
+                        type="url"
                         value={form.logoUrl ?? ''}
                         onChange={(event) => setForm((current) => ({ ...current, logoUrl: event.target.value }))}
+                        autoComplete="section-tenant off"
+                        inputMode="url"
+                        autoCapitalize="none"
+                        autoCorrect="off"
+                        spellCheck={false}
+                        data-filled={resolveFilledState(form.logoUrl)}
                         className={sharedInputClass}
                         placeholder="/branding/tenant-logo.png"
+                        {...autofillIgnoreProps}
                       />
                     </label>
                   </div>
 
-                  <div className="ui-surface-muted space-y-4 p-4 lg:p-5">
+                  <div className="ui-surface-muted space-y-4 p-4 text-[color:var(--app-shell-text)] lg:p-5">
                     <div>
                       <p className="text-sm font-medium text-[color:var(--app-shell-heading)]">Feature entitlements</p>
-                      <p className="mt-1 text-sm text-[color:var(--app-shell-muted)]">
+                      <p className={panelCopyClass}>
                         Package and commercial capability grants stay separate from contracted modules and rollout flags.
                       </p>
                     </div>
 
                     <div className="flex flex-col gap-3 lg:flex-row lg:items-end">
-                      <label className="flex-1 space-y-2">
+                      <label htmlFor="tenant-feature-entitlement" className="flex-1 space-y-2">
                         <span className={sharedInputLabelClass}>Entitlement key</span>
                         <input
+                          id="tenant-feature-entitlement"
+                          name="tenantFeatureEntitlement"
                           value={featureEntitlementDraft}
                           onChange={(event) => setFeatureEntitlementDraft(event.target.value)}
+                          autoComplete="section-tenant off"
+                          autoCapitalize="none"
+                          autoCorrect="off"
+                          spellCheck={false}
+                          data-filled={resolveFilledState(featureEntitlementDraft)}
                           className={sharedInputClass}
                           placeholder="beta.dashboard"
+                          {...autofillIgnoreProps}
                         />
                       </label>
                       <button
@@ -865,21 +939,21 @@ export default function TenantsPage() {
                             className="inline-flex items-center gap-2 rounded-full border border-[color:var(--tenant-accent)] bg-[color:var(--tenant-accent-soft)] px-3 py-2 text-xs font-semibold text-[color:var(--app-shell-heading)]"
                           >
                             <span>{featureKey}</span>
-                            <span className="text-[color:var(--app-shell-muted)]">Remove</span>
+                            <span className="text-[color:var(--app-shell-text)]">Remove</span>
                           </button>
                         ))
                       ) : (
-                        <span className="text-sm text-[color:var(--app-shell-muted)]">
+                        <span className={panelCopyClass}>
                           No custom feature entitlements configured for this workspace.
                         </span>
                       )}
                     </div>
                   </div>
 
-                  <div className="ui-surface-muted space-y-4 p-4 lg:p-5">
+                  <div className="ui-surface-muted space-y-4 p-4 text-[color:var(--app-shell-text)] lg:p-5">
                     <div>
                       <p className="text-sm font-medium text-[color:var(--app-shell-heading)]">Contracted modules</p>
-                      <p className="mt-1 text-sm text-[color:var(--app-shell-muted)]">
+                      <p className={panelCopyClass}>
                         CORE_PLATFORM remains active for every workspace. Modules included by the selected package stay enabled, and additional products remain explicit overrides.
                       </p>
                     </div>
@@ -913,7 +987,7 @@ export default function TenantsPage() {
                                 className="h-4 w-4 rounded border-[color:var(--app-shell-border)]"
                               />
                               {moduleItem.code}
-                              {includedByPlan ? <span className="text-[10px] text-[color:var(--app-shell-muted)]">Included by package</span> : null}
+                              {includedByPlan ? <span className={compactPanelCopyClass}>Included by package</span> : null}
                             </label>
                           );
                         })
@@ -923,36 +997,100 @@ export default function TenantsPage() {
                 </div>
 
                 <div className="space-y-5">
-                  <div className="ui-surface-muted space-y-4 p-4 lg:p-5">
-                    <div className="grid gap-4 md:grid-cols-2">
-                      <label className="space-y-2">
-                        <span className={sharedInputLabelClass}>Package</span>
-                        <select
-                          value={form.planCode ?? 'PETSHOP'}
-                          onChange={(event) => setForm((current) => ({ ...current, planCode: event.target.value }))}
-                          className={sharedInputClass}
-                        >
-                          {PLAN_CODES.map((code) => (
-                            <option key={code} value={code}>{code}</option>
-                          ))}
-                        </select>
-                      </label>
+                  <div className="ui-surface-muted space-y-4 p-4 text-[color:var(--app-shell-text)] lg:p-5">
+                    <div className="space-y-3">
+                      <div>
+                        <p className={sharedInputLabelClass}>Package</p>
+                        <p className={panelCopyClass}>
+                          Keep the commercial package visible here so contract review, access preview, and downstream validation stay aligned.
+                        </p>
+                      </div>
 
-                      <label className="space-y-2">
-                        <span className={sharedInputLabelClass}>Trial end date</span>
-                        <input
-                          type="date"
-                          value={form.trialEndDate}
-                          onChange={(event) => setForm((current) => ({ ...current, trialEndDate: event.target.value }))}
-                          className={sharedInputClass}
-                          required={!editingTenantId}
-                        />
-                      </label>
+                      <fieldset className="grid gap-3 md:grid-cols-2 xl:grid-cols-1">
+                        <legend className="sr-only">Commercial package options</legend>
+                        {PLAN_CODES.map((code) => {
+                          const plan = PLAN_DETAILS[code];
+                          const selected = (form.planCode ?? 'PETSHOP') === code;
+
+                          return (
+                            <label
+                              key={code}
+                              htmlFor={`tenant-plan-${code}`}
+                              className={[
+                                'flex cursor-pointer flex-col gap-3 rounded-2xl border px-4 py-4 transition',
+                                selected
+                                  ? 'border-[color:var(--tenant-accent)] bg-[color:var(--tenant-accent-soft)] shadow-[0_18px_34px_-28px_rgba(15,23,42,0.18)]'
+                                  : 'border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-panel)] hover:border-[color:var(--tenant-accent)]/40 hover:bg-[color:var(--app-shell-panel-muted)]'
+                              ].join(' ')}
+                            >
+                              <div className="flex items-start justify-between gap-3">
+                                <div className="space-y-1">
+                                  <div className="flex flex-wrap items-center gap-2">
+                                    <span className="text-sm font-semibold text-[color:var(--app-shell-heading)]">{code}</span>
+                                    <span className="rounded-full border border-[color:var(--app-shell-border)] bg-white/80 px-2 py-0.5 text-[11px] font-semibold text-[color:var(--app-shell-text)]">
+                                      {plan.label}
+                                    </span>
+                                  </div>
+                                  <p className={panelCopyClass}>{plan.description}</p>
+                                </div>
+
+                                <input
+                                  id={`tenant-plan-${code}`}
+                                  type="radio"
+                                  name="tenantPlanCode"
+                                  value={code}
+                                  checked={selected}
+                                  onChange={(event) => setForm((current) => ({ ...current, planCode: event.target.value }))}
+                                  className="mt-1 h-4 w-4 border-[color:var(--tenant-accent)] text-[color:var(--tenant-accent)]"
+                                />
+                              </div>
+
+                              <div className="flex flex-wrap gap-2">
+                                {plan.defaultModules.map((moduleCode) => (
+                                  <span
+                                    key={`${code}-module-${moduleCode}`}
+                                    className="inline-flex items-center rounded-full border border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-panel-muted)] px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-[color:var(--app-shell-text)]"
+                                  >
+                                    {moduleCode}
+                                  </span>
+                                ))}
+                                {plan.defaultEntitlements.map((featureKey) => (
+                                  <span
+                                    key={`${code}-feature-${featureKey}`}
+                                    className="inline-flex items-center rounded-full border border-[color:var(--tenant-accent)] bg-white/85 px-2.5 py-1 text-[11px] font-semibold text-[color:var(--app-shell-heading)]"
+                                  >
+                                    {featureKey}
+                                  </span>
+                                ))}
+                              </div>
+                            </label>
+                          );
+                        })}
+                      </fieldset>
                     </div>
 
-                    <div className="ui-surface-panel space-y-2 px-4 py-4 text-sm">
+                    <label htmlFor="tenant-trial-end-date" className="space-y-2">
+                      <span className={sharedInputLabelClass}>Trial end date</span>
+                      <input
+                        id="tenant-trial-end-date"
+                        name="tenantTrialEndDate"
+                        type="date"
+                        value={form.trialEndDate}
+                        onChange={(event) => setForm((current) => ({ ...current, trialEndDate: event.target.value }))}
+                        autoComplete="section-tenant off"
+                        data-filled={resolveFilledState(form.trialEndDate)}
+                        className={sharedInputClass}
+                        {...autofillIgnoreProps}
+                        required={!editingTenantId}
+                      />
+                    </label>
+
+                    <div className={detailPanelClass}>
                       <p className="font-medium text-[color:var(--app-shell-heading)]">
                         Package defines default modules and features.
+                      </p>
+                      <p className={panelCopyClass}>
+                        Selected package: <strong>{form.planCode ?? 'PETSHOP'}</strong>
                       </p>
                       <div className="flex flex-wrap gap-2">
                         {selectedPlanDetails.defaultModules.map((moduleCode) => (
@@ -976,19 +1114,22 @@ export default function TenantsPage() {
                       </div>
                     </div>
 
-                    <div className="ui-surface-panel space-y-4 px-4 py-4 text-sm">
+                    <div className={detailPanelClass}>
                       <div>
                         <p className="font-medium text-[color:var(--app-shell-heading)]">
                           Contract preview
                         </p>
-                        <p className="mt-1 text-[color:var(--app-shell-muted)]">
+                        <p className={panelCopyClass}>
                           Separate the commercial package baseline from manual overrides before saving the workspace contract.
                         </p>
                       </div>
 
                       <div>
-                        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--app-shell-muted)]">
+                        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--app-shell-heading)]">
                           Package baseline
+                        </p>
+                        <p className="mt-2 text-sm font-semibold text-[color:var(--app-shell-heading)]">
+                          {form.planCode ?? 'PETSHOP'}
                         </p>
                         <div className="mt-2 flex flex-wrap gap-2">
                           {selectedPlanDetails.defaultModules.map((moduleCode) => (
@@ -1003,12 +1144,12 @@ export default function TenantsPage() {
                       </div>
 
                       <div>
-                        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--app-shell-muted)]">
+                        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--app-shell-heading)]">
                           Manual module overrides
                         </p>
-                        {(form.contractedModules ?? []).length > 0 ? (
+                        {selectedManualModuleOverrides.length > 0 ? (
                           <div className="mt-2 flex flex-wrap gap-2">
-                            {form.contractedModules.map((moduleCode) => (
+                            {selectedManualModuleOverrides.map((moduleCode) => (
                               <span
                                 key={`preview-manual-module-${moduleCode}`}
                                 className="inline-flex items-center rounded-full border border-[color:var(--tenant-accent)] bg-[color:var(--tenant-accent-soft)] px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-[color:var(--app-shell-heading)]"
@@ -1018,14 +1159,14 @@ export default function TenantsPage() {
                             ))}
                           </div>
                         ) : (
-                          <p className="mt-2 text-[color:var(--app-shell-muted)]">
+                          <p className={panelCopyClass}>
                             No manual module overrides selected.
                           </p>
                         )}
                       </div>
 
                       <div>
-                        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--app-shell-muted)]">
+                        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--app-shell-heading)]">
                           Effective access
                         </p>
                         <div className="mt-2 flex flex-wrap gap-2">
@@ -1039,8 +1180,8 @@ export default function TenantsPage() {
                           ))}
                         </div>
                         <div className="mt-2 flex flex-wrap gap-2">
-                          {form.featureEntitlements && form.featureEntitlements.length > 0 ? (
-                            form.featureEntitlements.map((featureKey) => (
+                          {effectiveSelectedEntitlements.length > 0 ? (
+                            effectiveSelectedEntitlements.map((featureKey) => (
                               <span
                                 key={`preview-feature-${featureKey}`}
                                 className="inline-flex items-center rounded-full border border-[color:var(--tenant-accent)] bg-[color:var(--tenant-accent-soft)] px-2.5 py-1 text-[11px] font-semibold text-[color:var(--app-shell-heading)]"
@@ -1049,8 +1190,8 @@ export default function TenantsPage() {
                               </span>
                             ))
                           ) : (
-                            <span className="text-[color:var(--app-shell-muted)]">
-                              No custom feature entitlement overrides.
+                            <span className={panelCopyClass}>
+                              No effective entitlement signals selected.
                             </span>
                           )}
                         </div>
@@ -1058,50 +1199,67 @@ export default function TenantsPage() {
                     </div>
 
                     {!editingTenantId ? (
-                      <div className="ui-surface-panel space-y-4 px-4 py-4 text-sm">
+                      <div className={detailPanelClass}>
                         <div>
                           <p className="font-medium text-[color:var(--app-shell-heading)]">
                             Initial admin access
                           </p>
-                          <p className="mt-1 text-[color:var(--app-shell-muted)]">
+                          <p className={panelCopyClass}>
                             The bootstrap admin account is created with the workspace and the temporary password is stored as a hash.
                           </p>
                         </div>
 
                         <div className="grid gap-4 md:grid-cols-2">
-                          <label className="space-y-2">
+                          <label htmlFor="tenant-initial-admin-full-name" className="space-y-2">
                             <span className={sharedInputLabelClass}>Initial admin full name</span>
                             <input
+                              id="tenant-initial-admin-full-name"
+                              name="initialAdminFullName"
                               value={form.initialAdminFullName}
                               onChange={(event) => setForm((current) => ({ ...current, initialAdminFullName: event.target.value }))}
+                              autoComplete="section-workspace-admin off"
+                              data-filled={resolveFilledState(form.initialAdminFullName)}
                               className={sharedInputClass}
                               placeholder="Jordan Smith"
+                              {...autofillIgnoreProps}
                               required
                             />
                           </label>
 
-                          <label className="space-y-2">
+                          <label htmlFor="tenant-initial-admin-email" className="space-y-2">
                             <span className={sharedInputLabelClass}>Initial admin email</span>
                             <input
+                              id="tenant-initial-admin-email"
+                              name="initialAdminEmail"
                               type="email"
                               value={form.initialAdminEmail}
                               onChange={(event) => setForm((current) => ({ ...current, initialAdminEmail: event.target.value }))}
+                              autoComplete="section-workspace-admin email"
+                              inputMode="email"
+                              autoCapitalize="none"
+                              autoCorrect="off"
+                              spellCheck={false}
+                              data-filled={resolveFilledState(form.initialAdminEmail)}
                               className={sharedInputClass}
                               placeholder="admin@tenant.test"
-                              autoComplete="email"
+                              {...autofillIgnoreProps}
                               required
                             />
                           </label>
 
-                          <label className="space-y-2 md:col-span-2">
+                          <label htmlFor="tenant-temporary-password" className="space-y-2 md:col-span-2">
                             <span className={sharedInputLabelClass}>Temporary password</span>
                             <input
+                              id="tenant-temporary-password"
+                              name="temporaryPassword"
                               type="password"
                               value={form.temporaryPassword}
                               onChange={(event) => setForm((current) => ({ ...current, temporaryPassword: event.target.value }))}
+                              autoComplete="section-workspace-admin new-password"
+                              data-filled={resolveFilledState(form.temporaryPassword)}
                               className={sharedInputClass}
                               placeholder="TempPassword@123"
-                              autoComplete="new-password"
+                              {...autofillIgnoreProps}
                               required
                             />
                           </label>
@@ -1123,15 +1281,15 @@ export default function TenantsPage() {
                     ) : null}
                   </div>
 
-                  <div className="ui-surface-muted space-y-4 p-4 lg:p-5">
+                  <div className="ui-surface-muted space-y-4 p-4 text-[color:var(--app-shell-text)] lg:p-5">
                     <div>
                       <p className="text-sm font-medium text-[color:var(--app-shell-heading)]">Branding defaults</p>
-                      <p className="mt-1 text-sm text-[color:var(--app-shell-muted)]">
+                      <p className={panelCopyClass}>
                         Keep branding controlled so workspace identity stays visible without overriding the shared platform structure.
                       </p>
                     </div>
 
-                    <label className="space-y-2">
+                    <label htmlFor="tenant-primary-color" className="space-y-2">
                       <span className={sharedInputLabelClass}>Primary color</span>
                       <div className="flex items-center gap-3">
                         <input
@@ -1141,15 +1299,23 @@ export default function TenantsPage() {
                           className="h-12 w-16 rounded-xl border border-[color:var(--app-shell-border)] bg-transparent shadow-xs"
                         />
                         <input
+                          id="tenant-primary-color"
+                          name="tenantPrimaryColor"
                           value={form.primaryColor ?? ''}
                           onChange={(event) => setForm((current) => ({ ...current, primaryColor: event.target.value }))}
+                          autoComplete="section-tenant off"
+                          autoCapitalize="none"
+                          autoCorrect="off"
+                          spellCheck={false}
+                          data-filled={resolveFilledState(form.primaryColor)}
                           className={sharedInputClass}
                           placeholder="#0f172a"
+                          {...autofillIgnoreProps}
                         />
                       </div>
                     </label>
 
-                    <label className="space-y-2">
+                    <label htmlFor="tenant-accent-color" className="space-y-2">
                       <span className={sharedInputLabelClass}>Accent color</span>
                       <div className="flex items-center gap-3">
                         <input
@@ -1159,23 +1325,34 @@ export default function TenantsPage() {
                           className="h-12 w-16 rounded-xl border border-[color:var(--app-shell-border)] bg-transparent shadow-xs"
                         />
                         <input
+                          id="tenant-accent-color"
+                          name="tenantAccentColor"
                           value={form.accentColor ?? ''}
                           onChange={(event) => setForm((current) => ({ ...current, accentColor: event.target.value }))}
+                          autoComplete="section-tenant off"
+                          autoCapitalize="none"
+                          autoCorrect="off"
+                          spellCheck={false}
+                          data-filled={resolveFilledState(form.accentColor)}
                           className={sharedInputClass}
                           placeholder="#2563eb"
+                          {...autofillIgnoreProps}
                         />
                       </div>
                     </label>
 
-                    <label className="space-y-2">
+                    <label htmlFor="tenant-default-theme" className="space-y-2">
                       <span className={sharedInputLabelClass}>Default theme</span>
                       <select
+                        id="tenant-default-theme"
+                        name="tenantDefaultThemeMode"
                         value={form.defaultThemeMode}
                         onChange={(event) =>
                           setForm((current) => ({
                             ...current,
                             defaultThemeMode: event.target.value as TenantThemeMode
                           }))}
+                        data-filled={resolveFilledState(form.defaultThemeMode)}
                         className={sharedInputClass}
                       >
                         <option value="SYSTEM">System</option>
@@ -1203,10 +1380,10 @@ export default function TenantsPage() {
 
               {editingTenantId ? (
                 <div className="grid gap-4 xl:grid-cols-2">
-                  <section className="ui-surface-muted space-y-4 p-4 lg:p-5 xl:col-span-2">
+                  <section className="ui-surface-muted space-y-4 p-4 text-[color:var(--app-shell-text)] lg:p-5 xl:col-span-2">
                     <div>
                       <p className="text-sm font-medium text-[color:var(--app-shell-heading)]">Contract review</p>
-                      <p className="mt-1 text-sm text-[color:var(--app-shell-muted)]">
+                      <p className={panelCopyClass}>
                         Review the workspace package baseline, manual overrides, effective entitlements, and observed usage before approving the contract state.
                       </p>
                     </div>
@@ -1257,12 +1434,12 @@ export default function TenantsPage() {
                             ))}
                           </div>
                         ) : (
-                          <p className="mt-3 text-sm text-[color:var(--app-shell-muted)]">
+                          <p className={panelCopyClass}>
                             No manual module overrides are active for this workspace.
                           </p>
                         )}
 
-                        <p className="mt-4 text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--app-shell-muted)]">
+                        <p className="mt-4 text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--app-shell-heading)]">
                           Custom entitlements
                         </p>
                         <div className="mt-2 flex flex-wrap gap-2">
@@ -1276,7 +1453,7 @@ export default function TenantsPage() {
                               </span>
                             ))
                           ) : (
-                            <span className="text-sm text-[color:var(--app-shell-muted)]">
+                            <span className={panelCopyClass}>
                               No custom entitlements applied.
                             </span>
                           )}
@@ -1308,7 +1485,7 @@ export default function TenantsPage() {
                               </span>
                             ))
                           ) : (
-                            <span className="text-sm text-[color:var(--app-shell-muted)]">
+                            <span className={panelCopyClass}>
                               No effective entitlement signals returned by the backend.
                             </span>
                           )}
@@ -1317,10 +1494,10 @@ export default function TenantsPage() {
                     </div>
                   </section>
 
-                  <section className="ui-surface-muted space-y-3 p-4 lg:p-5">
+                  <section className="ui-surface-muted space-y-3 p-4 text-[color:var(--app-shell-text)] lg:p-5">
                     <div>
                       <p className="text-sm font-medium text-[color:var(--app-shell-heading)]">Feature flags</p>
-                      <p className="mt-1 text-sm text-[color:var(--app-shell-muted)]">
+                      <p className={panelCopyClass}>
                         Rollout controls sit on top of contracts. A disabled flag can still block a contracted module.
                       </p>
                     </div>
@@ -1379,16 +1556,16 @@ export default function TenantsPage() {
                         })}
                       </div>
                     ) : (
-                      <p className="text-sm text-[color:var(--app-shell-muted)]">
+                      <p className={panelCopyClass}>
                         No feature flags available for workspace override.
                       </p>
                     )}
                   </section>
 
-                  <section className="ui-surface-muted space-y-3 p-4 lg:p-5">
+                  <section className="ui-surface-muted space-y-3 p-4 text-[color:var(--app-shell-text)] lg:p-5">
                     <div>
                       <p className="text-sm font-medium text-[color:var(--app-shell-heading)]">Usage telemetry</p>
-                      <p className="mt-1 text-sm text-[color:var(--app-shell-muted)]">
+                      <p className={panelCopyClass}>
                         Read-only daily aggregates from successful logins, API requests, and auditable entity creation. Use this to explain what this workspace is actually consuming today.
                       </p>
                     </div>
@@ -1447,16 +1624,16 @@ export default function TenantsPage() {
                         </div>
                       </>
                     ) : (
-                      <p className="text-sm text-[color:var(--app-shell-muted)]">
+                      <p className={panelCopyClass}>
                         No recent usage telemetry has been recorded for this workspace.
                       </p>
                     )}
                   </section>
 
-                  <section className="ui-surface-muted space-y-4 p-4 lg:p-5 xl:col-span-2">
+                  <section className="ui-surface-muted space-y-4 p-4 text-[color:var(--app-shell-text)] lg:p-5 xl:col-span-2">
                     <div>
                       <p className="text-sm font-medium text-[color:var(--app-shell-heading)]">Support impersonation</p>
-                      <p className="mt-1 text-sm text-[color:var(--app-shell-muted)]">
+                      <p className={panelCopyClass}>
                         Start a time-boxed support session inside this workspace while keeping your original platform operator identity fully auditable.
                       </p>
                     </div>
@@ -1501,7 +1678,7 @@ export default function TenantsPage() {
                               <option value={45}>45 minutes</option>
                               <option value={60}>60 minutes</option>
                             </select>
-                            <p className="text-xs leading-5 text-[color:var(--app-shell-muted)]">
+                            <p className={compactPanelCopyClass}>
                               Short sessions reduce ambiguity and keep operator recovery simple.
                             </p>
                           </label>
