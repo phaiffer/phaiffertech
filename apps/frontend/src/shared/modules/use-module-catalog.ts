@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { filterVisibleModuleCatalogItems } from '@/shared/modules/visible-product-modules';
 import { moduleService } from '@/shared/services/module-service';
 import { ModuleItem } from '@/shared/types/module';
 
@@ -18,7 +19,7 @@ export function useModuleCatalog() {
         if (!active) {
           return;
         }
-        setModules(result);
+        setModules(filterVisibleModuleCatalogItems(result));
         setError(null);
       })
       .catch((err: Error) => {

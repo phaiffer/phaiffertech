@@ -73,15 +73,6 @@ const { currentPlatformState } = vi.hoisted(() => ({
           available: true
         },
         {
-          code: 'CRM',
-          name: 'CRM',
-          description: 'Commercial workspace',
-          enabled: true,
-          moduleEnabled: true,
-          featureFlagEnabled: true,
-          available: true
-        },
-        {
           code: 'PET',
           name: 'PetFlow',
           description: 'Clinical workspace',
@@ -93,17 +84,8 @@ const { currentPlatformState } = vi.hoisted(() => ({
       ],
       loading: false,
       error: null,
-      availableCodes: ['CORE_PLATFORM', 'CRM', 'PET'],
+      availableCodes: ['CORE_PLATFORM', 'PET'],
       contractedProducts: [
-        {
-          code: 'CRM',
-          name: 'CRM',
-          description: 'Commercial workspace',
-          enabled: true,
-          moduleEnabled: true,
-          featureFlagEnabled: true,
-          available: true
-        },
         {
           code: 'PET',
           name: 'PetFlow',
@@ -179,15 +161,6 @@ describe('DashboardPage workspace context', () => {
           available: true
         },
         {
-          code: 'CRM',
-          name: 'CRM',
-          description: 'Commercial workspace',
-          enabled: true,
-          moduleEnabled: true,
-          featureFlagEnabled: true,
-          available: true
-        },
-        {
           code: 'PET',
           name: 'PetFlow',
           description: 'Clinical workspace',
@@ -199,17 +172,8 @@ describe('DashboardPage workspace context', () => {
       ],
       loading: false,
       error: null,
-      availableCodes: ['CORE_PLATFORM', 'CRM', 'PET'],
+      availableCodes: ['CORE_PLATFORM', 'PET'],
       contractedProducts: [
-        {
-          code: 'CRM',
-          name: 'CRM',
-          description: 'Commercial workspace',
-          enabled: true,
-          moduleEnabled: true,
-          featureFlagEnabled: true,
-          available: true
-        },
         {
           code: 'PET',
           name: 'PetFlow',
@@ -272,7 +236,8 @@ describe('DashboardPage workspace context', () => {
       platformAdmin: false,
       role: 'TENANT_ADMIN',
       roles: ['TENANT_ADMIN'],
-      permissions: ['USER_READ']
+      permissions: ['USER_READ', 'pet.dashboard.read', 'pet.client.read'],
+      featureEntitlements: ['pet.retail']
     });
     currentPlatformState.workspace = {
       ...currentPlatformState.workspace,
@@ -296,15 +261,6 @@ describe('DashboardPage workspace context', () => {
           available: true
         },
         {
-          code: 'CRM',
-          name: 'CRM',
-          description: 'Commercial workspace',
-          enabled: true,
-          moduleEnabled: true,
-          featureFlagEnabled: true,
-          available: true
-        },
-        {
           code: 'PET',
           name: 'PetFlow',
           description: 'Clinical workspace',
@@ -316,16 +272,16 @@ describe('DashboardPage workspace context', () => {
       ],
       loading: false,
       error: null,
-      availableCodes: ['CORE_PLATFORM', 'CRM'],
+      availableCodes: ['CORE_PLATFORM'],
       contractedProducts: [
         {
-          code: 'CRM',
-          name: 'CRM',
-          description: 'Commercial workspace',
+          code: 'PET',
+          name: 'PetFlow',
+          description: 'Clinical workspace',
           enabled: true,
           moduleEnabled: true,
-          featureFlagEnabled: true,
-          available: true
+          featureFlagEnabled: false,
+          available: false
         }
       ]
     };
@@ -371,13 +327,15 @@ describe('DashboardPage workspace context', () => {
     expect(screen.getByRole('heading', { name: 'Workspace overview' })).toBeInTheDocument();
     expect(screen.getByText(/Executive workspace for Clinic North/)).toBeInTheDocument();
     expect(screen.getByText('Products in this workspace')).toBeInTheDocument();
-    expect(screen.getAllByText('Create first company').length).toBeGreaterThan(0);
+    expect(screen.getByText('PetFlow')).toBeInTheDocument();
+    expect(screen.queryByText('Create first company')).not.toBeInTheDocument();
     expect(screen.queryByText('Manage tenants')).not.toBeInTheDocument();
     expect(screen.queryByText('Visible products')).not.toBeInTheDocument();
     expect(screen.queryByText('Pet Snapshot')).not.toBeInTheDocument();
+    expect(screen.queryByText('CRM Snapshot')).not.toBeInTheDocument();
   });
 
-  it('shows customer workspace onboarding when no module snapshot is available yet', async () => {
+  it('opens the PetFlow operations shell for customer tenants as soon as PetFlow is visible', async () => {
     currentPlatformState.branding.scopeName = 'Clinic North';
     currentPlatformState.branding.tenantCode = 'clinic-north';
     currentPlatformState.user = buildUser({
@@ -387,7 +345,8 @@ describe('DashboardPage workspace context', () => {
       platformAdmin: false,
       role: 'TENANT_ADMIN',
       roles: ['TENANT_ADMIN'],
-      permissions: ['USER_READ']
+      permissions: ['USER_READ', 'pet.dashboard.read', 'pet.client.read'],
+      featureEntitlements: ['pet.retail']
     });
     currentPlatformState.workspace = {
       ...currentPlatformState.workspace,
@@ -411,9 +370,9 @@ describe('DashboardPage workspace context', () => {
           available: true
         },
         {
-          code: 'CRM',
-          name: 'CRM',
-          description: 'Commercial workspace',
+          code: 'PET',
+          name: 'PetFlow',
+          description: 'Clinical workspace',
           enabled: true,
           moduleEnabled: true,
           featureFlagEnabled: true,
@@ -422,12 +381,12 @@ describe('DashboardPage workspace context', () => {
       ],
       loading: false,
       error: null,
-      availableCodes: ['CORE_PLATFORM', 'CRM'],
+      availableCodes: ['CORE_PLATFORM', 'PET'],
       contractedProducts: [
         {
-          code: 'CRM',
-          name: 'CRM',
-          description: 'Commercial workspace',
+          code: 'PET',
+          name: 'PetFlow',
+          description: 'Clinical workspace',
           enabled: true,
           moduleEnabled: true,
           featureFlagEnabled: true,
@@ -457,9 +416,10 @@ describe('DashboardPage workspace context', () => {
       expect(moduleService.getDashboardSummary).toHaveBeenCalledTimes(1);
     });
 
-    expect(screen.getByText('Getting started')).toBeInTheDocument();
-    expect(screen.getByText('Get Clinic North moving')).toBeInTheDocument();
-    expect(screen.getAllByText('Create first company').length).toBeGreaterThan(0);
-    expect(screen.getByText(/Some contracted products still need their first records/i)).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'PetFlow overview' })).toBeInTheDocument();
+    expect(screen.getByText('Loading the PetFlow operating overview...')).toBeInTheDocument();
+    expect(screen.getByText('Official demo surface')).toBeInTheDocument();
+    expect(screen.queryByText('Create first company')).not.toBeInTheDocument();
+    expect(screen.queryByText('Getting started')).not.toBeInTheDocument();
   });
 });

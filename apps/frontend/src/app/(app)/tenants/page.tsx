@@ -16,6 +16,13 @@ import { StatusBadge } from '@/shared/dashboard/status-badge';
 import { setImpersonationBackupSession } from '@/shared/lib/session';
 import { resolvePageItems, resolveTotalItems } from '@/shared/lib/pagination';
 import { useModuleCatalog } from '@/shared/modules/use-module-catalog';
+import {
+  filterVisibleModuleCatalogItems,
+  filterVisibleProductModuleCodes,
+  filterVisibleUsageMetrics,
+  filterVisibleWorkspaceFeatureFlags,
+  filterVisibleWorkspaceModuleCodes
+} from '@/shared/modules/visible-product-modules';
 import { featureFlagService, TenantFeatureFlag } from '@/shared/services/feature-flag-service';
 import { supportImpersonationService } from '@/shared/services/support-impersonation-service';
 import {
@@ -286,6 +293,17 @@ function resolveManualModuleOverrides(tenant: Tenant) {
     ));
 }
 
+function resolveVisibleManualModuleOverrides(tenant: Tenant) {
+  return filterVisibleProductModuleCodes(resolveManualModuleOverrides(tenant));
+}
+
+function resolveVisibleEffectiveModules(tenant: Tenant) {
+  return filterVisibleProductModuleCodes(resolveEffectiveModuleSelection(
+    tenant.planCode,
+    resolveManualModuleOverrides(tenant)
+  ));
+}
+
 function resolveEffectiveEntitlements(tenant: Tenant) {
   if (tenant.effectiveFeatureEntitlements && tenant.effectiveFeatureEntitlements.length > 0) {
     return tenant.effectiveFeatureEntitlements;
@@ -331,11 +349,13 @@ export default function TenantsPage() {
     [form.planCode]
   );
   const selectedManualModuleOverrides = useMemo(
-    () => (form.contractedModules ?? []).filter((moduleCode) => !selectedPlanDetails.defaultModules.includes(moduleCode)),
+    () => filterVisibleProductModuleCodes(
+      (form.contractedModules ?? []).filter((moduleCode) => !selectedPlanDetails.defaultModules.includes(moduleCode))
+    ),
     [form.contractedModules, selectedPlanDetails]
   );
   const effectiveSelectedModules = useMemo(
-    () => resolveEffectiveModuleSelection(form.planCode, form.contractedModules),
+    () => filterVisibleProductModuleCodes(resolveEffectiveModuleSelection(form.planCode, form.contractedModules)),
     [form.contractedModules, form.planCode]
   );
   const effectiveSelectedEntitlements = useMemo(
@@ -361,7 +381,7 @@ export default function TenantsPage() {
   }, [usageMetrics]);
 
   const moduleOptions = useMemo(
-    () => modules.filter((moduleItem) => moduleItem.code !== 'CORE_PLATFORM'),
+    () => filterVisibleModuleCatalogItems(modules).filter((moduleItem) => moduleItem.code !== 'CORE_PLATFORM'),
     [modules]
   );
 
@@ -407,7 +427,7 @@ export default function TenantsPage() {
         if (!active) {
           return;
         }
-        setTenantFeatureFlags(result);
+        setTenantFeatureFlags(filterVisibleWorkspaceFeatureFlags(result));
         setFeatureFlagsError(null);
       })
       .catch((err: Error) => {
@@ -429,7 +449,7 @@ export default function TenantsPage() {
         if (!active) {
           return;
         }
-        setUsageMetrics(result);
+        setUsageMetrics(filterVisibleUsageMetrics(result));
         setUsageMetricsError(null);
       })
       .catch((err: Error) => {
@@ -555,7 +575,7 @@ export default function TenantsPage() {
 
   async function refreshFeatureFlags(tenantId: string) {
     const result = await featureFlagService.listForTenant(tenantId);
-    setTenantFeatureFlags(result);
+    setTenantFeatureFlags(filterVisibleWorkspaceFeatureFlags(result));
     setFeatureFlagsError(null);
   }
 
@@ -603,7 +623,7 @@ export default function TenantsPage() {
   );
   const tenantSummaryCards = useMemo<DashboardSummaryCard[]>(() => {
     const tenantsInScope = tenants.length;
-    const tenantsWithOverrides = tenants.filter((tenant) => resolveManualModuleOverrides(tenant).length > 0).length;
+    const tenantsWithOverrides = tenants.filter((tenant) => resolveVisibleManualModuleOverrides(tenant).length > 0).length;
     const tenantsWithCustomEntitlements = tenants.filter((tenant) => (tenant.featureEntitlements ?? []).length > 0).length;
     const enterpriseAccessTenants = tenants.filter((tenant) => resolveEffectiveEntitlements(tenant).includes('*')).length;
 
@@ -641,12 +661,12 @@ export default function TenantsPage() {
     [editingTenant]
   );
   const editingTenantManualModuleOverrides = useMemo(
-    () => editingTenant ? resolveManualModuleOverrides(editingTenant) : [],
+    () => editingTenant ? resolveVisibleManualModuleOverrides(editingTenant) : [],
     [editingTenant]
   );
   const editingTenantEffectiveModules = useMemo(
-    () => editingTenant ? resolveEffectiveModuleSelection(editingTenant.planCode, editingTenantManualModuleOverrides) : [],
-    [editingTenant, editingTenantManualModuleOverrides]
+    () => editingTenant ? resolveVisibleEffectiveModules(editingTenant) : [],
+    [editingTenant]
   );
   const editingTenantEffectiveEntitlements = useMemo(
     () => editingTenant ? resolveEffectiveEntitlements(editingTenant) : [],
@@ -813,7 +833,7 @@ export default function TenantsPage() {
       render: (tenant) => (
         <div className="space-y-2">
           <div className="flex flex-wrap gap-2">
-            {tenant.contractedModules.map((moduleCode) => (
+            {filterVisibleWorkspaceModuleCodes(tenant.contractedModules).map((moduleCode) => (
               <span
                 key={`${tenant.id}-${moduleCode}`}
                 className="inline-flex items-center rounded-full border border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-panel-muted)] px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-[color:var(--app-shell-text)]"
@@ -823,9 +843,9 @@ export default function TenantsPage() {
             ))}
           </div>
           <p className={sharedCompactTextClass}>
-            {resolveManualModuleOverrides(tenant).length > 0
-              ? `Manual override modules: ${resolveManualModuleOverrides(tenant).join(', ')}`
-              : 'No manual module overrides'}
+            {resolveVisibleManualModuleOverrides(tenant).length > 0
+              ? `Manual override modules: ${resolveVisibleManualModuleOverrides(tenant).join(', ')}`
+              : 'No visible manual module overrides'}
           </p>
         </div>
       )
@@ -1020,7 +1040,7 @@ export default function TenantsPage() {
                     <div>
                       <p className="text-sm font-medium text-[color:var(--app-shell-heading)]">Contracted modules</p>
                       <p className={panelCopyClass}>
-                        CORE_PLATFORM remains active for every workspace. Modules included by the selected package stay enabled, and additional products remain explicit overrides.
+                        CORE_PLATFORM remains active for every workspace. PetFlow stays visible through the selected package, while preserved legacy standalone modules remain hidden from this administration surface.
                       </p>
                     </div>
 
@@ -1227,7 +1247,7 @@ export default function TenantsPage() {
                           </div>
                         ) : (
                           <p className={panelCopyClass}>
-                            No manual module overrides selected.
+                            No visible manual module overrides selected.
                           </p>
                         )}
                       </div>
@@ -1502,7 +1522,7 @@ export default function TenantsPage() {
                           </div>
                         ) : (
                           <p className={panelCopyClass}>
-                            No manual module overrides are active for this workspace.
+                            No visible manual module overrides are active for this workspace.
                           </p>
                         )}
 
@@ -1565,7 +1585,7 @@ export default function TenantsPage() {
                     <div>
                       <p className="text-sm font-medium text-[color:var(--app-shell-heading)]">Feature flags</p>
                       <p className={panelCopyClass}>
-                        Rollout controls sit on top of contracts. A disabled flag can still block a contracted module.
+                        Rollout controls sit on top of contracts. Only PetFlow-visible rollout toggles remain exposed on this administration surface.
                       </p>
                     </div>
 
@@ -1633,7 +1653,7 @@ export default function TenantsPage() {
                     <div>
                       <p className="text-sm font-medium text-[color:var(--app-shell-heading)]">Usage telemetry</p>
                       <p className={panelCopyClass}>
-                        Read-only daily aggregates from successful logins, API requests, and auditable entity creation. Use this to explain what this workspace is actually consuming today.
+                        Read-only daily aggregates from successful logins, API requests, and auditable entity creation. Hidden legacy standalone module sources are intentionally excluded here.
                       </p>
                     </div>
 
