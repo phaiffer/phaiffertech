@@ -1,6 +1,6 @@
 'use client';
 
-import { FormEvent, useEffect, useMemo, useState } from 'react';
+import { CSSProperties, FormEvent, useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { PermissionGuard } from '@/shared/auth/PermissionGuard';
 import { useAuth } from '@/shared/auth/use-auth';
@@ -113,9 +113,43 @@ const autofillIgnoreProps = {
   'data-1p-ignore': 'true'
 } as const;
 
-const panelCopyClass = 'text-sm leading-6 text-[color:var(--app-shell-text)]';
-const compactPanelCopyClass = 'text-xs leading-5 text-[color:var(--app-shell-text)]';
-const detailPanelClass = 'ui-surface-panel space-y-4 px-4 py-4 text-sm text-[color:var(--app-shell-text)]';
+const tenantAdminToneStyle = {
+  '--background': '#f4f8f5',
+  '--surface': 'rgba(252, 253, 252, 0.98)',
+  '--surface-elevated': '#fcfdfc',
+  '--surface-inset': '#eef4f1',
+  '--app-shell-panel': '#fbfcfb',
+  '--app-shell-panel-muted': '#f0f5f2',
+  '--app-shell-border': 'rgba(148, 163, 184, 0.26)',
+  '--app-shell-muted': '#4d6175',
+  '--muted-foreground': '#607286',
+  '--tenant-accent-soft': 'color-mix(in srgb, var(--accent) 18%, #ffffff 82%)',
+  '--tenant-admin-soft-border': 'rgba(148, 163, 184, 0.24)',
+  '--tenant-admin-section-surface': 'rgba(248, 251, 249, 0.96)',
+  '--tenant-admin-soft-surface': '#f1f5f2',
+  '--tenant-admin-detail-surface': '#f7faf8',
+  '--tenant-admin-tag-surface': 'rgba(255, 255, 255, 0.72)',
+  '--tenant-admin-selected-border': 'color-mix(in srgb, var(--accent) 32%, rgba(15, 23, 42, 0.14))',
+  '--tenant-admin-selected-surface': 'color-mix(in srgb, var(--accent) 12%, #f7fbf8)',
+  '--tenant-admin-supporting-text': '#4a6073'
+} as CSSProperties;
+
+const panelCopyClass = 'text-sm leading-6 text-[color:var(--tenant-admin-supporting-text)]';
+const compactPanelCopyClass = 'text-[13px] leading-5 text-[color:var(--tenant-admin-supporting-text)]';
+const sectionPanelClass =
+  'ui-surface-muted space-y-4 border-[color:var(--tenant-admin-soft-border)] bg-[color:var(--tenant-admin-soft-surface)] p-4 text-[color:var(--app-shell-text)] shadow-[0_18px_30px_-28px_rgba(15,23,42,0.18)] lg:p-5';
+const detailPanelClass =
+  'space-y-4 rounded-[1.5rem] border border-[color:var(--tenant-admin-soft-border)] bg-[color:var(--tenant-admin-detail-surface)] px-4 py-4 text-sm text-[color:var(--app-shell-text)] shadow-[inset_0_1px_0_rgba(255,255,255,0.74)]';
+const surfaceToggleClass =
+  'ui-surface-panel flex items-center gap-3 border-[color:var(--tenant-admin-soft-border)] bg-[color:var(--tenant-admin-detail-surface)] px-4 py-3 text-sm text-[color:var(--app-shell-text)]';
+const surfaceTogglePillClass =
+  'ui-surface-panel inline-flex items-center gap-2 rounded-full border-[color:var(--tenant-admin-soft-border)] bg-[color:var(--tenant-admin-detail-surface)] px-3 py-2 text-sm text-[color:var(--app-shell-text)]';
+const contractReviewCardClass =
+  'rounded-2xl border border-[color:var(--tenant-admin-soft-border)] bg-[color:var(--tenant-admin-detail-surface)] p-4 shadow-[0_16px_28px_-28px_rgba(15,23,42,0.18)]';
+const packageMetaClass =
+  'rounded-full border border-[color:var(--tenant-admin-soft-border)] bg-[color:var(--tenant-admin-tag-surface)] px-2.5 py-1 text-[11px] font-semibold text-[color:var(--tenant-admin-supporting-text)]';
+const selectedPackageBadgeClass =
+  'rounded-full border border-[color:var(--tenant-admin-selected-border)] bg-white/84 px-2.5 py-1 text-[11px] font-semibold text-[color:var(--app-shell-heading)]';
 
 function resolvePlanDetails(planCode?: string) {
   const normalizedCode = (planCode ?? 'PETSHOP').toUpperCase() as keyof typeof PLAN_DETAILS;
@@ -800,7 +834,7 @@ export default function TenantsPage() {
           Workspace administration is restricted to platform owner administrators.
         </div>
       ) : (
-        <div className={sharedPageStackClass}>
+        <div className={sharedPageStackClass} style={tenantAdminToneStyle}>
           <PageTitle
             eyebrow="Platform administration"
             title="Workspaces"
@@ -824,6 +858,7 @@ export default function TenantsPage() {
           <PageSection
             title={editingTenantId ? 'Update workspace' : 'Create workspace'}
             description="Core platform access stays active by default. Package contracts and branding remain controlled here."
+            className="border-[color:var(--tenant-admin-soft-border)] bg-[color:var(--tenant-admin-section-surface)] shadow-[0_24px_44px_-36px_rgba(15,23,42,0.2)]"
             actions={editingTenantId ? (
               <button
                 type="button"
@@ -894,7 +929,7 @@ export default function TenantsPage() {
                     </label>
                   </div>
 
-                  <div className="ui-surface-muted space-y-4 p-4 text-[color:var(--app-shell-text)] lg:p-5">
+                  <div className={sectionPanelClass}>
                     <div>
                       <p className="text-sm font-medium text-[color:var(--app-shell-heading)]">Feature entitlements</p>
                       <p className={panelCopyClass}>
@@ -950,7 +985,7 @@ export default function TenantsPage() {
                     </div>
                   </div>
 
-                  <div className="ui-surface-muted space-y-4 p-4 text-[color:var(--app-shell-text)] lg:p-5">
+                  <div className={sectionPanelClass}>
                     <div>
                       <p className="text-sm font-medium text-[color:var(--app-shell-heading)]">Contracted modules</p>
                       <p className={panelCopyClass}>
@@ -997,7 +1032,7 @@ export default function TenantsPage() {
                 </div>
 
                 <div className="space-y-5">
-                  <div className="ui-surface-muted space-y-4 p-4 text-[color:var(--app-shell-text)] lg:p-5">
+                  <div className={sectionPanelClass}>
                     <div className="space-y-3">
                       <div>
                         <p className={sharedInputLabelClass}>Package</p>
@@ -1017,19 +1052,20 @@ export default function TenantsPage() {
                               key={code}
                               htmlFor={`tenant-plan-${code}`}
                               className={[
-                                'flex cursor-pointer flex-col gap-3 rounded-2xl border px-4 py-4 transition',
+                                'flex cursor-pointer flex-col gap-3 rounded-2xl border px-4 py-4 transition-colors duration-200',
                                 selected
-                                  ? 'border-[color:var(--tenant-accent)] bg-[color:var(--tenant-accent-soft)] shadow-[0_18px_34px_-28px_rgba(15,23,42,0.18)]'
-                                  : 'border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-panel)] hover:border-[color:var(--tenant-accent)]/40 hover:bg-[color:var(--app-shell-panel-muted)]'
+                                  ? 'border-[color:var(--tenant-admin-selected-border)] bg-[color:var(--tenant-admin-selected-surface)] shadow-[0_20px_36px_-30px_rgba(15,23,42,0.22)]'
+                                  : 'border-[color:var(--tenant-admin-soft-border)] bg-[color:var(--tenant-admin-tag-surface)] shadow-[0_12px_22px_-24px_rgba(15,23,42,0.12)] hover:border-[color:var(--tenant-accent)]/30 hover:bg-white'
                               ].join(' ')}
                             >
                               <div className="flex items-start justify-between gap-3">
                                 <div className="space-y-1">
                                   <div className="flex flex-wrap items-center gap-2">
                                     <span className="text-sm font-semibold text-[color:var(--app-shell-heading)]">{code}</span>
-                                    <span className="rounded-full border border-[color:var(--app-shell-border)] bg-white/80 px-2 py-0.5 text-[11px] font-semibold text-[color:var(--app-shell-text)]">
+                                    <span className={selected ? selectedPackageBadgeClass : packageMetaClass}>
                                       {plan.label}
                                     </span>
+                                    {selected ? <span className={selectedPackageBadgeClass}>Selected</span> : null}
                                   </div>
                                   <p className={panelCopyClass}>{plan.description}</p>
                                 </div>
@@ -1041,7 +1077,7 @@ export default function TenantsPage() {
                                   value={code}
                                   checked={selected}
                                   onChange={(event) => setForm((current) => ({ ...current, planCode: event.target.value }))}
-                                  className="mt-1 h-4 w-4 border-[color:var(--tenant-accent)] text-[color:var(--tenant-accent)]"
+                                  className="mt-1 h-4 w-4 border-[color:var(--tenant-admin-selected-border)] text-[color:var(--tenant-accent)]"
                                 />
                               </div>
 
@@ -1057,7 +1093,7 @@ export default function TenantsPage() {
                                 {plan.defaultEntitlements.map((featureKey) => (
                                   <span
                                     key={`${code}-feature-${featureKey}`}
-                                    className="inline-flex items-center rounded-full border border-[color:var(--tenant-accent)] bg-white/85 px-2.5 py-1 text-[11px] font-semibold text-[color:var(--app-shell-heading)]"
+                                    className="inline-flex items-center rounded-full border border-[color:var(--tenant-admin-selected-border)] bg-[color:var(--tenant-admin-tag-surface)] px-2.5 py-1 text-[11px] font-semibold text-[color:var(--app-shell-heading)]"
                                   >
                                     {featureKey}
                                   </span>
@@ -1265,7 +1301,7 @@ export default function TenantsPage() {
                           </label>
                         </div>
 
-                        <label className="flex items-center gap-3 rounded-2xl border border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-panel-muted)] px-4 py-3 text-sm text-[color:var(--app-shell-text)]">
+                        <label className={surfaceToggleClass}>
                           <input
                             type="checkbox"
                             checked={form.requirePasswordChangeOnFirstAccess}
@@ -1281,7 +1317,7 @@ export default function TenantsPage() {
                     ) : null}
                   </div>
 
-                  <div className="ui-surface-muted space-y-4 p-4 text-[color:var(--app-shell-text)] lg:p-5">
+                  <div className={sectionPanelClass}>
                     <div>
                       <p className="text-sm font-medium text-[color:var(--app-shell-heading)]">Branding defaults</p>
                       <p className={panelCopyClass}>
@@ -1361,7 +1397,7 @@ export default function TenantsPage() {
                       </select>
                     </label>
 
-                    <label className="ui-surface-panel flex items-center gap-3 px-4 py-3 text-sm text-[color:var(--app-shell-text)]">
+                    <label className={surfaceToggleClass}>
                       <input
                         type="checkbox"
                         checked={form.allowUserThemeOverride}
@@ -1380,7 +1416,7 @@ export default function TenantsPage() {
 
               {editingTenantId ? (
                 <div className="grid gap-4 xl:grid-cols-2">
-                  <section className="ui-surface-muted space-y-4 p-4 text-[color:var(--app-shell-text)] lg:p-5 xl:col-span-2">
+                  <section className={`${sectionPanelClass} xl:col-span-2`}>
                     <div>
                       <p className="text-sm font-medium text-[color:var(--app-shell-heading)]">Contract review</p>
                       <p className={panelCopyClass}>
@@ -1389,7 +1425,7 @@ export default function TenantsPage() {
                     </div>
 
                     <div className="grid gap-4 xl:grid-cols-3">
-                      <div className="rounded-2xl border border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-panel)] p-4">
+                      <div className={contractReviewCardClass}>
                         <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--app-shell-muted)]">
                           Package baseline
                         </p>
@@ -1418,7 +1454,7 @@ export default function TenantsPage() {
                         </div>
                       </div>
 
-                      <div className="rounded-2xl border border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-panel)] p-4">
+                      <div className={contractReviewCardClass}>
                         <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--app-shell-muted)]">
                           Manual module overrides
                         </p>
@@ -1460,7 +1496,7 @@ export default function TenantsPage() {
                         </div>
                       </div>
 
-                      <div className="rounded-2xl border border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-panel)] p-4">
+                      <div className={contractReviewCardClass}>
                         <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--app-shell-muted)]">
                           Effective access
                         </p>
@@ -1494,7 +1530,7 @@ export default function TenantsPage() {
                     </div>
                   </section>
 
-                  <section className="ui-surface-muted space-y-3 p-4 text-[color:var(--app-shell-text)] lg:p-5">
+                  <section className={`${sectionPanelClass} space-y-3`}>
                     <div>
                       <p className="text-sm font-medium text-[color:var(--app-shell-heading)]">Feature flags</p>
                       <p className={panelCopyClass}>
@@ -1515,7 +1551,7 @@ export default function TenantsPage() {
                           return (
                             <div
                               key={featureFlag.key}
-                              className="flex flex-col gap-3 rounded-2xl border border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-panel)] p-4"
+                              className="flex flex-col gap-3 rounded-2xl border border-[color:var(--tenant-admin-soft-border)] bg-[color:var(--tenant-admin-detail-surface)] p-4 shadow-[0_14px_24px_-24px_rgba(15,23,42,0.16)]"
                             >
                               <div className="flex items-center justify-between gap-3">
                                 <div>
@@ -1530,7 +1566,7 @@ export default function TenantsPage() {
                               </div>
 
                               <div className="flex flex-wrap items-center gap-3">
-                                <label className="ui-surface-panel inline-flex items-center gap-2 rounded-full px-3 py-2 text-sm text-[color:var(--app-shell-text)]">
+                                <label className={surfaceTogglePillClass}>
                                   <input
                                     type="checkbox"
                                     checked={featureFlag.enabled}
@@ -1562,7 +1598,7 @@ export default function TenantsPage() {
                     )}
                   </section>
 
-                  <section className="ui-surface-muted space-y-3 p-4 text-[color:var(--app-shell-text)] lg:p-5">
+                  <section className={`${sectionPanelClass} space-y-3`}>
                     <div>
                       <p className="text-sm font-medium text-[color:var(--app-shell-heading)]">Usage telemetry</p>
                       <p className={panelCopyClass}>
@@ -1630,7 +1666,7 @@ export default function TenantsPage() {
                     )}
                   </section>
 
-                  <section className="ui-surface-muted space-y-4 p-4 text-[color:var(--app-shell-text)] lg:p-5 xl:col-span-2">
+                  <section className={`${sectionPanelClass} xl:col-span-2`}>
                     <div>
                       <p className="text-sm font-medium text-[color:var(--app-shell-heading)]">Support impersonation</p>
                       <p className={panelCopyClass}>
