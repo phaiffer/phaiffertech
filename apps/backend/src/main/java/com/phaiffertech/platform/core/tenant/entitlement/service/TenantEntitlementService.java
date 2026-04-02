@@ -5,6 +5,7 @@ import com.phaiffertech.platform.core.tenant.entitlement.repository.TenantFeatur
 import com.phaiffertech.platform.core.tenant.plan.PlanDefinition;
 import com.phaiffertech.platform.core.tenant.plan.PlanResolutionService;
 import com.phaiffertech.platform.core.tenant.service.TenantContractGrantSource;
+import com.phaiffertech.platform.shared.security.LocalDevelopmentAdministratorAccessService;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.LinkedHashSet;
@@ -23,13 +24,16 @@ public class TenantEntitlementService {
 
     private final TenantFeatureEntitlementRepository tenantFeatureEntitlementRepository;
     private final PlanResolutionService planResolutionService;
+    private final LocalDevelopmentAdministratorAccessService localDevelopmentAdministratorAccessService;
 
     public TenantEntitlementService(
             TenantFeatureEntitlementRepository tenantFeatureEntitlementRepository,
-            PlanResolutionService planResolutionService
+            PlanResolutionService planResolutionService,
+            LocalDevelopmentAdministratorAccessService localDevelopmentAdministratorAccessService
     ) {
         this.tenantFeatureEntitlementRepository = tenantFeatureEntitlementRepository;
         this.planResolutionService = planResolutionService;
+        this.localDevelopmentAdministratorAccessService = localDevelopmentAdministratorAccessService;
     }
 
     @Transactional
@@ -85,6 +89,10 @@ public class TenantEntitlementService {
             return true;
         }
 
+        if (localDevelopmentAdministratorAccessService.isEnabledForCurrentUser()) {
+            return true;
+        }
+
         return tenantFeatureEntitlementRepository.findAllByTenantIdAndDeletedAtIsNullOrderByFeatureKeyAsc(tenantId).stream()
                 .filter(TenantFeatureEntitlement::isEnabled)
                 .map(TenantFeatureEntitlement::getFeatureKey)
@@ -95,13 +103,25 @@ public class TenantEntitlementService {
 
     @Transactional(readOnly = true)
     public List<String> resolveEffectiveEntitlements(UUID tenantId) {
-        return tenantFeatureEntitlementRepository.findAllByTenantIdAndDeletedAtIsNullOrderByFeatureKeyAsc(tenantId).stream()
+        return resolveEffectiveEntitlements(tenantId, null);
+    }
+
+    @Transactional(readOnly = true)
+    public List<String> resolveEffectiveEntitlements(UUID tenantId, String email) {
+        List<String> effectiveEntitlements = tenantFeatureEntitlementRepository.findAllByTenantIdAndDeletedAtIsNullOrderByFeatureKeyAsc(tenantId).stream()
                 .filter(TenantFeatureEntitlement::isEnabled)
                 .map(TenantFeatureEntitlement::getFeatureKey)
                 .map(featureKey -> featureKey.toLowerCase(Locale.ROOT))
                 .distinct()
                 .sorted()
                 .toList();
+
+        if (!localDevelopmentAdministratorAccessService.isEnabledForEmail(email)
+                && !localDevelopmentAdministratorAccessService.isEnabledForCurrentUser()) {
+            return effectiveEntitlements;
+        }
+
+        return withWildcardAccess(effectiveEntitlements);
     }
 
     @Transactional(readOnly = true)
@@ -180,5 +200,14 @@ public class TenantEntitlementService {
 
         String namespace = grantedEntitlement.substring(0, grantedEntitlement.length() - suffix.length());
         return requiredEntitlement.startsWith(namespace + ".");
+    }
+
+    private List<String> withWildcardAccess(List<String> effectiveEntitlements) {
+        Set<String> grants = new LinkedHashSet<>(effectiveEntitlements);
+        grants.add("*");
+        return grants.stream()
+                .map(featureKey -> featureKey.toLowerCase(Locale.ROOT))
+                .sorted()
+                .toList();
     }
 }

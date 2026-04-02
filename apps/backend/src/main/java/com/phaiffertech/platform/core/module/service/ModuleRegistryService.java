@@ -3,6 +3,7 @@ package com.phaiffertech.platform.core.module.service;
 import com.phaiffertech.platform.core.module.domain.ModuleDefinition;
 import com.phaiffertech.platform.core.module.repository.ModuleDefinitionRepository;
 import com.phaiffertech.platform.core.module.dto.ModuleViewResponse;
+import com.phaiffertech.platform.shared.security.LocalDevelopmentAdministratorAccessService;
 import com.phaiffertech.platform.shared.tenancy.TenantContext;
 import java.util.List;
 import java.util.UUID;
@@ -15,27 +16,37 @@ public class ModuleRegistryService {
     private final ModuleDefinitionRepository moduleDefinitionRepository;
     private final ModuleAccessService moduleAccessService;
     private final ModuleCatalogCacheService moduleCatalogCacheService;
+    private final LocalDevelopmentAdministratorAccessService localDevelopmentAdministratorAccessService;
 
     public ModuleRegistryService(
             ModuleDefinitionRepository moduleDefinitionRepository,
             ModuleAccessService moduleAccessService,
-            ModuleCatalogCacheService moduleCatalogCacheService
+            ModuleCatalogCacheService moduleCatalogCacheService,
+            LocalDevelopmentAdministratorAccessService localDevelopmentAdministratorAccessService
     ) {
         this.moduleDefinitionRepository = moduleDefinitionRepository;
         this.moduleAccessService = moduleAccessService;
         this.moduleCatalogCacheService = moduleCatalogCacheService;
+        this.localDevelopmentAdministratorAccessService = localDevelopmentAdministratorAccessService;
     }
 
     @Transactional(readOnly = true)
     public List<ModuleViewResponse> listModulesForTenant() {
         UUID tenantId = TenantContext.getRequiredTenantId();
+        if (localDevelopmentAdministratorAccessService.isEnabledForCurrentUser()) {
+            return loadModulesForTenant(tenantId);
+        }
 
         return moduleCatalogCacheService.getOrLoad(
                 tenantId,
-                () -> moduleDefinitionRepository.findAllByActiveTrueAndDeletedAtIsNullOrderByNameAsc().stream()
-                        .map(definition -> toResponse(definition, moduleAccessService.evaluate(tenantId, definition.getCode())))
-                        .toList()
+                () -> loadModulesForTenant(tenantId)
         );
+    }
+
+    private List<ModuleViewResponse> loadModulesForTenant(UUID tenantId) {
+        return moduleDefinitionRepository.findAllByActiveTrueAndDeletedAtIsNullOrderByNameAsc().stream()
+                .map(definition -> toResponse(definition, moduleAccessService.evaluate(tenantId, definition.getCode())))
+                .toList();
     }
 
     private ModuleViewResponse toResponse(ModuleDefinition definition, ModuleAccessStatus status) {

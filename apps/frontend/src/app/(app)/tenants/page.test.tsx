@@ -180,8 +180,72 @@ describe('TenantsPage access model', () => {
 
     expect(screen.getByText('Package defines default modules and features.')).toBeInTheDocument();
     expect(screen.getAllByText('PET').length).toBeGreaterThan(0);
-    expect(screen.getByText('pet.retail')).toBeInTheDocument();
+    expect(screen.getAllByText('pet.retail').length).toBeGreaterThan(0);
     expect(screen.getByText('Included by package')).toBeInTheDocument();
+  });
+
+  it('shows every supported commercial package and keeps the preview aligned with the selected option', async () => {
+    vi.mocked(tenantService.list).mockResolvedValue({
+      items: [],
+      totalItems: 0,
+      totalPages: 0,
+      page: 0,
+      size: 20
+    });
+
+    render(<TenantsPage />);
+
+    await waitFor(() => {
+      expect(tenantService.list).toHaveBeenCalledTimes(1);
+    });
+
+    ['PETSHOP', 'BANHO_TOSA', 'CLINICA_VETERINARIA', 'PETSHOP_BANHO_TOSA', 'BANHO_TOSA_CLINICA'].forEach((code) => {
+      expect(screen.getAllByText(code).length).toBeGreaterThan(0);
+    });
+
+    const packagePreview = screen.getByText(/Selected package:/);
+    expect(packagePreview).toHaveTextContent('PETSHOP');
+
+    const hybridPackage = screen.getByRole('radio', { name: /BANHO_TOSA_CLINICA/i });
+    fireEvent.click(hybridPackage);
+
+    expect(hybridPackage).toBeChecked();
+    expect(packagePreview).toHaveTextContent('BANHO_TOSA_CLINICA');
+  });
+
+  it('keeps the initial admin credential fields stable and protected from autofill interference', async () => {
+    vi.mocked(tenantService.list).mockResolvedValue({
+      items: [],
+      totalItems: 0,
+      totalPages: 0,
+      page: 0,
+      size: 20
+    });
+
+    render(<TenantsPage />);
+
+    await waitFor(() => {
+      expect(tenantService.list).toHaveBeenCalledTimes(1);
+    });
+
+    const emailInput = screen.getByLabelText('Initial admin email');
+    const passwordInput = screen.getByLabelText('Temporary password');
+
+    expect(emailInput).toHaveAttribute('name', 'initialAdminEmail');
+    expect(emailInput).toHaveAttribute('autocomplete', 'section-workspace-admin email');
+    expect(emailInput).toHaveAttribute('data-lpignore', 'true');
+    expect(emailInput).toHaveAttribute('data-1p-ignore', 'true');
+    expect(passwordInput).toHaveAttribute('name', 'temporaryPassword');
+    expect(passwordInput).toHaveAttribute('autocomplete', 'section-workspace-admin new-password');
+    expect(passwordInput).toHaveAttribute('data-lpignore', 'true');
+    expect(passwordInput).toHaveAttribute('data-1p-ignore', 'true');
+
+    fireEvent.change(emailInput, { target: { value: 'a' } });
+    expect(screen.getByLabelText('Initial admin email')).toBe(emailInput);
+
+    fireEvent.change(emailInput, { target: { value: 'admin@tenant.test' } });
+    expect(screen.getByLabelText('Initial admin email')).toBe(emailInput);
+    expect(emailInput).toHaveValue('admin@tenant.test');
   });
 
   it('submits tenant creation with initial admin access details', async () => {
