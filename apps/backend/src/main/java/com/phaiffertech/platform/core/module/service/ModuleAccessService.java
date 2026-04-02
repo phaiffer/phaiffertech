@@ -5,6 +5,7 @@ import com.phaiffertech.platform.core.module.domain.ModuleDefinition;
 import com.phaiffertech.platform.core.module.featureflag.service.FeatureFlagService;
 import com.phaiffertech.platform.core.module.repository.ModuleDefinitionRepository;
 import com.phaiffertech.platform.core.module.repository.TenantModuleRepository;
+import com.phaiffertech.platform.shared.security.LocalDevelopmentAdministratorAccessService;
 import java.util.Locale;
 import java.util.Optional;
 import java.util.UUID;
@@ -17,15 +18,18 @@ public class ModuleAccessService {
     private final ModuleDefinitionRepository moduleDefinitionRepository;
     private final TenantModuleRepository tenantModuleRepository;
     private final FeatureFlagService featureFlagService;
+    private final LocalDevelopmentAdministratorAccessService localDevelopmentAdministratorAccessService;
 
     public ModuleAccessService(
             ModuleDefinitionRepository moduleDefinitionRepository,
             TenantModuleRepository tenantModuleRepository,
-            FeatureFlagService featureFlagService
+            FeatureFlagService featureFlagService,
+            LocalDevelopmentAdministratorAccessService localDevelopmentAdministratorAccessService
     ) {
         this.moduleDefinitionRepository = moduleDefinitionRepository;
         this.tenantModuleRepository = tenantModuleRepository;
         this.featureFlagService = featureFlagService;
+        this.localDevelopmentAdministratorAccessService = localDevelopmentAdministratorAccessService;
     }
 
     @Transactional(readOnly = true)
@@ -45,6 +49,10 @@ public class ModuleAccessService {
 
     @Transactional(readOnly = true)
     public ModuleAccessStatus evaluate(UUID tenantId, String moduleCode) {
+        if (localDevelopmentAdministratorAccessService.isEnabledForCurrentUser()) {
+            return new ModuleAccessStatus(moduleCode, true, true, true);
+        }
+
         Optional<ModuleDefinition> moduleDefinition = moduleDefinitionRepository
                 .findByCodeAndActiveTrueAndDeletedAtIsNull(moduleCode);
 

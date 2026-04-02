@@ -26,6 +26,7 @@ import com.phaiffertech.platform.shared.security.AuthenticatedUser;
 import com.phaiffertech.platform.shared.security.CurrentUserService;
 import com.phaiffertech.platform.shared.security.JwtProperties;
 import com.phaiffertech.platform.shared.security.JwtService;
+import com.phaiffertech.platform.shared.security.LocalDevelopmentAdministratorAccessService;
 import com.phaiffertech.platform.shared.usage.UsageTelemetryService;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -55,6 +56,7 @@ public class AuthService {
     private final FeatureFlagService featureFlagService;
     private final TenantEntitlementService tenantEntitlementService;
     private final DemoAccessProperties demoAccessProperties;
+    private final LocalDevelopmentAdministratorAccessService localDevelopmentAdministratorAccessService;
 
     public AuthService(
             TenantRepository tenantRepository,
@@ -72,7 +74,8 @@ public class AuthService {
             UsageTelemetryService usageTelemetryService,
             FeatureFlagService featureFlagService,
             TenantEntitlementService tenantEntitlementService,
-            DemoAccessProperties demoAccessProperties
+            DemoAccessProperties demoAccessProperties,
+            LocalDevelopmentAdministratorAccessService localDevelopmentAdministratorAccessService
     ) {
         this.tenantRepository = tenantRepository;
         this.userRepository = userRepository;
@@ -90,6 +93,7 @@ public class AuthService {
         this.featureFlagService = featureFlagService;
         this.tenantEntitlementService = tenantEntitlementService;
         this.demoAccessProperties = demoAccessProperties;
+        this.localDevelopmentAdministratorAccessService = localDevelopmentAdministratorAccessService;
     }
 
     @Transactional
@@ -129,7 +133,7 @@ public class AuthService {
                     platformMetricsService.recordAuthenticationAttempt(false);
                     return new ResourceNotFoundException("Tenant not found.");
                 });
-        assertTenantAllowsLogin(tenant);
+        assertTenantAllowsLogin(tenant, request.email());
 
         User user = userRepository.findByEmailIgnoreCase(request.email())
                 .orElseThrow(() -> {
@@ -295,7 +299,7 @@ public class AuthService {
                 user,
                 authenticatedUser,
                 tenant,
-                tenantEntitlementService.resolveEffectiveEntitlements(tenant.getId()),
+                tenantEntitlementService.resolveEffectiveEntitlements(tenant.getId(), authenticatedUser.email()),
                 impersonation
         );
     }
@@ -317,7 +321,7 @@ public class AuthService {
                 user,
                 principal,
                 tenant,
-                tenantEntitlementService.resolveEffectiveEntitlements(tenant.getId()),
+                tenantEntitlementService.resolveEffectiveEntitlements(tenant.getId(), principal.email()),
                 resolveImpersonationContext(principal)
         );
 
@@ -357,7 +361,11 @@ public class AuthService {
         refreshTokenRepository.saveAll(activeTokens);
     }
 
-    private void assertTenantAllowsLogin(Tenant tenant) {
+    private void assertTenantAllowsLogin(Tenant tenant, String email) {
+        if (localDevelopmentAdministratorAccessService.isEnabledForEmail(email)) {
+            return;
+        }
+
         LocalDate currentDate = LocalDate.now();
         TenantCommercialStatus commercialStatus = tenant.getCommercialStatus();
 

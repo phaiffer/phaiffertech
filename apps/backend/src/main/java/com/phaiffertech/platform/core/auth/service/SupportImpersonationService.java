@@ -257,7 +257,7 @@ public class SupportImpersonationService {
                 user,
                 principal,
                 tenant,
-                tenantEntitlementService.resolveEffectiveEntitlements(tenant.getId()),
+                tenantEntitlementService.resolveEffectiveEntitlements(tenant.getId(), principal.email()),
                 impersonation
         );
 
