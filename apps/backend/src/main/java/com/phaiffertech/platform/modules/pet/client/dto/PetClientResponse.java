@@ -9,6 +9,7 @@ public record PetClientResponse(
         String name,
         String email,
         String phone,
+        String documentType,
         String document,
         String address,
         String status,

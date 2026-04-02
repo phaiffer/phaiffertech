@@ -138,6 +138,8 @@ class CrmActivityIntegrationTest extends AbstractIntegrationTest {
     private String createPetClient(AuthSession session, String marker) {
         ResponseEntity<JsonNode> response = post("/pet/clients", Map.of(
                 "name", "Pet Activity " + marker,
+                "documentType", "RG",
+                "document", "ACT-" + marker,
                 "status", "ACTIVE"
         ), session);
         return requireBody(response).path("data").path("id").asText();

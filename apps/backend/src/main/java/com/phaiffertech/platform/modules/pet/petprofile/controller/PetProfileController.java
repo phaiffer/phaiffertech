@@ -25,7 +25,12 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping({"/api/v1/pet/pets", "/api/v1/pet/profiles"})
-@RequirePermission(entitlement = TenantEntitlementKeys.PET_VETERINARY)
+@RequirePermission(anyEntitlements = {
+        TenantEntitlementKeys.PET_AESTHETICS,
+        TenantEntitlementKeys.PET_CLINIC,
+        TenantEntitlementKeys.PET_RETAIL,
+        TenantEntitlementKeys.PET_VETERINARY
+})
 public class PetProfileController {
 
     private final PetProfileService service;

@@ -77,6 +77,8 @@ class SaasOperationalFoundationsIntegrationTest extends AbstractIntegrationTest 
 
         ResponseEntity<JsonNode> createResponse = post("/pet/clients", Map.of(
                 "name", "Usage Telemetry Client",
+                "documentType", "RG",
+                "document", "USAGE-" + session.tenantId().substring(0, 8),
                 "status", "ACTIVE"
         ), session);
         assertEquals(200, createResponse.getStatusCode().value());
@@ -145,6 +147,8 @@ class SaasOperationalFoundationsIntegrationTest extends AbstractIntegrationTest 
 
         ResponseEntity<JsonNode> createResponse = post("/pet/clients", Map.of(
                 "name", "Usage Visibility Client",
+                "documentType", "RG",
+                "document", "VIS-" + tenantSession.tenantId().substring(0, 8),
                 "status", "ACTIVE"
         ), tenantSession);
         assertEquals(200, createResponse.getStatusCode().value());

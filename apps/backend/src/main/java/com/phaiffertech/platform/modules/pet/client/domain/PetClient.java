@@ -28,6 +28,9 @@ public class PetClient extends BaseTenantEntity {
     @Column(name = "document", length = 60)
     private String document;
 
+    @Column(name = "document_type", length = 20)
+    private String documentType;
+
     @Column(name = "address", length = 255)
     private String address;
 
@@ -76,6 +79,14 @@ public class PetClient extends BaseTenantEntity {
 
     public String getAddress() {
         return address;
+    }
+
+    public String getDocumentType() {
+        return documentType;
+    }
+
+    public void setDocumentType(String documentType) {
+        this.documentType = documentType;
     }
 
     public void setAddress(String address) {

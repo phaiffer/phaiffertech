@@ -4,6 +4,7 @@ import {
   PetAppointment,
   PetClinicalTimeline,
   PetClient,
+  PetClientDocumentType,
   ClientPlan,
   PetDashboardSummary,
   PetInsightsSummary,
@@ -23,7 +24,8 @@ export type CreatePetClientInput = {
   name: string;
   email?: string;
   phone?: string;
-  document?: string;
+  documentType: PetClientDocumentType;
+  document: string;
   address?: string;
   status?: string;
 };
@@ -32,7 +34,8 @@ export type UpdatePetClientInput = {
   name: string;
   email?: string;
   phone?: string;
-  document?: string;
+  documentType: PetClientDocumentType;
+  document: string;
   address?: string;
   status: string;
 };

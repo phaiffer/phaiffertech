@@ -17,11 +17,19 @@ import {
 import { PermissionGuard } from '@/shared/auth/PermissionGuard';
 import { StatusBadge } from '@/shared/dashboard/status-badge';
 import { ApiClientError } from '@/shared/lib/http';
+import {
+  formatPetClientDocumentDisplay,
+  formatPetClientDocumentInput,
+  inferPetClientDocumentType,
+  isValidPetClientDocument,
+  normalizePetClientDocumentNumber,
+  normalizePetClientDocumentType
+} from '@/shared/lib/pet-client-document';
 import { formatPhoneDisplay, maskPhoneInput, stripPhoneMask } from '@/shared/lib/phone';
 import { resolvePageItems, resolveTotalItems } from '@/shared/lib/pagination';
 import { petService } from '@/shared/services/pet-service';
 import type { PageResponse } from '@/shared/types/common';
-import type { PetClient } from '@/shared/types/pet';
+import type { PetClient, PetClientDocumentType } from '@/shared/types/pet';
 import { ConfirmDialog } from '@/shared/ui/confirm-dialog';
 import { DataTable, type DataTableColumn } from '@/shared/ui/data-table';
 import { FormInput } from '@/shared/ui/form-input';
@@ -46,6 +54,12 @@ const statusOptions = [
 const formStatusOptions = [
   { value: 'ACTIVE', label: 'Ativo' },
   { value: 'INACTIVE', label: 'Inativo' }
+];
+
+const documentTypeOptions = [
+  { value: '', label: 'Selecione o tipo' },
+  { value: 'CPF', label: 'CPF' },
+  { value: 'RG', label: 'RG' }
 ];
 
 const initialPage: PageResponse<PetClient> = {
@@ -81,6 +95,7 @@ export function PetClientsPage({ initialView = 'list' }: PetClientsPageProps) {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
+  const [documentType, setDocumentType] = useState<PetClientDocumentType | ''>('');
   const [document, setDocument] = useState('');
   const [address, setAddress] = useState('');
   const [status, setStatus] = useState('ACTIVE');
@@ -114,6 +129,7 @@ export function PetClientsPage({ initialView = 'list' }: PetClientsPageProps) {
     setName('');
     setEmail('');
     setPhone('');
+    setDocumentType('');
     setDocument('');
     setAddress('');
     setStatus('ACTIVE');
@@ -131,16 +147,24 @@ export function PetClientsPage({ initialView = 'list' }: PetClientsPageProps) {
   }, [isCreateRoute]);
 
   function beginEdit(client: PetClient) {
+    const resolvedDocumentType = inferPetClientDocumentType(client.documentType, client.document);
     setEditingId(client.id);
     setName(client.name ?? client.fullName ?? '');
     setEmail(client.email ?? '');
     setPhone(client.phone ? formatPhoneDisplay(client.phone) : '');
-    setDocument(client.document ?? '');
+    setDocumentType(resolvedDocumentType);
+    setDocument(formatPetClientDocumentInput(resolvedDocumentType, client.document ?? ''));
     setAddress(client.address ?? '');
     setStatus(client.status);
     setSuccess(null);
     setError(null);
     setIsEditorOpen(true);
+  }
+
+  function handleDocumentTypeChange(value: string) {
+    const nextDocumentType = normalizePetClientDocumentType(value);
+    setDocumentType(nextDocumentType);
+    setDocument((currentDocument) => formatPetClientDocumentInput(nextDocumentType, currentDocument));
   }
 
   function closeEditor() {
@@ -161,13 +185,39 @@ export function PetClientsPage({ initialView = 'list' }: PetClientsPageProps) {
     setError(null);
     setSuccess(null);
 
+    const normalizedDocumentType = normalizePetClientDocumentType(documentType);
+    const normalizedDocument = normalizePetClientDocumentNumber(normalizedDocumentType, document);
+
+    if (!normalizedDocumentType) {
+      setSubmitting(false);
+      setError('Selecione o tipo de documento.');
+      return;
+    }
+
+    if (!normalizedDocument) {
+      setSubmitting(false);
+      setError('Informe o numero do documento.');
+      return;
+    }
+
+    if (!isValidPetClientDocument(normalizedDocumentType, normalizedDocument)) {
+      setSubmitting(false);
+      setError(
+        normalizedDocumentType === 'CPF'
+          ? 'Informe um CPF valido.'
+          : 'Informe um RG valido.'
+      );
+      return;
+    }
+
     try {
       if (editingId) {
         await petService.updateClient(editingId, {
           name,
           email: email || undefined,
           phone: stripPhoneMask(phone) || undefined,
-          document: document || undefined,
+          documentType: normalizedDocumentType,
+          document: normalizedDocument,
           address: address || undefined,
           status
         });
@@ -178,7 +228,8 @@ export function PetClientsPage({ initialView = 'list' }: PetClientsPageProps) {
           name,
           email: email || undefined,
           phone: stripPhoneMask(phone) || undefined,
-          document: document || undefined,
+          documentType: normalizedDocumentType,
+          document: normalizedDocument,
           address: address || undefined,
           status
         });
@@ -229,12 +280,21 @@ export function PetClientsPage({ initialView = 'list' }: PetClientsPageProps) {
     {
       key: 'profile',
       header: 'Cliente',
-      render: (client) => (
-        <div>
-          <p className="font-medium text-slate-900">{client.name ?? client.fullName ?? '-'}</p>
-          <p className={`mt-1 ${sharedCompactTextClass}`}>Documento: {client.document ?? 'Nao informado'}</p>
-        </div>
-      )
+      render: (client) => {
+        const resolvedDocumentType = inferPetClientDocumentType(client.documentType, client.document);
+        const formattedDocument = formatPetClientDocumentDisplay(client.documentType, client.document);
+
+        return (
+          <div>
+            <p className="font-medium text-slate-900">{client.name ?? client.fullName ?? '-'}</p>
+            <p className={`mt-1 ${sharedCompactTextClass}`}>
+              Documento: {client.document
+                ? [resolvedDocumentType, formattedDocument].filter(Boolean).join(' ')
+                : 'Nao informado'}
+            </p>
+          </div>
+        );
+      }
     },
     {
       key: 'contact',
@@ -417,12 +477,32 @@ export function PetClientsPage({ initialView = 'list' }: PetClientsPageProps) {
                     data-lpignore="true"
                     data-1p-ignore="true"
                   />
+                  <FormSelect
+                    label="Tipo de documento"
+                    value={documentType}
+                    options={documentTypeOptions}
+                    onChange={handleDocumentTypeChange}
+                  />
                   <FormInput
                     id="client-document"
                     name="document"
                     label="Documento"
                     value={document}
-                    onChange={setDocument}
+                    onChange={(value) => setDocument(formatPetClientDocumentInput(documentType, value))}
+                    placeholder={
+                      documentType === 'CPF'
+                        ? '000.000.000-00'
+                        : documentType === 'RG'
+                          ? 'MG 12.345.678'
+                          : 'Selecione o tipo antes de informar o numero'
+                    }
+                    description={
+                      documentType === 'CPF'
+                        ? 'Use um CPF valido. O campo aplica mascara automaticamente.'
+                        : documentType === 'RG'
+                          ? 'RG aceita formato mais flexivel.'
+                          : 'Selecione CPF ou RG antes de informar o documento.'
+                    }
                     autoComplete="off"
                     data-lpignore="true"
                     data-1p-ignore="true"

@@ -124,6 +124,8 @@ class CrmNotesIntegrationTest extends AbstractIntegrationTest {
     private String createPetProfile(AuthSession session, String marker) {
         ResponseEntity<JsonNode> clientResponse = post("/pet/clients", Map.of(
                 "name", "Pet Owner " + marker,
+                "documentType", "RG",
+                "document", "NOTE-" + marker,
                 "status", "ACTIVE"
         ), session);
         String clientId = requireBody(clientResponse).path("data").path("id").asText();

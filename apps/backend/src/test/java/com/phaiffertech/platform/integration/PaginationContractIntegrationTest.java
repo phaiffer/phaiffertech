@@ -28,7 +28,9 @@ class PaginationContractIntegrationTest extends AbstractIntegrationTest {
         ), session);
 
         post("/pet/clients", Map.of(
-                "fullName", "Pet Client " + marker
+                "fullName", "Pet Client " + marker,
+                "documentType", "RG",
+                "document", "DOC-" + marker
         ), session);
 
         post("/iot/devices", Map.of(

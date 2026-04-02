@@ -178,6 +178,8 @@ class CrmTasksIntegrationTest extends AbstractIntegrationTest {
         ResponseEntity<JsonNode> response = post("/pet/clients", Map.of(
                 "name", "Pet Client " + marker,
                 "email", "pet." + marker + "@example.test",
+                "documentType", "RG",
+                "document", "TASK-" + marker,
                 "status", "ACTIVE"
         ), session);
         return requireBody(response).path("data").path("id").asText();

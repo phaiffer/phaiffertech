@@ -66,6 +66,53 @@ class LocalDevelopmentAdminAccessIntegrationTest extends AbstractIntegrationTest
 
         ResponseEntity<JsonNode> dashboardResponse = get("/crm/dashboard/summary", impersonatedSession);
         assertEquals(200, dashboardResponse.getStatusCode().value());
+
+        ResponseEntity<JsonNode> stopResponse = post("/auth/impersonation/stop", null, impersonatedSession);
+        assertEquals(200, stopResponse.getStatusCode().value());
+    }
+
+    @Test
+    void localDevelopmentAdminKeepsPetProfileAccessEvenWithoutTenantEntitlements() {
+        AuthSession platformAdmin = loginAsDefaultAdmin();
+        String targetTenantId = createTenant("local-dev-pet-restricted", "ACTIVE", null);
+
+        ResponseEntity<JsonNode> startResponse = post("/auth/impersonation/start", Map.of(
+                "targetTenantId", targetTenantId,
+                "reason", "Validate unrestricted PetFlow profile access in local development",
+                "durationMinutes", 15
+        ), platformAdmin);
+
+        assertEquals(200, startResponse.getStatusCode().value());
+        JsonNode data = requireBody(startResponse).path("data");
+        JsonNode user = data.path("user");
+
+        AuthSession impersonatedSession = authSession(
+                data.path("accessToken").asText(),
+                platformAdmin.refreshCookie(),
+                user.path("tenantId").asText(),
+                user.path("userId").asText()
+        );
+
+        ResponseEntity<JsonNode> clientResponse = post("/pet/clients", Map.of(
+                "name", "Local Development Owner",
+                "documentType", "RG",
+                "document", "LOCAL-DEV-001",
+                "status", "ACTIVE"
+        ), impersonatedSession);
+
+        assertEquals(200, clientResponse.getStatusCode().value());
+        String clientId = requireBody(clientResponse).path("data").path("id").asText();
+
+        ResponseEntity<JsonNode> petResponse = post("/pet/pets", Map.of(
+                "clientId", clientId,
+                "name", "Local Development Pet",
+                "species", "DOG"
+        ), impersonatedSession);
+
+        assertEquals(200, petResponse.getStatusCode().value());
+
+        ResponseEntity<JsonNode> stopResponse = post("/auth/impersonation/stop", null, impersonatedSession);
+        assertEquals(200, stopResponse.getStatusCode().value());
     }
 
     @Test

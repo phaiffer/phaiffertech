@@ -196,6 +196,52 @@ class ModuleEnablementIntegrationTest extends AbstractIntegrationTest {
     }
 
     @Test
+    void shouldAllowBasicPetProfilesWithoutVeterinaryEntitlement() {
+        AuthSession session = createTenantSessionWithPermissions(
+                "tenant-pet-profile-operational",
+                "tenant-pet-profile-operational@example.test",
+                List.of("pet.client.create", "pet.profile.create", "pet.profile.read", "pet.medical-record.read"),
+                "PET"
+        );
+
+        executeSql(
+                """
+                UPDATE tenant_feature_entitlements
+                SET enabled = FALSE
+                WHERE tenant_id = ?
+                  AND feature_key = 'pet.full'
+                """,
+                session.tenantId()
+        );
+        upsertTenantEntitlement(session.tenantId(), "pet.aesthetics", "MANUAL");
+        upsertTenantEntitlement(session.tenantId(), "pet.retail", "MANUAL");
+
+        ResponseEntity<JsonNode> clientResponse = post("/pet/clients", Map.of(
+                "name", "Operational Owner",
+                "documentType", "RG",
+                "document", "OP-CLIENT-001",
+                "status", "ACTIVE"
+        ), session);
+        assertEquals(200, clientResponse.getStatusCode().value());
+
+        String clientId = requireBody(clientResponse).path("data").path("id").asText();
+
+        ResponseEntity<JsonNode> createPetResponse = post("/pet/pets", Map.of(
+                "clientId", clientId,
+                "name", "Operational Pet",
+                "species", "DOG"
+        ), session);
+        assertEquals(200, createPetResponse.getStatusCode().value());
+
+        ResponseEntity<JsonNode> listProfilesResponse = get("/pet/pets?page=0&size=20", session);
+        ResponseEntity<JsonNode> medicalRecordResponse = get("/pet/medical-records?page=0&size=20", session);
+
+        assertEquals(200, listProfilesResponse.getStatusCode().value());
+        assertEquals(403, medicalRecordResponse.getStatusCode().value());
+        assertTrue(requireBody(medicalRecordResponse).path("message").asText().contains("pet.veterinary"));
+    }
+
+    @Test
     void shouldAllowLegacyPetBasicEntitlementToSatisfyPetSubmoduleChecks() {
         AuthSession session = createTenantSessionWithPermissions(
                 "tenant-pet-basic-compatibility",

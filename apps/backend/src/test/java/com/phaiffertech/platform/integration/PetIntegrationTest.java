@@ -24,12 +24,14 @@ class PetIntegrationTest extends AbstractIntegrationTest {
                 "name", "Client " + marker,
                 "email", "pet." + marker + "@example.test",
                 "phone", "+5511777777777",
+                "documentType", "RG",
                 "document", "DOC-" + marker,
                 "address", "Street " + marker,
                 "status", "ACTIVE"
         ), session);
 
         assertEquals(200, createResponse.getStatusCode().value());
+        assertEquals("RG", requireBody(createResponse).path("data").path("documentType").asText());
         String clientId = requireBody(createResponse).path("data").path("id").asText();
 
         ResponseEntity<JsonNode> listResponse = get("/pet/clients?page=0&size=20&search=" + marker, session);
@@ -40,13 +42,16 @@ class PetIntegrationTest extends AbstractIntegrationTest {
                 "name", "Updated Client " + marker,
                 "email", "updated.pet." + marker + "@example.test",
                 "phone", "+5511888888888",
-                "document", "DOC-UPDATED-" + marker,
+                "documentType", "CPF",
+                "document", "529.982.247-25",
                 "address", "Avenue " + marker,
                 "status", "INACTIVE"
         ), session);
 
         assertEquals(200, updateResponse.getStatusCode().value());
         assertEquals("INACTIVE", requireBody(updateResponse).path("data").path("status").asText());
+        assertEquals("CPF", requireBody(updateResponse).path("data").path("documentType").asText());
+        assertEquals("52998224725", requireBody(updateResponse).path("data").path("document").asText());
 
         ResponseEntity<JsonNode> deleteResponse = delete("/pet/clients/" + clientId, session);
         assertEquals(200, deleteResponse.getStatusCode().value());
@@ -60,6 +65,22 @@ class PetIntegrationTest extends AbstractIntegrationTest {
                 clientId
         );
         assertEquals(1, deletedCount);
+    }
+
+    @Test
+    void shouldRejectInvalidCpfForClientRegistration() {
+        AuthSession session = loginAsDefaultAdmin();
+
+        ResponseEntity<JsonNode> response = post("/pet/clients", Map.of(
+                "name", "Client Invalid CPF",
+                "documentType", "CPF",
+                "document", "111.111.111-11",
+                "status", "ACTIVE"
+        ), session);
+
+        assertEquals(400, response.getStatusCode().value());
+        assertEquals("BAD_REQUEST", requireBody(response).path("code").asText());
+        assertTrue(requireBody(response).path("message").asText().contains("CPF"));
     }
 
     @Test
@@ -789,6 +810,7 @@ class PetIntegrationTest extends AbstractIntegrationTest {
                 "name", "Owner " + marker,
                 "email", "owner." + marker + "@example.test",
                 "phone", "+5511999999999",
+                "documentType", "RG",
                 "document", "DOC-" + marker,
                 "address", "Address " + marker,
                 "status", "ACTIVE"
