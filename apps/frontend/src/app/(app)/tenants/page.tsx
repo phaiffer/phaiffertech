@@ -114,28 +114,50 @@ const autofillIgnoreProps = {
 } as const;
 
 const tenantAdminToneStyle = {
-  '--background': '#f4f8f5',
-  '--surface': 'rgba(252, 253, 252, 0.98)',
-  '--surface-elevated': '#fcfdfc',
-  '--surface-inset': '#eef4f1',
-  '--app-shell-panel': '#fbfcfb',
-  '--app-shell-panel-muted': '#f0f5f2',
-  '--app-shell-border': 'rgba(148, 163, 184, 0.26)',
-  '--app-shell-muted': '#4d6175',
-  '--muted-foreground': '#607286',
-  '--tenant-accent-soft': 'color-mix(in srgb, var(--accent) 18%, #ffffff 82%)',
-  '--tenant-admin-soft-border': 'rgba(148, 163, 184, 0.24)',
-  '--tenant-admin-section-surface': 'rgba(248, 251, 249, 0.96)',
-  '--tenant-admin-soft-surface': '#f1f5f2',
-  '--tenant-admin-detail-surface': '#f7faf8',
-  '--tenant-admin-tag-surface': 'rgba(255, 255, 255, 0.72)',
-  '--tenant-admin-selected-border': 'color-mix(in srgb, var(--accent) 32%, rgba(15, 23, 42, 0.14))',
-  '--tenant-admin-selected-surface': 'color-mix(in srgb, var(--accent) 12%, #f7fbf8)',
-  '--tenant-admin-supporting-text': '#4a6073'
+  colorScheme: 'light',
+  '--background': '#f5f8f7',
+  '--foreground': '#0f172a',
+  '--surface': '#ffffff',
+  '--surface-elevated': '#ffffff',
+  '--surface-inset': '#edf2f7',
+  '--border': 'rgba(100, 116, 139, 0.24)',
+  '--app-shell-panel': '#ffffff',
+  '--app-shell-panel-muted': '#f8fafc',
+  '--app-shell-border': 'rgba(100, 116, 139, 0.24)',
+  '--app-shell-text': '#0f172a',
+  '--app-shell-heading': '#0f172a',
+  '--app-shell-muted': '#475569',
+  '--muted': '#334155',
+  '--muted-foreground': '#64748b',
+  '--accent': '#0f766e',
+  '--tenant-accent': '#0f766e',
+  '--tenant-accent-soft': 'color-mix(in srgb, var(--tenant-accent) 12%, #ffffff 88%)',
+  '--tenant-admin-soft-border': 'rgba(100, 116, 139, 0.28)',
+  '--tenant-admin-section-surface': '#ffffff',
+  '--tenant-admin-soft-surface': '#f8fafc',
+  '--tenant-admin-detail-surface': '#ffffff',
+  '--tenant-admin-tag-surface': '#f8fafc',
+  '--tenant-admin-selected-border': 'color-mix(in srgb, var(--tenant-accent) 42%, rgba(15, 23, 42, 0.18))',
+  '--tenant-admin-selected-surface': 'color-mix(in srgb, var(--tenant-accent) 10%, #f8fafc)',
+  '--tenant-admin-contrast-chip-border': 'color-mix(in srgb, var(--tenant-accent) 26%, rgba(100, 116, 139, 0.34))',
+  '--tenant-admin-contrast-chip-surface': 'color-mix(in srgb, var(--tenant-accent) 8%, #ffffff 92%)',
+  '--tenant-admin-supporting-text': '#475569',
+  '--tenant-admin-secondary-text': '#334155',
+  '--tenant-admin-placeholder': '#64748b',
+  '--success': '#166534',
+  '--success-muted': 'rgba(22, 101, 52, 0.12)',
+  '--warning': '#b45309',
+  '--warning-muted': 'rgba(180, 83, 9, 0.12)',
+  '--destructive': '#b91c1c',
+  '--destructive-muted': 'rgba(185, 28, 28, 0.12)',
+  '--info': '#1d4ed8',
+  '--info-muted': 'rgba(29, 78, 216, 0.12)'
 } as CSSProperties;
 
 const panelCopyClass = 'text-sm leading-6 text-[color:var(--tenant-admin-supporting-text)]';
 const compactPanelCopyClass = 'text-[13px] leading-5 text-[color:var(--tenant-admin-supporting-text)]';
+const contrastInputClass = `${sharedInputClass} placeholder:text-[color:var(--tenant-admin-placeholder)]`;
+const contrastTextareaClass = 'placeholder:text-[color:var(--tenant-admin-placeholder)]';
 const sectionPanelClass =
   'ui-surface-muted space-y-4 border-[color:var(--tenant-admin-soft-border)] bg-[color:var(--tenant-admin-soft-surface)] p-4 text-[color:var(--app-shell-text)] shadow-[0_18px_30px_-28px_rgba(15,23,42,0.18)] lg:p-5';
 const detailPanelClass =
@@ -147,9 +169,18 @@ const surfaceTogglePillClass =
 const contractReviewCardClass =
   'rounded-2xl border border-[color:var(--tenant-admin-soft-border)] bg-[color:var(--tenant-admin-detail-surface)] p-4 shadow-[0_16px_28px_-28px_rgba(15,23,42,0.18)]';
 const packageMetaClass =
-  'rounded-full border border-[color:var(--tenant-admin-soft-border)] bg-[color:var(--tenant-admin-tag-surface)] px-2.5 py-1 text-[11px] font-semibold text-[color:var(--tenant-admin-supporting-text)]';
+  'rounded-full border border-[color:var(--tenant-admin-contrast-chip-border)] bg-[color:var(--tenant-admin-tag-surface)] px-2.5 py-1 text-[11px] font-semibold text-[color:var(--tenant-admin-secondary-text)]';
 const selectedPackageBadgeClass =
-  'rounded-full border border-[color:var(--tenant-admin-selected-border)] bg-white/84 px-2.5 py-1 text-[11px] font-semibold text-[color:var(--app-shell-heading)]';
+  'rounded-full border border-[color:var(--tenant-admin-selected-border)] bg-[color:var(--tenant-admin-selected-surface)] px-2.5 py-1 text-[11px] font-semibold text-[color:var(--app-shell-heading)]';
+const contrastChipClass =
+  'inline-flex items-center rounded-full border border-[color:var(--tenant-admin-contrast-chip-border)] bg-[color:var(--tenant-admin-contrast-chip-surface)] px-2.5 py-1 text-[11px] font-semibold text-[color:var(--app-shell-heading)]';
+const contrastUppercaseChipClass = `${contrastChipClass} uppercase tracking-[0.14em]`;
+const contrastPillClass =
+  'inline-flex items-center rounded-full border border-[color:var(--tenant-admin-contrast-chip-border)] bg-[color:var(--tenant-admin-contrast-chip-surface)] px-3 py-2 text-xs font-semibold text-[color:var(--app-shell-heading)]';
+const contrastUppercasePillClass = `${contrastPillClass} uppercase tracking-[0.16em]`;
+const contrastActionChipClass =
+  'inline-flex items-center gap-2 rounded-full border border-[color:var(--tenant-admin-contrast-chip-border)] bg-[color:var(--tenant-admin-contrast-chip-surface)] px-3 py-2 text-xs font-semibold text-[color:var(--app-shell-heading)]';
+const secondaryEyebrowClass = 'text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--tenant-admin-secondary-text)]';
 
 function resolvePlanDetails(planCode?: string) {
   const normalizedCode = (planCode ?? 'PETSHOP').toUpperCase() as keyof typeof PLAN_DETAILS;
@@ -720,7 +751,7 @@ export default function TenantsPage() {
               tenant.featureEntitlements?.map((featureKey) => (
                 <span
                   key={`${tenant.id}-${featureKey}`}
-                  className="inline-flex items-center rounded-full border border-[color:var(--tenant-accent)] bg-[color:var(--tenant-accent-soft)] px-2 py-1 text-[11px] font-semibold text-[color:var(--app-shell-heading)]"
+                  className={contrastChipClass}
                 >
                   {featureKey}
                 </span>
@@ -882,7 +913,7 @@ export default function TenantsPage() {
                         onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))}
                         autoComplete="section-tenant organization"
                         data-filled={resolveFilledState(form.name)}
-                        className={sharedInputClass}
+                        className={contrastInputClass}
                         placeholder="PhaifferTech Clinic Network"
                         {...autofillIgnoreProps}
                         required
@@ -901,7 +932,7 @@ export default function TenantsPage() {
                         autoCorrect="off"
                         spellCheck={false}
                         data-filled={resolveFilledState(form.code)}
-                        className={sharedInputClass}
+                        className={contrastInputClass}
                         placeholder="tenant-code"
                         {...autofillIgnoreProps}
                         required
@@ -922,7 +953,7 @@ export default function TenantsPage() {
                         autoCorrect="off"
                         spellCheck={false}
                         data-filled={resolveFilledState(form.logoUrl)}
-                        className={sharedInputClass}
+                        className={contrastInputClass}
                         placeholder="/branding/tenant-logo.png"
                         {...autofillIgnoreProps}
                       />
@@ -950,7 +981,7 @@ export default function TenantsPage() {
                           autoCorrect="off"
                           spellCheck={false}
                           data-filled={resolveFilledState(featureEntitlementDraft)}
-                          className={sharedInputClass}
+                          className={contrastInputClass}
                           placeholder="beta.dashboard"
                           {...autofillIgnoreProps}
                         />
@@ -971,10 +1002,10 @@ export default function TenantsPage() {
                             key={featureKey}
                             type="button"
                             onClick={() => removeFeatureEntitlement(featureKey)}
-                            className="inline-flex items-center gap-2 rounded-full border border-[color:var(--tenant-accent)] bg-[color:var(--tenant-accent-soft)] px-3 py-2 text-xs font-semibold text-[color:var(--app-shell-heading)]"
+                            className={contrastActionChipClass}
                           >
                             <span>{featureKey}</span>
-                            <span className="text-[color:var(--app-shell-text)]">Remove</span>
+                            <span className="text-[color:var(--tenant-admin-secondary-text)]">Remove</span>
                           </button>
                         ))
                       ) : (
@@ -994,7 +1025,7 @@ export default function TenantsPage() {
                     </div>
 
                     <div className="flex flex-wrap gap-3">
-                      <span className="inline-flex items-center rounded-full border border-[color:var(--tenant-accent)] bg-[color:var(--tenant-accent-soft)] px-3 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--app-shell-heading)]">
+                      <span className={contrastUppercasePillClass}>
                         CORE_PLATFORM
                       </span>
 
@@ -1093,7 +1124,7 @@ export default function TenantsPage() {
                                 {plan.defaultEntitlements.map((featureKey) => (
                                   <span
                                     key={`${code}-feature-${featureKey}`}
-                                    className="inline-flex items-center rounded-full border border-[color:var(--tenant-admin-selected-border)] bg-[color:var(--tenant-admin-tag-surface)] px-2.5 py-1 text-[11px] font-semibold text-[color:var(--app-shell-heading)]"
+                                    className={contrastChipClass}
                                   >
                                     {featureKey}
                                   </span>
@@ -1115,7 +1146,7 @@ export default function TenantsPage() {
                         onChange={(event) => setForm((current) => ({ ...current, trialEndDate: event.target.value }))}
                         autoComplete="section-tenant off"
                         data-filled={resolveFilledState(form.trialEndDate)}
-                        className={sharedInputClass}
+                        className={contrastInputClass}
                         {...autofillIgnoreProps}
                         required={!editingTenantId}
                       />
@@ -1142,7 +1173,7 @@ export default function TenantsPage() {
                         {selectedPlanDetails.defaultEntitlements.map((featureKey) => (
                           <span
                             key={`plan-entitlement-${featureKey}`}
-                            className="inline-flex items-center rounded-full border border-[color:var(--tenant-accent)] bg-[color:var(--tenant-accent-soft)] px-2.5 py-1 text-[11px] font-semibold text-[color:var(--app-shell-heading)]"
+                            className={contrastChipClass}
                           >
                             {featureKey}
                           </span>
@@ -1188,7 +1219,7 @@ export default function TenantsPage() {
                             {selectedManualModuleOverrides.map((moduleCode) => (
                               <span
                                 key={`preview-manual-module-${moduleCode}`}
-                                className="inline-flex items-center rounded-full border border-[color:var(--tenant-accent)] bg-[color:var(--tenant-accent-soft)] px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-[color:var(--app-shell-heading)]"
+                                className={contrastUppercaseChipClass}
                               >
                                 {moduleCode}
                               </span>
@@ -1220,7 +1251,7 @@ export default function TenantsPage() {
                             effectiveSelectedEntitlements.map((featureKey) => (
                               <span
                                 key={`preview-feature-${featureKey}`}
-                                className="inline-flex items-center rounded-full border border-[color:var(--tenant-accent)] bg-[color:var(--tenant-accent-soft)] px-2.5 py-1 text-[11px] font-semibold text-[color:var(--app-shell-heading)]"
+                                className={contrastChipClass}
                               >
                                 {featureKey}
                               </span>
@@ -1255,7 +1286,7 @@ export default function TenantsPage() {
                               onChange={(event) => setForm((current) => ({ ...current, initialAdminFullName: event.target.value }))}
                               autoComplete="section-workspace-admin off"
                               data-filled={resolveFilledState(form.initialAdminFullName)}
-                              className={sharedInputClass}
+                              className={contrastInputClass}
                               placeholder="Jordan Smith"
                               {...autofillIgnoreProps}
                               required
@@ -1276,7 +1307,7 @@ export default function TenantsPage() {
                               autoCorrect="off"
                               spellCheck={false}
                               data-filled={resolveFilledState(form.initialAdminEmail)}
-                              className={sharedInputClass}
+                              className={contrastInputClass}
                               placeholder="admin@tenant.test"
                               {...autofillIgnoreProps}
                               required
@@ -1293,7 +1324,7 @@ export default function TenantsPage() {
                               onChange={(event) => setForm((current) => ({ ...current, temporaryPassword: event.target.value }))}
                               autoComplete="section-workspace-admin new-password"
                               data-filled={resolveFilledState(form.temporaryPassword)}
-                              className={sharedInputClass}
+                              className={contrastInputClass}
                               placeholder="TempPassword@123"
                               {...autofillIgnoreProps}
                               required
@@ -1344,7 +1375,7 @@ export default function TenantsPage() {
                           autoCorrect="off"
                           spellCheck={false}
                           data-filled={resolveFilledState(form.primaryColor)}
-                          className={sharedInputClass}
+                          className={contrastInputClass}
                           placeholder="#0f172a"
                           {...autofillIgnoreProps}
                         />
@@ -1370,7 +1401,7 @@ export default function TenantsPage() {
                           autoCorrect="off"
                           spellCheck={false}
                           data-filled={resolveFilledState(form.accentColor)}
-                          className={sharedInputClass}
+                          className={contrastInputClass}
                           placeholder="#2563eb"
                           {...autofillIgnoreProps}
                         />
@@ -1389,7 +1420,7 @@ export default function TenantsPage() {
                             defaultThemeMode: event.target.value as TenantThemeMode
                           }))}
                         data-filled={resolveFilledState(form.defaultThemeMode)}
-                        className={sharedInputClass}
+                        className={contrastInputClass}
                       >
                         <option value="SYSTEM">System</option>
                         <option value="LIGHT">Light</option>
@@ -1426,7 +1457,7 @@ export default function TenantsPage() {
 
                     <div className="grid gap-4 xl:grid-cols-3">
                       <div className={contractReviewCardClass}>
-                        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--app-shell-muted)]">
+                        <p className={secondaryEyebrowClass}>
                           Package baseline
                         </p>
                         <p className="mt-2 text-sm font-semibold text-[color:var(--app-shell-heading)]">
@@ -1446,7 +1477,7 @@ export default function TenantsPage() {
                           {(editingTenantPlanDetails?.defaultEntitlements ?? []).map((featureKey) => (
                             <span
                               key={`editing-plan-entitlement-${featureKey}`}
-                              className="inline-flex items-center rounded-full border border-[color:var(--tenant-accent)] bg-[color:var(--tenant-accent-soft)] px-2.5 py-1 text-[11px] font-semibold text-[color:var(--app-shell-heading)]"
+                              className={contrastChipClass}
                             >
                               {featureKey}
                             </span>
@@ -1455,7 +1486,7 @@ export default function TenantsPage() {
                       </div>
 
                       <div className={contractReviewCardClass}>
-                        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--app-shell-muted)]">
+                        <p className={secondaryEyebrowClass}>
                           Manual module overrides
                         </p>
                         {editingTenantManualModuleOverrides.length > 0 ? (
@@ -1463,7 +1494,7 @@ export default function TenantsPage() {
                             {editingTenantManualModuleOverrides.map((moduleCode) => (
                               <span
                                 key={`editing-manual-module-${moduleCode}`}
-                                className="inline-flex items-center rounded-full border border-[color:var(--tenant-accent)] bg-[color:var(--tenant-accent-soft)] px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-[color:var(--app-shell-heading)]"
+                                className={contrastUppercaseChipClass}
                               >
                                 {moduleCode}
                               </span>
@@ -1483,7 +1514,7 @@ export default function TenantsPage() {
                             editingTenant?.featureEntitlements?.map((featureKey) => (
                               <span
                                 key={`editing-feature-${featureKey}`}
-                                className="inline-flex items-center rounded-full border border-[color:var(--tenant-accent)] bg-[color:var(--tenant-accent-soft)] px-2.5 py-1 text-[11px] font-semibold text-[color:var(--app-shell-heading)]"
+                                className={contrastChipClass}
                               >
                                 {featureKey}
                               </span>
@@ -1497,7 +1528,7 @@ export default function TenantsPage() {
                       </div>
 
                       <div className={contractReviewCardClass}>
-                        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--app-shell-muted)]">
+                        <p className={secondaryEyebrowClass}>
                           Effective access
                         </p>
                         <div className="mt-3 flex flex-wrap gap-2">
@@ -1699,6 +1730,7 @@ export default function TenantsPage() {
                             description="The reason becomes part of the auditable support-session record."
                             placeholder="Describe why support access is needed for this workspace."
                             disabled={impersonationSubmitting}
+                            className={contrastTextareaClass}
                           />
 
                           <label className="space-y-2">
@@ -1707,7 +1739,7 @@ export default function TenantsPage() {
                               value={impersonationDurationMinutes}
                               onChange={(event) => setImpersonationDurationMinutes(Number(event.target.value))}
                               disabled={impersonationSubmitting}
-                              className={sharedInputClass}
+                              className={contrastInputClass}
                             >
                               <option value={15}>15 minutes</option>
                               <option value={30}>30 minutes</option>
