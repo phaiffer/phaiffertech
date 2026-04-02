@@ -1,4 +1,8 @@
-import { hasAnyTenantEntitlement } from '@/shared/entitlements/tenant-entitlements';
+import {
+  hasAnyTenantEntitlement,
+  hasTenantEntitlement,
+  tenantEntitlementKeys
+} from '@/shared/entitlements/tenant-entitlements';
 import { hasAnyPermission } from '@/shared/permissions/has-permission';
 import type {
   FrontendPlatformModules,
@@ -13,15 +17,33 @@ type SidebarItemBase = {
   label: string;
   anyOf?: string[];
   anyEntitlements?: readonly string[];
+  allowedPlanCodes?: readonly string[];
   moduleCode?: string;
   group: string;
   platformOnly?: boolean;
 };
 
+export const petClinicNavigationPlanCodes = ['CLINICA_VETERINARIA', 'BANHO_TOSA_CLINICA'] as const;
+export const petPosNavigationPlanCodes = ['PETSHOP', 'PETSHOP_BANHO_TOSA'] as const;
+
 export type SidebarNavigationContext = Pick<FrontendPlatformState, 'user'> & {
   modules: Pick<FrontendPlatformModules, 'availableCodes' | 'loading'>;
-  workspace: Pick<FrontendPlatformWorkspace, 'canManagePlatformAdministration'>;
+  workspace: Pick<FrontendPlatformWorkspace, 'canManagePlatformAdministration' | 'hasFullPlatformVisibility'>;
 };
+
+function hasPlanVisibilityBypass(context: SidebarNavigationContext) {
+  return context.workspace.canManagePlatformAdministration
+    || context.workspace.hasFullPlatformVisibility
+    || hasTenantEntitlement(context.user, tenantEntitlementKeys.any);
+}
+
+function matchesAllowedPlanCodes(
+  user: SidebarNavigationContext['user'],
+  allowedPlanCodes: readonly string[]
+) {
+  const normalizedPlanCode = user?.tenantPlanCode?.trim().toUpperCase();
+  return normalizedPlanCode ? allowedPlanCodes.includes(normalizedPlanCode) : false;
+}
 
 export function filterSidebarItems<T extends SidebarItemBase>(
   items: T[],
@@ -40,6 +62,12 @@ export function filterSidebarItems<T extends SidebarItemBase>(
 
     if (item.moduleCode && !availableModuleCodes.has(item.moduleCode)) {
       return false;
+    }
+
+    if (item.allowedPlanCodes && item.allowedPlanCodes.length > 0 && !hasPlanVisibilityBypass(context)) {
+      if (!matchesAllowedPlanCodes(context.user, item.allowedPlanCodes)) {
+        return false;
+      }
     }
 
     if (item.anyEntitlements && item.anyEntitlements.length > 0 && !hasAnyTenantEntitlement(context.user, item.anyEntitlements)) {

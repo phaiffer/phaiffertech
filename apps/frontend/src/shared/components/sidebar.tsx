@@ -24,10 +24,18 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/shared/auth/use-auth';
 import { BrandMark, PetFlowMark } from '@/shared/components/brand-assets';
-import { petSubmoduleEntitlements } from '@/shared/entitlements/tenant-entitlements';
+import {
+  petClinicalEntitlements,
+  petRetailEntitlements,
+  petSubmoduleEntitlements
+} from '@/shared/entitlements/tenant-entitlements';
 import { useAppMessages } from '@/shared/i18n/app-i18n-provider';
 import { useFrontendPlatform } from '@/shared/platform/use-frontend-platform';
-import { filterSidebarItems } from '@/shared/platform/sidebar-navigation';
+import {
+  filterSidebarItems,
+  petClinicNavigationPlanCodes,
+  petPosNavigationPlanCodes
+} from '@/shared/platform/sidebar-navigation';
 import { Avatar, AvatarFallback } from '@/shared/ui/shadcn/avatar';
 import {
   DropdownMenu,
@@ -42,6 +50,7 @@ type SidebarItem = {
   label: string;
   anyOf?: string[];
   anyEntitlements?: readonly string[];
+  allowedPlanCodes?: readonly string[];
   moduleCode?: 'PET';
   group: 'principal' | 'gestao' | 'suporte';
   icon: ReactNode;
@@ -113,7 +122,8 @@ export function Sidebar() {
         href: '/pet/clinic',
         label: petMessages.clinic,
         anyOf: ['pet.medical-record.read'],
-        anyEntitlements: petSubmoduleEntitlements,
+        anyEntitlements: petClinicalEntitlements,
+        allowedPlanCodes: petClinicNavigationPlanCodes,
         moduleCode: 'PET',
         group: 'principal',
         icon: <Stethoscope className="h-4 w-4" />,
@@ -122,7 +132,8 @@ export function Sidebar() {
         href: '/pet/pos',
         label: petMessages.pos,
         anyOf: ['pet.product.read', 'pet.invoice.write'],
-        anyEntitlements: petSubmoduleEntitlements,
+        anyEntitlements: petRetailEntitlements,
+        allowedPlanCodes: petPosNavigationPlanCodes,
         moduleCode: 'PET',
         group: 'principal',
         icon: <ShoppingCart className="h-4 w-4" />,
@@ -217,10 +228,20 @@ export function Sidebar() {
     const filtered = filterSidebarItems(filterableItems, {
       user,
       modules: { availableCodes: modules.availableCodes, loading: modules.loading },
-      workspace: { canManagePlatformAdministration: workspace.canManagePlatformAdministration },
+      workspace: {
+        canManagePlatformAdministration: workspace.canManagePlatformAdministration,
+        hasFullPlatformVisibility: workspace.hasFullPlatformVisibility
+      },
     });
     return new Set(filtered.map((i) => i.href));
-  }, [filterableItems, modules.availableCodes, modules.loading, user, workspace.canManagePlatformAdministration]);
+  }, [
+    filterableItems,
+    modules.availableCodes,
+    modules.loading,
+    user,
+    workspace.canManagePlatformAdministration,
+    workspace.hasFullPlatformVisibility
+  ]);
 
   const principalItems = items.filter((i) => i.group === 'principal' && visibleIds.has(i.href));
   const gestaoItems = items.filter((i) => i.group === 'gestao' && visibleIds.has(i.href));

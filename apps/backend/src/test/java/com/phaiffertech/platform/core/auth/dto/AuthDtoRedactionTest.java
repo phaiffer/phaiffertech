@@ -33,6 +33,7 @@ class AuthDtoRedactionTest {
                         UUID.fromString("11111111-1111-1111-1111-111111111111"),
                         "Default Tenant",
                         "default",
+                        "BANHO_TOSA_CLINICA",
                         null,
                         "#0f172a",
                         "#2563eb",

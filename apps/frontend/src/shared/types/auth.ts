@@ -16,6 +16,7 @@ export type AuthenticatedUser = {
   tenantId: string;
   tenantName: string;
   tenantCode: string;
+  tenantPlanCode?: string | null;
   tenantLogoUrl?: string | null;
   tenantPrimaryColor?: string | null;
   tenantAccentColor?: string | null;
