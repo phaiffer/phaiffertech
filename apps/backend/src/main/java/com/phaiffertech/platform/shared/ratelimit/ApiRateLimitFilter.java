@@ -28,7 +28,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 public class ApiRateLimitFilter extends OncePerRequestFilter {
 
     private enum RatePolicy {
-        AUTH, API, TELEMETRY
+        AUTH, API
     }
 
     private final RateLimitProperties rateLimitProperties;
@@ -79,9 +79,6 @@ public class ApiRateLimitFilter extends OncePerRequestFilter {
         if (path.startsWith("/api/v1/auth")) {
             return RatePolicy.AUTH;
         }
-        if ("POST".equalsIgnoreCase(request.getMethod()) && path.startsWith("/api/v1/iot/telemetry")) {
-            return RatePolicy.TELEMETRY;
-        }
         if (path.startsWith("/api/v1/")) {
             return RatePolicy.API;
         }
@@ -91,7 +88,6 @@ public class ApiRateLimitFilter extends OncePerRequestFilter {
     private Bucket createBucket(RatePolicy policy) {
         int capacity = switch (policy) {
             case AUTH -> rateLimitProperties.getAuthPerMinute();
-            case TELEMETRY -> rateLimitProperties.getTelemetryPerMinute();
             case API -> rateLimitProperties.getApiPerMinute();
         };
 

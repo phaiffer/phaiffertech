@@ -13,7 +13,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class PaginationContractIntegrationTest extends AbstractIntegrationTest {
 
     @Test
-    void shouldExposeStandardAndLegacyPaginationFieldsForContactsLeadsPetAndIot() {
+    void shouldExposeStandardAndLegacyPaginationFieldsForContactsLeadsAndPet() {
         AuthSession session = loginAsDefaultAdmin();
         String marker = randomSearchMarker();
 
@@ -33,16 +33,9 @@ class PaginationContractIntegrationTest extends AbstractIntegrationTest {
                 "document", "DOC-" + marker
         ), session);
 
-        post("/iot/devices", Map.of(
-                "name", "Device-" + marker,
-                "serialNumber", "SERIAL-" + marker,
-                "status", "ONLINE"
-        ), session);
-
         assertStandardPage(get("/crm/contacts?page=0&size=10&sort=createdAt&direction=desc&search=" + marker, session), true);
         assertStandardPage(get("/crm/leads?page=0&size=10&sort=createdAt&direction=desc&search=" + marker, session), true);
         assertStandardPage(get("/pet/clients?page=0&size=10&sort=createdAt&direction=desc&search=" + marker, session), true);
-        assertStandardPage(get("/iot/devices?page=0&size=10&sort=createdAt&direction=desc&search=" + marker, session), true);
     }
 
     private void assertStandardPage(ResponseEntity<JsonNode> response, boolean expectAtLeastOneItem) {

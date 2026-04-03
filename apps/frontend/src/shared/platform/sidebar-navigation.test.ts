@@ -13,8 +13,8 @@ type NavigationItem = {
   anyOf?: string[];
   anyEntitlements?: readonly string[];
   allowedPlanCodes?: readonly string[];
-  moduleCode?: 'CRM' | 'IOT' | 'PET';
-  group: 'core' | 'crm' | 'pet' | 'iot';
+  moduleCode?: 'CRM' | 'PET';
+  group: 'core' | 'crm' | 'pet';
   platformOnly?: boolean;
 };
 
@@ -48,14 +48,6 @@ const items: NavigationItem[] = [
     anyEntitlements: [tenantEntitlementKeys.petRetail],
     allowedPlanCodes: petPosNavigationPlanCodes
   },
-  {
-    href: '/iot/dashboard',
-    label: 'IoT Dashboard',
-    group: 'iot',
-    moduleCode: 'IOT',
-    anyOf: ['iot.dashboard.read'],
-    anyEntitlements: [tenantEntitlementKeys.iotBasic]
-  }
 ];
 
 function createUser(overrides: Partial<AuthenticatedUser> = {}): AuthenticatedUser {
@@ -97,7 +89,7 @@ function visibleHrefs(user: AuthenticatedUser, availableCodes: string[], canMana
 }
 
 describe('filterSidebarItems contract scenarios', () => {
-  it('keeps CRM-only workspaces isolated from Pet and IoT navigation', () => {
+  it('keeps CRM-only workspaces isolated from Pet navigation', () => {
     const hrefs = visibleHrefs(
       createUser({
         permissions: ['crm.dashboard.read'],
@@ -109,7 +101,7 @@ describe('filterSidebarItems contract scenarios', () => {
     expect(hrefs).toEqual(['/dashboard', '/crm/dashboard']);
   });
 
-  it('keeps Pet-only workspaces isolated from CRM and IoT navigation', () => {
+  it('keeps Pet-only workspaces isolated from CRM navigation', () => {
     const hrefs = visibleHrefs(
       createUser({
         permissions: ['pet.dashboard.read'],
@@ -121,19 +113,7 @@ describe('filterSidebarItems contract scenarios', () => {
     expect(hrefs).toEqual(['/dashboard', '/pet/dashboard']);
   });
 
-  it('keeps IoT-only workspaces isolated from CRM and Pet navigation', () => {
-    const hrefs = visibleHrefs(
-      createUser({
-        permissions: ['iot.dashboard.read'],
-        featureEntitlements: [tenantEntitlementKeys.iotBasic]
-      }),
-      ['CORE_PLATFORM', 'IOT']
-    );
-
-    expect(hrefs).toEqual(['/dashboard', '/iot/dashboard']);
-  });
-
-  it('shows both CRM and Pet navigation for combined contracts without leaking IoT', () => {
+  it('shows both CRM and Pet navigation for combined contracts', () => {
     const hrefs = visibleHrefs(
       createUser({
         permissions: ['crm.dashboard.read', 'pet.dashboard.read'],
@@ -148,8 +128,8 @@ describe('filterSidebarItems contract scenarios', () => {
   it('removes downgraded modules even when stale entitlements remain on the session', () => {
     const hrefs = visibleHrefs(
       createUser({
-        permissions: ['crm.dashboard.read', 'pet.dashboard.read', 'iot.dashboard.read'],
-        featureEntitlements: [tenantEntitlementKeys.crmFull, tenantEntitlementKeys.petFull, tenantEntitlementKeys.iotBasic]
+        permissions: ['crm.dashboard.read', 'pet.dashboard.read'],
+        featureEntitlements: [tenantEntitlementKeys.crmFull, tenantEntitlementKeys.petFull]
       }),
       ['CORE_PLATFORM', 'CRM']
     );
@@ -160,10 +140,10 @@ describe('filterSidebarItems contract scenarios', () => {
   it('shows all contracted navigation for wildcard access and keeps platform administration restricted to platform admins', () => {
     const tenantUserHrefs = visibleHrefs(
       createUser({
-        permissions: ['crm.dashboard.read', 'pet.dashboard.read', 'iot.dashboard.read', 'pet.medical-record.read', 'pet.product.read', 'pet.invoice.write'],
+        permissions: ['crm.dashboard.read', 'pet.dashboard.read', 'pet.medical-record.read', 'pet.product.read', 'pet.invoice.write'],
         featureEntitlements: [tenantEntitlementKeys.any]
       }),
-      ['CORE_PLATFORM', 'CRM', 'PET', 'IOT']
+      ['CORE_PLATFORM', 'CRM', 'PET']
     );
 
     const platformAdminHrefs = visibleHrefs(
@@ -175,12 +155,12 @@ describe('filterSidebarItems contract scenarios', () => {
         permissions: ['TENANT_READ', 'pet.medical-record.read', 'pet.product.read', 'pet.invoice.write'],
         featureEntitlements: [tenantEntitlementKeys.any]
       }),
-      ['CORE_PLATFORM', 'CRM', 'PET', 'IOT'],
+      ['CORE_PLATFORM', 'CRM', 'PET'],
       true
     );
 
-    expect(tenantUserHrefs).toEqual(['/dashboard', '/crm/dashboard', '/pet/dashboard', '/pet/clinic', '/pet/pos', '/iot/dashboard']);
-    expect(platformAdminHrefs).toEqual(['/dashboard', '/tenants', '/crm/dashboard', '/pet/dashboard', '/pet/clinic', '/pet/pos', '/iot/dashboard']);
+    expect(tenantUserHrefs).toEqual(['/dashboard', '/crm/dashboard', '/pet/dashboard', '/pet/clinic', '/pet/pos']);
+    expect(platformAdminHrefs).toEqual(['/dashboard', '/tenants', '/crm/dashboard', '/pet/dashboard', '/pet/clinic', '/pet/pos']);
   });
 
   it('hides clinic and pos navigation for banho e tosa contracts even when permissions exist', () => {

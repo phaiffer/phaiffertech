@@ -8,13 +8,12 @@ TERRAFORM_DIR := infra/gcp/terraform
 LEGACY_TERRAFORM_DIR := infra/terraform
 CRM_SEED_SQL := infra/docker/sql/crm-seed.sql
 PET_SEED_SQL := infra/docker/sql/pet-seed.sql
-IOT_SEED_SQL := infra/docker/sql/iot-seed.sql
 
 .PHONY: help up down restart rebuild status logs logs-follow logs-backend logs-frontend logs-db docker-build docker-reset-db \
-	build test test-backend test-integration test-unit test-pet test-iot lint clean backend frontend install-backend install-frontend \
-	package-backend package-frontend db-shell migrate seed crm-seed pet-seed iot-seed logs-all swagger smoke verify \
+	build test test-backend test-integration test-unit test-pet lint clean backend frontend install-backend install-frontend \
+	package-backend package-frontend db-shell migrate seed crm-seed pet-seed logs-all swagger smoke verify \
 	ci metrics logs-json observability-up observability-down terraform-init terraform-plan terraform-legacy-init terraform-legacy-plan \
-	validate-iot-suite validate-iot-live simulate-iot-demo simulate-iot-test
+	
 
 help: ## List available commands
 	@awk 'BEGIN {FS = ":.*##"; printf "\nAvailable targets:\n"} /^[a-zA-Z0-9_.-]+:.*##/ { printf "  %-20s %s\n", $$1, $$2 }' $(MAKEFILE_LIST)
@@ -94,9 +93,6 @@ test-unit: ## Run backend tests excluding integration classes
 test-pet: ## Run PET integration tests
 	cd $(BACKEND_DIR) && mvn -Dtest=PetIntegrationTest test
 
-test-iot: ## Run IoT integration tests
-	cd $(BACKEND_DIR) && mvn -Dtest='IotIntegrationTest,IotTelemetryIntegrationTest' test
-
 lint: ## Run frontend lint and backend compile validation
 	cd $(FRONTEND_DIR) && npm run lint
 	cd $(BACKEND_DIR) && mvn -DskipTests compile
@@ -121,10 +117,6 @@ crm-seed: ## Seed sample CRM contacts and leads for local development
 pet-seed: ## Seed sample PET data for local development
 	@test -f $(PET_SEED_SQL) || (echo "Missing $(PET_SEED_SQL)" && exit 1)
 	$(COMPOSE_RAW) exec -T postgres sh -c 'PGPASSWORD="$${POSTGRES_PASSWORD:-platform_pass}" psql -v ON_ERROR_STOP=1 -h 127.0.0.1 -U "$${POSTGRES_USER:-platform_user}" -d "$${POSTGRES_DB:-platform_db}"' < $(PET_SEED_SQL)
-
-iot-seed: ## Seed sample IoT data for local development
-	@test -f $(IOT_SEED_SQL) || (echo "Missing $(IOT_SEED_SQL)" && exit 1)
-	$(COMPOSE_RAW) exec -T postgres sh -c 'PGPASSWORD="$${POSTGRES_PASSWORD:-platform_pass}" psql -v ON_ERROR_STOP=1 -h 127.0.0.1 -U "$${POSTGRES_USER:-platform_user}" -d "$${POSTGRES_DB:-platform_db}"' < $(IOT_SEED_SQL)
 
 smoke: ## Run quick post-startup health validation against the local stack
 	@echo "=== Smoke validation — local stack ==="
@@ -170,32 +162,3 @@ terraform-legacy-plan: ## Generate plan for legacy Terraform directory
 ci: verify docker-build ## Run local CI flow (verify + docker build)
 
 verify: lint test package-backend package-frontend ## Run lint, tests and build artifacts
-
-
-validate-iot:
-	chmod +x scripts/validation/iot_operational_validation.sh
-	./scripts/validation/iot_operational_validation.sh
-
-validate-iot-suite:
-	chmod +x scripts/validation/iot_validation_suite.sh
-	./scripts/validation/iot_validation_suite.sh
-
-validate-iot-live:
-	chmod +x scripts/validation/iot_operational_validation.sh
-	./scripts/validation/iot_operational_validation.sh
-
-seed-iot-demo:
-	chmod +x scripts/seed/iot_demo_seed.sh
-	./scripts/seed/iot_demo_seed.sh
-
-cleanup-iot-demo:
-	chmod +x scripts/seed/iot_demo_cleanup.sh
-	./scripts/seed/iot_demo_cleanup.sh
-
-simulate-iot-demo:
-	chmod +x scripts/seed/iot_demo_simulator.sh
-	./scripts/seed/iot_demo_simulator.sh demo
-
-simulate-iot-test:
-	chmod +x scripts/seed/iot_demo_simulator.sh
-	./scripts/seed/iot_demo_simulator.sh test

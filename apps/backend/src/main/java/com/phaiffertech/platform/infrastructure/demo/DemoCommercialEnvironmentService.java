@@ -107,26 +107,6 @@ public class DemoCommercialEnvironmentService {
         private static final UUID PET_PAYMENT_MARIA_ID = uuid("20000000-0000-0000-0000-000000000093");
         private static final UUID PET_CASH_MARIA_ID = uuid("20000000-0000-0000-0000-000000000094");
 
-        private static final UUID IOT_COMPRESSOR_DEVICE_ID = uuid("30000000-0000-0000-0000-000000000001");
-        private static final UUID IOT_OVEN_DEVICE_ID = uuid("30000000-0000-0000-0000-000000000002");
-        private static final UUID IOT_PANEL_DEVICE_ID = uuid("30000000-0000-0000-0000-000000000003");
-
-        private static final UUID IOT_COMPRESSOR_TEMPERATURE_ID = uuid("30000000-0000-0000-0000-000000000011");
-        private static final UUID IOT_COMPRESSOR_VIBRATION_ID = uuid("30000000-0000-0000-0000-000000000012");
-        private static final UUID IOT_COMPRESSOR_POWER_ID = uuid("30000000-0000-0000-0000-000000000013");
-        private static final UUID IOT_OVEN_TEMPERATURE_ID = uuid("30000000-0000-0000-0000-000000000021");
-        private static final UUID IOT_OVEN_VIBRATION_ID = uuid("30000000-0000-0000-0000-000000000022");
-        private static final UUID IOT_OVEN_POWER_ID = uuid("30000000-0000-0000-0000-000000000023");
-        private static final UUID IOT_PANEL_TEMPERATURE_ID = uuid("30000000-0000-0000-0000-000000000031");
-        private static final UUID IOT_PANEL_VIBRATION_ID = uuid("30000000-0000-0000-0000-000000000032");
-        private static final UUID IOT_PANEL_POWER_ID = uuid("30000000-0000-0000-0000-000000000033");
-
-        private static final UUID IOT_TEMPERATURE_ALARM_ID = uuid("30000000-0000-0000-0000-000000000041");
-        private static final UUID IOT_VIBRATION_ALARM_ID = uuid("30000000-0000-0000-0000-000000000042");
-
-        private static final UUID IOT_OVEN_MAINTENANCE_ID = uuid("30000000-0000-0000-0000-000000000051");
-        private static final UUID IOT_PANEL_MAINTENANCE_ID = uuid("30000000-0000-0000-0000-000000000052");
-
         private final DemoCommercialProperties properties;
         private final TenantRepository tenantRepository;
         private final UserRepository userRepository;
@@ -183,11 +163,11 @@ public class DemoCommercialEnvironmentService {
                 UserTenant userTenant = ensureUserTenant(tenant, user, tenantAdminRole);
                 ensureUserTenantRole(userTenant, tenantAdminRole);
                 enableModules(tenant.getId());
-                tenantModuleContractService.syncEffectiveModules(tenant.getId(), tenant.getPlanCode(), List.of("CRM", "IOT"));
+                tenantModuleContractService.syncEffectiveModules(tenant.getId(), tenant.getPlanCode(), List.of("CRM", "PET"));
                 tenantEntitlementService.syncManualEntitlements(
                                 tenant.getId(),
                                 tenant.getPlanCode(),
-                                List.of(TenantEntitlementKeys.CRM_FULL, TenantEntitlementKeys.IOT_BASIC));
+                                List.of(TenantEntitlementKeys.CRM_FULL, TenantEntitlementKeys.PET_FULL));
                 flushPersistenceState();
 
                 Tenant persistedTenant = tenant;
@@ -198,14 +178,12 @@ public class DemoCommercialEnvironmentService {
                 Instant now = Instant.now();
                 seedCrm(persistedTenant.getId(), persistedUser.getId(), now);
                 seedPet(persistedTenant.getId(), now);
-                seedIot(persistedTenant.getId(), persistedUser.getId(), now);
 
                 return new DemoCommercialSeedSummary(
                                 persistedTenant.getCode(),
                                 persistedUser.getEmail(),
                                 25,
-                                25,
-                                33);
+                                25);
         }
 
         private void validateProperties() {
@@ -267,7 +245,7 @@ public class DemoCommercialEnvironmentService {
         private void enableModules(UUID tenantId) {
                 List<ModuleDefinition> definitions = moduleDefinitionRepository
                                 .findAllByCodeInAndActiveTrueAndDeletedAtIsNull(
-                                                List.of("CORE_PLATFORM", "CRM", "PET", "IOT"));
+                                                List.of("CORE_PLATFORM", "CRM", "PET"));
 
                 for (ModuleDefinition definition : definitions) {
                         UUID moduleId = definition.getId();
@@ -825,229 +803,6 @@ public class DemoCommercialEnvironmentService {
                                 PET_APPOINTMENT_THOR_ID);
         }
 
-        private void seedIot(UUID tenantId, UUID userId, Instant now) {
-                Instant recent = now.minus(Duration.ofMinutes(3));
-                Instant alertWindow = now.minus(Duration.ofMinutes(18));
-                Instant acknowledgedWindow = now.minus(Duration.ofMinutes(42));
-                Instant stale = now.minus(Duration.ofHours(5));
-
-                insertIotDevice(
-                                IOT_COMPRESSOR_DEVICE_ID,
-                                tenantId,
-                                "compressor-line-01",
-                                "CMP-01-SN",
-                                "compressor-line-01",
-                                "ACTUATOR",
-                                "Utility bay",
-                                "Compressed-air line monitored for temperature, vibration and power draw.",
-                                "MODBUS_TCP",
-                                "10.20.0.21",
-                                502,
-                                1,
-                                "5s",
-                                "gw-demo-01",
-                                "ONLINE",
-                                recent,
-                                now.minus(Duration.ofDays(7)));
-                insertIotDevice(
-                                IOT_OVEN_DEVICE_ID,
-                                tenantId,
-                                "industrial-oven-02",
-                                "OVN-02-SN",
-                                "industrial-oven-02",
-                                "SENSOR",
-                                "Heat treatment line",
-                                "Industrial oven monitored for temperature stability and mechanical vibration.",
-                                "MODBUS_TCP",
-                                "10.20.0.22",
-                                502,
-                                2,
-                                "10s",
-                                "gw-demo-01",
-                                "ALERT",
-                                now.minus(Duration.ofMinutes(2)),
-                                now.minus(Duration.ofDays(7)));
-                insertIotDevice(
-                                IOT_PANEL_DEVICE_ID,
-                                tenantId,
-                                "electrical-panel-03",
-                                "PNL-03-SN",
-                                "electrical-panel-03",
-                                "GATEWAY",
-                                "Main electrical room",
-                                "Electrical distribution panel with telemetry for load and cabinet conditions.",
-                                "MODBUS_TCP",
-                                "10.20.0.30",
-                                502,
-                                3,
-                                "15s",
-                                "gw-demo-02",
-                                "OFFLINE",
-                                stale,
-                                now.minus(Duration.ofDays(7)));
-
-                insertIotRegister(IOT_COMPRESSOR_TEMPERATURE_ID, tenantId, IOT_COMPRESSOR_DEVICE_ID,
-                                "Compressor temperature", "CMP_TEMP", "FC03", 40001, "temperature", "C", "DECIMAL",
-                                new BigDecimal("35.0000"), new BigDecimal("85.0000"), "ACTIVE",
-                                now.minus(Duration.ofDays(7)));
-                insertIotRegister(IOT_COMPRESSOR_VIBRATION_ID, tenantId, IOT_COMPRESSOR_DEVICE_ID,
-                                "Compressor vibration", "CMP_VIB", "FC03", 40002, "vibration", "mm/s", "DECIMAL",
-                                new BigDecimal("0.5000"), new BigDecimal("4.5000"), "ACTIVE",
-                                now.minus(Duration.ofDays(7)));
-                insertIotRegister(IOT_COMPRESSOR_POWER_ID, tenantId, IOT_COMPRESSOR_DEVICE_ID,
-                                "Compressor power consumption", "CMP_PWR", "FC03", 40003, "power_consumption", "kW",
-                                "DECIMAL", new BigDecimal("20.0000"), new BigDecimal("95.0000"), "ACTIVE",
-                                now.minus(Duration.ofDays(7)));
-                insertIotRegister(IOT_OVEN_TEMPERATURE_ID, tenantId, IOT_OVEN_DEVICE_ID, "Oven temperature", "OVN_TEMP",
-                                "FC03", 40101, "temperature", "C", "DECIMAL", new BigDecimal("120.0000"),
-                                new BigDecimal("260.0000"), "ACTIVE", now.minus(Duration.ofDays(7)));
-                insertIotRegister(IOT_OVEN_VIBRATION_ID, tenantId, IOT_OVEN_DEVICE_ID, "Oven vibration", "OVN_VIB",
-                                "FC03", 40102, "vibration", "mm/s", "DECIMAL", new BigDecimal("0.3000"),
-                                new BigDecimal("3.2000"), "ACTIVE", now.minus(Duration.ofDays(7)));
-                insertIotRegister(IOT_OVEN_POWER_ID, tenantId, IOT_OVEN_DEVICE_ID, "Oven power consumption", "OVN_PWR",
-                                "FC03", 40103, "power_consumption", "kW", "DECIMAL", new BigDecimal("40.0000"),
-                                new BigDecimal("180.0000"), "ACTIVE", now.minus(Duration.ofDays(7)));
-                insertIotRegister(IOT_PANEL_TEMPERATURE_ID, tenantId, IOT_PANEL_DEVICE_ID, "Panel temperature",
-                                "PNL_TEMP", "FC04", 30011, "temperature", "C", "DECIMAL", new BigDecimal("18.0000"),
-                                new BigDecimal("55.0000"), "ACTIVE", now.minus(Duration.ofDays(7)));
-                insertIotRegister(IOT_PANEL_VIBRATION_ID, tenantId, IOT_PANEL_DEVICE_ID, "Panel vibration", "PNL_VIB",
-                                "FC04", 30012, "vibration", "mm/s", "DECIMAL", new BigDecimal("0.0000"),
-                                new BigDecimal("1.5000"), "ACTIVE", now.minus(Duration.ofDays(7)));
-                insertIotRegister(IOT_PANEL_POWER_ID, tenantId, IOT_PANEL_DEVICE_ID, "Panel power consumption",
-                                "PNL_PWR", "FC04", 30013, "power_consumption", "kW", "DECIMAL",
-                                new BigDecimal("10.0000"), new BigDecimal("220.0000"), "ACTIVE",
-                                now.minus(Duration.ofDays(7)));
-
-                insertTelemetryPoint(tenantId, IOT_COMPRESSOR_DEVICE_ID, IOT_COMPRESSOR_TEMPERATURE_ID, "temperature",
-                                new BigDecimal("67.4000"), "C",
-                                "{\"source\":\"demo-seed\",\"asset\":\"compressor-line-01\"}",
-                                now.minus(Duration.ofMinutes(26)));
-                insertTelemetryPoint(tenantId, IOT_COMPRESSOR_DEVICE_ID, IOT_COMPRESSOR_VIBRATION_ID, "vibration",
-                                new BigDecimal("2.8000"), "mm/s",
-                                "{\"source\":\"demo-seed\",\"asset\":\"compressor-line-01\"}",
-                                now.minus(Duration.ofMinutes(22)));
-                insertTelemetryPoint(tenantId, IOT_COMPRESSOR_DEVICE_ID, IOT_COMPRESSOR_POWER_ID, "power_consumption",
-                                new BigDecimal("64.2000"), "kW",
-                                "{\"source\":\"demo-seed\",\"asset\":\"compressor-line-01\"}",
-                                now.minus(Duration.ofMinutes(21)));
-                insertTelemetryPoint(tenantId, IOT_OVEN_DEVICE_ID, IOT_OVEN_TEMPERATURE_ID, "temperature",
-                                new BigDecimal("244.6000"), "C",
-                                "{\"source\":\"demo-seed\",\"asset\":\"industrial-oven-02\"}",
-                                now.minus(Duration.ofMinutes(19)));
-                insertTelemetryPoint(tenantId, IOT_OVEN_DEVICE_ID, IOT_OVEN_VIBRATION_ID, "vibration",
-                                new BigDecimal("2.1000"), "mm/s",
-                                "{\"source\":\"demo-seed\",\"asset\":\"industrial-oven-02\"}",
-                                now.minus(Duration.ofMinutes(18)));
-                insertTelemetryPoint(tenantId, IOT_OVEN_DEVICE_ID, IOT_OVEN_POWER_ID, "power_consumption",
-                                new BigDecimal("171.3000"), "kW",
-                                "{\"source\":\"demo-seed\",\"asset\":\"industrial-oven-02\"}",
-                                now.minus(Duration.ofMinutes(17)));
-                insertTelemetryPoint(tenantId, IOT_COMPRESSOR_DEVICE_ID, IOT_COMPRESSOR_TEMPERATURE_ID, "temperature",
-                                new BigDecimal("70.1000"), "C",
-                                "{\"source\":\"demo-seed\",\"asset\":\"compressor-line-01\"}",
-                                now.minus(Duration.ofMinutes(11)));
-                insertTelemetryPoint(tenantId, IOT_COMPRESSOR_DEVICE_ID, IOT_COMPRESSOR_VIBRATION_ID, "vibration",
-                                new BigDecimal("3.6000"), "mm/s",
-                                "{\"source\":\"demo-seed\",\"asset\":\"compressor-line-01\"}",
-                                now.minus(Duration.ofMinutes(9)));
-                insertTelemetryPoint(tenantId, IOT_COMPRESSOR_DEVICE_ID, IOT_COMPRESSOR_POWER_ID, "power_consumption",
-                                new BigDecimal("69.8000"), "kW",
-                                "{\"source\":\"demo-seed\",\"asset\":\"compressor-line-01\"}",
-                                now.minus(Duration.ofMinutes(8)));
-                insertTelemetryPoint(tenantId, IOT_OVEN_DEVICE_ID, IOT_OVEN_TEMPERATURE_ID, "temperature",
-                                new BigDecimal("268.9000"), "C",
-                                "{\"source\":\"demo-seed\",\"asset\":\"industrial-oven-02\"}",
-                                now.minus(Duration.ofMinutes(6)));
-                insertTelemetryPoint(tenantId, IOT_OVEN_DEVICE_ID, IOT_OVEN_VIBRATION_ID, "vibration",
-                                new BigDecimal("2.4000"), "mm/s",
-                                "{\"source\":\"demo-seed\",\"asset\":\"industrial-oven-02\"}",
-                                now.minus(Duration.ofMinutes(5)));
-                insertTelemetryPoint(tenantId, IOT_OVEN_DEVICE_ID, IOT_OVEN_POWER_ID, "power_consumption",
-                                new BigDecimal("176.1000"), "kW",
-                                "{\"source\":\"demo-seed\",\"asset\":\"industrial-oven-02\"}",
-                                now.minus(Duration.ofMinutes(4)));
-                insertTelemetryPoint(tenantId, IOT_COMPRESSOR_DEVICE_ID, IOT_COMPRESSOR_TEMPERATURE_ID, "temperature",
-                                new BigDecimal("68.2000"), "C",
-                                "{\"source\":\"demo-seed\",\"asset\":\"compressor-line-01\"}",
-                                now.minus(Duration.ofMinutes(3)));
-                insertTelemetryPoint(tenantId, IOT_COMPRESSOR_DEVICE_ID, IOT_COMPRESSOR_VIBRATION_ID, "vibration",
-                                new BigDecimal("3.9000"), "mm/s",
-                                "{\"source\":\"demo-seed\",\"asset\":\"compressor-line-01\"}",
-                                now.minus(Duration.ofMinutes(2)));
-                insertTelemetryPoint(tenantId, IOT_COMPRESSOR_DEVICE_ID, IOT_COMPRESSOR_POWER_ID, "power_consumption",
-                                new BigDecimal("70.4000"), "kW",
-                                "{\"source\":\"demo-seed\",\"asset\":\"compressor-line-01\"}",
-                                now.minus(Duration.ofMinutes(1)));
-                insertTelemetryPoint(tenantId, IOT_PANEL_DEVICE_ID, IOT_PANEL_TEMPERATURE_ID, "temperature",
-                                new BigDecimal("32.5000"), "C",
-                                "{\"source\":\"demo-seed\",\"asset\":\"electrical-panel-03\"}",
-                                now.minus(Duration.ofHours(6)));
-                insertTelemetryPoint(tenantId, IOT_PANEL_DEVICE_ID, IOT_PANEL_POWER_ID, "power_consumption",
-                                new BigDecimal("118.0000"), "kW",
-                                "{\"source\":\"demo-seed\",\"asset\":\"electrical-panel-03\"}",
-                                now.minus(Duration.ofHours(6)).plus(Duration.ofMinutes(4)));
-
-                insertIotAlarm(
-                                IOT_TEMPERATURE_ALARM_ID,
-                                tenantId,
-                                IOT_OVEN_DEVICE_ID,
-                                IOT_OVEN_TEMPERATURE_ID,
-                                "temperature-high",
-                                "HIGH",
-                                "Industrial oven temperature exceeded the safe operating envelope.",
-                                "OPEN",
-                                alertWindow,
-                                null,
-                                null);
-                insertIotAlarm(
-                                IOT_VIBRATION_ALARM_ID,
-                                tenantId,
-                                IOT_COMPRESSOR_DEVICE_ID,
-                                IOT_COMPRESSOR_VIBRATION_ID,
-                                "vibration-anomaly",
-                                "MEDIUM",
-                                "Compressor vibration drifted above the normal baseline during the current shift.",
-                                "ACKNOWLEDGED",
-                                acknowledgedWindow,
-                                acknowledgedWindow.plus(Duration.ofMinutes(7)),
-                                userId);
-
-                insertIotMaintenance(
-                                IOT_OVEN_MAINTENANCE_ID,
-                                tenantId,
-                                IOT_OVEN_DEVICE_ID,
-                                IOT_TEMPERATURE_ALARM_ID,
-                                IOT_OVEN_TEMPERATURE_ID,
-                                "Review oven cooling loop",
-                                "Investigate the temperature excursion and validate the exhaust and cooling controls before the next batch.",
-                                "PENDING",
-                                "HIGH",
-                                "ALARM",
-                                "Temperature high alarm triggered on industrial-oven-02.",
-                                now.plus(Duration.ofMinutes(90)),
-                                null,
-                                userId,
-                                "Field Engineering Team",
-                                now.minus(Duration.ofMinutes(12)));
-                insertIotMaintenance(
-                                IOT_PANEL_MAINTENANCE_ID,
-                                tenantId,
-                                IOT_PANEL_DEVICE_ID,
-                                null,
-                                IOT_PANEL_POWER_ID,
-                                "Restore panel heartbeat",
-                                "Confirm communication path to the electrical panel and recover the telemetry agent.",
-                                "SCHEDULED",
-                                "MEDIUM",
-                                "OPERATIONS",
-                                "No heartbeat received from electrical-panel-03 for more than four hours.",
-                                now.plus(Duration.ofHours(4)),
-                                null,
-                                null,
-                                "Remote Support",
-                                now.minus(Duration.ofMinutes(50)));
-        }
-
         private void insertCrmCompany(
                         UUID id,
                         UUID tenantId,
@@ -1579,142 +1334,6 @@ public class DemoCommercialEnvironmentService {
                 return "Pet client";
         }
 
-        private void insertIotDevice(
-                        UUID id,
-                        UUID tenantId,
-                        String name,
-                        String serialNumber,
-                        String identifier,
-                        String type,
-                        String location,
-                        String description,
-                        String transport,
-                        String host,
-                        int port,
-                        int unitId,
-                        String pollingProfile,
-                        String gateway,
-                        String status,
-                        Instant lastSeenAt,
-                        Instant createdAt) {
-                insert(
-                                """
-                                                INSERT INTO iot_devices (
-                                                    id, tenant_id, name, identifier, serial_number, type, location, description, transport, host, port,
-                                                    unit_id, polling_profile, gateway, status, last_seen_at,
-                                                    created_at, updated_at, created_by, updated_by
-                                                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                                                """,
-                                id, tenantId, name, identifier, serialNumber, type, location, description, transport,
-                                host, port,
-                                unitId, pollingProfile, gateway, status, ts(lastSeenAt),
-                                ts(createdAt), ts(createdAt), SEED_ACTOR, SEED_ACTOR);
-        }
-
-        private void insertIotRegister(
-                        UUID id,
-                        UUID tenantId,
-                        UUID deviceId,
-                        String name,
-                        String code,
-                        String functionCode,
-                        int registerAddress,
-                        String metricName,
-                        String unit,
-                        String dataType,
-                        BigDecimal minThreshold,
-                        BigDecimal maxThreshold,
-                        String status,
-                        Instant createdAt) {
-                insert(
-                                """
-                                                INSERT INTO iot_registers (
-                                                    id, tenant_id, device_id, name, code, function_code, register_address, metric_name, unit, data_type,
-                                                    min_threshold, max_threshold, status, created_at, updated_at, created_by, updated_by
-                                                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                                                """,
-                                id, tenantId, deviceId, name, code, functionCode, registerAddress, metricName, unit,
-                                dataType,
-                                minThreshold, maxThreshold, status, ts(createdAt), ts(createdAt), SEED_ACTOR,
-                                SEED_ACTOR);
-        }
-
-        private void insertTelemetryPoint(
-                        UUID tenantId,
-                        UUID deviceId,
-                        UUID registerId,
-                        String metricName,
-                        BigDecimal metricValue,
-                        String unit,
-                        String metadata,
-                        Instant recordedAt) {
-                insert(
-                                """
-                                                INSERT INTO iot_telemetry_records (
-                                                    id, tenant_id, device_id, register_id, metric_name, metric_value, unit, metadata, recorded_at,
-                                                    created_at, updated_at, created_by, updated_by
-                                                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                                                """,
-                                UUID.randomUUID(), tenantId, deviceId, registerId, metricName, metricValue, unit,
-                                metadata, ts(recordedAt),
-                                ts(recordedAt), ts(recordedAt), SEED_ACTOR, SEED_ACTOR);
-        }
-
-        private void insertIotAlarm(
-                        UUID id,
-                        UUID tenantId,
-                        UUID deviceId,
-                        UUID registerId,
-                        String code,
-                        String severity,
-                        String message,
-                        String status,
-                        Instant triggeredAt,
-                        Instant acknowledgedAt,
-                        UUID acknowledgedBy) {
-                insert(
-                                """
-                                                INSERT INTO iot_alarms (
-                                                    id, tenant_id, device_id, register_id, code, severity, message, status, triggered_at, acknowledged_at, acknowledged_by,
-                                                    created_at, updated_at, created_by, updated_by
-                                                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                                                """,
-                                id, tenantId, deviceId, registerId, code, severity, message, status, ts(triggeredAt),
-                                ts(acknowledgedAt), acknowledgedBy,
-                                ts(triggeredAt), ts(triggeredAt), SEED_ACTOR, SEED_ACTOR);
-        }
-
-        private void insertIotMaintenance(
-                        UUID id,
-                        UUID tenantId,
-                        UUID deviceId,
-                        UUID linkedAlarmId,
-                        UUID linkedRegisterId,
-                        String title,
-                        String description,
-                        String status,
-                        String priority,
-                        String origin,
-                        String trigger,
-                        Instant scheduledAt,
-                        Instant completedAt,
-                        UUID assignedUserId,
-                        String assignedUserLabel,
-                        Instant createdAt) {
-                insert(
-                                """
-                                                INSERT INTO iot_maintenance (
-                                                    id, tenant_id, device_id, linked_alarm_id, linked_register_id, title, description, status, priority, origin,
-                                                    trigger_message, scheduled_at, completed_at, assigned_user_id, assigned_user_label,
-                                                    created_at, updated_at, created_by, updated_by
-                                                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                                                """,
-                                id, tenantId, deviceId, linkedAlarmId, linkedRegisterId, title, description, status,
-                                priority, origin,
-                                trigger, ts(scheduledAt), ts(completedAt), assignedUserId, assignedUserLabel,
-                                ts(createdAt), ts(createdAt), SEED_ACTOR, SEED_ACTOR);
-        }
-
         private void insertAuditLog(
                         UUID tenantId,
                         UUID userId,
@@ -1751,7 +1370,6 @@ public class DemoCommercialEnvironmentService {
                         String tenantCode,
                         String userEmail,
                         int crmRecords,
-                        int petRecords,
-                        int iotRecords) {
+                        int petRecords) {
         }
 }

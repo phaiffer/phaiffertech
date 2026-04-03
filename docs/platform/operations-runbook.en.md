@@ -182,7 +182,7 @@ Example request body:
   "code": "acme-manufacturing",
   "primaryColor": "#0f172a",
   "accentColor": "#2563eb",
-  "contractedModules": ["CORE_PLATFORM", "CRM", "IOT"]
+  "contractedModules": ["CORE_PLATFORM", "PET"]
 }
 ```
 

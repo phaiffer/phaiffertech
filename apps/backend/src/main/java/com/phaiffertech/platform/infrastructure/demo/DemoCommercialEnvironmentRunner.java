@@ -22,11 +22,10 @@ public class DemoCommercialEnvironmentRunner implements CommandLineRunner {
     public void run(String... args) {
         DemoCommercialEnvironmentService.DemoCommercialSeedSummary summary = demoCommercialEnvironmentService.seed();
         log.info(
-                "Commercial demo tenant '{}' ready with CRM={}, PetFlow={} and IoT={} seeded records for '{}'.",
+                "Commercial demo tenant '{}' ready with CRM={} and PetFlow={} seeded records for '{}'.",
                 summary.tenantCode(),
                 summary.crmRecords(),
                 summary.petRecords(),
-                summary.iotRecords(),
                 summary.userEmail()
         );
     }

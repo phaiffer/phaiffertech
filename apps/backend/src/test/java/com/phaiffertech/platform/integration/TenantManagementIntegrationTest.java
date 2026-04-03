@@ -170,7 +170,7 @@ class TenantManagementIntegrationTest extends AbstractIntegrationTest {
                 null,
                 "SYSTEM",
                 true,
-                List.of("PET", "CRM", "IOT"),
+                List.of("PET", "CRM"),
                 List.of(),
                 "West Operator",
                 "clinic-west-admin@local.test",
@@ -202,9 +202,8 @@ class TenantManagementIntegrationTest extends AbstractIntegrationTest {
         assertTrue(containsValue(updated.path("contractedModules"), "CORE_PLATFORM"));
         assertTrue(containsValue(updated.path("contractedModules"), "PET"));
         assertFalse(containsValue(updated.path("contractedModules"), "CRM"));
-        assertFalse(containsValue(updated.path("contractedModules"), "IOT"));
 
-        assertEquals(4, countRows("SELECT COUNT(*) FROM tenant_modules WHERE tenant_id = ?", tenantId));
+        assertEquals(3, countRows("SELECT COUNT(*) FROM tenant_modules WHERE tenant_id = ?", tenantId));
         assertEquals(2, countRows(
                 """
                 SELECT COUNT(*)

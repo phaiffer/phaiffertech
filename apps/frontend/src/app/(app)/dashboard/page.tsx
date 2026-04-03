@@ -76,11 +76,10 @@ export default function DashboardPage() {
     () => accessibleModules.some((moduleItem) => moduleItem.code === 'PET'),
     [accessibleModules]
   );
-  const visibleOfficialModules = useMemo(() => (
-    hasPetVisible
-      ? accessibleModules.filter((moduleItem) => moduleItem.code === 'PET')
-      : accessibleModules.filter((moduleItem) => moduleItem.code !== 'IOT')
-  ), [accessibleModules, hasPetVisible]);
+  const visibleOfficialModules = useMemo(
+    () => accessibleModules,
+    [accessibleModules]
+  );
 
   const visibleSummaryModuleCodes = useMemo(() => {
     return new Set(visibleOfficialModules.map((moduleItem) => moduleItem.code));
@@ -127,12 +126,12 @@ export default function DashboardPage() {
     if (variant === 'platform') {
       return hasPetVisible
         ? platform.modules.items.filter((moduleItem) => moduleItem.code === 'PET')
-        : platform.modules.items.filter((moduleItem) => moduleItem.code !== 'CORE_PLATFORM' && moduleItem.code !== 'IOT');
+        : platform.modules.items.filter((moduleItem) => moduleItem.code !== 'CORE_PLATFORM');
     }
 
     return hasPetVisible
       ? contractedModules.filter((moduleItem) => moduleItem.code === 'PET')
-      : contractedModules.filter((moduleItem) => moduleItem.code !== 'IOT');
+      : contractedModules;
   }, [contractedModules, hasPetVisible, platform.modules.items, variant]);
 
   if (hasPetVisible) {

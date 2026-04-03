@@ -57,10 +57,6 @@ function resolveDefaultVisualProfileKey(availableModuleCodes: string[]): VisualP
     return 'crm-corporate';
   }
 
-  if (contractedCodes[0] === 'IOT') {
-    return 'iot-industrial';
-  }
-
   if (contractedCodes[0] === 'PET') {
     return 'pet-clinic';
   }

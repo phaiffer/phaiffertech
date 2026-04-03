@@ -12,7 +12,6 @@ public final class TenantEntitlementKeys {
     public static final String PET_CLINIC = "pet.clinic";
     public static final String PET_RETAIL = "pet.retail";
     public static final String PET_VETERINARY = "pet.veterinary";
-    public static final String IOT_BASIC = "iot.basic";
     public static final String FINANCE_FISCAL = "finance.fiscal";
     public static final String ANY = "*";
 

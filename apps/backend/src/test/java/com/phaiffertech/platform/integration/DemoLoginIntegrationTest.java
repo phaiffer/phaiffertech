@@ -62,7 +62,7 @@ class DemoLoginIntegrationTest extends AbstractIntegrationTest {
                 UUID.randomUUID().toString(),
                 userTenantId
         );
-        enableTenantModules(tenantId, "CORE_PLATFORM", "CRM", "PET", "IOT");
+        enableTenantModules(tenantId, "CORE_PLATFORM", "CRM", "PET");
 
         ResponseEntity<JsonNode> response = postPublic("/auth/demo-login", Map.of());
 

@@ -9,8 +9,7 @@ export const tenantEntitlementKeys = {
   petAesthetics: 'pet.aesthetics',
   petClinic: 'pet.clinic',
   petRetail: 'pet.retail',
-  petVeterinary: 'pet.veterinary',
-  iotBasic: 'iot.basic'
+  petVeterinary: 'pet.veterinary'
 } as const;
 
 export const petSubmoduleEntitlements = [
@@ -27,7 +26,6 @@ export const petOperationalEntitlements = [
 
 export const petRetailEntitlements = [tenantEntitlementKeys.petRetail] as const;
 export const petClinicalEntitlements = [tenantEntitlementKeys.petVeterinary] as const;
-export const iotMonitorEntitlements = [tenantEntitlementKeys.iotBasic] as const;
 
 export function hasTenantEntitlement(
   user: AuthenticatedUser | null | undefined,

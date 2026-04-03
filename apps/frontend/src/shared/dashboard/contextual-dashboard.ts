@@ -45,11 +45,6 @@ const moduleWorkspaceMeta: Record<string, ModuleWorkspaceMeta> = {
     actionTitle: 'Open CRM workspace',
     actionDescription: 'Review contacts, pipeline flow, and commercial activity for the current workspace.'
   },
-  IOT: {
-    href: '/iot',
-    actionTitle: 'Open IoT workspace',
-    actionDescription: 'Inspect fleet health, alarms, telemetry, and the next operational action for this workspace.'
-  },
   PET: {
     href: '/pet',
     actionTitle: 'Open PetFlow workspace',
@@ -139,10 +134,6 @@ function buildModuleSetupDescription(moduleCode: string) {
 
   if (moduleCode === 'PET') {
     return 'Open PetFlow and establish the first clients, pet profiles, and appointments so clinical context can start building.';
-  }
-
-  if (moduleCode === 'IOT') {
-    return 'Open IoT and onboard the first devices, mappings, and telemetry flows so operational signals can start surfacing.';
   }
 
   return 'Open the contracted module workspace and establish the first operational records for this tenant.';

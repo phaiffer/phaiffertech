@@ -108,8 +108,7 @@ public class DevelopmentDataSeeder implements CommandLineRunner {
                 "crm.lead.create",
                 "crm.lead.update",
                 "crm.lead.delete",
-                "pet.client.read",
-                "iot.device.read"
+                "pet.client.read"
         );
         for (String code : permissions) {
             if (!permissionRepository.existsByCode(code)) {
@@ -125,8 +124,7 @@ public class DevelopmentDataSeeder implements CommandLineRunner {
         List<ModuleDefinition> definitions = List.of(
                 ensureModule("CORE_PLATFORM", "Core Platform", "Shared platform capabilities"),
                 ensureModule("CRM", "CRM", "Contacts, leads and sales"),
-                ensureModule("PET", "Pet", "Pet care and clinic flows"),
-                ensureModule("IOT", "IoT", "Device and telemetry management")
+                ensureModule("PET", "Pet", "Pet care and clinic flows")
         );
 
         Tenant tenant = tenantRepository.findByCodeIgnoreCase("default")
@@ -160,11 +158,11 @@ public class DevelopmentDataSeeder implements CommandLineRunner {
 
         tenant.setPlanCode("BANHO_TOSA_CLINICA");
         tenantRepository.save(tenant);
-        tenantModuleContractService.syncEffectiveModules(tenant.getId(), tenant.getPlanCode(), List.of("CRM", "IOT"));
+        tenantModuleContractService.syncEffectiveModules(tenant.getId(), tenant.getPlanCode(), List.of("CRM", "PET"));
         tenantEntitlementService.syncManualEntitlements(
                 tenant.getId(),
                 tenant.getPlanCode(),
-                List.of(TenantEntitlementKeys.CRM_FULL, TenantEntitlementKeys.IOT_BASIC)
+                List.of(TenantEntitlementKeys.CRM_FULL, TenantEntitlementKeys.PET_FULL)
         );
     }
 

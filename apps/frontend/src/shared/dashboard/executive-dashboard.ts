@@ -29,7 +29,7 @@ type RankedQuickAction = DashboardQuickAction & {
 };
 
 const demoTenantCodes = new Set(['phaiffertech-demo', 'demo-clinic']);
-const executiveModuleOrder = ['PET', 'CRM', 'IOT'];
+const executiveModuleOrder = ['PET', 'CRM'];
 
 function findSummaryCard(summary: DashboardModuleSummary, key: string) {
   return summary.summaryCards.find((card) => card.key === key);
@@ -207,74 +207,12 @@ function resolvePetNextAction(platform: FrontendPlatformState, summary: Dashboar
   };
 }
 
-function resolveIotNextAction(platform: FrontendPlatformState, summary: DashboardModuleSummary | null): RankedQuickAction {
-  const fallbackHref = resolveModuleWorkspaceHref('IOT') ?? '/iot';
-
-  if (!summary || isEmptySummary(summary)) {
-    return {
-      key: 'iot-first-device',
-      eyebrow: 'IOT',
-      title: 'Add first device',
-      description: 'Start the connected workspace by onboarding the first device and register mapping.',
-      href: resolveTargetHref(platform, 'iot.device.create', '/iot/add-device', fallbackHref),
-      priority: 92
-    };
-  }
-
-  const openAlarms = readCardValue(summary, 'open-alarms');
-  if (openAlarms > 0) {
-    return {
-      key: 'iot-review-alerts',
-      eyebrow: 'IOT',
-      title: 'Review alerts',
-      description: `${openAlarms} open alarm(s) need ownership before the operational backlog grows.`,
-      href: resolveTargetHref(platform, 'iot.alarm.read', '/iot/alarms', fallbackHref),
-      priority: 100
-    };
-  }
-
-  const offlineDevices = readCardValue(summary, 'offline-devices');
-  if (offlineDevices > 0) {
-    return {
-      key: 'iot-recover-devices',
-      eyebrow: 'IOT',
-      title: 'Recover offline devices',
-      description: `${offlineDevices} asset(s) lost heartbeat and should be checked in the fleet inventory.`,
-      href: resolveTargetHref(platform, 'iot.device.read', '/iot/devices', fallbackHref),
-      priority: 90
-    };
-  }
-
-  const pendingMaintenance = readCardValue(summary, 'pending-maintenance');
-  if (pendingMaintenance > 0) {
-    return {
-      key: 'iot-review-maintenance',
-      eyebrow: 'IOT',
-      title: 'Review maintenance backlog',
-      description: `${pendingMaintenance} intervention item(s) remain open for the connected workspace.`,
-      href: resolveTargetHref(platform, 'iot.maintenance.read', '/iot/maintenance', fallbackHref),
-      priority: 82
-    };
-  }
-
-  return {
-    key: 'iot-open-workspace',
-    eyebrow: 'IOT',
-    title: 'Open IoT workspace',
-    description: 'Review device posture, telemetry rhythm, and the next operational move.',
-    href: fallbackHref,
-    priority: 62
-  };
-}
-
 function buildModuleAction(platform: FrontendPlatformState, summary: DashboardModuleSummary | null) {
   switch (summary?.moduleCode ?? '') {
     case 'CRM':
       return resolveCrmNextAction(platform, summary);
     case 'PET':
       return resolvePetNextAction(platform, summary);
-    case 'IOT':
-      return resolveIotNextAction(platform, summary);
     default:
       return null;
   }
@@ -286,8 +224,6 @@ function buildAccessibleModuleAction(platform: FrontendPlatformState, moduleCode
       return resolveCrmNextAction(platform, null);
     case 'PET':
       return resolvePetNextAction(platform, null);
-    case 'IOT':
-      return resolveIotNextAction(platform, null);
     default:
       return null;
   }
@@ -305,9 +241,6 @@ export function buildExecutiveContextCards(
   attentionSignals: DashboardQuickAction[]
 ): DashboardContextCard[] {
   const accessibleModules = getAccessibleWorkspaceModules(platform);
-  const visibleModules = accessibleModules.some((moduleItem) => moduleItem.code === 'PET')
-    ? accessibleModules.filter((moduleItem) => moduleItem.code === 'PET')
-    : accessibleModules.filter((moduleItem) => moduleItem.code !== 'IOT');
   const variant = resolveDashboardWorkspaceVariant(platform);
   const demoWorkspace = isDemoWorkspace(platform);
   const primaryAction = recommendedActions[0];
@@ -318,7 +251,7 @@ export function buildExecutiveContextCards(
       label: demoWorkspace ? 'Demo Story' : 'Operational Coverage',
       value: variant === 'platform'
         ? `${moduleSummaries.length} live modules`
-        : `${visibleModules.length} visible module${visibleModules.length === 1 ? '' : 's'}`,
+        : `${accessibleModules.length} visible module${accessibleModules.length === 1 ? '' : 's'}`,
       description: demoWorkspace
         ? 'The seeded demo workspace is ready to show PetFlow value from the first screen.'
         : 'Start with the modules already returning real signals for the current workspace.',
@@ -452,43 +385,6 @@ export function buildExecutiveAttentionSignals(
 
         return [];
       }
-      case 'IOT': {
-        const openAlarms = readCardValue(summary, 'open-alarms');
-        const offlineDevices = readCardValue(summary, 'offline-devices');
-        const pendingMaintenance = readCardValue(summary, 'pending-maintenance');
-
-        if (openAlarms > 0) {
-          return [{
-            key: 'attention-iot-alarms',
-            eyebrow: 'IOT',
-            title: 'IoT open alarms',
-            description: `${openAlarms} alarm(s) are active in the connected workspace.`,
-            href: resolveTargetHref(platform, 'iot.alarm.read', '/iot/alarms', resolveModuleWorkspaceHref('IOT') ?? '/iot')
-          }];
-        }
-
-        if (offlineDevices > 0) {
-          return [{
-            key: 'attention-iot-offline',
-            eyebrow: 'IOT',
-            title: 'IoT offline devices',
-            description: `${offlineDevices} device(s) need heartbeat recovery.`,
-            href: resolveTargetHref(platform, 'iot.device.read', '/iot/devices', resolveModuleWorkspaceHref('IOT') ?? '/iot')
-          }];
-        }
-
-        if (pendingMaintenance > 0) {
-          return [{
-            key: 'attention-iot-maintenance',
-            eyebrow: 'IOT',
-            title: 'IoT maintenance backlog',
-            description: `${pendingMaintenance} maintenance item(s) remain open for field action.`,
-            href: resolveTargetHref(platform, 'iot.maintenance.read', '/iot/maintenance', resolveModuleWorkspaceHref('IOT') ?? '/iot')
-          }];
-        }
-
-        return [];
-      }
       default:
         return [];
     }
@@ -534,16 +430,6 @@ export function buildExecutiveOnboardingSteps(
           href: resolveTargetHref(platform, 'pet.client.read', '/pet/clients', resolveModuleWorkspaceHref('PET') ?? '/pet'),
           status: 'setup required',
           actionLabel: 'Start PetFlow setup'
-        };
-      case 'IOT':
-        return {
-          key: 'onboarding-iot-device',
-          eyebrow: 'IOT',
-          title: 'Add first device',
-          description: 'Open IoT and onboard the first asset so telemetry, alerts, and maintenance signals can appear.',
-          href: resolveTargetHref(platform, 'iot.device.create', '/iot/add-device', resolveModuleWorkspaceHref('IOT') ?? '/iot'),
-          status: 'setup required',
-          actionLabel: 'Start IoT setup'
         };
       default:
         return {
@@ -611,24 +497,6 @@ export function buildExecutiveModuleSnapshots(
             featuredDescription: featured.description,
             emptyTitle: 'No PetFlow activity yet',
             emptyDescription: 'Register the first client, patient, and appointment to make the clinic pulse useful.',
-            nextAction
-          };
-        case 'IOT':
-          return {
-            moduleCode: summary.moduleCode,
-            title: summary.title,
-            description: 'Fleet health, alarm pressure, and telemetry motion across the connected workspace.',
-            status: readCardValue(summary, 'open-alarms') > 0 || readCardValue(summary, 'offline-devices') > 0
-              ? 'alert'
-              : empty
-                ? 'setup required'
-                : 'ok',
-            summaryCards: selectSummaryCards(summary, ['open-alarms', 'active-devices', 'pending-maintenance']),
-            featuredItems: featured.items,
-            featuredTitle: featured.title,
-            featuredDescription: featured.description,
-            emptyTitle: 'No IoT signals yet',
-            emptyDescription: 'Add the first device and mapping to begin surfacing telemetry and alert signals.',
             nextAction
           };
         default:

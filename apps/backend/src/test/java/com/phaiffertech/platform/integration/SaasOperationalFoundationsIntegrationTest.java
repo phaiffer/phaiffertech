@@ -18,30 +18,30 @@ class SaasOperationalFoundationsIntegrationTest extends AbstractIntegrationTest 
                 "tenant-feature-a",
                 "tenant-feature-a@example.test",
                 "CORE_PLATFORM",
-                "IOT"
+                "PET"
         );
         AuthSession tenantB = createTenantAdminSession(
                 "tenant-feature-b",
                 "tenant-feature-b@example.test",
                 "CORE_PLATFORM",
-                "IOT"
+                "PET"
         );
         AuthSession platformAdmin = loginAsDefaultAdmin();
 
         ResponseEntity<JsonNode> updateResponse = put(
-                "/feature-flags/tenants/" + tenantA.tenantId() + "/iot.enabled",
+                "/feature-flags/tenants/" + tenantA.tenantId() + "/pet.enabled",
                 Map.of("enabled", false),
                 platformAdmin
         );
 
         assertEquals(200, updateResponse.getStatusCode().value());
         JsonNode updated = requireBody(updateResponse).path("data");
-        assertEquals("iot.enabled", updated.path("key").asText());
+        assertEquals("pet.enabled", updated.path("key").asText());
         assertFalse(updated.path("enabled").asBoolean());
         assertEquals("TENANT", updated.path("scope").asText());
 
-        JsonNode tenantAModule = findModule(requireBody(get("/modules", tenantA)).path("data"), "IOT");
-        JsonNode tenantBModule = findModule(requireBody(get("/modules", tenantB)).path("data"), "IOT");
+        JsonNode tenantAModule = findModule(requireBody(get("/modules", tenantA)).path("data"), "PET");
+        JsonNode tenantBModule = findModule(requireBody(get("/modules", tenantB)).path("data"), "PET");
 
         assertFalse(tenantAModule.path("featureFlagEnabled").asBoolean());
         assertFalse(tenantAModule.path("available").asBoolean());
@@ -54,12 +54,12 @@ class SaasOperationalFoundationsIntegrationTest extends AbstractIntegrationTest 
                 FROM audit_logs
                 WHERE tenant_id = ?
                   AND entity_name = 'feature_flag'
-                  AND entity_id = 'iot.enabled'
+                  AND entity_id = 'pet.enabled'
                   AND ip_address IS NOT NULL
                   AND payload::jsonb -> 'auditContext' ->> 'path' = ?
                 """,
                 tenantA.tenantId(),
-                "/api/v1/feature-flags/tenants/" + tenantA.tenantId() + "/iot.enabled"
+                "/api/v1/feature-flags/tenants/" + tenantA.tenantId() + "/pet.enabled"
         ) > 0);
     }
 
