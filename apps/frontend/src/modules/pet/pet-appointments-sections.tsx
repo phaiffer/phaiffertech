@@ -25,11 +25,22 @@ export type PetAppointmentServiceSummary = {
   title: string;
   description: string;
   headline: string;
+  selectedServicesLabel: string;
+  emptySelectionLabel: string;
+  addServiceLabel: string;
+  removeServiceLabel: string;
   details: Array<{
     label: string;
     value: string;
   }>;
   notices: string[];
+};
+
+export type PetAppointmentSelectedService = {
+  serviceId: string;
+  label: string;
+  note?: string;
+  removable: boolean;
 };
 
 function buildPetAppointmentStatusOptions(messages: ReturnType<typeof useAppMessages>['petAppointments']): PetSelectOption[] {
@@ -207,10 +218,14 @@ type PetAppointmentFormProps = {
   onPetIdChange: (value: string) => void;
   formPetOptions: PetSelectOption[];
   profilesLookupUnavailable: boolean;
-  serviceId: string;
-  onServiceIdChange: (value: string) => void;
+  servicePickerId: string;
+  onServicePickerIdChange: (value: string) => void;
   formServiceOptions: PetSelectOption[];
   servicesLookupUnavailable: boolean;
+  selectedServices: PetAppointmentSelectedService[];
+  onAddService: () => void;
+  onRemoveService: (serviceId: string) => void;
+  canAddSelectedService: boolean;
   professionalId: string;
   onProfessionalIdChange: (value: string) => void;
   formProfessionalOptions: PetSelectOption[];
@@ -248,10 +263,14 @@ export function PetAppointmentForm({
   onPetIdChange,
   formPetOptions,
   profilesLookupUnavailable,
-  serviceId,
-  onServiceIdChange,
+  servicePickerId,
+  onServicePickerIdChange,
   formServiceOptions,
   servicesLookupUnavailable,
+  selectedServices,
+  onAddService,
+  onRemoveService,
+  canAddSelectedService,
   professionalId,
   onProfessionalIdChange,
   formProfessionalOptions,
@@ -296,7 +315,60 @@ export function PetAppointmentForm({
             <FormSelect label={t.filters.pet} value={petId} options={formPetOptions} onChange={onPetIdChange} disabled={profilesLookupUnavailable} />
           </div>
           <div className="grid gap-3 grid-cols-2">
-            <FormSelect label={t.filters.service} value={serviceId} options={formServiceOptions} onChange={onServiceIdChange} disabled={servicesLookupUnavailable} />
+            <div className="space-y-3">
+              <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
+                <FormSelect
+                  label={t.filters.service}
+                  value={servicePickerId}
+                  options={formServiceOptions}
+                  onChange={onServicePickerIdChange}
+                  disabled={servicesLookupUnavailable}
+                />
+                <button
+                  type="button"
+                  onClick={onAddService}
+                  disabled={!canAddSelectedService || servicesLookupUnavailable}
+                  className="ui-secondary-button whitespace-nowrap"
+                >
+                  {selectedServiceSummary?.addServiceLabel ?? 'Add service'}
+                </button>
+              </div>
+              <div className="rounded-xl border border-[color:var(--app-shell-border)] bg-white/80 px-4 py-3">
+                <p className="text-xs font-semibold uppercase tracking-wide text-[color:var(--app-shell-muted)]">
+                  {selectedServiceSummary?.selectedServicesLabel ?? 'Selected services'}
+                </p>
+                {selectedServices.length > 0 ? (
+                  <div className="mt-3 space-y-2">
+                    {selectedServices.map((service) => (
+                      <div
+                        key={service.serviceId}
+                        className="flex items-start justify-between gap-3 rounded-lg border border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-panel-muted)] px-3 py-2"
+                      >
+                        <div className="min-w-0">
+                          <p className="text-sm font-medium text-slate-900">{service.label}</p>
+                          {service.note ? (
+                            <p className="mt-1 text-xs text-[color:var(--app-shell-muted)]">{service.note}</p>
+                          ) : null}
+                        </div>
+                        {service.removable ? (
+                          <button
+                            type="button"
+                            onClick={() => onRemoveService(service.serviceId)}
+                            className="ui-inline-button whitespace-nowrap"
+                          >
+                            {selectedServiceSummary?.removeServiceLabel ?? 'Remove'}
+                          </button>
+                        ) : null}
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="mt-2 text-xs text-[color:var(--app-shell-muted)]">
+                    {selectedServiceSummary?.emptySelectionLabel ?? 'Add at least one structured service before saving.'}
+                  </p>
+                )}
+              </div>
+            </div>
             <FormSelect
               label={t.filters.professional}
               value={professionalId}

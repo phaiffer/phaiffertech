@@ -2,6 +2,7 @@ package com.phaiffertech.platform.modules.pet.appointment.dto;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.List;
 import java.util.UUID;
 
 public record PetAppointmentResponse(
@@ -12,6 +13,10 @@ public record PetAppointmentResponse(
         String petName,
         UUID serviceId,
         String serviceName,
+        List<PetAppointmentServiceLineResponse> appointmentServices,
+        int serviceCount,
+        Integer totalServiceDurationMinutes,
+        BigDecimal totalServiceBasePrice,
         UUID professionalId,
         String professionalName,
         Instant scheduledAt,

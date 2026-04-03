@@ -41,6 +41,10 @@ export type PetAppointment = {
   petId: string;
   petName?: string;
   serviceId: string;
+  appointmentServices?: PetAppointmentServiceLine[];
+  serviceCount?: number;
+  totalServiceDurationMinutes?: number | null;
+  totalServiceBasePrice?: number;
   professionalId: string;
   professionalName?: string;
   scheduledAt: string;
@@ -67,6 +71,21 @@ export type PetAppointment = {
   planCovered?: boolean;
   // finalAmountDue: computed checkout total. planCovered -> extrasAmount only, else servicePrice + extrasAmount.
   finalAmountDue?: number;
+};
+
+export type PetAppointmentServiceLine = {
+  id?: string | null;
+  serviceId: string;
+  serviceName: string;
+  serviceCategory?: PetServiceCategory | null;
+  durationMinutes?: number | null;
+  basePrice?: number | null;
+  active: boolean;
+  allowInPlans: boolean;
+  allowStandaloneBooking: boolean;
+  lineOrder: number;
+  primary: boolean;
+  missingFromCatalog: boolean;
 };
 
 export type PetServiceCategory = 'GROOMING' | 'CLINICAL';
