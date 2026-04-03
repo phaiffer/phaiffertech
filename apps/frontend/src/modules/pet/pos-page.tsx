@@ -176,7 +176,7 @@ function ServiceCard({
 
       <div className="mt-4 flex items-center justify-between">
         <p className="text-lg font-bold text-slate-900">
-          {formatCurrencyForLocale(locale, service.price)}
+          {formatCurrencyForLocale(locale, service.basePrice)}
         </p>
         <button
           type="button"
@@ -364,6 +364,10 @@ export function POSPage({ showSubnav = false }: POSPageProps) {
 
   const filteredServices = useMemo(() => {
     return services.filter((s) => {
+      if (!s.active) {
+        return false;
+      }
+
       return !searchQuery || s.name.toLowerCase().includes(searchQuery.toLowerCase());
     });
   }, [services, searchQuery]);
@@ -581,7 +585,7 @@ export function POSPage({ showSubnav = false }: POSPageProps) {
                       id: service.id,
                       type: 'service',
                       name: service.name,
-                      price: service.price
+                      price: service.basePrice
                     })
                   }
                 />

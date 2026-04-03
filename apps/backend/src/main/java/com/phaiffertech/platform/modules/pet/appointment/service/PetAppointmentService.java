@@ -23,6 +23,7 @@ import com.phaiffertech.platform.modules.pet.plan.domain.ClientPlan;
 import com.phaiffertech.platform.modules.pet.plan.repository.ClientPlanRepository;
 import com.phaiffertech.platform.modules.pet.servicecatalog.domain.PetServiceCatalog;
 import com.phaiffertech.platform.modules.pet.servicecatalog.repository.PetServiceCatalogRepository;
+import com.phaiffertech.platform.modules.pet.servicecatalog.service.PetServiceCatalogCategoryPolicyService;
 import com.phaiffertech.platform.shared.crud.BasePageQuery;
 import com.phaiffertech.platform.shared.crud.BaseSearchSpecificationBuilder;
 import com.phaiffertech.platform.shared.crud.BaseTenantCrudService;
@@ -64,6 +65,7 @@ public class PetAppointmentService extends BaseTenantCrudService<
     private final PlatformMetricsService platformMetricsService;
     private final ClientPlanRepository clientPlanRepository;
     private final PetOperationalTriggerService operationalTriggerService;
+    private final PetServiceCatalogCategoryPolicyService serviceCatalogCategoryPolicyService;
 
     public PetAppointmentService(
             PetAppointmentRepository repository,
@@ -76,7 +78,8 @@ public class PetAppointmentService extends BaseTenantCrudService<
             PetPrescriptionRepository petPrescriptionRepository,
             PlatformMetricsService platformMetricsService,
             ClientPlanRepository clientPlanRepository,
-            PetOperationalTriggerService operationalTriggerService
+            PetOperationalTriggerService operationalTriggerService,
+            PetServiceCatalogCategoryPolicyService serviceCatalogCategoryPolicyService
     ) {
         super(repository, repository, PetAppointmentMapper.INSTANCE, "Pet appointment not found.");
         this.repository = repository;
@@ -90,11 +93,23 @@ public class PetAppointmentService extends BaseTenantCrudService<
         this.platformMetricsService = platformMetricsService;
         this.clientPlanRepository = clientPlanRepository;
         this.operationalTriggerService = operationalTriggerService;
+        this.serviceCatalogCategoryPolicyService = serviceCatalogCategoryPolicyService;
     }
 
     @Override
     public void beforeCreate(UUID tenantId, PetAppointmentCreateRequest request, PetAppointment entity) {
-        hydrateAndValidateRelations(tenantId, request.clientId(), request.petId(), request.serviceId(), request.professionalId(), request.servicePrice(), entity);
+        hydrateAndValidateRelations(
+                tenantId,
+                request.clientId(),
+                request.petId(),
+                request.serviceId(),
+                request.professionalId(),
+                request.servicePrice(),
+                request.clientPlanId(),
+                null,
+                null,
+                entity
+        );
         // Validate plan if provided; do not consume session at creation time.
         if (request.clientPlanId() != null) {
             validatePlanForClient(tenantId, request.clientPlanId(), request.clientId());
@@ -103,7 +118,18 @@ public class PetAppointmentService extends BaseTenantCrudService<
 
     @Override
     public void beforeUpdate(UUID tenantId, PetAppointmentUpdateRequest request, PetAppointment entity) {
-        hydrateAndValidateRelations(tenantId, request.clientId(), request.petId(), request.serviceId(), request.professionalId(), request.servicePrice(), entity);
+        hydrateAndValidateRelations(
+                tenantId,
+                request.clientId(),
+                request.petId(),
+                request.serviceId(),
+                request.professionalId(),
+                request.servicePrice(),
+                request.clientPlanId(),
+                entity.getServiceId(),
+                entity.getClientPlanId(),
+                entity
+        );
         // Validate plan if provided.
         if (request.clientPlanId() != null) {
             validatePlanForClient(tenantId, request.clientPlanId(), request.clientId());
@@ -183,8 +209,21 @@ public class PetAppointmentService extends BaseTenantCrudService<
 
         ensureLinkedClinicalEntriesAllowUpdate(tenantId, entity, request);
 
+        UUID previousServiceId = entity.getServiceId();
+        UUID previousClientPlanId = entity.getClientPlanId();
         PetAppointmentMapper.INSTANCE.updateEntity(entity, request);
-        hydrateAndValidateRelations(tenantId, request.clientId(), request.petId(), request.serviceId(), request.professionalId(), request.servicePrice(), entity);
+        hydrateAndValidateRelations(
+                tenantId,
+                request.clientId(),
+                request.petId(),
+                request.serviceId(),
+                request.professionalId(),
+                request.servicePrice(),
+                request.clientPlanId(),
+                previousServiceId,
+                previousClientPlanId,
+                entity
+        );
 
         // Consume a plan session when appointment transitions to COMPLETED for the first time.
         tryConsumePlanSession(tenantId, entity);
@@ -241,6 +280,9 @@ public class PetAppointmentService extends BaseTenantCrudService<
             UUID serviceId,
             UUID professionalId,
             BigDecimal requestedServicePrice,
+            UUID requestedClientPlanId,
+            UUID previousServiceId,
+            UUID previousClientPlanId,
             PetAppointment entity
     ) {
         petClientRepository.findByIdAndTenantId(clientId, tenantId)
@@ -255,6 +297,13 @@ public class PetAppointmentService extends BaseTenantCrudService<
 
         PetServiceCatalog serviceCatalog = petServiceCatalogRepository.findByIdAndTenantId(serviceId, tenantId)
                 .orElseThrow(() -> new ResourceNotFoundException("Pet service not found for tenant."));
+        validateServiceCatalogBookingAccess(
+                tenantId,
+                serviceCatalog,
+                requestedClientPlanId,
+                previousServiceId,
+                previousClientPlanId
+        );
 
         PetProfessional professional = petProfessionalRepository.findByIdAndTenantId(professionalId, tenantId)
                 .orElseThrow(() -> new ResourceNotFoundException("Pet professional not found for tenant."));
@@ -277,6 +326,35 @@ public class PetAppointmentService extends BaseTenantCrudService<
                         ? finalPrice.multiply(professional.getCommissionRate()).setScale(2, RoundingMode.HALF_UP)
                         : null
         );
+    }
+
+    private void validateServiceCatalogBookingAccess(
+            UUID tenantId,
+            PetServiceCatalog serviceCatalog,
+            UUID requestedClientPlanId,
+            UUID previousServiceId,
+            UUID previousClientPlanId
+    ) {
+        boolean keepingCurrentService = previousServiceId != null && previousServiceId.equals(serviceCatalog.getId());
+        boolean planUsageChanged = !java.util.Objects.equals(previousClientPlanId, requestedClientPlanId);
+
+        if (!serviceCatalog.isActive() && !keepingCurrentService) {
+            throw new ConflictOperationException("Pet service is inactive and cannot be booked for new appointments.");
+        }
+
+        if (!serviceCatalogCategoryPolicyService.canUseCategory(tenantId, serviceCatalog.getCategory()) && !keepingCurrentService) {
+            throw new ConflictOperationException(
+                    "Pet service category is not available for the current tenant package."
+            );
+        }
+
+        if (requestedClientPlanId != null && !serviceCatalog.isAllowInPlans() && (!keepingCurrentService || planUsageChanged)) {
+            throw new ConflictOperationException("Pet service is not available for plan-based appointments.");
+        }
+
+        if (requestedClientPlanId == null && !serviceCatalog.isAllowStandaloneBooking() && (!keepingCurrentService || previousClientPlanId != null)) {
+            throw new ConflictOperationException("Pet service requires a linked plan before booking.");
+        }
     }
 
     private PetAppointmentResponse toValidatedResponse(PetAppointment appointment, UUID tenantId) {

@@ -1,8 +1,73 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { PetAppointmentsPage } from '@/modules/pet/pet-appointments-page';
+import type { FrontendPlatformState } from '@/shared/platform/frontend-platform.types';
 
-const { hasPermissionMock, hasAnyPermissionMock, petServiceMock } = vi.hoisted(() => ({
+const { currentPlatformState, hasPermissionMock, hasAnyPermissionMock, petServiceMock } = vi.hoisted(() => ({
+  currentPlatformState: {
+    user: {
+      userId: 'user-1',
+      email: 'pet@tenant.test',
+      fullName: 'Pet Operator',
+      tenantId: 'tenant-1',
+      tenantName: 'Clinic North',
+      tenantCode: 'clinic-north',
+      tenantPlanCode: 'BANHO_TOSA_CLINICA',
+      tenantLogoUrl: null,
+      tenantPrimaryColor: '#0f172a',
+      tenantAccentColor: '#2563eb',
+      tenantDefaultThemeMode: 'LIGHT',
+      tenantAllowUserThemeOverride: true,
+      platformOwner: false,
+      platformAdmin: false,
+      role: 'TENANT_ADMIN',
+      permissions: [],
+      featureEntitlements: ['pet.aesthetics', 'pet.clinic', 'pet.retail', 'pet.veterinary']
+    },
+    theme: {
+      mode: 'light',
+      setMode: vi.fn(),
+      tenantDefaultMode: 'light',
+      canOverride: true
+    },
+    branding: {
+      logoUrl: null,
+      scopeName: 'Clinic North',
+      tenantCode: 'clinic-north',
+      style: {}
+    },
+    visualProfile: {
+      key: 'pet-clinic',
+      label: 'Pet Clinic',
+      accentFallback: '#0f766e',
+      primaryFallback: '#164e63',
+      accentColor: '#2563eb',
+      primaryColor: '#0f172a',
+      accentTone: { emphasis: 'clinical', softAlpha: 0.18, highlightAlpha: 0.14 },
+      backgroundMood: { softness: 'soft', accentOpacity: 0.11, supportOpacity: 0.09, accentAnchor: 'top left', supportAnchor: 'bottom center' },
+      surfaceNuance: { tintOpacity: 0.15, borderOpacity: 0.17, elevation: 'quiet' },
+      iconTone: { emphasisOpacity: 0.16, mutedOpacity: 0.08 },
+      chartHighlightTone: { accentOpacity: 0.22, supportOpacity: 0.12 },
+      dashboardHighlightTone: { accentOpacity: 0.12, supportOpacity: 0.09 },
+      loginVisualContext: { accentOpacity: 0.11, supportOpacity: 0.1, cardTintOpacity: 0.05, cardBorderOpacity: 0.16, brandMarkOpacity: 0.15 },
+      illustrationPreset: 'clinical-care'
+    },
+    workspace: {
+      workspaceLabel: 'Tenant workspace',
+      accessLabel: 'Contracted SaaS workspace',
+      isPlatformOwnerTenant: false,
+      hasSystemAdminRole: false,
+      hasFullPlatformVisibility: false,
+      canManagePlatformAdministration: false
+    },
+    modules: {
+      items: [],
+      loading: false,
+      error: null,
+      availableCodes: ['PET'],
+      contractedProducts: []
+    }
+  } as FrontendPlatformState,
   hasPermissionMock: vi.fn(),
   hasAnyPermissionMock: vi.fn(),
   petServiceMock: {
@@ -27,6 +92,10 @@ vi.mock('@/shared/auth/usePermissions', () => ({
 
 vi.mock('@/shared/services/pet-service', () => ({
   petService: petServiceMock
+}));
+
+vi.mock('@/shared/platform/use-frontend-platform', () => ({
+  useFrontendPlatform: () => currentPlatformState
 }));
 
 function createPageResponse<T>(items: T[]) {

@@ -69,12 +69,19 @@ export type PetAppointment = {
   finalAmountDue?: number;
 };
 
+export type PetServiceCategory = 'GROOMING' | 'CLINICAL';
+
 export type PetServiceCatalog = {
   id: string;
   name: string;
   description?: string;
-  price: number;
+  category: PetServiceCategory;
+  active: boolean;
+  basePrice: number;
   durationMinutes: number;
+  commissionEligible: boolean;
+  allowInPlans: boolean;
+  allowStandaloneBooking: boolean;
   createdAt: string;
   updatedAt: string;
 };

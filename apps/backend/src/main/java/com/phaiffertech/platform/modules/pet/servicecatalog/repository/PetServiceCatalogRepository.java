@@ -1,7 +1,9 @@
 package com.phaiffertech.platform.modules.pet.servicecatalog.repository;
 
 import com.phaiffertech.platform.modules.pet.servicecatalog.domain.PetServiceCatalog;
+import com.phaiffertech.platform.modules.pet.servicecatalog.domain.PetServiceCategory;
 import com.phaiffertech.platform.shared.crud.BaseTenantCrudRepository;
+import java.util.Collection;
 import java.util.Optional;
 import java.util.UUID;
 import org.springframework.data.domain.Page;
@@ -19,12 +21,18 @@ public interface PetServiceCatalogRepository
             SELECT s
             FROM PetServiceCatalog s
             WHERE s.tenantId = :tenantId
+              AND s.category IN :allowedCategories
+              AND (:category IS NULL OR s.category = :category)
+              AND (:active IS NULL OR s.active = :active)
               AND (:search = '%' OR
                    LOWER(s.name) LIKE :search OR
                    LOWER(COALESCE(s.description, '')) LIKE :search)
             """)
-    Page<PetServiceCatalog> findAllByTenantIdAndSearch(
+    Page<PetServiceCatalog> findAllByTenantIdAndFilters(
             @Param("tenantId") UUID tenantId,
+            @Param("allowedCategories") Collection<PetServiceCategory> allowedCategories,
+            @Param("category") PetServiceCategory category,
+            @Param("active") Boolean active,
             @Param("search") String search,
             Pageable pageable
     );

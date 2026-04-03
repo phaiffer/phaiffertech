@@ -151,28 +151,103 @@ class PetIntegrationTest extends AbstractIntegrationTest {
         ResponseEntity<JsonNode> createResponse = post("/pet/services", Map.of(
                 "name", "Service " + marker,
                 "description", "Description " + marker,
-                "price", 95.50,
-                "durationMinutes", 45
+                "category", "CLINICAL",
+                "active", true,
+                "basePrice", 95.50,
+                "durationMinutes", 45,
+                "commissionEligible", true,
+                "allowInPlans", true,
+                "allowStandaloneBooking", true
         ), session);
 
         assertEquals(200, createResponse.getStatusCode().value());
+        assertEquals("CLINICAL", requireBody(createResponse).path("data").path("category").asText());
+        assertTrue(requireBody(createResponse).path("data").path("active").asBoolean());
         String serviceId = requireBody(createResponse).path("data").path("id").asText();
 
-        ResponseEntity<JsonNode> listResponse = get("/pet/services?page=0&size=20&search=" + marker, session);
+        ResponseEntity<JsonNode> listResponse = get("/pet/services?page=0&size=20&search=" + marker + "&category=CLINICAL&active=true", session);
         assertEquals(200, listResponse.getStatusCode().value());
         assertTrue(requireBody(listResponse).path("data").path("items").size() >= 1);
 
         ResponseEntity<JsonNode> updateResponse = put("/pet/services/" + serviceId, Map.of(
                 "name", "Service Updated " + marker,
                 "description", "Updated " + marker,
-                "price", 120.00,
-                "durationMinutes", 60
+                "category", "CLINICAL",
+                "active", false,
+                "basePrice", 120.00,
+                "durationMinutes", 60,
+                "commissionEligible", false,
+                "allowInPlans", false,
+                "allowStandaloneBooking", true
         ), session);
         assertEquals(200, updateResponse.getStatusCode().value());
         assertEquals("Service Updated " + marker, requireBody(updateResponse).path("data").path("name").asText());
+        assertEquals("CLINICAL", requireBody(updateResponse).path("data").path("category").asText());
+        assertEquals(false, requireBody(updateResponse).path("data").path("active").asBoolean());
+        assertEquals(false, requireBody(updateResponse).path("data").path("commissionEligible").asBoolean());
 
         ResponseEntity<JsonNode> deleteResponse = delete("/pet/services/" + serviceId, session);
         assertEquals(200, deleteResponse.getStatusCode().value());
+    }
+
+    @Test
+    void shouldKeepExistingAppointmentsEditableWhenServiceBecomesInactive() {
+        AuthSession session = loginAsDefaultAdmin();
+        String marker = randomSearchMarker();
+
+        String clientId = createClient(session, marker);
+        String petId = createPet(session, clientId, marker);
+        String serviceId = createService(session, marker, "GROOMING");
+        String professionalId = createProfessional(session, marker);
+
+        ResponseEntity<JsonNode> createAppointment = post("/pet/appointments", Map.of(
+                "clientId", clientId,
+                "petId", petId,
+                "serviceId", serviceId,
+                "professionalId", professionalId,
+                "scheduledAt", Instant.now().plusSeconds(1800).toString(),
+                "status", "SCHEDULED",
+                "notes", "Before deactivation"
+        ), session);
+        assertEquals(200, createAppointment.getStatusCode().value());
+        String appointmentId = requireBody(createAppointment).path("data").path("id").asText();
+
+        ResponseEntity<JsonNode> deactivateService = put("/pet/services/" + serviceId, Map.of(
+                "name", "Service " + marker,
+                "description", "Routine " + marker,
+                "category", "GROOMING",
+                "active", false,
+                "basePrice", 89.90,
+                "durationMinutes", 40,
+                "commissionEligible", true,
+                "allowInPlans", true,
+                "allowStandaloneBooking", true
+        ), session);
+        assertEquals(200, deactivateService.getStatusCode().value());
+
+        ResponseEntity<JsonNode> updateAppointment = put("/pet/appointments/" + appointmentId, Map.of(
+                "clientId", clientId,
+                "petId", petId,
+                "serviceId", serviceId,
+                "professionalId", professionalId,
+                "scheduledAt", Instant.now().plusSeconds(3600).toString(),
+                "status", "COMPLETED",
+                "notes", "Historical service remains compatible"
+        ), session);
+        assertEquals(200, updateAppointment.getStatusCode().value());
+        assertEquals("COMPLETED", requireBody(updateAppointment).path("data").path("status").asText());
+
+        ResponseEntity<JsonNode> newAppointmentWithInactiveService = post("/pet/appointments", Map.of(
+                "clientId", clientId,
+                "petId", petId,
+                "serviceId", serviceId,
+                "professionalId", professionalId,
+                "scheduledAt", Instant.now().plusSeconds(7200).toString(),
+                "status", "SCHEDULED",
+                "notes", "Should be rejected"
+        ), session);
+        assertEquals(409, newAppointmentWithInactiveService.getStatusCode().value());
+        assertTrue(requireBody(newAppointmentWithInactiveService).path("message").asText().contains("inactive"));
     }
 
     @Test
@@ -836,11 +911,20 @@ class PetIntegrationTest extends AbstractIntegrationTest {
     }
 
     private String createService(AuthSession session, String marker) {
+        return createService(session, marker, "GROOMING");
+    }
+
+    private String createService(AuthSession session, String marker, String category) {
         ResponseEntity<JsonNode> createService = post("/pet/services", Map.of(
                 "name", "Service " + marker,
                 "description", "Routine " + marker,
-                "price", 89.90,
-                "durationMinutes", 40
+                "category", category,
+                "active", true,
+                "basePrice", 89.90,
+                "durationMinutes", 40,
+                "commissionEligible", true,
+                "allowInPlans", true,
+                "allowStandaloneBooking", true
         ), session);
         assertEquals(200, createService.getStatusCode().value());
         return requireBody(createService).path("data").path("id").asText();

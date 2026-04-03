@@ -2,6 +2,7 @@
 
 import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { CalendarCheck, CarFront, CreditCard, RefreshCcw, type LucideIcon } from 'lucide-react';
+import { describePetServiceCatalogItem } from '@/modules/pet/pet-service-catalog-policy';
 import {
   PetAppointmentForm,
   PetAppointmentsFilters,
@@ -145,6 +146,7 @@ export function PetAppointmentsPage() {
 
   const [isEditorOpen, setIsEditorOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [editingServiceName, setEditingServiceName] = useState<string | null>(null);
   const [clientId, setClientId] = useState('');
   const [petId, setPetId] = useState('');
   const [serviceId, setServiceId] = useState('');
@@ -200,12 +202,20 @@ export function PetAppointmentsPage() {
     ];
   }, [messages.formOptions.all, profiles]);
 
+  const bookableServices = useMemo(
+    () => services.filter((service) => service.active),
+    [services]
+  );
+
   const serviceOptions = useMemo(() => {
     return [
       { value: '', label: messages.formOptions.all },
-      ...services.map((service) => ({ value: service.id, label: service.name }))
+      ...services.map((service) => ({
+        value: service.id,
+        label: describePetServiceCatalogItem(service, locale)
+      }))
     ];
-  }, [messages.formOptions.all, services]);
+  }, [locale, messages.formOptions.all, services]);
 
   const professionalOptions = useMemo(() => {
     return [
@@ -222,11 +232,26 @@ export function PetAppointmentsPage() {
   }, [filteredProfiles, messages.formOptions.selectPet]);
 
   const formServiceOptions = useMemo(() => {
+    const options = bookableServices.map((service) => ({
+      value: service.id,
+      label: describePetServiceCatalogItem(service, locale)
+    }));
+
+    if (serviceId && !options.some((option) => option.value === serviceId)) {
+      const selectedService = services.find((service) => service.id === serviceId);
+      options.push({
+        value: serviceId,
+        label: selectedService
+          ? `${describePetServiceCatalogItem(selectedService, locale)} · Legacy booking`
+          : `${editingServiceName ?? messages.filters.service} · Legacy booking`
+      });
+    }
+
     return [
       { value: '', label: messages.formOptions.selectService },
-      ...services.map((service) => ({ value: service.id, label: service.name }))
+      ...options
     ];
-  }, [messages.formOptions.selectService, services]);
+  }, [bookableServices, editingServiceName, locale, messages.filters.service, messages.formOptions.selectService, serviceId, services]);
 
   const formProfessionalOptions = useMemo(() => {
     return [
@@ -385,6 +410,7 @@ export function PetAppointmentsPage() {
 
   function resetForm() {
     setEditingId(null);
+    setEditingServiceName(null);
     setClientId('');
     setPetId('');
     setServiceId('');
@@ -410,6 +436,7 @@ export function PetAppointmentsPage() {
 
   function beginEdit(appointment: PetAppointment) {
     setEditingId(appointment.id);
+    setEditingServiceName(appointment.serviceName);
     setClientId(appointment.clientId);
     setPetId(appointment.petId);
     setServiceId(appointment.serviceId);
@@ -449,6 +476,27 @@ export function PetAppointmentsPage() {
     setSuccess(null);
 
     const parsedExtrasAmount = extrasAmount ? parseFloat(extrasAmount) : undefined;
+    const selectedService = services.find((entry) => entry.id === serviceId) ?? null;
+    if (!editingId && selectedService) {
+      if (!selectedService.active) {
+        setSubmitting(false);
+        setError('Selected service is inactive for new bookings.');
+        return;
+      }
+
+      if (clientPlanId && !selectedService.allowInPlans) {
+        setSubmitting(false);
+        setError('Selected service is not available for plan-based appointments.');
+        return;
+      }
+
+      if (!clientPlanId && !selectedService.allowStandaloneBooking) {
+        setSubmitting(false);
+        setError('Selected service requires a linked plan before booking.');
+        return;
+      }
+    }
+
     const payload = {
       clientId,
       petId,
