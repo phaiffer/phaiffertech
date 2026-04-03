@@ -70,7 +70,7 @@ The website is now structured to communicate five layers clearly:
 
 1. PhaifferTech as a technology company
 2. PhaifferTech Platform as a modular SaaS foundation
-3. Product lines across CRM, PetFlow and IoT System
+3. Product positioning across PetFlow, CRM support capabilities, and the shared SaaS foundation
 4. Engineering authority in data, cloud and platform architecture
 5. Research continuity for technical studies and academic visibility
 

@@ -68,8 +68,6 @@
   --accent-core-foreground: #ffffff;
   --accent-crm: #8B5CF6;
   --accent-crm-foreground: #ffffff;
-  --accent-iot: #14B8A6;
-  --accent-iot-foreground: #042f2e;
   --accent-pet: #10B981;
   --accent-pet-foreground: #ffffff;
 
@@ -199,8 +197,6 @@
   --accent-core-foreground: #022c22;
   --accent-crm: #A78BFA;
   --accent-crm-foreground: #0f172a;
-  --accent-iot: #2DD4BF;
-  --accent-iot-foreground: #0f172a;
   --accent-pet: #34D399;
   --accent-pet-foreground: #022c22;
 
@@ -235,12 +231,6 @@
   --accent: var(--accent-crm);
   --accent-foreground: var(--accent-crm-foreground);
   --accent-muted: rgba(139, 92, 246, 0.15);
-}
-
-[data-module='iot'] {
-  --accent: var(--accent-iot);
-  --accent-foreground: var(--accent-iot-foreground);
-  --accent-muted: rgba(34, 211, 238, 0.15);
 }
 
 [data-module='pet'] {

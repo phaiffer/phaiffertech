@@ -89,7 +89,7 @@ The tenant administration screen now makes explicit:
 This implementation preserves the existing architecture:
 
 - backend rules remain in `core`, not in vertical business modules
-- no CRM, Pet or IoT module depends directly on another module
+- no active CRM or Pet module depends directly on another business module
 - frontend keeps `app` as routing and uses the existing shared shell/components structure
 - no unrelated authenticated areas were redesigned
 

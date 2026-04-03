@@ -28,7 +28,6 @@ const config: Config = {
           muted: 'var(--accent-muted)',
           core: 'var(--accent-core)',
           crm: 'var(--accent-crm)',
-          iot: 'var(--accent-iot)',
           pet: 'var(--accent-pet)',
         },
         // PetFlow Brand Colors

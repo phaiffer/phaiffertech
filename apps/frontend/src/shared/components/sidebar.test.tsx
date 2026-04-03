@@ -98,7 +98,6 @@ describe('Sidebar', () => {
     expect(container.querySelector('a[href="/dashboard"]')).not.toBeNull();
     expect(container.querySelector('a[href="/pet/appointments"]')).not.toBeNull();
     expect(container.querySelector('a[href="/crm"]')).toBeNull();
-    expect(container.querySelector('a[href="/iot/dashboard"]')).toBeNull();
     expect(container.querySelector('a[href="/tenants"]')).toBeNull();
   });
 
@@ -114,7 +113,7 @@ describe('Sidebar', () => {
     expect(container.querySelector('a[href="/crm"]')).toBeNull();
   });
 
-  it('does not expose CRM or IoT even when those products are contracted internally', () => {
+  it('does not expose non-Pet product navigation even when those products are contracted internally', () => {
     currentUser.permissions = ['crm.task.read', 'pet.appointment.read'];
     currentUser.featureEntitlements = ['crm.full', 'pet.full'];
     navigationState.pathname = '/dashboard';
@@ -124,7 +123,6 @@ describe('Sidebar', () => {
     expect(container.querySelector('a[href="/dashboard"]')).not.toBeNull();
     expect(container.querySelector('a[href="/pet/appointments"]')).not.toBeNull();
     expect(container.querySelector('a[href="/crm"]')).toBeNull();
-    expect(container.querySelector('a[href="/iot/dashboard"]')).toBeNull();
   });
 
   it('keeps grooming-friendly PetFlow navigation visible while filtering veterinary-only areas', () => {

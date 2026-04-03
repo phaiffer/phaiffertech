@@ -213,7 +213,9 @@ Expected production behavior:
 
 ## Default Tenant Demo Data
 
-The initial Flyway migration (V5) creates a tenant with code `default` in every environment. A later migration (V46) seeds representative demo records into that tenant — finance invoices, inventory items, CRM tasks, and IoT alarms — to support dashboard and alert surface demonstrations.
+The initial Flyway migration (V5) creates a tenant with code `default` in every environment. A later migration (V46) seeds representative demo records into that tenant — finance invoices, inventory items, CRM tasks, and legacy IoT alarms — to support historical dashboard and alert surface demonstrations.
+
+The current local commercial demo bootstrap is separate from V46 and seeds CRM plus PetFlow data only.
 
 In a production environment this demo data is present in the database but is not accessible through normal application flows because no user is assigned to the `default` tenant by default (user creation is explicitly excluded from V5 and only happens via the `dev`-profile `DevelopmentDataSeeder`). The `default` tenant exists and has enabled modules, but it has no active users.
 

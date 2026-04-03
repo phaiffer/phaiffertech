@@ -2,12 +2,11 @@ import { describe, expect, it } from 'vitest';
 import { resolveVisualProfile, resolveVisualProfileKey } from '@/shared/lib/visual-profile';
 
 describe('visual-profile', () => {
-  it('prioritizes module context for crm and iot modules', () => {
+  it('maps historical industrial tenant codes to the neutral operations profile', () => {
     expect(resolveVisualProfileKey({
-      tenantCode: 'pet-spa-north',
-      moduleContext: 'iot',
+      tenantCode: 'iot-plant-north',
       defaultProfile: 'core-institutional'
-    })).toBe('iot-industrial');
+    })).toBe('operations-industrial');
   });
 
   it('uses module context when the tenant is generic', () => {
@@ -21,8 +20,8 @@ describe('visual-profile', () => {
   it('falls back to the preset default when there are no stronger signals', () => {
     expect(resolveVisualProfileKey({
       tenantCode: 'workspace-default',
-      defaultProfile: 'iot-industrial'
-    })).toBe('iot-industrial');
+      defaultProfile: 'operations-industrial'
+    })).toBe('operations-industrial');
   });
 
   it('keeps the pet module sensitive to grooming hints', () => {
@@ -40,7 +39,7 @@ describe('visual-profile', () => {
       primaryColor: '#654321'
     });
 
-    expect(profile.key).toBe('iot-industrial');
+    expect(profile.key).toBe('operations-industrial');
     expect(profile.accentColor).toBe('#123456');
     expect(profile.primaryColor).toBe('#654321');
     expect(profile.illustrationPreset).toBe('industrial-signals');

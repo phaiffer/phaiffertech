@@ -34,6 +34,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class MasterAdminBootstrapRunner implements CommandLineRunner {
 
     private static final Logger log = LoggerFactory.getLogger(MasterAdminBootstrapRunner.class);
+    private static final String LEGACY_DISABLED_MODULE_CODE = "IOT";
 
     private final MasterAdminBootstrapProperties properties;
     private final TenantRepository tenantRepository;
@@ -148,7 +149,8 @@ public class MasterAdminBootstrapRunner implements CommandLineRunner {
 
     private void ensureTenantModulesEnabled(Tenant tenant) {
         for (ModuleDefinition definition : moduleDefinitionRepository.findAllByActiveTrueAndDeletedAtIsNullOrderByNameAsc()) {
-            if ("IOT".equalsIgnoreCase(definition.getCode())) {
+            // Historical module definitions can still exist in upgraded databases, but local bootstrap must not reactivate them.
+            if (LEGACY_DISABLED_MODULE_CODE.equalsIgnoreCase(definition.getCode())) {
                 continue;
             }
 

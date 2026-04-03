@@ -44,12 +44,12 @@ INSERT INTO inventory_items (
 SELECT
     'e1111111-0000-0000-0000-000000000003',
     t.id,
-    'Temperature Sensor Probe', 'IOT-PROBE-TEMP', 'IOT_SPARE_PART', 'UNIT',
+    'Hypoallergenic Shampoo 5L', 'SHAMPOO-HYPO-5L', 'PET_RETAIL_GOOD', 'UNIT',
     1, 3, 8,
     'seed', 'seed'
 FROM tenants t
 WHERE t.code = 'default'
   AND NOT EXISTS (
       SELECT 1 FROM inventory_items i
-      WHERE i.tenant_id = t.id AND i.sku = 'IOT-PROBE-TEMP'
+      WHERE i.tenant_id = t.id AND i.sku = 'SHAMPOO-HYPO-5L'
   );

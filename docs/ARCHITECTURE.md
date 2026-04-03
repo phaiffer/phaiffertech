@@ -4,6 +4,10 @@
 
 The platform is implemented as a **modular monolith** with multi-tenancy from the beginning.
 
+Active repository direction after the PetFlow-only transition:
+- active business modules are CRM and Pet
+- historical IoT references below are retained only as archived architecture notes or migration compatibility context
+
 Principles:
 - single PostgreSQL database, shared schema
 - tenant isolation by `tenant_id`
@@ -76,19 +80,6 @@ com.phaiffertech.platform
 │   │   ├── invoice
 │   │   ├── subscription
 │   │   └── portal
-│   └── iot
-│       ├── device
-│       ├── capability
-│       ├── register
-│       ├── telemetry
-│       ├── processing
-│       ├── alarm
-│       ├── control
-│       ├── ingestion
-│       ├── sensor
-│       ├── maintenance
-│       ├── report
-│       └── monitoring
 └── infrastructure
     ├── docs
     ├── persistence
@@ -106,11 +97,10 @@ Core owns platform concerns only:
 
 Vertical modules own business rules:
 - `modules.crm`: companies, contacts, leads, deals, pipeline, tasks, notes, activity and CRM dashboard
-- `modules.iot`: devices, registers, telemetry, alarms, maintenance, monitoring and reports
 - `modules.pet`: clients, pets, appointments, services, professionals, medical records, vaccinations, prescriptions, products, inventory and invoices
 
 Explicit rule:
-- core cannot contain CRM, IoT or Pet business logic
+- core cannot contain CRM or Pet business logic
 - one vertical module cannot access another vertical module directly
 - cross-module reads must happen through contracts/capabilities, not through another module repository
 

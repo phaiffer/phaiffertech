@@ -70,7 +70,7 @@ O website agora está estruturado para comunicar cinco camadas com clareza:
 
 1. PhaifferTech como empresa de tecnologia
 2. PhaifferTech Platform como fundação SaaS modular
-3. Linhas de produto entre CRM, PetFlow e IoT System
+3. Posicionamento de produto entre PetFlow, capacidades de apoio em CRM e a fundação SaaS compartilhada
 4. Autoridade de engineering em dados, cloud e arquitetura de plataforma
 5. Continuidade de pesquisa para estudos técnicos e visibilidade acadêmica
 

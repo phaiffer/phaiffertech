@@ -95,8 +95,6 @@ export const enUSMessages: AppMessages = {
     quickSearchPet: 'Search appointments, clients, or billing',
     localeButtonLabel: 'Switch language',
     header: {
-      iotLabel: 'IoT System',
-      iotDescription: 'Internal module preserved outside the visible commercial surface.',
       crmLabel: 'CRM',
       crmDescription: 'Support lane for follow-up, commercial context, and relationship continuity.',
       petLabel: 'PetFlow',
