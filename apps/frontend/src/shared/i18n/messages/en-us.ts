@@ -95,8 +95,8 @@ export const enUSMessages: AppMessages = {
     quickSearchPet: 'Search appointments, clients, or billing',
     localeButtonLabel: 'Switch language',
     header: {
-      crmLabel: 'CRM',
-      crmDescription: 'Support lane for follow-up, commercial context, and relationship continuity.',
+      crmLabel: 'Relationship ops',
+      crmDescription: 'Continuity lane for follow-up, commercial context, and inherited history while PetFlow absorbs the workflow.',
       petLabel: 'PetFlow',
       petDescription: 'Daily queue, plans, stock, billing, and team accountability in one product lane.',
       workspacesLabel: 'Workspaces',
@@ -127,6 +127,7 @@ export const enUSMessages: AppMessages = {
     clients: 'Clients',
     pets: 'Pets',
     appointments: 'Appointments',
+    followUp: 'Follow-up',
     clinic: 'Clinic',
     pos: 'POS',
     finance: 'Finance',

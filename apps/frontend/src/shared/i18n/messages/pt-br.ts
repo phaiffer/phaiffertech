@@ -101,8 +101,8 @@ const ptBRMessages = {
     quickSearchPet: 'Buscar atendimentos, clientes ou cobrança',
     localeButtonLabel: 'Alternar idioma',
     header: {
-      crmLabel: 'CRM',
-      crmDescription: 'Faixa de apoio para follow-up, contexto comercial e continuidade de relacionamento.',
+      crmLabel: 'Relacionamento',
+      crmDescription: 'Faixa de continuidade para follow-up, contexto comercial e histórico herdado enquanto o PetFlow absorve a operação.',
       petLabel: 'PetFlow',
       petDescription: 'Fila do dia, planos, estoque, cobrança e responsabilidade do time em uma única frente.',
       workspacesLabel: 'Workspaces',
@@ -133,6 +133,7 @@ const ptBRMessages = {
     clients: 'Clientes',
     pets: 'Pets',
     appointments: 'Atendimentos',
+    followUp: 'Follow-up',
     clinic: 'Clínica',
     pos: 'PDV',
     finance: 'Financeiro',

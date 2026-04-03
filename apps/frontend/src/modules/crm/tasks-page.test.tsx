@@ -168,4 +168,28 @@ describe('CrmTasksPage', () => {
     expect(screen.getAllByLabelText('Tipo de vínculo')[0]).toHaveValue('PET.CLIENT');
     expect(screen.getAllByLabelText('Registro vinculado')[0]).toHaveValue('client-99');
   });
+
+  it('switches to the PetFlow follow-up surface while keeping legacy compatibility readable', async () => {
+    petServiceMock.listClients.mockResolvedValue(createPageResponse([
+      {
+        id: 'client-1',
+        name: 'Tutor Pet',
+        fullName: 'Tutor Pet',
+        status: 'ACTIVE',
+        createdAt: '2026-03-10T09:00:00Z',
+        updatedAt: '2026-03-10T09:00:00Z'
+      }
+    ]));
+
+    render(<CrmTasksPage surface="pet" />);
+
+    await waitFor(() => {
+      expect(crmServiceMock.listTasks).toHaveBeenCalledTimes(1);
+    });
+
+    expect(screen.getByText('Tarefas de follow-up do PetFlow')).toBeInTheDocument();
+    expect(screen.getByText(/Novas tarefas desta superfície usam referências do PetFlow/i)).toBeInTheDocument();
+    expect(screen.queryByRole('option', { name: 'Empresa CRM' })).not.toBeInTheDocument();
+    expect(screen.getAllByRole('option', { name: 'Cliente Pet' }).length).toBeGreaterThan(0);
+  });
 });

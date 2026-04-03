@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   buildReferenceContextLine,
   buildReferenceHeadline,
@@ -19,6 +19,7 @@ import { usePermissions } from '@/shared/auth/usePermissions';
 import { ApiClientError } from '@/shared/lib/http';
 import { resolvePageItems, resolveTotalItems } from '@/shared/lib/pagination';
 import { crmService, CreateTaskInput, UpdateTaskInput } from '@/shared/services/crm-service';
+import { petFollowUpService } from '@/shared/services/pet-follow-up-service';
 import { petService } from '@/shared/services/pet-service';
 import { CrmCompany, CrmContact, CrmDeal, CrmLead, CrmTask } from '@/shared/types/crm';
 import { PageResponse } from '@/shared/types/common';
@@ -54,8 +55,16 @@ const emptyCommonPage: PageResponse<CrmCompany | CrmContact | CrmLead | CrmDeal 
   size: 100
 };
 
-export function CrmTasksPage() {
+type CrmTasksPageProps = {
+  surface?: 'crm' | 'pet';
+};
+
+const petFollowUpRelationTypes = new Set<CrmRelatedReferenceType>(['PET.CLIENT', 'PET.PROFILE', 'PET.APPOINTMENT']);
+
+export function CrmTasksPage({ surface = 'crm' }: CrmTasksPageProps) {
   const { hasPermission } = usePermissions();
+  const isPetSurface = surface === 'pet';
+  const taskService = isPetSurface ? petFollowUpService : crmService;
   const [pageData, setPageData] = useState<PageResponse<CrmTask>>(initialPage);
   const [companies, setCompanies] = useState<CrmCompany[]>([]);
   const [contacts, setContacts] = useState<CrmContact[]>([]);
@@ -83,27 +92,54 @@ export function CrmTasksPage() {
   const [dueDate, setDueDate] = useState('');
   const [status, setStatus] = useState('OPEN');
   const [priority, setPriority] = useState('MEDIUM');
-  const [relationType, setRelationType] = useState<CrmRelatedReferenceType>('COMPANY');
+  const [relationType, setRelationType] = useState<CrmRelatedReferenceType>(isPetSurface ? 'PET.CLIENT' : 'COMPANY');
   const [relationId, setRelationId] = useState('');
 
   const canReadPetClients = hasPermission('pet.client.read');
   const canReadPetProfiles = hasPermission('pet.profile.read');
   const canReadPetAppointments = hasPermission('pet.appointment.read');
-  const relationTypeOptions = buildRelatedReferenceTypeOptions({
-    canReadPetClients,
-    canReadPetProfiles,
-    canReadPetAppointments
-  });
+  const relationTypeOptions = useMemo(
+    () => buildRelatedReferenceTypeOptions({
+      canReadPetClients,
+      canReadPetProfiles,
+      canReadPetAppointments
+    }).filter((option) => !isPetSurface || petFollowUpRelationTypes.has(option.value)),
+    [canReadPetAppointments, canReadPetClients, canReadPetProfiles, isPetSurface]
+  );
   const relationFilterTypeOptions = [{ value: '', label: 'Todos' }, ...relationTypeOptions];
+  const pageTitle = isPetSurface ? 'Tarefas de follow-up do PetFlow' : 'CRM Tasks';
+  const pageDescription = isPetSurface
+    ? 'Centralize tarefas operacionais ligadas a clientes, pets e atendimentos. Novos registros entram pelo contexto PetFlow enquanto vínculos históricos continuam legíveis para compatibilidade.'
+    : 'Tarefas vinculadas a registros do CRM e, quando permitido, a referências canônicas do PetFlow.';
+  const permissionFallback = isPetSurface
+    ? 'Você não possui permissão para visualizar tarefas de follow-up do PetFlow.'
+    : 'Você não possui permissão para visualizar tarefas.';
+  const relationHint = isPetSurface
+    ? 'Novas tarefas desta superfície usam referências do PetFlow. Vínculos legados continuam visíveis em modo compatível até a absorção completa.'
+    : 'Os vínculos CRM legados continuam compatíveis. Referências Pet aparecem quando o usuário possui leitura do recurso correspondente e são enviadas pelo tipo canônico.';
+
+  useEffect(() => {
+    if (!relationTypeOptions.some((option) => option.value === relationType) && relationTypeOptions[0]) {
+      setRelationType(relationTypeOptions[0].value);
+      setRelationId('');
+    }
+  }, [relationType, relationTypeOptions]);
+
+  useEffect(() => {
+    if (relationTypeFilter && !relationTypeOptions.some((option) => option.value === relationTypeFilter)) {
+      setRelationTypeFilter('');
+      setRelationIdFilter('');
+    }
+  }, [relationTypeFilter, relationTypeOptions]);
 
   useEffect(() => {
     async function loadSupportingData() {
       try {
         const [companiesPage, contactsPage, leadsPage, dealsPage, petClientsPage, petProfilesPage, petAppointmentsPage] = await Promise.all([
-          crmService.listCompanies(0, 100),
-          crmService.listContacts(0, 100),
-          crmService.listLeads(0, 100),
-          crmService.listDeals(0, 100),
+          isPetSurface ? Promise.resolve(emptyCommonPage as PageResponse<CrmCompany>) : crmService.listCompanies(0, 100),
+          isPetSurface ? Promise.resolve(emptyCommonPage as PageResponse<CrmContact>) : crmService.listContacts(0, 100),
+          isPetSurface ? Promise.resolve(emptyCommonPage as PageResponse<CrmLead>) : crmService.listLeads(0, 100),
+          isPetSurface ? Promise.resolve(emptyCommonPage as PageResponse<CrmDeal>) : crmService.listDeals(0, 100),
           canReadPetClients ? petService.listClients(0, 100) : Promise.resolve(emptyCommonPage as PageResponse<PetClient>),
           canReadPetProfiles ? petService.listProfiles(0, 100) : Promise.resolve(emptyCommonPage as PageResponse<PetProfile>),
           canReadPetAppointments ? petService.listAppointments(0, 100) : Promise.resolve(emptyCommonPage as PageResponse<PetAppointment>)
@@ -121,7 +157,7 @@ export function CrmTasksPage() {
     }
 
     void loadSupportingData();
-  }, [canReadPetAppointments, canReadPetClients, canReadPetProfiles]);
+  }, [canReadPetAppointments, canReadPetClients, canReadPetProfiles, isPetSurface]);
 
   useEffect(() => {
     if (filtersReady) {
@@ -146,25 +182,18 @@ export function CrmTasksPage() {
     setFiltersReady(true);
   }, [filtersReady, relationTypeOptions]);
 
-  useEffect(() => {
-    if (!filtersReady) {
-      return;
-    }
-    void load(0, search, statusFilter, priorityFilter, relationTypeFilter, relationIdFilter);
-  }, [filtersReady, search, statusFilter, priorityFilter, relationTypeFilter, relationIdFilter]);
-
-  async function load(
+  const load = useCallback(async (
     page: number,
     currentSearch: string,
     currentStatus: string,
     currentPriority: string,
     currentRelationType: CrmRelatedReferenceType | '',
     currentRelationId: string
-  ) {
+  ) => {
     setLoading(true);
     setError(null);
     try {
-      const result = await crmService.listTasks(page, pageSize, currentSearch, {
+      const result = await taskService.listTasks(page, pageSize, currentSearch, {
         status: currentStatus || undefined,
         priority: currentPriority || undefined,
         relatedReferenceType: currentRelationType || undefined,
@@ -176,7 +205,14 @@ export function CrmTasksPage() {
     } finally {
       setLoading(false);
     }
-  }
+  }, [taskService]);
+
+  useEffect(() => {
+    if (!filtersReady) {
+      return;
+    }
+    void load(0, search, statusFilter, priorityFilter, relationTypeFilter, relationIdFilter);
+  }, [filtersReady, load, priorityFilter, relationIdFilter, relationTypeFilter, search, statusFilter]);
 
   function relationOptions(currentRelationType: CrmRelatedReferenceType) {
     return buildRelatedReferenceOptions(currentRelationType, {
@@ -197,7 +233,7 @@ export function CrmTasksPage() {
     setDueDate('');
     setStatus('OPEN');
     setPriority('MEDIUM');
-    setRelationType('COMPANY');
+    setRelationType(relationTypeOptions[0]?.value ?? (isPetSurface ? 'PET.CLIENT' : 'COMPANY'));
     setRelationId('');
   }
 
@@ -224,9 +260,9 @@ export function CrmTasksPage() {
     setError(null);
     try {
       if (editingId) {
-        await crmService.updateTask(editingId, payload as UpdateTaskInput);
+        await taskService.updateTask(editingId, payload as UpdateTaskInput);
       } else {
-        await crmService.createTask(payload);
+        await taskService.createTask(payload);
       }
       resetForm();
       await load(pageData.page, search, statusFilter, priorityFilter, relationTypeFilter, relationIdFilter);
@@ -240,7 +276,7 @@ export function CrmTasksPage() {
   async function handleDelete() {
     if (!deleteCandidate) return;
     try {
-      await crmService.deleteTask(deleteCandidate.id);
+      await taskService.deleteTask(deleteCandidate.id);
       setDeleteCandidate(null);
       await load(pageData.page, search, statusFilter, priorityFilter, relationTypeFilter, relationIdFilter);
     } catch (err) {
@@ -333,10 +369,10 @@ export function CrmTasksPage() {
   return (
     <PermissionGuard
       permission="crm.task.read"
-      fallback={<div className="ui-notice-warning">Você não possui permissão para visualizar tarefas.</div>}
+      fallback={<div className="ui-notice-warning">{permissionFallback}</div>}
     >
       <div className="space-y-5">
-        <PageTitle title="CRM Tasks" description="Tarefas vinculadas a registros do CRM e, quando permitido, a referências canônicas do PetFlow." />
+        <PageTitle title={pageTitle} description={pageDescription} eyebrow={isPetSurface ? 'PetFlow' : undefined} />
 
         <div className="grid gap-3 ui-surface-panel p-4 xl:grid-cols-[1fr_160px_160px_180px_220px_auto_auto]">
           <SearchBar value={searchInput} onChange={setSearchInput} placeholder="Título, descrição, prioridade" />
@@ -390,7 +426,7 @@ export function CrmTasksPage() {
             <FormSelect label="Tipo de vínculo" value={relationType} options={relationTypeOptions} onChange={(value) => { setRelationType(value as CrmRelatedReferenceType); setRelationId(''); }} />
             <FormSelect label="Registro vinculado" value={relationId} options={[{ value: '', label: 'Selecione' }, ...relationOptions(relationType)]} onChange={setRelationId} />
             <p className="text-xs text-[color:var(--app-shell-muted)] md:col-span-2">
-              Os vínculos CRM legados continuam compatíveis. Referências Pet aparecem quando o usuário possui leitura do recurso correspondente e são enviadas pelo tipo canônico.
+              {relationHint}
             </p>
             <div className="flex gap-2 md:col-span-2">
               <button
