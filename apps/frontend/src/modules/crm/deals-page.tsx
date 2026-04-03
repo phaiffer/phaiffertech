@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { type DragEvent, useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { PermissionGuard } from '@/shared/auth/PermissionGuard';
 import {
@@ -12,6 +12,7 @@ import { StatusBadge } from '@/shared/dashboard/status-badge';
 import { ApiClientError } from '@/shared/lib/http';
 import { resolvePageItems, resolveTotalItems } from '@/shared/lib/pagination';
 import { crmService, CreateDealInput, UpdateDealInput } from '@/shared/services/crm-service';
+import { petCommercialService } from '@/shared/services/pet-commercial-service';
 import { financeService } from '@/shared/services/finance-service';
 import { CrmCompany, CrmContact, CrmDeal, CrmLead, CrmPipelineStage } from '@/shared/types/crm';
 import { FinanceInvoice } from '@/shared/types/finance';
@@ -32,23 +33,41 @@ const statusOptions = [
   { value: 'WON', label: 'WON' },
   { value: 'LOST', label: 'LOST' }
 ];
-const formStatusOptions = statusOptions.filter((option) => option.value);
+const petStatusOptions = [
+  { value: '', label: 'Todos' },
+  { value: 'OPEN', label: 'Em aberto' },
+  { value: 'WON', label: 'Convertido' },
+  { value: 'LOST', label: 'Perdido' }
+];
 const initialPage: PageResponse<CrmDeal> = { items: [], totalItems: 0, totalPages: 0, page: 0, size: pageSize };
 
 /* ─── Finance status helpers ─────────────────────────────────────────────── */
 
-function resolveFinanceStatus(invoice: FinanceInvoice | undefined): { label: string; className: string } {
-  if (!invoice) return { label: 'No invoice', className: 'text-[color:var(--app-shell-muted)]' };
-  if (invoice.status === 'PAID') return { label: 'Payment completed', className: 'text-emerald-600 dark:text-emerald-400' };
-  if (invoice.status === 'ISSUED') return { label: 'Awaiting payment', className: 'text-amber-600 dark:text-amber-400' };
-  if (invoice.status === 'DRAFT') return { label: 'Draft invoice', className: 'text-blue-600 dark:text-blue-400' };
-  if (invoice.status === 'CANCELED') return { label: 'Invoice canceled', className: 'text-[color:var(--app-shell-muted)] line-through' };
-  return { label: 'Invoice pending', className: 'text-[color:var(--app-shell-muted)]' };
+function resolveFinanceStatus(
+  invoice: FinanceInvoice | undefined,
+  isPetSurface: boolean
+): { label: string; className: string } {
+  if (!invoice) {
+    return { label: isPetSurface ? 'Sem fatura' : 'No invoice', className: 'text-[color:var(--app-shell-muted)]' };
+  }
+  if (invoice.status === 'PAID') {
+    return { label: isPetSurface ? 'Pagamento concluido' : 'Payment completed', className: 'text-emerald-600 dark:text-emerald-400' };
+  }
+  if (invoice.status === 'ISSUED') {
+    return { label: isPetSurface ? 'Aguardando pagamento' : 'Awaiting payment', className: 'text-amber-600 dark:text-amber-400' };
+  }
+  if (invoice.status === 'DRAFT') {
+    return { label: isPetSurface ? 'Fatura em rascunho' : 'Draft invoice', className: 'text-blue-600 dark:text-blue-400' };
+  }
+  if (invoice.status === 'CANCELED') {
+    return { label: isPetSurface ? 'Fatura cancelada' : 'Invoice canceled', className: 'text-[color:var(--app-shell-muted)] line-through' };
+  }
+  return { label: isPetSurface ? 'Fatura pendente' : 'Invoice pending', className: 'text-[color:var(--app-shell-muted)]' };
 }
 
-function formatCurrency(amount: number, currency: string) {
+function formatCurrency(amount: number, currency: string, locale: string) {
   try {
-    return new Intl.NumberFormat('en-US', { style: 'currency', currency }).format(amount);
+    return new Intl.NumberFormat(locale, { style: 'currency', currency }).format(amount);
   } catch {
     return `${currency} ${amount}`;
   }
@@ -56,7 +75,14 @@ function formatCurrency(amount: number, currency: string) {
 
 /* ─── Component ──────────────────────────────────────────────────────────── */
 
-export function CrmDealsPage() {
+type CrmDealsPageProps = {
+  surface?: 'crm' | 'pet';
+};
+
+export function CrmDealsPage({ surface = 'crm' }: CrmDealsPageProps) {
+  const isPetSurface = surface === 'pet';
+  const commercialService = isPetSurface ? petCommercialService : crmService;
+  const pipelinePath = isPetSurface ? '/pet/commercial?tab=pipeline' : '/crm/pipeline';
   const [pageData, setPageData] = useState<PageResponse<CrmDeal>>(initialPage);
   const [companies, setCompanies] = useState<CrmCompany[]>([]);
   const [contacts, setContacts] = useState<CrmContact[]>([]);
@@ -93,19 +119,25 @@ export function CrmDealsPage() {
   const loadSupportingData = useCallback(async () => {
     try {
       const [companiesPage, contactsPage, leadsPage, stagesPage] = await Promise.all([
-        crmService.listCompanies(0, 100),
-        crmService.listContacts(0, 100),
-        crmService.listLeads(0, 100),
-        crmService.listPipelineStages(0, 100)
+        commercialService.listCompanies(0, 100),
+        commercialService.listContacts(0, 100),
+        commercialService.listLeads(0, 100),
+        commercialService.listPipelineStages(0, 100)
       ]);
       setCompanies(resolvePageItems(companiesPage));
       setContacts(resolvePageItems(contactsPage));
       setLeads(resolvePageItems(leadsPage));
       setStages(resolvePageItems(stagesPage).sort((a, b) => a.position - b.position));
     } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : 'Unable to load deal dependencies for the CRM workspace.');
+      setError(
+        err instanceof ApiClientError
+          ? err.message
+          : isPetSurface
+            ? 'Nao foi possivel carregar as dependencias do comercial do PetFlow.'
+            : 'Unable to load deal dependencies for the CRM workspace.'
+      );
     }
-  }, []);
+  }, [commercialService, isPetSurface]);
 
   const loadInvoices = useCallback(async () => {
     try {
@@ -131,18 +163,24 @@ export function CrmDealsPage() {
     setLoading(true);
     setError(null);
     try {
-      const result = await crmService.listDeals(page, pageSize, currentSearch, {
+      const result = await commercialService.listDeals(page, pageSize, currentSearch, {
         status: currentStatus || undefined,
         companyId: currentCompanyId || undefined
       });
       setPageData(result);
       await loadInvoices();
     } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : 'Unable to load CRM deals.');
+      setError(
+        err instanceof ApiClientError
+          ? err.message
+          : isPetSurface
+            ? 'Nao foi possivel carregar os negocios comerciais.'
+            : 'Unable to load CRM deals.'
+      );
     } finally {
       setLoading(false);
     }
-  }, [loadInvoices]);
+  }, [commercialService, isPetSurface, loadInvoices]);
 
   useEffect(() => {
     void loadSupportingData();
@@ -188,7 +226,7 @@ export function CrmDealsPage() {
 
   async function handleSubmit() {
     if (!companyId || !pipelineStageId || !title.trim()) {
-      setError('Title, company, and pipeline stage are required.');
+      setError(isPetSurface ? 'Titulo, conta comercial e etapa do pipeline sao obrigatorios.' : 'Title, company, and pipeline stage are required.');
       return;
     }
 
@@ -209,15 +247,21 @@ export function CrmDealsPage() {
     setError(null);
     try {
       if (editingId) {
-        await crmService.updateDeal(editingId, payload as UpdateDealInput);
+        await commercialService.updateDeal(editingId, payload as UpdateDealInput);
       } else {
-        await crmService.createDeal(payload);
+        await commercialService.createDeal(payload);
       }
       setIsEditorOpen(false);
       resetForm();
       await load(pageData.page, search, statusFilter, companyFilterId);
     } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : 'Unable to save the deal.');
+      setError(
+        err instanceof ApiClientError
+          ? err.message
+          : isPetSurface
+            ? 'Nao foi possivel salvar o negocio comercial.'
+            : 'Unable to save the deal.'
+      );
     } finally {
       setSaving(false);
     }
@@ -226,12 +270,18 @@ export function CrmDealsPage() {
   async function handleDelete() {
     if (!deleteCandidate) return;
     try {
-      await crmService.deleteDeal(deleteCandidate.id);
+      await commercialService.deleteDeal(deleteCandidate.id);
       setDeleteCandidate(null);
       setIsEditorOpen(false);
       await load(pageData.page, search, statusFilter, companyFilterId);
     } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : 'Unable to delete the selected deal.');
+      setError(
+        err instanceof ApiClientError
+          ? err.message
+          : isPetSurface
+            ? 'Nao foi possivel remover o negocio selecionado.'
+            : 'Unable to delete the selected deal.'
+      );
     }
   }
 
@@ -242,6 +292,8 @@ export function CrmDealsPage() {
     try {
       const company = companies.find((c) => c.id === deal.companyId);
       await financeService.createInvoice({
+        // Historical finance records still use CRM source tags until the
+        // backend commercial ownership is migrated safely.
         sourceModule: 'CRM',
         businessContextType: 'CRM.DEAL',
         businessContextId: deal.id,
@@ -252,13 +304,19 @@ export function CrmDealsPage() {
       });
       await loadInvoices();
     } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : 'Unable to generate invoice for this deal.');
+      setError(
+        err instanceof ApiClientError
+          ? err.message
+          : isPetSurface
+            ? 'Nao foi possivel gerar a fatura deste negocio.'
+            : 'Unable to generate invoice for this deal.'
+      );
     } finally {
       setGeneratingInvoice(false);
     }
   }
 
-  async function handleDropDeal(e: React.DragEvent, stageId: string) {
+  async function handleDropDeal(e: DragEvent, stageId: string) {
     e.preventDefault();
     const dealId = e.dataTransfer.getData('dealId');
     if (!dealId || isDragUpdating) return;
@@ -281,29 +339,52 @@ export function CrmDealsPage() {
         expectedCloseDate: deal.expectedCloseDate ?? undefined
       };
 
-      await crmService.updateDeal(dealId, payload);
+      await commercialService.updateDeal(dealId, payload);
       await load(pageData.page, search, statusFilter, companyFilterId);
     } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : 'Unable to move deal.');
+      setError(
+        err instanceof ApiClientError
+          ? err.message
+          : isPetSurface
+            ? 'Nao foi possivel mover o negocio.'
+            : 'Unable to move deal.'
+      );
     } finally {
       setIsDragUpdating(false);
     }
   }
 
-  function handleDragStart(e: React.DragEvent, dealId: string) {
+  function handleDragStart(e: DragEvent, dealId: string) {
     e.dataTransfer.setData('dealId', dealId);
   }
 
-  function handleDragOver(e: React.DragEvent) {
+  function handleDragOver(e: DragEvent) {
     e.preventDefault();
   }
 
   const activeFilterCount = [search, statusFilter, companyFilterId].filter(Boolean).length;
-  const companyOptions = [{ value: '', label: 'Select a company' }, ...companies.map((item) => ({ value: item.id, label: item.name }))];
-  const filterCompanyOptions = [{ value: '', label: 'All companies' }, ...companies.map((item) => ({ value: item.id, label: item.name }))];
-  const stageOptions = [{ value: '', label: 'Select a pipeline stage' }, ...stages.map((item) => ({ value: item.id, label: `${item.position}. ${item.name}` }))];
-  const contactOptions = [{ value: '', label: 'No linked contact' }, ...contacts.map((item) => ({ value: item.id, label: `${item.firstName} ${item.lastName ?? ''}`.trim() }))];
-  const leadOptions = [{ value: '', label: 'No linked lead' }, ...leads.map((item) => ({ value: item.id, label: item.name }))];
+  const availableStatusOptions = isPetSurface ? petStatusOptions : statusOptions;
+  const formStatusOptions = availableStatusOptions.filter((option) => option.value);
+  const companyOptions = [{
+    value: '',
+    label: isPetSurface ? 'Selecionar conta comercial' : 'Select a company'
+  }, ...companies.map((item) => ({ value: item.id, label: item.name }))];
+  const filterCompanyOptions = [{
+    value: '',
+    label: isPetSurface ? 'Todas as contas comerciais' : 'All companies'
+  }, ...companies.map((item) => ({ value: item.id, label: item.name }))];
+  const stageOptions = [{
+    value: '',
+    label: isPetSurface ? 'Selecionar etapa do pipeline' : 'Select a pipeline stage'
+  }, ...stages.map((item) => ({ value: item.id, label: `${item.position}. ${item.name}` }))];
+  const contactOptions = [{
+    value: '',
+    label: isPetSurface ? 'Sem contato de apoio vinculado' : 'No linked contact'
+  }, ...contacts.map((item) => ({ value: item.id, label: `${item.firstName} ${item.lastName ?? ''}`.trim() }))];
+  const leadOptions = [{
+    value: '',
+    label: isPetSurface ? 'Sem lead vinculado' : 'No linked lead'
+  }, ...leads.map((item) => ({ value: item.id, label: item.name }))];
   const companyName = (id?: string) => companies.find((item) => item.id === id)?.name ?? '-';
 
   const rows = resolvePageItems(pageData);
@@ -311,8 +392,8 @@ export function CrmDealsPage() {
   const openDealsOnPage = rows.filter((row) => row.status === 'OPEN').length;
 
   function formatDealAmount(row: CrmDeal) {
-    if (!row.amount) return 'No amount defined';
-    return formatCurrency(row.amount, row.currency);
+    if (!row.amount) return isPetSurface ? 'Sem valor definido' : 'No amount defined';
+    return formatCurrency(row.amount, row.currency, isPetSurface ? 'pt-BR' : 'en-US');
   }
 
   const columnsData = stages.map(stage => ({
@@ -321,23 +402,39 @@ export function CrmDealsPage() {
   }));
   const uncategorizedDeals = rows.filter(r => !stages.some(s => s.id === r.pipelineStageId));
   if (uncategorizedDeals.length > 0) {
-    columnsData.push({ stage: { id: '', name: 'Uncategorized', position: 99, color: '#475569' } as CrmPipelineStage, deals: uncategorizedDeals });
+    columnsData.push({
+      stage: {
+        id: '',
+        name: isPetSurface ? 'Sem etapa definida' : 'Uncategorized',
+        position: 99,
+        color: '#475569'
+      } as CrmPipelineStage,
+      deals: uncategorizedDeals
+    });
   }
 
   return (
     <PermissionGuard
       permission="crm.deal.read"
-      fallback={<div className="ui-notice-warning">You do not have permission to view CRM deals.</div>}
+      fallback={(
+        <div className="ui-notice-warning">
+          {isPetSurface
+            ? 'Voce nao possui permissao para visualizar o comercial do PetFlow.'
+            : 'You do not have permission to view CRM deals.'}
+        </div>
+      )}
     >
       <div className={sharedPageStackClass}>
         <PageTitle
-          eyebrow="CRM workspace"
-          title="Deals"
-          description="Track opportunities on a single board without turning the page into a reporting layer."
+          eyebrow={isPetSurface ? 'PetFlow commercial' : 'CRM workspace'}
+          title={isPetSurface ? 'Negocios comerciais' : 'Deals'}
+          description={isPetSurface
+            ? 'Acompanhe o pipeline comercial do PetFlow sem reabrir uma superficie separada de CRM.'
+            : 'Track opportunities on a single board without turning the page into a reporting layer.'}
           actions={(
             <PermissionGuard permission="crm.deal.create">
               <button type="button" onClick={beginCreateDeal} className="ui-primary-button">
-                Add deal
+                {isPetSurface ? 'Novo negocio comercial' : 'Add deal'}
               </button>
             </PermissionGuard>
           )}
@@ -345,24 +442,31 @@ export function CrmDealsPage() {
 
         <PageSection
           tone="muted"
-          title="Filters"
-          description="Focus the board by search, lifecycle, and account."
+          title={isPetSurface ? 'Filtros comerciais' : 'Filters'}
+          description={isPetSurface
+            ? 'Refine o quadro por busca, status e conta comercial para manter a conversao sob controle.'
+            : 'Focus the board by search, lifecycle, and account.'}
         >
           <div className={sharedFilterToolbarClass}>
             <div className="grid gap-3 xl:grid-cols-[minmax(0,1.45fr)_220px_260px] xl:items-end">
               <SearchBar
-                label="Search"
+                label={isPetSurface ? 'Buscar' : 'Search'}
                 value={searchInput}
                 onChange={setSearchInput}
-                placeholder="Title, summary, or currency"
+                placeholder={isPetSurface ? 'Titulo, resumo ou moeda' : 'Title, summary, or currency'}
               />
-              <FormSelect label="Status" value={statusFilter} options={statusOptions} onChange={setStatusFilter} />
-              <FormSelect label="Company" value={companyFilterId} options={filterCompanyOptions} onChange={setCompanyFilterId} />
+              <FormSelect label="Status" value={statusFilter} options={availableStatusOptions} onChange={setStatusFilter} />
+              <FormSelect
+                label={isPetSurface ? 'Conta comercial' : 'Company'}
+                value={companyFilterId}
+                options={filterCompanyOptions}
+                onChange={setCompanyFilterId}
+              />
             </div>
 
             <div className={sharedFormActionsClass}>
               <button type="button" onClick={() => setSearch(searchInput)} className="ui-primary-button">
-                Search
+                {isPetSurface ? 'Buscar' : 'Search'}
               </button>
               <button
                 type="button"
@@ -374,12 +478,16 @@ export function CrmDealsPage() {
                 }}
                 className="ui-secondary-button"
               >
-                Clear
+                {isPetSurface ? 'Limpar' : 'Clear'}
               </button>
               <p className="text-sm text-[color:var(--app-shell-muted)]">
                 {activeFilterCount > 0
-                  ? `${activeFilterCount} filter(s) updating the board view.`
-                  : 'No active filters.'}
+                  ? isPetSurface
+                    ? `${activeFilterCount} filtro(s) ativos atualizando o quadro comercial.`
+                    : `${activeFilterCount} filter(s) updating the board view.`
+                  : isPetSurface
+                    ? 'Sem filtros ativos no quadro comercial.'
+                    : 'No active filters.'}
               </p>
             </div>
           </div>
@@ -388,24 +496,32 @@ export function CrmDealsPage() {
         {error ? <div className="ui-notice-error">{error}</div> : null}
 
         <PageSection
-          title="Pipeline board"
-          description="Move opportunities by stage and open a deal only when you need details."
+          title={isPetSurface ? 'Pipeline comercial' : 'Pipeline board'}
+          description={isPetSurface
+            ? 'Mova oportunidades por etapa e abra um negocio apenas quando precisar aprofundar os detalhes.'
+            : 'Move opportunities by stage and open a deal only when you need details.'}
           actions={(
             <p className="text-sm text-[color:var(--app-shell-muted)]">
-              {openDealsOnPage} open deal(s) · {stages.length} stage(s) · {totalItems} total
+              {isPetSurface
+                ? `${openDealsOnPage} negocio(s) em aberto · ${stages.length} etapa(s) · ${totalItems} no total`
+                : `${openDealsOnPage} open deal(s) · ${stages.length} stage(s) · ${totalItems} total`}
             </p>
           )}
         >
           <div className="flex gap-6 overflow-x-auto pb-8 pt-1">
             {loading && rows.length === 0 ? (
               <div className="w-full py-20 text-center text-[color:var(--app-shell-muted)]">
-                Loading pipeline data...
+                {isPetSurface ? 'Carregando pipeline comercial...' : 'Loading pipeline data...'}
               </div>
             ) : stages.length === 0 && !loading ? (
               <div className="ui-notice-neutral w-full">
-                The Kanban board requires at least one pipeline stage to be configured.
+                {isPetSurface
+                  ? 'O quadro comercial precisa de pelo menos uma etapa de pipeline configurada.'
+                  : 'The Kanban board requires at least one pipeline stage to be configured.'}
                 <div className="mt-3 flex gap-2">
-                  <Link href="/crm/pipeline" className="ui-secondary-button">Configure pipeline stages</Link>
+                  <Link href={pipelinePath} className="ui-secondary-button">
+                    {isPetSurface ? 'Configurar pipeline comercial' : 'Configure pipeline stages'}
+                  </Link>
                 </div>
               </div>
             ) : (
@@ -429,7 +545,7 @@ export function CrmDealsPage() {
                   <div className="flex min-h-[150px] flex-col gap-3">
                     {deals.map((deal) => {
                       const invoice = invoicesByDealId.get(deal.id);
-                      const fs = resolveFinanceStatus(invoice);
+                      const fs = resolveFinanceStatus(invoice, isPetSurface);
                       return (
                         <div
                           key={deal.id}
@@ -457,7 +573,11 @@ export function CrmDealsPage() {
                               <span className={new Date(deal.expectedCloseDate || '2099') < new Date()
                                 ? 'text-xs font-medium text-red-500'
                                 : 'text-xs text-[color:var(--app-shell-muted)]'}>
-                                {deal.expectedCloseDate ? new Date(deal.expectedCloseDate).toLocaleDateString() : 'No date'}
+                                {deal.expectedCloseDate
+                                  ? new Date(deal.expectedCloseDate).toLocaleDateString(isPetSurface ? 'pt-BR' : 'en-US')
+                                  : isPetSurface
+                                    ? 'Sem data'
+                                    : 'No date'}
                               </span>
                             </div>
 
@@ -470,7 +590,9 @@ export function CrmDealsPage() {
                     })}
                     {deals.length === 0 ? (
                       <div className="flex h-24 items-center justify-center rounded-lg border-2 border-dashed border-[color:var(--app-shell-border)] bg-transparent">
-                        <span className="text-sm text-[color:var(--app-shell-muted)] opacity-60">Drop deals here</span>
+                        <span className="text-sm text-[color:var(--app-shell-muted)] opacity-60">
+                          {isPetSurface ? 'Solte negocios aqui' : 'Drop deals here'}
+                        </span>
                       </div>
                     ) : null}
                   </div>
@@ -491,10 +613,18 @@ export function CrmDealsPage() {
               <div className="mb-8 flex items-center justify-between">
                 <div>
                   <h2 className="text-2xl font-bold tracking-tight text-[color:var(--app-shell-heading)]">
-                    {editingId ? 'Edit deal' : 'Create deal'}
+                    {isPetSurface
+                      ? editingId ? 'Editar negocio comercial' : 'Novo negocio comercial'
+                      : editingId ? 'Edit deal' : 'Create deal'}
                   </h2>
                   <p className="text-sm mt-1 text-[color:var(--app-shell-muted)]">
-                    {editingId ? 'Update opportunity details and forecast.' : 'Add a new opportunity to the pipeline.'}
+                    {isPetSurface
+                      ? editingId
+                        ? 'Atualize detalhes, previsao e vinculos do negocio.'
+                        : 'Adicione uma nova oportunidade ao pipeline comercial.'
+                      : editingId
+                        ? 'Update opportunity details and forecast.'
+                        : 'Add a new opportunity to the pipeline.'}
                   </p>
                 </div>
                 <button
@@ -507,49 +637,96 @@ export function CrmDealsPage() {
               </div>
 
               <div className="space-y-6">
-                <PermissionGuard permission={editingId ? 'crm.deal.update' : 'crm.deal.create'} fallback={<div className="ui-notice-error">Missing permissions to save this deal.</div>}>
+                <PermissionGuard
+                  permission={editingId ? 'crm.deal.update' : 'crm.deal.create'}
+                  fallback={(
+                    <div className="ui-notice-error">
+                      {isPetSurface
+                        ? 'Permissao insuficiente para salvar este negocio comercial.'
+                        : 'Missing permissions to save this deal.'}
+                    </div>
+                  )}
+                >
                   <form className="space-y-6 flex flex-col h-full" onSubmit={(e) => { e.preventDefault(); void handleSubmit(); }}>
 
                     <div className="grid gap-5 sm:grid-cols-2">
                       <div className="sm:col-span-2">
-                        <FormInput label="Deal title" placeholder="e.g. Enterprise License Expansion" value={title} onChange={setTitle} required />
+                        <FormInput
+                          label={isPetSurface ? 'Titulo do negocio' : 'Deal title'}
+                          placeholder={isPetSurface ? 'Ex.: Plano premium anual' : 'e.g. Enterprise License Expansion'}
+                          value={title}
+                          onChange={setTitle}
+                          required
+                        />
                       </div>
 
                       <div className="sm:col-span-2">
-                        <FormInput label="Commercial summary" value={description} onChange={setDescription} />
+                        <FormInput
+                          label={isPetSurface ? 'Resumo comercial' : 'Commercial summary'}
+                          value={description}
+                          onChange={setDescription}
+                        />
                       </div>
 
-                      <FormSelect label="Company" value={companyId} options={companyOptions} onChange={setCompanyId} />
-                      <FormSelect label="Pipeline stage" value={pipelineStageId} options={stageOptions} onChange={setPipelineStageId} />
+                      <FormSelect
+                        label={isPetSurface ? 'Conta comercial' : 'Company'}
+                        value={companyId}
+                        options={companyOptions}
+                        onChange={setCompanyId}
+                      />
+                      <FormSelect
+                        label={isPetSurface ? 'Etapa do pipeline' : 'Pipeline stage'}
+                        value={pipelineStageId}
+                        options={stageOptions}
+                        onChange={setPipelineStageId}
+                      />
 
-                      <FormInput label="Amount" value={amount} onChange={setAmount} type="number" />
+                      <FormInput label={isPetSurface ? 'Valor' : 'Amount'} value={amount} onChange={setAmount} type="number" />
                       <FormSelect label="Currency" value={currency} options={[{ value: 'BRL', label: 'BRL' }, { value: 'USD', label: 'USD' }, { value: 'EUR', label: 'EUR' }]} onChange={setCurrency} />
 
-                      <DateInput label="Expected close date" value={expectedCloseDate} onChange={setExpectedCloseDate} />
+                      <DateInput
+                        label={isPetSurface ? 'Data prevista de fechamento' : 'Expected close date'}
+                        value={expectedCloseDate}
+                        onChange={setExpectedCloseDate}
+                      />
                       <FormSelect label="Status" value={status} options={formStatusOptions} onChange={setStatus} />
 
                       <div className="sm:col-span-2 pt-4 border-t border-[color:var(--app-shell-border)] grid gap-5 sm:grid-cols-2">
-                        <h3 className="sm:col-span-2 text-sm font-semibold uppercase tracking-wider text-[color:var(--app-shell-muted)]">Optional Linkages</h3>
-                        <FormSelect label="Primary contact" value={contactId} options={contactOptions} onChange={setContactId} />
-                        <FormSelect label="Source lead" value={leadId} options={leadOptions} onChange={setLeadId} />
+                        <h3 className="sm:col-span-2 text-sm font-semibold uppercase tracking-wider text-[color:var(--app-shell-muted)]">
+                          {isPetSurface ? 'Vinculos opcionais' : 'Optional Linkages'}
+                        </h3>
+                        <FormSelect
+                          label={isPetSurface ? 'Contato de apoio principal' : 'Primary contact'}
+                          value={contactId}
+                          options={contactOptions}
+                          onChange={setContactId}
+                        />
+                        <FormSelect
+                          label={isPetSurface ? 'Lead de origem' : 'Source lead'}
+                          value={leadId}
+                          options={leadOptions}
+                          onChange={setLeadId}
+                        />
                       </div>
 
                       {/* Finance section — visible only when editing an existing deal */}
                       {editingId && (() => {
                         const deal = rows.find(r => r.id === editingId);
                         const invoice = invoicesByDealId.get(editingId);
-                        const fs = resolveFinanceStatus(invoice);
+                        const fs = resolveFinanceStatus(invoice, isPetSurface);
                         return (
                           <div className="sm:col-span-2 pt-4 border-t border-[color:var(--app-shell-border)] space-y-3">
                             <div className="flex items-center justify-between">
-                              <h3 className="text-sm font-semibold uppercase tracking-wider text-[color:var(--app-shell-muted)]">Finance</h3>
+                              <h3 className="text-sm font-semibold uppercase tracking-wider text-[color:var(--app-shell-muted)]">
+                                {isPetSurface ? 'Financeiro' : 'Finance'}
+                              </h3>
                               {invoice && (
                                 <Link
                                   href="/finance/invoices"
                                   className="text-xs text-blue-600 dark:text-blue-400 hover:underline"
                                   onClick={() => setIsEditorOpen(false)}
                                 >
-                                  View in Finance →
+                                  {isPetSurface ? 'Abrir no financeiro ->' : 'View in Finance ->'}
                                 </Link>
                               )}
                             </div>
@@ -560,18 +737,18 @@ export function CrmDealsPage() {
                                   <span className={`text-sm font-medium ${fs.className}`}>{fs.label}</span>
                                   {invoice.totalAmount > 0 && (
                                     <span className="text-sm font-semibold text-[color:var(--app-shell-heading)]">
-                                      {formatCurrency(invoice.totalAmount, invoice.currency)}
+                                      {formatCurrency(invoice.totalAmount, invoice.currency, isPetSurface ? 'pt-BR' : 'en-US')}
                                     </span>
                                   )}
                                 </div>
                                 {invoice.outstandingAmount > 0 && invoice.status !== 'PAID' && (
                                   <p className="text-xs text-[color:var(--app-shell-muted)]">
-                                    Outstanding: {formatCurrency(invoice.outstandingAmount, invoice.currency)}
+                                    {isPetSurface ? 'Em aberto:' : 'Outstanding:'} {formatCurrency(invoice.outstandingAmount, invoice.currency, isPetSurface ? 'pt-BR' : 'en-US')}
                                   </p>
                                 )}
                                 {invoice.paidAt && (
                                   <p className="text-xs text-emerald-600 dark:text-emerald-400">
-                                    Paid on {new Date(invoice.paidAt).toLocaleDateString()}
+                                    {isPetSurface ? 'Pago em ' : 'Paid on '}{new Date(invoice.paidAt).toLocaleDateString(isPetSurface ? 'pt-BR' : 'en-US')}
                                   </p>
                                 )}
                               </div>
@@ -580,7 +757,7 @@ export function CrmDealsPage() {
                                 {deal?.amount ? (
                                   <>
                                     <p className="text-sm text-[color:var(--app-shell-muted)]">
-                                      No invoice yet for this deal.
+                                      {isPetSurface ? 'Ainda nao existe fatura para este negocio.' : 'No invoice yet for this deal.'}
                                     </p>
                                     <PermissionGuard permission="finance.invoice.create">
                                       <button
@@ -589,13 +766,17 @@ export function CrmDealsPage() {
                                         onClick={() => deal && void handleGenerateInvoice(deal)}
                                         className="ui-secondary-button text-sm"
                                       >
-                                        {generatingInvoice ? 'Generating...' : 'Generate invoice'}
+                                        {generatingInvoice
+                                          ? isPetSurface ? 'Gerando...' : 'Generating...'
+                                          : isPetSurface ? 'Gerar fatura' : 'Generate invoice'}
                                       </button>
                                     </PermissionGuard>
                                   </>
                                 ) : (
                                   <p className="text-sm text-[color:var(--app-shell-muted)]">
-                                    Set a deal amount to enable invoice generation.
+                                    {isPetSurface
+                                      ? 'Defina um valor no negocio para habilitar a geracao de fatura.'
+                                      : 'Set a deal amount to enable invoice generation.'}
                                   </p>
                                 )}
                               </div>
@@ -612,17 +793,21 @@ export function CrmDealsPage() {
                           disabled={saving || !title.trim() || !companyId || !pipelineStageId}
                           className="ui-primary-button"
                         >
-                          {saving ? 'Saving...' : editingId ? 'Save changes' : 'Add to board'}
+                          {saving
+                            ? isPetSurface ? 'Salvando...' : 'Saving...'
+                            : isPetSurface
+                              ? editingId ? 'Salvar negocio' : 'Adicionar ao pipeline'
+                              : editingId ? 'Save changes' : 'Add to board'}
                         </button>
                         <button type="button" onClick={() => setIsEditorOpen(false)} className="ui-secondary-button">
-                          Cancel
+                          {isPetSurface ? 'Cancelar' : 'Cancel'}
                         </button>
                       </div>
 
                       {editingId && (
                         <PermissionGuard permission="crm.deal.delete">
                           <button type="button" onClick={() => setDeleteCandidate(rows.find(r => r.id === editingId) || null)} className="text-red-600 hover:text-red-700 font-medium text-sm px-3 py-2 rounded-md hover:bg-red-50 dark:hover:bg-red-950/30">
-                            Delete deal
+                            {isPetSurface ? 'Remover negocio' : 'Delete deal'}
                           </button>
                         </PermissionGuard>
                       )}
@@ -636,9 +821,13 @@ export function CrmDealsPage() {
 
         <ConfirmDialog
           open={Boolean(deleteCandidate)}
-          title="Delete opportunity"
-          description={deleteCandidate ? `Are you sure you want to permanently remove "${deleteCandidate.title}" from the pipeline? This action cannot be undone.` : undefined}
-          confirmLabel="Delete forever"
+          title={isPetSurface ? 'Remover negocio comercial' : 'Delete opportunity'}
+          description={deleteCandidate
+            ? (isPetSurface
+              ? `Confirma a remocao permanente de "${deleteCandidate.title}" do pipeline comercial?`
+              : `Are you sure you want to permanently remove "${deleteCandidate.title}" from the pipeline? This action cannot be undone.`)
+            : undefined}
+          confirmLabel={isPetSurface ? 'Remover' : 'Delete forever'}
           onCancel={() => setDeleteCandidate(null)}
           onConfirm={() => void handleDelete()}
         />

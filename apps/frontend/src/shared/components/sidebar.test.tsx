@@ -86,7 +86,7 @@ describe('Sidebar', () => {
     currentUser.platformAdmin = true;
     currentUser.platformOwner = true;
     currentUser.tenantPlanCode = 'BANHO_TOSA_CLINICA';
-    currentUser.permissions = ['TENANT_READ', 'USER_READ', 'crm.task.read', 'pet.appointment.read', 'crm.dashboard.read', 'pet.dashboard.read'];
+    currentUser.permissions = ['TENANT_READ', 'USER_READ', 'crm.task.read', 'crm.deal.read', 'pet.appointment.read', 'crm.dashboard.read', 'pet.dashboard.read'];
     currentUser.featureEntitlements = ['crm.full', 'pet.full'];
   });
 
@@ -98,6 +98,7 @@ describe('Sidebar', () => {
     expect(container.querySelector('a[href="/dashboard"]')).not.toBeNull();
     expect(container.querySelector('a[href="/pet/appointments"]')).not.toBeNull();
     expect(container.querySelector('a[href="/pet/follow-up"]')).not.toBeNull();
+    expect(container.querySelector('a[href="/pet/commercial"]')).not.toBeNull();
     expect(container.querySelector('a[href="/crm"]')).toBeNull();
     expect(container.querySelector('a[href="/tenants"]')).toBeNull();
   });
@@ -115,7 +116,7 @@ describe('Sidebar', () => {
   });
 
   it('does not expose non-Pet product navigation even when those products are contracted internally', () => {
-    currentUser.permissions = ['crm.task.read', 'pet.appointment.read'];
+    currentUser.permissions = ['crm.task.read', 'crm.deal.read', 'pet.appointment.read'];
     currentUser.featureEntitlements = ['crm.full', 'pet.full'];
     navigationState.pathname = '/dashboard';
 
@@ -124,6 +125,7 @@ describe('Sidebar', () => {
     expect(container.querySelector('a[href="/dashboard"]')).not.toBeNull();
     expect(container.querySelector('a[href="/pet/appointments"]')).not.toBeNull();
     expect(container.querySelector('a[href="/pet/follow-up"]')).not.toBeNull();
+    expect(container.querySelector('a[href="/pet/commercial"]')).not.toBeNull();
     expect(container.querySelector('a[href="/crm"]')).toBeNull();
   });
 

@@ -76,6 +76,17 @@ describe('CrmDealsPage', () => {
     expect(screen.getByRole('link', { name: 'Configure pipeline stages' })).toHaveAttribute('href', '/crm/pipeline');
   });
 
+  it('uses the PetFlow commercial pipeline setup route on the absorbed surface', async () => {
+    render(<CrmDealsPage surface="pet" />);
+
+    await waitFor(() => {
+      expect(crmServiceMock.listDeals).toHaveBeenCalledTimes(1);
+    });
+
+    expect(screen.getByText('Negocios comerciais')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Configurar pipeline comercial' })).toHaveAttribute('href', '/pet/commercial?tab=pipeline');
+  });
+
   it('renders kanban board when stages and deals exist', async () => {
     crmServiceMock.listPipelineStages.mockResolvedValue(createPageResponse([mockStage]));
     crmServiceMock.listDeals.mockResolvedValue(createPageResponse([mockDeal]));

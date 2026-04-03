@@ -134,6 +134,7 @@ const ptBRMessages = {
     pets: 'Pets',
     appointments: 'Atendimentos',
     followUp: 'Follow-up',
+    commercial: 'Comercial',
     clinic: 'Clínica',
     pos: 'PDV',
     finance: 'Financeiro',
