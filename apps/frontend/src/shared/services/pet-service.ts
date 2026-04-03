@@ -17,6 +17,7 @@ import {
   PetProfessional,
   PetProfile,
   PetServiceCatalog,
+  PetServiceCategory,
   PetVaccination
 } from '@/shared/types/pet';
 
@@ -63,8 +64,13 @@ export type UpdatePetProfileInput = CreatePetProfileInput;
 export type CreatePetServiceCatalogInput = {
   name: string;
   description?: string;
-  price: number;
+  category: PetServiceCategory;
+  active: boolean;
+  basePrice: number;
   durationMinutes: number;
+  commissionEligible: boolean;
+  allowInPlans: boolean;
+  allowStandaloneBooking: boolean;
 };
 
 export type UpdatePetServiceCatalogInput = CreatePetServiceCatalogInput;
@@ -217,6 +223,11 @@ type PetAppointmentFilters = {
   scheduledTo?: string;
 };
 
+type PetServiceCatalogFilters = {
+  category?: PetServiceCategory;
+  active?: boolean;
+};
+
 type PetMedicalRecordFilters = {
   petId?: string;
   professionalId?: string;
@@ -341,8 +352,13 @@ export const petService = {
 
   restoreProfile: (id: string) => apiClient.patch<PetProfile>(`/pet/pets/${id}/restore`),
 
-  listServices: (page = 0, size = 20, search = '') =>
-    apiClient.get<PageResponse<PetServiceCatalog>>(`/pet/services?${queryString(page, size, search)}`),
+  listServices: (page = 0, size = 20, search = '', filters: PetServiceCatalogFilters = {}) =>
+    apiClient.get<PageResponse<PetServiceCatalog>>(
+      `/pet/services?${queryString(page, size, search, {
+        category: filters.category,
+        active: filters.active === undefined ? undefined : String(filters.active)
+      })}`
+    ),
 
   getService: (id: string) => apiClient.get<PetServiceCatalog>(`/pet/services/${id}`),
 

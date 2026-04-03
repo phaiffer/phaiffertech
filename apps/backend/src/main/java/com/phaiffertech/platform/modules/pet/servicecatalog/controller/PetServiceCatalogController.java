@@ -1,6 +1,7 @@
 package com.phaiffertech.platform.modules.pet.servicecatalog.controller;
 
 import com.phaiffertech.platform.core.tenant.entitlement.TenantEntitlementKeys;
+import com.phaiffertech.platform.modules.pet.servicecatalog.domain.PetServiceCategory;
 import com.phaiffertech.platform.modules.pet.servicecatalog.dto.PetServiceCatalogCreateRequest;
 import com.phaiffertech.platform.modules.pet.servicecatalog.dto.PetServiceCatalogResponse;
 import com.phaiffertech.platform.modules.pet.servicecatalog.dto.PetServiceCatalogUpdateRequest;
@@ -20,6 +21,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -38,8 +40,12 @@ public class PetServiceCatalogController {
 
     @GetMapping
     @RequirePermission("pet.service.read")
-    public ApiResponse<PageResponseDto<PetServiceCatalogResponse>> list(@Valid @ModelAttribute PageRequestDto pageRequest) {
-        return ApiResponse.success(service.list(pageRequest));
+    public ApiResponse<PageResponseDto<PetServiceCatalogResponse>> list(
+            @Valid @ModelAttribute PageRequestDto pageRequest,
+            @RequestParam(required = false) PetServiceCategory category,
+            @RequestParam(required = false) Boolean active
+    ) {
+        return ApiResponse.success(service.list(pageRequest, category, active));
     }
 
     @GetMapping("/{id}")

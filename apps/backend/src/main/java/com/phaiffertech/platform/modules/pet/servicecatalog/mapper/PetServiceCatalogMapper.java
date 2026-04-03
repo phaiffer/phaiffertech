@@ -22,8 +22,13 @@ public final class PetServiceCatalogMapper implements BaseCrudMapper<
         PetServiceCatalog entity = new PetServiceCatalog();
         entity.setName(request.name().trim());
         entity.setDescription(trimToNull(request.description()));
-        entity.setPrice(request.price());
+        entity.setCategory(request.category());
+        entity.setActive(request.active());
+        entity.setPrice(request.basePrice());
         entity.setDurationMinutes(request.durationMinutes());
+        entity.setCommissionEligible(request.commissionEligible());
+        entity.setAllowInPlans(request.allowInPlans());
+        entity.setAllowStandaloneBooking(request.allowStandaloneBooking());
         return entity;
     }
 
@@ -31,8 +36,13 @@ public final class PetServiceCatalogMapper implements BaseCrudMapper<
     public void updateEntity(PetServiceCatalog entity, PetServiceCatalogUpdateRequest request) {
         entity.setName(request.name().trim());
         entity.setDescription(trimToNull(request.description()));
-        entity.setPrice(request.price());
+        entity.setCategory(request.category());
+        entity.setActive(request.active());
+        entity.setPrice(request.basePrice());
         entity.setDurationMinutes(request.durationMinutes());
+        entity.setCommissionEligible(request.commissionEligible());
+        entity.setAllowInPlans(request.allowInPlans());
+        entity.setAllowStandaloneBooking(request.allowStandaloneBooking());
     }
 
     @Override
@@ -41,8 +51,13 @@ public final class PetServiceCatalogMapper implements BaseCrudMapper<
                 entity.getId(),
                 entity.getName(),
                 entity.getDescription(),
+                entity.getCategory(),
+                entity.isActive(),
                 entity.getPrice(),
                 entity.getDurationMinutes(),
+                entity.isCommissionEligible(),
+                entity.isAllowInPlans(),
+                entity.isAllowStandaloneBooking(),
                 entity.getCreatedAt(),
                 entity.getUpdatedAt()
         );
