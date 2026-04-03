@@ -7,6 +7,7 @@ import {
   petRetailEntitlements,
   petSubmoduleEntitlements
 } from '@/shared/entitlements/tenant-entitlements';
+import { petCommercialNavigationPermissions } from '@/shared/auth/pet-commercial-permissions';
 import { useAppMessages } from '@/shared/i18n/app-i18n-provider';
 import { filterSidebarItems, petClinicNavigationPlanCodes, petPosNavigationPlanCodes } from '@/shared/platform/sidebar-navigation';
 import { useFrontendPlatform } from '@/shared/platform/use-frontend-platform';
@@ -72,7 +73,7 @@ export function PetModuleSubnav() {
     {
       href: '/pet/commercial',
       label: t.commercial,
-      anyOf: ['crm.lead.read', 'crm.deal.read', 'crm.pipeline.read'],
+      anyOf: [...petCommercialNavigationPermissions],
       anyEntitlements: petSubmoduleEntitlements,
       moduleCode: 'PET',
       group: 'pet' as const

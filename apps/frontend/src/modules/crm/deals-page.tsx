@@ -3,6 +3,7 @@
 import { type DragEvent, useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { PermissionGuard } from '@/shared/auth/PermissionGuard';
+import { petCommercialPermissions } from '@/shared/auth/pet-commercial-permissions';
 import {
   sharedFilterToolbarClass,
   sharedFormActionsClass,
@@ -11,12 +12,21 @@ import {
 import { StatusBadge } from '@/shared/dashboard/status-badge';
 import { ApiClientError } from '@/shared/lib/http';
 import { resolvePageItems, resolveTotalItems } from '@/shared/lib/pagination';
-import { crmService, CreateDealInput, UpdateDealInput } from '@/shared/services/crm-service';
-import { petCommercialService } from '@/shared/services/pet-commercial-service';
+import {
+  petCommercialService,
+  type CreatePetCommercialDealInput,
+  type UpdatePetCommercialDealInput
+} from '@/shared/services/pet-commercial-service';
 import { financeService } from '@/shared/services/finance-service';
-import { CrmCompany, CrmContact, CrmDeal, CrmLead, CrmPipelineStage } from '@/shared/types/crm';
 import { FinanceInvoice } from '@/shared/types/finance';
 import { PageResponse } from '@/shared/types/common';
+import {
+  PetCommercialAccount,
+  PetCommercialDeal,
+  PetCommercialLead,
+  PetCommercialPipelineStage,
+  PetCommercialSupportContact
+} from '@/shared/types/pet-commercial';
 import { ConfirmDialog } from '@/shared/ui/confirm-dialog';
 import { DateInput } from '@/shared/ui/date-input';
 import { FormInput } from '@/shared/ui/form-input';
@@ -39,7 +49,7 @@ const petStatusOptions = [
   { value: 'WON', label: 'Convertido' },
   { value: 'LOST', label: 'Perdido' }
 ];
-const initialPage: PageResponse<CrmDeal> = { items: [], totalItems: 0, totalPages: 0, page: 0, size: pageSize };
+const initialPage: PageResponse<PetCommercialDeal> = { items: [], totalItems: 0, totalPages: 0, page: 0, size: pageSize };
 
 /* ─── Finance status helpers ─────────────────────────────────────────────── */
 
@@ -81,20 +91,21 @@ type CrmDealsPageProps = {
 
 export function CrmDealsPage({ surface = 'crm' }: CrmDealsPageProps) {
   const isPetSurface = surface === 'pet';
-  const commercialService = isPetSurface ? petCommercialService : crmService;
+  const commercialService = petCommercialService;
+  const dealPermissions = petCommercialPermissions.deals;
   const pipelinePath = isPetSurface ? '/pet/commercial?tab=pipeline' : '/crm/pipeline';
-  const [pageData, setPageData] = useState<PageResponse<CrmDeal>>(initialPage);
-  const [companies, setCompanies] = useState<CrmCompany[]>([]);
-  const [contacts, setContacts] = useState<CrmContact[]>([]);
-  const [leads, setLeads] = useState<CrmLead[]>([]);
-  const [stages, setStages] = useState<CrmPipelineStage[]>([]);
+  const [pageData, setPageData] = useState<PageResponse<PetCommercialDeal>>(initialPage);
+  const [companies, setCompanies] = useState<PetCommercialAccount[]>([]);
+  const [contacts, setContacts] = useState<PetCommercialSupportContact[]>([]);
+  const [leads, setLeads] = useState<PetCommercialLead[]>([]);
+  const [stages, setStages] = useState<PetCommercialPipelineStage[]>([]);
   const [invoicesByDealId, setInvoicesByDealId] = useState<Map<string, FinanceInvoice>>(new Map());
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [generatingInvoice, setGeneratingInvoice] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [deleteCandidate, setDeleteCandidate] = useState<CrmDeal | null>(null);
+  const [deleteCandidate, setDeleteCandidate] = useState<PetCommercialDeal | null>(null);
 
   // Kanban & Drawer state
   const [isEditorOpen, setIsEditorOpen] = useState(false);
@@ -209,7 +220,7 @@ export function CrmDealsPage({ surface = 'crm' }: CrmDealsPageProps) {
     setIsEditorOpen(true);
   }
 
-  function beginEditDeal(row: CrmDeal) {
+  function beginEditDeal(row: PetCommercialDeal) {
     setEditingId(row.id);
     setTitle(row.title);
     setDescription(row.description ?? '');
@@ -230,7 +241,7 @@ export function CrmDealsPage({ surface = 'crm' }: CrmDealsPageProps) {
       return;
     }
 
-    const payload: CreateDealInput | UpdateDealInput = {
+    const payload: CreatePetCommercialDealInput | UpdatePetCommercialDealInput = {
       title,
       description: description || undefined,
       amount: amount ? Number(amount) : undefined,
@@ -247,7 +258,7 @@ export function CrmDealsPage({ surface = 'crm' }: CrmDealsPageProps) {
     setError(null);
     try {
       if (editingId) {
-        await commercialService.updateDeal(editingId, payload as UpdateDealInput);
+        await commercialService.updateDeal(editingId, payload as UpdatePetCommercialDealInput);
       } else {
         await commercialService.createDeal(payload);
       }
@@ -285,7 +296,7 @@ export function CrmDealsPage({ surface = 'crm' }: CrmDealsPageProps) {
     }
   }
 
-  async function handleGenerateInvoice(deal: CrmDeal) {
+  async function handleGenerateInvoice(deal: PetCommercialDeal) {
     if (generatingInvoice) return;
     setGeneratingInvoice(true);
     setError(null);
@@ -326,7 +337,7 @@ export function CrmDealsPage({ surface = 'crm' }: CrmDealsPageProps) {
 
     setIsDragUpdating(true);
     try {
-      const payload: UpdateDealInput = {
+      const payload: UpdatePetCommercialDealInput = {
         title: deal.title,
         description: deal.description ?? undefined,
         amount: String(deal.amount) ? Number(deal.amount) : undefined,
@@ -391,7 +402,7 @@ export function CrmDealsPage({ surface = 'crm' }: CrmDealsPageProps) {
   const totalItems = resolveTotalItems(pageData);
   const openDealsOnPage = rows.filter((row) => row.status === 'OPEN').length;
 
-  function formatDealAmount(row: CrmDeal) {
+  function formatDealAmount(row: PetCommercialDeal) {
     if (!row.amount) return isPetSurface ? 'Sem valor definido' : 'No amount defined';
     return formatCurrency(row.amount, row.currency, isPetSurface ? 'pt-BR' : 'en-US');
   }
@@ -408,14 +419,14 @@ export function CrmDealsPage({ surface = 'crm' }: CrmDealsPageProps) {
         name: isPetSurface ? 'Sem etapa definida' : 'Uncategorized',
         position: 99,
         color: '#475569'
-      } as CrmPipelineStage,
+      } as PetCommercialPipelineStage,
       deals: uncategorizedDeals
     });
   }
 
   return (
     <PermissionGuard
-      permission="crm.deal.read"
+      permission={dealPermissions.read}
       fallback={(
         <div className="ui-notice-warning">
           {isPetSurface
@@ -429,10 +440,10 @@ export function CrmDealsPage({ surface = 'crm' }: CrmDealsPageProps) {
           eyebrow={isPetSurface ? 'PetFlow commercial' : 'CRM workspace'}
           title={isPetSurface ? 'Negocios comerciais' : 'Deals'}
           description={isPetSurface
-            ? 'Acompanhe o pipeline comercial do PetFlow sem reabrir uma superficie separada de CRM.'
+            ? 'Acompanhe o pipeline comercial do PetFlow sem reabrir uma superficie comercial legada.'
             : 'Track opportunities on a single board without turning the page into a reporting layer.'}
           actions={(
-            <PermissionGuard permission="crm.deal.create">
+            <PermissionGuard permission={dealPermissions.create}>
               <button type="button" onClick={beginCreateDeal} className="ui-primary-button">
                 {isPetSurface ? 'Novo negocio comercial' : 'Add deal'}
               </button>
@@ -638,7 +649,7 @@ export function CrmDealsPage({ surface = 'crm' }: CrmDealsPageProps) {
 
               <div className="space-y-6">
                 <PermissionGuard
-                  permission={editingId ? 'crm.deal.update' : 'crm.deal.create'}
+                  permission={editingId ? dealPermissions.update : dealPermissions.create}
                   fallback={(
                     <div className="ui-notice-error">
                       {isPetSurface
@@ -805,7 +816,7 @@ export function CrmDealsPage({ surface = 'crm' }: CrmDealsPageProps) {
                       </div>
 
                       {editingId && (
-                        <PermissionGuard permission="crm.deal.delete">
+                        <PermissionGuard permission={dealPermissions.delete}>
                           <button type="button" onClick={() => setDeleteCandidate(rows.find(r => r.id === editingId) || null)} className="text-red-600 hover:text-red-700 font-medium text-sm px-3 py-2 rounded-md hover:bg-red-50 dark:hover:bg-red-950/30">
                             {isPetSurface ? 'Remover negocio' : 'Delete deal'}
                           </button>

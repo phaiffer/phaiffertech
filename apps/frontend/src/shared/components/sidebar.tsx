@@ -25,6 +25,7 @@ import {
   ShoppingCart,
 } from 'lucide-react';
 import { useAuth } from '@/shared/auth/use-auth';
+import { petCommercialNavigationPermissions } from '@/shared/auth/pet-commercial-permissions';
 import { BrandMark, PetFlowMark } from '@/shared/components/brand-assets';
 import {
   petClinicalEntitlements,
@@ -132,7 +133,7 @@ export function Sidebar() {
       {
         href: '/pet/commercial',
         label: petMessages.commercial,
-        anyOf: ['crm.lead.read', 'crm.deal.read', 'crm.pipeline.read'],
+        anyOf: [...petCommercialNavigationPermissions],
         anyEntitlements: petSubmoduleEntitlements,
         moduleCode: 'PET',
         group: 'principal',

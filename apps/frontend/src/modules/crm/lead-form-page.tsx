@@ -8,11 +8,15 @@ import {
   sharedFormActionsClass,
   sharedPageStackClass
 } from '@/shared/components/public-visual-system';
-import { crmService } from '@/shared/services/crm-service';
-import { petCommercialService } from '@/shared/services/pet-commercial-service';
+import { petCommercialPermissions } from '@/shared/auth/pet-commercial-permissions';
+import {
+  petCommercialService,
+  type CreatePetCommercialLeadInput,
+  type UpdatePetCommercialLeadInput
+} from '@/shared/services/pet-commercial-service';
 import { ApiClientError } from '@/shared/lib/http';
 import { resolvePageItems } from '@/shared/lib/pagination';
-import { CrmCompany, CrmContact } from '@/shared/types/crm';
+import { PetCommercialAccount, PetCommercialSupportContact } from '@/shared/types/pet-commercial';
 import { FormInput } from '@/shared/ui/form-input';
 import { FormSelect } from '@/shared/ui/form-select';
 import { FormTextarea } from '@/shared/ui/form-textarea';
@@ -36,9 +40,10 @@ export function LeadFormPage({ leadId, surface = 'crm' }: LeadFormPageProps) {
   const router = useRouter();
   const isPetSurface = surface === 'pet';
   const isEdit = Boolean(leadId);
-  const commercialService = isPetSurface ? petCommercialService : crmService;
+  const commercialService = petCommercialService;
   const listPath = isPetSurface ? '/pet/commercial?tab=leads' : '/crm/leads';
-  const requiredPermission = isEdit ? 'crm.lead.update' : 'crm.lead.create';
+  const leadPermissions = petCommercialPermissions.leads;
+  const requiredPermission = isEdit ? leadPermissions.update : leadPermissions.create;
 
   const [loading, setLoading] = useState(isEdit);
   const [loadingCompanies, setLoadingCompanies] = useState(true);
@@ -46,8 +51,8 @@ export function LeadFormPage({ leadId, surface = 'crm' }: LeadFormPageProps) {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
-  const [companies, setCompanies] = useState<CrmCompany[]>([]);
-  const [contacts, setContacts] = useState<CrmContact[]>([]);
+  const [companies, setCompanies] = useState<PetCommercialAccount[]>([]);
+  const [contacts, setContacts] = useState<PetCommercialSupportContact[]>([]);
 
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -215,7 +220,7 @@ export function LeadFormPage({ leadId, surface = 'crm' }: LeadFormPageProps) {
     setSuccess(null);
 
     try {
-      const payload = {
+      const basePayload: CreatePetCommercialLeadInput = {
         name,
         email: email || undefined,
         phone: phone || undefined,
@@ -227,10 +232,14 @@ export function LeadFormPage({ leadId, surface = 'crm' }: LeadFormPageProps) {
       };
 
       if (isEdit && leadId) {
+        const payload: UpdatePetCommercialLeadInput = {
+          ...basePayload,
+          status
+        };
         await commercialService.updateLead(leadId, payload);
         setSuccess(isPetSurface ? 'Lead comercial atualizado com sucesso.' : 'Lead atualizado com sucesso.');
       } else {
-        await commercialService.createLead(payload);
+        await commercialService.createLead(basePayload);
         setSuccess(isPetSurface ? 'Lead comercial criado com sucesso.' : 'Lead criado com sucesso.');
       }
 
@@ -264,7 +273,7 @@ export function LeadFormPage({ leadId, surface = 'crm' }: LeadFormPageProps) {
           title={title}
           description={isPetSurface
             ? 'Cadastre e qualifique leads no contexto comercial do PetFlow. Os vínculos de conta e contato permanecem como camada temporária de compatibilidade.'
-            : 'Formulário de cadastro/edição de lead CRM.'}
+            : 'Formulário de cadastro/edição de lead comercial.'}
           actions={(
             <Link href={listPath} className="ui-secondary-button">
               {isPetSurface ? 'Voltar para o comercial' : 'Voltar para listagem'}
