@@ -21,6 +21,17 @@ export type PetSelectOption = {
   label: string;
 };
 
+export type PetAppointmentServiceSummary = {
+  title: string;
+  description: string;
+  headline: string;
+  details: Array<{
+    label: string;
+    value: string;
+  }>;
+  notices: string[];
+};
+
 function buildPetAppointmentStatusOptions(messages: ReturnType<typeof useAppMessages>['petAppointments']): PetSelectOption[] {
   return [
     { value: '', label: messages.statuses.all },
@@ -218,6 +229,9 @@ type PetAppointmentFormProps = {
   onExtrasAmountChange: (value: string) => void;
   extrasDescription: string;
   onExtrasDescriptionChange: (value: string) => void;
+  serviceSummaryTitle: string;
+  serviceSummaryEmpty: string;
+  selectedServiceSummary: PetAppointmentServiceSummary | null;
   submitting: boolean;
   appointmentReferencesReady: boolean;
   onCancelEdit: () => void;
@@ -255,6 +269,9 @@ export function PetAppointmentForm({
   onExtrasAmountChange,
   extrasDescription,
   onExtrasDescriptionChange,
+  serviceSummaryTitle,
+  serviceSummaryEmpty,
+  selectedServiceSummary,
   submitting,
   appointmentReferencesReady,
   onCancelEdit
@@ -287,6 +304,34 @@ export function PetAppointmentForm({
               onChange={onProfessionalIdChange}
               disabled={professionalsLookupUnavailable}
             />
+          </div>
+          <div className="rounded-xl border border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-panel-muted)] px-4 py-3">
+            <p className="text-xs font-semibold uppercase tracking-wide text-[color:var(--app-shell-muted)]">{serviceSummaryTitle}</p>
+            {selectedServiceSummary ? (
+              <>
+                <p className="mt-1 text-xs text-[color:var(--app-shell-muted)]">{selectedServiceSummary.description}</p>
+                <p className="mt-3 text-sm font-medium text-slate-900">{selectedServiceSummary.headline}</p>
+                <div className="mt-3 grid gap-3 md:grid-cols-2">
+                  {selectedServiceSummary.details.map((detail) => (
+                    <div key={detail.label} className="space-y-1">
+                      <p className="text-[11px] font-semibold uppercase tracking-wide text-[color:var(--app-shell-muted)]">{detail.label}</p>
+                      <p className="text-sm text-slate-900">{detail.value}</p>
+                    </div>
+                  ))}
+                </div>
+                {selectedServiceSummary.notices.length > 0 ? (
+                  <div className="mt-3 space-y-2">
+                    {selectedServiceSummary.notices.map((notice) => (
+                      <div key={notice} className="rounded-md border border-[color:var(--app-shell-border)] bg-white/80 px-3 py-2 text-xs text-[color:var(--app-shell-muted)]">
+                        {notice}
+                      </div>
+                    ))}
+                  </div>
+                ) : null}
+              </>
+            ) : (
+              <p className="mt-2 text-xs text-[color:var(--app-shell-muted)]">{serviceSummaryEmpty}</p>
+            )}
           </div>
           <div className="grid gap-3 grid-cols-2">
             <DateTimeInput label={t.form.dateTime} value={scheduledAt} onChange={onScheduledAtChange} required />

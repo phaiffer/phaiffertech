@@ -27,7 +27,8 @@ import { SearchBar } from '@/shared/ui/search-bar';
 import {
   describePetServiceCatalogItem,
   formatPetServiceCategory,
-  resolveAllowedPetServiceCategories
+  resolveAllowedPetServiceCategories,
+  resolvePetServiceBookingMode
 } from '@/modules/pet/pet-service-catalog-policy';
 
 const pageSize = 10;
@@ -65,6 +66,19 @@ function ServiceFlagToggle({
       </span>
     </label>
   );
+}
+
+function buildServiceAvailabilityLabel(service: Pick<PetServiceCatalog, 'allowInPlans' | 'allowStandaloneBooking'>) {
+  switch (resolvePetServiceBookingMode(service)) {
+    case 'PLAN_ONLY':
+      return 'Plan sessions only';
+    case 'STANDALONE_ONLY':
+      return 'Standalone booking only';
+    case 'UNAVAILABLE':
+      return 'Unavailable for new scheduling';
+    default:
+      return 'Standalone booking and plan sessions enabled';
+  }
 }
 
 export function PetServicesPage() {
@@ -174,6 +188,8 @@ export function PetServicesPage() {
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    setError(null);
+    setSuccess(null);
 
     const parsedBasePrice = Number(basePrice);
     const parsedDuration = Number(durationMinutes);
@@ -182,9 +198,12 @@ export function PetServicesPage() {
       return;
     }
 
+    if (active && !allowInPlans && !allowStandaloneBooking) {
+      setError('Active services must allow standalone booking or plan-based scheduling.');
+      return;
+    }
+
     setSubmitting(true);
-    setError(null);
-    setSuccess(null);
 
     try {
       const payload = {
@@ -242,6 +261,24 @@ export function PetServicesPage() {
   const averageBasePrice = rows.length > 0
     ? Math.round(rows.reduce((total, item) => total + item.basePrice, 0) / rows.length)
     : 0;
+  const parsedDraftBasePrice = Number(basePrice);
+  const parsedDraftDuration = Number(durationMinutes);
+  const activeSchedulingConflict = active && !allowInPlans && !allowStandaloneBooking;
+  const draftServicePreview = describePetServiceCatalogItem({
+    id: editingId ?? 'draft-service',
+    name: name.trim() || 'Draft service',
+    description: description.trim() || undefined,
+    category,
+    active,
+    basePrice: Number.isFinite(parsedDraftBasePrice) ? parsedDraftBasePrice : 0,
+    durationMinutes: Number.isFinite(parsedDraftDuration) && parsedDraftDuration > 0 ? parsedDraftDuration : 0,
+    commissionEligible,
+    allowInPlans,
+    allowStandaloneBooking,
+    createdAt: '',
+    updatedAt: ''
+  }, 'en-US');
+  const draftAvailabilityLabel = buildServiceAvailabilityLabel({ allowInPlans, allowStandaloneBooking });
 
   const summaryCards: DashboardSummaryCard[] = [
     {
@@ -478,6 +515,32 @@ export function PetServicesPage() {
                     checked={allowStandaloneBooking}
                     onChange={setAllowStandaloneBooking}
                   />
+                </div>
+
+                <div className={`rounded-2xl border px-4 py-3 ${
+                  activeSchedulingConflict
+                    ? 'border-amber-200 bg-amber-50'
+                    : 'border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-panel-muted)]'
+                }`}>
+                  <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--app-shell-muted)]">
+                    Scheduling preview
+                  </p>
+                  <p className="mt-2 text-sm font-medium text-[color:var(--app-shell-heading)]">
+                    {draftServicePreview}
+                  </p>
+                  <div className="mt-3 grid gap-2 text-xs text-[color:var(--app-shell-muted)] xl:grid-cols-2">
+                    <p>Category: {formatPetServiceCategory(category)}</p>
+                    <p>Status: {active ? 'Active for new appointments' : 'Hidden from new appointments'}</p>
+                    <p>Scheduling mode: {draftAvailabilityLabel}</p>
+                    <p>{commissionEligible ? 'Commission ready' : 'Commission excluded'}</p>
+                  </div>
+                  <p className={`mt-3 text-xs ${activeSchedulingConflict ? 'text-amber-800' : 'text-[color:var(--app-shell-muted)]'}`}>
+                    {activeSchedulingConflict
+                      ? 'Active services need at least one booking path enabled so operators can actually schedule them.'
+                      : active
+                        ? 'This preview matches how the service will appear in the structured appointment picker.'
+                        : 'Inactive services stay available only for historical understanding and safe legacy edits.'}
+                  </p>
                 </div>
 
                 <div className={sharedFormActionsClass}>

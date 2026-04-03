@@ -191,6 +191,27 @@ class PetIntegrationTest extends AbstractIntegrationTest {
     }
 
     @Test
+    void shouldRejectActiveServiceWithoutAnySchedulingPath() {
+        AuthSession session = loginAsDefaultAdmin();
+        String marker = randomSearchMarker();
+
+        ResponseEntity<JsonNode> createResponse = post("/pet/services", Map.of(
+                "name", "Service " + marker,
+                "description", "Description " + marker,
+                "category", "GROOMING",
+                "active", true,
+                "basePrice", 55.00,
+                "durationMinutes", 30,
+                "commissionEligible", true,
+                "allowInPlans", false,
+                "allowStandaloneBooking", false
+        ), session);
+
+        assertEquals(409, createResponse.getStatusCode().value());
+        assertTrue(requireBody(createResponse).path("message").asText().contains("standalone booking or plan-based scheduling"));
+    }
+
+    @Test
     void shouldKeepExistingAppointmentsEditableWhenServiceBecomesInactive() {
         AuthSession session = loginAsDefaultAdmin();
         String marker = randomSearchMarker();

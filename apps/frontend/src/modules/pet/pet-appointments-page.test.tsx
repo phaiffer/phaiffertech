@@ -192,4 +192,77 @@ describe('PetAppointmentsPage', () => {
       screen.getByText((text) => text.includes('Before booking, add at least one client, pet, service, and professional'))
     ).toBeInTheDocument();
   });
+
+  it('shows structured service context and warns when the selected service requires a plan', async () => {
+    setGrantedPermissions([
+      'pet.appointment.read',
+      'pet.appointment.create',
+      'pet.client.read',
+      'pet.profile.read',
+      'pet.service.read',
+      'pet.professional.read'
+    ]);
+
+    petServiceMock.listClients.mockResolvedValue(createPageResponse([
+      {
+        id: 'client-1',
+        name: 'Owner Example',
+        status: 'ACTIVE',
+        createdAt: '2026-03-10T10:00:00Z',
+        updatedAt: '2026-03-10T10:00:00Z'
+      }
+    ]));
+    petServiceMock.listProfiles.mockResolvedValue(createPageResponse([
+      {
+        id: 'pet-1',
+        clientId: 'client-1',
+        name: 'Pet Example',
+        species: 'Dog',
+        createdAt: '2026-03-10T10:00:00Z',
+        updatedAt: '2026-03-10T10:00:00Z'
+      }
+    ]));
+    petServiceMock.listServices.mockResolvedValue(createPageResponse([
+      {
+        id: 'service-plan-only',
+        name: 'Hydration session',
+        category: 'GROOMING',
+        active: true,
+        basePrice: 120,
+        durationMinutes: 90,
+        commissionEligible: true,
+        allowInPlans: true,
+        allowStandaloneBooking: false,
+        createdAt: '2026-03-10T10:00:00Z',
+        updatedAt: '2026-03-10T10:00:00Z'
+      }
+    ]));
+    petServiceMock.listProfessionals.mockResolvedValue(createPageResponse([
+      {
+        id: 'professional-1',
+        name: 'Dr Example',
+        createdAt: '2026-03-10T10:00:00Z',
+        updatedAt: '2026-03-10T10:00:00Z'
+      }
+    ]));
+    petServiceMock.listAppointments.mockResolvedValue(createPageResponse([]));
+
+    render(<PetAppointmentsPage />);
+
+    await waitFor(() => {
+      expect(petServiceMock.listServices).toHaveBeenCalled();
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: 'Book appointment' }));
+
+    expect(screen.getByText('Select a service to confirm category, duration, base price, and booking rule.')).toBeInTheDocument();
+
+    const serviceSelect = screen.getAllByLabelText('Service')[1];
+    fireEvent.change(serviceSelect, { target: { value: 'service-plan-only' } });
+
+    expect(await screen.findByText('Structured service')).toBeInTheDocument();
+    expect(screen.getAllByText(/Hydration session · Grooming · 90 min/).length).toBeGreaterThan(0);
+    expect(screen.getByText('Plan sessions only')).toBeInTheDocument();
+    expect(screen.getByText('This service requires a linked plan before booking.')).toBeInTheDocument();
+  });
 });

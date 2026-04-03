@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   describePetServiceCatalogItem,
+  resolvePetServiceBookingMode,
   resolveAllowedPetServiceCategories
 } from '@/modules/pet/pet-service-catalog-policy';
 import type { AuthenticatedUser } from '@/shared/types/auth';
@@ -56,5 +57,12 @@ describe('pet service catalog policy', () => {
       createdAt: '2026-04-03T00:00:00Z',
       updatedAt: '2026-04-03T00:00:00Z'
     }, 'en-US')).toContain('Vaccination · Clinical · 30 min');
+  });
+
+  it('resolves booking mode from standalone and plan flags', () => {
+    expect(resolvePetServiceBookingMode({ allowInPlans: true, allowStandaloneBooking: true })).toBe('FLEXIBLE');
+    expect(resolvePetServiceBookingMode({ allowInPlans: true, allowStandaloneBooking: false })).toBe('PLAN_ONLY');
+    expect(resolvePetServiceBookingMode({ allowInPlans: false, allowStandaloneBooking: true })).toBe('STANDALONE_ONLY');
+    expect(resolvePetServiceBookingMode({ allowInPlans: false, allowStandaloneBooking: false })).toBe('UNAVAILABLE');
   });
 });

@@ -2,6 +2,8 @@ import { hasAnyTenantEntitlement, tenantEntitlementKeys } from '@/shared/entitle
 import type { AuthenticatedUser } from '@/shared/types/auth';
 import type { PetServiceCatalog, PetServiceCategory } from '@/shared/types/pet';
 
+export type PetServiceBookingMode = 'FLEXIBLE' | 'PLAN_ONLY' | 'STANDALONE_ONLY' | 'UNAVAILABLE';
+
 export const petServiceCategoryLabels: Record<PetServiceCategory, string> = {
   GROOMING: 'Grooming',
   CLINICAL: 'Clinical'
@@ -25,6 +27,22 @@ export function resolveAllowedPetServiceCategories(
 
 export function formatPetServiceCategory(category: PetServiceCategory) {
   return petServiceCategoryLabels[category];
+}
+
+export function resolvePetServiceBookingMode(service: Pick<PetServiceCatalog, 'allowInPlans' | 'allowStandaloneBooking'>): PetServiceBookingMode {
+  if (service.allowInPlans && service.allowStandaloneBooking) {
+    return 'FLEXIBLE';
+  }
+
+  if (service.allowInPlans) {
+    return 'PLAN_ONLY';
+  }
+
+  if (service.allowStandaloneBooking) {
+    return 'STANDALONE_ONLY';
+  }
+
+  return 'UNAVAILABLE';
 }
 
 export function describePetServiceCatalogItem(service: PetServiceCatalog, locale: string) {
