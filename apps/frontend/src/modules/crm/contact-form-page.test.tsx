@@ -3,8 +3,9 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { ContactFormPage } from '@/modules/crm/contact-form-page';
 import { ApiClientError } from '@/shared/lib/http';
 
-const { hasPermissionMock, crmServiceMock } = vi.hoisted(() => ({
+const { hasPermissionMock, crmServiceMock, pushMock } = vi.hoisted(() => ({
   hasPermissionMock: vi.fn(),
+  pushMock: vi.fn(),
   crmServiceMock: {
     listCompanies: vi.fn(),
     getContact: vi.fn(),
@@ -15,7 +16,7 @@ const { hasPermissionMock, crmServiceMock } = vi.hoisted(() => ({
 
 vi.mock('next/navigation', () => ({
   useRouter: () => ({
-    push: vi.fn()
+    push: pushMock
   })
 }));
 
@@ -152,5 +153,30 @@ describe('ContactFormPage', () => {
     });
 
     expect(screen.getByLabelText('Empresa manual (compatibilidade)')).toBeInTheDocument();
+  });
+
+  it('uses the PetFlow support-contact surface without loading companies', async () => {
+    render(<ContactFormPage surface="pet" />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Novo contato de apoio')).toBeInTheDocument();
+    });
+
+    expect(crmServiceMock.listCompanies).not.toHaveBeenCalled();
+    expect(screen.queryByLabelText('Company vinculada')).not.toBeInTheDocument();
+    expect(screen.getByLabelText('Contexto legado (opcional)')).toBeInTheDocument();
+
+    fireEvent.change(screen.getByLabelText('Nome do contato de apoio'), { target: { value: 'Ana' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Criar contato de apoio' }));
+
+    await waitFor(() => {
+      expect(crmServiceMock.createContact).toHaveBeenCalledTimes(1);
+    });
+
+    expect(crmServiceMock.createContact.mock.calls[0][0]).toMatchObject({
+      firstName: 'Ana',
+      status: 'ACTIVE'
+    });
+    expect(pushMock).not.toHaveBeenCalled();
   });
 });

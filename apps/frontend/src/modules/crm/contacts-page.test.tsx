@@ -78,4 +78,17 @@ describe('CrmContactsPage', () => {
 
     expect(screen.getAllByText('Acme Vet').length).toBeGreaterThan(0);
   });
+
+  it('renders the PetFlow support-contact surface without exposing the CRM company filter', async () => {
+    render(<CrmContactsPage surface="pet" />);
+
+    await waitFor(() => {
+      expect(crmServiceMock.listContacts).toHaveBeenCalledTimes(1);
+    });
+
+    expect(crmServiceMock.listCompanies).not.toHaveBeenCalled();
+    expect(screen.getByRole('heading', { name: 'Contatos de apoio' })).toBeInTheDocument();
+    expect(screen.queryByLabelText('Company')).not.toBeInTheDocument();
+    expect(screen.getByText('Contexto legado')).toBeInTheDocument();
+  });
 });

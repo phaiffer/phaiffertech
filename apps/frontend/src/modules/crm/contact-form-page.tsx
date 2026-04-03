@@ -4,6 +4,7 @@ import { FormEvent, useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { crmService } from '@/shared/services/crm-service';
+import { petClientContactSupportService } from '@/shared/services/pet-client-contact-support-service';
 import { ApiClientError } from '@/shared/lib/http';
 import { resolvePageItems } from '@/shared/lib/pagination';
 import { CrmCompany } from '@/shared/types/crm';
@@ -19,11 +20,15 @@ const statusOptions = [
 
 type ContactFormPageProps = {
   contactId?: string;
+  surface?: 'crm' | 'pet';
 };
 
-export function ContactFormPage({ contactId }: ContactFormPageProps) {
+export function ContactFormPage({ contactId, surface = 'crm' }: ContactFormPageProps) {
   const router = useRouter();
+  const isPetSurface = surface === 'pet';
   const isEdit = Boolean(contactId);
+  const contactService = isPetSurface ? petClientContactSupportService : crmService;
+  const basePath = isPetSurface ? '/pet/clients/contacts' : '/crm/contacts';
   const requiredPermission = isEdit ? 'crm.contact.update' : 'crm.contact.create';
 
   const [loading, setLoading] = useState(isEdit);
@@ -42,6 +47,12 @@ export function ContactFormPage({ contactId }: ContactFormPageProps) {
   const [status, setStatus] = useState('ACTIVE');
 
   useEffect(() => {
+    if (isPetSurface) {
+      setCompanies([]);
+      setLoadingCompanies(false);
+      return;
+    }
+
     let active = true;
 
     setLoadingCompanies(true);
@@ -68,7 +79,7 @@ export function ContactFormPage({ contactId }: ContactFormPageProps) {
     return () => {
       active = false;
     };
-  }, []);
+  }, [isPetSurface]);
 
   useEffect(() => {
     if (!isEdit || !contactId) {
@@ -77,7 +88,7 @@ export function ContactFormPage({ contactId }: ContactFormPageProps) {
 
     let active = true;
     setLoading(true);
-    crmService.getContact(contactId)
+    contactService.getContact(contactId)
       .then((contact) => {
         if (!active) {
           return;
@@ -87,14 +98,18 @@ export function ContactFormPage({ contactId }: ContactFormPageProps) {
         setEmail(contact.email ?? '');
         setPhone(contact.phone ?? '');
         setCompanyId(contact.companyId ?? '');
-        setManualCompany(contact.companyId ? '' : contact.company ?? '');
+        setManualCompany(contact.company ?? '');
         setStatus(contact.status ?? 'ACTIVE');
       })
       .catch((err) => {
         if (!active) {
           return;
         }
-        const message = err instanceof ApiClientError ? err.message : 'Erro ao carregar contato.';
+        const message = err instanceof ApiClientError
+          ? err.message
+          : isPetSurface
+            ? 'Erro ao carregar contato de apoio.'
+            : 'Erro ao carregar contato.';
         setError(message);
       })
       .finally(() => {
@@ -106,9 +121,15 @@ export function ContactFormPage({ contactId }: ContactFormPageProps) {
     return () => {
       active = false;
     };
-  }, [contactId, isEdit]);
+  }, [contactId, contactService, isEdit, isPetSurface]);
 
-  const title = useMemo(() => (isEdit ? 'Editar contato' : 'Novo contato'), [isEdit]);
+  const title = useMemo(() => {
+    if (isPetSurface) {
+      return isEdit ? 'Editar contato de apoio' : 'Novo contato de apoio';
+    }
+
+    return isEdit ? 'Editar contato' : 'Novo contato';
+  }, [isEdit, isPetSurface]);
   const companyOptions = useMemo(() => [
     { value: '', label: loadingCompanies ? 'Carregando companies...' : 'Sem vínculo com company' },
     ...companies.map((company) => ({
@@ -146,16 +167,20 @@ export function ContactFormPage({ contactId }: ContactFormPageProps) {
       };
 
       if (isEdit && contactId) {
-        await crmService.updateContact(contactId, payload);
-        setSuccess('Contato atualizado com sucesso.');
+        await contactService.updateContact(contactId, payload);
+        setSuccess(isPetSurface ? 'Contato de apoio atualizado com sucesso.' : 'Contato atualizado com sucesso.');
       } else {
-        await crmService.createContact(payload);
-        setSuccess('Contato criado com sucesso.');
+        await contactService.createContact(payload);
+        setSuccess(isPetSurface ? 'Contato de apoio criado com sucesso.' : 'Contato criado com sucesso.');
       }
 
-      setTimeout(() => router.push('/crm/contacts'), 600);
+      setTimeout(() => router.push(basePath), 600);
     } catch (err) {
-      const message = err instanceof ApiClientError ? err.message : 'Erro ao salvar contato.';
+      const message = err instanceof ApiClientError
+        ? err.message
+        : isPetSurface
+          ? 'Erro ao salvar contato de apoio.'
+          : 'Erro ao salvar contato.';
       setError(message);
     } finally {
       setSubmitting(false);
@@ -165,43 +190,85 @@ export function ContactFormPage({ contactId }: ContactFormPageProps) {
   return (
     <PermissionGuard
       permission={requiredPermission}
-      fallback={<div className="ui-notice-warning">Você não possui permissão para esta ação.</div>}
+      fallback={(
+        <div className="ui-notice-warning">
+          {isPetSurface
+            ? 'Você não possui permissão para gerenciar contatos de apoio.'
+            : 'Você não possui permissão para esta ação.'}
+        </div>
+      )}
     >
       <div className="space-y-5">
-        <PageTitle title={title} description="Formulário de cadastro/edição de contato CRM." />
+        <PageTitle
+          title={title}
+          description={isPetSurface
+            ? 'Cadastre contatos adicionais, financeiros ou operacionais usados no relacionamento com clientes do PetFlow. Campos de company ficam apenas como compatibilidade legada.'
+            : 'Formulário de cadastro/edição de contato CRM.'}
+        />
 
         <div className="flex justify-end">
-          <Link href="/crm/contacts" className="ui-secondary-button">
-            Voltar para listagem
+          <Link href={basePath} className="ui-secondary-button">
+            {isPetSurface ? 'Voltar para contatos de apoio' : 'Voltar para listagem'}
           </Link>
         </div>
 
         {loading ? (
-          <div className="ui-surface-panel px-4 py-6 text-sm text-[color:var(--app-shell-muted)]">Carregando contato...</div>
+          <div className="ui-surface-panel px-4 py-6 text-sm text-[color:var(--app-shell-muted)]">
+            {isPetSurface ? 'Carregando contato de apoio...' : 'Carregando contato...'}
+          </div>
         ) : (
           <form onSubmit={handleSubmit} className="grid gap-3 ui-surface-panel p-4 md:grid-cols-2">
-            <FormInput label="Nome" value={firstName} onChange={setFirstName} required />
-            <FormInput label="Sobrenome" value={lastName} onChange={setLastName} />
-            <FormInput label="Email" value={email} onChange={setEmail} type="email" />
-            <FormInput label="Telefone" value={phone} onChange={setPhone} />
-            <FormSelect
-              label="Company vinculada"
-              value={companyId}
-              options={companyOptions}
-              onChange={handleCompanyChange}
-              disabled={loadingCompanies}
+            <FormInput
+              label={isPetSurface ? 'Nome do contato de apoio' : 'Nome'}
+              value={firstName}
+              onChange={setFirstName}
+              required
             />
+            <FormInput
+              label={isPetSurface ? 'Sobrenome ou complemento' : 'Sobrenome'}
+              value={lastName}
+              onChange={setLastName}
+            />
+            <FormInput
+              label={isPetSurface ? 'E-mail do contato' : 'Email'}
+              value={email}
+              onChange={setEmail}
+              type="email"
+            />
+            <FormInput
+              label={isPetSurface ? 'Telefone do contato' : 'Telefone'}
+              value={phone}
+              onChange={setPhone}
+            />
+            {!isPetSurface ? (
+              <FormSelect
+                label="Company vinculada"
+                value={companyId}
+                options={companyOptions}
+                onChange={handleCompanyChange}
+                disabled={loadingCompanies}
+              />
+            ) : null}
             <FormSelect label="Status" value={status} options={statusOptions} onChange={setStatus} />
 
-            {!companyId ? (
+            {isPetSurface && companyId ? (
+              <div className="md:col-span-2 ui-notice-neutral">
+                Vínculo legado com company preservado automaticamente{manualCompany ? `: ${manualCompany}.` : '.'}
+              </div>
+            ) : null}
+
+            {(!companyId || isPetSurface) ? (
               <div className="md:col-span-2 space-y-2">
                 <FormInput
-                  label="Empresa manual (compatibilidade)"
+                  label={isPetSurface ? 'Contexto legado (opcional)' : 'Empresa manual (compatibilidade)'}
                   value={manualCompany}
                   onChange={setManualCompany}
+                  disabled={isPetSurface && Boolean(companyId)}
                 />
                 <p className="text-xs text-[color:var(--app-shell-muted)]">
-                  Use este campo apenas quando o contato ainda não estiver vinculado a uma company cadastrada.
+                  {isPetSurface
+                    ? 'Use este campo apenas quando precisar preservar uma referência histórica de company para um contato antigo.'
+                    : 'Use este campo apenas quando o contato ainda não estiver vinculado a uma company cadastrada.'}
                 </p>
               </div>
             ) : null}
@@ -212,7 +279,11 @@ export function ContactFormPage({ contactId }: ContactFormPageProps) {
                 disabled={submitting}
                 className="ui-primary-button"
               >
-                {submitting ? 'Salvando...' : isEdit ? 'Atualizar contato' : 'Criar contato'}
+                {submitting
+                  ? 'Salvando...'
+                  : isPetSurface
+                    ? isEdit ? 'Atualizar contato de apoio' : 'Criar contato de apoio'
+                    : isEdit ? 'Atualizar contato' : 'Criar contato'}
               </button>
             </div>
           </form>

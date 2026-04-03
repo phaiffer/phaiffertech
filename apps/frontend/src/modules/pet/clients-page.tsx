@@ -25,6 +25,7 @@ import {
   normalizePetClientDocumentNumber,
   normalizePetClientDocumentType
 } from '@/shared/lib/pet-client-document';
+import { resolvePetClientPrimaryResponsible } from '@/shared/lib/pet-client-primary-responsible';
 import { formatPhoneDisplay, maskPhoneInput, stripPhoneMask } from '@/shared/lib/phone';
 import { resolvePageItems, resolveTotalItems } from '@/shared/lib/pagination';
 import { petService } from '@/shared/services/pet-service';
@@ -148,10 +149,11 @@ export function PetClientsPage({ initialView = 'list' }: PetClientsPageProps) {
 
   function beginEdit(client: PetClient) {
     const resolvedDocumentType = inferPetClientDocumentType(client.documentType, client.document);
+    const primaryResponsible = resolvePetClientPrimaryResponsible(client);
     setEditingId(client.id);
-    setName(client.name ?? client.fullName ?? '');
-    setEmail(client.email ?? '');
-    setPhone(client.phone ? formatPhoneDisplay(client.phone) : '');
+    setName(primaryResponsible.name ?? client.name ?? client.fullName ?? '');
+    setEmail(primaryResponsible.email ?? '');
+    setPhone(primaryResponsible.phone ? formatPhoneDisplay(primaryResponsible.phone) : '');
     setDocumentType(resolvedDocumentType);
     setDocument(formatPetClientDocumentInput(resolvedDocumentType, client.document ?? ''));
     setAddress(client.address ?? '');
@@ -211,11 +213,16 @@ export function PetClientsPage({ initialView = 'list' }: PetClientsPageProps) {
     }
 
     try {
+      const normalizedPhone = stripPhoneMask(phone) || undefined;
+
       if (editingId) {
         await petService.updateClient(editingId, {
           name,
           email: email || undefined,
-          phone: stripPhoneMask(phone) || undefined,
+          phone: normalizedPhone,
+          primaryResponsibleName: name,
+          primaryResponsibleEmail: email || undefined,
+          primaryResponsiblePhone: normalizedPhone,
           documentType: normalizedDocumentType,
           document: normalizedDocument,
           address: address || undefined,
@@ -227,7 +234,10 @@ export function PetClientsPage({ initialView = 'list' }: PetClientsPageProps) {
         await petService.createClient({
           name,
           email: email || undefined,
-          phone: stripPhoneMask(phone) || undefined,
+          phone: normalizedPhone,
+          primaryResponsibleName: name,
+          primaryResponsibleEmail: email || undefined,
+          primaryResponsiblePhone: normalizedPhone,
           documentType: normalizedDocumentType,
           document: normalizedDocument,
           address: address || undefined,
@@ -273,8 +283,8 @@ export function PetClientsPage({ initialView = 'list' }: PetClientsPageProps) {
   const totalItems = resolveTotalItems(pageData);
   const activeFilterCount = [search, statusFilter].filter(Boolean).length;
   const activeClients = rows.filter((client) => client.status === 'ACTIVE').length;
-  const clientsWithEmail = rows.filter((client) => Boolean(client.email)).length;
-  const clientsWithPhone = rows.filter((client) => Boolean(client.phone)).length;
+  const clientsWithEmail = rows.filter((client) => Boolean(resolvePetClientPrimaryResponsible(client).email)).length;
+  const clientsWithPhone = rows.filter((client) => Boolean(resolvePetClientPrimaryResponsible(client).phone)).length;
 
   const columns: DataTableColumn<PetClient>[] = [
     {
@@ -298,15 +308,22 @@ export function PetClientsPage({ initialView = 'list' }: PetClientsPageProps) {
     },
     {
       key: 'contact',
-      header: 'Contato',
-      render: (client) => (
-        <div>
-          <p className="font-medium text-slate-900">{client.email ?? 'Sem e-mail'}</p>
-          <p className={`mt-1 ${sharedCompactTextClass}`}>
-            {client.phone ? formatPhoneDisplay(client.phone) : 'Sem telefone'}
-          </p>
-        </div>
-      )
+      header: 'Responsavel principal',
+      render: (client) => {
+        const primaryResponsible = resolvePetClientPrimaryResponsible(client);
+
+        return (
+          <div>
+            <p className="font-medium text-slate-900">{primaryResponsible.name ?? 'Sem responsavel principal'}</p>
+            <p className={`mt-1 ${sharedCompactTextClass}`}>
+              {primaryResponsible.email ?? 'Sem e-mail'}
+            </p>
+            <p className={sharedCompactTextClass}>
+              {primaryResponsible.phone ? formatPhoneDisplay(primaryResponsible.phone) : 'Sem telefone'}
+            </p>
+          </div>
+        );
+      }
     },
     {
       key: 'address',
@@ -355,19 +372,26 @@ export function PetClientsPage({ initialView = 'list' }: PetClientsPageProps) {
           title={isCreateRoute ? 'Novo cliente' : 'Clientes'}
           description={
             isCreateRoute
-              ? 'Crie a base do cadastro antes de ligar pets, atendimentos, planos e cobranca.'
-              : 'Mantenha a base de clientes pronta antes de avançar para pets, atendimentos e cobranca.'
+              ? 'Cadastre o cliente e o seu responsavel principal antes de ligar pets, atendimentos, planos e cobranca.'
+              : 'Mantenha a base de clientes e dos responsaveis principais pronta antes de avancar para pets, atendimentos e cobranca.'
           }
           actions={isCreateRoute ? (
             <Link href="/pet/clients" className="ui-secondary-button">
               Voltar para clientes
             </Link>
           ) : (
-            <PermissionGuard permission="pet.client.create">
-              <Link href="/pet/clients/new" className="ui-primary-button">
-                Novo cliente
-              </Link>
-            </PermissionGuard>
+            <div className="flex flex-wrap justify-end gap-2">
+              <PermissionGuard permission="crm.contact.read">
+                <Link href="/pet/clients/contacts" className="ui-secondary-button">
+                  Contatos de apoio
+                </Link>
+              </PermissionGuard>
+              <PermissionGuard permission="pet.client.create">
+                <Link href="/pet/clients/new" className="ui-primary-button">
+                  Novo cliente
+                </Link>
+              </PermissionGuard>
+            </div>
           )}
         />
 
@@ -376,8 +400,8 @@ export function PetClientsPage({ initialView = 'list' }: PetClientsPageProps) {
             {[
               { label: 'Total de clientes', value: totalItems, icon: Users },
               { label: 'Cadastros ativos', value: activeClients, icon: Users },
-              { label: 'Com e-mail', value: clientsWithEmail, icon: Mail },
-              { label: 'Com telefone', value: clientsWithPhone, icon: Phone }
+              { label: 'Responsaveis com e-mail', value: clientsWithEmail, icon: Mail },
+              { label: 'Responsaveis com telefone', value: clientsWithPhone, icon: Phone }
             ].map((item) => (
               <div key={item.label} className={sharedSummaryCardClass}>
                 <div className="flex items-start justify-between gap-3">
@@ -395,10 +419,10 @@ export function PetClientsPage({ initialView = 'list' }: PetClientsPageProps) {
         ) : null}
 
         {!isCreateRoute ? (
-          <PageSection tone="muted" title="Filtros" description="Busque por nome, contato ou status do cadastro.">
+          <PageSection tone="muted" title="Filtros" description="Busque por cliente, responsavel principal ou status do cadastro.">
             <div className={sharedFilterToolbarClass}>
               <div className="grid gap-3 xl:grid-cols-[minmax(0,1.45fr)_220px] xl:items-end">
-                <SearchBar value={searchInput} onChange={setSearchInput} placeholder="Nome, e-mail, telefone, endereco" />
+                <SearchBar value={searchInput} onChange={setSearchInput} placeholder="Cliente, responsavel, e-mail, telefone, endereco" />
                 <FormSelect label="Status" value={statusFilter} options={statusOptions} onChange={setStatusFilter} />
               </div>
               <div className={sharedFormActionsClass}>
@@ -433,14 +457,14 @@ export function PetClientsPage({ initialView = 'list' }: PetClientsPageProps) {
           <PermissionGuard permission={editingId ? 'pet.client.update' : 'pet.client.create'}>
             <PageSection
               title={editingId ? 'Editar cliente' : 'Novo cliente'}
-              description="Capture apenas os dados necessarios para recepcao, cobranca e follow-up seguirem organizados."
+              description="Capture os dados do cliente e do responsavel principal. Contatos adicionais, financeiros ou de contingencia podem ficar em contatos de apoio."
             >
               <form onSubmit={handleSubmit} className="space-y-5">
                 <div className="grid gap-4 xl:grid-cols-2">
                   <FormInput
                     id="client-name"
                     name="name"
-                    label="Nome"
+                    label="Responsavel principal"
                     value={name}
                     onChange={setName}
                     autoComplete="name"
@@ -450,7 +474,7 @@ export function PetClientsPage({ initialView = 'list' }: PetClientsPageProps) {
                   <FormInput
                     id="client-email"
                     name="clientEmail"
-                    label="E-mail"
+                    label="E-mail do responsavel"
                     value={email}
                     onChange={setEmail}
                     type="email"
@@ -465,7 +489,7 @@ export function PetClientsPage({ initialView = 'list' }: PetClientsPageProps) {
                   <FormInput
                     id="client-phone"
                     name="clientPhone"
-                    label="Telefone"
+                    label="Telefone do responsavel"
                     value={phone}
                     onChange={(v) => setPhone(maskPhoneInput(v))}
                     type="tel"

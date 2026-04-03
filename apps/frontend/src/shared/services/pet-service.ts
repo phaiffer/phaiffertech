@@ -24,6 +24,9 @@ export type CreatePetClientInput = {
   name: string;
   email?: string;
   phone?: string;
+  primaryResponsibleName?: string;
+  primaryResponsibleEmail?: string;
+  primaryResponsiblePhone?: string;
   documentType: PetClientDocumentType;
   document: string;
   address?: string;
@@ -34,6 +37,9 @@ export type UpdatePetClientInput = {
   name: string;
   email?: string;
   phone?: string;
+  primaryResponsibleName?: string;
+  primaryResponsibleEmail?: string;
+  primaryResponsiblePhone?: string;
   documentType: PetClientDocumentType;
   document: string;
   address?: string;
@@ -284,6 +290,23 @@ function simpleQueryString(filters: Record<string, string | number | undefined> 
   return params.toString();
 }
 
+function normalizePetClientPayload(input: CreatePetClientInput | UpdatePetClientInput) {
+  const primaryResponsibleName = input.primaryResponsibleName?.trim() || input.name.trim();
+  const primaryResponsibleEmail = input.primaryResponsibleEmail?.trim() || input.email?.trim() || undefined;
+  const primaryResponsiblePhone = input.primaryResponsiblePhone?.trim() || input.phone?.trim() || undefined;
+
+  return {
+    name: primaryResponsibleName,
+    fullName: primaryResponsibleName,
+    email: primaryResponsibleEmail,
+    phone: primaryResponsiblePhone,
+    documentType: input.documentType,
+    document: input.document,
+    address: input.address,
+    status: input.status
+  };
+}
+
 export const petService = {
   listClients: (page = 0, size = 20, search = '', filters: PetClientFilters = {}) =>
     apiClient.get<PageResponse<PetClient>>(
@@ -292,10 +315,11 @@ export const petService = {
 
   getClient: (id: string) => apiClient.get<PetClient>(`/pet/clients/${id}`),
 
-  createClient: (input: CreatePetClientInput) => apiClient.post<PetClient>('/pet/clients', input),
+  createClient: (input: CreatePetClientInput) =>
+    apiClient.post<PetClient>('/pet/clients', normalizePetClientPayload(input)),
 
   updateClient: (id: string, input: UpdatePetClientInput) =>
-    apiClient.put<PetClient>(`/pet/clients/${id}`, input),
+    apiClient.put<PetClient>(`/pet/clients/${id}`, normalizePetClientPayload(input)),
 
   deleteClient: (id: string) => apiClient.delete<void>(`/pet/clients/${id}`),
 
