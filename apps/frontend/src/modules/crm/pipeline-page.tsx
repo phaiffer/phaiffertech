@@ -1,10 +1,11 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { PermissionGuard } from '@/shared/auth/PermissionGuard';
 import { ApiClientError } from '@/shared/lib/http';
 import { resolvePageItems, resolveTotalItems } from '@/shared/lib/pagination';
 import { crmService, CreatePipelineStageInput, UpdatePipelineStageInput } from '@/shared/services/crm-service';
+import { petCommercialService } from '@/shared/services/pet-commercial-service';
 import { CrmPipelineStage } from '@/shared/types/crm';
 import { PageResponse } from '@/shared/types/common';
 import { ConfirmDialog } from '@/shared/ui/confirm-dialog';
@@ -22,7 +23,13 @@ const defaultOptions = [
 ];
 const initialPage: PageResponse<CrmPipelineStage> = { items: [], totalItems: 0, totalPages: 0, page: 0, size: pageSize };
 
-export function CrmPipelinePage() {
+type CrmPipelinePageProps = {
+  surface?: 'crm' | 'pet';
+};
+
+export function CrmPipelinePage({ surface = 'crm' }: CrmPipelinePageProps) {
+  const isPetSurface = surface === 'pet';
+  const commercialService = isPetSurface ? petCommercialService : crmService;
   const [pageData, setPageData] = useState<PageResponse<CrmPipelineStage>>(initialPage);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -37,22 +44,28 @@ export function CrmPipelinePage() {
   const [color, setColor] = useState('#475569');
   const [isDefault, setIsDefault] = useState('false');
 
-  useEffect(() => {
-    void load(0, search);
-  }, [search]);
-
-  async function load(page: number, currentSearch: string) {
+  const load = useCallback(async (page: number, currentSearch: string) => {
     setLoading(true);
     setError(null);
     try {
-      const result = await crmService.listPipelineStages(page, pageSize, currentSearch);
+      const result = await commercialService.listPipelineStages(page, pageSize, currentSearch);
       setPageData(result);
     } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : 'Erro ao carregar pipeline.');
+      setError(
+        err instanceof ApiClientError
+          ? err.message
+          : isPetSurface
+            ? 'Erro ao carregar o pipeline comercial.'
+            : 'Erro ao carregar pipeline.'
+      );
     } finally {
       setLoading(false);
     }
-  }
+  }, [commercialService, isPetSurface]);
+
+  useEffect(() => {
+    void load(0, search);
+  }, [load, search]);
 
   function resetForm() {
     setEditingId(null);
@@ -66,7 +79,7 @@ export function CrmPipelinePage() {
   async function handleSubmit() {
     const numericPosition = Number(position);
     if (!name.trim() || !numericPosition) {
-      setError('Nome e posição são obrigatórios.');
+      setError(isPetSurface ? 'Nome e posicao sao obrigatorios.' : 'Nome e posicao sao obrigatorios.');
       return;
     }
 
@@ -82,14 +95,20 @@ export function CrmPipelinePage() {
     setError(null);
     try {
       if (editingId) {
-        await crmService.updatePipelineStage(editingId, payload as UpdatePipelineStageInput);
+        await commercialService.updatePipelineStage(editingId, payload as UpdatePipelineStageInput);
       } else {
-        await crmService.createPipelineStage(payload);
+        await commercialService.createPipelineStage(payload);
       }
       resetForm();
       await load(pageData.page, search);
     } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : 'Erro ao salvar etapa.');
+      setError(
+        err instanceof ApiClientError
+          ? err.message
+          : isPetSurface
+            ? 'Erro ao salvar etapa do pipeline comercial.'
+            : 'Erro ao salvar etapa.'
+      );
     } finally {
       setSaving(false);
     }
@@ -98,11 +117,17 @@ export function CrmPipelinePage() {
   async function handleDelete() {
     if (!deleteCandidate) return;
     try {
-      await crmService.deletePipelineStage(deleteCandidate.id);
+      await commercialService.deletePipelineStage(deleteCandidate.id);
       setDeleteCandidate(null);
       await load(pageData.page, search);
     } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : 'Erro ao excluir etapa.');
+      setError(
+        err instanceof ApiClientError
+          ? err.message
+          : isPetSurface
+            ? 'Erro ao excluir etapa do pipeline comercial.'
+            : 'Erro ao excluir etapa.'
+      );
     }
   }
 
@@ -161,28 +186,45 @@ export function CrmPipelinePage() {
   return (
     <PermissionGuard
       permission="crm.pipeline.read"
-      fallback={<div className="ui-notice-warning">Você não possui permissão para visualizar o pipeline.</div>}
+      fallback={(
+        <div className="ui-notice-warning">
+          {isPetSurface
+            ? 'Voce nao possui permissao para visualizar o comercial do PetFlow.'
+            : 'Voce nao possui permissao para visualizar o pipeline.'}
+        </div>
+      )}
     >
       <div className="space-y-5">
-        <PageTitle title="CRM Pipeline" description="Gestão das etapas do pipeline comercial." />
+        <PageTitle
+          eyebrow={isPetSurface ? 'PetFlow commercial' : 'CRM workspace'}
+          title={isPetSurface ? 'Pipeline comercial' : 'CRM Pipeline'}
+          description={isPetSurface
+            ? 'Gerencie as etapas do pipeline comercial do PetFlow mantendo o backend atual apenas como compatibilidade.'
+            : 'Gestao das etapas do pipeline comercial.'}
+        />
 
         <div className="grid gap-3 ui-surface-panel p-4 md:grid-cols-[1fr_auto_auto]">
-          <SearchBar value={searchInput} onChange={setSearchInput} placeholder="Nome ou código da etapa" />
+          <SearchBar
+            label={isPetSurface ? 'Buscar etapa' : undefined}
+            value={searchInput}
+            onChange={setSearchInput}
+            placeholder={isPetSurface ? 'Nome ou codigo da etapa comercial' : 'Nome ou codigo da etapa'}
+          />
           <button type="button" onClick={() => setSearch(searchInput)} className="ui-primary-button">
-            Buscar
+            {isPetSurface ? 'Buscar' : 'Buscar'}
           </button>
           <button type="button" onClick={() => { setSearchInput(''); setSearch(''); }} className="ui-secondary-button">
-            Limpar
+            {isPetSurface ? 'Limpar' : 'Limpar'}
           </button>
         </div>
 
         <PermissionGuard permission={editingId ? 'crm.pipeline.update' : 'crm.pipeline.create'}>
           <div className="grid gap-3 ui-surface-panel p-4 md:grid-cols-2">
-            <FormInput label="Nome" value={name} onChange={setName} required />
-            <FormInput label="Código" value={code} onChange={setCode} />
-            <FormInput label="Posição" value={position} onChange={setPosition} type="number" required />
+            <FormInput label={isPetSurface ? 'Nome da etapa' : 'Nome'} value={name} onChange={setName} required />
+            <FormInput label="Codigo" value={code} onChange={setCode} />
+            <FormInput label="Posicao" value={position} onChange={setPosition} type="number" required />
             <FormInput label="Cor" value={color} onChange={setColor} />
-            <FormSelect label="Etapa padrão" value={isDefault} options={defaultOptions} onChange={setIsDefault} />
+            <FormSelect label={isPetSurface ? 'Etapa padrao' : 'Etapa padrao'} value={isDefault} options={defaultOptions} onChange={setIsDefault} />
             <div className="flex gap-2 md:col-span-2">
               <button
                 type="button"
@@ -190,10 +232,12 @@ export function CrmPipelinePage() {
                 onClick={() => void handleSubmit()}
                 className="ui-primary-button"
               >
-                {editingId ? 'Salvar etapa' : 'Criar etapa'}
+                {editingId
+                  ? isPetSurface ? 'Salvar etapa comercial' : 'Salvar etapa'
+                  : isPetSurface ? 'Criar etapa comercial' : 'Criar etapa'}
               </button>
               <button type="button" onClick={resetForm} className="ui-secondary-button">
-                Cancelar
+                {isPetSurface ? 'Cancelar' : 'Cancelar'}
               </button>
             </div>
           </div>
@@ -201,15 +245,21 @@ export function CrmPipelinePage() {
 
         {error ? <div className="ui-notice-error">{error}</div> : null}
 
-        <DataTable columns={columns} rows={rows} getRowKey={(row) => row.id} loading={loading} emptyMessage="Nenhuma etapa encontrada." />
+        <DataTable
+          columns={columns}
+          rows={rows}
+          getRowKey={(row) => row.id}
+          loading={loading}
+          emptyMessage={isPetSurface ? 'Nenhuma etapa comercial encontrada.' : 'Nenhuma etapa encontrada.'}
+        />
 
         <Pagination page={pageData.page} totalPages={pageData.totalPages} totalElements={totalItems} onPageChange={(nextPage) => void load(nextPage, search)} />
 
         <ConfirmDialog
           open={Boolean(deleteCandidate)}
-          title="Excluir etapa"
-          description={deleteCandidate ? `Confirma a exclusão de ${deleteCandidate.name}?` : undefined}
-          confirmLabel="Excluir"
+          title={isPetSurface ? 'Excluir etapa comercial' : 'Excluir etapa'}
+          description={deleteCandidate ? `Confirma a exclusao de ${deleteCandidate.name}?` : undefined}
+          confirmLabel={isPetSurface ? 'Excluir' : 'Excluir'}
           onCancel={() => setDeleteCandidate(null)}
           onConfirm={() => void handleDelete()}
         />

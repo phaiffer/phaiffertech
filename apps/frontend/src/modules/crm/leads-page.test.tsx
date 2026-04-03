@@ -115,4 +115,28 @@ describe('CrmLeadsPage', () => {
     expect(screen.getAllByText('Ana Silva').length).toBeGreaterThan(0);
     expect(screen.getAllByText('Acme Vet').length).toBeGreaterThan(0);
   });
+
+  it('uses the PetFlow commercial surface without reviving CRM routes', async () => {
+    render(<CrmLeadsPage surface="pet" />);
+
+    await waitFor(() => {
+      expect(crmServiceMock.listLeads).toHaveBeenCalledTimes(1);
+    });
+
+    expect(screen.getByText('Leads comerciais')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Novo lead comercial' })).toHaveAttribute('href', '/pet/commercial/leads/new');
+
+    fireEvent.change(screen.getByLabelText('Conta comercial'), { target: { value: 'company-1' } });
+
+    await waitFor(() => {
+      expect(crmServiceMock.listLeads).toHaveBeenLastCalledWith(0, 10, '', {
+        status: undefined,
+        source: undefined,
+        companyId: 'company-1',
+        contactId: undefined
+      });
+    });
+
+    expect(screen.getByLabelText('Contato de apoio')).toBeInTheDocument();
+  });
 });

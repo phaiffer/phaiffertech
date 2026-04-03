@@ -3,8 +3,9 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { ApiClientError } from '@/shared/lib/http';
 import { LeadFormPage } from '@/modules/crm/lead-form-page';
 
-const { hasPermissionMock, crmServiceMock } = vi.hoisted(() => ({
+const { hasPermissionMock, pushMock, crmServiceMock } = vi.hoisted(() => ({
   hasPermissionMock: vi.fn(),
+  pushMock: vi.fn(),
   crmServiceMock: {
     listCompanies: vi.fn(),
     listContacts: vi.fn(),
@@ -16,7 +17,7 @@ const { hasPermissionMock, crmServiceMock } = vi.hoisted(() => ({
 
 vi.mock('next/navigation', () => ({
   useRouter: () => ({
-    push: vi.fn()
+    push: pushMock
   })
 }));
 
@@ -134,5 +135,36 @@ describe('LeadFormPage', () => {
     await waitFor(() => {
       expect(screen.getByText('Lead invalid')).toBeInTheDocument();
     });
+  });
+
+  it('returns to the PetFlow commercial surface after creating a lead on the absorbed route', async () => {
+    render(<LeadFormPage surface="pet" />);
+
+    await waitFor(() => {
+      expect(crmServiceMock.listCompanies).toHaveBeenCalledTimes(1);
+    });
+
+    fireEvent.change(screen.getByLabelText('Nome do lead'), { target: { value: 'Lead PetFlow' } });
+    fireEvent.change(screen.getByLabelText('Conta comercial (legado)'), { target: { value: 'company-1' } });
+
+    await waitFor(() => {
+      expect(crmServiceMock.listContacts).toHaveBeenLastCalledWith(0, 100, '', {
+        companyId: 'company-1'
+      });
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: 'Criar lead comercial' }));
+
+    await waitFor(() => {
+      expect(crmServiceMock.createLead).toHaveBeenCalledWith({
+        name: 'Lead PetFlow',
+        companyId: 'company-1',
+        status: 'NEW'
+      });
+    });
+
+    await waitFor(() => {
+      expect(pushMock).toHaveBeenCalledWith('/pet/commercial?tab=leads');
+    }, { timeout: 1500 });
   });
 });

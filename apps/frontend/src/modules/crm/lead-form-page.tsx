@@ -9,6 +9,7 @@ import {
   sharedPageStackClass
 } from '@/shared/components/public-visual-system';
 import { crmService } from '@/shared/services/crm-service';
+import { petCommercialService } from '@/shared/services/pet-commercial-service';
 import { ApiClientError } from '@/shared/lib/http';
 import { resolvePageItems } from '@/shared/lib/pagination';
 import { CrmCompany, CrmContact } from '@/shared/types/crm';
@@ -28,11 +29,15 @@ const statusOptions = [
 
 type LeadFormPageProps = {
   leadId?: string;
+  surface?: 'crm' | 'pet';
 };
 
-export function LeadFormPage({ leadId }: LeadFormPageProps) {
+export function LeadFormPage({ leadId, surface = 'crm' }: LeadFormPageProps) {
   const router = useRouter();
+  const isPetSurface = surface === 'pet';
   const isEdit = Boolean(leadId);
+  const commercialService = isPetSurface ? petCommercialService : crmService;
+  const listPath = isPetSurface ? '/pet/commercial?tab=leads' : '/crm/leads';
   const requiredPermission = isEdit ? 'crm.lead.update' : 'crm.lead.create';
 
   const [loading, setLoading] = useState(isEdit);
@@ -57,7 +62,7 @@ export function LeadFormPage({ leadId }: LeadFormPageProps) {
     let active = true;
 
     setLoadingCompanies(true);
-    crmService.listCompanies(0, 100)
+    commercialService.listCompanies(0, 100)
       .then((companiesPage) => {
         if (!active) {
           return;
@@ -68,7 +73,11 @@ export function LeadFormPage({ leadId }: LeadFormPageProps) {
         if (!active) {
           return;
         }
-        const message = err instanceof ApiClientError ? err.message : 'Erro ao carregar companies para o lead.';
+        const message = err instanceof ApiClientError
+          ? err.message
+          : isPetSurface
+            ? 'Erro ao carregar contas comerciais para o lead.'
+            : 'Erro ao carregar companies para o lead.';
         setError((current) => current ?? message);
       })
       .finally(() => {
@@ -80,13 +89,13 @@ export function LeadFormPage({ leadId }: LeadFormPageProps) {
     return () => {
       active = false;
     };
-  }, []);
+  }, [commercialService, isPetSurface]);
 
   useEffect(() => {
     let active = true;
 
     setLoadingContacts(true);
-    crmService.listContacts(0, 100, '', {
+    commercialService.listContacts(0, 100, '', {
       companyId: companyId || undefined
     })
       .then((contactsPage) => {
@@ -99,7 +108,11 @@ export function LeadFormPage({ leadId }: LeadFormPageProps) {
         if (!active) {
           return;
         }
-        const message = err instanceof ApiClientError ? err.message : 'Erro ao carregar contatos para vínculo.';
+        const message = err instanceof ApiClientError
+          ? err.message
+          : isPetSurface
+            ? 'Erro ao carregar contatos de apoio para o lead.'
+            : 'Erro ao carregar contatos para vínculo.';
         setError((current) => current ?? message);
       })
       .finally(() => {
@@ -111,7 +124,7 @@ export function LeadFormPage({ leadId }: LeadFormPageProps) {
     return () => {
       active = false;
     };
-  }, [companyId]);
+  }, [commercialService, companyId, isPetSurface]);
 
   useEffect(() => {
     if (!isEdit || !leadId) {
@@ -120,7 +133,7 @@ export function LeadFormPage({ leadId }: LeadFormPageProps) {
 
     let active = true;
     setLoading(true);
-    crmService.getLead(leadId)
+    commercialService.getLead(leadId)
       .then((lead) => {
         if (!active) {
           return;
@@ -138,7 +151,11 @@ export function LeadFormPage({ leadId }: LeadFormPageProps) {
         if (!active) {
           return;
         }
-        const message = err instanceof ApiClientError ? err.message : 'Erro ao carregar lead.';
+        const message = err instanceof ApiClientError
+          ? err.message
+          : isPetSurface
+            ? 'Erro ao carregar lead comercial.'
+            : 'Erro ao carregar lead.';
         setError(message);
       })
       .finally(() => {
@@ -150,25 +167,41 @@ export function LeadFormPage({ leadId }: LeadFormPageProps) {
     return () => {
       active = false;
     };
-  }, [isEdit, leadId]);
+  }, [commercialService, isEdit, isPetSurface, leadId]);
 
-  const title = useMemo(() => (isEdit ? 'Editar lead' : 'Novo lead'), [isEdit]);
+  const title = useMemo(() => {
+    if (isPetSurface) {
+      return isEdit ? 'Editar lead comercial' : 'Novo lead comercial';
+    }
+
+    return isEdit ? 'Editar lead' : 'Novo lead';
+  }, [isEdit, isPetSurface]);
   const companyOptions = useMemo(() => [
-    { value: '', label: loadingCompanies ? 'Carregando companies...' : 'Sem company vinculada' },
+    {
+      value: '',
+      label: loadingCompanies
+        ? (isPetSurface ? 'Carregando contas comerciais...' : 'Carregando companies...')
+        : (isPetSurface ? 'Sem conta comercial vinculada' : 'Sem company vinculada')
+    },
     ...companies.map((company) => ({
       value: company.id,
       label: company.name
     }))
-  ], [companies, loadingCompanies]);
+  ], [companies, isPetSurface, loadingCompanies]);
   const contactOptions = useMemo(() => [
-    { value: '', label: loadingContacts ? 'Carregando contatos...' : 'Nenhum contato relacionado' },
+    {
+      value: '',
+      label: loadingContacts
+        ? (isPetSurface ? 'Carregando contatos de apoio...' : 'Carregando contatos...')
+        : (isPetSurface ? 'Nenhum contato de apoio relacionado' : 'Nenhum contato relacionado')
+    },
     ...contacts.map((contact) => ({
       value: contact.id,
       label: `${contact.firstName} ${contact.lastName ?? ''}`.trim()
     }))
-  ], [contacts, loadingContacts]);
-  const selectedCompanyLabel = companyOptions.find((option) => option.value === companyId)?.label ?? 'Sem company vinculada';
-  const selectedContactLabel = contactOptions.find((option) => option.value === contactId)?.label ?? 'Nenhum contato relacionado';
+  ], [contacts, isPetSurface, loadingContacts]);
+  const selectedCompanyLabel = companyOptions.find((option) => option.value === companyId)?.label ?? (isPetSurface ? 'Sem conta comercial vinculada' : 'Sem company vinculada');
+  const selectedContactLabel = contactOptions.find((option) => option.value === contactId)?.label ?? (isPetSurface ? 'Nenhum contato de apoio relacionado' : 'Nenhum contato relacionado');
 
   function handleCompanyChange(nextCompanyId: string) {
     setCompanyId(nextCompanyId);
@@ -194,16 +227,20 @@ export function LeadFormPage({ leadId }: LeadFormPageProps) {
       };
 
       if (isEdit && leadId) {
-        await crmService.updateLead(leadId, payload);
-        setSuccess('Lead atualizado com sucesso.');
+        await commercialService.updateLead(leadId, payload);
+        setSuccess(isPetSurface ? 'Lead comercial atualizado com sucesso.' : 'Lead atualizado com sucesso.');
       } else {
-        await crmService.createLead(payload);
-        setSuccess('Lead criado com sucesso.');
+        await commercialService.createLead(payload);
+        setSuccess(isPetSurface ? 'Lead comercial criado com sucesso.' : 'Lead criado com sucesso.');
       }
 
-      setTimeout(() => router.push('/crm/leads'), 600);
+      setTimeout(() => router.push(listPath), 600);
     } catch (err) {
-      const message = err instanceof ApiClientError ? err.message : 'Erro ao salvar lead.';
+      const message = err instanceof ApiClientError
+        ? err.message
+        : isPetSurface
+          ? 'Erro ao salvar lead comercial.'
+          : 'Erro ao salvar lead.';
       setError(message);
     } finally {
       setSubmitting(false);
@@ -213,86 +250,112 @@ export function LeadFormPage({ leadId }: LeadFormPageProps) {
   return (
     <PermissionGuard
       permission={requiredPermission}
-      fallback={<div className="ui-notice-warning">Você não possui permissão para esta ação.</div>}
+      fallback={(
+        <div className="ui-notice-warning">
+          {isPetSurface
+            ? 'Você não possui permissão para esta ação comercial do PetFlow.'
+            : 'Você não possui permissão para esta ação.'}
+        </div>
+      )}
     >
       <div className={sharedPageStackClass}>
         <PageTitle
-          eyebrow="CRM workspace"
+          eyebrow={isPetSurface ? 'PetFlow commercial' : 'CRM workspace'}
           title={title}
-          description="Formulário de cadastro/edição de lead CRM."
+          description={isPetSurface
+            ? 'Cadastre e qualifique leads no contexto comercial do PetFlow. Os vínculos de conta e contato permanecem como camada temporária de compatibilidade.'
+            : 'Formulário de cadastro/edição de lead CRM.'}
           actions={(
-            <Link href="/crm/leads" className="ui-secondary-button">
-              Voltar para listagem
+            <Link href={listPath} className="ui-secondary-button">
+              {isPetSurface ? 'Voltar para o comercial' : 'Voltar para listagem'}
             </Link>
           )}
         />
 
         {loading ? (
           <PageSection>
-            <div className="text-sm text-[color:var(--app-shell-muted)]">Carregando lead...</div>
+            <div className="text-sm text-[color:var(--app-shell-muted)]">
+              {isPetSurface ? 'Carregando lead comercial...' : 'Carregando lead...'}
+            </div>
           </PageSection>
         ) : (
           <>
             <PageSection
               tone="muted"
-              title="Workflow context"
-              description="Keep the commercial mode, relationship links, and downstream CRM context explicit before editing the lead payload itself."
+              title={isPetSurface ? 'Contexto comercial' : 'Workflow context'}
+              description={isPetSurface
+                ? 'Mantenha captação, relacionamento e conversão legados explícitos antes de editar o payload do lead.'
+                : 'Keep the commercial mode, relationship links, and downstream CRM context explicit before editing the lead payload itself.'}
             >
               <div className="grid gap-4 xl:grid-cols-2">
                 <div className="ui-surface-muted p-4 lg:p-5">
                   <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--tenant-accent)]">
-                    Record mode
+                    {isPetSurface ? 'Modo comercial' : 'Record mode'}
                   </p>
                   <p className="mt-3 text-base font-semibold text-[color:var(--app-shell-heading)]">
-                    {isEdit ? 'Updating an existing lead' : 'Creating a new lead'}
+                    {isPetSurface
+                      ? (isEdit ? 'Atualizando um lead em andamento' : 'Capturando um novo lead comercial')
+                      : (isEdit ? 'Updating an existing lead' : 'Creating a new lead')}
                   </p>
                   <p className={`mt-2 ${sharedCompactTextClass}`}>
-                    Keep qualification, relationship context, and notes aligned so list and detail pages read the same way across the CRM workspace.
+                    {isPetSurface
+                      ? 'Mantenha qualificação, contexto de relacionamento e notas alinhados para que o lead siga coerente dentro do comercial do PetFlow.'
+                      : 'Keep qualification, relationship context, and notes aligned so list and detail pages read the same way across the CRM workspace.'}
                   </p>
                 </div>
 
                 <div className="ui-surface-muted p-4 lg:p-5">
                   <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--tenant-accent)]">
-                    Current relationship
+                    {isPetSurface ? 'Contexto atual' : 'Current relationship'}
                   </p>
                   <p className="mt-3 text-base font-semibold text-[color:var(--app-shell-heading)]">
                     {selectedCompanyLabel}
                   </p>
-                  <p className={`mt-2 ${sharedCompactTextClass}`}>Contact: {selectedContactLabel}</p>
+                  <p className={`mt-2 ${sharedCompactTextClass}`}>
+                    {isPetSurface ? 'Contato de apoio' : 'Contact'}: {selectedContactLabel}
+                  </p>
                 </div>
               </div>
             </PageSection>
 
             <PageSection
-              title={isEdit ? 'Lead details' : 'Lead capture'}
-              description="Group the core identity fields, relationship selectors, and sales notes so the form stays dense without feeling cramped."
+              title={isPetSurface
+                ? (isEdit ? 'Detalhes do lead comercial' : 'Captação do lead comercial')
+                : (isEdit ? 'Lead details' : 'Lead capture')}
+              description={isPetSurface
+                ? 'Agrupe identidade, relacionamento e notas comerciais para preparar a conversão sem reviver uma superfície separada de CRM.'
+                : 'Group the core identity fields, relationship selectors, and sales notes so the form stays dense without feeling cramped.'}
             >
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div className="grid gap-4 xl:grid-cols-2">
-                  <FormInput label="Nome" value={name} onChange={setName} required />
+                  <FormInput label={isPetSurface ? 'Nome do lead' : 'Nome'} value={name} onChange={setName} required />
                   <FormSelect label="Status" value={status} options={statusOptions} onChange={setStatus} />
-                  <FormInput label="Email" value={email} onChange={setEmail} type="email" />
-                  <FormInput label="Telefone" value={phone} onChange={setPhone} />
-                  <FormInput label="Origem" value={source} onChange={setSource} />
+                  <FormInput label={isPetSurface ? 'Email do lead' : 'Email'} value={email} onChange={setEmail} type="email" />
+                  <FormInput label={isPetSurface ? 'Telefone do lead' : 'Telefone'} value={phone} onChange={setPhone} />
+                  <FormInput label={isPetSurface ? 'Origem comercial' : 'Origem'} value={source} onChange={setSource} />
                   <div className="hidden xl:block" />
                 </div>
 
                 <div className="grid gap-4 xl:grid-cols-2">
                   <FormSelect
-                    label="Company relacionada"
+                    label={isPetSurface ? 'Conta comercial (legado)' : 'Company relacionada'}
                     value={companyId}
                     options={companyOptions}
                     onChange={handleCompanyChange}
                     disabled={loadingCompanies}
-                    description="A seleção da company mantém o vínculo comercial e redefine a lista de contatos disponíveis."
+                    description={isPetSurface
+                      ? 'A conta comercial continua disponível apenas como compatibilidade enquanto o modelo do PetFlow absorve a conversão.'
+                      : 'A seleção da company mantém o vínculo comercial e redefine a lista de contatos disponíveis.'}
                   />
                   <FormSelect
-                    label="Contato relacionado"
+                    label={isPetSurface ? 'Contato de apoio (opcional)' : 'Contato relacionado'}
                     value={contactId}
                     options={contactOptions}
                     onChange={setContactId}
                     disabled={loadingContacts}
-                    description="O contato acompanha a company selecionada quando houver relacionamento comercial definido."
+                    description={isPetSurface
+                      ? 'Use um contato de apoio quando ele ainda for necessário para preservar o relacionamento legado do lead.'
+                      : 'O contato acompanha a company selecionada quando houver relacionamento comercial definido.'}
                   />
                 </div>
 
@@ -301,7 +364,9 @@ export function LeadFormPage({ leadId }: LeadFormPageProps) {
                   value={notes}
                   onChange={setNotes}
                   rows={5}
-                  description="Use este campo para registrar o contexto comercial que precisa sobreviver entre a captura, a qualificação e a conversão."
+                  description={isPetSurface
+                    ? 'Use este campo para registrar o contexto comercial que precisa sobreviver entre captação, qualificação e conversão para cliente.'
+                    : 'Use este campo para registrar o contexto comercial que precisa sobreviver entre a captura, a qualificação e a conversão.'}
                 />
 
                 <div className={sharedFormActionsClass}>
@@ -310,7 +375,11 @@ export function LeadFormPage({ leadId }: LeadFormPageProps) {
                     disabled={submitting}
                     className="ui-primary-button"
                   >
-                    {submitting ? 'Salvando...' : isEdit ? 'Atualizar lead' : 'Criar lead'}
+                    {submitting
+                      ? 'Salvando...'
+                      : isPetSurface
+                        ? isEdit ? 'Atualizar lead comercial' : 'Criar lead comercial'
+                        : isEdit ? 'Atualizar lead' : 'Criar lead'}
                   </button>
                 </div>
               </form>

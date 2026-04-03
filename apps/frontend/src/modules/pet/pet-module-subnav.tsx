@@ -70,6 +70,14 @@ export function PetModuleSubnav() {
       group: 'pet' as const
     },
     {
+      href: '/pet/commercial',
+      label: t.commercial,
+      anyOf: ['crm.lead.read', 'crm.deal.read', 'crm.pipeline.read'],
+      anyEntitlements: petSubmoduleEntitlements,
+      moduleCode: 'PET',
+      group: 'pet' as const
+    },
+    {
       href: '/pet/clinic',
       label: t.clinic,
       anyOf: ['pet.medical-record.read'],

@@ -128,6 +128,7 @@ export const enUSMessages: AppMessages = {
     pets: 'Pets',
     appointments: 'Appointments',
     followUp: 'Follow-up',
+    commercial: 'Commercial',
     clinic: 'Clinic',
     pos: 'POS',
     finance: 'Finance',

@@ -11,6 +11,7 @@ import {
 } from '@/shared/components/public-visual-system';
 import { StatusBadge } from '@/shared/dashboard/status-badge';
 import { crmService } from '@/shared/services/crm-service';
+import { petCommercialService } from '@/shared/services/pet-commercial-service';
 import { ApiClientError } from '@/shared/lib/http';
 import { resolvePageItems, resolveTotalItems } from '@/shared/lib/pagination';
 import { CrmCompany, CrmContact, CrmLead } from '@/shared/types/crm';
@@ -33,11 +34,26 @@ const statusOptions = [
   { value: 'LOST', label: 'LOST' }
 ];
 
+const petStatusOptions = [
+  { value: '', label: 'Todos' },
+  { value: 'NEW', label: 'Novo' },
+  { value: 'QUALIFIED', label: 'Qualificado' },
+  { value: 'WON', label: 'Convertido' },
+  { value: 'LOST', label: 'Perdido' }
+];
+
 const sourceOptions = [
   { value: '', label: 'Todas' },
   { value: 'WEBSITE', label: 'WEBSITE' },
   { value: 'EVENT', label: 'EVENT' },
   { value: 'REFERRAL', label: 'REFERRAL' }
+];
+
+const petSourceOptions = [
+  { value: '', label: 'Todas' },
+  { value: 'WEBSITE', label: 'Website' },
+  { value: 'EVENT', label: 'Evento' },
+  { value: 'REFERRAL', label: 'Indicacao' }
 ];
 
 const initialPage: PageResponse<CrmLead> = {
@@ -55,7 +71,14 @@ function formatDateTime(value: string) {
   }).format(new Date(value));
 }
 
-export function CrmLeadsPage() {
+type CrmLeadsPageProps = {
+  surface?: 'crm' | 'pet';
+};
+
+export function CrmLeadsPage({ surface = 'crm' }: CrmLeadsPageProps) {
+  const isPetSurface = surface === 'pet';
+  const commercialService = isPetSurface ? petCommercialService : crmService;
+  const basePath = isPetSurface ? '/pet/commercial/leads' : '/crm/leads';
   const [pageData, setPageData] = useState<PageResponse<CrmLead>>(initialPage);
   const [companies, setCompanies] = useState<CrmCompany[]>([]);
   const [contacts, setContacts] = useState<CrmContact[]>([]);
@@ -76,7 +99,7 @@ export function CrmLeadsPage() {
     let active = true;
 
     setLoadingCompanies(true);
-    crmService.listCompanies(0, 100)
+    commercialService.listCompanies(0, 100)
       .then((companiesPage) => {
         if (!active) {
           return;
@@ -87,7 +110,11 @@ export function CrmLeadsPage() {
         if (!active) {
           return;
         }
-        const message = err instanceof ApiClientError ? err.message : 'Erro ao carregar companies para filtro.';
+        const message = err instanceof ApiClientError
+          ? err.message
+          : isPetSurface
+            ? 'Erro ao carregar contas comerciais para filtro.'
+            : 'Erro ao carregar companies para filtro.';
         setError((current) => current ?? message);
       })
       .finally(() => {
@@ -99,13 +126,13 @@ export function CrmLeadsPage() {
     return () => {
       active = false;
     };
-  }, []);
+  }, [commercialService, isPetSurface]);
 
   useEffect(() => {
     let active = true;
 
     setLoadingContacts(true);
-    crmService.listContacts(0, 100, '', {
+    commercialService.listContacts(0, 100, '', {
       companyId: companyFilterId || undefined
     })
       .then((contactsPage) => {
@@ -118,7 +145,11 @@ export function CrmLeadsPage() {
         if (!active) {
           return;
         }
-        const message = err instanceof ApiClientError ? err.message : 'Erro ao carregar contatos para filtro.';
+        const message = err instanceof ApiClientError
+          ? err.message
+          : isPetSurface
+            ? 'Erro ao carregar contatos de apoio para filtro.'
+            : 'Erro ao carregar contatos para filtro.';
         setError((current) => current ?? message);
       })
       .finally(() => {
@@ -130,7 +161,7 @@ export function CrmLeadsPage() {
     return () => {
       active = false;
     };
-  }, [companyFilterId]);
+  }, [commercialService, companyFilterId, isPetSurface]);
 
   const load = useCallback(async (
     page: number,
@@ -143,7 +174,7 @@ export function CrmLeadsPage() {
     setLoading(true);
     setError(null);
     try {
-      const result = await crmService.listLeads(page, pageSize, currentSearch, {
+      const result = await commercialService.listLeads(page, pageSize, currentSearch, {
         status: currentStatus || undefined,
         source: currentSource || undefined,
         companyId: currentCompanyId || undefined,
@@ -151,12 +182,16 @@ export function CrmLeadsPage() {
       });
       setPageData(result);
     } catch (err) {
-      const message = err instanceof ApiClientError ? err.message : 'Erro ao carregar leads.';
+      const message = err instanceof ApiClientError
+        ? err.message
+        : isPetSurface
+          ? 'Erro ao carregar leads comerciais.'
+          : 'Erro ao carregar leads.';
       setError(message);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [commercialService, isPetSurface]);
 
   useEffect(() => {
     load(0, search, statusFilter, sourceFilter, companyFilterId, contactFilterId);
@@ -168,26 +203,42 @@ export function CrmLeadsPage() {
     }
 
     try {
-      await crmService.deleteLead(deleteCandidate.id);
+      await commercialService.deleteLead(deleteCandidate.id);
       setDeleteCandidate(null);
       await load(pageData.page, search, statusFilter, sourceFilter, companyFilterId, contactFilterId);
     } catch (err) {
-      const message = err instanceof ApiClientError ? err.message : 'Erro ao excluir lead.';
+      const message = err instanceof ApiClientError
+        ? err.message
+        : isPetSurface
+          ? 'Erro ao remover lead comercial.'
+          : 'Erro ao excluir lead.';
       setError(message);
     }
   }
 
   const rows = resolvePageItems(pageData);
   const totalItems = resolveTotalItems(pageData);
+  const availableStatusOptions = isPetSurface ? petStatusOptions : statusOptions;
+  const availableSourceOptions = isPetSurface ? petSourceOptions : sourceOptions;
   const companyOptions = [
-    { value: '', label: loadingCompanies ? 'Carregando companies...' : 'Todas as companies' },
+    {
+      value: '',
+      label: loadingCompanies
+        ? (isPetSurface ? 'Carregando contas comerciais...' : 'Carregando companies...')
+        : (isPetSurface ? 'Todas as contas comerciais' : 'Todas as companies')
+    },
     ...companies.map((company) => ({
       value: company.id,
       label: company.name
     }))
   ];
   const contactOptions = [
-    { value: '', label: loadingContacts ? 'Carregando contatos...' : 'Todos os contatos' },
+    {
+      value: '',
+      label: loadingContacts
+        ? (isPetSurface ? 'Carregando contatos de apoio...' : 'Carregando contatos...')
+        : (isPetSurface ? 'Todos os contatos de apoio' : 'Todos os contatos')
+    },
     ...contacts.map((contact) => ({
       value: contact.id,
       label: `${contact.firstName} ${contact.lastName ?? ''}`.trim()
@@ -203,7 +254,7 @@ export function CrmLeadsPage() {
   const columns: DataTableColumn<CrmLead>[] = [
     {
       key: 'lead',
-      header: 'Lead',
+      header: isPetSurface ? 'Lead comercial' : 'Lead',
       render: (lead) => (
         <div>
           <p className="font-medium text-[color:var(--app-shell-heading)]">{lead.name}</p>
@@ -226,11 +277,13 @@ export function CrmLeadsPage() {
     },
     {
       key: 'relationship',
-      header: 'Relacionamento',
+      header: isPetSurface ? 'Contexto comercial' : 'Relacionamento',
       render: (lead) => (
         <div>
           <p className="font-medium text-[color:var(--app-shell-heading)]">{companyName(lead.companyId)}</p>
-          <p className={`mt-1 ${sharedCompactTextClass}`}>Contato: {contactName(lead.contactId)}</p>
+          <p className={`mt-1 ${sharedCompactTextClass}`}>
+            {isPetSurface ? 'Contato de apoio' : 'Contato'}: {contactName(lead.contactId)}
+          </p>
         </div>
       )
     },
@@ -246,7 +299,7 @@ export function CrmLeadsPage() {
         <div className={sharedInlineActionsClass}>
           <PermissionGuard permission="crm.lead.update">
             <Link
-              href={`/crm/leads/${lead.id}`}
+              href={`${basePath}/${lead.id}`}
               className="ui-inline-button"
             >
               Editar
@@ -270,20 +323,28 @@ export function CrmLeadsPage() {
   return (
     <PermissionGuard
       permission="crm.lead.read"
-      fallback={<div className="ui-notice-warning">Você não possui permissão para visualizar leads.</div>}
+      fallback={(
+        <div className="ui-notice-warning">
+          {isPetSurface
+            ? 'Você não possui permissão para visualizar o comercial do PetFlow.'
+            : 'Você não possui permissão para visualizar leads.'}
+        </div>
+      )}
     >
       <div className={sharedPageStackClass}>
         <PageTitle
-          eyebrow="CRM workspace"
-          title="Leads"
-          description="Keep intake, source, and relationship context visible without turning the page into an admin panel."
+          eyebrow={isPetSurface ? 'PetFlow commercial' : 'CRM workspace'}
+          title={isPetSurface ? 'Leads comerciais' : 'Leads'}
+          description={isPetSurface
+            ? 'Concentre captura, origem e contexto de conversão sem expor CRM como uma superfície separada do PetFlow.'
+            : 'Keep intake, source, and relationship context visible without turning the page into an admin panel.'}
           actions={(
             <PermissionGuard permission="crm.lead.create">
               <Link
-                href="/crm/leads/new"
+                href={`${basePath}/new`}
                 className="ui-primary-button"
               >
-                Novo lead
+                {isPetSurface ? 'Novo lead comercial' : 'Novo lead'}
               </Link>
             </PermissionGuard>
           )}
@@ -291,31 +352,33 @@ export function CrmLeadsPage() {
 
         <PageSection
           tone="muted"
-          title="Filters"
-          description="Refine the queue by status, source, company, and contact."
+          title={isPetSurface ? 'Filtros comerciais' : 'Filters'}
+          description={isPetSurface
+            ? 'Refine a fila por status, origem e contexto comercial sem tirar o PetFlow do centro da navegação.'
+            : 'Refine the queue by status, source, company, and contact.'}
         >
           <div className={sharedFilterToolbarClass}>
             <div className="grid gap-3 xl:grid-cols-[minmax(0,1.45fr)_repeat(4,minmax(0,0.82fr))] xl:items-end">
               <SearchBar
-                label="Search"
+                label={isPetSurface ? 'Buscar' : 'Search'}
                 value={searchInput}
                 onChange={setSearchInput}
-                placeholder="Nome, email, origem"
+                placeholder={isPetSurface ? 'Nome, email, origem ou contexto' : 'Nome, email, origem'}
               />
               <FormSelect
                 label="Status"
                 value={statusFilter}
-                options={statusOptions}
+                options={availableStatusOptions}
                 onChange={setStatusFilter}
               />
               <FormSelect
-                label="Origem"
+                label={isPetSurface ? 'Origem comercial' : 'Origem'}
                 value={sourceFilter}
-                options={sourceOptions}
+                options={availableSourceOptions}
                 onChange={setSourceFilter}
               />
               <FormSelect
-                label="Company"
+                label={isPetSurface ? 'Conta comercial' : 'Company'}
                 value={companyFilterId}
                 options={companyOptions}
                 onChange={(value) => {
@@ -325,7 +388,7 @@ export function CrmLeadsPage() {
                 disabled={loadingCompanies}
               />
               <FormSelect
-                label="Contato"
+                label={isPetSurface ? 'Contato de apoio' : 'Contato'}
                 value={contactFilterId}
                 options={contactOptions}
                 onChange={setContactFilterId}
@@ -338,7 +401,7 @@ export function CrmLeadsPage() {
                 onClick={() => setSearch(searchInput)}
                 className="ui-primary-button"
               >
-                Buscar
+                {isPetSurface ? 'Buscar' : 'Buscar'}
               </button>
               <button
                 type="button"
@@ -357,7 +420,9 @@ export function CrmLeadsPage() {
               <p className="text-sm text-[color:var(--app-shell-muted)]">
                 {activeFilterCount > 0
                   ? `${activeFilterCount} filtro(s) ativos na fila comercial.`
-                  : 'Sem filtros ativos no momento.'}
+                  : isPetSurface
+                    ? 'Sem filtros ativos. Mostrando a entrada comercial mais ampla.'
+                    : 'Sem filtros ativos no momento.'}
               </p>
             </div>
           </div>
@@ -368,11 +433,13 @@ export function CrmLeadsPage() {
         ) : null}
 
         <PageSection
-          title="Lead queue"
-          description="Open leads with source, relationship context, and next actions."
+          title={isPetSurface ? 'Fila de leads comerciais' : 'Lead queue'}
+          description={isPetSurface
+            ? 'Acompanhe captação, qualificação e próximos passos de conversão antes da passagem para cliente.'
+            : 'Open leads with source, relationship context, and next actions.'}
           actions={(
             <p className="text-sm text-[color:var(--app-shell-muted)]">
-              Total {totalItems} lead(s)
+              {isPetSurface ? `Total de ${totalItems} lead(s)` : `Total ${totalItems} lead(s)`}
             </p>
           )}
         >
@@ -383,12 +450,14 @@ export function CrmLeadsPage() {
               getRowKey={(row) => row.id}
               loading={loading}
               emptyState={{
-                title: 'Nenhum lead encontrado',
-                description: 'Abra o primeiro lead para iniciar a fila comercial deste workspace.',
+                title: isPetSurface ? 'Nenhum lead comercial encontrado' : 'Nenhum lead encontrado',
+                description: isPetSurface
+                  ? 'Abra o primeiro lead para iniciar a captação comercial do PetFlow neste workspace.'
+                  : 'Abra o primeiro lead para iniciar a fila comercial deste workspace.',
                 action: (
                   <PermissionGuard permission="crm.lead.create">
-                    <Link href="/crm/leads/new" className="ui-primary-button">
-                      Novo lead
+                    <Link href={`${basePath}/new`} className="ui-primary-button">
+                      {isPetSurface ? 'Novo lead comercial' : 'Novo lead'}
                     </Link>
                   </PermissionGuard>
                 )
@@ -406,9 +475,13 @@ export function CrmLeadsPage() {
 
         <ConfirmDialog
           open={Boolean(deleteCandidate)}
-          title="Excluir lead"
-          description={deleteCandidate ? `Confirma a exclusão de ${deleteCandidate.name}?` : undefined}
-          confirmLabel="Excluir"
+          title={isPetSurface ? 'Remover lead comercial' : 'Excluir lead'}
+          description={deleteCandidate
+            ? (isPetSurface
+              ? `Remover ${deleteCandidate.name} da fila comercial do PetFlow?`
+              : `Confirma a exclusão de ${deleteCandidate.name}?`)
+            : undefined}
+          confirmLabel={isPetSurface ? 'Remover' : 'Excluir'}
           onCancel={() => setDeleteCandidate(null)}
           onConfirm={handleConfirmDelete}
         />
