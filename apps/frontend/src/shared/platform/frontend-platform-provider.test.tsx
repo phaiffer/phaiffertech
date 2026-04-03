@@ -21,7 +21,7 @@ const { currentUser, moduleCatalog } = vi.hoisted(() => ({
     platformAdmin: false,
     role: 'TENANT_ADMIN',
     roles: ['TENANT_ADMIN'],
-    permissions: ['crm.dashboard.read']
+    permissions: ['pet.dashboard.read']
   } as AuthenticatedUser,
   moduleCatalog: {
     modules: [
@@ -35,22 +35,13 @@ const { currentUser, moduleCatalog } = vi.hoisted(() => ({
         available: true
       },
       {
-        code: 'CRM',
-        name: 'CRM',
-        description: 'CRM module',
+        code: 'PET',
+        name: 'PetFlow',
+        description: 'PetFlow workspace',
         enabled: true,
         moduleEnabled: true,
         featureFlagEnabled: true,
         available: true
-      },
-      {
-        code: 'IOT',
-        name: 'IoT System',
-        description: 'IoT module',
-        enabled: true,
-        moduleEnabled: true,
-        featureFlagEnabled: true,
-        available: false
       }
     ],
     loading: false,
@@ -118,9 +109,9 @@ describe('FrontendPlatformProvider', () => {
     expect(screen.getByTestId('tenant-default').textContent).toBe('light');
     expect(screen.getByTestId('workspace-label').textContent).toBe('Workspace');
     expect(screen.getByTestId('full-visibility').textContent).toBe('no');
-    expect(screen.getByTestId('contracted-products').textContent).toBe('CRM');
+    expect(screen.getByTestId('contracted-products').textContent).toBe('PET');
     expect(screen.getByTestId('branding-scope').textContent).toBe('Tenant One');
-    expect(screen.getByTestId('visual-profile').textContent).toBe('crm-corporate');
+    expect(screen.getByTestId('visual-profile').textContent).toBe('pet-clinic');
   });
 
   it('falls back to tenant theme defaults when overrides are disabled', async () => {

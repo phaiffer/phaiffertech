@@ -15,6 +15,7 @@ import {
   toAppThemeMode
 } from '@/shared/lib/tenant-branding';
 import { useModuleCatalog } from '@/shared/modules/use-module-catalog';
+import { filterVisibleModuleCatalogItems } from '@/shared/modules/visible-product-modules';
 import type { AuthenticatedUser } from '@/shared/types/auth';
 import { FrontendPlatformContext } from '@/shared/platform/frontend-platform.context';
 import type { FrontendPlatformState } from '@/shared/platform/frontend-platform.types';
@@ -71,7 +72,11 @@ export function FrontendPlatformProvider({ children }: { children: ReactNode }) 
   const { session } = useAuth();
   const user = session?.user ?? null;
   const [themeMode, setThemeMode] = useState<AppThemeMode>('system');
-  const { modules, loading, error } = useModuleCatalog();
+  const { modules: catalogModules, loading, error } = useModuleCatalog();
+  const modules = useMemo(
+    () => filterVisibleModuleCatalogItems(catalogModules),
+    [catalogModules]
+  );
 
   const tenantDefaultMode = toAppThemeMode(user?.tenantDefaultThemeMode);
   const canOverrideTheme = user?.tenantAllowUserThemeOverride ?? true;

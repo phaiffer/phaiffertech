@@ -53,6 +53,9 @@ public class PlatformDashboardService {
 
         List<DashboardModuleSummaryDto> modules = capabilities.stream()
                 .sorted(Comparator.comparing(ModuleSummaryCapability::moduleCode))
+                .filter(capability -> PlatformModule.fromCode(capability.moduleCode())
+                        .map(PlatformModule::isVisibleProductSurface)
+                        .orElse(false))
                 .filter(capability -> moduleAvailability.getOrDefault(capability.moduleCode(), false))
                 .filter(capability -> canAccessCapability(user, capability))
                 .map(capability -> capability.summarize(tenantId))
@@ -199,6 +202,7 @@ public class PlatformDashboardService {
     private Map<String, Boolean> resolveModuleAvailability(UUID tenantId) {
         Map<String, Boolean> availability = new LinkedHashMap<>();
         Arrays.stream(PlatformModule.values())
+                .filter(PlatformModule::isVisibleProductSurface)
                 .forEach(module -> availability.put(module.getCode(), moduleAccessService.isModuleAvailable(tenantId, module.getCode())));
         return availability;
     }

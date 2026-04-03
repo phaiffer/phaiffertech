@@ -1,4 +1,5 @@
 import { getAppThemeModeLabel } from '@/shared/lib/tenant-branding';
+import { isVisibleProductModuleCode } from '@/shared/modules/visible-product-modules';
 import type { GettingStartedStep } from '@/shared/onboarding/getting-started';
 import { hasPermission } from '@/shared/permissions/has-permission';
 import type { FrontendPlatformState } from '@/shared/platform/frontend-platform.types';
@@ -60,7 +61,7 @@ function filterProductModules(
   modules: ModuleItem[],
   predicate: (moduleItem: ModuleItem) => boolean
 ) {
-  return modules.filter((moduleItem) => moduleItem.code !== 'CORE_PLATFORM' && predicate(moduleItem));
+  return modules.filter((moduleItem) => isVisibleProductModuleCode(moduleItem.code) && predicate(moduleItem));
 }
 
 export function resolveDashboardWorkspaceVariant(
@@ -86,6 +87,10 @@ export function getAccessibleWorkspaceModules(
 }
 
 export function resolveModuleWorkspaceHref(moduleCode: string) {
+  if (!isVisibleProductModuleCode(moduleCode)) {
+    return null;
+  }
+
   return moduleWorkspaceMeta[moduleCode]?.href ?? null;
 }
 
@@ -124,6 +129,10 @@ export function buildDashboardExperienceCopy(platform: FrontendPlatformState): D
 }
 
 function buildModuleSetupDescription(moduleCode: string) {
+  if (!isVisibleProductModuleCode(moduleCode)) {
+    return 'This workspace no longer exposes that standalone module on the visible PetFlow surface.';
+  }
+
   if (moduleCode === 'CRM') {
     return 'Open CRM and create the first commercial records so the workspace can begin surfacing contacts, leads, deals, and activity.';
   }

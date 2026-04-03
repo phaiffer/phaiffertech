@@ -1,6 +1,7 @@
 package com.phaiffertech.platform.core.module.service;
 
 import com.phaiffertech.platform.core.module.domain.ModuleDefinition;
+import com.phaiffertech.platform.core.module.domain.PlatformModule;
 import com.phaiffertech.platform.core.module.repository.ModuleDefinitionRepository;
 import com.phaiffertech.platform.core.module.dto.ModuleViewResponse;
 import com.phaiffertech.platform.shared.security.LocalDevelopmentAdministratorAccessService;
@@ -45,6 +46,7 @@ public class ModuleRegistryService {
 
     private List<ModuleViewResponse> loadModulesForTenant(UUID tenantId) {
         return moduleDefinitionRepository.findAllByActiveTrueAndDeletedAtIsNullOrderByNameAsc().stream()
+                .filter(definition -> PlatformModule.isVisibleWorkspaceModuleCode(definition.getCode()))
                 .map(definition -> toResponse(definition, moduleAccessService.evaluate(tenantId, definition.getCode())))
                 .toList();
     }

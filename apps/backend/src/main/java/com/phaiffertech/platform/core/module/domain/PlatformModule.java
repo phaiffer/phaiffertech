@@ -5,18 +5,20 @@ import java.util.Locale;
 import java.util.Optional;
 
 public enum PlatformModule {
-    CRM("CRM", "/api/v1/crm", "crm.enabled"),
-    PET("PET", "/api/v1/pet", "pet.enabled"),
-    IOT("IOT", "/api/v1/iot", "iot.enabled");
+    CRM("CRM", "/api/v1/crm", "crm.enabled", false),
+    PET("PET", "/api/v1/pet", "pet.enabled", true),
+    IOT("IOT", "/api/v1/iot", "iot.enabled", false);
 
     private final String code;
     private final String apiPathPrefix;
     private final String featureFlagKey;
+    private final boolean visibleProductSurface;
 
-    PlatformModule(String code, String apiPathPrefix, String featureFlagKey) {
+    PlatformModule(String code, String apiPathPrefix, String featureFlagKey, boolean visibleProductSurface) {
         this.code = code;
         this.apiPathPrefix = apiPathPrefix;
         this.featureFlagKey = featureFlagKey;
+        this.visibleProductSurface = visibleProductSurface;
     }
 
     public String getCode() {
@@ -29,6 +31,21 @@ public enum PlatformModule {
 
     public String getFeatureFlagKey() {
         return featureFlagKey;
+    }
+
+    public boolean isVisibleProductSurface() {
+        return visibleProductSurface;
+    }
+
+    public static boolean isVisibleWorkspaceModuleCode(String code) {
+        String normalized = code == null ? "" : code.trim().toUpperCase(Locale.ROOT);
+        if ("CORE_PLATFORM".equals(normalized)) {
+            return true;
+        }
+
+        return fromCode(normalized)
+                .map(PlatformModule::isVisibleProductSurface)
+                .orElse(false);
     }
 
     public static Optional<PlatformModule> fromRequestPath(String requestPath) {

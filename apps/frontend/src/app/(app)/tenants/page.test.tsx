@@ -56,7 +56,6 @@ vi.mock('@/shared/modules/use-module-catalog', () => ({
   useModuleCatalog: () => ({
     modules: [
       { code: 'CORE_PLATFORM', name: 'Core Platform', available: true },
-      { code: 'CRM', name: 'CRM', available: true },
       { code: 'PET', name: 'PetFlow', available: true }
     ],
     loading: false,
@@ -140,7 +139,7 @@ describe('TenantsPage access model', () => {
           accentColor: '#0ea5e9',
           defaultThemeMode: 'DARK',
           allowUserThemeOverride: false,
-          contractedModules: ['CORE_PLATFORM', 'PET']
+          contractedModules: ['CORE_PLATFORM', 'PET', 'CRM']
         }
       ],
       totalItems: 1,
@@ -161,6 +160,7 @@ describe('TenantsPage access model', () => {
     expect(screen.getByText('beta.dashboard')).toBeInTheDocument();
     expect(screen.getAllByText('CORE_PLATFORM').length).toBeGreaterThan(0);
     expect(screen.getAllByText('PET').length).toBeGreaterThan(0);
+    expect(screen.queryByText('CRM')).not.toBeInTheDocument();
   });
 
   it('shows the selected package defaults as a read-only hint', async () => {
@@ -348,7 +348,8 @@ describe('TenantsPage access model', () => {
       size: 20
     });
     vi.mocked(featureFlagService.listForTenant).mockResolvedValue([
-      { key: 'crm.enabled', enabled: true, scope: 'GLOBAL' }
+      { key: 'crm.enabled', enabled: true, scope: 'GLOBAL' },
+      { key: 'pet.enabled', enabled: true, scope: 'GLOBAL' }
     ]);
     vi.mocked(tenantService.listUsageMetrics).mockResolvedValue([
       {
@@ -358,6 +359,14 @@ describe('TenantsPage access model', () => {
         unit: 'COUNT',
         metricDate: '2026-03-19',
         lastRecordedAt: '2026-03-19T12:00:00Z'
+      },
+      {
+        metricKey: 'api.request',
+        source: 'pet',
+        quantity: 2,
+        unit: 'COUNT',
+        metricDate: '2026-03-19',
+        lastRecordedAt: '2026-03-19T12:05:00Z'
       }
     ]);
 
@@ -372,8 +381,11 @@ describe('TenantsPage access model', () => {
       expect(tenantService.listUsageMetrics).toHaveBeenCalledWith('tenant-2');
     });
 
-    expect(await screen.findByText('crm.enabled')).toBeInTheDocument();
+    expect(await screen.findByText('pet.enabled')).toBeInTheDocument();
+    expect(screen.queryByText('crm.enabled')).not.toBeInTheDocument();
     expect(screen.getByText('Api Request')).toBeInTheDocument();
+    expect(screen.getByText('Pet')).toBeInTheDocument();
+    expect(screen.queryByText('Crm')).not.toBeInTheDocument();
     expect(screen.getByText('Tracked signals')).toBeInTheDocument();
     expect(screen.getByText('Observed activity')).toBeInTheDocument();
   });
@@ -414,7 +426,9 @@ describe('TenantsPage access model', () => {
     expect(screen.getAllByText('Package baseline').length).toBeGreaterThan(0);
     expect(screen.getAllByText('Manual module overrides').length).toBeGreaterThan(0);
     expect(screen.getAllByText('Effective access').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('No visible manual module overrides are active for this workspace.').length).toBeGreaterThan(0);
     expect(screen.getAllByText('usage.billing.preview').length).toBeGreaterThan(0);
+    expect(screen.queryByText('CRM')).not.toBeInTheDocument();
   });
 
   it('submits normalized feature entitlements when updating a tenant', async () => {
@@ -470,7 +484,8 @@ describe('TenantsPage access model', () => {
 
     await waitFor(() => {
       expect(tenantService.update).toHaveBeenCalledWith('tenant-2', expect.objectContaining({
-        featureEntitlements: ['beta.dashboard', 'usage.billing.preview']
+        featureEntitlements: ['beta.dashboard', 'usage.billing.preview'],
+        contractedModules: ['PET', 'CRM']
       }));
     });
   });
