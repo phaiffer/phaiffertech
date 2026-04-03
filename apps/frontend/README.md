@@ -1,6 +1,6 @@
 # Frontend - Platform Console
 
-Next.js admin console for the unified platform.
+Next.js admin console for the PetFlow-first platform experience.
 
 ## Stack
 
@@ -28,15 +28,6 @@ Next.js admin console for the unified platform.
   - clients list/create/edit/delete
   - pet profiles list/create/edit/delete
   - appointments list/create/edit/delete
-  - search, filters and pagination
-- IoT v1 UI:
-  - dashboard summary
-  - devices list/create/edit/delete
-  - registers list/create/edit/delete
-  - alarms list/create/edit/delete + acknowledge
-  - telemetry write + read list
-  - maintenance list/create/edit/delete
-  - reports summary
   - search, filters, pagination and permission-aware actions
 
 ## Key Shared Modules
@@ -51,7 +42,7 @@ Next.js admin console for the unified platform.
   - `hasPermission` / `hasAnyPermission`
   - `PermissionGate`
 - `src/shared/services`
-  - centralized API client usage (`crm-service`, `pet-service`, `iot-service`, etc.)
+  - centralized API client usage (`crm-service`, `pet-service`, `finance-service`, etc.)
 - `src/shared/dashboard`
   - reusable dashboard widgets and section renderers
 - `src/shared/observability`
@@ -78,14 +69,6 @@ Next.js admin console for the unified platform.
 - `/pet/clients`
 - `/pet/pets`
 - `/pet/appointments`
-- `/iot`
-- `/iot/dashboard`
-- `/iot/devices`
-- `/iot/registers`
-- `/iot/alarms`
-- `/iot/telemetry`
-- `/iot/maintenance`
-- `/iot/reports`
 - `/settings`
 
 ## Run
@@ -114,7 +97,4 @@ npm run build
 - Module-disabled API access returns `403` from backend guard, and UI sections are hidden from sidebar.
 - Module dashboards require explicit dashboard permissions even when the module is enabled for the tenant.
 - The global dashboard renders only the backend aggregation payload and does not query module internals directly.
-- IoT UI mirrors the V1 split between control plane and data plane:
-  - control plane: devices, registers, maintenance
-  - data plane: telemetry, alarms, dashboard and reports
-- IoT actions are wrapped with `PermissionGuard` so CRUD, acknowledge and summary views follow the backend permission model.
+- Historical `iot.enabled` flags and `iot` usage metrics can still appear in upgraded datasets and remain filtered from the visible product surface.

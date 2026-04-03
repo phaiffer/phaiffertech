@@ -101,8 +101,6 @@ const ptBRMessages = {
     quickSearchPet: 'Buscar atendimentos, clientes ou cobrança',
     localeButtonLabel: 'Alternar idioma',
     header: {
-      iotLabel: 'Sistema IoT',
-      iotDescription: 'Módulo interno preservado fora da superfície comercial visível.',
       crmLabel: 'CRM',
       crmDescription: 'Faixa de apoio para follow-up, contexto comercial e continuidade de relacionamento.',
       petLabel: 'PetFlow',

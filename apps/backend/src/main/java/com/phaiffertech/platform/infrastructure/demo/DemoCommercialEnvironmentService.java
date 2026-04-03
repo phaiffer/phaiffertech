@@ -320,6 +320,8 @@ public class DemoCommercialEnvironmentService {
                 deleteByTenant("pet_client_plans", tenantId);
                 deleteByTenant("pet_clients", tenantId);
 
+                // Older local databases may still carry archived IoT rows for the demo tenant.
+                // Clear them to keep reseeds deterministic, but do not seed new IoT demo data anymore.
                 deleteByTenant("iot_parts", tenantId);
                 deleteByTenant("iot_maintenance", tenantId);
                 deleteByTenant("iot_alarms", tenantId);

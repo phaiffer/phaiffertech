@@ -3,11 +3,11 @@ import type { AuthenticatedUser } from '@/shared/types/auth';
 export type VisualProfileKey =
   | 'core-institutional'
   | 'crm-corporate'
-  | 'iot-industrial'
+  | 'operations-industrial'
   | 'pet-clinic'
   | 'pet-grooming';
 
-export type VisualProfileModuleContext = 'core' | 'crm' | 'iot' | 'pet';
+export type VisualProfileModuleContext = 'core' | 'crm' | 'pet';
 
 export type VisualProfileBackgroundMood = {
   softness: 'soft' | 'balanced';
@@ -168,9 +168,9 @@ export const crmCorporateProfile: VisualProfilePreset = {
   illustrationPreset: 'corporate-flow'
 };
 
-export const iotIndustrialProfile: VisualProfilePreset = {
-  key: 'iot-industrial',
-  label: 'IoT Industrial',
+export const operationsIndustrialProfile: VisualProfilePreset = {
+  key: 'operations-industrial',
+  label: 'Industrial Operations',
   accentFallback: '#0891b2',
   primaryFallback: '#0f172a',
   accentTone: {
@@ -303,7 +303,7 @@ export const petGroomingProfile: VisualProfilePreset = {
 const visualProfilePresets: Record<VisualProfileKey, VisualProfilePreset> = {
   'core-institutional': coreInstitutionalProfile,
   'crm-corporate': crmCorporateProfile,
-  'iot-industrial': iotIndustrialProfile,
+  'operations-industrial': operationsIndustrialProfile,
   'pet-clinic': petClinicProfile,
   'pet-grooming': petGroomingProfile
 };
@@ -320,10 +320,6 @@ export function resolveVisualProfileKey(
 
   if (input.moduleContext === 'crm') {
     return 'crm-corporate';
-  }
-
-  if (input.moduleContext === 'iot') {
-    return 'iot-industrial';
   }
 
   if (input.moduleContext === 'pet') {
@@ -346,8 +342,9 @@ export function resolveVisualProfileKey(
     return 'pet-clinic';
   }
 
+  // Preserve historical tenant codes while mapping them to neutral industrial copy.
   if (hasTenantKeyword(tenantTokens, ['iot', 'plant', 'factory', 'industrial', 'manuf'])) {
-    return 'iot-industrial';
+    return 'operations-industrial';
   }
 
   if (hasTenantKeyword(tenantTokens, ['crm', 'corp', 'sales', 'commercial'])) {

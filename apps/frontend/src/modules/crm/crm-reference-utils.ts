@@ -19,7 +19,8 @@ const editableCrmEntityTypes = new Set(['COMPANY', 'CONTACT', 'LEAD', 'DEAL']);
 
 const moduleLabels: Record<string, string> = {
   CRM: 'CRM',
-  IOT: 'IoT',
+  // Historical IOT references can still exist in stored CRM relations.
+  IOT: 'Legacy',
   PET: 'Pet'
 };
 
@@ -138,7 +139,10 @@ export function buildReferenceHeadline(context: CanonicalReferenceContext, displ
 }
 
 export function buildReferenceDetail(context: CanonicalReferenceContext, relatedId?: string | null) {
-  const parts = [context.referenceType ?? context.compatibilityType];
+  const detailLabel = context.moduleCode === 'IOT'
+    ? null
+    : (context.referenceType ?? context.compatibilityType);
+  const parts = [detailLabel];
   if (relatedId) {
     parts.push(relatedId.slice(0, 8));
   }

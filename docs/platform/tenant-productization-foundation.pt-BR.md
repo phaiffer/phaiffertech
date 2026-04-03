@@ -89,7 +89,7 @@ A tela de administracao de tenants agora explicita:
 Esta implementacao preserva a arquitetura existente:
 
 - regras ficam em `core`, nao em modulos verticais de negocio
-- CRM, Pet e IoT continuam sem dependencia direta entre si
+- CRM e Pet continuam sem dependencia direta entre modulos de negocio ativos
 - o frontend preserva `app` como roteamento e reaproveita a estrutura compartilhada de shell/componentes
 - nao houve redesign de areas autenticadas sem relacao com esta fase
 

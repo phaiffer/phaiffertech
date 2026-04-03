@@ -1,6 +1,6 @@
 # Phaiffer Platform Monorepo
 
-Unified multi-tenant SaaS platform (CRM, Pet and IoT) built as a modular monolith.
+Unified multi-tenant SaaS platform focused on PetFlow, with CRM support capabilities and historical IoT compatibility preserved where required.
 
 ## Stack
 
@@ -62,10 +62,10 @@ Backend package root is fixed:
 - Automatic auditing for auth and CRUD flows.
 - Soft delete with `deleted_at` on business entities.
 - Standard pagination contract (`page`, `size`, `sort`, `direction`, `search`).
-- IoT split between control plane and data plane abstractions.
+- PetFlow-first product surface with CRM support lanes behind the same SaaS foundation.
 - Structured JSON logs with tenant/user/trace correlation.
 - Actuator metrics + Prometheus endpoint.
-- API rate limiting (auth, default API, telemetry ingestion).
+- API rate limiting (auth and default API).
 - Feature flags (global + tenant) and module enablement guards.
 
 ## Architecture Guardrails
@@ -80,19 +80,17 @@ Core ownership:
 Vertical ownership:
 
 - `modules.crm`: companies, contacts, leads, deals, pipeline, tasks, notes, CRM dashboard/activity
-- `modules.iot`: devices, registers, telemetry, alarms, maintenance, monitoring and reports
 - `modules.pet`: clients, pets, appointments, services, professionals, medical records, vaccinations, prescriptions, products, inventory and invoices
 
 Enforced rules:
 
-- core/shared cannot import business classes from `modules.crm`, `modules.iot` or `modules.pet`
+- core/shared cannot import business classes from `modules.crm` or `modules.pet`
 - one vertical module cannot import another vertical module directly
 - cross-module aggregation happens through `shared.contracts.module.ModuleSummaryCapability`
 - module access is centralized in `core.module.ModuleAccessService` and enforced by `shared.security.ModuleAccessGuard`
 
 Current architectural corrections:
 
-- the old telemetry pipeline health indicator was moved out of `shared.health` into `modules.iot.monitoring.health`
 - `/api/v1/modules` now separates `moduleEnabled`, `featureFlagEnabled` and `available`
 - `/api/v1/dashboard/summary` now aggregates module summaries through capabilities instead of direct repository access from core
 - dashboard payloads are standardized in `shared.dashboard.dto`, while each vertical module owns its own operational summary endpoint
@@ -101,7 +99,6 @@ Current architectural corrections:
 
 - Platform dashboard: `GET /api/v1/dashboard/summary`
 - CRM dashboard: `GET /api/v1/crm/dashboard/summary`
-- IoT dashboard: `GET /api/v1/iot/dashboard/summary`
 - Pet dashboard: `GET /api/v1/pet/dashboard/summary`
 - Cross-module aggregation contract: `shared.contracts.module.ModuleSummaryCapability`
 - Shared dashboard payloads: `DashboardSummaryCardDto`, `DashboardCountMetricDto`, `DashboardListItemDto`, `DashboardTimeSeriesPointDto`, `DashboardSectionDto`, `DashboardModuleSummaryDto`, `PlatformDashboardResponseDto`
@@ -182,54 +179,14 @@ Deferred to Pet V2:
 - advanced reports
 - external integrations
 
-## IoT Delivery Status
+## Historical Compatibility Notes
 
-The legacy IoT reference at `../iotsystem` was analyzed only as a functional and technical reference. Main legacy findings:
+Phase 2B keeps historical IoT compatibility only where it still protects upgraded databases or old records:
 
-- domains: devices, registers, telemetry ingestion, alarms, maintenance, reports, device health, audit, governance/plans/quotas and observability
-- operational flows: telemetry poller, alarm events, maintenance closeout, executive reporting and health history
-- architecture references: ADRs for Kafka-based telemetry pipeline and split OLTP + TSDB storage
-- commercial value retained for V1: configurable device/register base, telemetry ingestion and query, alarm lifecycle, maintenance queue and operational summary dashboards
-
-Gap analysis used for IoT V1 scope:
-
-| Funcionalidade | Status na nova plataforma |
-| --- | --- |
-| devices | já implementado |
-| registers / sensors | já implementado |
-| telemetry write | já implementado |
-| telemetry read/query | já implementado |
-| alarms | já implementado |
-| alarm acknowledge | já implementado |
-| maintenance | já implementado |
-| reports | já implementado |
-| monitoring dashboard | já implementado |
-| polling | adiar para IoT V2 |
-| device health | parcialmente implementado |
-| governance / quotas | depende de abstração futura |
-| metrics / tracing | parcialmente implementado |
-| activity / audit | parcialmente implementado |
-
-IoT V1 delivered:
-
-- devices
-- registers modeled as logical telemetry channels
-- telemetry ingestion and query
-- alarms + acknowledge
-- maintenance
-- dashboard summary
-- basic reports summary
-- basic device health/status based on `lastSeenAt`, recent telemetry and critical open alarms
-
-Deferred to IoT V2:
-
-- Kafka-first ingestion pipeline
-- TSDB/TimescaleDB mandatory storage
-- advanced polling
-- advanced risk scoring
-- predictive analytics
-- advanced plan/quota governance
-- deep per-device observability and analytics dashboards
+- Flyway migrations and seeded reference data stay untouched in the migration chain.
+- Shared enums still preserve historical IoT values when persisted rows can still reference them.
+- CRM related-reference handling still accepts historical `IOT.*` payloads, but the frontend now renders them with neutral legacy copy.
+- Local bootstrap/demo flows explicitly avoid re-enabling archived IoT modules while still clearing stale historical rows when needed.
 
 ## Flyway Migrations
 
@@ -264,6 +221,7 @@ Deferred to IoT V2:
 
 Note:
 - Pet V1 expansion requested originally as `V17..V20` was created as `V24..V27`, because `V17..V23` were already allocated in the existing Flyway chain and could not be reused safely.
+- Historical IoT migrations remain in place for compatibility with existing databases and are not removed as part of the PetFlow-only transition.
 
 ## Main Endpoints (`/api/v1`)
 
@@ -312,7 +270,7 @@ Note:
   - `GET /crm/activity`
   - `GET /crm/dashboard/summary`
 
-### Pet / IoT
+### Pet
 - Pet dashboard:
   - `GET /pet/dashboard/summary`
 - Pet clients:
@@ -359,28 +317,6 @@ Note:
   - `GET|POST /pet/invoices`
   - `GET|PUT|DELETE /pet/invoices/{id}`
   - `PATCH /pet/invoices/{id}/restore`
-- IoT devices:
-  - `GET|POST /iot/devices`
-  - `GET|PUT|DELETE /iot/devices/{id}`
-  - `PATCH /iot/devices/{id}/restore`
-- IoT registers:
-  - `GET|POST /iot/registers`
-  - `GET|PUT|DELETE /iot/registers/{id}`
-  - `PATCH /iot/registers/{id}/restore`
-- IoT alarms:
-  - `GET|POST /iot/alarms`
-  - `GET|PUT|DELETE /iot/alarms/{id}`
-  - `POST /iot/alarms/{id}/acknowledge`
-  - `PATCH /iot/alarms/{id}/restore`
-- IoT telemetry:
-  - `GET|POST /iot/telemetry`
-- IoT maintenance:
-  - `GET|POST /iot/maintenance`
-  - `GET|PUT|DELETE /iot/maintenance/{id}`
-  - `PATCH /iot/maintenance/{id}/restore`
-- IoT monitoring and reports:
-  - `GET /iot/dashboard/summary`
-  - `GET /iot/reports/summary`
 
 Swagger UI:
 - `http://localhost:8080/swagger-ui.html`
@@ -414,15 +350,6 @@ Implemented pages:
   - `/pet/products`
   - `/pet/inventory`
   - `/pet/invoices`
-- IoT:
-  - `/iot`
-  - `/iot/dashboard`
-  - `/iot/devices`
-  - `/iot/registers`
-  - `/iot/alarms`
-  - `/iot/telemetry`
-  - `/iot/maintenance`
-  - `/iot/reports`
 
 Guards:
 - Route protection via authenticated layout (`ProtectedRoute`).
@@ -478,13 +405,13 @@ Main targets:
 - `make up`, `make down`, `make restart`, `make status`
 - `make logs-follow`, `make logs-all`, `make logs-json`, `make logs-backend`, `make logs-frontend`, `make logs-db`
 - `make docker-build`, `make docker-reset-db`
-- `make test`, `make test-backend`, `make test-integration`, `make test-unit`, `make test-pet`, `make test-iot`
+- `make test`, `make test-backend`, `make test-integration`, `make test-unit`, `make test-pet`
 - `make build`, `make verify`, `make ci`
 - `make metrics`
 - `make observability-up`, `make observability-down`
 - `make terraform-init`, `make terraform-plan`
 - `make terraform-legacy-init`, `make terraform-legacy-plan`
-- `make migrate`, `make crm-seed`, `make pet-seed`, `make iot-seed`, `make db-shell`
+- `make migrate`, `make crm-seed`, `make pet-seed`, `make db-shell`
 
 ## Docker Profiles
 
@@ -508,12 +435,11 @@ Current coverage includes:
 - CRM contacts/leads CRUD
 - CRM companies/deals/pipeline/tasks/notes CRUD
 - CRM dashboard summary and activity feed
+- CRM legacy external-reference compatibility
 - PET clients/profiles/appointments CRUD
 - PET services/professionals CRUD
 - PET medical records/vaccinations/prescriptions CRUD
 - PET products/inventory/invoices CRUD
-- IoT devices/alarms CRUD
-- IoT telemetry write/read
 - shared CRUD behavior (soft delete, tenant filter, pagination behavior)
 - pagination contract
 
@@ -554,6 +480,7 @@ Detailed runbook:
 - Tenant code: `default`
 - Email: `admin@local.test`
 - Password: `Admin@123`
+- In local/dev, `admin@local.test` keeps unrestricted wildcard entitlement access for full platform validation.
 
 ## Default Ports
 

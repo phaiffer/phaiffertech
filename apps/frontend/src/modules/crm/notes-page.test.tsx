@@ -105,7 +105,7 @@ describe('CrmNotesPage', () => {
     expect(screen.getAllByLabelText('Registro vinculado')[1]).toHaveValue('87654321-4321-4321-4321-1234567890ab');
   });
 
-  it('keeps unsupported external placeholders read-only in the CRM form', async () => {
+  it('keeps historical external placeholders read-only in the CRM form', async () => {
     crmServiceMock.listNotes.mockResolvedValue(createPageResponse([
       {
         id: 'note-2',
@@ -127,7 +127,8 @@ describe('CrmNotesPage', () => {
       expect(crmServiceMock.listNotes).toHaveBeenCalledTimes(1);
     });
 
-    expect(screen.getByText('IoT / Device')).toBeInTheDocument();
+    expect(screen.getByText('Legacy / Device')).toBeInTheDocument();
+    expect(screen.getByText('Legacy / Device · 12345678')).toBeInTheDocument();
     expect(screen.getByText('Somente leitura')).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Editar' })).not.toBeInTheDocument();
   });
