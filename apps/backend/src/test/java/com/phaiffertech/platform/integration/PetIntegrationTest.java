@@ -5,6 +5,7 @@ import com.phaiffertech.platform.support.AbstractIntegrationTest;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
@@ -141,6 +142,51 @@ class PetIntegrationTest extends AbstractIntegrationTest {
         assertEquals("Owner " + marker, requireBody(updateAppointment).path("data").path("clientName").asText());
         assertEquals("Pet " + marker, requireBody(updateAppointment).path("data").path("petName").asText());
         assertEquals("Professional " + marker, requireBody(updateAppointment).path("data").path("professionalName").asText());
+    }
+
+    @Test
+    void shouldCreateAndFilterMultiServiceAppointment() {
+        AuthSession session = loginAsDefaultAdmin();
+        String marker = randomSearchMarker();
+
+        String clientId = createClient(session, marker);
+        String petId = createPet(session, clientId, marker);
+        String bathServiceId = createService(session, marker + "-bath", "GROOMING");
+        String hydrationServiceId = createService(session, marker + "-hydration", "GROOMING");
+        String professionalId = createProfessional(session, marker);
+
+        ResponseEntity<JsonNode> createAppointment = post("/pet/appointments", Map.of(
+                "clientId", clientId,
+                "petId", petId,
+                "serviceId", bathServiceId,
+                "serviceIds", List.of(bathServiceId, hydrationServiceId),
+                "professionalId", professionalId,
+                "scheduledAt", Instant.now().plusSeconds(3600).toString(),
+                "status", "SCHEDULED",
+                "notes", "Bundle appointment"
+        ), session);
+
+        assertEquals(200, createAppointment.getStatusCode().value());
+        JsonNode createdAppointment = requireBody(createAppointment).path("data");
+        assertEquals(bathServiceId, createdAppointment.path("serviceId").asText());
+        assertEquals(2, createdAppointment.path("serviceCount").asInt());
+        assertEquals(2, createdAppointment.path("appointmentServices").size());
+        assertEquals("Service " + marker + "-bath + 1 more", createdAppointment.path("serviceName").asText());
+        assertEquals(179.80, createdAppointment.path("totalServiceBasePrice").asDouble(), 0.01);
+        assertEquals(80, createdAppointment.path("totalServiceDurationMinutes").asInt());
+
+        ResponseEntity<JsonNode> filteredBySecondaryService = get(
+                "/pet/appointments?page=0&size=20&serviceId=" + hydrationServiceId + "&search=hydration",
+                session
+        );
+        assertEquals(200, filteredBySecondaryService.getStatusCode().value());
+        assertEquals(1, requireBody(filteredBySecondaryService).path("data").path("items").size());
+        assertEquals(2, requireBody(filteredBySecondaryService)
+                .path("data")
+                .path("items")
+                .get(0)
+                .path("appointmentServices")
+                .size());
     }
 
     @Test

@@ -3,9 +3,11 @@ package com.phaiffertech.platform.modules.pet.appointment.mapper;
 import com.phaiffertech.platform.modules.pet.appointment.domain.PetAppointment;
 import com.phaiffertech.platform.modules.pet.appointment.dto.PetAppointmentCreateRequest;
 import com.phaiffertech.platform.modules.pet.appointment.dto.PetAppointmentResponse;
+import com.phaiffertech.platform.modules.pet.appointment.dto.PetAppointmentServiceLineResponse;
 import com.phaiffertech.platform.modules.pet.appointment.dto.PetAppointmentUpdateRequest;
 import com.phaiffertech.platform.shared.crud.BaseCrudMapper;
 import java.math.BigDecimal;
+import java.util.List;
 
 public final class PetAppointmentMapper implements BaseCrudMapper<
         PetAppointment,
@@ -58,7 +60,7 @@ public final class PetAppointmentMapper implements BaseCrudMapper<
 
     @Override
     public PetAppointmentResponse toResponse(PetAppointment appointment) {
-        return toResponse(appointment, null, null, null, 0, 0, 0, null);
+        return toResponse(appointment, null, null, null, List.of(), 0, null, null, 0, 0, 0, null);
     }
 
     public PetAppointmentResponse toResponse(
@@ -66,6 +68,10 @@ public final class PetAppointmentMapper implements BaseCrudMapper<
             String clientName,
             String petName,
             String professionalName,
+            List<PetAppointmentServiceLineResponse> appointmentServices,
+            int serviceCount,
+            Integer totalServiceDurationMinutes,
+            BigDecimal totalServiceBasePrice,
             int medicalRecordCount,
             int vaccinationCount,
             int prescriptionCount,
@@ -86,6 +92,10 @@ public final class PetAppointmentMapper implements BaseCrudMapper<
                 petName,
                 appointment.getServiceId(),
                 appointment.getServiceName(),
+                appointmentServices,
+                serviceCount,
+                totalServiceDurationMinutes,
+                totalServiceBasePrice,
                 appointment.getProfessionalId(),
                 professionalName,
                 appointment.getScheduledAt(),

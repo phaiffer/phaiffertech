@@ -2,11 +2,14 @@ package com.phaiffertech.platform.modules.pet.appointment.service;
 
 import com.phaiffertech.platform.core.audit.service.AuditableAction;
 import com.phaiffertech.platform.modules.pet.appointment.domain.PetAppointment;
+import com.phaiffertech.platform.modules.pet.appointment.domain.PetAppointmentServiceLine;
 import com.phaiffertech.platform.modules.pet.appointment.dto.PetAppointmentCreateRequest;
 import com.phaiffertech.platform.modules.pet.appointment.dto.PetAppointmentResponse;
+import com.phaiffertech.platform.modules.pet.appointment.dto.PetAppointmentServiceLineResponse;
 import com.phaiffertech.platform.modules.pet.appointment.dto.PetAppointmentUpdateRequest;
 import com.phaiffertech.platform.modules.pet.appointment.mapper.PetAppointmentMapper;
 import com.phaiffertech.platform.modules.pet.appointment.repository.PetAppointmentRepository;
+import com.phaiffertech.platform.modules.pet.appointment.repository.PetAppointmentServiceLineRepository;
 import com.phaiffertech.platform.modules.pet.client.domain.PetClient;
 import com.phaiffertech.platform.modules.pet.client.repository.PetClientRepository;
 import com.phaiffertech.platform.modules.pet.medical.prescription.domain.PetPrescription;
@@ -38,7 +41,11 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.Instant;
 import java.util.Collection;
+import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -55,6 +62,7 @@ public class PetAppointmentService extends BaseTenantCrudService<
         PetAppointmentResponse> {
 
     private final PetAppointmentRepository repository;
+    private final PetAppointmentServiceLineRepository appointmentServiceLineRepository;
     private final PetClientRepository petClientRepository;
     private final PetProfileRepository petProfileRepository;
     private final PetServiceCatalogRepository petServiceCatalogRepository;
@@ -69,6 +77,7 @@ public class PetAppointmentService extends BaseTenantCrudService<
 
     public PetAppointmentService(
             PetAppointmentRepository repository,
+            PetAppointmentServiceLineRepository appointmentServiceLineRepository,
             PetClientRepository petClientRepository,
             PetProfileRepository petProfileRepository,
             PetServiceCatalogRepository petServiceCatalogRepository,
@@ -83,6 +92,7 @@ public class PetAppointmentService extends BaseTenantCrudService<
     ) {
         super(repository, repository, PetAppointmentMapper.INSTANCE, "Pet appointment not found.");
         this.repository = repository;
+        this.appointmentServiceLineRepository = appointmentServiceLineRepository;
         this.petClientRepository = petClientRepository;
         this.petProfileRepository = petProfileRepository;
         this.petServiceCatalogRepository = petServiceCatalogRepository;
@@ -96,52 +106,34 @@ public class PetAppointmentService extends BaseTenantCrudService<
         this.serviceCatalogCategoryPolicyService = serviceCatalogCategoryPolicyService;
     }
 
-    @Override
-    public void beforeCreate(UUID tenantId, PetAppointmentCreateRequest request, PetAppointment entity) {
-        hydrateAndValidateRelations(
-                tenantId,
-                request.clientId(),
-                request.petId(),
-                request.serviceId(),
-                request.professionalId(),
-                request.servicePrice(),
-                request.clientPlanId(),
-                null,
-                null,
-                entity
-        );
-        // Validate plan if provided; do not consume session at creation time.
-        if (request.clientPlanId() != null) {
-            validatePlanForClient(tenantId, request.clientPlanId(), request.clientId());
-        }
-    }
-
-    @Override
-    public void beforeUpdate(UUID tenantId, PetAppointmentUpdateRequest request, PetAppointment entity) {
-        hydrateAndValidateRelations(
-                tenantId,
-                request.clientId(),
-                request.petId(),
-                request.serviceId(),
-                request.professionalId(),
-                request.servicePrice(),
-                request.clientPlanId(),
-                entity.getServiceId(),
-                entity.getClientPlanId(),
-                entity
-        );
-        // Validate plan if provided.
-        if (request.clientPlanId() != null) {
-            validatePlanForClient(tenantId, request.clientPlanId(), request.clientId());
-        }
-    }
-
     @Transactional
     @AuditableAction(action = AuditActionType.CREATE, entity = "pet_appointment")
     public PetAppointmentResponse create(PetAppointmentCreateRequest request) {
-        PetAppointmentResponse response = doCreate(request);
+        UUID tenantId = currentTenantId();
+        PetAppointment entity = PetAppointmentMapper.INSTANCE.toNewEntity(request);
+        entity.setTenantId(tenantId);
+
+        AppointmentServiceSelection selection = hydrateAndValidateRelations(
+                tenantId,
+                request.clientId(),
+                request.petId(),
+                request.serviceId(),
+                request.serviceIds(),
+                request.professionalId(),
+                request.servicePrice(),
+                request.clientPlanId(),
+                List.of(),
+                null,
+                entity
+        );
+        if (request.clientPlanId() != null) {
+            validatePlanForClient(tenantId, request.clientPlanId(), request.clientId());
+        }
+
+        PetAppointment saved = repository.save(entity);
+        replaceAppointmentServiceLines(tenantId, saved, selection.services());
         platformMetricsService.incrementPetAppointmentsCreated();
-        return getById(response.id());
+        return toValidatedResponse(saved, tenantId);
     }
 
     @Transactional(readOnly = true)
@@ -181,12 +173,17 @@ public class PetAppointmentService extends BaseTenantCrudService<
         Map<UUID, Integer> medicalRecordCounts = loadMedicalRecordCounts(tenantId, appointments.getContent());
         Map<UUID, Integer> vaccinationCounts = loadVaccinationCounts(tenantId, appointments.getContent());
         Map<UUID, Integer> prescriptionCounts = loadPrescriptionCounts(tenantId, appointments.getContent());
+        Map<UUID, List<PetAppointmentServiceLineResponse>> appointmentServices = loadAppointmentServices(
+                tenantId,
+                appointments.getContent()
+        );
         Page<PetAppointmentResponse> mapped = appointments.map(appointment ->
                 toValidatedResponse(
                         appointment,
                         clientNames,
                         petNames,
                         professionalNames,
+                        appointmentServices,
                         medicalRecordCounts,
                         vaccinationCounts,
                         prescriptionCounts
@@ -209,18 +206,19 @@ public class PetAppointmentService extends BaseTenantCrudService<
 
         ensureLinkedClinicalEntriesAllowUpdate(tenantId, entity, request);
 
-        UUID previousServiceId = entity.getServiceId();
         UUID previousClientPlanId = entity.getClientPlanId();
+        List<UUID> previousServiceIds = resolveCurrentServiceIds(tenantId, entity);
         PetAppointmentMapper.INSTANCE.updateEntity(entity, request);
-        hydrateAndValidateRelations(
+        AppointmentServiceSelection selection = hydrateAndValidateRelations(
                 tenantId,
                 request.clientId(),
                 request.petId(),
                 request.serviceId(),
+                request.serviceIds(),
                 request.professionalId(),
                 request.servicePrice(),
                 request.clientPlanId(),
-                previousServiceId,
+                previousServiceIds,
                 previousClientPlanId,
                 entity
         );
@@ -228,7 +226,9 @@ public class PetAppointmentService extends BaseTenantCrudService<
         // Consume a plan session when appointment transitions to COMPLETED for the first time.
         tryConsumePlanSession(tenantId, entity);
 
-        PetAppointmentResponse response = toValidatedResponse(repository.save(entity), tenantId);
+        PetAppointment saved = repository.save(entity);
+        replaceAppointmentServiceLines(tenantId, saved, selection.services());
+        PetAppointmentResponse response = toValidatedResponse(saved, tenantId);
 
         // Fire "pet ready" operational signal after a successful COMPLETED transition.
         if ("COMPLETED".equals(entity.getStatus())) {
@@ -273,15 +273,16 @@ public class PetAppointmentService extends BaseTenantCrudService<
         }
     }
 
-    private void hydrateAndValidateRelations(
+    private AppointmentServiceSelection hydrateAndValidateRelations(
             UUID tenantId,
             UUID clientId,
             UUID petId,
             UUID serviceId,
+            List<UUID> requestedServiceIds,
             UUID professionalId,
             BigDecimal requestedServicePrice,
             UUID requestedClientPlanId,
-            UUID previousServiceId,
+            List<UUID> previousServiceIds,
             UUID previousClientPlanId,
             PetAppointment entity
     ) {
@@ -295,28 +296,37 @@ public class PetAppointmentService extends BaseTenantCrudService<
             throw new ResourceNotFoundException("Pet profile does not belong to the informed client.");
         }
 
-        PetServiceCatalog serviceCatalog = petServiceCatalogRepository.findByIdAndTenantId(serviceId, tenantId)
-                .orElseThrow(() -> new ResourceNotFoundException("Pet service not found for tenant."));
-        validateServiceCatalogBookingAccess(
-                tenantId,
-                serviceCatalog,
-                requestedClientPlanId,
-                previousServiceId,
-                previousClientPlanId
-        );
+        List<UUID> resolvedServiceIds = resolveRequestedServiceIds(serviceId, requestedServiceIds);
+        List<PetServiceCatalog> selectedServices = loadSelectedServices(tenantId, resolvedServiceIds);
+        Set<UUID> previousServiceIdSet = new LinkedHashSet<>(previousServiceIds);
+
+        for (PetServiceCatalog selectedService : selectedServices) {
+            validateServiceCatalogBookingAccess(
+                    tenantId,
+                    selectedService,
+                    requestedClientPlanId,
+                    previousServiceIdSet.contains(selectedService.getId()),
+                    previousClientPlanId
+            );
+        }
 
         PetProfessional professional = petProfessionalRepository.findByIdAndTenantId(professionalId, tenantId)
                 .orElseThrow(() -> new ResourceNotFoundException("Pet professional not found for tenant."));
 
-        entity.setServiceId(serviceCatalog.getId());
-        entity.setServiceName(serviceCatalog.getName());
+        PetServiceCatalog primaryService = selectedServices.getFirst();
+        entity.setServiceId(primaryService.getId());
+        entity.setServiceName(resolveAppointmentServiceHeadline(selectedServices));
         entity.setProfessionalId(professional.getId());
 
-        // Price snapshot: use caller-supplied override if present; otherwise snapshot from catalog.
+        BigDecimal totalCatalogServicePrice = selectedServices.stream()
+                .map(PetServiceCatalog::getPrice)
+                .filter(Objects::nonNull)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
         if (requestedServicePrice != null) {
             entity.setServicePrice(requestedServicePrice);
         } else {
-            entity.setServicePrice(serviceCatalog.getPrice());
+            entity.setServicePrice(totalCatalogServicePrice);
         }
 
         // Snapshot commission amount from professional rate at booking time.
@@ -326,17 +336,18 @@ public class PetAppointmentService extends BaseTenantCrudService<
                         ? finalPrice.multiply(professional.getCommissionRate()).setScale(2, RoundingMode.HALF_UP)
                         : null
         );
+
+        return new AppointmentServiceSelection(selectedServices);
     }
 
     private void validateServiceCatalogBookingAccess(
             UUID tenantId,
             PetServiceCatalog serviceCatalog,
             UUID requestedClientPlanId,
-            UUID previousServiceId,
+            boolean keepingCurrentService,
             UUID previousClientPlanId
     ) {
-        boolean keepingCurrentService = previousServiceId != null && previousServiceId.equals(serviceCatalog.getId());
-        boolean planUsageChanged = !java.util.Objects.equals(previousClientPlanId, requestedClientPlanId);
+        boolean planUsageChanged = !Objects.equals(previousClientPlanId, requestedClientPlanId);
 
         if (!serviceCatalog.isActive() && !keepingCurrentService) {
             throw new ConflictOperationException("Pet service is inactive and cannot be booked for new appointments.");
@@ -360,11 +371,24 @@ public class PetAppointmentService extends BaseTenantCrudService<
     private PetAppointmentResponse toValidatedResponse(PetAppointment appointment, UUID tenantId) {
         validateContractIntegrity(appointment);
         Integer planRemaining = resolvePlanRemainingSessions(tenantId, appointment.getClientPlanId());
+        List<UUID> currentServiceIds = resolveCurrentServiceIds(tenantId, appointment);
+        List<PetAppointmentServiceLineResponse> appointmentServices = resolveAppointmentServiceResponses(
+                appointment,
+                appointmentServiceLineRepository.findAllByTenantIdAndAppointmentIdOrderByLineOrderAsc(
+                        tenantId,
+                        appointment.getId()
+                ),
+                loadServiceCatalogMap(tenantId, currentServiceIds)
+        );
         return PetAppointmentMapper.INSTANCE.toResponse(
                 appointment,
                 resolveClientName(petClientRepository.findByIdAndTenantId(appointment.getClientId(), tenantId).orElse(null)),
                 resolvePetName(petProfileRepository.findByIdAndTenantId(appointment.getPetId(), tenantId).orElse(null)),
                 resolveProfessionalName(petProfessionalRepository.findByIdAndTenantId(appointment.getProfessionalId(), tenantId).orElse(null)),
+                appointmentServices,
+                appointmentServices.size(),
+                resolveTotalServiceDurationMinutes(appointmentServices),
+                appointment.getServicePrice(),
                 Math.toIntExact(petMedicalRecordRepository.countByTenantIdAndAppointmentId(tenantId, appointment.getId())),
                 Math.toIntExact(petVaccinationRepository.countByTenantIdAndAppointmentId(tenantId, appointment.getId())),
                 Math.toIntExact(petPrescriptionRepository.countByTenantIdAndAppointmentId(tenantId, appointment.getId())),
@@ -386,6 +410,7 @@ public class PetAppointmentService extends BaseTenantCrudService<
             Map<UUID, String> clientNames,
             Map<UUID, String> petNames,
             Map<UUID, String> professionalNames,
+            Map<UUID, List<PetAppointmentServiceLineResponse>> appointmentServices,
             Map<UUID, Integer> medicalRecordCounts,
             Map<UUID, Integer> vaccinationCounts,
             Map<UUID, Integer> prescriptionCounts
@@ -398,6 +423,10 @@ public class PetAppointmentService extends BaseTenantCrudService<
                 clientNames.get(appointment.getClientId()),
                 petNames.get(appointment.getPetId()),
                 professionalNames.get(appointment.getProfessionalId()),
+                appointmentServices.getOrDefault(appointment.getId(), List.of()),
+                appointmentServices.getOrDefault(appointment.getId(), List.of()).size(),
+                resolveTotalServiceDurationMinutes(appointmentServices.getOrDefault(appointment.getId(), List.of())),
+                appointment.getServicePrice(),
                 medicalRecordCounts.getOrDefault(appointment.getId(), 0),
                 vaccinationCounts.getOrDefault(appointment.getId(), 0),
                 prescriptionCounts.getOrDefault(appointment.getId(), 0),
@@ -563,7 +592,9 @@ public class PetAppointmentService extends BaseTenantCrudService<
 
         boolean relationshipsChanged = !currentAppointment.getClientId().equals(request.clientId())
                 || !currentAppointment.getPetId().equals(request.petId())
-                || !java.util.Objects.equals(currentAppointment.getServiceId(), request.serviceId())
+                || !new LinkedHashSet<>(resolveCurrentServiceIds(tenantId, currentAppointment)).equals(
+                        new LinkedHashSet<>(resolveRequestedServiceIds(request.serviceId(), request.serviceIds()))
+                )
                 || !java.util.Objects.equals(currentAppointment.getProfessionalId(), request.professionalId());
 
         if (relationshipsChanged) {
@@ -597,5 +628,197 @@ public class PetAppointmentService extends BaseTenantCrudService<
 
     private String resolveProfessionalName(PetProfessional professional) {
         return professional == null ? null : professional.getName();
+    }
+
+    private List<UUID> resolveRequestedServiceIds(UUID serviceId, List<UUID> requestedServiceIds) {
+        List<UUID> candidates = requestedServiceIds == null || requestedServiceIds.isEmpty()
+                ? List.of(serviceId)
+                : requestedServiceIds.stream().filter(Objects::nonNull).toList();
+
+        if (candidates.isEmpty()) {
+            throw new ConflictOperationException("Pet appointment requires at least one structured service.");
+        }
+
+        LinkedHashSet<UUID> uniqueServiceIds = new LinkedHashSet<>(candidates);
+        if (uniqueServiceIds.size() != candidates.size()) {
+            throw new ConflictOperationException("Pet appointment cannot repeat the same service in a single booking.");
+        }
+
+        return List.copyOf(uniqueServiceIds);
+    }
+
+    private List<PetServiceCatalog> loadSelectedServices(UUID tenantId, List<UUID> selectedServiceIds) {
+        Map<UUID, PetServiceCatalog> servicesById = petServiceCatalogRepository.findAllByTenantIdAndIdIn(tenantId, selectedServiceIds)
+                .stream()
+                .collect(Collectors.toMap(PetServiceCatalog::getId, Function.identity()));
+
+        if (servicesById.size() != selectedServiceIds.size()) {
+            throw new ResourceNotFoundException("Pet service not found for tenant.");
+        }
+
+        return selectedServiceIds.stream().map(servicesById::get).toList();
+    }
+
+    private String resolveAppointmentServiceHeadline(List<PetServiceCatalog> services) {
+        PetServiceCatalog primaryService = services.getFirst();
+        if (services.size() == 1) {
+            return primaryService.getName();
+        }
+        return primaryService.getName() + " + " + (services.size() - 1) + " more";
+    }
+
+    private void replaceAppointmentServiceLines(
+            UUID tenantId,
+            PetAppointment appointment,
+            List<PetServiceCatalog> selectedServices
+    ) {
+        appointmentServiceLineRepository.deleteAllByTenantIdAndAppointmentId(tenantId, appointment.getId());
+        appointmentServiceLineRepository.flush();
+
+        List<PetAppointmentServiceLine> lines = java.util.stream.IntStream.range(0, selectedServices.size())
+                .mapToObj(index -> buildAppointmentServiceLine(tenantId, appointment, selectedServices.get(index), index))
+                .toList();
+        appointmentServiceLineRepository.saveAll(lines);
+    }
+
+    private PetAppointmentServiceLine buildAppointmentServiceLine(
+            UUID tenantId,
+            PetAppointment appointment,
+            PetServiceCatalog serviceCatalog,
+            int lineOrder
+    ) {
+        PetAppointmentServiceLine line = new PetAppointmentServiceLine();
+        line.setTenantId(tenantId);
+        line.setAppointmentId(appointment.getId());
+        line.setServiceId(serviceCatalog.getId());
+        line.setLineOrder(lineOrder);
+        line.setServiceName(serviceCatalog.getName());
+        line.setServiceCategory(serviceCatalog.getCategory());
+        line.setDurationMinutes(serviceCatalog.getDurationMinutes());
+        line.setServicePrice(serviceCatalog.getPrice());
+        return line;
+    }
+
+    private List<UUID> resolveCurrentServiceIds(UUID tenantId, PetAppointment appointment) {
+        List<PetAppointmentServiceLine> lines = appointmentServiceLineRepository.findAllByTenantIdAndAppointmentIdOrderByLineOrderAsc(
+                tenantId,
+                appointment.getId()
+        );
+        if (!lines.isEmpty()) {
+            return lines.stream().map(PetAppointmentServiceLine::getServiceId).toList();
+        }
+        return appointment.getServiceId() == null ? List.of() : List.of(appointment.getServiceId());
+    }
+
+    private Map<UUID, List<PetAppointmentServiceLineResponse>> loadAppointmentServices(
+            UUID tenantId,
+            Collection<PetAppointment> appointments
+    ) {
+        if (appointments.isEmpty()) {
+            return Map.of();
+        }
+
+        List<UUID> appointmentIds = appointments.stream().map(PetAppointment::getId).toList();
+        Map<UUID, List<PetAppointmentServiceLine>> linesByAppointmentId = appointmentServiceLineRepository
+                .findAllByTenantIdAndAppointmentIdInOrderByAppointmentIdAscLineOrderAsc(tenantId, appointmentIds)
+                .stream()
+                .collect(Collectors.groupingBy(PetAppointmentServiceLine::getAppointmentId));
+
+        Set<UUID> serviceIds = new LinkedHashSet<>();
+        appointments.forEach(appointment -> {
+            List<PetAppointmentServiceLine> lines = linesByAppointmentId.get(appointment.getId());
+            if (lines == null || lines.isEmpty()) {
+                if (appointment.getServiceId() != null) {
+                    serviceIds.add(appointment.getServiceId());
+                }
+                return;
+            }
+            lines.forEach(line -> serviceIds.add(line.getServiceId()));
+        });
+
+        Map<UUID, PetServiceCatalog> servicesById = loadServiceCatalogMap(tenantId, serviceIds);
+
+        return appointments.stream().collect(Collectors.toMap(
+                PetAppointment::getId,
+                appointment -> resolveAppointmentServiceResponses(
+                        appointment,
+                        linesByAppointmentId.getOrDefault(appointment.getId(), List.of()),
+                        servicesById
+                )
+        ));
+    }
+
+    private Map<UUID, PetServiceCatalog> loadServiceCatalogMap(UUID tenantId, Collection<UUID> serviceIds) {
+        if (serviceIds.isEmpty()) {
+            return Map.of();
+        }
+
+        return petServiceCatalogRepository.findAllByTenantIdAndIdIn(tenantId, serviceIds)
+                .stream()
+                .collect(Collectors.toMap(PetServiceCatalog::getId, Function.identity()));
+    }
+
+    private List<PetAppointmentServiceLineResponse> resolveAppointmentServiceResponses(
+            PetAppointment appointment,
+            List<PetAppointmentServiceLine> lines,
+            Map<UUID, PetServiceCatalog> servicesById
+    ) {
+        if (!lines.isEmpty()) {
+            return lines.stream()
+                    .map(line -> toAppointmentServiceResponse(line, servicesById.get(line.getServiceId()), appointment))
+                    .toList();
+        }
+
+        if (appointment.getServiceId() == null) {
+            return List.of();
+        }
+
+        PetServiceCatalog serviceCatalog = servicesById.get(appointment.getServiceId());
+        return List.of(new PetAppointmentServiceLineResponse(
+                null,
+                appointment.getServiceId(),
+                appointment.getServiceName(),
+                serviceCatalog == null ? null : serviceCatalog.getCategory(),
+                serviceCatalog == null ? null : serviceCatalog.getDurationMinutes(),
+                appointment.getServicePrice(),
+                serviceCatalog != null && serviceCatalog.isActive(),
+                serviceCatalog != null && serviceCatalog.isAllowInPlans(),
+                serviceCatalog != null && serviceCatalog.isAllowStandaloneBooking(),
+                0,
+                true,
+                serviceCatalog == null
+        ));
+    }
+
+    private PetAppointmentServiceLineResponse toAppointmentServiceResponse(
+            PetAppointmentServiceLine line,
+            PetServiceCatalog serviceCatalog,
+            PetAppointment appointment
+    ) {
+        return new PetAppointmentServiceLineResponse(
+                line.getId(),
+                line.getServiceId(),
+                line.getServiceName(),
+                line.getServiceCategory(),
+                line.getDurationMinutes(),
+                line.getServicePrice(),
+                serviceCatalog != null && serviceCatalog.isActive(),
+                serviceCatalog != null && serviceCatalog.isAllowInPlans(),
+                serviceCatalog != null && serviceCatalog.isAllowStandaloneBooking(),
+                line.getLineOrder(),
+                line.getLineOrder() == 0 || Objects.equals(line.getServiceId(), appointment.getServiceId()),
+                serviceCatalog == null
+        );
+    }
+
+    private Integer resolveTotalServiceDurationMinutes(List<PetAppointmentServiceLineResponse> appointmentServices) {
+        int total = appointmentServices.stream()
+                .map(PetAppointmentServiceLineResponse::durationMinutes)
+                .filter(Objects::nonNull)
+                .reduce(0, Integer::sum);
+        return total > 0 ? total : null;
+    }
+
+    private record AppointmentServiceSelection(List<PetServiceCatalog> services) {
     }
 }

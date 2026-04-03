@@ -90,6 +90,7 @@ export type CreatePetAppointmentInput = {
   clientId: string;
   petId: string;
   serviceId: string;
+  serviceIds?: string[];
   professionalId: string;
   scheduledAt: string;
   status?: string;
@@ -107,6 +108,7 @@ export type UpdatePetAppointmentInput = {
   clientId: string;
   petId: string;
   serviceId: string;
+  serviceIds?: string[];
   professionalId: string;
   scheduledAt: string;
   status: string;

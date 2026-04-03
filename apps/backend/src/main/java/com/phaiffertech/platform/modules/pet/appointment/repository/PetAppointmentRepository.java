@@ -65,13 +65,30 @@ public interface PetAppointmentRepository extends JpaRepository<PetAppointment, 
               AND (:professionalId IS NULL OR a.professionalId = :professionalId)
               AND (:clientId IS NULL OR a.clientId = :clientId)
               AND (:petId IS NULL OR a.petId = :petId)
-              AND (:serviceId IS NULL OR a.serviceId = :serviceId)
+              AND (
+                   :serviceId IS NULL OR
+                   a.serviceId = :serviceId OR
+                   EXISTS (
+                       SELECT 1
+                       FROM PetAppointmentServiceLine line
+                       WHERE line.tenantId = :tenantId
+                         AND line.appointmentId = a.id
+                         AND line.serviceId = :serviceId
+                   )
+              )
               AND (COALESCE(:scheduledFrom, a.scheduledAt) IS NULL OR a.scheduledAt >= COALESCE(:scheduledFrom, a.scheduledAt))
               AND (COALESCE(:scheduledTo, a.scheduledAt) IS NULL OR a.scheduledAt <= COALESCE(:scheduledTo, a.scheduledAt))
               AND (:search = '%' OR
                    LOWER(a.serviceName) LIKE :search OR
                    LOWER(COALESCE(a.status, '')) LIKE :search OR
-                   LOWER(COALESCE(a.notes, '')) LIKE :search)
+                   LOWER(COALESCE(a.notes, '')) LIKE :search OR
+                   EXISTS (
+                       SELECT 1
+                       FROM PetAppointmentServiceLine line
+                       WHERE line.tenantId = :tenantId
+                         AND line.appointmentId = a.id
+                         AND LOWER(COALESCE(line.serviceName, '')) LIKE :search
+                   ))
             """)
     Page<PetAppointment> findAllByTenantIdAndSearch(
             @Param("tenantId") UUID tenantId,

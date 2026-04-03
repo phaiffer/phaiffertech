@@ -255,14 +255,118 @@ describe('PetAppointmentsPage', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Book appointment' }));
 
-    expect(screen.getByText('Select a service to confirm category, duration, base price, and booking rule.')).toBeInTheDocument();
+    expect(screen.getByText('Add one or more services to confirm the bundle, total duration, base price, and booking rule.')).toBeInTheDocument();
 
     const serviceSelect = screen.getAllByLabelText('Service')[1];
     fireEvent.change(serviceSelect, { target: { value: 'service-plan-only' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Add service' }));
 
-    expect(await screen.findByText('Structured service')).toBeInTheDocument();
+    expect(await screen.findByText('Structured services')).toBeInTheDocument();
     expect(screen.getAllByText(/Hydration session · Grooming · 90 min/).length).toBeGreaterThan(0);
-    expect(screen.getByText('Plan sessions only')).toBeInTheDocument();
-    expect(screen.getByText('This service requires a linked plan before booking.')).toBeInTheDocument();
+    expect(screen.getByText('Unavailable for new scheduling')).toBeInTheDocument();
+    expect(screen.getByText('At least one selected service requires a linked plan before booking.')).toBeInTheDocument();
+  });
+
+  it('submits a multi-service appointment with the first service kept as the compatibility anchor', async () => {
+    setGrantedPermissions([
+      'pet.appointment.read',
+      'pet.appointment.create',
+      'pet.client.read',
+      'pet.profile.read',
+      'pet.service.read',
+      'pet.professional.read'
+    ]);
+
+    petServiceMock.listClients.mockResolvedValue(createPageResponse([
+      {
+        id: 'client-1',
+        name: 'Owner Example',
+        status: 'ACTIVE',
+        createdAt: '2026-03-10T10:00:00Z',
+        updatedAt: '2026-03-10T10:00:00Z'
+      }
+    ]));
+    petServiceMock.listProfiles.mockResolvedValue(createPageResponse([
+      {
+        id: 'pet-1',
+        clientId: 'client-1',
+        name: 'Pet Example',
+        species: 'Dog',
+        createdAt: '2026-03-10T10:00:00Z',
+        updatedAt: '2026-03-10T10:00:00Z'
+      }
+    ]));
+    petServiceMock.listServices.mockResolvedValue(createPageResponse([
+      {
+        id: 'service-bath',
+        name: 'Bath',
+        category: 'GROOMING',
+        active: true,
+        basePrice: 80,
+        durationMinutes: 60,
+        commissionEligible: true,
+        allowInPlans: true,
+        allowStandaloneBooking: true,
+        createdAt: '2026-03-10T10:00:00Z',
+        updatedAt: '2026-03-10T10:00:00Z'
+      },
+      {
+        id: 'service-hydration',
+        name: 'Hydration',
+        category: 'GROOMING',
+        active: true,
+        basePrice: 45,
+        durationMinutes: 30,
+        commissionEligible: true,
+        allowInPlans: true,
+        allowStandaloneBooking: true,
+        createdAt: '2026-03-10T10:00:00Z',
+        updatedAt: '2026-03-10T10:00:00Z'
+      }
+    ]));
+    petServiceMock.listProfessionals.mockResolvedValue(createPageResponse([
+      {
+        id: 'professional-1',
+        name: 'Dr Example',
+        createdAt: '2026-03-10T10:00:00Z',
+        updatedAt: '2026-03-10T10:00:00Z'
+      }
+    ]));
+    petServiceMock.listAppointments.mockResolvedValue(createPageResponse([]));
+    petServiceMock.createAppointment.mockResolvedValue({
+      id: 'appointment-new'
+    });
+
+    render(<PetAppointmentsPage />);
+
+    await waitFor(() => {
+      expect(petServiceMock.listServices).toHaveBeenCalled();
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: 'Book appointment' }));
+
+    fireEvent.change(screen.getAllByLabelText('Client')[1], { target: { value: 'client-1' } });
+    fireEvent.change(screen.getAllByLabelText('Pet')[1], { target: { value: 'pet-1' } });
+
+    const serviceSelect = screen.getAllByLabelText('Service')[1];
+    fireEvent.change(serviceSelect, { target: { value: 'service-bath' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Add service' }));
+    fireEvent.change(serviceSelect, { target: { value: 'service-hydration' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Add service' }));
+
+    fireEvent.change(screen.getAllByLabelText('Professional')[1], { target: { value: 'professional-1' } });
+    fireEvent.change(screen.getByLabelText(/Date/i), { target: { value: '2026-03-10T10:30' } });
+
+    expect(screen.getByText('2 services selected')).toBeInTheDocument();
+    expect(screen.getByText('90 min')).toBeInTheDocument();
+
+    fireEvent.click(screen.getAllByRole('button', { name: 'Book appointment' })[1]);
+
+    await waitFor(() => {
+      expect(petServiceMock.createAppointment).toHaveBeenCalledWith(expect.objectContaining({
+        serviceId: 'service-bath',
+        serviceIds: ['service-bath', 'service-hydration']
+      }));
+    });
   });
 });

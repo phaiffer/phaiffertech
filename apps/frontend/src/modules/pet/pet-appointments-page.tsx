@@ -4,12 +4,12 @@ import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from 're
 import { CalendarCheck, CarFront, CreditCard, RefreshCcw, type LucideIcon } from 'lucide-react';
 import {
   describePetServiceCatalogItem,
-  formatPetServiceCategory,
-  resolvePetServiceBookingMode
+  formatPetServiceCategory
 } from '@/modules/pet/pet-service-catalog-policy';
 import {
   PetAppointmentForm,
   PetAppointmentsFilters,
+  type PetAppointmentSelectedService,
   type PetAppointmentServiceSummary,
   createPetAppointmentColumns
 } from '@/modules/pet/pet-appointments-sections';
@@ -32,6 +32,7 @@ import { PageResponse } from '@/shared/types/common';
 import {
   ClientPlan,
   PetAppointment,
+  PetAppointmentServiceLine,
   PetClient,
   PetProfessional,
   PetProfile,
@@ -124,14 +125,19 @@ function hasPickupMessageCoverage(appointment: PetAppointment, clients: PetClien
 function resolveServiceSummaryCopy(locale: string) {
   if (locale === 'pt-BR') {
     return {
-      title: 'Servico estruturado',
-      empty: 'Selecione um servico para confirmar categoria, duracao, preco base e regra de agendamento.',
-      description: 'Este atendimento usa a definicao estruturada do catalogo do tenant, nao um nome solto.',
+      title: 'Servicos estruturados',
+      empty: 'Adicione um ou mais servicos para confirmar composicao, duracao total, preco base e regra de agendamento.',
+      description: 'Este atendimento usa definicoes estruturadas do catalogo do tenant, nao nomes soltos.',
+      selectedServicesLabel: 'Servicos selecionados',
+      emptySelectionLabel: 'Adicione pelo menos um servico estruturado antes de salvar.',
+      addServiceLabel: 'Adicionar servico',
+      removeServiceLabel: 'Remover',
       category: 'Categoria',
+      servicesCount: 'Servicos',
       status: 'Status',
       scheduling: 'Regra de agendamento',
-      duration: 'Duracao',
-      basePrice: 'Preco base',
+      duration: 'Duracao total',
+      basePrice: 'Preco base total',
       checkout: 'Checkout previsto',
       active: 'Ativo para novos agendamentos',
       inactive: 'Inativo para novos agendamentos',
@@ -139,25 +145,31 @@ function resolveServiceSummaryCopy(locale: string) {
       planOnly: 'Somente por plano',
       standaloneOnly: 'Somente avulso',
       unavailable: 'Indisponivel para novos agendamentos',
-      planReady: 'O plano selecionado pode cobrir o servico base.',
-      planBlocked: 'Este servico nao pode ser consumido por plano.',
-      standaloneReady: 'Este servico pode ser agendado como atendimento avulso.',
-      standaloneBlocked: 'Este servico exige um plano vinculado antes do agendamento.',
-      inactiveLegacy: 'Este servico inativo continua visivel apenas porque o atendimento atual ja o utiliza.',
+      planReady: 'Todos os servicos selecionados podem ser consumidos pelo plano vinculado.',
+      planBlocked: 'Algum servico selecionado nao pode ser consumido por plano.',
+      standaloneReady: 'Todos os servicos selecionados podem ser agendados como atendimento avulso.',
+      standaloneBlocked: 'Algum servico selecionado exige plano vinculado antes do agendamento.',
+      inactiveLegacy: 'Servico inativo mantido apenas para preservar a edicao segura de um agendamento historico.',
       missingLegacy: 'A definicao original do servico nao esta mais no catalogo ativo. Mantenha o vinculo apenas para edicao historica segura.',
-      legacyHeadlineSuffix: 'reserva legada'
+      legacyHeadlineSuffix: 'reserva legada',
+      bundleHeadlineSuffix: 'servicos selecionados'
     };
   }
 
   return {
-    title: 'Structured service',
-    empty: 'Select a service to confirm category, duration, base price, and booking rule.',
-    description: 'This appointment uses the tenant-owned structured service definition instead of a loose service label.',
+    title: 'Structured services',
+    empty: 'Add one or more services to confirm the bundle, total duration, base price, and booking rule.',
+    description: 'This appointment uses tenant-owned structured service definitions instead of loose service labels.',
+    selectedServicesLabel: 'Selected services',
+    emptySelectionLabel: 'Add at least one structured service before saving.',
+    addServiceLabel: 'Add service',
+    removeServiceLabel: 'Remove',
     category: 'Category',
+    servicesCount: 'Services',
     status: 'Status',
     scheduling: 'Scheduling rule',
-    duration: 'Duration',
-    basePrice: 'Base price',
+    duration: 'Combined duration',
+    basePrice: 'Combined base price',
     checkout: 'Projected checkout',
     active: 'Active for new bookings',
     inactive: 'Inactive for new bookings',
@@ -165,13 +177,14 @@ function resolveServiceSummaryCopy(locale: string) {
     planOnly: 'Plan sessions only',
     standaloneOnly: 'Standalone booking only',
     unavailable: 'Unavailable for new scheduling',
-    planReady: 'The selected plan can cover this base service.',
-    planBlocked: 'This service cannot be consumed from a plan.',
-    standaloneReady: 'This service can be booked as a one-time appointment.',
-    standaloneBlocked: 'This service requires a linked plan before booking.',
-    inactiveLegacy: 'This inactive service stays visible only because the current appointment already uses it.',
+    planReady: 'All selected services can be consumed from the linked plan.',
+    planBlocked: 'At least one selected service cannot be consumed from the linked plan.',
+    standaloneReady: 'All selected services can be booked as one-time appointments.',
+    standaloneBlocked: 'At least one selected service requires a linked plan before booking.',
+    inactiveLegacy: 'This inactive service stays visible only to preserve safe editing of a historical appointment.',
     missingLegacy: 'The original service definition is no longer in the active catalog. Keep the link only for safe historical edits.',
-    legacyHeadlineSuffix: 'legacy booking'
+    legacyHeadlineSuffix: 'legacy booking',
+    bundleHeadlineSuffix: 'services selected'
   };
 }
 
@@ -205,10 +218,11 @@ export function PetAppointmentsPage() {
 
   const [isEditorOpen, setIsEditorOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [editingServiceName, setEditingServiceName] = useState<string | null>(null);
+  const [editingServiceLines, setEditingServiceLines] = useState<PetAppointmentServiceLine[]>([]);
   const [clientId, setClientId] = useState('');
   const [petId, setPetId] = useState('');
-  const [serviceId, setServiceId] = useState('');
+  const [servicePickerId, setServicePickerId] = useState('');
+  const [selectedServiceIds, setSelectedServiceIds] = useState<string[]>([]);
   const [professionalId, setProfessionalId] = useState('');
   const [scheduledAt, setScheduledAt] = useState('');
   const [status, setStatus] = useState('SCHEDULED');
@@ -265,13 +279,17 @@ export function PetAppointmentsPage() {
     () => services.filter((service) => service.active),
     [services]
   );
-  const selectedService = useMemo(
-    () => services.find((service) => service.id === serviceId) ?? null,
-    [serviceId, services]
-  );
   const serviceSummaryCopy = useMemo(
     () => resolveServiceSummaryCopy(locale),
     [locale]
+  );
+  const servicesById = useMemo(
+    () => new Map(services.map((service) => [service.id, service])),
+    [services]
+  );
+  const editingServiceLinesById = useMemo(
+    () => new Map(editingServiceLines.map((line) => [line.serviceId, line])),
+    [editingServiceLines]
   );
 
   const serviceOptions = useMemo(() => {
@@ -299,26 +317,16 @@ export function PetAppointmentsPage() {
   }, [filteredProfiles, messages.formOptions.selectPet]);
 
   const formServiceOptions = useMemo(() => {
-    const options = bookableServices.map((service) => ({
-      value: service.id,
-      label: describePetServiceCatalogItem(service, locale)
-    }));
-
-    if (serviceId && !options.some((option) => option.value === serviceId)) {
-      const selectedService = services.find((service) => service.id === serviceId);
-      options.push({
-        value: serviceId,
-        label: selectedService
-          ? `${describePetServiceCatalogItem(selectedService, locale)} · Legacy booking`
-          : `${editingServiceName ?? messages.filters.service} · Legacy booking`
-      });
-    }
-
     return [
       { value: '', label: messages.formOptions.selectService },
-      ...options
+      ...bookableServices
+        .filter((service) => !selectedServiceIds.includes(service.id))
+        .map((service) => ({
+          value: service.id,
+          label: describePetServiceCatalogItem(service, locale)
+        }))
     ];
-  }, [bookableServices, editingServiceName, locale, messages.filters.service, messages.formOptions.selectService, serviceId, services]);
+  }, [bookableServices, locale, messages.formOptions.selectService, selectedServiceIds]);
 
   const formProfessionalOptions = useMemo(() => {
     return [
@@ -345,70 +353,112 @@ export function PetAppointmentsPage() {
     ];
   }, [clientPlans, clientId, messages.formOptions, plansLoading]);
 
+  const selectedServiceEntries = useMemo(() => {
+    return selectedServiceIds
+      .map((selectedId) => {
+        const catalogService = servicesById.get(selectedId);
+        const legacyServiceLine = editingServiceLinesById.get(selectedId);
+
+        if (!catalogService && !legacyServiceLine) {
+          return null;
+        }
+
+        return {
+          serviceId: selectedId,
+          catalogService,
+          legacyServiceLine
+        };
+      })
+      .filter((entry): entry is {
+        serviceId: string;
+        catalogService: PetServiceCatalog | undefined;
+        legacyServiceLine: PetAppointmentServiceLine | undefined;
+      } => entry !== null);
+  }, [editingServiceLinesById, selectedServiceIds, servicesById]);
+
+  const selectedServices = useMemo<PetAppointmentSelectedService[]>(() => {
+    return selectedServiceEntries.map((entry) => {
+      if (entry.catalogService) {
+        return {
+          serviceId: entry.serviceId,
+          label: describePetServiceCatalogItem(entry.catalogService, locale),
+          note: entry.catalogService.active ? undefined : serviceSummaryCopy.inactiveLegacy,
+          removable: true
+        };
+      }
+
+      return {
+        serviceId: entry.serviceId,
+        label: `${entry.legacyServiceLine?.serviceName ?? messages.filters.service} · ${serviceSummaryCopy.legacyHeadlineSuffix}`,
+        note: serviceSummaryCopy.missingLegacy,
+        removable: true
+      };
+    });
+  }, [locale, messages.filters.service, selectedServiceEntries, serviceSummaryCopy.inactiveLegacy, serviceSummaryCopy.legacyHeadlineSuffix, serviceSummaryCopy.missingLegacy]);
+
   const selectedServiceSummary = useMemo<PetAppointmentServiceSummary | null>(() => {
-    if (!serviceId) {
+    if (selectedServiceEntries.length === 0) {
       return null;
     }
 
     const parsedExtrasAmount = extrasAmount ? parseFloat(extrasAmount) : 0;
     const safeExtrasAmount = Number.isFinite(parsedExtrasAmount) ? parsedExtrasAmount : 0;
-
-    if (!selectedService) {
-      if (!editingServiceName) {
-        return null;
-      }
-
-      return {
-        title: serviceSummaryCopy.title,
-        description: serviceSummaryCopy.description,
-        headline: `${editingServiceName} · ${serviceSummaryCopy.legacyHeadlineSuffix}`,
-        details: [
-          { label: serviceSummaryCopy.status, value: serviceSummaryCopy.inactive },
-          { label: serviceSummaryCopy.scheduling, value: serviceSummaryCopy.unavailable }
-        ],
-        notices: [serviceSummaryCopy.missingLegacy]
-      };
-    }
-
-    const bookingMode = resolvePetServiceBookingMode(selectedService);
-    const baseCoveredByPlan = Boolean(clientPlanId) && selectedService.allowInPlans;
-    const projectedCheckout = (baseCoveredByPlan ? 0 : selectedService.basePrice) + safeExtrasAmount;
     const notices: string[] = [];
+    const categories = Array.from(new Set(
+      selectedServiceEntries
+        .map((entry) => entry.catalogService?.category ?? entry.legacyServiceLine?.serviceCategory ?? null)
+        .filter((category): category is NonNullable<typeof category> => Boolean(category))
+        .map((category) => formatPetServiceCategory(category))
+    ));
+    const combinedDurationMinutes = selectedServiceEntries.reduce((total, entry) => (
+      total + (entry.catalogService?.durationMinutes ?? entry.legacyServiceLine?.durationMinutes ?? 0)
+    ), 0);
+    const combinedBasePrice = selectedServiceEntries.reduce((total, entry) => (
+      total + (entry.catalogService?.basePrice ?? entry.legacyServiceLine?.basePrice ?? 0)
+    ), 0);
+    const supportsSelectedBookingMode = clientPlanId
+      ? selectedServiceEntries.every((entry) => entry.catalogService?.allowInPlans ?? entry.legacyServiceLine?.allowInPlans ?? false)
+      : selectedServiceEntries.every((entry) => entry.catalogService?.allowStandaloneBooking ?? entry.legacyServiceLine?.allowStandaloneBooking ?? false);
+    const projectedCheckout = (clientPlanId && supportsSelectedBookingMode ? 0 : combinedBasePrice) + safeExtrasAmount;
 
-    if (!selectedService.active) {
-      notices.push(serviceSummaryCopy.inactiveLegacy);
-    }
+    selectedServiceEntries.forEach((entry) => {
+      if (entry.catalogService && !entry.catalogService.active) {
+        notices.push(`${entry.catalogService.name}: ${serviceSummaryCopy.inactiveLegacy}`);
+      } else if (!entry.catalogService) {
+        notices.push(`${entry.legacyServiceLine?.serviceName ?? messages.filters.service}: ${serviceSummaryCopy.missingLegacy}`);
+      }
+    });
 
-    if (clientPlanId) {
-      notices.push(selectedService.allowInPlans ? serviceSummaryCopy.planReady : serviceSummaryCopy.planBlocked);
-    } else {
-      notices.push(selectedService.allowStandaloneBooking ? serviceSummaryCopy.standaloneReady : serviceSummaryCopy.standaloneBlocked);
-    }
+    notices.push(clientPlanId
+      ? (supportsSelectedBookingMode ? serviceSummaryCopy.planReady : serviceSummaryCopy.planBlocked)
+      : (supportsSelectedBookingMode ? serviceSummaryCopy.standaloneReady : serviceSummaryCopy.standaloneBlocked));
 
     return {
       title: serviceSummaryCopy.title,
       description: serviceSummaryCopy.description,
-      headline: describePetServiceCatalogItem(selectedService, locale),
+      selectedServicesLabel: serviceSummaryCopy.selectedServicesLabel,
+      emptySelectionLabel: serviceSummaryCopy.emptySelectionLabel,
+      addServiceLabel: serviceSummaryCopy.addServiceLabel,
+      removeServiceLabel: serviceSummaryCopy.removeServiceLabel,
+      headline: selectedServiceEntries.length === 1
+        ? selectedServices[0]?.label ?? serviceSummaryCopy.title
+        : `${selectedServiceEntries.length} ${serviceSummaryCopy.bundleHeadlineSuffix}`,
       details: [
-        { label: serviceSummaryCopy.category, value: formatPetServiceCategory(selectedService.category) },
-        { label: serviceSummaryCopy.status, value: selectedService.active ? serviceSummaryCopy.active : serviceSummaryCopy.inactive },
+        { label: serviceSummaryCopy.servicesCount, value: String(selectedServiceEntries.length) },
+        { label: serviceSummaryCopy.category, value: categories.length > 0 ? categories.join(' + ') : serviceSummaryCopy.unavailable },
         {
           label: serviceSummaryCopy.scheduling,
-          value: bookingMode === 'PLAN_ONLY'
-            ? serviceSummaryCopy.planOnly
-            : bookingMode === 'STANDALONE_ONLY'
-              ? serviceSummaryCopy.standaloneOnly
-              : bookingMode === 'UNAVAILABLE'
-                ? serviceSummaryCopy.unavailable
-                : serviceSummaryCopy.flexible
+          value: clientPlanId
+            ? (supportsSelectedBookingMode ? serviceSummaryCopy.planOnly : serviceSummaryCopy.unavailable)
+            : (supportsSelectedBookingMode ? serviceSummaryCopy.standaloneOnly : serviceSummaryCopy.unavailable)
         },
-        { label: serviceSummaryCopy.duration, value: `${selectedService.durationMinutes} min` },
-        { label: serviceSummaryCopy.basePrice, value: formatCurrencyForLocale(locale, selectedService.basePrice) },
+        { label: serviceSummaryCopy.duration, value: `${combinedDurationMinutes} min` },
+        { label: serviceSummaryCopy.basePrice, value: formatCurrencyForLocale(locale, combinedBasePrice) },
         { label: serviceSummaryCopy.checkout, value: formatCurrencyForLocale(locale, projectedCheckout) }
       ],
       notices
     };
-  }, [clientPlanId, editingServiceName, extrasAmount, locale, selectedService, serviceId, serviceSummaryCopy]);
+  }, [clientPlanId, extrasAmount, locale, messages.filters.service, selectedServiceEntries, selectedServices, serviceSummaryCopy]);
 
   const loadReferences = useCallback(async () => {
     const [clientPage, profilePage, servicePage, professionalPage] = await Promise.allSettled([
@@ -542,10 +592,11 @@ export function PetAppointmentsPage() {
 
   function resetForm() {
     setEditingId(null);
-    setEditingServiceName(null);
+    setEditingServiceLines([]);
     setClientId('');
     setPetId('');
-    setServiceId('');
+    setServicePickerId('');
+    setSelectedServiceIds([]);
     setProfessionalId('');
     setScheduledAt('');
     setStatus('SCHEDULED');
@@ -567,11 +618,27 @@ export function PetAppointmentsPage() {
   }
 
   function beginEdit(appointment: PetAppointment) {
+    const appointmentServices = appointment.appointmentServices && appointment.appointmentServices.length > 0
+      ? appointment.appointmentServices
+      : [{
+          serviceId: appointment.serviceId,
+          serviceName: appointment.serviceName,
+          serviceCategory: null,
+          durationMinutes: appointment.totalServiceDurationMinutes ?? null,
+          basePrice: appointment.servicePrice ?? appointment.totalServiceBasePrice ?? null,
+          active: false,
+          allowInPlans: Boolean(appointment.clientPlanId),
+          allowStandaloneBooking: !appointment.clientPlanId,
+          lineOrder: 0,
+          primary: true,
+          missingFromCatalog: true
+        }];
     setEditingId(appointment.id);
-    setEditingServiceName(appointment.serviceName);
+    setEditingServiceLines(appointmentServices);
     setClientId(appointment.clientId);
     setPetId(appointment.petId);
-    setServiceId(appointment.serviceId);
+    setServicePickerId('');
+    setSelectedServiceIds(appointmentServices.map((service) => service.serviceId));
     setProfessionalId(appointment.professionalId);
     setScheduledAt(toDateTimeLocal(appointment.scheduledAt));
     setStatus(appointment.status);
@@ -589,12 +656,25 @@ export function PetAppointmentsPage() {
     beginEdit(apt);
   }
 
+  function handleAddService() {
+    if (!servicePickerId || selectedServiceIds.includes(servicePickerId)) {
+      return;
+    }
+
+    setSelectedServiceIds((current) => [...current, servicePickerId]);
+    setServicePickerId('');
+  }
+
+  function handleRemoveService(serviceToRemoveId: string) {
+    setSelectedServiceIds((current) => current.filter((selectedId) => selectedId !== serviceToRemoveId));
+  }
+
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError(null);
     setSuccess(null);
 
-    if (!clientId || !petId || !serviceId || !professionalId) {
+    if (!clientId || !petId || selectedServiceIds.length === 0 || !professionalId) {
       setError(messages.errors.missingReferences);
       return;
     }
@@ -607,31 +687,43 @@ export function PetAppointmentsPage() {
 
     setSubmitting(true);
 
+    const primaryServiceId = selectedServiceIds[0];
     const parsedExtrasAmount = extrasAmount ? parseFloat(extrasAmount) : undefined;
-    if (!editingId && selectedService) {
-      if (!selectedService.active) {
-        setSubmitting(false);
-        setError('Selected service is inactive for new bookings.');
-        return;
-      }
+    if (!editingId && selectedServiceEntries.some((entry) => entry.catalogService && !entry.catalogService.active)) {
+      setSubmitting(false);
+      setError('Selected service is inactive for new bookings.');
+      return;
+    }
 
-      if (clientPlanId && !selectedService.allowInPlans) {
-        setSubmitting(false);
-        setError('Selected service is not available for plan-based appointments.');
-        return;
-      }
+    if (!editingId && selectedServiceEntries.some((entry) => !entry.catalogService)) {
+      setSubmitting(false);
+      setError('Legacy appointment services cannot be used for new bookings.');
+      return;
+    }
 
-      if (!clientPlanId && !selectedService.allowStandaloneBooking) {
+    if (clientPlanId && selectedServiceEntries.some((entry) => !(entry.catalogService?.allowInPlans ?? entry.legacyServiceLine?.allowInPlans))) {
+      setSubmitting(false);
+      setError('At least one selected service is not available for plan-based appointments.');
+      return;
+    }
+
+    if (!clientPlanId && selectedServiceEntries.some((entry) => !(entry.catalogService?.allowStandaloneBooking ?? entry.legacyServiceLine?.allowStandaloneBooking))) {
+      setSubmitting(false);
+      setError('At least one selected service requires a linked plan before booking.');
+      return;
+    }
+
+    if (!primaryServiceId) {
         setSubmitting(false);
-        setError('Selected service requires a linked plan before booking.');
+        setError(messages.errors.missingReferences);
         return;
-      }
     }
 
     const payload = {
       clientId,
       petId,
-      serviceId,
+      serviceId: primaryServiceId,
+      serviceIds: selectedServiceIds,
       professionalId,
       scheduledAt: isoScheduledAt,
       status,
@@ -910,10 +1002,14 @@ export function PetAppointmentsPage() {
                   onPetIdChange={setPetId}
                   formPetOptions={formPetOptions}
                   profilesLookupUnavailable={profilesLookupUnavailable}
-                  serviceId={serviceId}
-                  onServiceIdChange={setServiceId}
+                  servicePickerId={servicePickerId}
+                  onServicePickerIdChange={setServicePickerId}
                   formServiceOptions={formServiceOptions}
                   servicesLookupUnavailable={servicesLookupUnavailable}
+                  selectedServices={selectedServices}
+                  onAddService={handleAddService}
+                  onRemoveService={handleRemoveService}
+                  canAddSelectedService={Boolean(servicePickerId) && !selectedServiceIds.includes(servicePickerId)}
                   professionalId={professionalId}
                   onProfessionalIdChange={setProfessionalId}
                   formProfessionalOptions={formProfessionalOptions}

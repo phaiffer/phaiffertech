@@ -37,6 +37,8 @@ public interface PetServiceCatalogRepository
             Pageable pageable
     );
 
+    java.util.List<PetServiceCatalog> findAllByTenantIdAndIdIn(UUID tenantId, Collection<UUID> ids);
+
     Optional<PetServiceCatalog> findByIdAndTenantId(UUID id, UUID tenantId);
 
     @Query(value = """
