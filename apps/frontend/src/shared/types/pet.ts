@@ -8,6 +8,9 @@ export type PetClient = {
   fullName?: string;
   email?: string;
   phone?: string;
+  primaryResponsibleName?: string;
+  primaryResponsibleEmail?: string;
+  primaryResponsiblePhone?: string;
   documentType?: PetClientDocumentType;
   document?: string;
   address?: string;

@@ -21,4 +21,19 @@ public record PetClientResponse(
     public String legacyFullName() {
         return name;
     }
+
+    @JsonProperty("primaryResponsibleName")
+    public String primaryResponsibleName() {
+        return name;
+    }
+
+    @JsonProperty("primaryResponsibleEmail")
+    public String primaryResponsibleEmail() {
+        return email;
+    }
+
+    @JsonProperty("primaryResponsiblePhone")
+    public String primaryResponsiblePhone() {
+        return phone;
+    }
 }
