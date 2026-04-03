@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   buildReferenceContextLine,
   buildReferenceHeadline,
@@ -17,6 +17,7 @@ import { usePermissions } from '@/shared/auth/usePermissions';
 import { ApiClientError } from '@/shared/lib/http';
 import { resolvePageItems, resolveTotalItems } from '@/shared/lib/pagination';
 import { crmService } from '@/shared/services/crm-service';
+import { petFollowUpService } from '@/shared/services/pet-follow-up-service';
 import { petService } from '@/shared/services/pet-service';
 import { CrmActivityItem, CrmCompany, CrmContact, CrmDeal, CrmLead } from '@/shared/types/crm';
 import { PageResponse } from '@/shared/types/common';
@@ -36,6 +37,12 @@ const emptyCommonPage: PageResponse<CrmCompany | CrmContact | CrmLead | CrmDeal 
   size: 100
 };
 
+type CrmActivityPageProps = {
+  surface?: 'crm' | 'pet';
+};
+
+const petFollowUpRelationTypes = new Set<CrmRelatedReferenceType>(['PET.CLIENT', 'PET.PROFILE', 'PET.APPOINTMENT']);
+
 function payloadSummary(payload: Record<string, unknown>) {
   const json = JSON.stringify(payload);
   if (!json || json === '{}') {
@@ -44,8 +51,10 @@ function payloadSummary(payload: Record<string, unknown>) {
   return json.length > 120 ? `${json.slice(0, 117)}...` : json;
 }
 
-export function CrmActivityPage() {
+export function CrmActivityPage({ surface = 'crm' }: CrmActivityPageProps) {
   const { hasPermission } = usePermissions();
+  const isPetSurface = surface === 'pet';
+  const activityService = isPetSurface ? petFollowUpService : crmService;
   const [pageData, setPageData] = useState<PageResponse<CrmActivityItem>>(initialPage);
   const [companies, setCompanies] = useState<CrmCompany[]>([]);
   const [contacts, setContacts] = useState<CrmContact[]>([]);
@@ -63,21 +72,38 @@ export function CrmActivityPage() {
   const canReadPetClients = hasPermission('pet.client.read');
   const canReadPetProfiles = hasPermission('pet.profile.read');
   const canReadPetAppointments = hasPermission('pet.appointment.read');
-  const relationTypeOptions = buildRelatedReferenceTypeOptions({
-    canReadPetClients,
-    canReadPetProfiles,
-    canReadPetAppointments
-  });
+  const relationTypeOptions = useMemo(
+    () => buildRelatedReferenceTypeOptions({
+      canReadPetClients,
+      canReadPetProfiles,
+      canReadPetAppointments
+    }).filter((option) => !isPetSurface || petFollowUpRelationTypes.has(option.value)),
+    [canReadPetAppointments, canReadPetClients, canReadPetProfiles, isPetSurface]
+  );
   const relationFilterTypeOptions = [{ value: '', label: 'Todos' }, ...relationTypeOptions];
+  const pageTitle = isPetSurface ? 'Atividade de follow-up do PetFlow' : 'CRM Activity';
+  const pageDescription = isPetSurface
+    ? 'Acompanhe a trilha de tarefas e notas ligadas a clientes, pets e atendimentos. Eventos históricos continuam legíveis enquanto o fluxo é absorvido pelo PetFlow.'
+    : 'Feed auditável com contexto canônico da entidade CRM e do vínculo relacionado quando houver referência cross-module.';
+  const permissionFallback = isPetSurface
+    ? 'Você não possui permissão para visualizar a atividade de follow-up do PetFlow.'
+    : 'Você não possui permissão para visualizar a atividade do CRM.';
+
+  useEffect(() => {
+    if (relationTypeFilter && !relationTypeOptions.some((option) => option.value === relationTypeFilter)) {
+      setRelationTypeFilter('');
+      setRelationIdFilter('');
+    }
+  }, [relationTypeFilter, relationTypeOptions]);
 
   useEffect(() => {
     async function loadSupportingData() {
       try {
         const [companiesPage, contactsPage, leadsPage, dealsPage, petClientsPage, petProfilesPage, petAppointmentsPage] = await Promise.all([
-          crmService.listCompanies(0, 100),
-          crmService.listContacts(0, 100),
-          crmService.listLeads(0, 100),
-          crmService.listDeals(0, 100),
+          isPetSurface ? Promise.resolve(emptyCommonPage as PageResponse<CrmCompany>) : crmService.listCompanies(0, 100),
+          isPetSurface ? Promise.resolve(emptyCommonPage as PageResponse<CrmContact>) : crmService.listContacts(0, 100),
+          isPetSurface ? Promise.resolve(emptyCommonPage as PageResponse<CrmLead>) : crmService.listLeads(0, 100),
+          isPetSurface ? Promise.resolve(emptyCommonPage as PageResponse<CrmDeal>) : crmService.listDeals(0, 100),
           canReadPetClients ? petService.listClients(0, 100) : Promise.resolve(emptyCommonPage as PageResponse<PetClient>),
           canReadPetProfiles ? petService.listProfiles(0, 100) : Promise.resolve(emptyCommonPage as PageResponse<PetProfile>),
           canReadPetAppointments ? petService.listAppointments(0, 100) : Promise.resolve(emptyCommonPage as PageResponse<PetAppointment>)
@@ -95,7 +121,7 @@ export function CrmActivityPage() {
     }
 
     void loadSupportingData();
-  }, [canReadPetAppointments, canReadPetClients, canReadPetProfiles]);
+  }, [canReadPetAppointments, canReadPetClients, canReadPetProfiles, isPetSurface]);
 
   useEffect(() => {
     if (filtersReady) {
@@ -115,18 +141,11 @@ export function CrmActivityPage() {
     setFiltersReady(true);
   }, [filtersReady, relationTypeOptions]);
 
-  useEffect(() => {
-    if (!filtersReady) {
-      return;
-    }
-    void load(0, relationTypeFilter, relationIdFilter);
-  }, [filtersReady, relationTypeFilter, relationIdFilter]);
-
-  async function load(page: number, currentRelationType: CrmRelatedReferenceType | '', currentRelationId: string) {
+  const load = useCallback(async (page: number, currentRelationType: CrmRelatedReferenceType | '', currentRelationId: string) => {
     setLoading(true);
     setError(null);
     try {
-      const result = await crmService.listActivity(page, pageSize, {
+      const result = await activityService.listActivity(page, pageSize, {
         relatedReferenceType: currentRelationType || undefined,
         relatedId: currentRelationId || undefined
       });
@@ -136,7 +155,14 @@ export function CrmActivityPage() {
     } finally {
       setLoading(false);
     }
-  }
+  }, [activityService]);
+
+  useEffect(() => {
+    if (!filtersReady) {
+      return;
+    }
+    void load(0, relationTypeFilter, relationIdFilter);
+  }, [filtersReady, load, relationIdFilter, relationTypeFilter]);
 
   function relationOptions(currentRelationType: CrmRelatedReferenceType) {
     return buildRelatedReferenceOptions(currentRelationType, {
@@ -204,10 +230,10 @@ export function CrmActivityPage() {
   return (
     <PermissionGuard
       permission="crm.activity.read"
-      fallback={<div className="ui-notice-warning">Você não possui permissão para visualizar a atividade do CRM.</div>}
+      fallback={<div className="ui-notice-warning">{permissionFallback}</div>}
     >
       <div className="space-y-5">
-        <PageTitle title="CRM Activity" description="Feed auditável com contexto canônico da entidade CRM e do vínculo relacionado quando houver referência cross-module." />
+        <PageTitle title={pageTitle} description={pageDescription} eyebrow={isPetSurface ? 'PetFlow' : undefined} />
 
         <div className="grid gap-3 ui-surface-panel p-4 xl:grid-cols-[180px_220px_auto]">
           <FormSelect

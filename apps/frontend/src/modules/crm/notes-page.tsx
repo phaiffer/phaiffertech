@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   buildReferenceContextLine,
   buildReferenceHeadline,
@@ -19,6 +19,7 @@ import { usePermissions } from '@/shared/auth/usePermissions';
 import { ApiClientError } from '@/shared/lib/http';
 import { resolvePageItems, resolveTotalItems } from '@/shared/lib/pagination';
 import { crmService, CreateNoteInput, UpdateNoteInput } from '@/shared/services/crm-service';
+import { petFollowUpService } from '@/shared/services/pet-follow-up-service';
 import { petService } from '@/shared/services/pet-service';
 import { CrmCompany, CrmContact, CrmDeal, CrmLead, CrmNote } from '@/shared/types/crm';
 import { PageResponse } from '@/shared/types/common';
@@ -41,8 +42,16 @@ const emptyCommonPage: PageResponse<CrmCompany | CrmContact | CrmLead | CrmDeal 
   size: 100
 };
 
-export function CrmNotesPage() {
+type CrmNotesPageProps = {
+  surface?: 'crm' | 'pet';
+};
+
+const petFollowUpRelationTypes = new Set<CrmRelatedReferenceType>(['PET.CLIENT', 'PET.PROFILE', 'PET.APPOINTMENT']);
+
+export function CrmNotesPage({ surface = 'crm' }: CrmNotesPageProps) {
   const { hasPermission } = usePermissions();
+  const isPetSurface = surface === 'pet';
+  const noteService = isPetSurface ? petFollowUpService : crmService;
   const [pageData, setPageData] = useState<PageResponse<CrmNote>>(initialPage);
   const [companies, setCompanies] = useState<CrmCompany[]>([]);
   const [contacts, setContacts] = useState<CrmContact[]>([]);
@@ -61,28 +70,55 @@ export function CrmNotesPage() {
   const [search, setSearch] = useState('');
   const [relationTypeFilter, setRelationTypeFilter] = useState<CrmRelatedReferenceType | ''>('');
   const [relationIdFilter, setRelationIdFilter] = useState('');
-  const [relationType, setRelationType] = useState<CrmRelatedReferenceType>('COMPANY');
+  const [relationType, setRelationType] = useState<CrmRelatedReferenceType>(isPetSurface ? 'PET.CLIENT' : 'COMPANY');
   const [relationId, setRelationId] = useState('');
   const [content, setContent] = useState('');
 
   const canReadPetClients = hasPermission('pet.client.read');
   const canReadPetProfiles = hasPermission('pet.profile.read');
   const canReadPetAppointments = hasPermission('pet.appointment.read');
-  const relationTypeOptions = buildRelatedReferenceTypeOptions({
-    canReadPetClients,
-    canReadPetProfiles,
-    canReadPetAppointments
-  });
+  const relationTypeOptions = useMemo(
+    () => buildRelatedReferenceTypeOptions({
+      canReadPetClients,
+      canReadPetProfiles,
+      canReadPetAppointments
+    }).filter((option) => !isPetSurface || petFollowUpRelationTypes.has(option.value)),
+    [canReadPetAppointments, canReadPetClients, canReadPetProfiles, isPetSurface]
+  );
   const relationFilterTypeOptions = [{ value: '', label: 'Todos' }, ...relationTypeOptions];
+  const pageTitle = isPetSurface ? 'Notas de follow-up do PetFlow' : 'CRM Notes';
+  const pageDescription = isPetSurface
+    ? 'Registre observações operacionais ligadas a clientes, pets e atendimentos. Novas notas passam a nascer no contexto PetFlow, com leitura preservada para vínculos históricos.'
+    : 'Notas rápidas com vínculo legível entre CRM e, quando permitido, entidades do PetFlow.';
+  const permissionFallback = isPetSurface
+    ? 'Você não possui permissão para visualizar notas de follow-up do PetFlow.'
+    : 'Você não possui permissão para visualizar notas.';
+  const relationHint = isPetSurface
+    ? 'Novas notas desta superfície usam referências do PetFlow. Registros legados continuam visíveis até a absorção completa do histórico.'
+    : 'Os vínculos CRM legados continuam compatíveis. Referências Pet aparecem quando o usuário possui leitura do recurso correspondente e são enviadas pelo tipo canônico.';
+
+  useEffect(() => {
+    if (!relationTypeOptions.some((option) => option.value === relationType) && relationTypeOptions[0]) {
+      setRelationType(relationTypeOptions[0].value);
+      setRelationId('');
+    }
+  }, [relationType, relationTypeOptions]);
+
+  useEffect(() => {
+    if (relationTypeFilter && !relationTypeOptions.some((option) => option.value === relationTypeFilter)) {
+      setRelationTypeFilter('');
+      setRelationIdFilter('');
+    }
+  }, [relationTypeFilter, relationTypeOptions]);
 
   useEffect(() => {
     async function loadSupportingData() {
       try {
         const [companiesPage, contactsPage, leadsPage, dealsPage, petClientsPage, petProfilesPage, petAppointmentsPage] = await Promise.all([
-          crmService.listCompanies(0, 100),
-          crmService.listContacts(0, 100),
-          crmService.listLeads(0, 100),
-          crmService.listDeals(0, 100),
+          isPetSurface ? Promise.resolve(emptyCommonPage as PageResponse<CrmCompany>) : crmService.listCompanies(0, 100),
+          isPetSurface ? Promise.resolve(emptyCommonPage as PageResponse<CrmContact>) : crmService.listContacts(0, 100),
+          isPetSurface ? Promise.resolve(emptyCommonPage as PageResponse<CrmLead>) : crmService.listLeads(0, 100),
+          isPetSurface ? Promise.resolve(emptyCommonPage as PageResponse<CrmDeal>) : crmService.listDeals(0, 100),
           canReadPetClients ? petService.listClients(0, 100) : Promise.resolve(emptyCommonPage as PageResponse<PetClient>),
           canReadPetProfiles ? petService.listProfiles(0, 100) : Promise.resolve(emptyCommonPage as PageResponse<PetProfile>),
           canReadPetAppointments ? petService.listAppointments(0, 100) : Promise.resolve(emptyCommonPage as PageResponse<PetAppointment>)
@@ -100,7 +136,7 @@ export function CrmNotesPage() {
     }
 
     void loadSupportingData();
-  }, [canReadPetAppointments, canReadPetClients, canReadPetProfiles]);
+  }, [canReadPetAppointments, canReadPetClients, canReadPetProfiles, isPetSurface]);
 
   useEffect(() => {
     if (filtersReady) {
@@ -123,23 +159,16 @@ export function CrmNotesPage() {
     setFiltersReady(true);
   }, [filtersReady, relationTypeOptions]);
 
-  useEffect(() => {
-    if (!filtersReady) {
-      return;
-    }
-    void load(0, search, relationTypeFilter, relationIdFilter);
-  }, [filtersReady, search, relationTypeFilter, relationIdFilter]);
-
-  async function load(
+  const load = useCallback(async (
     page: number,
     currentSearch: string,
     currentRelationType: CrmRelatedReferenceType | '',
     currentRelationId: string
-  ) {
+  ) => {
     setLoading(true);
     setError(null);
     try {
-      const result = await crmService.listNotes(page, pageSize, currentSearch, {
+      const result = await noteService.listNotes(page, pageSize, currentSearch, {
         relatedReferenceType: currentRelationType || undefined,
         relatedId: currentRelationId || undefined
       });
@@ -149,7 +178,14 @@ export function CrmNotesPage() {
     } finally {
       setLoading(false);
     }
-  }
+  }, [noteService]);
+
+  useEffect(() => {
+    if (!filtersReady) {
+      return;
+    }
+    void load(0, search, relationTypeFilter, relationIdFilter);
+  }, [filtersReady, load, relationIdFilter, relationTypeFilter, search]);
 
   function relationOptions(currentRelationType: CrmRelatedReferenceType) {
     return buildRelatedReferenceOptions(currentRelationType, {
@@ -170,7 +206,7 @@ export function CrmNotesPage() {
   function resetForm() {
     setEditingId(null);
     setContent('');
-    setRelationType('COMPANY');
+    setRelationType(relationTypeOptions[0]?.value ?? (isPetSurface ? 'PET.CLIENT' : 'COMPANY'));
     setRelationId('');
   }
 
@@ -189,9 +225,9 @@ export function CrmNotesPage() {
     setError(null);
     try {
       if (editingId) {
-        await crmService.updateNote(editingId, payload as UpdateNoteInput);
+        await noteService.updateNote(editingId, payload as UpdateNoteInput);
       } else {
-        await crmService.createNote(payload);
+        await noteService.createNote(payload);
       }
       resetForm();
       await load(pageData.page, search, relationTypeFilter, relationIdFilter);
@@ -205,7 +241,7 @@ export function CrmNotesPage() {
   async function handleDelete() {
     if (!deleteCandidate) return;
     try {
-      await crmService.deleteNote(deleteCandidate.id);
+      await noteService.deleteNote(deleteCandidate.id);
       setDeleteCandidate(null);
       await load(pageData.page, search, relationTypeFilter, relationIdFilter);
     } catch (err) {
@@ -293,10 +329,10 @@ export function CrmNotesPage() {
   return (
     <PermissionGuard
       permission="crm.note.read"
-      fallback={<div className="ui-notice-warning">Você não possui permissão para visualizar notas.</div>}
+      fallback={<div className="ui-notice-warning">{permissionFallback}</div>}
     >
       <div className="space-y-5">
-        <PageTitle title="CRM Notes" description="Notas rápidas com vínculo legível entre CRM e, quando permitido, entidades do PetFlow." />
+        <PageTitle title={pageTitle} description={pageDescription} eyebrow={isPetSurface ? 'PetFlow' : undefined} />
 
         <div className="grid gap-3 ui-surface-panel p-4 xl:grid-cols-[1fr_180px_220px_auto_auto]">
           <SearchBar value={searchInput} onChange={setSearchInput} placeholder="Buscar por conteúdo da nota" />
@@ -342,7 +378,7 @@ export function CrmNotesPage() {
             <FormSelect label="Tipo de vínculo" value={relationType} options={relationTypeOptions} onChange={(value) => { setRelationType(value as CrmRelatedReferenceType); setRelationId(''); }} />
             <FormSelect label="Registro vinculado" value={relationId} options={[{ value: '', label: 'Selecione' }, ...relationOptions(relationType)]} onChange={setRelationId} />
             <p className="text-xs text-[color:var(--app-shell-muted)] md:col-span-2">
-              Os vínculos CRM legados continuam compatíveis. Referências Pet aparecem quando o usuário possui leitura do recurso correspondente e são enviadas pelo tipo canônico.
+              {relationHint}
             </p>
             <div className="flex gap-2 md:col-span-2">
               <button

@@ -4,7 +4,7 @@ import { Sidebar } from '@/shared/components/sidebar';
 import { AuthenticatedUser } from '@/shared/types/auth';
 
 const { navigationState, signOutMock, currentUser } = vi.hoisted(() => ({
-  navigationState: { pathname: '/crm/tasks' },
+  navigationState: { pathname: '/pet/follow-up' },
   signOutMock: vi.fn(),
   currentUser: {
     userId: 'user-1',
@@ -80,7 +80,7 @@ vi.mock('@/shared/platform/use-frontend-platform', () => ({
 describe('Sidebar', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    navigationState.pathname = '/crm/tasks';
+    navigationState.pathname = '/pet/follow-up';
     currentUser.email = 'jane@phaiffer.test';
     currentUser.role = 'PLATFORM_ADMIN';
     currentUser.platformAdmin = true;
@@ -97,6 +97,7 @@ describe('Sidebar', () => {
     expect(getAllByText('PetFlow').length).toBeGreaterThan(0);
     expect(container.querySelector('a[href="/dashboard"]')).not.toBeNull();
     expect(container.querySelector('a[href="/pet/appointments"]')).not.toBeNull();
+    expect(container.querySelector('a[href="/pet/follow-up"]')).not.toBeNull();
     expect(container.querySelector('a[href="/crm"]')).toBeNull();
     expect(container.querySelector('a[href="/tenants"]')).toBeNull();
   });
@@ -122,6 +123,7 @@ describe('Sidebar', () => {
 
     expect(container.querySelector('a[href="/dashboard"]')).not.toBeNull();
     expect(container.querySelector('a[href="/pet/appointments"]')).not.toBeNull();
+    expect(container.querySelector('a[href="/pet/follow-up"]')).not.toBeNull();
     expect(container.querySelector('a[href="/crm"]')).toBeNull();
   });
 

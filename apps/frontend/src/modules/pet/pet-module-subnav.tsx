@@ -62,6 +62,14 @@ export function PetModuleSubnav() {
       group: 'pet' as const
     },
     {
+      href: '/pet/follow-up',
+      label: t.followUp,
+      anyOf: ['crm.task.read', 'crm.note.read', 'crm.activity.read'],
+      anyEntitlements: petSubmoduleEntitlements,
+      moduleCode: 'PET',
+      group: 'pet' as const
+    },
+    {
       href: '/pet/clinic',
       label: t.clinic,
       anyOf: ['pet.medical-record.read'],
