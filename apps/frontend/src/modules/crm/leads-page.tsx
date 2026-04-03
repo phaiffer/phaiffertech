@@ -9,13 +9,13 @@ import {
   sharedInlineActionsClass,
   sharedPageStackClass
 } from '@/shared/components/public-visual-system';
+import { petCommercialPermissions } from '@/shared/auth/pet-commercial-permissions';
 import { StatusBadge } from '@/shared/dashboard/status-badge';
-import { crmService } from '@/shared/services/crm-service';
 import { petCommercialService } from '@/shared/services/pet-commercial-service';
 import { ApiClientError } from '@/shared/lib/http';
 import { resolvePageItems, resolveTotalItems } from '@/shared/lib/pagination';
-import { CrmCompany, CrmContact, CrmLead } from '@/shared/types/crm';
 import { PageResponse } from '@/shared/types/common';
+import { PetCommercialAccount, PetCommercialLead, PetCommercialSupportContact } from '@/shared/types/pet-commercial';
 import { DataTable, DataTableColumn } from '@/shared/ui/data-table';
 import { FormSelect } from '@/shared/ui/form-select';
 import { PageSection } from '@/shared/ui/page-section';
@@ -56,7 +56,7 @@ const petSourceOptions = [
   { value: 'REFERRAL', label: 'Indicacao' }
 ];
 
-const initialPage: PageResponse<CrmLead> = {
+const initialPage: PageResponse<PetCommercialLead> = {
   items: [],
   totalItems: 0,
   totalPages: 0,
@@ -77,11 +77,12 @@ type CrmLeadsPageProps = {
 
 export function CrmLeadsPage({ surface = 'crm' }: CrmLeadsPageProps) {
   const isPetSurface = surface === 'pet';
-  const commercialService = isPetSurface ? petCommercialService : crmService;
+  const commercialService = petCommercialService;
+  const leadPermissions = petCommercialPermissions.leads;
   const basePath = isPetSurface ? '/pet/commercial/leads' : '/crm/leads';
-  const [pageData, setPageData] = useState<PageResponse<CrmLead>>(initialPage);
-  const [companies, setCompanies] = useState<CrmCompany[]>([]);
-  const [contacts, setContacts] = useState<CrmContact[]>([]);
+  const [pageData, setPageData] = useState<PageResponse<PetCommercialLead>>(initialPage);
+  const [companies, setCompanies] = useState<PetCommercialAccount[]>([]);
+  const [contacts, setContacts] = useState<PetCommercialSupportContact[]>([]);
   const [loading, setLoading] = useState(false);
   const [loadingCompanies, setLoadingCompanies] = useState(true);
   const [loadingContacts, setLoadingContacts] = useState(true);
@@ -93,7 +94,7 @@ export function CrmLeadsPage({ surface = 'crm' }: CrmLeadsPageProps) {
   const [sourceFilter, setSourceFilter] = useState('');
   const [companyFilterId, setCompanyFilterId] = useState('');
   const [contactFilterId, setContactFilterId] = useState('');
-  const [deleteCandidate, setDeleteCandidate] = useState<CrmLead | null>(null);
+  const [deleteCandidate, setDeleteCandidate] = useState<PetCommercialLead | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -251,7 +252,7 @@ export function CrmLeadsPage({ surface = 'crm' }: CrmLeadsPageProps) {
   };
   const activeFilterCount = [search, statusFilter, sourceFilter, companyFilterId, contactFilterId].filter(Boolean).length;
 
-  const columns: DataTableColumn<CrmLead>[] = [
+  const columns: DataTableColumn<PetCommercialLead>[] = [
     {
       key: 'lead',
       header: isPetSurface ? 'Lead comercial' : 'Lead',
@@ -297,7 +298,7 @@ export function CrmLeadsPage({ surface = 'crm' }: CrmLeadsPageProps) {
       header: 'Ações',
       render: (lead) => (
         <div className={sharedInlineActionsClass}>
-          <PermissionGuard permission="crm.lead.update">
+          <PermissionGuard permission={leadPermissions.update}>
             <Link
               href={`${basePath}/${lead.id}`}
               className="ui-inline-button"
@@ -306,7 +307,7 @@ export function CrmLeadsPage({ surface = 'crm' }: CrmLeadsPageProps) {
             </Link>
           </PermissionGuard>
 
-          <PermissionGuard permission="crm.lead.delete">
+          <PermissionGuard permission={leadPermissions.delete}>
             <button
               type="button"
               onClick={() => setDeleteCandidate(lead)}
@@ -322,7 +323,7 @@ export function CrmLeadsPage({ surface = 'crm' }: CrmLeadsPageProps) {
 
   return (
     <PermissionGuard
-      permission="crm.lead.read"
+      permission={leadPermissions.read}
       fallback={(
         <div className="ui-notice-warning">
           {isPetSurface
@@ -336,10 +337,10 @@ export function CrmLeadsPage({ surface = 'crm' }: CrmLeadsPageProps) {
           eyebrow={isPetSurface ? 'PetFlow commercial' : 'CRM workspace'}
           title={isPetSurface ? 'Leads comerciais' : 'Leads'}
           description={isPetSurface
-            ? 'Concentre captura, origem e contexto de conversão sem expor CRM como uma superfície separada do PetFlow.'
+            ? 'Concentre captura, origem e contexto de conversão sem reabrir uma superfície comercial legada.'
             : 'Keep intake, source, and relationship context visible without turning the page into an admin panel.'}
           actions={(
-            <PermissionGuard permission="crm.lead.create">
+            <PermissionGuard permission={leadPermissions.create}>
               <Link
                 href={`${basePath}/new`}
                 className="ui-primary-button"
@@ -455,7 +456,7 @@ export function CrmLeadsPage({ surface = 'crm' }: CrmLeadsPageProps) {
                   ? 'Abra o primeiro lead para iniciar a captação comercial do PetFlow neste workspace.'
                   : 'Abra o primeiro lead para iniciar a fila comercial deste workspace.',
                 action: (
-                  <PermissionGuard permission="crm.lead.create">
+                  <PermissionGuard permission={leadPermissions.create}>
                     <Link href={`${basePath}/new`} className="ui-primary-button">
                       {isPetSurface ? 'Novo lead comercial' : 'Novo lead'}
                     </Link>

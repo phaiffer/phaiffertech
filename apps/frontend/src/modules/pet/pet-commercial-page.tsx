@@ -2,21 +2,23 @@
 
 import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
-import { CrmDealsPage } from '@/modules/crm/deals-page';
-import { CrmLeadsPage } from '@/modules/crm/leads-page';
-import { CrmPipelinePage } from '@/modules/crm/pipeline-page';
+import { PetCommercialDealsPage } from '@/modules/pet/pet-commercial-deals-page';
+import { PetCommercialLeadsPage } from '@/modules/pet/pet-commercial-leads-page';
+import { PetCommercialPipelinePage } from '@/modules/pet/pet-commercial-pipeline-page';
 import { PetModuleSubnav } from '@/modules/pet/pet-module-subnav';
+import {
+  petCommercialTabPermissions,
+  type PetCommercialTabKey
+} from '@/shared/auth/pet-commercial-permissions';
 import { usePermissions } from '@/shared/auth/usePermissions';
 
-type CommercialTabKey = 'leads' | 'deals' | 'pipeline';
-
-const commercialTabs: Array<{ key: CommercialTabKey; label: string; permission: string }> = [
-  { key: 'leads', label: 'Leads', permission: 'crm.lead.read' },
-  { key: 'deals', label: 'Negócios', permission: 'crm.deal.read' },
-  { key: 'pipeline', label: 'Pipeline', permission: 'crm.pipeline.read' }
+const commercialTabs: Array<{ key: PetCommercialTabKey; label: string; permission: string }> = [
+  { key: 'leads', label: 'Leads', permission: petCommercialTabPermissions.leads },
+  { key: 'deals', label: 'Negócios', permission: petCommercialTabPermissions.deals },
+  { key: 'pipeline', label: 'Pipeline', permission: petCommercialTabPermissions.pipeline }
 ];
 
-function buildTabHref(pathname: string, key: CommercialTabKey) {
+function buildTabHref(pathname: string, key: PetCommercialTabKey) {
   return key === 'leads' ? pathname : `${pathname}?tab=${key}`;
 }
 
@@ -40,9 +42,9 @@ export function PetCommercialPage() {
                 PetFlow commercial
               </p>
               <p className="max-w-3xl text-sm text-[color:var(--app-shell-muted)]">
-                Leads, negócios e pipeline agora entram pela navegação do PetFlow. Os endpoints de CRM continuam por
-                baixo apenas como camada temporária de compatibilidade enquanto a absorção comercial avança com
-                segurança.
+                Leads, negócios e pipeline entram pelo PetFlow como uma capacidade comercial única. A infraestrutura
+                legada continua por baixo apenas como camada temporária de compatibilidade enquanto a consolidação
+                avança com segurança.
               </p>
             </div>
 
@@ -68,9 +70,9 @@ export function PetCommercialPage() {
             </div>
           </section>
 
-          {activeTab.key === 'leads' ? <CrmLeadsPage surface="pet" /> : null}
-          {activeTab.key === 'deals' ? <CrmDealsPage surface="pet" /> : null}
-          {activeTab.key === 'pipeline' ? <CrmPipelinePage surface="pet" /> : null}
+          {activeTab.key === 'leads' ? <PetCommercialLeadsPage /> : null}
+          {activeTab.key === 'deals' ? <PetCommercialDealsPage /> : null}
+          {activeTab.key === 'pipeline' ? <PetCommercialPipelinePage /> : null}
         </>
       ) : (
         <div className="ui-notice-warning">Você não possui permissão para visualizar o comercial do PetFlow.</div>

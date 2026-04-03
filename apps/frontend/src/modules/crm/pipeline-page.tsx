@@ -2,12 +2,16 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { PermissionGuard } from '@/shared/auth/PermissionGuard';
+import { petCommercialPermissions } from '@/shared/auth/pet-commercial-permissions';
 import { ApiClientError } from '@/shared/lib/http';
 import { resolvePageItems, resolveTotalItems } from '@/shared/lib/pagination';
-import { crmService, CreatePipelineStageInput, UpdatePipelineStageInput } from '@/shared/services/crm-service';
-import { petCommercialService } from '@/shared/services/pet-commercial-service';
-import { CrmPipelineStage } from '@/shared/types/crm';
+import {
+  petCommercialService,
+  type CreatePetCommercialPipelineStageInput,
+  type UpdatePetCommercialPipelineStageInput
+} from '@/shared/services/pet-commercial-service';
 import { PageResponse } from '@/shared/types/common';
+import { PetCommercialPipelineStage } from '@/shared/types/pet-commercial';
 import { ConfirmDialog } from '@/shared/ui/confirm-dialog';
 import { DataTable, DataTableColumn } from '@/shared/ui/data-table';
 import { FormInput } from '@/shared/ui/form-input';
@@ -21,7 +25,7 @@ const defaultOptions = [
   { value: 'false', label: 'Não' },
   { value: 'true', label: 'Sim' }
 ];
-const initialPage: PageResponse<CrmPipelineStage> = { items: [], totalItems: 0, totalPages: 0, page: 0, size: pageSize };
+const initialPage: PageResponse<PetCommercialPipelineStage> = { items: [], totalItems: 0, totalPages: 0, page: 0, size: pageSize };
 
 type CrmPipelinePageProps = {
   surface?: 'crm' | 'pet';
@@ -29,13 +33,14 @@ type CrmPipelinePageProps = {
 
 export function CrmPipelinePage({ surface = 'crm' }: CrmPipelinePageProps) {
   const isPetSurface = surface === 'pet';
-  const commercialService = isPetSurface ? petCommercialService : crmService;
-  const [pageData, setPageData] = useState<PageResponse<CrmPipelineStage>>(initialPage);
+  const commercialService = petCommercialService;
+  const pipelinePermissions = petCommercialPermissions.pipeline;
+  const [pageData, setPageData] = useState<PageResponse<PetCommercialPipelineStage>>(initialPage);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [deleteCandidate, setDeleteCandidate] = useState<CrmPipelineStage | null>(null);
+  const [deleteCandidate, setDeleteCandidate] = useState<PetCommercialPipelineStage | null>(null);
   const [searchInput, setSearchInput] = useState('');
   const [search, setSearch] = useState('');
   const [name, setName] = useState('');
@@ -83,7 +88,7 @@ export function CrmPipelinePage({ surface = 'crm' }: CrmPipelinePageProps) {
       return;
     }
 
-    const payload: CreatePipelineStageInput | UpdatePipelineStageInput = {
+    const payload: CreatePetCommercialPipelineStageInput | UpdatePetCommercialPipelineStageInput = {
       name,
       code: code || undefined,
       position: numericPosition,
@@ -95,7 +100,7 @@ export function CrmPipelinePage({ surface = 'crm' }: CrmPipelinePageProps) {
     setError(null);
     try {
       if (editingId) {
-        await commercialService.updatePipelineStage(editingId, payload as UpdatePipelineStageInput);
+        await commercialService.updatePipelineStage(editingId, payload as UpdatePetCommercialPipelineStageInput);
       } else {
         await commercialService.createPipelineStage(payload);
       }
@@ -133,7 +138,7 @@ export function CrmPipelinePage({ surface = 'crm' }: CrmPipelinePageProps) {
 
   const rows = resolvePageItems(pageData);
   const totalItems = resolveTotalItems(pageData);
-  const columns: DataTableColumn<CrmPipelineStage>[] = [
+  const columns: DataTableColumn<PetCommercialPipelineStage>[] = [
     { key: 'name', header: 'Etapa', render: (row) => row.name },
     { key: 'code', header: 'Código', render: (row) => row.code },
     { key: 'position', header: 'Posição', render: (row) => row.position },
@@ -153,7 +158,7 @@ export function CrmPipelinePage({ surface = 'crm' }: CrmPipelinePageProps) {
       header: 'Ações',
       render: (row) => (
         <div className="flex gap-2">
-          <PermissionGuard permission="crm.pipeline.update">
+          <PermissionGuard permission={pipelinePermissions.update}>
             <button
               type="button"
               onClick={() => {
@@ -169,7 +174,7 @@ export function CrmPipelinePage({ surface = 'crm' }: CrmPipelinePageProps) {
               Editar
             </button>
           </PermissionGuard>
-          <PermissionGuard permission="crm.pipeline.delete">
+          <PermissionGuard permission={pipelinePermissions.delete}>
             <button
               type="button"
               onClick={() => setDeleteCandidate(row)}
@@ -185,7 +190,7 @@ export function CrmPipelinePage({ surface = 'crm' }: CrmPipelinePageProps) {
 
   return (
     <PermissionGuard
-      permission="crm.pipeline.read"
+      permission={pipelinePermissions.read}
       fallback={(
         <div className="ui-notice-warning">
           {isPetSurface
@@ -218,7 +223,7 @@ export function CrmPipelinePage({ surface = 'crm' }: CrmPipelinePageProps) {
           </button>
         </div>
 
-        <PermissionGuard permission={editingId ? 'crm.pipeline.update' : 'crm.pipeline.create'}>
+        <PermissionGuard permission={editingId ? pipelinePermissions.update : pipelinePermissions.create}>
           <div className="grid gap-3 ui-surface-panel p-4 md:grid-cols-2">
             <FormInput label={isPetSurface ? 'Nome da etapa' : 'Nome'} value={name} onChange={setName} required />
             <FormInput label="Codigo" value={code} onChange={setCode} />
