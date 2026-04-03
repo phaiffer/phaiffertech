@@ -18,10 +18,10 @@ class ModuleArchitectureTest {
 
     private static final Path SOURCE_ROOT = Path.of("src/main/java/com/phaiffertech/platform");
     private static final Pattern VERTICAL_IMPORT_PATTERN = Pattern.compile(
-            "^import\\s+com\\.phaiffertech\\.platform\\.modules\\.(crm|iot|pet)\\..*;$"
+            "^import\\s+com\\.phaiffertech\\.platform\\.modules\\.(crm|pet)\\..*;$"
     );
     private static final Pattern IMPORTED_VERTICAL_PATTERN = Pattern.compile(
-            "^import\\s+com\\.phaiffertech\\.platform\\.modules\\.(crm|iot|pet)\\..*;$"
+            "^import\\s+com\\.phaiffertech\\.platform\\.modules\\.(crm|pet)\\..*;$"
     );
 
     @Test
@@ -53,7 +53,7 @@ class ModuleArchitectureTest {
         assertTrue(source.contains("ModuleSummaryCapability"), "Platform dashboard must aggregate through capabilities.");
         assertFalse(source.contains("import com.phaiffertech.platform.modules."), "Platform dashboard cannot import vertical modules directly.");
         assertFalse(
-                Pattern.compile("import\\s+com\\.phaiffertech\\.platform\\.modules\\.(crm|iot|pet)\\..*repository\\..*;")
+                Pattern.compile("import\\s+com\\.phaiffertech\\.platform\\.modules\\.(crm|pet)\\..*repository\\..*;")
                         .matcher(source)
                         .find(),
                 "Platform dashboard cannot depend on vertical repositories directly."
@@ -104,9 +104,6 @@ class ModuleArchitectureTest {
         String normalized = path.toString().replace('\\', '/');
         if (normalized.contains("/modules/crm/")) {
             return "CRM";
-        }
-        if (normalized.contains("/modules/iot/")) {
-            return "IOT";
         }
         if (normalized.contains("/modules/pet/")) {
             return "PET";

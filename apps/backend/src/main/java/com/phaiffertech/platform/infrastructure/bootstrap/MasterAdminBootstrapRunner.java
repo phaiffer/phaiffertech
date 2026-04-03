@@ -97,11 +97,11 @@ public class MasterAdminBootstrapRunner implements CommandLineRunner {
         }
 
         ensureTenantModulesEnabled(tenant);
-        tenantModuleContractService.syncEffectiveModules(tenant.getId(), tenant.getPlanCode(), List.of("CRM", "IOT"));
+        tenantModuleContractService.syncEffectiveModules(tenant.getId(), tenant.getPlanCode(), List.of("CRM", "PET"));
         tenantEntitlementService.syncManualEntitlements(
                 tenant.getId(),
                 tenant.getPlanCode(),
-                List.of(TenantEntitlementKeys.CRM_FULL, TenantEntitlementKeys.IOT_BASIC)
+                List.of(TenantEntitlementKeys.CRM_FULL, TenantEntitlementKeys.PET_FULL)
         );
 
         log.info(
@@ -148,6 +148,10 @@ public class MasterAdminBootstrapRunner implements CommandLineRunner {
 
     private void ensureTenantModulesEnabled(Tenant tenant) {
         for (ModuleDefinition definition : moduleDefinitionRepository.findAllByActiveTrueAndDeletedAtIsNullOrderByNameAsc()) {
+            if ("IOT".equalsIgnoreCase(definition.getCode())) {
+                continue;
+            }
+
             UUID moduleId = definition.getId();
 
             // Look up the row regardless of soft-delete state to avoid duplicate inserts

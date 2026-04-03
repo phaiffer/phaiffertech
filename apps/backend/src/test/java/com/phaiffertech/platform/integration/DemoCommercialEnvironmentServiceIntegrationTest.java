@@ -40,10 +40,10 @@ class DemoCommercialEnvironmentServiceIntegrationTest extends AbstractIntegratio
         assertEquals("demo-commercial-seed@phaiffertech.local", secondSeed.userEmail());
 
         assertEquals(1, countRows("SELECT COUNT(*) FROM tenants WHERE id = ?", tenantId.toString()));
-        assertEquals(4, countRows("SELECT COUNT(*) FROM tenant_modules WHERE tenant_id = ? AND deleted_at IS NULL", tenantId.toString()));
+        assertEquals(3, countRows("SELECT COUNT(*) FROM tenant_modules WHERE tenant_id = ? AND deleted_at IS NULL", tenantId.toString()));
         assertEquals(3, countRows("SELECT COUNT(*) FROM crm_companies WHERE tenant_id = ? AND deleted_at IS NULL", tenantId.toString()));
         assertEquals(3, countRows("SELECT COUNT(*) FROM crm_contacts WHERE tenant_id = ? AND deleted_at IS NULL", tenantId.toString()));
         assertEquals(3, countRows("SELECT COUNT(*) FROM crm_leads WHERE tenant_id = ? AND deleted_at IS NULL", tenantId.toString()));
-        assertEquals(3, countRows("SELECT COUNT(*) FROM iot_devices WHERE tenant_id = ? AND deleted_at IS NULL", tenantId.toString()));
+        assertEquals(3, countRows("SELECT COUNT(*) FROM pet_profiles WHERE tenant_id = ? AND deleted_at IS NULL", tenantId.toString()));
     }
 }

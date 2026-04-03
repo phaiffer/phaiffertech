@@ -72,32 +72,23 @@ const { currentPlatformState } = vi.hoisted(() => ({
           available: true
         },
         {
-          code: 'CRM',
-          name: 'CRM',
-          description: 'Commercial workspace',
+          code: 'PET',
+          name: 'PetFlow',
+          description: 'Pet operations workspace',
           enabled: true,
           moduleEnabled: true,
           featureFlagEnabled: true,
           available: true
-        },
-        {
-          code: 'IOT',
-          name: 'IoT System',
-          description: 'Industrial workspace',
-          enabled: true,
-          moduleEnabled: true,
-          featureFlagEnabled: false,
-          available: false
         }
       ],
       loading: false,
       error: null,
-      availableCodes: ['CORE_PLATFORM', 'CRM'],
+      availableCodes: ['CORE_PLATFORM', 'PET'],
       contractedProducts: [
         {
-          code: 'CRM',
-          name: 'CRM',
-          description: 'Commercial workspace',
+          code: 'PET',
+          name: 'PetFlow',
+          description: 'Pet operations workspace',
           enabled: true,
           moduleEnabled: true,
           featureFlagEnabled: true,
@@ -163,32 +154,23 @@ describe('SettingsPage', () => {
           available: true
         },
         {
-          code: 'CRM',
-          name: 'CRM',
-          description: 'Commercial workspace',
+          code: 'PET',
+          name: 'PetFlow',
+          description: 'Pet operations workspace',
           enabled: true,
           moduleEnabled: true,
           featureFlagEnabled: true,
           available: true
-        },
-        {
-          code: 'IOT',
-          name: 'IoT System',
-          description: 'Industrial workspace',
-          enabled: true,
-          moduleEnabled: true,
-          featureFlagEnabled: false,
-          available: false
         }
       ],
       loading: false,
       error: null,
-      availableCodes: ['CORE_PLATFORM', 'CRM'],
+      availableCodes: ['CORE_PLATFORM', 'PET'],
       contractedProducts: [
         {
-          code: 'CRM',
-          name: 'CRM',
-          description: 'Commercial workspace',
+          code: 'PET',
+          name: 'PetFlow',
+          description: 'Pet operations workspace',
           enabled: true,
           moduleEnabled: true,
           featureFlagEnabled: true,
@@ -204,12 +186,12 @@ describe('SettingsPage', () => {
     expect(screen.getByRole('heading', { name: 'Workspace Configuration' })).toBeInTheDocument();
     expect(screen.getByText('Platform Owner Workspace')).toBeInTheDocument();
     expect(screen.getAllByText('Full platform visibility')).toHaveLength(2);
-    expect(screen.getByText('Branding Preview')).toBeInTheDocument();
+    expect(screen.getByText('PetFlow Branding Preview')).toBeInTheDocument();
     expect(screen.getByText('Theme Policy')).toBeInTheDocument();
     expect(screen.getByText('Contracted Modules')).toBeInTheDocument();
     expect(screen.getByText('Account Security')).toBeInTheDocument();
-    expect(screen.getByText('Pending workspace exposure')).toBeInTheDocument();
-    expect(screen.getByText('Feature exposure pending')).toBeInTheDocument();
+    expect(screen.getByText('Available in workspace')).toBeInTheDocument();
+    expect(screen.getByText('Feature exposure enabled')).toBeInTheDocument();
   });
 
   it('keeps internal support sessions tenant-scoped for customer workspaces', () => {

@@ -181,7 +181,6 @@ Condições mínimas para virar `GO`:
 
 - [ ] executar `make crm-seed`
 - [ ] executar `make pet-seed`
-- [ ] executar `make iot-seed`
 - [ ] validar integridade mínima da massa carregada
 
 ### Dados Reais

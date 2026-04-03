@@ -46,7 +46,6 @@ make migrate
 ```bash
 make crm-seed
 make pet-seed
-make iot-seed
 ```
 
 5. Shell no banco:

@@ -48,7 +48,7 @@ public abstract class AbstractIntegrationTest extends IntegrationTestContainersC
     }
 
     protected AuthSession createTenantAdminSession(String tenantCode, String email) {
-        return createTenantAdminSession(tenantCode, email, "CORE_PLATFORM", "IOT");
+        return createTenantAdminSession(tenantCode, email, "CORE_PLATFORM");
     }
 
     protected AuthSession createTenantAdminSession(String tenantCode, String email, String... moduleCodes) {
@@ -166,7 +166,6 @@ public abstract class AbstractIntegrationTest extends IntegrationTestContainersC
             switch (moduleCode) {
                 case "CRM" -> upsertTenantEntitlement(tenantId, "crm.full", "MANUAL");
                 case "PET" -> upsertTenantEntitlement(tenantId, "pet.full", "MANUAL");
-                case "IOT" -> upsertTenantEntitlement(tenantId, "iot.basic", "MANUAL");
                 default -> {
                 }
             }

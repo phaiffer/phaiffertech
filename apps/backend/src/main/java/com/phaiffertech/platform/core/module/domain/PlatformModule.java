@@ -6,8 +6,7 @@ import java.util.Optional;
 
 public enum PlatformModule {
     CRM("CRM", "/api/v1/crm", "crm.enabled", false),
-    PET("PET", "/api/v1/pet", "pet.enabled", true),
-    IOT("IOT", "/api/v1/iot", "iot.enabled", false);
+    PET("PET", "/api/v1/pet", "pet.enabled", true);
 
     private final String code;
     private final String apiPathPrefix;

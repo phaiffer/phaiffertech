@@ -21,8 +21,7 @@ import {
   DropdownMenuTrigger,
 } from '@/shared/ui/shadcn/dropdown-menu';
 
-function resolveModuleContext(pathname: string): 'core' | 'crm' | 'iot' | 'pet' {
-  if (pathname.startsWith('/iot')) return 'iot';
+function resolveModuleContext(pathname: string): 'core' | 'crm' | 'pet' {
   if (pathname.startsWith('/crm')) return 'crm';
   if (pathname.startsWith('/pet')) return 'pet';
   return 'core';
@@ -44,9 +43,6 @@ function resolveHeaderMeta(
   platformAdmin?: boolean,
   hasPetVisible?: boolean
 ) {
-  if (pathname.startsWith('/iot')) {
-    return { label: labels.iotLabel, description: labels.iotDescription };
-  }
   if (pathname.startsWith('/crm')) {
     return { label: labels.crmLabel, description: labels.crmDescription };
   }

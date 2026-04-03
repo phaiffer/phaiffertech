@@ -23,7 +23,7 @@ const { navigationState, signOutMock, currentUser } = vi.hoisted(() => ({
     platformOwner: true,
     platformAdmin: true,
     permissions: [],
-    featureEntitlements: ['crm.full', 'pet.full', 'iot.basic']
+    featureEntitlements: ['crm.full', 'pet.full']
   } as AuthenticatedUser
 }));
 
@@ -63,15 +63,13 @@ vi.mock('@/shared/platform/use-frontend-platform', () => ({
     modules: {
       items: [
         { code: 'CORE_PLATFORM', name: 'Core Platform', description: 'Core', enabled: true, moduleEnabled: true, featureFlagEnabled: true, available: true },
-        { code: 'IOT', name: 'IoT System', description: 'IoT', enabled: true, moduleEnabled: true, featureFlagEnabled: true, available: true },
         { code: 'CRM', name: 'CRM', description: 'CRM', enabled: true, moduleEnabled: true, featureFlagEnabled: true, available: true },
         { code: 'PET', name: 'PetFlow', description: 'Pet', enabled: true, moduleEnabled: true, featureFlagEnabled: true, available: true }
       ],
       loading: false,
       error: null,
-      availableCodes: ['CORE_PLATFORM', 'IOT', 'CRM', 'PET'],
+      availableCodes: ['CORE_PLATFORM', 'CRM', 'PET'],
       contractedProducts: [
-        { code: 'IOT', name: 'IoT System', description: 'IoT', enabled: true, moduleEnabled: true, featureFlagEnabled: true, available: true },
         { code: 'CRM', name: 'CRM', description: 'CRM', enabled: true, moduleEnabled: true, featureFlagEnabled: true, available: true },
         { code: 'PET', name: 'PetFlow', description: 'Pet', enabled: true, moduleEnabled: true, featureFlagEnabled: true, available: true }
       ]
@@ -89,7 +87,7 @@ describe('Sidebar', () => {
     currentUser.platformOwner = true;
     currentUser.tenantPlanCode = 'BANHO_TOSA_CLINICA';
     currentUser.permissions = ['TENANT_READ', 'USER_READ', 'crm.task.read', 'pet.appointment.read', 'crm.dashboard.read', 'pet.dashboard.read'];
-    currentUser.featureEntitlements = ['crm.full', 'pet.full', 'iot.basic'];
+    currentUser.featureEntitlements = ['crm.full', 'pet.full'];
   });
 
   it('renders the reduced PetFlow-first navigation and keeps platform framing visible for admins', () => {
@@ -117,8 +115,8 @@ describe('Sidebar', () => {
   });
 
   it('does not expose CRM or IoT even when those products are contracted internally', () => {
-    currentUser.permissions = ['crm.task.read', 'pet.appointment.read', 'iot.dashboard.read'];
-    currentUser.featureEntitlements = ['crm.full', 'pet.full', 'iot.basic'];
+    currentUser.permissions = ['crm.task.read', 'pet.appointment.read'];
+    currentUser.featureEntitlements = ['crm.full', 'pet.full'];
     navigationState.pathname = '/dashboard';
 
     const { container } = render(<Sidebar />);

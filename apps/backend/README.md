@@ -37,7 +37,7 @@ Spring Boot backend for the modular multi-tenant platform.
 - Rate limiting via Bucket4j.
 - Feature flags (global + tenant) and module access guard.
 - Brute-force protection on login endpoint.
-- Expanded actuator health indicators for migration and telemetry pipeline status.
+- Expanded actuator health indicators for migration and infrastructure readiness.
 
 ## Architecture Guardrails
 
@@ -51,7 +51,6 @@ Core packages:
 Vertical packages:
 
 - `modules.crm`: CRM business rules and persistence
-- `modules.iot`: IoT business rules and persistence
 - `modules.pet`: Pet business rules and persistence
 
 Enforced rules:
@@ -64,7 +63,6 @@ Enforced rules:
 Current capability contracts:
 
 - `CrmDashboardCapability`
-- `IotDashboardCapability`
 - `PetDashboardCapability`
 - all of them implement `shared.contracts.module.ModuleSummaryCapability`
 - dashboard responses share DTOs in `shared.dashboard.dto`
@@ -87,43 +85,6 @@ Current capability contracts:
 - Products, inventory movements and invoices CRUD.
 - Operational dashboard:
   - `GET /api/v1/pet/dashboard/summary`
-
-## IoT v1 Scope
-
-- Devices CRUD + restore + search + pagination.
-- Registers CRUD + restore + search + pagination.
-- Alarms CRUD + acknowledge + restore.
-- Maintenance CRUD + restore + search + pagination.
-- Telemetry write/read with paginated query by device, register, metric and period.
-- Monitoring and reporting:
-  - `GET /api/v1/iot/dashboard/summary`
-  - `GET /api/v1/iot/reports/summary`
-- Platform aggregation:
-  - `GET /api/v1/dashboard/summary`
-- Module catalog:
-  - `GET /api/v1/modules`
-- Control plane and data plane abstractions:
-  - `TelemetryWriter`
-  - `TelemetryReader`
-  - `AlarmEvaluator`
-  - `DeviceStatusService`
-  - `MonitoringSummaryService`
-
-Legacy-guided decisions:
-
-- `../iotsystem` was used only as a reference for business scope, not copied into the monorepo.
-- `registers` were modeled as logical telemetry channels instead of importing legacy protocol-specific details directly.
-- telemetry now runs on PostgreSQL, and access still goes through data-plane abstractions to keep TSDB evolution open.
-
-Current IoT V1 permissions:
-
-- `iot.device.read|create|update|delete`
-- `iot.register.read|create|update|delete`
-- `iot.telemetry.read|write`
-- `iot.alarm.read|create|update|delete|ack`
-- `iot.maintenance.read|create|update|delete`
-- `iot.dashboard.read`
-- `iot.report.read`
 
 Current Pet dashboard permission:
 
@@ -160,30 +121,7 @@ Current Pet dashboard permission:
 - `V27__pet_products_inventory_invoices.sql`
 - `V28__pet_dashboard_permission.sql`
 
-## IoT API Surface
-
-- Devices:
-  - `GET|POST /api/v1/iot/devices`
-  - `GET|PUT|DELETE /api/v1/iot/devices/{id}`
-  - `PATCH /api/v1/iot/devices/{id}/restore`
-- Registers:
-  - `GET|POST /api/v1/iot/registers`
-  - `GET|PUT|DELETE /api/v1/iot/registers/{id}`
-  - `PATCH /api/v1/iot/registers/{id}/restore`
-- Telemetry:
-  - `GET|POST /api/v1/iot/telemetry`
-- Alarms:
-  - `GET|POST /api/v1/iot/alarms`
-  - `GET|PUT|DELETE /api/v1/iot/alarms/{id}`
-  - `POST /api/v1/iot/alarms/{id}/acknowledge`
-  - `PATCH /api/v1/iot/alarms/{id}/restore`
-- Maintenance:
-  - `GET|POST /api/v1/iot/maintenance`
-  - `GET|PUT|DELETE /api/v1/iot/maintenance/{id}`
-  - `PATCH /api/v1/iot/maintenance/{id}/restore`
-- Monitoring and reports:
-  - `GET /api/v1/iot/dashboard/summary`
-  - `GET /api/v1/iot/reports/summary`
+Historical IoT migrations remain in the Flyway chain for compatibility with existing databases and are not removed as part of the Phase 2A repository cleanup.
 
 ## Operational Endpoints
 
@@ -194,7 +132,6 @@ Current Pet dashboard permission:
 - `GET /api/v1/dashboard/summary`
 - `GET /api/v1/feature-flags`
 - `GET /api/v1/crm/dashboard/summary`
-- `GET /api/v1/iot/dashboard/summary`
 - `GET /api/v1/pet/dashboard/summary`
 
 ## Module Access Model

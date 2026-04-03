@@ -26,35 +26,6 @@ class MultiTenantUserAssignmentIsolationIntegrationTest extends AbstractIntegrat
         assertEquals(404, response.getStatusCode().value());
     }
 
-    @Test
-    void iotMaintenanceShouldRejectAssignedUserFromAnotherTenant() {
-        AuthSession session = loginAsDefaultAdmin();
-        String marker = randomSearchMarker();
-        String foreignUserId = seedForeignTenantUser(marker);
-        String deviceId = UUID.randomUUID().toString();
-
-        executeSql(
-                """
-                INSERT INTO iot_devices (id, tenant_id, name, serial_number, identifier, status)
-                VALUES (?, ?, ?, ?, ?, ?)
-                """,
-                deviceId,
-                session.tenantId(),
-                "Tenant Device " + marker,
-                "SER-" + marker,
-                "DEV-" + marker,
-                "ONLINE"
-        );
-
-        ResponseEntity<JsonNode> response = post("/iot/maintenance", Map.of(
-                "deviceId", deviceId,
-                "title", "Maintenance " + marker,
-                "assignedUserId", foreignUserId
-        ), session);
-
-        assertEquals(404, response.getStatusCode().value());
-    }
-
     private String seedForeignTenantUser(String marker) {
         String tenantId = UUID.randomUUID().toString();
         String userId = UUID.randomUUID().toString();

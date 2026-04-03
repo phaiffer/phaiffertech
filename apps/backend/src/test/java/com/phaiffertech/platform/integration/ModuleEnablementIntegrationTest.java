@@ -33,23 +33,6 @@ class ModuleEnablementIntegrationTest extends AbstractIntegrationTest {
     }
 
     @Test
-    void shouldBlockIotEndpointsWhenFeatureFlagDisablesTheModule() {
-        AuthSession session = createTenantAdminSession(
-                "tenant-iot-flag-off",
-                "tenant-iot-flag-off@example.test",
-                "CORE_PLATFORM",
-                "IOT"
-        );
-
-        upsertTenantFeatureFlag(session.tenantId(), "iot.enabled", false);
-
-        ResponseEntity<JsonNode> response = get("/iot/dashboard/summary", session);
-
-        assertEquals(403, response.getStatusCode().value());
-        assertEquals("MODULE_DISABLED", requireBody(response).path("code").asText());
-    }
-
-    @Test
     void shouldExposeSeparatedModuleStatusAndAggregateDashboardThroughCapabilities() {
         AuthSession session = createTenantAdminSession(
                 "tenant-capabilities",
@@ -67,11 +50,9 @@ class ModuleEnablementIntegrationTest extends AbstractIntegrationTest {
         JsonNode modules = requireBody(registryResponse).path("data");
         JsonNode crm = findModule(modules, "CRM");
         JsonNode pet = findModule(modules, "PET");
-        JsonNode iot = findModule(modules, "IOT");
 
         assertNotNull(crm);
         assertNotNull(pet);
-        assertNotNull(iot);
 
         assertTrue(crm.path("moduleEnabled").asBoolean());
         assertTrue(crm.path("featureFlagEnabled").asBoolean());
@@ -83,10 +64,6 @@ class ModuleEnablementIntegrationTest extends AbstractIntegrationTest {
         assertFalse(pet.path("available").asBoolean());
         assertFalse(pet.path("enabled").asBoolean());
 
-        assertFalse(iot.path("moduleEnabled").asBoolean());
-        assertTrue(iot.path("featureFlagEnabled").asBoolean());
-        assertFalse(iot.path("available").asBoolean());
-
         ResponseEntity<JsonNode> dashboardResponse = get("/dashboard/summary", session);
         assertEquals(200, dashboardResponse.getStatusCode().value());
 
@@ -97,7 +74,6 @@ class ModuleEnablementIntegrationTest extends AbstractIntegrationTest {
         assertEquals(1, summaries.size());
         assertTrue(moduleCodes.contains("CRM"));
         assertFalse(moduleCodes.contains("PET"));
-        assertFalse(moduleCodes.contains("IOT"));
         assertTrue(requireBody(dashboardResponse).path("data").path("coreSummary").path("cards").size() > 0);
         assertTrue(summaries.get(0).path("summaryCards").size() > 0);
         assertTrue(summaries.get(0).path("sections").size() > 0);
@@ -110,7 +86,6 @@ class ModuleEnablementIntegrationTest extends AbstractIntegrationTest {
                 "tenant-no-dashboard-permission@example.test",
                 List.of(),
                 "CRM",
-                "IOT",
                 "PET"
         );
 
@@ -135,32 +110,6 @@ class ModuleEnablementIntegrationTest extends AbstractIntegrationTest {
 
         assertEquals(403, response.getStatusCode().value());
         assertEquals("FORBIDDEN", requireBody(response).path("code").asText());
-    }
-
-    @Test
-    void shouldBlockIotDashboardWhenEntitlementIsMissingEvenIfModuleAndPermissionAreEnabled() {
-        AuthSession session = createTenantSessionWithPermissions(
-                "tenant-iot-entitlement-blocked",
-                "tenant-iot-entitlement-blocked@example.test",
-                List.of("iot.dashboard.read"),
-                "IOT"
-        );
-
-        executeSql(
-                """
-                UPDATE tenant_feature_entitlements
-                SET enabled = FALSE
-                WHERE tenant_id = ?
-                  AND feature_key = 'iot.basic'
-                """,
-                session.tenantId()
-        );
-
-        ResponseEntity<JsonNode> response = get("/iot/dashboard/summary", session);
-
-        assertEquals(403, response.getStatusCode().value());
-        assertEquals("FORBIDDEN", requireBody(response).path("code").asText());
-        assertTrue(requireBody(response).path("message").asText().contains("iot.basic"));
     }
 
     @Test
