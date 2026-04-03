@@ -2,10 +2,15 @@
 
 import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { CalendarCheck, CarFront, CreditCard, RefreshCcw, type LucideIcon } from 'lucide-react';
-import { describePetServiceCatalogItem } from '@/modules/pet/pet-service-catalog-policy';
+import {
+  describePetServiceCatalogItem,
+  formatPetServiceCategory,
+  resolvePetServiceBookingMode
+} from '@/modules/pet/pet-service-catalog-policy';
 import {
   PetAppointmentForm,
   PetAppointmentsFilters,
+  type PetAppointmentServiceSummary,
   createPetAppointmentColumns
 } from '@/modules/pet/pet-appointments-sections';
 import { PetAppointmentsCalendar } from '@/modules/pet/pet-appointments-calendar';
@@ -116,6 +121,60 @@ function hasPickupMessageCoverage(appointment: PetAppointment, clients: PetClien
   return Boolean(client?.email);
 }
 
+function resolveServiceSummaryCopy(locale: string) {
+  if (locale === 'pt-BR') {
+    return {
+      title: 'Servico estruturado',
+      empty: 'Selecione um servico para confirmar categoria, duracao, preco base e regra de agendamento.',
+      description: 'Este atendimento usa a definicao estruturada do catalogo do tenant, nao um nome solto.',
+      category: 'Categoria',
+      status: 'Status',
+      scheduling: 'Regra de agendamento',
+      duration: 'Duracao',
+      basePrice: 'Preco base',
+      checkout: 'Checkout previsto',
+      active: 'Ativo para novos agendamentos',
+      inactive: 'Inativo para novos agendamentos',
+      flexible: 'Avulso e plano habilitados',
+      planOnly: 'Somente por plano',
+      standaloneOnly: 'Somente avulso',
+      unavailable: 'Indisponivel para novos agendamentos',
+      planReady: 'O plano selecionado pode cobrir o servico base.',
+      planBlocked: 'Este servico nao pode ser consumido por plano.',
+      standaloneReady: 'Este servico pode ser agendado como atendimento avulso.',
+      standaloneBlocked: 'Este servico exige um plano vinculado antes do agendamento.',
+      inactiveLegacy: 'Este servico inativo continua visivel apenas porque o atendimento atual ja o utiliza.',
+      missingLegacy: 'A definicao original do servico nao esta mais no catalogo ativo. Mantenha o vinculo apenas para edicao historica segura.',
+      legacyHeadlineSuffix: 'reserva legada'
+    };
+  }
+
+  return {
+    title: 'Structured service',
+    empty: 'Select a service to confirm category, duration, base price, and booking rule.',
+    description: 'This appointment uses the tenant-owned structured service definition instead of a loose service label.',
+    category: 'Category',
+    status: 'Status',
+    scheduling: 'Scheduling rule',
+    duration: 'Duration',
+    basePrice: 'Base price',
+    checkout: 'Projected checkout',
+    active: 'Active for new bookings',
+    inactive: 'Inactive for new bookings',
+    flexible: 'Standalone booking and plan sessions enabled',
+    planOnly: 'Plan sessions only',
+    standaloneOnly: 'Standalone booking only',
+    unavailable: 'Unavailable for new scheduling',
+    planReady: 'The selected plan can cover this base service.',
+    planBlocked: 'This service cannot be consumed from a plan.',
+    standaloneReady: 'This service can be booked as a one-time appointment.',
+    standaloneBlocked: 'This service requires a linked plan before booking.',
+    inactiveLegacy: 'This inactive service stays visible only because the current appointment already uses it.',
+    missingLegacy: 'The original service definition is no longer in the active catalog. Keep the link only for safe historical edits.',
+    legacyHeadlineSuffix: 'legacy booking'
+  };
+}
+
 export function PetAppointmentsPage() {
   const { locale } = useAppI18n();
   const messages = useAppMessages().petAppointments;
@@ -206,6 +265,14 @@ export function PetAppointmentsPage() {
     () => services.filter((service) => service.active),
     [services]
   );
+  const selectedService = useMemo(
+    () => services.find((service) => service.id === serviceId) ?? null,
+    [serviceId, services]
+  );
+  const serviceSummaryCopy = useMemo(
+    () => resolveServiceSummaryCopy(locale),
+    [locale]
+  );
 
   const serviceOptions = useMemo(() => {
     return [
@@ -277,6 +344,71 @@ export function PetAppointmentsPage() {
       }))
     ];
   }, [clientPlans, clientId, messages.formOptions, plansLoading]);
+
+  const selectedServiceSummary = useMemo<PetAppointmentServiceSummary | null>(() => {
+    if (!serviceId) {
+      return null;
+    }
+
+    const parsedExtrasAmount = extrasAmount ? parseFloat(extrasAmount) : 0;
+    const safeExtrasAmount = Number.isFinite(parsedExtrasAmount) ? parsedExtrasAmount : 0;
+
+    if (!selectedService) {
+      if (!editingServiceName) {
+        return null;
+      }
+
+      return {
+        title: serviceSummaryCopy.title,
+        description: serviceSummaryCopy.description,
+        headline: `${editingServiceName} · ${serviceSummaryCopy.legacyHeadlineSuffix}`,
+        details: [
+          { label: serviceSummaryCopy.status, value: serviceSummaryCopy.inactive },
+          { label: serviceSummaryCopy.scheduling, value: serviceSummaryCopy.unavailable }
+        ],
+        notices: [serviceSummaryCopy.missingLegacy]
+      };
+    }
+
+    const bookingMode = resolvePetServiceBookingMode(selectedService);
+    const baseCoveredByPlan = Boolean(clientPlanId) && selectedService.allowInPlans;
+    const projectedCheckout = (baseCoveredByPlan ? 0 : selectedService.basePrice) + safeExtrasAmount;
+    const notices: string[] = [];
+
+    if (!selectedService.active) {
+      notices.push(serviceSummaryCopy.inactiveLegacy);
+    }
+
+    if (clientPlanId) {
+      notices.push(selectedService.allowInPlans ? serviceSummaryCopy.planReady : serviceSummaryCopy.planBlocked);
+    } else {
+      notices.push(selectedService.allowStandaloneBooking ? serviceSummaryCopy.standaloneReady : serviceSummaryCopy.standaloneBlocked);
+    }
+
+    return {
+      title: serviceSummaryCopy.title,
+      description: serviceSummaryCopy.description,
+      headline: describePetServiceCatalogItem(selectedService, locale),
+      details: [
+        { label: serviceSummaryCopy.category, value: formatPetServiceCategory(selectedService.category) },
+        { label: serviceSummaryCopy.status, value: selectedService.active ? serviceSummaryCopy.active : serviceSummaryCopy.inactive },
+        {
+          label: serviceSummaryCopy.scheduling,
+          value: bookingMode === 'PLAN_ONLY'
+            ? serviceSummaryCopy.planOnly
+            : bookingMode === 'STANDALONE_ONLY'
+              ? serviceSummaryCopy.standaloneOnly
+              : bookingMode === 'UNAVAILABLE'
+                ? serviceSummaryCopy.unavailable
+                : serviceSummaryCopy.flexible
+        },
+        { label: serviceSummaryCopy.duration, value: `${selectedService.durationMinutes} min` },
+        { label: serviceSummaryCopy.basePrice, value: formatCurrencyForLocale(locale, selectedService.basePrice) },
+        { label: serviceSummaryCopy.checkout, value: formatCurrencyForLocale(locale, projectedCheckout) }
+      ],
+      notices
+    };
+  }, [clientPlanId, editingServiceName, extrasAmount, locale, selectedService, serviceId, serviceSummaryCopy]);
 
   const loadReferences = useCallback(async () => {
     const [clientPage, profilePage, servicePage, professionalPage] = await Promise.allSettled([
@@ -459,6 +591,8 @@ export function PetAppointmentsPage() {
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    setError(null);
+    setSuccess(null);
 
     if (!clientId || !petId || !serviceId || !professionalId) {
       setError(messages.errors.missingReferences);
@@ -472,11 +606,8 @@ export function PetAppointmentsPage() {
     }
 
     setSubmitting(true);
-    setError(null);
-    setSuccess(null);
 
     const parsedExtrasAmount = extrasAmount ? parseFloat(extrasAmount) : undefined;
-    const selectedService = services.find((entry) => entry.id === serviceId) ?? null;
     if (!editingId && selectedService) {
       if (!selectedService.active) {
         setSubmitting(false);
@@ -800,6 +931,9 @@ export function PetAppointmentsPage() {
                   onExtrasAmountChange={setExtrasAmount}
                   extrasDescription={extrasDescription}
                   onExtrasDescriptionChange={setExtrasDescription}
+                  serviceSummaryTitle={serviceSummaryCopy.title}
+                  serviceSummaryEmpty={serviceSummaryCopy.empty}
+                  selectedServiceSummary={selectedServiceSummary}
                   submitting={submitting}
                   appointmentReferencesReady={appointmentReferencesReady}
                   onCancelEdit={() => setIsEditorOpen(false)}

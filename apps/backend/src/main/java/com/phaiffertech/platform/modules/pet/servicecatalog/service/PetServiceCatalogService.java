@@ -11,6 +11,7 @@ import com.phaiffertech.platform.modules.pet.servicecatalog.repository.PetServic
 import com.phaiffertech.platform.shared.crud.BasePageQuery;
 import com.phaiffertech.platform.shared.crud.BaseTenantCrudService;
 import com.phaiffertech.platform.shared.domain.enums.AuditActionType;
+import com.phaiffertech.platform.shared.exception.ConflictOperationException;
 import com.phaiffertech.platform.shared.pagination.PageRequestDto;
 import com.phaiffertech.platform.shared.pagination.PageResponseDto;
 import org.springframework.data.domain.Sort;
@@ -41,11 +42,13 @@ public class PetServiceCatalogService extends BaseTenantCrudService<
     @Override
     public void beforeCreate(UUID tenantId, PetServiceCatalogCreateRequest request, PetServiceCatalog entity) {
         categoryPolicyService.validateCategoryAccess(tenantId, entity.getCategory());
+        validateSchedulingConfiguration(entity);
     }
 
     @Override
     public void beforeUpdate(UUID tenantId, PetServiceCatalogUpdateRequest request, PetServiceCatalog entity) {
         categoryPolicyService.validateCategoryAccess(tenantId, entity.getCategory());
+        validateSchedulingConfiguration(entity);
     }
 
     @Transactional
@@ -105,5 +108,19 @@ public class PetServiceCatalogService extends BaseTenantCrudService<
         UUID tenantId = currentTenantId();
         categoryPolicyService.validateCategoryAccess(tenantId, getIncludingDeletedOrThrow(id, tenantId).getCategory());
         return doRestore(id);
+    }
+
+    private void validateSchedulingConfiguration(PetServiceCatalog entity) {
+        if (!entity.isActive()) {
+            return;
+        }
+
+        if (entity.isAllowInPlans() || entity.isAllowStandaloneBooking()) {
+            return;
+        }
+
+        throw new ConflictOperationException(
+                "Active Pet services must allow standalone booking or plan-based scheduling."
+        );
     }
 }
