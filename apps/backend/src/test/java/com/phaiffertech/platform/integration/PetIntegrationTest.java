@@ -297,6 +297,114 @@ class PetIntegrationTest extends AbstractIntegrationTest {
     }
 
     @Test
+    void shouldSummarizeCommissionByResponsibleProfessional() {
+        AuthSession session = loginAsDefaultAdmin();
+        String marker = randomSearchMarker();
+
+        String clientId = createClient(session, marker);
+        String petId = createPet(session, clientId, marker);
+        String bathServiceId = createService(session, marker + "-bath", "GROOMING", true, 80.00);
+        String hygienicServiceId = createService(session, marker + "-hygienic", "GROOMING", true, 50.00);
+        String vaccinationServiceId = createService(session, marker + "-vaccination", "CLINICAL", false, 35.00);
+        String bathProfessionalId = createProfessional(session, marker + "-bath", 0.15);
+        String hygienicProfessionalId = createProfessional(session, marker + "-hygienic", 0.10);
+        String pendingProfessionalId = createProfessional(session, marker + "-pending");
+
+        ResponseEntity<JsonNode> splitAppointment = post("/pet/appointments", Map.of(
+                "clientId", clientId,
+                "petId", petId,
+                "serviceId", bathServiceId,
+                "serviceIds", List.of(bathServiceId, hygienicServiceId),
+                "professionalId", bathProfessionalId,
+                "serviceLineAssignments", List.of(
+                        Map.of("serviceId", bathServiceId, "professionalId", bathProfessionalId),
+                        Map.of("serviceId", hygienicServiceId, "professionalId", hygienicProfessionalId)
+                ),
+                "scheduledAt", Instant.parse("2026-02-10T13:00:00Z").toString(),
+                "status", "COMPLETED",
+                "notes", "Split professional attribution"
+        ), session);
+        assertEquals(200, splitAppointment.getStatusCode().value());
+
+        ResponseEntity<JsonNode> mixedAppointment = post("/pet/appointments", Map.of(
+                "clientId", clientId,
+                "petId", petId,
+                "serviceId", bathServiceId,
+                "serviceIds", List.of(bathServiceId, vaccinationServiceId),
+                "professionalId", bathProfessionalId,
+                "scheduledAt", Instant.parse("2026-02-12T13:00:00Z").toString(),
+                "status", "COMPLETED",
+                "notes", "Generated and excluded lines"
+        ), session);
+        assertEquals(200, mixedAppointment.getStatusCode().value());
+
+        ResponseEntity<JsonNode> pendingAppointment = post("/pet/appointments", Map.of(
+                "clientId", clientId,
+                "petId", petId,
+                "serviceId", bathServiceId,
+                "professionalId", pendingProfessionalId,
+                "scheduledAt", Instant.parse("2026-02-14T13:00:00Z").toString(),
+                "status", "COMPLETED",
+                "notes", "Eligible line without commission rate"
+        ), session);
+        assertEquals(200, pendingAppointment.getStatusCode().value());
+
+        ResponseEntity<JsonNode> legacyCompatibleAppointment = post("/pet/appointments", Map.of(
+                "clientId", clientId,
+                "petId", petId,
+                "serviceId", bathServiceId,
+                "professionalId", bathProfessionalId,
+                "scheduledAt", Instant.parse("2026-02-16T13:00:00Z").toString(),
+                "status", "COMPLETED",
+                "notes", "Historical single-line compatibility"
+        ), session);
+        assertEquals(200, legacyCompatibleAppointment.getStatusCode().value());
+        String legacyCompatibleAppointmentId = requireBody(legacyCompatibleAppointment).path("data").path("id").asText();
+        executeSql("DELETE FROM pet_appointment_services WHERE appointment_id = ?", legacyCompatibleAppointmentId);
+
+        ResponseEntity<JsonNode> summaryResponse = get(
+                "/pet/commissions/summary?scheduledFrom=2026-02-01T00:00:00Z&scheduledTo=2026-02-28T23:59:59Z",
+                session
+        );
+        assertEquals(200, summaryResponse.getStatusCode().value());
+
+        JsonNode data = requireBody(summaryResponse).path("data");
+        assertEquals(41.00, data.path("totalCommissionAmount").asDouble(), 0.01);
+        assertEquals(3, data.path("professionalCount").asInt());
+        assertEquals(4, data.path("generatedLineCount").asInt());
+        assertEquals(1, data.path("excludedLineCount").asInt());
+        assertEquals(1, data.path("eligibleWithoutAmountLineCount").asInt());
+        assertEquals(0, data.path("unassignedLineCount").asInt());
+        assertEquals(0, data.path("legacyLineCount").asInt());
+        assertEquals(3, data.path("contributingAppointmentCount").asInt());
+
+        JsonNode professionals = data.path("professionals");
+        JsonNode bathProfessionalSummary = findNodeByField(professionals, "professionalId", bathProfessionalId);
+        assertEquals(36.00, bathProfessionalSummary.path("totalCommissionAmount").asDouble(), 0.01);
+        assertEquals(3, bathProfessionalSummary.path("generatedLineCount").asInt());
+        assertEquals(1, bathProfessionalSummary.path("excludedLineCount").asInt());
+        assertEquals(0, bathProfessionalSummary.path("eligibleWithoutAmountLineCount").asInt());
+        assertEquals(3, bathProfessionalSummary.path("contributingAppointmentCount").asInt());
+
+        JsonNode hygienicProfessionalSummary = findNodeByField(professionals, "professionalId", hygienicProfessionalId);
+        assertEquals(5.00, hygienicProfessionalSummary.path("totalCommissionAmount").asDouble(), 0.01);
+        assertEquals(1, hygienicProfessionalSummary.path("generatedLineCount").asInt());
+        assertEquals(0, hygienicProfessionalSummary.path("excludedLineCount").asInt());
+        assertEquals(1, hygienicProfessionalSummary.path("contributingAppointmentCount").asInt());
+
+        JsonNode pendingProfessionalSummary = findNodeByField(professionals, "professionalId", pendingProfessionalId);
+        assertEquals(0.00, pendingProfessionalSummary.path("totalCommissionAmount").asDouble(), 0.01);
+        assertEquals(0, pendingProfessionalSummary.path("generatedLineCount").asInt());
+        assertEquals(1, pendingProfessionalSummary.path("eligibleWithoutAmountLineCount").asInt());
+
+        JsonNode compatibilityDetail = findNodeByField(data.path("details"), "appointmentId", legacyCompatibleAppointmentId);
+        assertEquals("GENERATED", compatibilityDetail.path("lineStatus").asText());
+        assertEquals("COMPATIBILITY_FALLBACK", compatibilityDetail.path("dataSource").asText());
+        assertEquals(bathProfessionalId, compatibilityDetail.path("professionalId").asText());
+        assertEquals(12.00, compatibilityDetail.path("commissionAmount").asDouble(), 0.01);
+    }
+
+    @Test
     void shouldCreateUpdateAndDeleteServiceCatalog() {
         AuthSession session = loginAsDefaultAdmin();
         String marker = randomSearchMarker();
@@ -1132,5 +1240,15 @@ class PetIntegrationTest extends AbstractIntegrationTest {
         ResponseEntity<JsonNode> createProfessional = post("/pet/professionals", payload, session);
         assertEquals(200, createProfessional.getStatusCode().value());
         return requireBody(createProfessional).path("data").path("id").asText();
+    }
+
+    private JsonNode findNodeByField(JsonNode nodes, String fieldName, String expectedValue) {
+        for (JsonNode node : nodes) {
+            if (expectedValue.equals(node.path(fieldName).asText())) {
+                return node;
+            }
+        }
+
+        throw new AssertionError("Node not found for " + fieldName + ": " + expectedValue);
     }
 }

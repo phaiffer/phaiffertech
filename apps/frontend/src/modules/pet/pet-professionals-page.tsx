@@ -138,8 +138,7 @@ export function PetProfessionalsPage() {
 
     setSummaryLoading(true);
 
-    petService.listAppointments(0, 200, '', {
-      status: 'COMPLETED',
+    petService.getCommissionSummary({
       scheduledFrom: start,
       scheduledTo: end
     }).then((result) => {
@@ -147,11 +146,11 @@ export function PetProfessionalsPage() {
         return;
       }
 
-      const grouped = resolvePageItems(result).reduce<Record<string, { count: number; total: number }>>((accumulator, appointment) => {
-        const current = accumulator[appointment.professionalId] ?? { count: 0, total: 0 };
-        current.count += 1;
-        current.total += appointment.commissionAmount ?? 0;
-        accumulator[appointment.professionalId] = current;
+      const grouped = result.professionals.reduce<Record<string, { count: number; total: number }>>((accumulator, professional) => {
+        const current = accumulator[professional.professionalId] ?? { count: 0, total: 0 };
+        current.count += professional.contributingAppointmentCount;
+        current.total += professional.totalCommissionAmount;
+        accumulator[professional.professionalId] = current;
         return accumulator;
       }, {});
 

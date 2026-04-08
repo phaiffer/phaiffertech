@@ -115,6 +115,30 @@ public interface PetAppointmentRepository extends JpaRepository<PetAppointment, 
 
     Optional<PetAppointment> findByIdAndTenantId(UUID id, UUID tenantId);
 
+    List<PetAppointment> findAllByTenantIdAndDeletedAtIsNullAndStatusOrderByScheduledAtDescIdDesc(
+            UUID tenantId,
+            String status
+    );
+
+    List<PetAppointment> findAllByTenantIdAndDeletedAtIsNullAndStatusAndScheduledAtGreaterThanEqualOrderByScheduledAtDescIdDesc(
+            UUID tenantId,
+            String status,
+            Instant scheduledFrom
+    );
+
+    List<PetAppointment> findAllByTenantIdAndDeletedAtIsNullAndStatusAndScheduledAtLessThanEqualOrderByScheduledAtDescIdDesc(
+            UUID tenantId,
+            String status,
+            Instant scheduledTo
+    );
+
+    List<PetAppointment> findAllByTenantIdAndDeletedAtIsNullAndStatusAndScheduledAtBetweenOrderByScheduledAtDescIdDesc(
+            UUID tenantId,
+            String status,
+            Instant scheduledFrom,
+            Instant scheduledTo
+    );
+
     @Query(value = """
             SELECT *
             FROM pet_appointments a
