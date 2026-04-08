@@ -41,6 +41,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.Instant;
 import java.util.Collection;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -323,21 +324,25 @@ public class PetAppointmentService extends BaseTenantCrudService<
                 .filter(Objects::nonNull)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
+        BigDecimal resolvedServicePrice = requestedServicePrice != null
+                ? normalizeCurrency(requestedServicePrice)
+                : totalCatalogServicePrice;
+
         if (requestedServicePrice != null) {
-            entity.setServicePrice(requestedServicePrice);
+            entity.setServicePrice(resolvedServicePrice);
         } else {
             entity.setServicePrice(totalCatalogServicePrice);
         }
 
-        // Snapshot commission amount from professional rate at booking time.
-        BigDecimal finalPrice = entity.getServicePrice();
-        entity.setCommissionAmount(
-                professional.getCommissionRate() != null && finalPrice != null
-                        ? finalPrice.multiply(professional.getCommissionRate()).setScale(2, RoundingMode.HALF_UP)
-                        : null
+        List<AppointmentServiceLineSelection> serviceLines = buildAppointmentServiceLineSelections(
+                selectedServices,
+                professional,
+                resolvedServicePrice,
+                requestedServicePrice != null
         );
+        entity.setCommissionAmount(resolveAppointmentCommissionAmount(serviceLines));
 
-        return new AppointmentServiceSelection(selectedServices);
+        return new AppointmentServiceSelection(serviceLines);
     }
 
     private void validateServiceCatalogBookingAccess(
@@ -388,7 +393,7 @@ public class PetAppointmentService extends BaseTenantCrudService<
                 appointmentServices,
                 appointmentServices.size(),
                 resolveTotalServiceDurationMinutes(appointmentServices),
-                appointment.getServicePrice(),
+                resolveTotalServiceBasePrice(appointmentServices, appointment.getServicePrice()),
                 Math.toIntExact(petMedicalRecordRepository.countByTenantIdAndAppointmentId(tenantId, appointment.getId())),
                 Math.toIntExact(petVaccinationRepository.countByTenantIdAndAppointmentId(tenantId, appointment.getId())),
                 Math.toIntExact(petPrescriptionRepository.countByTenantIdAndAppointmentId(tenantId, appointment.getId())),
@@ -426,7 +431,10 @@ public class PetAppointmentService extends BaseTenantCrudService<
                 appointmentServices.getOrDefault(appointment.getId(), List.of()),
                 appointmentServices.getOrDefault(appointment.getId(), List.of()).size(),
                 resolveTotalServiceDurationMinutes(appointmentServices.getOrDefault(appointment.getId(), List.of())),
-                appointment.getServicePrice(),
+                resolveTotalServiceBasePrice(
+                        appointmentServices.getOrDefault(appointment.getId(), List.of()),
+                        appointment.getServicePrice()
+                ),
                 medicalRecordCounts.getOrDefault(appointment.getId(), 0),
                 vaccinationCounts.getOrDefault(appointment.getId(), 0),
                 prescriptionCounts.getOrDefault(appointment.getId(), 0),
@@ -670,13 +678,13 @@ public class PetAppointmentService extends BaseTenantCrudService<
     private void replaceAppointmentServiceLines(
             UUID tenantId,
             PetAppointment appointment,
-            List<PetServiceCatalog> selectedServices
+            List<AppointmentServiceLineSelection> selectedServices
     ) {
         appointmentServiceLineRepository.deleteAllByTenantIdAndAppointmentId(tenantId, appointment.getId());
         appointmentServiceLineRepository.flush();
 
-        List<PetAppointmentServiceLine> lines = java.util.stream.IntStream.range(0, selectedServices.size())
-                .mapToObj(index -> buildAppointmentServiceLine(tenantId, appointment, selectedServices.get(index), index))
+        List<PetAppointmentServiceLine> lines = selectedServices.stream()
+                .map(selection -> buildAppointmentServiceLine(tenantId, appointment, selection))
                 .toList();
         appointmentServiceLineRepository.saveAll(lines);
     }
@@ -684,18 +692,21 @@ public class PetAppointmentService extends BaseTenantCrudService<
     private PetAppointmentServiceLine buildAppointmentServiceLine(
             UUID tenantId,
             PetAppointment appointment,
-            PetServiceCatalog serviceCatalog,
-            int lineOrder
+            AppointmentServiceLineSelection selection
     ) {
+        PetServiceCatalog serviceCatalog = selection.serviceCatalog();
         PetAppointmentServiceLine line = new PetAppointmentServiceLine();
         line.setTenantId(tenantId);
         line.setAppointmentId(appointment.getId());
         line.setServiceId(serviceCatalog.getId());
-        line.setLineOrder(lineOrder);
+        line.setLineOrder(selection.lineOrder());
         line.setServiceName(serviceCatalog.getName());
         line.setServiceCategory(serviceCatalog.getCategory());
         line.setDurationMinutes(serviceCatalog.getDurationMinutes());
-        line.setServicePrice(serviceCatalog.getPrice());
+        line.setServicePrice(selection.servicePrice());
+        line.setCommissionEligible(selection.commissionEligible());
+        line.setCommissionRate(selection.commissionRate());
+        line.setCommissionAmount(selection.commissionAmount());
         return line;
     }
 
@@ -765,7 +776,12 @@ public class PetAppointmentService extends BaseTenantCrudService<
     ) {
         if (!lines.isEmpty()) {
             return lines.stream()
-                    .map(line -> toAppointmentServiceResponse(line, servicesById.get(line.getServiceId()), appointment))
+                    .map(line -> toAppointmentServiceResponse(
+                            line,
+                            servicesById.get(line.getServiceId()),
+                            appointment,
+                            lines.size()
+                    ))
                     .toList();
         }
 
@@ -781,6 +797,9 @@ public class PetAppointmentService extends BaseTenantCrudService<
                 serviceCatalog == null ? null : serviceCatalog.getCategory(),
                 serviceCatalog == null ? null : serviceCatalog.getDurationMinutes(),
                 appointment.getServicePrice(),
+                serviceCatalog == null ? null : serviceCatalog.isCommissionEligible(),
+                null,
+                serviceCatalog != null && serviceCatalog.isCommissionEligible() ? appointment.getCommissionAmount() : null,
                 serviceCatalog != null && serviceCatalog.isActive(),
                 serviceCatalog != null && serviceCatalog.isAllowInPlans(),
                 serviceCatalog != null && serviceCatalog.isAllowStandaloneBooking(),
@@ -793,8 +812,20 @@ public class PetAppointmentService extends BaseTenantCrudService<
     private PetAppointmentServiceLineResponse toAppointmentServiceResponse(
             PetAppointmentServiceLine line,
             PetServiceCatalog serviceCatalog,
-            PetAppointment appointment
+            PetAppointment appointment,
+            int serviceLineCount
     ) {
+        Boolean commissionEligible = line.getCommissionEligible() != null
+                ? line.getCommissionEligible()
+                : (serviceCatalog == null ? null : serviceCatalog.isCommissionEligible());
+        BigDecimal commissionAmount = line.getCommissionAmount();
+        if (commissionAmount == null
+                && serviceLineCount == 1
+                && Boolean.TRUE.equals(commissionEligible)
+                && appointment.getCommissionAmount() != null) {
+            commissionAmount = appointment.getCommissionAmount();
+        }
+
         return new PetAppointmentServiceLineResponse(
                 line.getId(),
                 line.getServiceId(),
@@ -802,6 +833,9 @@ public class PetAppointmentService extends BaseTenantCrudService<
                 line.getServiceCategory(),
                 line.getDurationMinutes(),
                 line.getServicePrice(),
+                commissionEligible,
+                line.getCommissionRate(),
+                commissionAmount,
                 serviceCatalog != null && serviceCatalog.isActive(),
                 serviceCatalog != null && serviceCatalog.isAllowInPlans(),
                 serviceCatalog != null && serviceCatalog.isAllowStandaloneBooking(),
@@ -819,6 +853,152 @@ public class PetAppointmentService extends BaseTenantCrudService<
         return total > 0 ? total : null;
     }
 
-    private record AppointmentServiceSelection(List<PetServiceCatalog> services) {
+    private BigDecimal resolveTotalServiceBasePrice(
+            List<PetAppointmentServiceLineResponse> appointmentServices,
+            BigDecimal fallbackBasePrice
+    ) {
+        List<BigDecimal> basePrices = appointmentServices.stream()
+                .map(PetAppointmentServiceLineResponse::basePrice)
+                .filter(Objects::nonNull)
+                .toList();
+
+        if (!basePrices.isEmpty()) {
+            return basePrices.stream().reduce(BigDecimal.ZERO, BigDecimal::add);
+        }
+
+        return fallbackBasePrice;
+    }
+
+    private List<AppointmentServiceLineSelection> buildAppointmentServiceLineSelections(
+            List<PetServiceCatalog> selectedServices,
+            PetProfessional professional,
+            BigDecimal appointmentServicePrice,
+            boolean servicePriceOverridden
+    ) {
+        List<BigDecimal> linePrices = resolveServiceLinePrices(
+                selectedServices,
+                appointmentServicePrice,
+                servicePriceOverridden
+        );
+
+        return java.util.stream.IntStream.range(0, selectedServices.size())
+                .mapToObj(index -> {
+                    PetServiceCatalog serviceCatalog = selectedServices.get(index);
+                    BigDecimal linePrice = linePrices.get(index);
+                    boolean commissionEligible = serviceCatalog.isCommissionEligible();
+                    BigDecimal commissionRate = commissionEligible ? professional.getCommissionRate() : null;
+                    BigDecimal commissionAmount = commissionRate != null && linePrice != null
+                            ? normalizeCurrency(linePrice.multiply(commissionRate))
+                            : null;
+
+                    return new AppointmentServiceLineSelection(
+                            serviceCatalog,
+                            index,
+                            linePrice,
+                            commissionEligible,
+                            commissionRate,
+                            commissionAmount
+                    );
+                })
+                .toList();
+    }
+
+    private List<BigDecimal> resolveServiceLinePrices(
+            List<PetServiceCatalog> selectedServices,
+            BigDecimal appointmentServicePrice,
+            boolean servicePriceOverridden
+    ) {
+        if (!servicePriceOverridden || appointmentServicePrice == null) {
+            return selectedServices.stream()
+                    .map(PetServiceCatalog::getPrice)
+                    .map(this::normalizeCurrency)
+                    .toList();
+        }
+
+        if (selectedServices.size() == 1) {
+            return List.of(normalizeCurrency(appointmentServicePrice));
+        }
+
+        List<BigDecimal> catalogPrices = selectedServices.stream()
+                .map(PetServiceCatalog::getPrice)
+                .map(this::normalizeCurrency)
+                .toList();
+        BigDecimal totalCatalogPrice = catalogPrices.stream().reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        if (totalCatalogPrice.compareTo(BigDecimal.ZERO) > 0) {
+            return distributeAmountProportionally(normalizeCurrency(appointmentServicePrice), catalogPrices, totalCatalogPrice);
+        }
+
+        return distributeAmountEvenly(normalizeCurrency(appointmentServicePrice), selectedServices.size());
+    }
+
+    private List<BigDecimal> distributeAmountProportionally(
+            BigDecimal totalAmount,
+            List<BigDecimal> weights,
+            BigDecimal totalWeight
+    ) {
+        Map<Integer, BigDecimal> distributed = new LinkedHashMap<>();
+        BigDecimal allocated = BigDecimal.ZERO;
+
+        for (int index = 0; index < weights.size(); index++) {
+            BigDecimal amount = index == weights.size() - 1
+                    ? totalAmount.subtract(allocated)
+                    : totalAmount.multiply(weights.get(index)).divide(totalWeight, 2, RoundingMode.DOWN);
+            amount = normalizeCurrency(amount);
+            distributed.put(index, amount);
+            allocated = allocated.add(amount);
+        }
+
+        return List.copyOf(distributed.values());
+    }
+
+    private List<BigDecimal> distributeAmountEvenly(BigDecimal totalAmount, int lineCount) {
+        Map<Integer, BigDecimal> distributed = new LinkedHashMap<>();
+        BigDecimal share = totalAmount.divide(BigDecimal.valueOf(lineCount), 2, RoundingMode.DOWN);
+        BigDecimal allocated = BigDecimal.ZERO;
+
+        for (int index = 0; index < lineCount; index++) {
+            BigDecimal amount = index == lineCount - 1
+                    ? totalAmount.subtract(allocated)
+                    : share;
+            amount = normalizeCurrency(amount);
+            distributed.put(index, amount);
+            allocated = allocated.add(amount);
+        }
+
+        return List.copyOf(distributed.values());
+    }
+
+    private BigDecimal resolveAppointmentCommissionAmount(List<AppointmentServiceLineSelection> serviceLines) {
+        List<BigDecimal> commissionAmounts = serviceLines.stream()
+                .map(AppointmentServiceLineSelection::commissionAmount)
+                .filter(Objects::nonNull)
+                .toList();
+
+        if (commissionAmounts.isEmpty()) {
+            return null;
+        }
+
+        return normalizeCurrency(commissionAmounts.stream().reduce(BigDecimal.ZERO, BigDecimal::add));
+    }
+
+    private BigDecimal normalizeCurrency(BigDecimal amount) {
+        if (amount == null) {
+            return null;
+        }
+        return amount.setScale(2, RoundingMode.HALF_UP);
+    }
+
+    private record AppointmentServiceSelection(List<AppointmentServiceLineSelection> services) {
+    }
+
+    private record AppointmentServiceLineSelection(
+            PetServiceCatalog serviceCatalog,
+            int lineOrder,
+            BigDecimal servicePrice,
+            boolean commissionEligible,
+            BigDecimal commissionRate,
+            BigDecimal commissionAmount
+    ) {
     }
 }

@@ -36,6 +36,15 @@ public class PetAppointmentServiceLine extends BaseTenantEntity {
     @Column(name = "service_price", precision = 10, scale = 2)
     private BigDecimal servicePrice;
 
+    @Column(name = "commission_eligible")
+    private Boolean commissionEligible;
+
+    @Column(name = "commission_rate", precision = 5, scale = 4)
+    private BigDecimal commissionRate;
+
+    @Column(name = "commission_amount", precision = 10, scale = 2)
+    private BigDecimal commissionAmount;
+
     public UUID getAppointmentId() {
         return appointmentId;
     }
@@ -90,5 +99,29 @@ public class PetAppointmentServiceLine extends BaseTenantEntity {
 
     public void setServicePrice(BigDecimal servicePrice) {
         this.servicePrice = servicePrice;
+    }
+
+    public Boolean getCommissionEligible() {
+        return commissionEligible;
+    }
+
+    public void setCommissionEligible(Boolean commissionEligible) {
+        this.commissionEligible = commissionEligible;
+    }
+
+    public BigDecimal getCommissionRate() {
+        return commissionRate;
+    }
+
+    public void setCommissionRate(BigDecimal commissionRate) {
+        this.commissionRate = commissionRate;
+    }
+
+    public BigDecimal getCommissionAmount() {
+        return commissionAmount;
+    }
+
+    public void setCommissionAmount(BigDecimal commissionAmount) {
+        this.commissionAmount = commissionAmount;
     }
 }

@@ -395,8 +395,11 @@ const ptBRMessages = {
       vaccines: 'vacinas',
       prescriptions: 'rx',
       recurring: 'Recorrente',
+      serviceLines: 'linhas estruturadas',
+      commissionLines: 'elegiveis para comissao',
       professionalDetail: 'Responsavel pelo atendimento e pelo resultado da comissao.',
       commission: 'Comissao',
+      commissionExcluded: 'excluida pela regra do servico',
       pendingSetup: 'configuracao pendente',
       careNotes: 'Notas do atendimento',
       continueCare: 'Continuar atendimento'

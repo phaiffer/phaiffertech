@@ -389,8 +389,11 @@ export const enUSMessages: AppMessages = {
       vaccines: 'vaccines',
       prescriptions: 'rx',
       recurring: 'Recurring',
+      serviceLines: 'structured lines',
+      commissionLines: 'commission eligible',
       professionalDetail: 'Responsible for the appointment and for the commission outcome.',
       commission: 'Commission',
+      commissionExcluded: 'excluded by service rule',
       pendingSetup: 'pending setup',
       careNotes: 'Care notes',
       continueCare: 'Continue care'

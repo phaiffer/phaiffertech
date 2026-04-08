@@ -122,6 +122,17 @@ function hasPickupMessageCoverage(appointment: PetAppointment, clients: PetClien
   return Boolean(client?.email);
 }
 
+function roundCurrency(value: number) {
+  return Math.round((value + Number.EPSILON) * 100) / 100;
+}
+
+function formatCommissionRate(locale: string, rate: number) {
+  return new Intl.NumberFormat(locale === 'pt-BR' ? 'pt-BR' : 'en-US', {
+    style: 'percent',
+    maximumFractionDigits: 2
+  }).format(rate);
+}
+
 function resolveServiceSummaryCopy(locale: string) {
   if (locale === 'pt-BR') {
     return {
@@ -138,6 +149,8 @@ function resolveServiceSummaryCopy(locale: string) {
       scheduling: 'Regra de agendamento',
       duration: 'Duracao total',
       basePrice: 'Preco base total',
+      commissionLines: 'Linhas com comissao',
+      projectedCommission: 'Comissao projetada',
       checkout: 'Checkout previsto',
       active: 'Ativo para novos agendamentos',
       inactive: 'Inativo para novos agendamentos',
@@ -151,6 +164,18 @@ function resolveServiceSummaryCopy(locale: string) {
       standaloneBlocked: 'Algum servico selecionado exige plano vinculado antes do agendamento.',
       inactiveLegacy: 'Servico inativo mantido apenas para preservar a edicao segura de um agendamento historico.',
       missingLegacy: 'A definicao original do servico nao esta mais no catalogo ativo. Mantenha o vinculo apenas para edicao historica segura.',
+      commissionReady: 'Comissao pronta',
+      commissionExcluded: 'Comissao excluida pela regra do servico',
+      commissionPending: 'Servico elegivel, mas o profissional ainda precisa de taxa de comissao.',
+      commissionUnavailable: 'Regra de comissao indisponivel para esta linha legada.',
+      commissionExcludedNotice: 'Nenhum servico selecionado gera comissao.',
+      commissionProjectedNotice: 'A projecao considera apenas as linhas que permitem comissao.',
+      commissionPendingNotice: (count: number) => count === 1
+        ? '1 linha elegivel ainda precisa de taxa de comissao no profissional.'
+        : `${count} linhas elegiveis ainda precisam de taxa de comissao no profissional.`,
+      commissionUnavailableNotice: (count: number) => count === 1
+        ? '1 linha legada ainda nao possui snapshot estruturado de comissao.'
+        : `${count} linhas legadas ainda nao possuem snapshot estruturado de comissao.`,
       legacyHeadlineSuffix: 'reserva legada',
       bundleHeadlineSuffix: 'servicos selecionados'
     };
@@ -170,6 +195,8 @@ function resolveServiceSummaryCopy(locale: string) {
     scheduling: 'Scheduling rule',
     duration: 'Combined duration',
     basePrice: 'Combined base price',
+    commissionLines: 'Commission lines',
+    projectedCommission: 'Projected commission',
     checkout: 'Projected checkout',
     active: 'Active for new bookings',
     inactive: 'Inactive for new bookings',
@@ -183,6 +210,18 @@ function resolveServiceSummaryCopy(locale: string) {
     standaloneBlocked: 'At least one selected service requires a linked plan before booking.',
     inactiveLegacy: 'This inactive service stays visible only to preserve safe editing of a historical appointment.',
     missingLegacy: 'The original service definition is no longer in the active catalog. Keep the link only for safe historical edits.',
+    commissionReady: 'Commission ready',
+    commissionExcluded: 'Commission excluded by service rule',
+    commissionPending: 'Commission eligible, but the professional still needs a commission rate.',
+    commissionUnavailable: 'Commission rule unavailable for this legacy line.',
+    commissionExcludedNotice: 'None of the selected service lines generates commission.',
+    commissionProjectedNotice: 'The projection considers only the service lines that allow commission.',
+    commissionPendingNotice: (count: number) => count === 1
+      ? '1 eligible service line still needs a professional commission rate.'
+      : `${count} eligible service lines still need a professional commission rate.`,
+    commissionUnavailableNotice: (count: number) => count === 1
+      ? '1 legacy service line does not yet carry a structured commission snapshot.'
+      : `${count} legacy service lines do not yet carry a structured commission snapshot.`,
     legacyHeadlineSuffix: 'legacy booking',
     bundleHeadlineSuffix: 'services selected'
   };
@@ -291,6 +330,10 @@ export function PetAppointmentsPage() {
     () => new Map(editingServiceLines.map((line) => [line.serviceId, line])),
     [editingServiceLines]
   );
+  const selectedProfessional = useMemo(
+    () => professionals.find((professional) => professional.id === professionalId),
+    [professionalId, professionals]
+  );
 
   const serviceOptions = useMemo(() => {
     return [
@@ -366,23 +409,49 @@ export function PetAppointmentsPage() {
         return {
           serviceId: selectedId,
           catalogService,
-          legacyServiceLine
+          legacyServiceLine,
+          commissionEligible: catalogService?.commissionEligible ?? legacyServiceLine?.commissionEligible ?? null,
+          lineBasePrice: catalogService?.basePrice ?? legacyServiceLine?.basePrice ?? null,
+          commissionRate: selectedProfessional?.commissionRate ?? legacyServiceLine?.commissionRate ?? null
         };
       })
       .filter((entry): entry is {
         serviceId: string;
         catalogService: PetServiceCatalog | undefined;
         legacyServiceLine: PetAppointmentServiceLine | undefined;
+        commissionEligible: boolean | null;
+        lineBasePrice: number | null;
+        commissionRate: number | null;
       } => entry !== null);
-  }, [editingServiceLinesById, selectedServiceIds, servicesById]);
+  }, [editingServiceLinesById, selectedProfessional, selectedServiceIds, servicesById]);
 
   const selectedServices = useMemo<PetAppointmentSelectedService[]>(() => {
     return selectedServiceEntries.map((entry) => {
+      const projectedCommissionAmount = entry.commissionEligible === true && entry.commissionRate != null && entry.lineBasePrice != null
+        ? roundCurrency(entry.lineBasePrice * entry.commissionRate)
+        : null;
+      const commissionContext = entry.commissionEligible === true
+        ? projectedCommissionAmount != null
+          ? `${serviceSummaryCopy.commissionReady} · ${formatCommissionRate(locale, entry.commissionRate ?? 0)} · ${formatCurrencyForLocale(locale, projectedCommissionAmount)}`
+          : serviceSummaryCopy.commissionPending
+        : entry.commissionEligible === false
+          ? serviceSummaryCopy.commissionExcluded
+          : serviceSummaryCopy.commissionUnavailable;
+      const commissionTone = entry.commissionEligible === true
+        ? projectedCommissionAmount != null
+          ? 'accent'
+          : 'warning'
+        : entry.commissionEligible === false
+          ? 'neutral'
+          : 'warning';
+
       if (entry.catalogService) {
         return {
           serviceId: entry.serviceId,
           label: describePetServiceCatalogItem(entry.catalogService, locale),
           note: entry.catalogService.active ? undefined : serviceSummaryCopy.inactiveLegacy,
+          commissionContext,
+          commissionTone,
           removable: true
         };
       }
@@ -391,10 +460,12 @@ export function PetAppointmentsPage() {
         serviceId: entry.serviceId,
         label: `${entry.legacyServiceLine?.serviceName ?? messages.filters.service} · ${serviceSummaryCopy.legacyHeadlineSuffix}`,
         note: serviceSummaryCopy.missingLegacy,
+        commissionContext,
+        commissionTone,
         removable: true
       };
     });
-  }, [locale, messages.filters.service, selectedServiceEntries, serviceSummaryCopy.inactiveLegacy, serviceSummaryCopy.legacyHeadlineSuffix, serviceSummaryCopy.missingLegacy]);
+  }, [locale, messages.filters.service, selectedServiceEntries, serviceSummaryCopy]);
 
   const selectedServiceSummary = useMemo<PetAppointmentServiceSummary | null>(() => {
     if (selectedServiceEntries.length === 0) {
@@ -416,6 +487,17 @@ export function PetAppointmentsPage() {
     const combinedBasePrice = selectedServiceEntries.reduce((total, entry) => (
       total + (entry.catalogService?.basePrice ?? entry.legacyServiceLine?.basePrice ?? 0)
     ), 0);
+    const commissionEligibleCount = selectedServiceEntries.filter((entry) => entry.commissionEligible === true).length;
+    const projectedCommission = roundCurrency(selectedServiceEntries.reduce((total, entry) => {
+      if (entry.commissionEligible !== true || entry.commissionRate == null || entry.lineBasePrice == null) {
+        return total;
+      }
+      return total + (entry.lineBasePrice * entry.commissionRate);
+    }, 0));
+    const commissionPendingCount = selectedServiceEntries.filter((entry) => (
+      entry.commissionEligible === true && (entry.commissionRate == null || entry.lineBasePrice == null)
+    )).length;
+    const commissionUnavailableCount = selectedServiceEntries.filter((entry) => entry.commissionEligible == null).length;
     const supportsSelectedBookingMode = clientPlanId
       ? selectedServiceEntries.every((entry) => entry.catalogService?.allowInPlans ?? entry.legacyServiceLine?.allowInPlans ?? false)
       : selectedServiceEntries.every((entry) => entry.catalogService?.allowStandaloneBooking ?? entry.legacyServiceLine?.allowStandaloneBooking ?? false);
@@ -432,6 +514,20 @@ export function PetAppointmentsPage() {
     notices.push(clientPlanId
       ? (supportsSelectedBookingMode ? serviceSummaryCopy.planReady : serviceSummaryCopy.planBlocked)
       : (supportsSelectedBookingMode ? serviceSummaryCopy.standaloneReady : serviceSummaryCopy.standaloneBlocked));
+
+    if (commissionEligibleCount === 0) {
+      notices.push(serviceSummaryCopy.commissionExcludedNotice);
+    } else {
+      notices.push(serviceSummaryCopy.commissionProjectedNotice);
+    }
+
+    if (commissionPendingCount > 0) {
+      notices.push(serviceSummaryCopy.commissionPendingNotice(commissionPendingCount));
+    }
+
+    if (commissionUnavailableCount > 0) {
+      notices.push(serviceSummaryCopy.commissionUnavailableNotice(commissionUnavailableCount));
+    }
 
     return {
       title: serviceSummaryCopy.title,
@@ -454,6 +550,15 @@ export function PetAppointmentsPage() {
         },
         { label: serviceSummaryCopy.duration, value: `${combinedDurationMinutes} min` },
         { label: serviceSummaryCopy.basePrice, value: formatCurrencyForLocale(locale, combinedBasePrice) },
+        { label: serviceSummaryCopy.commissionLines, value: `${commissionEligibleCount}/${selectedServiceEntries.length}` },
+        {
+          label: serviceSummaryCopy.projectedCommission,
+          value: commissionEligibleCount === 0
+            ? serviceSummaryCopy.commissionExcluded
+            : commissionPendingCount === commissionEligibleCount && projectedCommission === 0
+              ? serviceSummaryCopy.commissionPending
+              : formatCurrencyForLocale(locale, projectedCommission)
+        },
         { label: serviceSummaryCopy.checkout, value: formatCurrencyForLocale(locale, projectedCheckout) }
       ],
       notices
@@ -626,6 +731,9 @@ export function PetAppointmentsPage() {
           serviceCategory: null,
           durationMinutes: appointment.totalServiceDurationMinutes ?? null,
           basePrice: appointment.servicePrice ?? appointment.totalServiceBasePrice ?? null,
+          commissionEligible: null,
+          commissionRate: null,
+          commissionAmount: appointment.commissionAmount ?? null,
           active: false,
           allowInPlans: Boolean(appointment.clientPlanId),
           allowStandaloneBooking: !appointment.clientPlanId,
