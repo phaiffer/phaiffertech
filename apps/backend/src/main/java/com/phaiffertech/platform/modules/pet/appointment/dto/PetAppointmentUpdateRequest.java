@@ -13,6 +13,7 @@ public record PetAppointmentUpdateRequest(
         @NotNull UUID serviceId,
         List<UUID> serviceIds,
         @NotNull UUID professionalId,
+        List<PetAppointmentServiceLineAssignmentRequest> serviceLineAssignments,
         @NotNull Instant scheduledAt,
         @NotBlank String status,
         String notes,

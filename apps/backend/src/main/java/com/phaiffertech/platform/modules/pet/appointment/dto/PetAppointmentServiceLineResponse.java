@@ -11,6 +11,8 @@ public record PetAppointmentServiceLineResponse(
         PetServiceCategory serviceCategory,
         Integer durationMinutes,
         BigDecimal basePrice,
+        UUID professionalId,
+        String professionalName,
         Boolean commissionEligible,
         BigDecimal commissionRate,
         BigDecimal commissionAmount,

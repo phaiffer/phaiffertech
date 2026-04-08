@@ -289,7 +289,7 @@ const ptBRMessages = {
       createTitle: 'Agendar atendimento',
       editTitle: 'Editar atendimento',
       description:
-        'Selecione cliente e pet, escolha servico e profissional e depois defina pagamento avulso ou por plano com os extras do dia.'
+        'Selecione cliente e pet, escolha os servicos, defina o profissional padrao e ajuste o responsavel por linha quando necessario.'
     },
     dialog: {
       deleteTitle: 'Remover atendimento?',
@@ -302,6 +302,7 @@ const ptBRMessages = {
       selectPet: 'Selecione um pet',
       selectService: 'Selecione um servico',
       selectProfessional: 'Selecione um profissional',
+      unassignedProfessional: 'Deixar sem atribuicao por enquanto',
       selectClientFirst: 'Selecione um cliente primeiro',
       loadingPlans: 'Carregando planos...',
       oneTime: 'Sem plano — pagamento avulso',
@@ -344,6 +345,10 @@ const ptBRMessages = {
       notes: 'Observacoes',
       notesPlaceholder: 'Observacoes da visita, como pele sensivel ou primeiro atendimento',
       dateTime: 'Data e hora',
+      defaultProfessionalHint: 'Usado como ancora de compatibilidade e como profissional padrao para novas linhas de servico.',
+      serviceLineProfessional: 'Profissional responsavel',
+      serviceLineProfessionalHint: 'Sobrescreva o profissional padrao nesta linha quando outra pessoa assumir a execucao.',
+      serviceLineProfessionalPending: 'Nenhum profissional atribuido a esta linha ainda.',
       packageLabel: 'Plano (opcional)',
       packageSelectClient: 'Selecione um cliente primeiro para ver os planos disponiveis.',
       packageUnavailable: 'Nenhum plano ativo para este cliente. O atendimento sera cobrado de forma avulsa.',
@@ -397,6 +402,8 @@ const ptBRMessages = {
       recurring: 'Recorrente',
       serviceLines: 'linhas estruturadas',
       commissionLines: 'elegiveis para comissao',
+      lineAssignments: 'Responsabilidade por linha',
+      pendingProfessional: 'Profissional pendente',
       professionalDetail: 'Responsavel pelo atendimento e pelo resultado da comissao.',
       commission: 'Comissao',
       commissionExcluded: 'excluida pela regra do servico',
