@@ -18,6 +18,7 @@ import {
   PetProfessional,
   PetProfile,
   PetServiceCatalog,
+  PetServiceInventoryConsumptionRule,
   PetServiceCategory,
   PetVaccination
 } from '@/shared/types/pet';
@@ -62,6 +63,13 @@ export type CreatePetProfileInput = {
 
 export type UpdatePetProfileInput = CreatePetProfileInput;
 
+export type CreatePetServiceInventoryLinkInput = {
+  inventoryItemId: string;
+  expectedQuantity: number;
+  consumptionRule: PetServiceInventoryConsumptionRule;
+  active: boolean;
+};
+
 export type CreatePetServiceCatalogInput = {
   name: string;
   description?: string;
@@ -72,6 +80,7 @@ export type CreatePetServiceCatalogInput = {
   commissionEligible: boolean;
   allowInPlans: boolean;
   allowStandaloneBooking: boolean;
+  inventoryLinks?: CreatePetServiceInventoryLinkInput[];
 };
 
 export type UpdatePetServiceCatalogInput = CreatePetServiceCatalogInput;

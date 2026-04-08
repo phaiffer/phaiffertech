@@ -22,6 +22,17 @@ public interface InventoryItemRepository extends JpaRepository<InventoryItem, UU
 
     List<InventoryItem> findAllByTenantIdAndIdIn(UUID tenantId, Collection<UUID> ids);
 
+    @Query(value = """
+            SELECT *
+            FROM inventory_items i
+            WHERE i.tenant_id = :tenantId
+              AND i.id IN (:ids)
+            """, nativeQuery = true)
+    List<InventoryItem> findAllByTenantIdAndIdInIncludingDeleted(
+            @Param("tenantId") UUID tenantId,
+            @Param("ids") Collection<UUID> ids
+    );
+
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("""
             SELECT i

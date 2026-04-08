@@ -73,6 +73,18 @@ export type PetAppointment = {
   finalAmountDue?: number;
 };
 
+export type PetServiceInventoryConsumptionRule = 'FIXED_PER_SERVICE';
+
+export type PetAppointmentServiceLineInventoryConsumption = {
+  inventoryItemId: string;
+  inventoryItemName: string;
+  inventoryItemSku?: string | null;
+  inventoryCategory?: string | null;
+  unitOfMeasure: string;
+  expectedQuantity: number;
+  consumptionRule: PetServiceInventoryConsumptionRule;
+};
+
 export type PetAppointmentServiceLine = {
   id?: string | null;
   serviceId: string;
@@ -85,6 +97,7 @@ export type PetAppointmentServiceLine = {
   commissionEligible?: boolean | null;
   commissionRate?: number | null;
   commissionAmount?: number | null;
+  expectedInventoryConsumptions?: PetAppointmentServiceLineInventoryConsumption[];
   active: boolean;
   allowInPlans: boolean;
   allowStandaloneBooking: boolean;
@@ -94,6 +107,18 @@ export type PetAppointmentServiceLine = {
 };
 
 export type PetServiceCategory = 'GROOMING' | 'CLINICAL';
+
+export type PetServiceInventoryLink = {
+  id: string;
+  inventoryItemId: string;
+  inventoryItemName: string;
+  inventoryItemSku?: string | null;
+  inventoryCategory?: string | null;
+  unitOfMeasure: string;
+  expectedQuantity: number;
+  consumptionRule: PetServiceInventoryConsumptionRule;
+  active: boolean;
+};
 
 export type PetServiceCatalog = {
   id: string;
@@ -106,6 +131,7 @@ export type PetServiceCatalog = {
   commissionEligible: boolean;
   allowInPlans: boolean;
   allowStandaloneBooking: boolean;
+  inventoryLinks: PetServiceInventoryLink[];
   createdAt: string;
   updatedAt: string;
 };
@@ -256,6 +282,7 @@ export type PetClinicalTimeline = {
 
 export type PetProduct = {
   id: string;
+  inventoryItemId: string;
   name: string;
   sku: string;
   price: number;
