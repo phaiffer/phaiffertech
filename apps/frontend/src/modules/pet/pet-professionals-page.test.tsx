@@ -7,7 +7,7 @@ const { hasPermissionMock, hasAnyPermissionMock, petServiceMock } = vi.hoisted((
   hasAnyPermissionMock: vi.fn(),
   petServiceMock: {
     listProfessionals: vi.fn(),
-    listAppointments: vi.fn(),
+    getCommissionSummary: vi.fn(),
     createProfessional: vi.fn(),
     updateProfessional: vi.fn(),
     deleteProfessional: vi.fn()
@@ -23,6 +23,10 @@ vi.mock('@/shared/auth/usePermissions', () => ({
 
 vi.mock('@/shared/services/pet-service', () => ({
   petService: petServiceMock
+}));
+
+vi.mock('@/modules/pet/pet-module-subnav', () => ({
+  PetModuleSubnav: () => <div>Pet nav</div>
 }));
 
 function createPageResponse<T>(items: T[]) {
@@ -41,7 +45,19 @@ describe('PetProfessionalsPage', () => {
     hasPermissionMock.mockReturnValue(true);
     hasAnyPermissionMock.mockReturnValue(true);
     petServiceMock.listProfessionals.mockResolvedValue(createPageResponse([]));
-    petServiceMock.listAppointments.mockResolvedValue(createPageResponse([]));
+    petServiceMock.getCommissionSummary.mockResolvedValue({
+      appointmentStatus: 'COMPLETED',
+      totalCommissionAmount: 0,
+      professionalCount: 0,
+      generatedLineCount: 0,
+      excludedLineCount: 0,
+      eligibleWithoutAmountLineCount: 0,
+      unassignedLineCount: 0,
+      legacyLineCount: 0,
+      contributingAppointmentCount: 0,
+      professionals: [],
+      details: []
+    });
   });
 
   it('renders the professional email field with safe autofill metadata', async () => {

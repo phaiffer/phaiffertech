@@ -116,6 +116,39 @@ class LocalDevelopmentAdminAccessIntegrationTest extends AbstractIntegrationTest
     }
 
     @Test
+    void localDevelopmentAdminKeepsPetCommissionSummaryAccessEvenWithoutTenantEntitlements() {
+        AuthSession platformAdmin = loginAsDefaultAdmin();
+        String targetTenantId = createTenant("local-dev-pet-commission-restricted", "ACTIVE", null);
+
+        ResponseEntity<JsonNode> startResponse = post("/auth/impersonation/start", Map.of(
+                "targetTenantId", targetTenantId,
+                "reason", "Validate unrestricted PetFlow commission access in local development",
+                "durationMinutes", 15
+        ), platformAdmin);
+
+        assertEquals(200, startResponse.getStatusCode().value());
+        JsonNode data = requireBody(startResponse).path("data");
+        JsonNode user = data.path("user");
+
+        AuthSession impersonatedSession = authSession(
+                data.path("accessToken").asText(),
+                platformAdmin.refreshCookie(),
+                user.path("tenantId").asText(),
+                user.path("userId").asText()
+        );
+
+        ResponseEntity<JsonNode> commissionSummaryResponse = get(
+                "/pet/commissions/summary?scheduledFrom=2026-02-01T00:00:00Z&scheduledTo=2026-02-28T23:59:59Z",
+                impersonatedSession
+        );
+
+        assertEquals(200, commissionSummaryResponse.getStatusCode().value());
+
+        ResponseEntity<JsonNode> stopResponse = post("/auth/impersonation/stop", null, impersonatedSession);
+        assertEquals(200, stopResponse.getStatusCode().value());
+    }
+
+    @Test
     void nonExemptDevelopmentUsersRemainBoundToTenantModuleRestrictions() {
         AuthSession session = createTenantAdminSession(
                 "local-dev-non-exempt",

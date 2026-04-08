@@ -2,6 +2,7 @@ import { apiClient } from '@/shared/lib/http';
 import { PageResponse } from '@/shared/types/common';
 import {
   PetAppointment,
+  PetCommissionSummary,
   PetClinicalTimeline,
   PetClient,
   PetClientDocumentType,
@@ -232,6 +233,11 @@ type PetAppointmentFilters = {
   scheduledTo?: string;
 };
 
+type PetCommissionSummaryFilters = {
+  scheduledFrom?: string;
+  scheduledTo?: string;
+};
+
 type PetServiceCatalogFilters = {
   category?: PetServiceCategory;
   active?: boolean;
@@ -395,6 +401,14 @@ export const petService = {
   deleteProfessional: (id: string) => apiClient.delete<void>(`/pet/professionals/${id}`),
 
   restoreProfessional: (id: string) => apiClient.patch<PetProfessional>(`/pet/professionals/${id}/restore`),
+
+  getCommissionSummary: (filters: PetCommissionSummaryFilters = {}) =>
+    apiClient.get<PetCommissionSummary>(
+      `/pet/commissions/summary?${simpleQueryString({
+        scheduledFrom: filters.scheduledFrom,
+        scheduledTo: filters.scheduledTo
+      })}`
+    ),
 
   listAppointments: (page = 0, size = 20, search = '', filters: PetAppointmentFilters = {}) =>
     apiClient.get<PageResponse<PetAppointment>>(

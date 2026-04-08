@@ -122,6 +122,65 @@ export type PetProfessional = {
   updatedAt: string;
 };
 
+export type PetCommissionLineStatus =
+  | 'GENERATED'
+  | 'EXCLUDED'
+  | 'ELIGIBLE_WITHOUT_AMOUNT'
+  | 'UNASSIGNED'
+  | 'LEGACY_UNAVAILABLE';
+
+export type PetCommissionDataSource =
+  | 'STRUCTURED_LINE'
+  | 'COMPATIBILITY_FALLBACK';
+
+export type PetCommissionSummaryProfessional = {
+  professionalId: string;
+  professionalName: string;
+  totalCommissionAmount: number;
+  generatedLineCount: number;
+  excludedLineCount: number;
+  eligibleWithoutAmountLineCount: number;
+  contributingAppointmentCount: number;
+};
+
+export type PetCommissionSummaryDetail = {
+  appointmentId: string;
+  appointmentServiceLineId?: string | null;
+  scheduledAt: string;
+  appointmentStatus: string;
+  clientId: string;
+  clientName: string;
+  petId: string;
+  petName: string;
+  serviceId: string;
+  serviceName: string;
+  lineOrder: number;
+  professionalId?: string | null;
+  professionalName?: string | null;
+  basePrice?: number | null;
+  commissionEligible?: boolean | null;
+  commissionRate?: number | null;
+  commissionAmount?: number | null;
+  lineStatus: PetCommissionLineStatus;
+  dataSource: PetCommissionDataSource;
+};
+
+export type PetCommissionSummary = {
+  scheduledFrom?: string | null;
+  scheduledTo?: string | null;
+  appointmentStatus: string;
+  totalCommissionAmount: number;
+  professionalCount: number;
+  generatedLineCount: number;
+  excludedLineCount: number;
+  eligibleWithoutAmountLineCount: number;
+  unassignedLineCount: number;
+  legacyLineCount: number;
+  contributingAppointmentCount: number;
+  professionals: PetCommissionSummaryProfessional[];
+  details: PetCommissionSummaryDetail[];
+};
+
 export type PetMedicalRecord = {
   id: string;
   petId: string;
