@@ -33,6 +33,7 @@ import {
   ClientPlan,
   PetAppointment,
   PetAppointmentServiceLine,
+  PetAppointmentServiceLineInventoryConsumption,
   PetClient,
   PetProfessional,
   PetProfile,
@@ -133,6 +134,51 @@ function formatCommissionRate(locale: string, rate: number) {
   }).format(rate);
 }
 
+function formatInventoryQuantity(locale: string, quantity: number) {
+  return new Intl.NumberFormat(locale === 'pt-BR' ? 'pt-BR' : 'en-US', {
+    maximumFractionDigits: 2
+  }).format(quantity);
+}
+
+function formatInventoryPreview(
+  locale: string,
+  consumptions: PetAppointmentServiceLineInventoryConsumption[]
+) {
+  if (consumptions.length === 0) {
+    return locale === 'pt-BR'
+      ? 'Estoque previsto: nenhum item vinculado.'
+      : 'Expected stock: no linked item.';
+  }
+
+  const label = consumptions
+    .map((consumption) => `${consumption.inventoryItemName} x${formatInventoryQuantity(locale, consumption.expectedQuantity)} ${consumption.unitOfMeasure}`)
+    .join(' • ');
+
+  return locale === 'pt-BR'
+    ? `Estoque previsto: ${label}`
+    : `Expected stock: ${label}`;
+}
+
+function aggregateInventoryConsumptions(
+  consumptionGroups: PetAppointmentServiceLineInventoryConsumption[][]
+) {
+  const aggregated = new Map<string, PetAppointmentServiceLineInventoryConsumption>();
+
+  consumptionGroups.forEach((group) => {
+    group.forEach((consumption) => {
+      const existing = aggregated.get(consumption.inventoryItemId);
+      if (existing) {
+        existing.expectedQuantity += consumption.expectedQuantity;
+        return;
+      }
+
+      aggregated.set(consumption.inventoryItemId, { ...consumption });
+    });
+  });
+
+  return Array.from(aggregated.values());
+}
+
 function resolveServiceSummaryCopy(locale: string) {
   if (locale === 'pt-BR') {
     return {
@@ -152,6 +198,8 @@ function resolveServiceSummaryCopy(locale: string) {
       commissionLines: 'Linhas com comissao',
       projectedCommission: 'Comissao projetada',
       checkout: 'Checkout previsto',
+      inventoryUsage: 'Consumo previsto',
+      inventoryNone: 'Sem consumo previsto',
       active: 'Ativo para novos agendamentos',
       inactive: 'Inativo para novos agendamentos',
       flexible: 'Avulso e plano habilitados',
@@ -201,6 +249,8 @@ function resolveServiceSummaryCopy(locale: string) {
     commissionLines: 'Commission lines',
     projectedCommission: 'Projected commission',
     checkout: 'Projected checkout',
+    inventoryUsage: 'Expected stock usage',
+    inventoryNone: 'No planned stock usage',
     active: 'Active for new bookings',
     inactive: 'Inactive for new bookings',
     flexible: 'Standalone booking and plan sessions enabled',
@@ -431,6 +481,19 @@ export function PetAppointmentsPage() {
           legacyServiceLine,
           assignedProfessionalId,
           assignedProfessionalName,
+          expectedInventoryConsumptions: catalogService
+            ? catalogService.inventoryLinks
+              .filter((link) => link.active)
+              .map((link) => ({
+                inventoryItemId: link.inventoryItemId,
+                inventoryItemName: link.inventoryItemName,
+                inventoryItemSku: link.inventoryItemSku ?? null,
+                inventoryCategory: link.inventoryCategory ?? null,
+                unitOfMeasure: link.unitOfMeasure,
+                expectedQuantity: link.expectedQuantity,
+                consumptionRule: link.consumptionRule
+              }))
+            : (legacyServiceLine?.expectedInventoryConsumptions ?? []),
           commissionEligible: catalogService?.commissionEligible ?? legacyServiceLine?.commissionEligible ?? null,
           lineBasePrice: catalogService?.basePrice ?? legacyServiceLine?.basePrice ?? null,
           commissionRate: assignedProfessional?.commissionRate
@@ -443,6 +506,7 @@ export function PetAppointmentsPage() {
         legacyServiceLine: PetAppointmentServiceLine | undefined;
         assignedProfessionalId: string;
         assignedProfessionalName: string | null;
+        expectedInventoryConsumptions: PetAppointmentServiceLineInventoryConsumption[];
         commissionEligible: boolean | null;
         lineBasePrice: number | null;
         commissionRate: number | null;
@@ -474,6 +538,7 @@ export function PetAppointmentsPage() {
           serviceId: entry.serviceId,
           label: describePetServiceCatalogItem(entry.catalogService, locale),
           note: entry.catalogService.active ? undefined : serviceSummaryCopy.inactiveLegacy,
+          inventoryPreview: formatInventoryPreview(locale, entry.expectedInventoryConsumptions),
           professionalId: entry.assignedProfessionalId,
           professionalName: entry.assignedProfessionalName,
           professionalPending: !entry.assignedProfessionalId,
@@ -487,6 +552,7 @@ export function PetAppointmentsPage() {
         serviceId: entry.serviceId,
         label: `${entry.legacyServiceLine?.serviceName ?? messages.filters.service} · ${serviceSummaryCopy.legacyHeadlineSuffix}`,
         note: serviceSummaryCopy.missingLegacy,
+        inventoryPreview: formatInventoryPreview(locale, entry.expectedInventoryConsumptions),
         professionalId: entry.assignedProfessionalId,
         professionalName: entry.assignedProfessionalName,
         professionalPending: !entry.assignedProfessionalId,
@@ -517,6 +583,9 @@ export function PetAppointmentsPage() {
     const combinedBasePrice = selectedServiceEntries.reduce((total, entry) => (
       total + (entry.catalogService?.basePrice ?? entry.legacyServiceLine?.basePrice ?? 0)
     ), 0);
+    const aggregatedInventoryConsumptions = aggregateInventoryConsumptions(
+      selectedServiceEntries.map((entry) => entry.expectedInventoryConsumptions)
+    );
     const commissionEligibleCount = selectedServiceEntries.filter((entry) => entry.commissionEligible === true).length;
     const projectedCommission = roundCurrency(selectedServiceEntries.reduce((total, entry) => {
       if (entry.commissionEligible !== true || entry.commissionRate == null || entry.lineBasePrice == null) {
@@ -594,6 +663,9 @@ export function PetAppointmentsPage() {
               ? serviceSummaryCopy.commissionPending
               : formatCurrencyForLocale(locale, projectedCommission)
         },
+        { label: serviceSummaryCopy.inventoryUsage, value: aggregatedInventoryConsumptions.length > 0
+          ? formatInventoryPreview(locale, aggregatedInventoryConsumptions).replace(/^Expected stock:\s|^Estoque previsto:\s/, '')
+          : serviceSummaryCopy.inventoryNone },
         { label: serviceSummaryCopy.checkout, value: formatCurrencyForLocale(locale, projectedCheckout) }
       ],
       notices
@@ -772,6 +844,7 @@ export function PetAppointmentsPage() {
           commissionEligible: null,
           commissionRate: null,
           commissionAmount: appointment.commissionAmount ?? null,
+          expectedInventoryConsumptions: [],
           active: false,
           allowInPlans: Boolean(appointment.clientPlanId),
           allowStandaloneBooking: !appointment.clientPlanId,

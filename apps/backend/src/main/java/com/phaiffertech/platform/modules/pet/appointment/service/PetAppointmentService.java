@@ -1,15 +1,20 @@
 package com.phaiffertech.platform.modules.pet.appointment.service;
 
 import com.phaiffertech.platform.core.audit.service.AuditableAction;
+import com.phaiffertech.platform.core.inventory.domain.InventoryItem;
+import com.phaiffertech.platform.core.inventory.repository.InventoryItemRepository;
 import com.phaiffertech.platform.modules.pet.appointment.domain.PetAppointment;
 import com.phaiffertech.platform.modules.pet.appointment.domain.PetAppointmentServiceLine;
+import com.phaiffertech.platform.modules.pet.appointment.domain.PetAppointmentServiceLineInventoryPlan;
 import com.phaiffertech.platform.modules.pet.appointment.dto.PetAppointmentCreateRequest;
 import com.phaiffertech.platform.modules.pet.appointment.dto.PetAppointmentResponse;
 import com.phaiffertech.platform.modules.pet.appointment.dto.PetAppointmentServiceLineAssignmentRequest;
+import com.phaiffertech.platform.modules.pet.appointment.dto.PetAppointmentServiceLineInventoryResponse;
 import com.phaiffertech.platform.modules.pet.appointment.dto.PetAppointmentServiceLineResponse;
 import com.phaiffertech.platform.modules.pet.appointment.dto.PetAppointmentUpdateRequest;
 import com.phaiffertech.platform.modules.pet.appointment.mapper.PetAppointmentMapper;
 import com.phaiffertech.platform.modules.pet.appointment.repository.PetAppointmentRepository;
+import com.phaiffertech.platform.modules.pet.appointment.repository.PetAppointmentServiceLineInventoryPlanRepository;
 import com.phaiffertech.platform.modules.pet.appointment.repository.PetAppointmentServiceLineRepository;
 import com.phaiffertech.platform.modules.pet.client.domain.PetClient;
 import com.phaiffertech.platform.modules.pet.client.repository.PetClientRepository;
@@ -26,7 +31,9 @@ import com.phaiffertech.platform.modules.pet.professional.repository.PetProfessi
 import com.phaiffertech.platform.modules.pet.plan.domain.ClientPlan;
 import com.phaiffertech.platform.modules.pet.plan.repository.ClientPlanRepository;
 import com.phaiffertech.platform.modules.pet.servicecatalog.domain.PetServiceCatalog;
+import com.phaiffertech.platform.modules.pet.servicecatalog.domain.PetServiceInventoryLink;
 import com.phaiffertech.platform.modules.pet.servicecatalog.repository.PetServiceCatalogRepository;
+import com.phaiffertech.platform.modules.pet.servicecatalog.repository.PetServiceInventoryLinkRepository;
 import com.phaiffertech.platform.modules.pet.servicecatalog.service.PetServiceCatalogCategoryPolicyService;
 import com.phaiffertech.platform.shared.crud.BasePageQuery;
 import com.phaiffertech.platform.shared.crud.BaseSearchSpecificationBuilder;
@@ -66,9 +73,12 @@ public class PetAppointmentService extends BaseTenantCrudService<
 
     private final PetAppointmentRepository repository;
     private final PetAppointmentServiceLineRepository appointmentServiceLineRepository;
+    private final PetAppointmentServiceLineInventoryPlanRepository appointmentServiceLineInventoryPlanRepository;
     private final PetClientRepository petClientRepository;
     private final PetProfileRepository petProfileRepository;
     private final PetServiceCatalogRepository petServiceCatalogRepository;
+    private final PetServiceInventoryLinkRepository serviceInventoryLinkRepository;
+    private final InventoryItemRepository inventoryItemRepository;
     private final PetProfessionalRepository petProfessionalRepository;
     private final PetMedicalRecordRepository petMedicalRecordRepository;
     private final PetVaccinationRepository petVaccinationRepository;
@@ -81,9 +91,12 @@ public class PetAppointmentService extends BaseTenantCrudService<
     public PetAppointmentService(
             PetAppointmentRepository repository,
             PetAppointmentServiceLineRepository appointmentServiceLineRepository,
+            PetAppointmentServiceLineInventoryPlanRepository appointmentServiceLineInventoryPlanRepository,
             PetClientRepository petClientRepository,
             PetProfileRepository petProfileRepository,
             PetServiceCatalogRepository petServiceCatalogRepository,
+            PetServiceInventoryLinkRepository serviceInventoryLinkRepository,
+            InventoryItemRepository inventoryItemRepository,
             PetProfessionalRepository petProfessionalRepository,
             PetMedicalRecordRepository petMedicalRecordRepository,
             PetVaccinationRepository petVaccinationRepository,
@@ -96,9 +109,12 @@ public class PetAppointmentService extends BaseTenantCrudService<
         super(repository, repository, PetAppointmentMapper.INSTANCE, "Pet appointment not found.");
         this.repository = repository;
         this.appointmentServiceLineRepository = appointmentServiceLineRepository;
+        this.appointmentServiceLineInventoryPlanRepository = appointmentServiceLineInventoryPlanRepository;
         this.petClientRepository = petClientRepository;
         this.petProfileRepository = petProfileRepository;
         this.petServiceCatalogRepository = petServiceCatalogRepository;
+        this.serviceInventoryLinkRepository = serviceInventoryLinkRepository;
+        this.inventoryItemRepository = inventoryItemRepository;
         this.petProfessionalRepository = petProfessionalRepository;
         this.petMedicalRecordRepository = petMedicalRecordRepository;
         this.petVaccinationRepository = petVaccinationRepository;
@@ -322,6 +338,8 @@ public class PetAppointmentService extends BaseTenantCrudService<
                 resolvedServiceIds,
                 requestedServiceLineAssignments
         );
+        Map<UUID, List<AppointmentServiceInventorySelection>> serviceInventoryByServiceId =
+                loadServiceInventorySelectionsByServiceId(tenantId, resolvedServiceIds);
 
         PetServiceCatalog primaryService = selectedServices.getFirst();
         entity.setServiceId(primaryService.getId());
@@ -347,7 +365,8 @@ public class PetAppointmentService extends BaseTenantCrudService<
                 selectedServices,
                 professionalSelection,
                 resolvedServicePrice,
-                requestedServicePrice != null
+                requestedServicePrice != null,
+                serviceInventoryByServiceId
         );
         entity.setCommissionAmount(resolveAppointmentCommissionAmount(serviceLines));
 
@@ -385,14 +404,23 @@ public class PetAppointmentService extends BaseTenantCrudService<
     private PetAppointmentResponse toValidatedResponse(PetAppointment appointment, UUID tenantId) {
         validateContractIntegrity(appointment);
         Integer planRemaining = resolvePlanRemainingSessions(tenantId, appointment.getClientPlanId());
-        List<UUID> currentServiceIds = resolveCurrentServiceIds(tenantId, appointment);
+        List<PetAppointmentServiceLine> appointmentLines = appointmentServiceLineRepository
+                .findAllByTenantIdAndAppointmentIdOrderByLineOrderAsc(tenantId, appointment.getId());
+        List<UUID> currentServiceIds = resolveCurrentServiceIds(appointment, appointmentLines);
+        Map<UUID, List<PetAppointmentServiceLineInventoryResponse>> lineInventoryByLineId = loadLineInventoryByLineId(
+                tenantId,
+                appointmentLines.stream().map(PetAppointmentServiceLine::getId).filter(Objects::nonNull).toList()
+        );
+        Map<UUID, List<PetAppointmentServiceLineInventoryResponse>> serviceInventoryByServiceId = loadServiceInventoryPreviewByServiceId(
+                tenantId,
+                currentServiceIds
+        );
         List<PetAppointmentServiceLineResponse> appointmentServices = resolveAppointmentServiceResponses(
                 appointment,
-                appointmentServiceLineRepository.findAllByTenantIdAndAppointmentIdOrderByLineOrderAsc(
-                        tenantId,
-                        appointment.getId()
-                ),
-                loadServiceCatalogMap(tenantId, currentServiceIds)
+                appointmentLines,
+                loadServiceCatalogMap(tenantId, currentServiceIds),
+                lineInventoryByLineId,
+                serviceInventoryByServiceId
         );
         return PetAppointmentMapper.INSTANCE.toResponse(
                 appointment,
@@ -699,6 +727,18 @@ public class PetAppointmentService extends BaseTenantCrudService<
                 .map(selection -> buildAppointmentServiceLine(tenantId, appointment, selection))
                 .toList();
         appointmentServiceLineRepository.saveAll(lines);
+
+        List<PetAppointmentServiceLineInventoryPlan> inventoryPlans = new java.util.ArrayList<>();
+        for (int index = 0; index < lines.size(); index++) {
+            PetAppointmentServiceLine line = lines.get(index);
+            AppointmentServiceLineSelection selection = selectedServices.get(index);
+            selection.expectedInventoryConsumptions().forEach(consumption ->
+                    inventoryPlans.add(buildAppointmentServiceLineInventoryPlan(tenantId, line, consumption))
+            );
+        }
+        if (!inventoryPlans.isEmpty()) {
+            appointmentServiceLineInventoryPlanRepository.saveAll(inventoryPlans);
+        }
     }
 
     private PetAppointmentServiceLine buildAppointmentServiceLine(
@@ -724,11 +764,33 @@ public class PetAppointmentService extends BaseTenantCrudService<
         return line;
     }
 
+    private PetAppointmentServiceLineInventoryPlan buildAppointmentServiceLineInventoryPlan(
+            UUID tenantId,
+            PetAppointmentServiceLine line,
+            AppointmentServiceInventorySelection selection
+    ) {
+        PetAppointmentServiceLineInventoryPlan plan = new PetAppointmentServiceLineInventoryPlan();
+        plan.setTenantId(tenantId);
+        plan.setAppointmentServiceId(line.getId());
+        plan.setInventoryItemId(selection.inventoryItemId());
+        plan.setInventoryItemName(selection.inventoryItemName());
+        plan.setInventoryItemSku(selection.inventoryItemSku());
+        plan.setInventoryCategory(selection.inventoryCategory());
+        plan.setUnitOfMeasure(selection.unitOfMeasure());
+        plan.setExpectedQuantity(selection.expectedQuantity());
+        plan.setConsumptionRule(selection.consumptionRule());
+        return plan;
+    }
+
     private List<UUID> resolveCurrentServiceIds(UUID tenantId, PetAppointment appointment) {
         List<PetAppointmentServiceLine> lines = appointmentServiceLineRepository.findAllByTenantIdAndAppointmentIdOrderByLineOrderAsc(
                 tenantId,
                 appointment.getId()
         );
+        return resolveCurrentServiceIds(appointment, lines);
+    }
+
+    private List<UUID> resolveCurrentServiceIds(PetAppointment appointment, List<PetAppointmentServiceLine> lines) {
         if (!lines.isEmpty()) {
             return lines.stream().map(PetAppointmentServiceLine::getServiceId).toList();
         }
@@ -750,6 +812,7 @@ public class PetAppointmentService extends BaseTenantCrudService<
                 .collect(Collectors.groupingBy(PetAppointmentServiceLine::getAppointmentId));
 
         Set<UUID> serviceIds = new LinkedHashSet<>();
+        Set<UUID> lineIds = new LinkedHashSet<>();
         appointments.forEach(appointment -> {
             List<PetAppointmentServiceLine> lines = linesByAppointmentId.get(appointment.getId());
             if (lines == null || lines.isEmpty()) {
@@ -758,17 +821,32 @@ public class PetAppointmentService extends BaseTenantCrudService<
                 }
                 return;
             }
-            lines.forEach(line -> serviceIds.add(line.getServiceId()));
+            lines.forEach(line -> {
+                serviceIds.add(line.getServiceId());
+                if (line.getId() != null) {
+                    lineIds.add(line.getId());
+                }
+            });
         });
 
         Map<UUID, PetServiceCatalog> servicesById = loadServiceCatalogMap(tenantId, serviceIds);
+        Map<UUID, List<PetAppointmentServiceLineInventoryResponse>> lineInventoryByLineId = loadLineInventoryByLineId(
+                tenantId,
+                lineIds
+        );
+        Map<UUID, List<PetAppointmentServiceLineInventoryResponse>> serviceInventoryByServiceId = loadServiceInventoryPreviewByServiceId(
+                tenantId,
+                serviceIds
+        );
 
         return appointments.stream().collect(Collectors.toMap(
                 PetAppointment::getId,
                 appointment -> resolveAppointmentServiceResponses(
                         appointment,
                         linesByAppointmentId.getOrDefault(appointment.getId(), List.of()),
-                        servicesById
+                        servicesById,
+                        lineInventoryByLineId,
+                        serviceInventoryByServiceId
                 )
         ));
     }
@@ -783,10 +861,130 @@ public class PetAppointmentService extends BaseTenantCrudService<
                 .collect(Collectors.toMap(PetServiceCatalog::getId, Function.identity()));
     }
 
+    private Map<UUID, List<AppointmentServiceInventorySelection>> loadServiceInventorySelectionsByServiceId(
+            UUID tenantId,
+            Collection<UUID> serviceIds
+    ) {
+        if (serviceIds == null || serviceIds.isEmpty()) {
+            return Map.of();
+        }
+
+        List<PetServiceInventoryLink> links = serviceInventoryLinkRepository
+                .findAllByTenantIdAndServiceIdInAndActiveTrueOrderByServiceIdAscCreatedAtAsc(tenantId, serviceIds);
+        if (links.isEmpty()) {
+            return Map.of();
+        }
+
+        Map<UUID, InventoryItem> itemsById = loadInventoryItemMapIncludingDeleted(
+                tenantId,
+                links.stream().map(PetServiceInventoryLink::getInventoryItemId).collect(Collectors.toSet())
+        );
+
+        Map<UUID, List<AppointmentServiceInventorySelection>> grouped = new LinkedHashMap<>();
+        for (PetServiceInventoryLink link : links) {
+            grouped.computeIfAbsent(link.getServiceId(), ignored -> new java.util.ArrayList<>())
+                    .add(toServiceInventorySelection(link, itemsById.get(link.getInventoryItemId())));
+        }
+        return grouped;
+    }
+
+    private Map<UUID, List<PetAppointmentServiceLineInventoryResponse>> loadServiceInventoryPreviewByServiceId(
+            UUID tenantId,
+            Collection<UUID> serviceIds
+    ) {
+        if (serviceIds == null || serviceIds.isEmpty()) {
+            return Map.of();
+        }
+
+        Map<UUID, List<AppointmentServiceInventorySelection>> selectionsByServiceId =
+                loadServiceInventorySelectionsByServiceId(tenantId, serviceIds);
+        if (selectionsByServiceId.isEmpty()) {
+            return Map.of();
+        }
+
+        Map<UUID, List<PetAppointmentServiceLineInventoryResponse>> grouped = new LinkedHashMap<>();
+        selectionsByServiceId.forEach((serviceId, selections) -> grouped.put(
+                serviceId,
+                selections.stream().map(this::toInventoryPreviewResponse).toList()
+        ));
+        return grouped;
+    }
+
+    private Map<UUID, List<PetAppointmentServiceLineInventoryResponse>> loadLineInventoryByLineId(
+            UUID tenantId,
+            Collection<UUID> lineIds
+    ) {
+        if (lineIds == null || lineIds.isEmpty()) {
+            return Map.of();
+        }
+
+        List<PetAppointmentServiceLineInventoryPlan> plans = appointmentServiceLineInventoryPlanRepository
+                .findAllByTenantIdAndAppointmentServiceIdInOrderByAppointmentServiceIdAscCreatedAtAsc(tenantId, lineIds);
+        if (plans.isEmpty()) {
+            return Map.of();
+        }
+
+        Map<UUID, List<PetAppointmentServiceLineInventoryResponse>> grouped = new LinkedHashMap<>();
+        for (PetAppointmentServiceLineInventoryPlan plan : plans) {
+            grouped.computeIfAbsent(plan.getAppointmentServiceId(), ignored -> new java.util.ArrayList<>())
+                    .add(new PetAppointmentServiceLineInventoryResponse(
+                            plan.getInventoryItemId(),
+                            plan.getInventoryItemName(),
+                            plan.getInventoryItemSku(),
+                            plan.getInventoryCategory(),
+                            plan.getUnitOfMeasure(),
+                            plan.getExpectedQuantity(),
+                            plan.getConsumptionRule()
+                    ));
+        }
+        return grouped;
+    }
+
+    private Map<UUID, InventoryItem> loadInventoryItemMapIncludingDeleted(
+            UUID tenantId,
+            Collection<UUID> inventoryItemIds
+    ) {
+        if (inventoryItemIds == null || inventoryItemIds.isEmpty()) {
+            return Map.of();
+        }
+
+        return inventoryItemRepository.findAllByTenantIdAndIdInIncludingDeleted(tenantId, inventoryItemIds)
+                .stream()
+                .collect(Collectors.toMap(InventoryItem::getId, Function.identity()));
+    }
+
+    private AppointmentServiceInventorySelection toServiceInventorySelection(PetServiceInventoryLink link, InventoryItem item) {
+        return new AppointmentServiceInventorySelection(
+                link.getInventoryItemId(),
+                item == null ? "Unavailable inventory item" : item.getName(),
+                item == null ? "UNAVAILABLE" : item.getSku(),
+                item == null || item.getCategory() == null ? "UNKNOWN" : item.getCategory().name(),
+                item == null ? "UNIT" : item.getUnitOfMeasure(),
+                link.getExpectedQuantity(),
+                link.getConsumptionRule()
+        );
+    }
+
+    private PetAppointmentServiceLineInventoryResponse toInventoryPreviewResponse(
+            AppointmentServiceInventorySelection selection
+    ) {
+        return new PetAppointmentServiceLineInventoryResponse(
+                selection.inventoryItemId(),
+                selection.inventoryItemName(),
+                selection.inventoryItemSku(),
+                selection.inventoryCategory(),
+                selection.unitOfMeasure(),
+                selection.expectedQuantity(),
+                selection.consumptionRule()
+        );
+    }
+
     private List<PetAppointmentServiceLineResponse> resolveAppointmentServiceResponses(
             PetAppointment appointment,
             List<PetAppointmentServiceLine> lines,
-            Map<UUID, PetServiceCatalog> servicesById
+            Map<UUID, PetServiceCatalog> servicesById,
+            Map<UUID, List<PetAppointmentServiceLineInventoryResponse>> lineInventoryByLineId,
+            Map<UUID, List<PetAppointmentServiceLineInventoryResponse>> serviceInventoryByServiceId
     ) {
         if (!lines.isEmpty()) {
             return lines.stream()
@@ -794,7 +992,9 @@ public class PetAppointmentService extends BaseTenantCrudService<
                             line,
                             servicesById.get(line.getServiceId()),
                             appointment,
-                            lines.size()
+                            lines.size(),
+                            lineInventoryByLineId.getOrDefault(line.getId(), List.of()),
+                            serviceInventoryByServiceId.getOrDefault(line.getServiceId(), List.of())
                     ))
                     .toList();
         }
@@ -818,6 +1018,7 @@ public class PetAppointmentService extends BaseTenantCrudService<
                 serviceCatalog == null ? null : serviceCatalog.isCommissionEligible(),
                 null,
                 serviceCatalog != null && serviceCatalog.isCommissionEligible() ? appointment.getCommissionAmount() : null,
+                serviceInventoryByServiceId.getOrDefault(appointment.getServiceId(), List.of()),
                 serviceCatalog != null && serviceCatalog.isActive(),
                 serviceCatalog != null && serviceCatalog.isAllowInPlans(),
                 serviceCatalog != null && serviceCatalog.isAllowStandaloneBooking(),
@@ -831,7 +1032,9 @@ public class PetAppointmentService extends BaseTenantCrudService<
             PetAppointmentServiceLine line,
             PetServiceCatalog serviceCatalog,
             PetAppointment appointment,
-            int serviceLineCount
+            int serviceLineCount,
+            List<PetAppointmentServiceLineInventoryResponse> storedInventoryConsumptions,
+            List<PetAppointmentServiceLineInventoryResponse> fallbackInventoryConsumptions
     ) {
         Boolean commissionEligible = line.getCommissionEligible() != null
                 ? line.getCommissionEligible()
@@ -843,6 +1046,9 @@ public class PetAppointmentService extends BaseTenantCrudService<
                 && appointment.getCommissionAmount() != null) {
             commissionAmount = appointment.getCommissionAmount();
         }
+        List<PetAppointmentServiceLineInventoryResponse> expectedInventoryConsumptions = storedInventoryConsumptions.isEmpty()
+                ? fallbackInventoryConsumptions
+                : storedInventoryConsumptions;
 
         return new PetAppointmentServiceLineResponse(
                 line.getId(),
@@ -856,6 +1062,7 @@ public class PetAppointmentService extends BaseTenantCrudService<
                 commissionEligible,
                 line.getCommissionRate(),
                 commissionAmount,
+                expectedInventoryConsumptions,
                 serviceCatalog != null && serviceCatalog.isActive(),
                 serviceCatalog != null && serviceCatalog.isAllowInPlans(),
                 serviceCatalog != null && serviceCatalog.isAllowStandaloneBooking(),
@@ -893,7 +1100,8 @@ public class PetAppointmentService extends BaseTenantCrudService<
             List<PetServiceCatalog> selectedServices,
             AppointmentProfessionalSelection professionalSelection,
             BigDecimal appointmentServicePrice,
-            boolean servicePriceOverridden
+            boolean servicePriceOverridden,
+            Map<UUID, List<AppointmentServiceInventorySelection>> serviceInventoryByServiceId
     ) {
         List<BigDecimal> linePrices = resolveServiceLinePrices(
                 selectedServices,
@@ -923,7 +1131,8 @@ public class PetAppointmentService extends BaseTenantCrudService<
                             lineProfessional == null ? null : lineProfessional.getName(),
                             commissionEligible,
                             commissionRate,
-                            commissionAmount
+                            commissionAmount,
+                            serviceInventoryByServiceId.getOrDefault(serviceCatalog.getId(), List.of())
                     );
                 })
                 .toList();
@@ -1109,6 +1318,17 @@ public class PetAppointmentService extends BaseTenantCrudService<
     private record AppointmentServiceSelection(List<AppointmentServiceLineSelection> services) {
     }
 
+    private record AppointmentServiceInventorySelection(
+            UUID inventoryItemId,
+            String inventoryItemName,
+            String inventoryItemSku,
+            String inventoryCategory,
+            String unitOfMeasure,
+            BigDecimal expectedQuantity,
+            com.phaiffertech.platform.modules.pet.servicecatalog.domain.PetServiceInventoryConsumptionRule consumptionRule
+    ) {
+    }
+
     private record AppointmentProfessionalSelection(
             PetProfessional defaultProfessional,
             PetProfessional compatibilityProfessional,
@@ -1124,7 +1344,8 @@ public class PetAppointmentService extends BaseTenantCrudService<
             String professionalName,
             boolean commissionEligible,
             BigDecimal commissionRate,
-            BigDecimal commissionAmount
+            BigDecimal commissionAmount,
+            List<AppointmentServiceInventorySelection> expectedInventoryConsumptions
     ) {
     }
 }

@@ -3,6 +3,7 @@ package com.phaiffertech.platform.modules.pet.servicecatalog.dto;
 import com.phaiffertech.platform.modules.pet.servicecatalog.domain.PetServiceCategory;
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.List;
 import java.util.UUID;
 
 public record PetServiceCatalogResponse(
@@ -16,6 +17,7 @@ public record PetServiceCatalogResponse(
         boolean commissionEligible,
         boolean allowInPlans,
         boolean allowStandaloneBooking,
+        List<PetServiceInventoryLinkResponse> inventoryLinks,
         Instant createdAt,
         Instant updatedAt
 ) {

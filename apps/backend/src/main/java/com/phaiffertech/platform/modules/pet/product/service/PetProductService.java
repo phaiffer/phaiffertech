@@ -191,6 +191,7 @@ public class PetProductService {
     private PetProductResponse toResponse(PetProduct product, InventoryItem item) {
         return new PetProductResponse(
                 product.getId(),
+                product.getInventoryItemId(),
                 product.getName(),
                 product.getSku(),
                 product.getPrice(),

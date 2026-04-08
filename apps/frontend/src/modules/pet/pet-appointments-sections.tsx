@@ -40,6 +40,7 @@ export type PetAppointmentSelectedService = {
   serviceId: string;
   label: string;
   note?: string;
+  inventoryPreview?: string;
   professionalId: string;
   professionalName?: string | null;
   professionalPending: boolean;
@@ -357,6 +358,11 @@ export function PetAppointmentForm({
                           <p className="text-sm font-medium text-slate-900">{service.label}</p>
                           {service.note ? (
                             <p className="mt-1 text-xs text-[color:var(--app-shell-muted)]">{service.note}</p>
+                          ) : null}
+                          {service.inventoryPreview ? (
+                            <p className="mt-1 text-xs text-[color:var(--app-shell-muted)]">
+                              {service.inventoryPreview}
+                            </p>
                           ) : null}
                           <div className="mt-3 space-y-1.5">
                             <FormSelect
