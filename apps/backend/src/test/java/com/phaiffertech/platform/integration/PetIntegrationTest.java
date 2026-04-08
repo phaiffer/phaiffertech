@@ -5,6 +5,7 @@ import com.phaiffertech.platform.support.AbstractIntegrationTest;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -187,6 +188,44 @@ class PetIntegrationTest extends AbstractIntegrationTest {
                 .get(0)
                 .path("appointmentServices")
                 .size());
+    }
+
+    @Test
+    void shouldTrackCommissionPerEligibleAppointmentServiceLine() {
+        AuthSession session = loginAsDefaultAdmin();
+        String marker = randomSearchMarker();
+
+        String clientId = createClient(session, marker);
+        String petId = createPet(session, clientId, marker);
+        String groomingServiceId = createService(session, marker + "-grooming", "GROOMING", true, 80.00);
+        String vaccinationServiceId = createService(session, marker + "-vaccination", "CLINICAL", false, 50.00);
+        String professionalId = createProfessional(session, marker, 0.15);
+
+        ResponseEntity<JsonNode> createAppointment = post("/pet/appointments", Map.of(
+                "clientId", clientId,
+                "petId", petId,
+                "serviceId", groomingServiceId,
+                "serviceIds", List.of(groomingServiceId, vaccinationServiceId),
+                "professionalId", professionalId,
+                "scheduledAt", Instant.now().plusSeconds(3600).toString(),
+                "status", "SCHEDULED",
+                "notes", "Mixed commission appointment"
+        ), session);
+
+        assertEquals(200, createAppointment.getStatusCode().value());
+        JsonNode createdAppointment = requireBody(createAppointment).path("data");
+        assertEquals(12.00, createdAppointment.path("commissionAmount").asDouble(), 0.01);
+        assertEquals(2, createdAppointment.path("appointmentServices").size());
+
+        JsonNode firstLine = createdAppointment.path("appointmentServices").get(0);
+        assertEquals(true, firstLine.path("commissionEligible").asBoolean());
+        assertEquals(0.15, firstLine.path("commissionRate").asDouble(), 0.0001);
+        assertEquals(12.00, firstLine.path("commissionAmount").asDouble(), 0.01);
+
+        JsonNode secondLine = createdAppointment.path("appointmentServices").get(1);
+        assertEquals(false, secondLine.path("commissionEligible").asBoolean());
+        assertTrue(secondLine.path("commissionRate").isMissingNode() || secondLine.path("commissionRate").isNull());
+        assertTrue(secondLine.path("commissionAmount").isMissingNode() || secondLine.path("commissionAmount").isNull());
     }
 
     @Test
@@ -982,14 +1021,24 @@ class PetIntegrationTest extends AbstractIntegrationTest {
     }
 
     private String createService(AuthSession session, String marker, String category) {
+        return createService(session, marker, category, true, 89.90);
+    }
+
+    private String createService(
+            AuthSession session,
+            String marker,
+            String category,
+            boolean commissionEligible,
+            double basePrice
+    ) {
         ResponseEntity<JsonNode> createService = post("/pet/services", Map.of(
                 "name", "Service " + marker,
                 "description", "Routine " + marker,
                 "category", category,
                 "active", true,
-                "basePrice", 89.90,
+                "basePrice", basePrice,
                 "durationMinutes", 40,
-                "commissionEligible", true,
+                "commissionEligible", commissionEligible,
                 "allowInPlans", true,
                 "allowStandaloneBooking", true
         ), session);
@@ -998,13 +1047,21 @@ class PetIntegrationTest extends AbstractIntegrationTest {
     }
 
     private String createProfessional(AuthSession session, String marker) {
-        ResponseEntity<JsonNode> createProfessional = post("/pet/professionals", Map.of(
-                "name", "Professional " + marker,
-                "specialty", "Vet",
-                "licenseNumber", "LIC-" + marker,
-                "phone", "+5511888888888",
-                "email", "professional." + marker + "@example.test"
-        ), session);
+        return createProfessional(session, marker, null);
+    }
+
+    private String createProfessional(AuthSession session, String marker, Double commissionRate) {
+        Map<String, Object> payload = new LinkedHashMap<>();
+        payload.put("name", "Professional " + marker);
+        payload.put("specialty", "Vet");
+        payload.put("licenseNumber", "LIC-" + marker);
+        payload.put("phone", "+5511888888888");
+        payload.put("email", "professional." + marker + "@example.test");
+        if (commissionRate != null) {
+            payload.put("commissionRate", commissionRate);
+        }
+
+        ResponseEntity<JsonNode> createProfessional = post("/pet/professionals", payload, session);
         assertEquals(200, createProfessional.getStatusCode().value());
         return requireBody(createProfessional).path("data").path("id").asText();
     }

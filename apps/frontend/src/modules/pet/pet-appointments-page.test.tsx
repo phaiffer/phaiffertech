@@ -267,6 +267,97 @@ describe('PetAppointmentsPage', () => {
     expect(screen.getByText('At least one selected service requires a linked plan before booking.')).toBeInTheDocument();
   });
 
+  it('shows commission-ready and excluded service lines in the multi-service summary', async () => {
+    setGrantedPermissions([
+      'pet.appointment.read',
+      'pet.appointment.create',
+      'pet.client.read',
+      'pet.profile.read',
+      'pet.service.read',
+      'pet.professional.read'
+    ]);
+
+    petServiceMock.listClients.mockResolvedValue(createPageResponse([
+      {
+        id: 'client-1',
+        name: 'Owner Example',
+        status: 'ACTIVE',
+        createdAt: '2026-03-10T10:00:00Z',
+        updatedAt: '2026-03-10T10:00:00Z'
+      }
+    ]));
+    petServiceMock.listProfiles.mockResolvedValue(createPageResponse([
+      {
+        id: 'pet-1',
+        clientId: 'client-1',
+        name: 'Pet Example',
+        species: 'Dog',
+        createdAt: '2026-03-10T10:00:00Z',
+        updatedAt: '2026-03-10T10:00:00Z'
+      }
+    ]));
+    petServiceMock.listServices.mockResolvedValue(createPageResponse([
+      {
+        id: 'service-grooming',
+        name: 'Grooming',
+        category: 'GROOMING',
+        active: true,
+        basePrice: 80,
+        durationMinutes: 60,
+        commissionEligible: true,
+        allowInPlans: true,
+        allowStandaloneBooking: true,
+        createdAt: '2026-03-10T10:00:00Z',
+        updatedAt: '2026-03-10T10:00:00Z'
+      },
+      {
+        id: 'service-vaccine',
+        name: 'Vaccination',
+        category: 'CLINICAL',
+        active: true,
+        basePrice: 50,
+        durationMinutes: 20,
+        commissionEligible: false,
+        allowInPlans: true,
+        allowStandaloneBooking: true,
+        createdAt: '2026-03-10T10:00:00Z',
+        updatedAt: '2026-03-10T10:00:00Z'
+      }
+    ]));
+    petServiceMock.listProfessionals.mockResolvedValue(createPageResponse([
+      {
+        id: 'professional-1',
+        name: 'Dr Example',
+        commissionRate: 0.15,
+        createdAt: '2026-03-10T10:00:00Z',
+        updatedAt: '2026-03-10T10:00:00Z'
+      }
+    ]));
+    petServiceMock.listAppointments.mockResolvedValue(createPageResponse([]));
+
+    render(<PetAppointmentsPage />);
+
+    await waitFor(() => {
+      expect(petServiceMock.listProfessionals).toHaveBeenCalled();
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: 'Book appointment' }));
+    fireEvent.change(screen.getAllByLabelText('Client')[1], { target: { value: 'client-1' } });
+    fireEvent.change(screen.getAllByLabelText('Pet')[1], { target: { value: 'pet-1' } });
+
+    const serviceSelect = screen.getAllByLabelText('Service')[1];
+    fireEvent.change(serviceSelect, { target: { value: 'service-grooming' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Add service' }));
+    fireEvent.change(serviceSelect, { target: { value: 'service-vaccine' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Add service' }));
+    fireEvent.change(screen.getAllByLabelText('Professional')[1], { target: { value: 'professional-1' } });
+
+    expect(screen.getByText((text) => text.includes('Commission ready') && text.includes('15%') && text.includes('12.00'))).toBeInTheDocument();
+    expect(screen.getByText('Commission excluded by service rule')).toBeInTheDocument();
+    expect(screen.getByText('Commission lines')).toBeInTheDocument();
+    expect(screen.getByText('1/2')).toBeInTheDocument();
+  });
+
   it('submits a multi-service appointment with the first service kept as the compatibility anchor', async () => {
     setGrantedPermissions([
       'pet.appointment.read',
