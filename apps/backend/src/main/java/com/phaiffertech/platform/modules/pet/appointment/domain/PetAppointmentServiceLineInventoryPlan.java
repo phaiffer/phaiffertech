@@ -39,6 +39,13 @@ public class PetAppointmentServiceLineInventoryPlan extends BaseTenantEntity {
     @Column(name = "consumption_rule", nullable = false, length = 40)
     private PetServiceInventoryConsumptionRule consumptionRule = PetServiceInventoryConsumptionRule.FIXED_PER_SERVICE;
 
+    @Column(name = "actual_quantity", precision = 10, scale = 2)
+    private BigDecimal actualQuantity;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "consumption_status", nullable = false, length = 40)
+    private PetAppointmentInventoryConsumptionStatus consumptionStatus = PetAppointmentInventoryConsumptionStatus.PLANNED;
+
     public UUID getAppointmentServiceId() {
         return appointmentServiceId;
     }
@@ -101,5 +108,21 @@ public class PetAppointmentServiceLineInventoryPlan extends BaseTenantEntity {
 
     public void setConsumptionRule(PetServiceInventoryConsumptionRule consumptionRule) {
         this.consumptionRule = consumptionRule;
+    }
+
+    public BigDecimal getActualQuantity() {
+        return actualQuantity;
+    }
+
+    public void setActualQuantity(BigDecimal actualQuantity) {
+        this.actualQuantity = actualQuantity;
+    }
+
+    public PetAppointmentInventoryConsumptionStatus getConsumptionStatus() {
+        return consumptionStatus;
+    }
+
+    public void setConsumptionStatus(PetAppointmentInventoryConsumptionStatus consumptionStatus) {
+        this.consumptionStatus = consumptionStatus;
     }
 }

@@ -74,6 +74,11 @@ export type PetAppointment = {
 };
 
 export type PetServiceInventoryConsumptionRule = 'FIXED_PER_SERVICE';
+export type PetAppointmentInventoryConsumptionStatus =
+  | 'PLANNED'
+  | 'ADJUSTED'
+  | 'READY_TO_APPLY'
+  | 'SKIPPED';
 
 export type PetAppointmentServiceLineInventoryConsumption = {
   inventoryItemId: string;
@@ -82,7 +87,10 @@ export type PetAppointmentServiceLineInventoryConsumption = {
   inventoryCategory?: string | null;
   unitOfMeasure: string;
   expectedQuantity: number;
+  actualQuantity?: number | null;
+  consumptionStatus: PetAppointmentInventoryConsumptionStatus;
   consumptionRule: PetServiceInventoryConsumptionRule;
+  snapshotBacked: boolean;
 };
 
 export type PetAppointmentServiceLine = {

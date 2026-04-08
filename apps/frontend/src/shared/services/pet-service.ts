@@ -2,6 +2,7 @@ import { apiClient } from '@/shared/lib/http';
 import { PageResponse } from '@/shared/types/common';
 import {
   PetAppointment,
+  PetAppointmentInventoryConsumptionStatus,
   PetCommissionSummary,
   PetClinicalTimeline,
   PetClient,
@@ -224,6 +225,14 @@ export type PetAppointmentServiceLineAssignmentInput = {
   professionalId?: string | null;
 };
 
+export type UpdatePetAppointmentServiceLineInventoryActualInput = {
+  inventoryConsumptions: Array<{
+    inventoryItemId: string;
+    actualQuantity?: number | null;
+    consumptionStatus: PetAppointmentInventoryConsumptionStatus;
+  }>;
+};
+
 type PetClientFilters = {
   status?: string;
 };
@@ -439,6 +448,16 @@ export const petService = {
 
   updateAppointment: (id: string, input: UpdatePetAppointmentInput) =>
     apiClient.put<PetAppointment>(`/pet/appointments/${id}`, input),
+
+  updateAppointmentServiceLineInventoryConsumptions: (
+    appointmentId: string,
+    serviceLineId: string,
+    input: UpdatePetAppointmentServiceLineInventoryActualInput
+  ) =>
+    apiClient.patch<PetAppointment>(
+      `/pet/appointments/${appointmentId}/service-lines/${serviceLineId}/inventory-consumptions`,
+      input
+    ),
 
   deleteAppointment: (id: string) => apiClient.delete<void>(`/pet/appointments/${id}`),
 

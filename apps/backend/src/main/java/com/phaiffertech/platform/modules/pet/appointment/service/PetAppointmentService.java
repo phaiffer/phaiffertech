@@ -4,10 +4,13 @@ import com.phaiffertech.platform.core.audit.service.AuditableAction;
 import com.phaiffertech.platform.core.inventory.domain.InventoryItem;
 import com.phaiffertech.platform.core.inventory.repository.InventoryItemRepository;
 import com.phaiffertech.platform.modules.pet.appointment.domain.PetAppointment;
+import com.phaiffertech.platform.modules.pet.appointment.domain.PetAppointmentInventoryConsumptionStatus;
 import com.phaiffertech.platform.modules.pet.appointment.domain.PetAppointmentServiceLine;
 import com.phaiffertech.platform.modules.pet.appointment.domain.PetAppointmentServiceLineInventoryPlan;
 import com.phaiffertech.platform.modules.pet.appointment.dto.PetAppointmentCreateRequest;
 import com.phaiffertech.platform.modules.pet.appointment.dto.PetAppointmentResponse;
+import com.phaiffertech.platform.modules.pet.appointment.dto.PetAppointmentServiceLineInventoryActualRequest;
+import com.phaiffertech.platform.modules.pet.appointment.dto.PetAppointmentServiceLineInventoryActualUpdateRequest;
 import com.phaiffertech.platform.modules.pet.appointment.dto.PetAppointmentServiceLineAssignmentRequest;
 import com.phaiffertech.platform.modules.pet.appointment.dto.PetAppointmentServiceLineInventoryResponse;
 import com.phaiffertech.platform.modules.pet.appointment.dto.PetAppointmentServiceLineResponse;
@@ -144,6 +147,7 @@ public class PetAppointmentService extends BaseTenantCrudService<
                 request.clientPlanId(),
                 List.of(),
                 null,
+                Map.of(),
                 entity
         );
         if (request.clientPlanId() != null) {
@@ -228,6 +232,8 @@ public class PetAppointmentService extends BaseTenantCrudService<
 
         UUID previousClientPlanId = entity.getClientPlanId();
         List<UUID> previousServiceIds = resolveCurrentServiceIds(tenantId, entity);
+        Map<UUID, List<AppointmentServiceInventorySelection>> persistedServiceInventoryByServiceId =
+                loadStoredServiceInventorySelectionsByServiceId(tenantId, entity.getId());
         PetAppointmentMapper.INSTANCE.updateEntity(entity, request);
         AppointmentServiceSelection selection = hydrateAndValidateRelations(
                 tenantId,
@@ -241,6 +247,7 @@ public class PetAppointmentService extends BaseTenantCrudService<
                 request.clientPlanId(),
                 previousServiceIds,
                 previousClientPlanId,
+                persistedServiceInventoryByServiceId,
                 entity
         );
 
@@ -260,6 +267,53 @@ public class PetAppointmentService extends BaseTenantCrudService<
         }
 
         return response;
+    }
+
+    @Transactional
+    @AuditableAction(action = AuditActionType.UPDATE, entity = "pet_appointment_service_inventory")
+    public PetAppointmentResponse updateServiceLineInventoryConsumptions(
+            UUID appointmentId,
+            UUID serviceLineId,
+            PetAppointmentServiceLineInventoryActualUpdateRequest request
+    ) {
+        UUID tenantId = currentTenantId();
+        PetAppointment appointment = getOrThrow(appointmentId, tenantId);
+        PetAppointmentServiceLine serviceLine = appointmentServiceLineRepository
+                .findByIdAndTenantIdAndAppointmentId(serviceLineId, tenantId, appointmentId)
+                .orElseThrow(() -> new ResourceNotFoundException("Pet appointment service line not found."));
+
+        List<PetAppointmentServiceLineInventoryPlan> plans = appointmentServiceLineInventoryPlanRepository
+                .findAllByTenantIdAndAppointmentServiceIdOrderByCreatedAtAsc(tenantId, serviceLine.getId());
+
+        if (plans.isEmpty()) {
+            throw new ConflictOperationException(
+                    "Pet appointment service line does not have a structured inventory snapshot to capture actual consumption."
+            );
+        }
+
+        Map<UUID, PetAppointmentServiceLineInventoryActualRequest> requestsByInventoryItemId =
+                mapActualConsumptionRequests(request.inventoryConsumptions());
+        Set<UUID> planInventoryItemIds = plans.stream()
+                .map(PetAppointmentServiceLineInventoryPlan::getInventoryItemId)
+                .collect(Collectors.toSet());
+
+        if (!planInventoryItemIds.containsAll(requestsByInventoryItemId.keySet())) {
+            throw new ConflictOperationException(
+                    "Pet appointment actual consumption update can only touch inventory items from the stored service-line snapshot."
+            );
+        }
+
+        for (PetAppointmentServiceLineInventoryPlan plan : plans) {
+            PetAppointmentServiceLineInventoryActualRequest lineRequest =
+                    requestsByInventoryItemId.get(plan.getInventoryItemId());
+            if (lineRequest == null) {
+                continue;
+            }
+            applyActualConsumption(plan, lineRequest);
+        }
+
+        appointmentServiceLineInventoryPlanRepository.saveAll(plans);
+        return toValidatedResponse(appointment, tenantId);
     }
 
     @Transactional
@@ -306,6 +360,7 @@ public class PetAppointmentService extends BaseTenantCrudService<
             UUID requestedClientPlanId,
             List<UUID> previousServiceIds,
             UUID previousClientPlanId,
+            Map<UUID, List<AppointmentServiceInventorySelection>> persistedServiceInventoryByServiceId,
             PetAppointment entity
     ) {
         petClientRepository.findByIdAndTenantId(clientId, tenantId)
@@ -339,7 +394,12 @@ public class PetAppointmentService extends BaseTenantCrudService<
                 requestedServiceLineAssignments
         );
         Map<UUID, List<AppointmentServiceInventorySelection>> serviceInventoryByServiceId =
-                loadServiceInventorySelectionsByServiceId(tenantId, resolvedServiceIds);
+                loadServiceInventorySelectionsByServiceId(
+                        tenantId,
+                        resolvedServiceIds,
+                        previousServiceIdSet,
+                        persistedServiceInventoryByServiceId
+                );
 
         PetServiceCatalog primaryService = selectedServices.getFirst();
         entity.setServiceId(primaryService.getId());
@@ -778,8 +838,66 @@ public class PetAppointmentService extends BaseTenantCrudService<
         plan.setInventoryCategory(selection.inventoryCategory());
         plan.setUnitOfMeasure(selection.unitOfMeasure());
         plan.setExpectedQuantity(selection.expectedQuantity());
+        plan.setActualQuantity(selection.actualQuantity());
+        plan.setConsumptionStatus(selection.consumptionStatus());
         plan.setConsumptionRule(selection.consumptionRule());
         return plan;
+    }
+
+    private Map<UUID, PetAppointmentServiceLineInventoryActualRequest> mapActualConsumptionRequests(
+            List<PetAppointmentServiceLineInventoryActualRequest> inventoryConsumptions
+    ) {
+        if (inventoryConsumptions == null || inventoryConsumptions.isEmpty()) {
+            throw new ConflictOperationException("Pet appointment actual consumption update requires at least one inventory row.");
+        }
+
+        Map<UUID, PetAppointmentServiceLineInventoryActualRequest> requestsByInventoryItemId = new LinkedHashMap<>();
+        for (PetAppointmentServiceLineInventoryActualRequest request : inventoryConsumptions) {
+            PetAppointmentServiceLineInventoryActualRequest previous =
+                    requestsByInventoryItemId.put(request.inventoryItemId(), request);
+            if (previous != null) {
+                throw new ConflictOperationException(
+                        "Pet appointment actual consumption cannot repeat the same inventory item in one service line update."
+                );
+            }
+        }
+        return requestsByInventoryItemId;
+    }
+
+    private void applyActualConsumption(
+            PetAppointmentServiceLineInventoryPlan plan,
+            PetAppointmentServiceLineInventoryActualRequest request
+    ) {
+        if (request.actualQuantity() != null && request.actualQuantity().compareTo(BigDecimal.ZERO) < 0) {
+            throw new ConflictOperationException("Pet appointment actual consumption quantity cannot be negative.");
+        }
+
+        BigDecimal normalizedActualQuantity = request.actualQuantity() == null
+                ? null
+                : request.actualQuantity().setScale(2, RoundingMode.HALF_UP);
+
+        switch (request.consumptionStatus()) {
+            case PLANNED -> {
+                if (normalizedActualQuantity != null) {
+                    throw new ConflictOperationException(
+                            "Pet appointment planned inventory rows cannot store an actual quantity."
+                    );
+                }
+                plan.setActualQuantity(null);
+            }
+            case SKIPPED -> plan.setActualQuantity(BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP));
+            case ADJUSTED, READY_TO_APPLY -> {
+                if (normalizedActualQuantity == null) {
+                    throw new ConflictOperationException(
+                            "Pet appointment actual consumption quantity is required for adjusted or ready-to-apply rows."
+                    );
+                }
+                plan.setActualQuantity(normalizedActualQuantity);
+            }
+            default -> throw new ConflictOperationException("Pet appointment inventory consumption status is not supported.");
+        }
+
+        plan.setConsumptionStatus(request.consumptionStatus());
     }
 
     private List<UUID> resolveCurrentServiceIds(UUID tenantId, PetAppointment appointment) {
@@ -863,16 +981,31 @@ public class PetAppointmentService extends BaseTenantCrudService<
 
     private Map<UUID, List<AppointmentServiceInventorySelection>> loadServiceInventorySelectionsByServiceId(
             UUID tenantId,
-            Collection<UUID> serviceIds
+            Collection<UUID> serviceIds,
+            Collection<UUID> persistedServiceIds,
+            Map<UUID, List<AppointmentServiceInventorySelection>> persistedServiceInventoryByServiceId
     ) {
         if (serviceIds == null || serviceIds.isEmpty()) {
             return Map.of();
         }
 
+        Set<UUID> persistedServiceIdSet = persistedServiceIds == null
+                ? Set.of()
+                : new LinkedHashSet<>(persistedServiceIds);
         List<PetServiceInventoryLink> links = serviceInventoryLinkRepository
                 .findAllByTenantIdAndServiceIdInAndActiveTrueOrderByServiceIdAscCreatedAtAsc(tenantId, serviceIds);
+
+        Map<UUID, List<AppointmentServiceInventorySelection>> grouped = new LinkedHashMap<>();
+        for (UUID serviceId : serviceIds) {
+            if (persistedServiceIdSet.contains(serviceId)) {
+                grouped.put(serviceId, List.copyOf(
+                        persistedServiceInventoryByServiceId.getOrDefault(serviceId, List.of())
+                ));
+            }
+        }
+
         if (links.isEmpty()) {
-            return Map.of();
+            return grouped;
         }
 
         Map<UUID, InventoryItem> itemsById = loadInventoryItemMapIncludingDeleted(
@@ -880,11 +1013,46 @@ public class PetAppointmentService extends BaseTenantCrudService<
                 links.stream().map(PetServiceInventoryLink::getInventoryItemId).collect(Collectors.toSet())
         );
 
-        Map<UUID, List<AppointmentServiceInventorySelection>> grouped = new LinkedHashMap<>();
         for (PetServiceInventoryLink link : links) {
+            if (persistedServiceIdSet.contains(link.getServiceId())) {
+                continue;
+            }
             grouped.computeIfAbsent(link.getServiceId(), ignored -> new java.util.ArrayList<>())
                     .add(toServiceInventorySelection(link, itemsById.get(link.getInventoryItemId())));
         }
+        return grouped;
+    }
+
+    private Map<UUID, List<AppointmentServiceInventorySelection>> loadStoredServiceInventorySelectionsByServiceId(
+            UUID tenantId,
+            UUID appointmentId
+    ) {
+        List<PetAppointmentServiceLine> lines = appointmentServiceLineRepository
+                .findAllByTenantIdAndAppointmentIdOrderByLineOrderAsc(tenantId, appointmentId);
+        if (lines.isEmpty()) {
+            return Map.of();
+        }
+
+        Map<UUID, UUID> lineIdsByServiceId = lines.stream()
+                .collect(Collectors.toMap(
+                        PetAppointmentServiceLine::getServiceId,
+                        PetAppointmentServiceLine::getId,
+                        (first, second) -> first,
+                        LinkedHashMap::new
+                ));
+
+        Map<UUID, List<PetAppointmentServiceLineInventoryResponse>> lineInventoryByLineId = loadLineInventoryByLineId(
+                tenantId,
+                lineIdsByServiceId.values()
+        );
+
+        Map<UUID, List<AppointmentServiceInventorySelection>> grouped = new LinkedHashMap<>();
+        lineIdsByServiceId.forEach((serviceId, lineId) -> grouped.put(
+                serviceId,
+                lineInventoryByLineId.getOrDefault(lineId, List.of()).stream()
+                        .map(this::toStoredInventorySelection)
+                        .toList()
+        ));
         return grouped;
     }
 
@@ -897,7 +1065,7 @@ public class PetAppointmentService extends BaseTenantCrudService<
         }
 
         Map<UUID, List<AppointmentServiceInventorySelection>> selectionsByServiceId =
-                loadServiceInventorySelectionsByServiceId(tenantId, serviceIds);
+                loadServiceInventorySelectionsByServiceId(tenantId, serviceIds, Set.of(), Map.of());
         if (selectionsByServiceId.isEmpty()) {
             return Map.of();
         }
@@ -934,7 +1102,10 @@ public class PetAppointmentService extends BaseTenantCrudService<
                             plan.getInventoryCategory(),
                             plan.getUnitOfMeasure(),
                             plan.getExpectedQuantity(),
-                            plan.getConsumptionRule()
+                            plan.getActualQuantity(),
+                            plan.getConsumptionStatus(),
+                            plan.getConsumptionRule(),
+                            true
                     ));
         }
         return grouped;
@@ -961,7 +1132,27 @@ public class PetAppointmentService extends BaseTenantCrudService<
                 item == null || item.getCategory() == null ? "UNKNOWN" : item.getCategory().name(),
                 item == null ? "UNIT" : item.getUnitOfMeasure(),
                 link.getExpectedQuantity(),
-                link.getConsumptionRule()
+                null,
+                PetAppointmentInventoryConsumptionStatus.PLANNED,
+                link.getConsumptionRule(),
+                false
+        );
+    }
+
+    private AppointmentServiceInventorySelection toStoredInventorySelection(
+            PetAppointmentServiceLineInventoryResponse response
+    ) {
+        return new AppointmentServiceInventorySelection(
+                response.inventoryItemId(),
+                response.inventoryItemName(),
+                response.inventoryItemSku(),
+                response.inventoryCategory(),
+                response.unitOfMeasure(),
+                response.expectedQuantity(),
+                response.actualQuantity(),
+                response.consumptionStatus(),
+                response.consumptionRule(),
+                response.snapshotBacked()
         );
     }
 
@@ -975,7 +1166,10 @@ public class PetAppointmentService extends BaseTenantCrudService<
                 selection.inventoryCategory(),
                 selection.unitOfMeasure(),
                 selection.expectedQuantity(),
-                selection.consumptionRule()
+                selection.actualQuantity(),
+                selection.consumptionStatus(),
+                selection.consumptionRule(),
+                selection.snapshotBacked()
         );
     }
 
@@ -1325,7 +1519,10 @@ public class PetAppointmentService extends BaseTenantCrudService<
             String inventoryCategory,
             String unitOfMeasure,
             BigDecimal expectedQuantity,
-            com.phaiffertech.platform.modules.pet.servicecatalog.domain.PetServiceInventoryConsumptionRule consumptionRule
+            BigDecimal actualQuantity,
+            PetAppointmentInventoryConsumptionStatus consumptionStatus,
+            com.phaiffertech.platform.modules.pet.servicecatalog.domain.PetServiceInventoryConsumptionRule consumptionRule,
+            boolean snapshotBacked
     ) {
     }
 
