@@ -80,6 +80,8 @@ export type PetAppointmentServiceLine = {
   serviceCategory?: PetServiceCategory | null;
   durationMinutes?: number | null;
   basePrice?: number | null;
+  professionalId?: string | null;
+  professionalName?: string | null;
   commissionEligible?: boolean | null;
   commissionRate?: number | null;
   commissionAmount?: number | null;

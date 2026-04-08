@@ -191,6 +191,74 @@ class PetIntegrationTest extends AbstractIntegrationTest {
     }
 
     @Test
+    void shouldAssignDifferentProfessionalsPerAppointmentServiceLine() {
+        AuthSession session = loginAsDefaultAdmin();
+        String marker = randomSearchMarker();
+
+        String clientId = createClient(session, marker);
+        String petId = createPet(session, clientId, marker);
+        String bathServiceId = createService(session, marker + "-bath", "GROOMING", true, 80.00);
+        String hygienicServiceId = createService(session, marker + "-hygienic", "GROOMING", true, 50.00);
+        String bathProfessionalId = createProfessional(session, marker + "-bath", 0.15);
+        String hygienicProfessionalId = createProfessional(session, marker + "-hygienic", 0.10);
+
+        ResponseEntity<JsonNode> createAppointment = post("/pet/appointments", Map.of(
+                "clientId", clientId,
+                "petId", petId,
+                "serviceId", bathServiceId,
+                "serviceIds", List.of(bathServiceId, hygienicServiceId),
+                "professionalId", bathProfessionalId,
+                "serviceLineAssignments", List.of(
+                        Map.of(
+                                "serviceId", bathServiceId,
+                                "professionalId", bathProfessionalId
+                        ),
+                        Map.of(
+                                "serviceId", hygienicServiceId,
+                                "professionalId", hygienicProfessionalId
+                        )
+                ),
+                "scheduledAt", Instant.now().plusSeconds(3600).toString(),
+                "status", "SCHEDULED",
+                "notes", "Split responsibility appointment"
+        ), session);
+
+        assertEquals(200, createAppointment.getStatusCode().value());
+        JsonNode createdAppointment = requireBody(createAppointment).path("data");
+        assertEquals(bathProfessionalId, createdAppointment.path("professionalId").asText());
+        assertEquals("Professional " + marker + "-bath", createdAppointment.path("professionalName").asText());
+        assertEquals(17.00, createdAppointment.path("commissionAmount").asDouble(), 0.01);
+
+        JsonNode firstLine = createdAppointment.path("appointmentServices").get(0);
+        assertEquals(bathProfessionalId, firstLine.path("professionalId").asText());
+        assertEquals("Professional " + marker + "-bath", firstLine.path("professionalName").asText());
+        assertEquals(12.00, firstLine.path("commissionAmount").asDouble(), 0.01);
+
+        JsonNode secondLine = createdAppointment.path("appointmentServices").get(1);
+        assertEquals(hygienicProfessionalId, secondLine.path("professionalId").asText());
+        assertEquals("Professional " + marker + "-hygienic", secondLine.path("professionalName").asText());
+        assertEquals(5.00, secondLine.path("commissionAmount").asDouble(), 0.01);
+
+        ResponseEntity<JsonNode> filteredBySecondaryProfessional = get(
+                "/pet/appointments?page=0&size=20&professionalId=" + hygienicProfessionalId + "&search=hygienic",
+                session
+        );
+        assertEquals(200, filteredBySecondaryProfessional.getStatusCode().value());
+        assertEquals(1, requireBody(filteredBySecondaryProfessional).path("data").path("items").size());
+        assertEquals(
+                hygienicProfessionalId,
+                requireBody(filteredBySecondaryProfessional)
+                        .path("data")
+                        .path("items")
+                        .get(0)
+                        .path("appointmentServices")
+                        .get(1)
+                        .path("professionalId")
+                        .asText()
+        );
+    }
+
+    @Test
     void shouldTrackCommissionPerEligibleAppointmentServiceLine() {
         AuthSession session = loginAsDefaultAdmin();
         String marker = randomSearchMarker();

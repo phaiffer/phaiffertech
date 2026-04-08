@@ -176,6 +176,9 @@ function resolveServiceSummaryCopy(locale: string) {
       commissionUnavailableNotice: (count: number) => count === 1
         ? '1 linha legada ainda nao possui snapshot estruturado de comissao.'
         : `${count} linhas legadas ainda nao possuem snapshot estruturado de comissao.`,
+      professionalPendingNotice: (count: number) => count === 1
+        ? '1 linha ainda esta sem profissional responsavel.'
+        : `${count} linhas ainda estao sem profissional responsavel.`,
       legacyHeadlineSuffix: 'reserva legada',
       bundleHeadlineSuffix: 'servicos selecionados'
     };
@@ -222,6 +225,9 @@ function resolveServiceSummaryCopy(locale: string) {
     commissionUnavailableNotice: (count: number) => count === 1
       ? '1 legacy service line does not yet carry a structured commission snapshot.'
       : `${count} legacy service lines do not yet carry a structured commission snapshot.`,
+    professionalPendingNotice: (count: number) => count === 1
+      ? '1 service line is still missing a responsible professional.'
+      : `${count} service lines are still missing a responsible professional.`,
     legacyHeadlineSuffix: 'legacy booking',
     bundleHeadlineSuffix: 'services selected'
   };
@@ -263,6 +269,7 @@ export function PetAppointmentsPage() {
   const [servicePickerId, setServicePickerId] = useState('');
   const [selectedServiceIds, setSelectedServiceIds] = useState<string[]>([]);
   const [professionalId, setProfessionalId] = useState('');
+  const [serviceLineProfessionalIds, setServiceLineProfessionalIds] = useState<Record<string, string>>({});
   const [scheduledAt, setScheduledAt] = useState('');
   const [status, setStatus] = useState('SCHEDULED');
   const [notes, setNotes] = useState('');
@@ -330,11 +337,6 @@ export function PetAppointmentsPage() {
     () => new Map(editingServiceLines.map((line) => [line.serviceId, line])),
     [editingServiceLines]
   );
-  const selectedProfessional = useMemo(
-    () => professionals.find((professional) => professional.id === professionalId),
-    [professionalId, professionals]
-  );
-
   const serviceOptions = useMemo(() => {
     return [
       { value: '', label: messages.formOptions.all },
@@ -378,6 +380,13 @@ export function PetAppointmentsPage() {
     ];
   }, [messages.formOptions.selectProfessional, professionals]);
 
+  const serviceLineProfessionalOptions = useMemo(() => {
+    return [
+      { value: '', label: messages.formOptions.unassignedProfessional },
+      ...professionals.map((professional) => ({ value: professional.id, label: professional.name }))
+    ];
+  }, [messages.formOptions.unassignedProfessional, professionals]);
+
   // Plan options loaded server-side by clientId when the form is open
   const planOptions = useMemo(() => {
     if (!clientId) {
@@ -401,29 +410,44 @@ export function PetAppointmentsPage() {
       .map((selectedId) => {
         const catalogService = servicesById.get(selectedId);
         const legacyServiceLine = editingServiceLinesById.get(selectedId);
+        const hasExplicitLineProfessional = Object.prototype.hasOwnProperty.call(serviceLineProfessionalIds, selectedId);
+        const assignedProfessionalId = hasExplicitLineProfessional
+          ? serviceLineProfessionalIds[selectedId]
+          : professionalId;
+        const assignedProfessional = professionals.find((professional) => professional.id === assignedProfessionalId);
 
         if (!catalogService && !legacyServiceLine) {
           return null;
         }
 
+        const assignedProfessionalName = assignedProfessionalId
+          ? assignedProfessional?.name
+            ?? (legacyServiceLine?.professionalId === assignedProfessionalId ? legacyServiceLine.professionalName ?? null : null)
+          : null;
+
         return {
           serviceId: selectedId,
           catalogService,
           legacyServiceLine,
+          assignedProfessionalId,
+          assignedProfessionalName,
           commissionEligible: catalogService?.commissionEligible ?? legacyServiceLine?.commissionEligible ?? null,
           lineBasePrice: catalogService?.basePrice ?? legacyServiceLine?.basePrice ?? null,
-          commissionRate: selectedProfessional?.commissionRate ?? legacyServiceLine?.commissionRate ?? null
+          commissionRate: assignedProfessional?.commissionRate
+            ?? (legacyServiceLine?.professionalId === assignedProfessionalId ? legacyServiceLine?.commissionRate ?? null : null)
         };
       })
       .filter((entry): entry is {
         serviceId: string;
         catalogService: PetServiceCatalog | undefined;
         legacyServiceLine: PetAppointmentServiceLine | undefined;
+        assignedProfessionalId: string;
+        assignedProfessionalName: string | null;
         commissionEligible: boolean | null;
         lineBasePrice: number | null;
         commissionRate: number | null;
       } => entry !== null);
-  }, [editingServiceLinesById, selectedProfessional, selectedServiceIds, servicesById]);
+  }, [editingServiceLinesById, professionalId, professionals, selectedServiceIds, serviceLineProfessionalIds, servicesById]);
 
   const selectedServices = useMemo<PetAppointmentSelectedService[]>(() => {
     return selectedServiceEntries.map((entry) => {
@@ -450,6 +474,9 @@ export function PetAppointmentsPage() {
           serviceId: entry.serviceId,
           label: describePetServiceCatalogItem(entry.catalogService, locale),
           note: entry.catalogService.active ? undefined : serviceSummaryCopy.inactiveLegacy,
+          professionalId: entry.assignedProfessionalId,
+          professionalName: entry.assignedProfessionalName,
+          professionalPending: !entry.assignedProfessionalId,
           commissionContext,
           commissionTone,
           removable: true
@@ -460,6 +487,9 @@ export function PetAppointmentsPage() {
         serviceId: entry.serviceId,
         label: `${entry.legacyServiceLine?.serviceName ?? messages.filters.service} · ${serviceSummaryCopy.legacyHeadlineSuffix}`,
         note: serviceSummaryCopy.missingLegacy,
+        professionalId: entry.assignedProfessionalId,
+        professionalName: entry.assignedProfessionalName,
+        professionalPending: !entry.assignedProfessionalId,
         commissionContext,
         commissionTone,
         removable: true
@@ -494,6 +524,7 @@ export function PetAppointmentsPage() {
       }
       return total + (entry.lineBasePrice * entry.commissionRate);
     }, 0));
+    const professionalPendingCount = selectedServiceEntries.filter((entry) => !entry.assignedProfessionalId).length;
     const commissionPendingCount = selectedServiceEntries.filter((entry) => (
       entry.commissionEligible === true && (entry.commissionRate == null || entry.lineBasePrice == null)
     )).length;
@@ -527,6 +558,10 @@ export function PetAppointmentsPage() {
 
     if (commissionUnavailableCount > 0) {
       notices.push(serviceSummaryCopy.commissionUnavailableNotice(commissionUnavailableCount));
+    }
+
+    if (professionalPendingCount > 0) {
+      notices.push(serviceSummaryCopy.professionalPendingNotice(professionalPendingCount));
     }
 
     return {
@@ -703,6 +738,7 @@ export function PetAppointmentsPage() {
     setServicePickerId('');
     setSelectedServiceIds([]);
     setProfessionalId('');
+    setServiceLineProfessionalIds({});
     setScheduledAt('');
     setStatus('SCHEDULED');
     setNotes('');
@@ -731,6 +767,8 @@ export function PetAppointmentsPage() {
           serviceCategory: null,
           durationMinutes: appointment.totalServiceDurationMinutes ?? null,
           basePrice: appointment.servicePrice ?? appointment.totalServiceBasePrice ?? null,
+          professionalId: appointment.professionalId,
+          professionalName: appointment.professionalName ?? null,
           commissionEligible: null,
           commissionRate: null,
           commissionAmount: appointment.commissionAmount ?? null,
@@ -747,6 +785,12 @@ export function PetAppointmentsPage() {
     setPetId(appointment.petId);
     setServicePickerId('');
     setSelectedServiceIds(appointmentServices.map((service) => service.serviceId));
+    setServiceLineProfessionalIds(Object.fromEntries(
+      appointmentServices.map((service) => [
+        service.serviceId,
+        service.professionalId === undefined ? appointment.professionalId : (service.professionalId ?? '')
+      ])
+    ));
     setProfessionalId(appointment.professionalId);
     setScheduledAt(toDateTimeLocal(appointment.scheduledAt));
     setStatus(appointment.status);
@@ -770,11 +814,40 @@ export function PetAppointmentsPage() {
     }
 
     setSelectedServiceIds((current) => [...current, servicePickerId]);
+    setServiceLineProfessionalIds((current) => ({
+      ...current,
+      [servicePickerId]: current[servicePickerId] ?? professionalId
+    }));
     setServicePickerId('');
   }
 
   function handleRemoveService(serviceToRemoveId: string) {
     setSelectedServiceIds((current) => current.filter((selectedId) => selectedId !== serviceToRemoveId));
+    setServiceLineProfessionalIds((current) => {
+      const next = { ...current };
+      delete next[serviceToRemoveId];
+      return next;
+    });
+  }
+
+  function handleProfessionalIdChange(nextProfessionalId: string) {
+    setServiceLineProfessionalIds((current) => {
+      const next = { ...current };
+      selectedServiceIds.forEach((serviceId) => {
+        if (!next[serviceId] || next[serviceId] === professionalId) {
+          next[serviceId] = nextProfessionalId;
+        }
+      });
+      return next;
+    });
+    setProfessionalId(nextProfessionalId);
+  }
+
+  function handleSelectedServiceProfessionalChange(serviceId: string, nextProfessionalId: string) {
+    setServiceLineProfessionalIds((current) => ({
+      ...current,
+      [serviceId]: nextProfessionalId
+    }));
   }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -833,6 +906,12 @@ export function PetAppointmentsPage() {
       serviceId: primaryServiceId,
       serviceIds: selectedServiceIds,
       professionalId,
+      serviceLineAssignments: selectedServiceIds.map((serviceId) => ({
+        serviceId,
+        professionalId: Object.prototype.hasOwnProperty.call(serviceLineProfessionalIds, serviceId)
+          ? (serviceLineProfessionalIds[serviceId] || null)
+          : (professionalId || null)
+      })),
       scheduledAt: isoScheduledAt,
       status,
       notes: notes || undefined,
@@ -1119,8 +1198,10 @@ export function PetAppointmentsPage() {
                   onRemoveService={handleRemoveService}
                   canAddSelectedService={Boolean(servicePickerId) && !selectedServiceIds.includes(servicePickerId)}
                   professionalId={professionalId}
-                  onProfessionalIdChange={setProfessionalId}
+                  onProfessionalIdChange={handleProfessionalIdChange}
                   formProfessionalOptions={formProfessionalOptions}
+                  serviceLineProfessionalOptions={serviceLineProfessionalOptions}
+                  onSelectedServiceProfessionalChange={handleSelectedServiceProfessionalChange}
                   professionalsLookupUnavailable={professionalsLookupUnavailable}
                   scheduledAt={scheduledAt}
                   onScheduledAtChange={setScheduledAt}

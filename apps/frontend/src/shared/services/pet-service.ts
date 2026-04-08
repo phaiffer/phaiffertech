@@ -92,6 +92,7 @@ export type CreatePetAppointmentInput = {
   serviceId: string;
   serviceIds?: string[];
   professionalId: string;
+  serviceLineAssignments?: PetAppointmentServiceLineAssignmentInput[];
   scheduledAt: string;
   status?: string;
   notes?: string;
@@ -110,6 +111,7 @@ export type UpdatePetAppointmentInput = {
   serviceId: string;
   serviceIds?: string[];
   professionalId: string;
+  serviceLineAssignments?: PetAppointmentServiceLineAssignmentInput[];
   scheduledAt: string;
   status: string;
   notes?: string;
@@ -205,6 +207,11 @@ export type CreatePetInvoicePaymentInput = {
   receivedAt?: string;
   referenceCode?: string;
   notes?: string;
+};
+
+export type PetAppointmentServiceLineAssignmentInput = {
+  serviceId: string;
+  professionalId?: string | null;
 };
 
 type PetClientFilters = {

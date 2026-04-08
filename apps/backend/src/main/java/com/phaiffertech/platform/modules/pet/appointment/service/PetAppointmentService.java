@@ -5,6 +5,7 @@ import com.phaiffertech.platform.modules.pet.appointment.domain.PetAppointment;
 import com.phaiffertech.platform.modules.pet.appointment.domain.PetAppointmentServiceLine;
 import com.phaiffertech.platform.modules.pet.appointment.dto.PetAppointmentCreateRequest;
 import com.phaiffertech.platform.modules.pet.appointment.dto.PetAppointmentResponse;
+import com.phaiffertech.platform.modules.pet.appointment.dto.PetAppointmentServiceLineAssignmentRequest;
 import com.phaiffertech.platform.modules.pet.appointment.dto.PetAppointmentServiceLineResponse;
 import com.phaiffertech.platform.modules.pet.appointment.dto.PetAppointmentUpdateRequest;
 import com.phaiffertech.platform.modules.pet.appointment.mapper.PetAppointmentMapper;
@@ -46,6 +47,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.function.Function;
@@ -121,6 +123,7 @@ public class PetAppointmentService extends BaseTenantCrudService<
                 request.serviceId(),
                 request.serviceIds(),
                 request.professionalId(),
+                request.serviceLineAssignments(),
                 request.servicePrice(),
                 request.clientPlanId(),
                 List.of(),
@@ -217,6 +220,7 @@ public class PetAppointmentService extends BaseTenantCrudService<
                 request.serviceId(),
                 request.serviceIds(),
                 request.professionalId(),
+                request.serviceLineAssignments(),
                 request.servicePrice(),
                 request.clientPlanId(),
                 previousServiceIds,
@@ -281,6 +285,7 @@ public class PetAppointmentService extends BaseTenantCrudService<
             UUID serviceId,
             List<UUID> requestedServiceIds,
             UUID professionalId,
+            List<PetAppointmentServiceLineAssignmentRequest> requestedServiceLineAssignments,
             BigDecimal requestedServicePrice,
             UUID requestedClientPlanId,
             List<UUID> previousServiceIds,
@@ -311,13 +316,17 @@ public class PetAppointmentService extends BaseTenantCrudService<
             );
         }
 
-        PetProfessional professional = petProfessionalRepository.findByIdAndTenantId(professionalId, tenantId)
-                .orElseThrow(() -> new ResourceNotFoundException("Pet professional not found for tenant."));
+        AppointmentProfessionalSelection professionalSelection = resolveProfessionalSelection(
+                tenantId,
+                professionalId,
+                resolvedServiceIds,
+                requestedServiceLineAssignments
+        );
 
         PetServiceCatalog primaryService = selectedServices.getFirst();
         entity.setServiceId(primaryService.getId());
         entity.setServiceName(resolveAppointmentServiceHeadline(selectedServices));
-        entity.setProfessionalId(professional.getId());
+        entity.setProfessionalId(professionalSelection.compatibilityProfessional().getId());
 
         BigDecimal totalCatalogServicePrice = selectedServices.stream()
                 .map(PetServiceCatalog::getPrice)
@@ -336,7 +345,7 @@ public class PetAppointmentService extends BaseTenantCrudService<
 
         List<AppointmentServiceLineSelection> serviceLines = buildAppointmentServiceLineSelections(
                 selectedServices,
-                professional,
+                professionalSelection,
                 resolvedServicePrice,
                 requestedServicePrice != null
         );
@@ -603,7 +612,10 @@ public class PetAppointmentService extends BaseTenantCrudService<
                 || !new LinkedHashSet<>(resolveCurrentServiceIds(tenantId, currentAppointment)).equals(
                         new LinkedHashSet<>(resolveRequestedServiceIds(request.serviceId(), request.serviceIds()))
                 )
-                || !java.util.Objects.equals(currentAppointment.getProfessionalId(), request.professionalId());
+                || !java.util.Objects.equals(
+                        currentAppointment.getProfessionalId(),
+                        resolveRequestedCompatibilityProfessionalId(request)
+                );
 
         if (relationshipsChanged) {
             throw new ConflictOperationException(
@@ -704,6 +716,8 @@ public class PetAppointmentService extends BaseTenantCrudService<
         line.setServiceCategory(serviceCatalog.getCategory());
         line.setDurationMinutes(serviceCatalog.getDurationMinutes());
         line.setServicePrice(selection.servicePrice());
+        line.setProfessionalId(selection.professionalId());
+        line.setProfessionalName(selection.professionalName());
         line.setCommissionEligible(selection.commissionEligible());
         line.setCommissionRate(selection.commissionRate());
         line.setCommissionAmount(selection.commissionAmount());
@@ -797,6 +811,10 @@ public class PetAppointmentService extends BaseTenantCrudService<
                 serviceCatalog == null ? null : serviceCatalog.getCategory(),
                 serviceCatalog == null ? null : serviceCatalog.getDurationMinutes(),
                 appointment.getServicePrice(),
+                appointment.getProfessionalId(),
+                appointment.getProfessionalId() == null ? null : resolveProfessionalName(
+                        petProfessionalRepository.findByIdAndTenantId(appointment.getProfessionalId(), appointment.getTenantId()).orElse(null)
+                ),
                 serviceCatalog == null ? null : serviceCatalog.isCommissionEligible(),
                 null,
                 serviceCatalog != null && serviceCatalog.isCommissionEligible() ? appointment.getCommissionAmount() : null,
@@ -833,6 +851,8 @@ public class PetAppointmentService extends BaseTenantCrudService<
                 line.getServiceCategory(),
                 line.getDurationMinutes(),
                 line.getServicePrice(),
+                line.getProfessionalId(),
+                line.getProfessionalName(),
                 commissionEligible,
                 line.getCommissionRate(),
                 commissionAmount,
@@ -871,7 +891,7 @@ public class PetAppointmentService extends BaseTenantCrudService<
 
     private List<AppointmentServiceLineSelection> buildAppointmentServiceLineSelections(
             List<PetServiceCatalog> selectedServices,
-            PetProfessional professional,
+            AppointmentProfessionalSelection professionalSelection,
             BigDecimal appointmentServicePrice,
             boolean servicePriceOverridden
     ) {
@@ -884,9 +904,13 @@ public class PetAppointmentService extends BaseTenantCrudService<
         return java.util.stream.IntStream.range(0, selectedServices.size())
                 .mapToObj(index -> {
                     PetServiceCatalog serviceCatalog = selectedServices.get(index);
+                    PetProfessional lineProfessional = professionalSelection.serviceLineProfessionals()
+                            .getOrDefault(serviceCatalog.getId(), professionalSelection.defaultProfessional());
                     BigDecimal linePrice = linePrices.get(index);
                     boolean commissionEligible = serviceCatalog.isCommissionEligible();
-                    BigDecimal commissionRate = commissionEligible ? professional.getCommissionRate() : null;
+                    BigDecimal commissionRate = commissionEligible && lineProfessional != null
+                            ? lineProfessional.getCommissionRate()
+                            : null;
                     BigDecimal commissionAmount = commissionRate != null && linePrice != null
                             ? normalizeCurrency(linePrice.multiply(commissionRate))
                             : null;
@@ -895,6 +919,8 @@ public class PetAppointmentService extends BaseTenantCrudService<
                             serviceCatalog,
                             index,
                             linePrice,
+                            lineProfessional == null ? null : lineProfessional.getId(),
+                            lineProfessional == null ? null : lineProfessional.getName(),
                             commissionEligible,
                             commissionRate,
                             commissionAmount
@@ -982,6 +1008,19 @@ public class PetAppointmentService extends BaseTenantCrudService<
         return normalizeCurrency(commissionAmounts.stream().reduce(BigDecimal.ZERO, BigDecimal::add));
     }
 
+    private UUID resolveRequestedCompatibilityProfessionalId(PetAppointmentUpdateRequest request) {
+        List<UUID> selectedServiceIds = resolveRequestedServiceIds(request.serviceId(), request.serviceIds());
+        Map<UUID, PetAppointmentServiceLineAssignmentRequest> assignmentsByServiceId = resolveRequestedServiceLineAssignments(
+                selectedServiceIds,
+                request.serviceLineAssignments()
+        );
+        PetAppointmentServiceLineAssignmentRequest primaryAssignment = assignmentsByServiceId.get(selectedServiceIds.getFirst());
+        if (primaryAssignment != null && primaryAssignment.professionalId() != null) {
+            return primaryAssignment.professionalId();
+        }
+        return request.professionalId();
+    }
+
     private BigDecimal normalizeCurrency(BigDecimal amount) {
         if (amount == null) {
             return null;
@@ -989,13 +1028,100 @@ public class PetAppointmentService extends BaseTenantCrudService<
         return amount.setScale(2, RoundingMode.HALF_UP);
     }
 
+    private AppointmentProfessionalSelection resolveProfessionalSelection(
+            UUID tenantId,
+            UUID defaultProfessionalId,
+            List<UUID> selectedServiceIds,
+            List<PetAppointmentServiceLineAssignmentRequest> requestedServiceLineAssignments
+    ) {
+        PetProfessional defaultProfessional = petProfessionalRepository.findByIdAndTenantId(defaultProfessionalId, tenantId)
+                .orElseThrow(() -> new ResourceNotFoundException("Pet professional not found for tenant."));
+
+        Map<UUID, PetAppointmentServiceLineAssignmentRequest> assignmentsByServiceId = resolveRequestedServiceLineAssignments(
+                selectedServiceIds,
+                requestedServiceLineAssignments
+        );
+
+        Set<UUID> professionalIds = new LinkedHashSet<>();
+        professionalIds.add(defaultProfessionalId);
+        assignmentsByServiceId.values().stream()
+                .map(PetAppointmentServiceLineAssignmentRequest::professionalId)
+                .filter(Objects::nonNull)
+                .forEach(professionalIds::add);
+
+        Map<UUID, PetProfessional> professionalsById = petProfessionalRepository.findAllByTenantIdAndIdIn(tenantId, professionalIds)
+                .stream()
+                .collect(Collectors.toMap(PetProfessional::getId, Function.identity()));
+
+        if (professionalsById.size() != professionalIds.size()) {
+            throw new ResourceNotFoundException("Pet professional not found for tenant.");
+        }
+
+        Map<UUID, PetProfessional> serviceLineProfessionals = new LinkedHashMap<>();
+        for (UUID serviceId : selectedServiceIds) {
+            PetAppointmentServiceLineAssignmentRequest assignment = assignmentsByServiceId.get(serviceId);
+            if (assignment == null) {
+                serviceLineProfessionals.put(serviceId, defaultProfessional);
+                continue;
+            }
+
+            serviceLineProfessionals.put(
+                    serviceId,
+                    assignment.professionalId() == null ? null : professionalsById.get(assignment.professionalId())
+            );
+        }
+
+        PetProfessional compatibilityProfessional = Optional.ofNullable(serviceLineProfessionals.get(selectedServiceIds.getFirst()))
+                .orElse(defaultProfessional);
+
+        return new AppointmentProfessionalSelection(defaultProfessional, compatibilityProfessional, serviceLineProfessionals);
+    }
+
+    private Map<UUID, PetAppointmentServiceLineAssignmentRequest> resolveRequestedServiceLineAssignments(
+            List<UUID> selectedServiceIds,
+            List<PetAppointmentServiceLineAssignmentRequest> requestedServiceLineAssignments
+    ) {
+        if (requestedServiceLineAssignments == null || requestedServiceLineAssignments.isEmpty()) {
+            return Map.of();
+        }
+
+        Set<UUID> selectedServiceIdSet = new LinkedHashSet<>(selectedServiceIds);
+        Map<UUID, PetAppointmentServiceLineAssignmentRequest> assignmentsByServiceId = new LinkedHashMap<>();
+
+        for (PetAppointmentServiceLineAssignmentRequest assignment : requestedServiceLineAssignments) {
+            if (!selectedServiceIdSet.contains(assignment.serviceId())) {
+                throw new ConflictOperationException(
+                        "Pet appointment service line assignment must reference a selected service."
+                );
+            }
+
+            PetAppointmentServiceLineAssignmentRequest previous = assignmentsByServiceId.put(assignment.serviceId(), assignment);
+            if (previous != null) {
+                throw new ConflictOperationException(
+                        "Pet appointment cannot assign more than one professional entry to the same service line."
+                );
+            }
+        }
+
+        return assignmentsByServiceId;
+    }
+
     private record AppointmentServiceSelection(List<AppointmentServiceLineSelection> services) {
+    }
+
+    private record AppointmentProfessionalSelection(
+            PetProfessional defaultProfessional,
+            PetProfessional compatibilityProfessional,
+            Map<UUID, PetProfessional> serviceLineProfessionals
+    ) {
     }
 
     private record AppointmentServiceLineSelection(
             PetServiceCatalog serviceCatalog,
             int lineOrder,
             BigDecimal servicePrice,
+            UUID professionalId,
+            String professionalName,
             boolean commissionEligible,
             BigDecimal commissionRate,
             BigDecimal commissionAmount
