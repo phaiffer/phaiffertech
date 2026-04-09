@@ -459,6 +459,15 @@ export const petService = {
       input
     ),
 
+  applyAppointmentServiceLineInventoryConsumption: (
+    appointmentId: string,
+    serviceLineId: string,
+    inventoryConsumptionId: string
+  ) =>
+    apiClient.post<PetAppointment>(
+      `/pet/appointments/${appointmentId}/service-lines/${serviceLineId}/inventory-consumptions/${inventoryConsumptionId}/apply-stock`
+    ),
+
   deleteAppointment: (id: string) => apiClient.delete<void>(`/pet/appointments/${id}`),
 
   restoreAppointment: (id: string) => apiClient.patch<PetAppointment>(`/pet/appointments/${id}/restore`),

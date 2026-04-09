@@ -24,7 +24,7 @@ import { PetModuleSubnav } from '@/modules/pet/pet-module-subnav';
 import { PermissionGuard } from '@/shared/auth/PermissionGuard';
 import { usePermissions } from '@/shared/auth/usePermissions';
 import { useAppI18n, useAppMessages } from '@/shared/i18n/app-i18n-provider';
-import { formatCurrencyForLocale } from '@/shared/i18n/formatters';
+import { formatCurrencyForLocale, formatDateTimeForLocale } from '@/shared/i18n/formatters';
 import { ApiClientError } from '@/shared/lib/http';
 import { resolvePageItems, resolveTotalItems } from '@/shared/lib/pagination';
 import { petService } from '@/shared/services/pet-service';
@@ -187,6 +187,8 @@ type ActualConsumptionCopy = {
   description: string;
   save: string;
   saving: string;
+  apply: string;
+  applying: string;
   planned: string;
   actual: string;
   status: string;
@@ -196,6 +198,15 @@ type ActualConsumptionCopy = {
   bookFirst: string;
   rowUnavailable: string;
   updated: string;
+  applySuccess: string;
+  stockAppliedBadge: string;
+  stockPendingBadge: string;
+  stockApplied: string;
+  stockAppliedOn: string;
+  stockPending: string;
+  stockNotReady: string;
+  stockNoAction: string;
+  wholeQuantityOnly: string;
 };
 
 function resolveActualConsumptionCopy(locale: string): ActualConsumptionCopy {
@@ -205,6 +216,8 @@ function resolveActualConsumptionCopy(locale: string): ActualConsumptionCopy {
       description: 'Edite o que foi realmente usado sem alterar a receita planejada nem gerar baixa de estoque automaticamente.',
       save: 'Salvar consumo real',
       saving: 'Salvando consumo real...',
+      apply: 'Aplicar estoque',
+      applying: 'Aplicando estoque...',
       planned: 'Planejado',
       actual: 'Real',
       status: 'Status',
@@ -213,7 +226,16 @@ function resolveActualConsumptionCopy(locale: string): ActualConsumptionCopy {
       saveFirst: 'Salve a composicao de servicos primeiro para registrar o consumo real com seguranca.',
       bookFirst: 'Agende o atendimento primeiro para registrar consumo real por linha.',
       rowUnavailable: 'Consumo real indisponivel para esta linha historica sem snapshot estruturado.',
-      updated: 'Consumo real atualizado.'
+      updated: 'Consumo real atualizado.',
+      applySuccess: 'Consumo aplicado ao estoque.',
+      stockAppliedBadge: 'Estoque aplicado',
+      stockPendingBadge: 'Aplicacao pendente',
+      stockApplied: 'Consumo ja aplicado ao estoque.',
+      stockAppliedOn: 'Aplicado ao estoque em {value}.',
+      stockPending: 'Pronto para uma aplicacao explicita de estoque.',
+      stockNotReady: 'Registre uma quantidade real positiva e marque como pronto para aplicar antes de baixar estoque.',
+      stockNoAction: 'Nenhuma baixa de estoque necessaria para esta linha.',
+      wholeQuantityOnly: 'Esta primeira etapa aceita apenas quantidades inteiras de estoque.'
     };
   }
 
@@ -222,6 +244,8 @@ function resolveActualConsumptionCopy(locale: string): ActualConsumptionCopy {
     description: 'Edit what was actually used without changing the planned recipe or creating stock deductions automatically.',
     save: 'Save actual usage',
     saving: 'Saving actual usage...',
+    apply: 'Apply stock',
+    applying: 'Applying stock...',
     planned: 'Planned',
     actual: 'Actual',
     status: 'Status',
@@ -230,8 +254,61 @@ function resolveActualConsumptionCopy(locale: string): ActualConsumptionCopy {
     saveFirst: 'Save the service composition first so actual usage can be recorded safely.',
     bookFirst: 'Book the appointment first to record actual usage per line.',
     rowUnavailable: 'Actual usage is unavailable for this historical line without a structured snapshot.',
-    updated: 'Actual usage updated.'
+    updated: 'Actual usage updated.',
+    applySuccess: 'Usage applied to stock.',
+    stockAppliedBadge: 'Stock applied',
+    stockPendingBadge: 'Pending apply',
+    stockApplied: 'Usage already applied to stock.',
+    stockAppliedOn: 'Applied to stock on {value}.',
+    stockPending: 'Ready for an explicit stock application.',
+    stockNotReady: 'Record a positive actual quantity and mark the row ready to apply before updating stock.',
+    stockNoAction: 'No stock deduction is needed for this row.',
+    wholeQuantityOnly: 'This first step only supports whole stock quantities.'
   };
+}
+
+function canApplyStockConsumption(row: PetAppointmentServiceLineInventoryConsumption) {
+  return row.snapshotBacked
+    && Boolean(row.id)
+    && !row.stockApplied
+    && row.consumptionStatus === 'READY_TO_APPLY'
+    && typeof row.actualQuantity === 'number'
+    && Number.isFinite(row.actualQuantity)
+    && row.actualQuantity > 0
+    && Number.isInteger(row.actualQuantity);
+}
+
+function resolveStockApplicationDetail(
+  locale: string,
+  row: PetAppointmentServiceLineInventoryConsumption,
+  copy: ActualConsumptionCopy
+) {
+  if (!row.snapshotBacked) {
+    return copy.snapshotOnly;
+  }
+  if (row.stockApplied) {
+    const appliedAt = row.stockAppliedAt
+      ? formatDateTimeForLocale(locale, row.stockAppliedAt, '', {
+          dateStyle: 'medium',
+          timeStyle: 'short'
+        })
+      : '';
+    return appliedAt ? copy.stockAppliedOn.replace('{value}', appliedAt) : copy.stockApplied;
+  }
+  if (row.consumptionStatus === 'SKIPPED') {
+    return copy.stockNoAction;
+  }
+  if (row.consumptionStatus === 'READY_TO_APPLY'
+      && typeof row.actualQuantity === 'number'
+      && Number.isFinite(row.actualQuantity)
+      && row.actualQuantity > 0
+      && !Number.isInteger(row.actualQuantity)) {
+    return copy.wholeQuantityOnly;
+  }
+  if (canApplyStockConsumption(row)) {
+    return copy.stockPending;
+  }
+  return copy.stockNotReady;
 }
 
 function resolveActualConsumptionStatusOptions(locale: string) {
@@ -422,6 +499,7 @@ export function PetAppointmentsPage() {
   const lastPlanClientIdRef = useRef<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [savingActualServiceLineId, setSavingActualServiceLineId] = useState<string | null>(null);
+  const [applyingInventoryRowId, setApplyingInventoryRowId] = useState<string | null>(null);
 
   const [deleteCandidate, setDeleteCandidate] = useState<PetAppointment | null>(null);
 
@@ -581,6 +659,7 @@ export function PetAppointmentsPage() {
             ? (catalogService.inventoryLinks ?? [])
               .filter((link) => link.active)
               .map((link) => ({
+                id: null,
                 inventoryItemId: link.inventoryItemId,
                 inventoryItemName: link.inventoryItemName,
                 inventoryItemSku: link.inventoryItemSku ?? null,
@@ -590,7 +669,10 @@ export function PetAppointmentsPage() {
                 actualQuantity: null,
                 consumptionStatus: 'PLANNED',
                 consumptionRule: link.consumptionRule,
-                snapshotBacked: false
+                snapshotBacked: false,
+                stockApplied: false,
+                appliedInventoryMovementId: null,
+                stockAppliedAt: null
               }))
             : [];
 
@@ -897,6 +979,36 @@ export function PetAppointmentsPage() {
       setError(err instanceof ApiClientError ? err.message : messages.errors.save);
     } finally {
       setSavingActualServiceLineId(null);
+    }
+  }
+
+  async function handleApplyStockConsumption(
+    serviceLine: PetAppointmentServiceLine,
+    row: PetAppointmentServiceLineInventoryConsumption
+  ) {
+    if (!editingId || !serviceLine.id || !row.id) {
+      setError(actualConsumptionCopy.rowUnavailable);
+      return;
+    }
+
+    setApplyingInventoryRowId(row.id);
+    setError(null);
+    setSuccess(null);
+
+    try {
+      const updatedAppointment = await petService.applyAppointmentServiceLineInventoryConsumption(
+        editingId,
+        serviceLine.id,
+        row.id
+      );
+
+      setEditingServiceLines(updatedAppointment.appointmentServices ?? []);
+      setSuccess(actualConsumptionCopy.applySuccess);
+      await loadData(pageData.page, search, statusFilter, clientFilterId, petFilterId, serviceFilterId, professionalFilterId, viewMode, currentMonth);
+    } catch (err) {
+      setError(err instanceof ApiClientError ? err.message : messages.errors.save);
+    } finally {
+      setApplyingInventoryRowId(null);
     }
   }
 
@@ -1579,8 +1691,11 @@ export function PetAppointmentsPage() {
                                   {inventoryRows.map((row) => {
                                     const quantityValue = row.actualQuantity == null ? '' : String(row.actualQuantity);
                                     const quantityDisabled = !row.snapshotBacked
+                                      || row.stockApplied
                                       || row.consumptionStatus === 'PLANNED'
                                       || row.consumptionStatus === 'SKIPPED';
+                                    const canApplyStock = canApplyStockConsumption(row);
+                                    const stockApplicationDetail = resolveStockApplicationDetail(locale, row, actualConsumptionCopy);
 
                                     return (
                                       <div
@@ -1598,10 +1713,21 @@ export function PetAppointmentsPage() {
                                                 SKU: {row.inventoryItemSku}
                                               </p>
                                             ) : null}
+                                            <p className={`mt-1 text-[11px] ${row.stockApplied ? 'text-emerald-700' : 'text-[color:var(--app-shell-muted)]'}`}>
+                                              {stockApplicationDetail}
+                                            </p>
                                           </div>
                                           {!row.snapshotBacked ? (
                                             <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-medium text-amber-800">
                                               {locale === 'pt-BR' ? 'Preview' : 'Preview only'}
+                                            </span>
+                                          ) : row.stockApplied ? (
+                                            <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-medium text-emerald-800">
+                                              {actualConsumptionCopy.stockAppliedBadge}
+                                            </span>
+                                          ) : canApplyStock ? (
+                                            <span className="rounded-full bg-sky-100 px-2 py-0.5 text-[11px] font-medium text-sky-800">
+                                              {actualConsumptionCopy.stockPendingBadge}
                                             </span>
                                           ) : null}
                                         </div>
@@ -1624,9 +1750,22 @@ export function PetAppointmentsPage() {
                                               row.inventoryItemId,
                                               value as PetAppointmentInventoryConsumptionStatus
                                             )}
-                                            disabled={!row.snapshotBacked}
+                                            disabled={!row.snapshotBacked || row.stockApplied}
                                           />
                                         </div>
+
+                                        {canApplyStock ? (
+                                          <div className="mt-3 flex justify-end">
+                                            <button
+                                              type="button"
+                                              onClick={() => handleApplyStockConsumption(line, row)}
+                                              disabled={applyingInventoryRowId === row.id}
+                                              className="ui-primary-button"
+                                            >
+                                              {applyingInventoryRowId === row.id ? actualConsumptionCopy.applying : actualConsumptionCopy.apply}
+                                            </button>
+                                          </div>
+                                        ) : null}
                                       </div>
                                     );
                                   })}

@@ -8,6 +8,7 @@ import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.Table;
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.UUID;
 
 @Entity
@@ -45,6 +46,15 @@ public class PetAppointmentServiceLineInventoryPlan extends BaseTenantEntity {
     @Enumerated(EnumType.STRING)
     @Column(name = "consumption_status", nullable = false, length = 40)
     private PetAppointmentInventoryConsumptionStatus consumptionStatus = PetAppointmentInventoryConsumptionStatus.PLANNED;
+
+    @Column(name = "applied_inventory_movement_id")
+    private UUID appliedInventoryMovementId;
+
+    @Column(name = "stock_applied_at")
+    private Instant stockAppliedAt;
+
+    @Column(name = "stock_applied_by", length = 64)
+    private String stockAppliedBy;
 
     public UUID getAppointmentServiceId() {
         return appointmentServiceId;
@@ -124,5 +134,29 @@ public class PetAppointmentServiceLineInventoryPlan extends BaseTenantEntity {
 
     public void setConsumptionStatus(PetAppointmentInventoryConsumptionStatus consumptionStatus) {
         this.consumptionStatus = consumptionStatus;
+    }
+
+    public UUID getAppliedInventoryMovementId() {
+        return appliedInventoryMovementId;
+    }
+
+    public void setAppliedInventoryMovementId(UUID appliedInventoryMovementId) {
+        this.appliedInventoryMovementId = appliedInventoryMovementId;
+    }
+
+    public Instant getStockAppliedAt() {
+        return stockAppliedAt;
+    }
+
+    public void setStockAppliedAt(Instant stockAppliedAt) {
+        this.stockAppliedAt = stockAppliedAt;
+    }
+
+    public String getStockAppliedBy() {
+        return stockAppliedBy;
+    }
+
+    public void setStockAppliedBy(String stockAppliedBy) {
+        this.stockAppliedBy = stockAppliedBy;
     }
 }

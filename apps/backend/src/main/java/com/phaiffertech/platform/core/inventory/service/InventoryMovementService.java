@@ -47,6 +47,7 @@ public class InventoryMovementService {
     @AuditableAction(action = AuditActionType.UPDATE, entity = "inventory_movement")
     public InventoryMovement updateMovement(UUID tenantId, UUID movementId, InventoryMovementCommand command) {
         InventoryMovement movement = getOrThrow(movementId, tenantId);
+        ensureMovementIsMutable(movement);
         InventoryMovement normalized = toNewEntity(command);
 
         InventoryItem previousItem = lockItemOrThrow(tenantId, movement.getInventoryItemId());
@@ -77,6 +78,7 @@ public class InventoryMovementService {
     @AuditableAction(action = AuditActionType.DELETE, entity = "inventory_movement")
     public void deleteMovement(UUID tenantId, UUID movementId) {
         InventoryMovement movement = getOrThrow(movementId, tenantId);
+        ensureMovementIsMutable(movement);
         InventoryItem item = lockItemOrThrow(tenantId, movement.getInventoryItemId());
 
         revertMovement(item, movement);
@@ -91,6 +93,7 @@ public class InventoryMovementService {
     public InventoryMovement restoreMovement(UUID tenantId, UUID movementId) {
         InventoryMovement movement = movementRepository.findByIdIncludingDeleted(movementId, tenantId)
                 .orElseThrow(() -> new ResourceNotFoundException("Inventory movement not found."));
+        ensureMovementIsMutable(movement);
         if (movement.getDeletedAt() == null) {
             throw new ConflictOperationException("Inventory movement is already active.");
         }
@@ -108,6 +111,14 @@ public class InventoryMovementService {
     private InventoryMovement getOrThrow(UUID movementId, UUID tenantId) {
         return movementRepository.findByIdAndTenantId(movementId, tenantId)
                 .orElseThrow(() -> new ResourceNotFoundException("Inventory movement not found."));
+    }
+
+    private void ensureMovementIsMutable(InventoryMovement movement) {
+        if (movement.getSourceType() == com.phaiffertech.platform.core.inventory.domain.InventoryMovementSource.PET_APPOINTMENT_SERVICE_CONSUMPTION) {
+            throw new ConflictOperationException(
+                    "Appointment-applied inventory movements require a dedicated reversal flow and cannot be edited, deleted or restored."
+            );
+        }
     }
 
     private InventoryMovement toNewEntity(InventoryMovementCommand command) {

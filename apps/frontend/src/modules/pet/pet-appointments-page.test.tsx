@@ -80,6 +80,7 @@ const { currentPlatformState, hasPermissionMock, hasAnyPermissionMock, petServic
     createAppointment: vi.fn(),
     updateAppointment: vi.fn(),
     updateAppointmentServiceLineInventoryConsumptions: vi.fn(),
+    applyAppointmentServiceLineInventoryConsumption: vi.fn(),
     deleteAppointment: vi.fn()
   }
 }));
@@ -150,6 +151,22 @@ describe('PetAppointmentsPage', () => {
       }
     ]));
     petServiceMock.updateAppointmentServiceLineInventoryConsumptions.mockResolvedValue({
+      id: 'appointment-1',
+      clientId: 'client-1',
+      clientName: 'Owner Example',
+      petId: 'pet-1',
+      petName: 'Pet Example',
+      serviceId: 'service-1',
+      serviceName: 'Bath',
+      professionalId: 'professional-1',
+      professionalName: 'Dr Example',
+      scheduledAt: '2026-03-10T10:00:00Z',
+      status: 'COMPLETED',
+      createdAt: '2026-03-10T10:00:00Z',
+      updatedAt: '2026-03-10T10:00:00Z',
+      appointmentServices: []
+    });
+    petServiceMock.applyAppointmentServiceLineInventoryConsumption.mockResolvedValue({
       id: 'appointment-1',
       clientId: 'client-1',
       clientName: 'Owner Example',
@@ -631,6 +648,7 @@ describe('PetAppointmentsPage', () => {
             commissionAmount: 12,
             expectedInventoryConsumptions: [
               {
+                id: 'inventory-row-1',
                 inventoryItemId: 'inventory-1',
                 inventoryItemName: 'Shampoo concentrate',
                 inventoryItemSku: 'SHA-1',
@@ -640,7 +658,10 @@ describe('PetAppointmentsPage', () => {
                 actualQuantity: 30,
                 consumptionStatus: 'READY_TO_APPLY',
                 consumptionRule: 'FIXED_PER_SERVICE',
-                snapshotBacked: true
+                snapshotBacked: true,
+                stockApplied: false,
+                appliedInventoryMovementId: null,
+                stockAppliedAt: null
               }
             ],
             active: true,
@@ -682,6 +703,7 @@ describe('PetAppointmentsPage', () => {
           commissionAmount: 12,
           expectedInventoryConsumptions: [
             {
+              id: 'inventory-row-1',
               inventoryItemId: 'inventory-1',
               inventoryItemName: 'Shampoo concentrate',
               inventoryItemSku: 'SHA-1',
@@ -691,7 +713,10 @@ describe('PetAppointmentsPage', () => {
               actualQuantity: 40,
               consumptionStatus: 'READY_TO_APPLY',
               consumptionRule: 'FIXED_PER_SERVICE',
-              snapshotBacked: true
+              snapshotBacked: true,
+              stockApplied: false,
+              appliedInventoryMovementId: null,
+              stockAppliedAt: null
             }
           ],
           active: true,
@@ -738,6 +763,149 @@ describe('PetAppointmentsPage', () => {
             }
           ]
         }
+      );
+    });
+  });
+
+  it('applies stock explicitly for a ready inventory row', async () => {
+    setGrantedPermissions([
+      'pet.appointment.read',
+      'pet.appointment.update'
+    ]);
+
+    petServiceMock.listAppointments.mockResolvedValue(createPageResponse([
+      {
+        id: 'appointment-apply-1',
+        clientId: 'client-1',
+        clientName: 'Owner Example',
+        petId: 'pet-1',
+        petName: 'Pet Example',
+        serviceId: 'service-bath',
+        serviceName: 'Bath',
+        professionalId: 'professional-1',
+        professionalName: 'Dr Example',
+        scheduledAt: '2026-03-10T10:00:00Z',
+        status: 'IN_PROGRESS',
+        createdAt: '2026-03-10T10:00:00Z',
+        updatedAt: '2026-03-10T10:00:00Z',
+        appointmentServices: [
+          {
+            id: 'line-1',
+            serviceId: 'service-bath',
+            serviceName: 'Bath',
+            serviceCategory: 'GROOMING',
+            durationMinutes: 60,
+            basePrice: 80,
+            professionalId: 'professional-1',
+            professionalName: 'Dr Example',
+            commissionEligible: true,
+            commissionRate: 0.15,
+            commissionAmount: 12,
+            expectedInventoryConsumptions: [
+              {
+                id: 'inventory-row-1',
+                inventoryItemId: 'inventory-1',
+                inventoryItemName: 'Shampoo concentrate',
+                inventoryItemSku: 'SHA-1',
+                inventoryCategory: 'PET_RETAIL_GOOD',
+                unitOfMeasure: 'ML',
+                expectedQuantity: 30,
+                actualQuantity: 40,
+                consumptionStatus: 'READY_TO_APPLY',
+                consumptionRule: 'FIXED_PER_SERVICE',
+                snapshotBacked: true,
+                stockApplied: false,
+                appliedInventoryMovementId: null,
+                stockAppliedAt: null
+              }
+            ],
+            active: true,
+            allowInPlans: true,
+            allowStandaloneBooking: true,
+            lineOrder: 0,
+            primary: true,
+            missingFromCatalog: false
+          }
+        ]
+      }
+    ]));
+    petServiceMock.applyAppointmentServiceLineInventoryConsumption.mockResolvedValue({
+      id: 'appointment-apply-1',
+      clientId: 'client-1',
+      clientName: 'Owner Example',
+      petId: 'pet-1',
+      petName: 'Pet Example',
+      serviceId: 'service-bath',
+      serviceName: 'Bath',
+      professionalId: 'professional-1',
+      professionalName: 'Dr Example',
+      scheduledAt: '2026-03-10T10:00:00Z',
+      status: 'IN_PROGRESS',
+      createdAt: '2026-03-10T10:00:00Z',
+      updatedAt: '2026-03-10T10:05:00Z',
+      appointmentServices: [
+        {
+          id: 'line-1',
+          serviceId: 'service-bath',
+          serviceName: 'Bath',
+          serviceCategory: 'GROOMING',
+          durationMinutes: 60,
+          basePrice: 80,
+          professionalId: 'professional-1',
+          professionalName: 'Dr Example',
+          commissionEligible: true,
+          commissionRate: 0.15,
+          commissionAmount: 12,
+          expectedInventoryConsumptions: [
+            {
+              id: 'inventory-row-1',
+              inventoryItemId: 'inventory-1',
+              inventoryItemName: 'Shampoo concentrate',
+              inventoryItemSku: 'SHA-1',
+              inventoryCategory: 'PET_RETAIL_GOOD',
+              unitOfMeasure: 'ML',
+              expectedQuantity: 30,
+              actualQuantity: 40,
+              consumptionStatus: 'READY_TO_APPLY',
+              consumptionRule: 'FIXED_PER_SERVICE',
+              snapshotBacked: true,
+              stockApplied: true,
+              appliedInventoryMovementId: 'movement-1',
+              stockAppliedAt: '2026-03-10T10:05:00Z'
+            }
+          ],
+          active: true,
+          allowInPlans: true,
+          allowStandaloneBooking: true,
+          lineOrder: 0,
+          primary: true,
+          missingFromCatalog: false
+        }
+      ]
+    });
+
+    render(<PetAppointmentsPage />);
+
+    await waitFor(() => {
+      expect(petServiceMock.listAppointments).toHaveBeenCalled();
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: 'Switch to list' }));
+
+    await waitFor(() => {
+      expect(screen.getByText('Bath')).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: 'Edit' }));
+
+    expect(await screen.findByRole('button', { name: 'Apply stock' })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Apply stock' }));
+
+    await waitFor(() => {
+      expect(petServiceMock.applyAppointmentServiceLineInventoryConsumption).toHaveBeenCalledWith(
+        'appointment-apply-1',
+        'line-1',
+        'inventory-row-1'
       );
     });
   });
