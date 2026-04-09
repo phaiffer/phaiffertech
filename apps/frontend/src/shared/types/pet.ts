@@ -81,6 +81,7 @@ export type PetAppointmentInventoryConsumptionStatus =
   | 'SKIPPED';
 
 export type PetAppointmentServiceLineInventoryConsumption = {
+  id?: string | null;
   inventoryItemId: string;
   inventoryItemName: string;
   inventoryItemSku?: string | null;
@@ -91,6 +92,9 @@ export type PetAppointmentServiceLineInventoryConsumption = {
   consumptionStatus: PetAppointmentInventoryConsumptionStatus;
   consumptionRule: PetServiceInventoryConsumptionRule;
   snapshotBacked: boolean;
+  stockApplied: boolean;
+  appliedInventoryMovementId?: string | null;
+  stockAppliedAt?: string | null;
 };
 
 export type PetAppointmentServiceLine = {

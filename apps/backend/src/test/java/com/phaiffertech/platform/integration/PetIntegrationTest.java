@@ -13,6 +13,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.http.ResponseEntity;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class PetIntegrationTest extends AbstractIntegrationTest {
@@ -759,6 +760,8 @@ class PetIntegrationTest extends AbstractIntegrationTest {
                 updatedLine.path("expectedInventoryConsumptions").get(0).path("consumptionStatus").asText()
         );
         assertTrue(updatedLine.path("expectedInventoryConsumptions").get(0).path("snapshotBacked").asBoolean());
+        assertFalse(updatedLine.path("expectedInventoryConsumptions").get(0).path("stockApplied").asBoolean());
+        assertEquals("", updatedLine.path("expectedInventoryConsumptions").get(0).path("appliedInventoryMovementId").asText(""));
 
         assertEquals(
                 inventoryMovementCountBefore,
@@ -813,6 +816,290 @@ class PetIntegrationTest extends AbstractIntegrationTest {
                         .path("consumptionStatus")
                         .asText()
         );
+        assertFalse(
+                requireBody(completeAppointment)
+                        .path("data")
+                        .path("appointmentServices")
+                        .get(0)
+                        .path("expectedInventoryConsumptions")
+                        .get(0)
+                        .path("stockApplied")
+                        .asBoolean()
+        );
+    }
+
+    @Test
+    void shouldApplyActualInventoryConsumptionToStockOncePerInventoryRow() {
+        AuthSession session = loginAsDefaultAdmin();
+        String marker = randomSearchMarker();
+
+        String clientId = createClient(session, marker);
+        String petId = createPet(session, clientId, marker);
+        String professionalId = createProfessional(session, marker);
+        JsonNode product = createProduct(session, marker + "-apply", "PET_RETAIL_GOOD");
+        String productId = product.path("id").asText();
+        String inventoryItemId = product.path("inventoryItemId").asText();
+
+        ResponseEntity<JsonNode> createService = post("/pet/services", Map.of(
+                "name", "Service " + marker,
+                "description", "Apply stock " + marker,
+                "category", "GROOMING",
+                "active", true,
+                "basePrice", 95.00,
+                "durationMinutes", 45,
+                "commissionEligible", true,
+                "allowInPlans", true,
+                "allowStandaloneBooking", true,
+                "inventoryLinks", List.of(
+                        Map.of(
+                                "inventoryItemId", inventoryItemId,
+                                "expectedQuantity", 3.00,
+                                "consumptionRule", "FIXED_PER_SERVICE",
+                                "active", true
+                        )
+                )
+        ), session);
+        assertEquals(200, createService.getStatusCode().value());
+        String serviceId = requireBody(createService).path("data").path("id").asText();
+
+        ResponseEntity<JsonNode> createAppointment = post("/pet/appointments", Map.of(
+                "clientId", clientId,
+                "petId", petId,
+                "serviceId", serviceId,
+                "professionalId", professionalId,
+                "scheduledAt", Instant.now().plusSeconds(3600).toString(),
+                "status", "IN_PROGRESS",
+                "notes", "Apply stock " + marker
+        ), session);
+        assertEquals(200, createAppointment.getStatusCode().value());
+
+        String appointmentId = requireBody(createAppointment).path("data").path("id").asText();
+        String serviceLineId = requireBody(createAppointment)
+                .path("data")
+                .path("appointmentServices")
+                .get(0)
+                .path("id")
+                .asText();
+
+        ResponseEntity<JsonNode> updateActualConsumption = patch(
+                "/pet/appointments/" + appointmentId + "/service-lines/" + serviceLineId + "/inventory-consumptions",
+                Map.of(
+                        "inventoryConsumptions", List.of(
+                                Map.of(
+                                        "inventoryItemId", inventoryItemId,
+                                        "actualQuantity", 4.00,
+                                        "consumptionStatus", "READY_TO_APPLY"
+                                )
+                        )
+                ),
+                session
+        );
+        assertEquals(200, updateActualConsumption.getStatusCode().value());
+
+        JsonNode inventoryRow = requireBody(updateActualConsumption)
+                .path("data")
+                .path("appointmentServices")
+                .get(0)
+                .path("expectedInventoryConsumptions")
+                .get(0);
+        String inventoryRowId = inventoryRow.path("id").asText();
+        assertFalse(inventoryRow.path("stockApplied").asBoolean());
+
+        ResponseEntity<JsonNode> applyStock = post(
+                "/pet/appointments/" + appointmentId
+                        + "/service-lines/" + serviceLineId
+                        + "/inventory-consumptions/" + inventoryRowId
+                        + "/apply-stock",
+                null,
+                session
+        );
+        assertEquals(200, applyStock.getStatusCode().value());
+
+        JsonNode appliedRow = requireBody(applyStock)
+                .path("data")
+                .path("appointmentServices")
+                .get(0)
+                .path("expectedInventoryConsumptions")
+                .get(0);
+        String movementId = appliedRow.path("appliedInventoryMovementId").asText();
+        assertTrue(appliedRow.path("stockApplied").asBoolean());
+        assertTrue(!movementId.isBlank());
+        assertTrue(!appliedRow.path("stockAppliedAt").asText().isBlank());
+        assertEquals(3.00, appliedRow.path("expectedQuantity").asDouble(), 0.001);
+        assertEquals(4.00, appliedRow.path("actualQuantity").asDouble(), 0.001);
+        assertEquals("READY_TO_APPLY", appliedRow.path("consumptionStatus").asText());
+
+        ResponseEntity<JsonNode> productAfterApply = get("/pet/products/" + productId, session);
+        assertEquals(200, productAfterApply.getStatusCode().value());
+        assertEquals(16, requireBody(productAfterApply).path("data").path("stockQuantity").asInt());
+
+        assertEquals(1, countRows(
+                "SELECT COUNT(*) FROM inventory_movements WHERE tenant_id = ? AND source_type = 'PET_APPOINTMENT_SERVICE_CONSUMPTION' AND source_reference_id = ? AND deleted_at IS NULL",
+                session.tenantId(),
+                inventoryRowId
+        ));
+
+        ResponseEntity<JsonNode> completeAppointment = put("/pet/appointments/" + appointmentId, Map.of(
+                "clientId", clientId,
+                "petId", petId,
+                "serviceId", serviceId,
+                "professionalId", professionalId,
+                "scheduledAt", Instant.now().plusSeconds(3600).toString(),
+                "status", "COMPLETED",
+                "notes", "Completed after explicit stock application " + marker
+        ), session);
+        assertEquals(200, completeAppointment.getStatusCode().value());
+        assertTrue(
+                requireBody(completeAppointment)
+                        .path("data")
+                        .path("appointmentServices")
+                        .get(0)
+                        .path("expectedInventoryConsumptions")
+                        .get(0)
+                        .path("stockApplied")
+                        .asBoolean()
+        );
+        assertEquals(
+                movementId,
+                requireBody(completeAppointment)
+                        .path("data")
+                        .path("appointmentServices")
+                        .get(0)
+                        .path("expectedInventoryConsumptions")
+                        .get(0)
+                        .path("appliedInventoryMovementId")
+                        .asText()
+        );
+        assertEquals(16, requireBody(get("/pet/products/" + productId, session)).path("data").path("stockQuantity").asInt());
+        assertEquals(1, countRows(
+                "SELECT COUNT(*) FROM inventory_movements WHERE tenant_id = ? AND source_type = 'PET_APPOINTMENT_SERVICE_CONSUMPTION' AND source_reference_id = ? AND deleted_at IS NULL",
+                session.tenantId(),
+                inventoryRowId
+        ));
+
+        ResponseEntity<JsonNode> reapplyStock = post(
+                "/pet/appointments/" + appointmentId
+                        + "/service-lines/" + serviceLineId
+                        + "/inventory-consumptions/" + inventoryRowId
+                        + "/apply-stock",
+                null,
+                session
+        );
+        assertEquals(200, reapplyStock.getStatusCode().value());
+        assertEquals(1, countRows(
+                "SELECT COUNT(*) FROM inventory_movements WHERE tenant_id = ? AND source_type = 'PET_APPOINTMENT_SERVICE_CONSUMPTION' AND source_reference_id = ? AND deleted_at IS NULL",
+                session.tenantId(),
+                inventoryRowId
+        ));
+        assertEquals(16, requireBody(get("/pet/products/" + productId, session)).path("data").path("stockQuantity").asInt());
+    }
+
+    @Test
+    void shouldFailSafelyWhenApplyingInventoryConsumptionWithoutEnoughStock() {
+        AuthSession session = loginAsDefaultAdmin();
+        String marker = randomSearchMarker();
+
+        String clientId = createClient(session, marker);
+        String petId = createPet(session, clientId, marker);
+        String professionalId = createProfessional(session, marker);
+
+        ResponseEntity<JsonNode> createProduct = post("/pet/products", Map.of(
+                "name", "Low Stock " + marker,
+                "sku", "LOW-" + marker,
+                "price", 12.00,
+                "stockQuantity", 2,
+                "category", "PET_VETERINARY_SUPPLY",
+                "unitOfMeasure", "DOSE",
+                "minimumQuantity", 0,
+                "reorderPoint", 1
+        ), session);
+        assertEquals(200, createProduct.getStatusCode().value());
+        String productId = requireBody(createProduct).path("data").path("id").asText();
+        String inventoryItemId = requireBody(createProduct).path("data").path("inventoryItemId").asText();
+
+        ResponseEntity<JsonNode> createService = post("/pet/services", Map.of(
+                "name", "Service " + marker,
+                "description", "Low stock apply " + marker,
+                "category", "CLINICAL",
+                "active", true,
+                "basePrice", 120.00,
+                "durationMinutes", 30,
+                "commissionEligible", false,
+                "allowInPlans", true,
+                "allowStandaloneBooking", true,
+                "inventoryLinks", List.of(
+                        Map.of(
+                                "inventoryItemId", inventoryItemId,
+                                "expectedQuantity", 1.00,
+                                "consumptionRule", "FIXED_PER_SERVICE",
+                                "active", true
+                        )
+                )
+        ), session);
+        assertEquals(200, createService.getStatusCode().value());
+        String serviceId = requireBody(createService).path("data").path("id").asText();
+
+        ResponseEntity<JsonNode> createAppointment = post("/pet/appointments", Map.of(
+                "clientId", clientId,
+                "petId", petId,
+                "serviceId", serviceId,
+                "professionalId", professionalId,
+                "scheduledAt", Instant.now().plusSeconds(3600).toString(),
+                "status", "IN_PROGRESS",
+                "notes", "Insufficient stock " + marker
+        ), session);
+        assertEquals(200, createAppointment.getStatusCode().value());
+
+        String appointmentId = requireBody(createAppointment).path("data").path("id").asText();
+        String serviceLineId = requireBody(createAppointment)
+                .path("data")
+                .path("appointmentServices")
+                .get(0)
+                .path("id")
+                .asText();
+
+        ResponseEntity<JsonNode> updateActualConsumption = patch(
+                "/pet/appointments/" + appointmentId + "/service-lines/" + serviceLineId + "/inventory-consumptions",
+                Map.of(
+                        "inventoryConsumptions", List.of(
+                                Map.of(
+                                        "inventoryItemId", inventoryItemId,
+                                        "actualQuantity", 3.00,
+                                        "consumptionStatus", "READY_TO_APPLY"
+                                )
+                        )
+                ),
+                session
+        );
+        assertEquals(200, updateActualConsumption.getStatusCode().value());
+
+        String inventoryRowId = requireBody(updateActualConsumption)
+                .path("data")
+                .path("appointmentServices")
+                .get(0)
+                .path("expectedInventoryConsumptions")
+                .get(0)
+                .path("id")
+                .asText();
+
+        ResponseEntity<JsonNode> applyStock = post(
+                "/pet/appointments/" + appointmentId
+                        + "/service-lines/" + serviceLineId
+                        + "/inventory-consumptions/" + inventoryRowId
+                        + "/apply-stock",
+                null,
+                session
+        );
+        assertEquals(409, applyStock.getStatusCode().value());
+        assertEquals("CONFLICT", requireBody(applyStock).path("code").asText());
+        assertTrue(requireBody(applyStock).path("message").asText().contains("Insufficient stock"));
+
+        assertEquals(0, countRows(
+                "SELECT COUNT(*) FROM inventory_movements WHERE tenant_id = ? AND source_type = 'PET_APPOINTMENT_SERVICE_CONSUMPTION' AND source_reference_id = ? AND deleted_at IS NULL",
+                session.tenantId(),
+                inventoryRowId
+        ));
+        assertEquals(2, requireBody(get("/pet/products/" + productId, session)).path("data").path("stockQuantity").asInt());
     }
 
     @Test

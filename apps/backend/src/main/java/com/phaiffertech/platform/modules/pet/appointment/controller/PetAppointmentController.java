@@ -94,6 +94,16 @@ public class PetAppointmentController {
         return ApiResponse.success(service.updateServiceLineInventoryConsumptions(id, serviceLineId, request));
     }
 
+    @PostMapping("/{id}/service-lines/{serviceLineId}/inventory-consumptions/{inventoryConsumptionId}/apply-stock")
+    @RequirePermission("pet.appointment.update")
+    public ApiResponse<PetAppointmentResponse> applyServiceLineInventoryConsumption(
+            @PathVariable UUID id,
+            @PathVariable UUID serviceLineId,
+            @PathVariable UUID inventoryConsumptionId
+    ) {
+        return ApiResponse.success(service.applyServiceLineInventoryConsumption(id, serviceLineId, inventoryConsumptionId));
+    }
+
     @DeleteMapping("/{id}")
     @RequirePermission("pet.appointment.delete")
     public ApiResponse<Void> delete(@PathVariable UUID id) {
