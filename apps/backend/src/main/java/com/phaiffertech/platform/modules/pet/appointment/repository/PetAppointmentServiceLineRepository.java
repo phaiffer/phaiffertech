@@ -8,6 +8,12 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface PetAppointmentServiceLineRepository extends JpaRepository<PetAppointmentServiceLine, UUID> {
 
+    java.util.Optional<PetAppointmentServiceLine> findByIdAndTenantIdAndAppointmentId(
+            UUID id,
+            UUID tenantId,
+            UUID appointmentId
+    );
+
     List<PetAppointmentServiceLine> findAllByTenantIdAndAppointmentIdOrderByLineOrderAsc(UUID tenantId, UUID appointmentId);
 
     List<PetAppointmentServiceLine> findAllByTenantIdAndAppointmentIdInOrderByAppointmentIdAscLineOrderAsc(

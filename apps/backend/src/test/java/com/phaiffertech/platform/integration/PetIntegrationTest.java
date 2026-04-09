@@ -678,6 +678,144 @@ class PetIntegrationTest extends AbstractIntegrationTest {
     }
 
     @Test
+    void shouldCaptureActualInventoryConsumptionPerServiceLineWithoutCreatingStockMovements() {
+        AuthSession session = loginAsDefaultAdmin();
+        String marker = randomSearchMarker();
+
+        String clientId = createClient(session, marker);
+        String petId = createPet(session, clientId, marker);
+        String professionalId = createProfessional(session, marker);
+        JsonNode shampooProduct = createProduct(session, marker + "-actual", "PET_RETAIL_GOOD");
+        String inventoryItemId = shampooProduct.path("inventoryItemId").asText();
+
+        ResponseEntity<JsonNode> createService = post("/pet/services", Map.of(
+                "name", "Service " + marker,
+                "description", "Actual consumption " + marker,
+                "category", "GROOMING",
+                "active", true,
+                "basePrice", 90.00,
+                "durationMinutes", 45,
+                "commissionEligible", true,
+                "allowInPlans", true,
+                "allowStandaloneBooking", true,
+                "inventoryLinks", List.of(
+                        Map.of(
+                                "inventoryItemId", inventoryItemId,
+                                "expectedQuantity", 1.50,
+                                "consumptionRule", "FIXED_PER_SERVICE",
+                                "active", true
+                        )
+                )
+        ), session);
+        assertEquals(200, createService.getStatusCode().value());
+        String serviceId = requireBody(createService).path("data").path("id").asText();
+
+        ResponseEntity<JsonNode> createAppointment = post("/pet/appointments", Map.of(
+                "clientId", clientId,
+                "petId", petId,
+                "serviceId", serviceId,
+                "professionalId", professionalId,
+                "scheduledAt", Instant.now().plusSeconds(3600).toString(),
+                "status", "IN_PROGRESS",
+                "notes", "Actual usage " + marker
+        ), session);
+        assertEquals(200, createAppointment.getStatusCode().value());
+
+        String appointmentId = requireBody(createAppointment).path("data").path("id").asText();
+        String serviceLineId = requireBody(createAppointment)
+                .path("data")
+                .path("appointmentServices")
+                .get(0)
+                .path("id")
+                .asText();
+
+        int inventoryMovementCountBefore = countRows(
+                "SELECT COUNT(*) FROM inventory_movements WHERE tenant_id = ? AND deleted_at IS NULL",
+                session.tenantId()
+        );
+
+        ResponseEntity<JsonNode> updateActualConsumption = patch(
+                "/pet/appointments/" + appointmentId + "/service-lines/" + serviceLineId + "/inventory-consumptions",
+                Map.of(
+                        "inventoryConsumptions", List.of(
+                                Map.of(
+                                        "inventoryItemId", inventoryItemId,
+                                        "actualQuantity", 2.00,
+                                        "consumptionStatus", "READY_TO_APPLY"
+                                )
+                        )
+                ),
+                session
+        );
+        assertEquals(200, updateActualConsumption.getStatusCode().value());
+        JsonNode updatedLine = requireBody(updateActualConsumption)
+                .path("data")
+                .path("appointmentServices")
+                .get(0);
+        assertEquals(1.50, updatedLine.path("expectedInventoryConsumptions").get(0).path("expectedQuantity").asDouble(), 0.001);
+        assertEquals(2.00, updatedLine.path("expectedInventoryConsumptions").get(0).path("actualQuantity").asDouble(), 0.001);
+        assertEquals(
+                "READY_TO_APPLY",
+                updatedLine.path("expectedInventoryConsumptions").get(0).path("consumptionStatus").asText()
+        );
+        assertTrue(updatedLine.path("expectedInventoryConsumptions").get(0).path("snapshotBacked").asBoolean());
+
+        assertEquals(
+                inventoryMovementCountBefore,
+                countRows(
+                        "SELECT COUNT(*) FROM inventory_movements WHERE tenant_id = ? AND deleted_at IS NULL",
+                        session.tenantId()
+                )
+        );
+
+        ResponseEntity<JsonNode> completeAppointment = put("/pet/appointments/" + appointmentId, Map.of(
+                "clientId", clientId,
+                "petId", petId,
+                "serviceId", serviceId,
+                "professionalId", professionalId,
+                "scheduledAt", Instant.now().plusSeconds(3600).toString(),
+                "status", "COMPLETED",
+                "notes", "Completed after actual usage " + marker
+        ), session);
+        assertEquals(200, completeAppointment.getStatusCode().value());
+        assertEquals(
+                1.50,
+                requireBody(completeAppointment)
+                        .path("data")
+                        .path("appointmentServices")
+                        .get(0)
+                        .path("expectedInventoryConsumptions")
+                        .get(0)
+                        .path("expectedQuantity")
+                        .asDouble(),
+                0.001
+        );
+        assertEquals(
+                2.00,
+                requireBody(completeAppointment)
+                        .path("data")
+                        .path("appointmentServices")
+                        .get(0)
+                        .path("expectedInventoryConsumptions")
+                        .get(0)
+                        .path("actualQuantity")
+                        .asDouble(),
+                0.001
+        );
+        assertEquals(
+                "READY_TO_APPLY",
+                requireBody(completeAppointment)
+                        .path("data")
+                        .path("appointmentServices")
+                        .get(0)
+                        .path("expectedInventoryConsumptions")
+                        .get(0)
+                        .path("consumptionStatus")
+                        .asText()
+        );
+    }
+
+    @Test
     void shouldCreateMedicalRecordVaccinationAndPrescription() {
         AuthSession session = loginAsDefaultAdmin();
         String marker = randomSearchMarker();

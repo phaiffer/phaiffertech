@@ -79,6 +79,7 @@ const { currentPlatformState, hasPermissionMock, hasAnyPermissionMock, petServic
     listAppointments: vi.fn(),
     createAppointment: vi.fn(),
     updateAppointment: vi.fn(),
+    updateAppointmentServiceLineInventoryConsumptions: vi.fn(),
     deleteAppointment: vi.fn()
   }
 }));
@@ -148,6 +149,22 @@ describe('PetAppointmentsPage', () => {
         updatedAt: '2026-03-10T10:00:00Z'
       }
     ]));
+    petServiceMock.updateAppointmentServiceLineInventoryConsumptions.mockResolvedValue({
+      id: 'appointment-1',
+      clientId: 'client-1',
+      clientName: 'Owner Example',
+      petId: 'pet-1',
+      petName: 'Pet Example',
+      serviceId: 'service-1',
+      serviceName: 'Bath',
+      professionalId: 'professional-1',
+      professionalName: 'Dr Example',
+      scheduledAt: '2026-03-10T10:00:00Z',
+      status: 'COMPLETED',
+      createdAt: '2026-03-10T10:00:00Z',
+      updatedAt: '2026-03-10T10:00:00Z',
+      appointmentServices: []
+    });
   });
 
   it('shows degraded lookup diagnostics and enriched labels in the appointment table', async () => {
@@ -575,6 +592,153 @@ describe('PetAppointmentsPage', () => {
           { serviceId: 'service-vaccine', professionalId: 'professional-2' }
         ]
       }));
+    });
+  });
+
+  it('saves actual inventory consumption without overwriting the planned snapshot', async () => {
+    setGrantedPermissions([
+      'pet.appointment.read',
+      'pet.appointment.update'
+    ]);
+
+    petServiceMock.listAppointments.mockResolvedValue(createPageResponse([
+      {
+        id: 'appointment-actual-1',
+        clientId: 'client-1',
+        clientName: 'Owner Example',
+        petId: 'pet-1',
+        petName: 'Pet Example',
+        serviceId: 'service-bath',
+        serviceName: 'Bath',
+        professionalId: 'professional-1',
+        professionalName: 'Dr Example',
+        scheduledAt: '2026-03-10T10:00:00Z',
+        status: 'IN_PROGRESS',
+        createdAt: '2026-03-10T10:00:00Z',
+        updatedAt: '2026-03-10T10:00:00Z',
+        appointmentServices: [
+          {
+            id: 'line-1',
+            serviceId: 'service-bath',
+            serviceName: 'Bath',
+            serviceCategory: 'GROOMING',
+            durationMinutes: 60,
+            basePrice: 80,
+            professionalId: 'professional-1',
+            professionalName: 'Dr Example',
+            commissionEligible: true,
+            commissionRate: 0.15,
+            commissionAmount: 12,
+            expectedInventoryConsumptions: [
+              {
+                inventoryItemId: 'inventory-1',
+                inventoryItemName: 'Shampoo concentrate',
+                inventoryItemSku: 'SHA-1',
+                inventoryCategory: 'PET_RETAIL_GOOD',
+                unitOfMeasure: 'ML',
+                expectedQuantity: 30,
+                actualQuantity: 30,
+                consumptionStatus: 'READY_TO_APPLY',
+                consumptionRule: 'FIXED_PER_SERVICE',
+                snapshotBacked: true
+              }
+            ],
+            active: true,
+            allowInPlans: true,
+            allowStandaloneBooking: true,
+            lineOrder: 0,
+            primary: true,
+            missingFromCatalog: false
+          }
+        ]
+      }
+    ]));
+    petServiceMock.updateAppointmentServiceLineInventoryConsumptions.mockResolvedValue({
+      id: 'appointment-actual-1',
+      clientId: 'client-1',
+      clientName: 'Owner Example',
+      petId: 'pet-1',
+      petName: 'Pet Example',
+      serviceId: 'service-bath',
+      serviceName: 'Bath',
+      professionalId: 'professional-1',
+      professionalName: 'Dr Example',
+      scheduledAt: '2026-03-10T10:00:00Z',
+      status: 'IN_PROGRESS',
+      createdAt: '2026-03-10T10:00:00Z',
+      updatedAt: '2026-03-10T10:05:00Z',
+      appointmentServices: [
+        {
+          id: 'line-1',
+          serviceId: 'service-bath',
+          serviceName: 'Bath',
+          serviceCategory: 'GROOMING',
+          durationMinutes: 60,
+          basePrice: 80,
+          professionalId: 'professional-1',
+          professionalName: 'Dr Example',
+          commissionEligible: true,
+          commissionRate: 0.15,
+          commissionAmount: 12,
+          expectedInventoryConsumptions: [
+            {
+              inventoryItemId: 'inventory-1',
+              inventoryItemName: 'Shampoo concentrate',
+              inventoryItemSku: 'SHA-1',
+              inventoryCategory: 'PET_RETAIL_GOOD',
+              unitOfMeasure: 'ML',
+              expectedQuantity: 30,
+              actualQuantity: 40,
+              consumptionStatus: 'READY_TO_APPLY',
+              consumptionRule: 'FIXED_PER_SERVICE',
+              snapshotBacked: true
+            }
+          ],
+          active: true,
+          allowInPlans: true,
+          allowStandaloneBooking: true,
+          lineOrder: 0,
+          primary: true,
+          missingFromCatalog: false
+        }
+      ]
+    });
+
+    render(<PetAppointmentsPage />);
+
+    await waitFor(() => {
+      expect(petServiceMock.listAppointments).toHaveBeenCalled();
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: 'Switch to list' }));
+
+    await waitFor(() => {
+      expect(screen.getByText('Bath')).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: 'Edit' }));
+
+    expect(await screen.findByText('Actual usage per line')).toBeInTheDocument();
+    expect(screen.getByText('Planned: 30 ML')).toBeInTheDocument();
+    expect(screen.getByText('Actual usage: Shampoo concentrate x30 ML')).toBeInTheDocument();
+
+    fireEvent.change(screen.getByLabelText('Actual'), { target: { value: '40' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Save actual usage' }));
+
+    await waitFor(() => {
+      expect(petServiceMock.updateAppointmentServiceLineInventoryConsumptions).toHaveBeenCalledWith(
+        'appointment-actual-1',
+        'line-1',
+        {
+          inventoryConsumptions: [
+            {
+              inventoryItemId: 'inventory-1',
+              actualQuantity: 40,
+              consumptionStatus: 'READY_TO_APPLY'
+            }
+          ]
+        }
+      );
     });
   });
 });
