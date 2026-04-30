@@ -660,6 +660,10 @@ describe('PetAppointmentsPage', () => {
                 consumptionRule: 'FIXED_PER_SERVICE',
                 snapshotBacked: true,
                 stockApplied: false,
+                appliedQuantity: null,
+                plannedActualVarianceQuantity: 0,
+                plannedAppliedVarianceQuantity: null,
+                varianceStatus: 'ADJUSTED_NOT_APPLIED',
                 appliedInventoryMovementId: null,
                 stockAppliedAt: null
               }
@@ -715,6 +719,10 @@ describe('PetAppointmentsPage', () => {
               consumptionRule: 'FIXED_PER_SERVICE',
               snapshotBacked: true,
               stockApplied: false,
+              appliedQuantity: null,
+              plannedActualVarianceQuantity: 10,
+              plannedAppliedVarianceQuantity: null,
+              varianceStatus: 'ADJUSTED_NOT_APPLIED',
               appliedInventoryMovementId: null,
               stockAppliedAt: null
             }
@@ -745,6 +753,8 @@ describe('PetAppointmentsPage', () => {
 
     expect(await screen.findByText('Actual usage per line')).toBeInTheDocument();
     expect(screen.getByText('Planned: 30 ML')).toBeInTheDocument();
+    expect(screen.getByText('Actual: 30 ML | Applied: not applied')).toBeInTheDocument();
+    expect(screen.getByText('Variance: Actual not applied')).toBeInTheDocument();
     expect(screen.getByText('Actual usage: Shampoo concentrate x30 ML')).toBeInTheDocument();
 
     fireEvent.change(screen.getByLabelText('Actual'), { target: { value: '40' } });

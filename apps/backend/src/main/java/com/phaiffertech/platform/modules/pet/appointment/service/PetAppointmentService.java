@@ -10,6 +10,7 @@ import com.phaiffertech.platform.core.inventory.service.InventoryMovementCommand
 import com.phaiffertech.platform.core.inventory.service.InventoryMovementService;
 import com.phaiffertech.platform.modules.pet.appointment.domain.PetAppointment;
 import com.phaiffertech.platform.modules.pet.appointment.domain.PetAppointmentInventoryConsumptionStatus;
+import com.phaiffertech.platform.modules.pet.appointment.domain.PetAppointmentInventoryVarianceStatus;
 import com.phaiffertech.platform.modules.pet.appointment.domain.PetAppointmentServiceLine;
 import com.phaiffertech.platform.modules.pet.appointment.domain.PetAppointmentServiceLineInventoryPlan;
 import com.phaiffertech.platform.modules.pet.appointment.dto.PetAppointmentCreateRequest;
@@ -39,6 +40,7 @@ import com.phaiffertech.platform.modules.pet.professional.repository.PetProfessi
 import com.phaiffertech.platform.modules.pet.plan.domain.ClientPlan;
 import com.phaiffertech.platform.modules.pet.plan.repository.ClientPlanRepository;
 import com.phaiffertech.platform.modules.pet.servicecatalog.domain.PetServiceCatalog;
+import com.phaiffertech.platform.modules.pet.servicecatalog.domain.PetServiceInventoryConsumptionRule;
 import com.phaiffertech.platform.modules.pet.servicecatalog.domain.PetServiceInventoryLink;
 import com.phaiffertech.platform.modules.pet.servicecatalog.repository.PetServiceCatalogRepository;
 import com.phaiffertech.platform.modules.pet.servicecatalog.repository.PetServiceInventoryLinkRepository;
@@ -1246,7 +1248,7 @@ public class PetAppointmentService extends BaseTenantCrudService<
         Map<UUID, List<PetAppointmentServiceLineInventoryResponse>> grouped = new LinkedHashMap<>();
         for (PetAppointmentServiceLineInventoryPlan plan : plans) {
             grouped.computeIfAbsent(plan.getAppointmentServiceId(), ignored -> new java.util.ArrayList<>())
-                    .add(new PetAppointmentServiceLineInventoryResponse(
+                    .add(toInventoryResponse(
                             plan.getId(),
                             plan.getInventoryItemId(),
                             plan.getInventoryItemName(),
@@ -1294,6 +1296,10 @@ public class PetAppointmentService extends BaseTenantCrudService<
                 false,
                 false,
                 null,
+                null,
+                null,
+                PetAppointmentInventoryVarianceStatus.PREVIEW_ONLY,
+                null,
                 null
         );
     }
@@ -1314,6 +1320,10 @@ public class PetAppointmentService extends BaseTenantCrudService<
                 response.consumptionRule(),
                 response.snapshotBacked(),
                 response.stockApplied(),
+                response.appliedQuantity(),
+                response.plannedActualVarianceQuantity(),
+                response.plannedAppliedVarianceQuantity(),
+                response.varianceStatus(),
                 response.appliedInventoryMovementId(),
                 response.stockAppliedAt()
         );
@@ -1335,9 +1345,84 @@ public class PetAppointmentService extends BaseTenantCrudService<
                 selection.consumptionRule(),
                 selection.snapshotBacked(),
                 selection.stockApplied(),
+                selection.appliedQuantity(),
+                selection.plannedActualVarianceQuantity(),
+                selection.plannedAppliedVarianceQuantity(),
+                selection.varianceStatus(),
                 selection.appliedInventoryMovementId(),
                 selection.stockAppliedAt()
         );
+    }
+
+    private PetAppointmentServiceLineInventoryResponse toInventoryResponse(
+            UUID id,
+            UUID inventoryItemId,
+            String inventoryItemName,
+            String inventoryItemSku,
+            String inventoryCategory,
+            String unitOfMeasure,
+            BigDecimal expectedQuantity,
+            BigDecimal actualQuantity,
+            PetAppointmentInventoryConsumptionStatus consumptionStatus,
+            PetServiceInventoryConsumptionRule consumptionRule,
+            boolean snapshotBacked,
+            boolean stockApplied,
+            UUID appliedInventoryMovementId,
+            Instant stockAppliedAt
+    ) {
+        BigDecimal appliedQuantity = stockApplied ? actualQuantity : null;
+        BigDecimal plannedActualVarianceQuantity = actualQuantity == null ? null : actualQuantity.subtract(expectedQuantity);
+        BigDecimal plannedAppliedVarianceQuantity = appliedQuantity == null ? null : appliedQuantity.subtract(expectedQuantity);
+        PetAppointmentInventoryVarianceStatus varianceStatus = resolveInventoryVarianceStatus(
+                snapshotBacked,
+                stockApplied,
+                expectedQuantity,
+                actualQuantity,
+                consumptionStatus
+        );
+
+        return new PetAppointmentServiceLineInventoryResponse(
+                id,
+                inventoryItemId,
+                inventoryItemName,
+                inventoryItemSku,
+                inventoryCategory,
+                unitOfMeasure,
+                expectedQuantity,
+                actualQuantity,
+                consumptionStatus,
+                consumptionRule,
+                snapshotBacked,
+                stockApplied,
+                appliedQuantity,
+                plannedActualVarianceQuantity,
+                plannedAppliedVarianceQuantity,
+                varianceStatus,
+                appliedInventoryMovementId,
+                stockAppliedAt
+        );
+    }
+
+    private PetAppointmentInventoryVarianceStatus resolveInventoryVarianceStatus(
+            boolean snapshotBacked,
+            boolean stockApplied,
+            BigDecimal expectedQuantity,
+            BigDecimal actualQuantity,
+            PetAppointmentInventoryConsumptionStatus consumptionStatus
+    ) {
+        if (!snapshotBacked) {
+            return PetAppointmentInventoryVarianceStatus.PREVIEW_ONLY;
+        }
+        if (stockApplied) {
+            BigDecimal appliedReferenceQuantity = actualQuantity == null ? expectedQuantity : actualQuantity;
+            return appliedReferenceQuantity.compareTo(expectedQuantity) == 0
+                    ? PetAppointmentInventoryVarianceStatus.APPLIED_MATCHED
+                    : PetAppointmentInventoryVarianceStatus.APPLIED_DIFFERENT;
+        }
+        if (actualQuantity != null || consumptionStatus != PetAppointmentInventoryConsumptionStatus.PLANNED) {
+            return PetAppointmentInventoryVarianceStatus.ADJUSTED_NOT_APPLIED;
+        }
+        return PetAppointmentInventoryVarianceStatus.PLANNED_ONLY;
     }
 
     private boolean hasAppliedInventoryConsumptions(UUID tenantId, List<PetAppointmentServiceLine> existingLines) {
@@ -1754,6 +1839,10 @@ public class PetAppointmentService extends BaseTenantCrudService<
             com.phaiffertech.platform.modules.pet.servicecatalog.domain.PetServiceInventoryConsumptionRule consumptionRule,
             boolean snapshotBacked,
             boolean stockApplied,
+            BigDecimal appliedQuantity,
+            BigDecimal plannedActualVarianceQuantity,
+            BigDecimal plannedAppliedVarianceQuantity,
+            PetAppointmentInventoryVarianceStatus varianceStatus,
             UUID appliedInventoryMovementId,
             Instant stockAppliedAt
     ) {

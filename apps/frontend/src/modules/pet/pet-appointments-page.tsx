@@ -23,7 +23,7 @@ import {
 import { PetModuleSubnav } from '@/modules/pet/pet-module-subnav';
 import { PermissionGuard } from '@/shared/auth/PermissionGuard';
 import { usePermissions } from '@/shared/auth/usePermissions';
-import { useAppI18n, useAppMessages } from '@/shared/i18n/app-i18n-provider';
+import { useAppI18n, useAppMessages, type AppLocale } from '@/shared/i18n/app-i18n-provider';
 import { formatCurrencyForLocale, formatDateTimeForLocale } from '@/shared/i18n/formatters';
 import { ApiClientError } from '@/shared/lib/http';
 import { resolvePageItems, resolveTotalItems } from '@/shared/lib/pagination';
@@ -33,6 +33,7 @@ import {
   ClientPlan,
   PetAppointment,
   PetAppointmentInventoryConsumptionStatus,
+  PetAppointmentInventoryVarianceStatus,
   PetAppointmentServiceLine,
   PetAppointmentServiceLineInventoryConsumption,
   PetClient,
@@ -191,6 +192,10 @@ type ActualConsumptionCopy = {
   applying: string;
   planned: string;
   actual: string;
+  applied: string;
+  notRecorded: string;
+  notApplied: string;
+  variance: string;
   status: string;
   snapshotOnly: string;
   noInventory: string;
@@ -207,6 +212,7 @@ type ActualConsumptionCopy = {
   stockNotReady: string;
   stockNoAction: string;
   wholeQuantityOnly: string;
+  varianceLabels: Record<PetAppointmentInventoryVarianceStatus, string>;
 };
 
 function resolveActualConsumptionCopy(locale: string): ActualConsumptionCopy {
@@ -220,6 +226,10 @@ function resolveActualConsumptionCopy(locale: string): ActualConsumptionCopy {
       applying: 'Aplicando estoque...',
       planned: 'Planejado',
       actual: 'Real',
+      applied: 'Aplicado',
+      notRecorded: 'nao registrado',
+      notApplied: 'nao aplicado',
+      variance: 'Variancia',
       status: 'Status',
       snapshotOnly: 'Somente leitura. Esta linha usa apenas o preview atual da receita porque o snapshot estruturado nao existe neste historico.',
       noInventory: 'Nenhum item planejado nesta linha.',
@@ -235,7 +245,14 @@ function resolveActualConsumptionCopy(locale: string): ActualConsumptionCopy {
       stockPending: 'Pronto para uma aplicacao explicita de estoque.',
       stockNotReady: 'Registre uma quantidade real positiva e marque como pronto para aplicar antes de baixar estoque.',
       stockNoAction: 'Nenhuma baixa de estoque necessaria para esta linha.',
-      wholeQuantityOnly: 'Esta primeira etapa aceita apenas quantidades inteiras de estoque.'
+      wholeQuantityOnly: 'Esta primeira etapa aceita apenas quantidades inteiras de estoque.',
+      varianceLabels: {
+        PREVIEW_ONLY: 'Somente preview',
+        PLANNED_ONLY: 'So planejado',
+        ADJUSTED_NOT_APPLIED: 'Real nao aplicado',
+        APPLIED_MATCHED: 'Aplicado igual ao planejado',
+        APPLIED_DIFFERENT: 'Aplicado diferente do planejado'
+      }
     };
   }
 
@@ -248,6 +265,10 @@ function resolveActualConsumptionCopy(locale: string): ActualConsumptionCopy {
     applying: 'Applying stock...',
     planned: 'Planned',
     actual: 'Actual',
+    applied: 'Applied',
+    notRecorded: 'not recorded',
+    notApplied: 'not applied',
+    variance: 'Variance',
     status: 'Status',
     snapshotOnly: 'Read-only. This line only has the current recipe preview because the structured snapshot is missing in this historical record.',
     noInventory: 'No planned inventory rows on this line.',
@@ -263,7 +284,14 @@ function resolveActualConsumptionCopy(locale: string): ActualConsumptionCopy {
     stockPending: 'Ready for an explicit stock application.',
     stockNotReady: 'Record a positive actual quantity and mark the row ready to apply before updating stock.',
     stockNoAction: 'No stock deduction is needed for this row.',
-    wholeQuantityOnly: 'This first step only supports whole stock quantities.'
+    wholeQuantityOnly: 'This first step only supports whole stock quantities.',
+    varianceLabels: {
+      PREVIEW_ONLY: 'Preview only',
+      PLANNED_ONLY: 'Planned only',
+      ADJUSTED_NOT_APPLIED: 'Actual not applied',
+      APPLIED_MATCHED: 'Applied matches plan',
+      APPLIED_DIFFERENT: 'Applied differs from plan'
+    }
   };
 }
 
@@ -279,7 +307,7 @@ function canApplyStockConsumption(row: PetAppointmentServiceLineInventoryConsump
 }
 
 function resolveStockApplicationDetail(
-  locale: string,
+  locale: AppLocale,
   row: PetAppointmentServiceLineInventoryConsumption,
   copy: ActualConsumptionCopy
 ) {
@@ -309,6 +337,37 @@ function resolveStockApplicationDetail(
     return copy.stockPending;
   }
   return copy.stockNotReady;
+}
+
+function resolveInventoryVarianceStatus(row: PetAppointmentServiceLineInventoryConsumption): PetAppointmentInventoryVarianceStatus {
+  if (row.varianceStatus) {
+    return row.varianceStatus;
+  }
+  if (!row.snapshotBacked) {
+    return 'PREVIEW_ONLY';
+  }
+  if (row.stockApplied) {
+    const appliedQuantity = row.appliedQuantity ?? row.actualQuantity ?? row.expectedQuantity;
+    return appliedQuantity === row.expectedQuantity ? 'APPLIED_MATCHED' : 'APPLIED_DIFFERENT';
+  }
+  return row.actualQuantity == null && row.consumptionStatus === 'PLANNED' ? 'PLANNED_ONLY' : 'ADJUSTED_NOT_APPLIED';
+}
+
+function resolveInventoryVarianceTone(status: PetAppointmentInventoryVarianceStatus) {
+  switch (status) {
+    case 'PREVIEW_ONLY':
+      return 'bg-amber-100 text-amber-800';
+    case 'PLANNED_ONLY':
+      return 'bg-slate-100 text-slate-700';
+    case 'ADJUSTED_NOT_APPLIED':
+      return 'bg-sky-100 text-sky-800';
+    case 'APPLIED_MATCHED':
+      return 'bg-emerald-100 text-emerald-800';
+    case 'APPLIED_DIFFERENT':
+      return 'bg-violet-100 text-violet-800';
+    default:
+      return 'bg-slate-100 text-slate-700';
+  }
 }
 
 function resolveActualConsumptionStatusOptions(locale: string) {
@@ -1696,6 +1755,13 @@ export function PetAppointmentsPage() {
                                       || row.consumptionStatus === 'SKIPPED';
                                     const canApplyStock = canApplyStockConsumption(row);
                                     const stockApplicationDetail = resolveStockApplicationDetail(locale, row, actualConsumptionCopy);
+                                    const varianceStatus = resolveInventoryVarianceStatus(row);
+                                    const actualQuantityText = row.actualQuantity == null
+                                      ? actualConsumptionCopy.notRecorded
+                                      : `${formatInventoryQuantity(locale, row.actualQuantity)} ${row.unitOfMeasure}`;
+                                    const appliedQuantityText = row.appliedQuantity == null
+                                      ? actualConsumptionCopy.notApplied
+                                      : `${formatInventoryQuantity(locale, row.appliedQuantity)} ${row.unitOfMeasure}`;
 
                                     return (
                                       <div
@@ -1708,6 +1774,9 @@ export function PetAppointmentsPage() {
                                             <p className="mt-1 text-xs text-[color:var(--app-shell-muted)]">
                                               {actualConsumptionCopy.planned}: {formatInventoryQuantity(locale, row.expectedQuantity)} {row.unitOfMeasure}
                                             </p>
+                                            <p className="mt-1 text-xs text-[color:var(--app-shell-muted)]">
+                                              {actualConsumptionCopy.actual}: {actualQuantityText} | {actualConsumptionCopy.applied}: {appliedQuantityText}
+                                            </p>
                                             {row.inventoryItemSku ? (
                                               <p className="mt-1 text-[11px] text-[color:var(--app-shell-muted)]">
                                                 SKU: {row.inventoryItemSku}
@@ -1717,19 +1786,9 @@ export function PetAppointmentsPage() {
                                               {stockApplicationDetail}
                                             </p>
                                           </div>
-                                          {!row.snapshotBacked ? (
-                                            <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-medium text-amber-800">
-                                              {locale === 'pt-BR' ? 'Preview' : 'Preview only'}
-                                            </span>
-                                          ) : row.stockApplied ? (
-                                            <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-medium text-emerald-800">
-                                              {actualConsumptionCopy.stockAppliedBadge}
-                                            </span>
-                                          ) : canApplyStock ? (
-                                            <span className="rounded-full bg-sky-100 px-2 py-0.5 text-[11px] font-medium text-sky-800">
-                                              {actualConsumptionCopy.stockPendingBadge}
-                                            </span>
-                                          ) : null}
+                                          <span className={`rounded-full px-2 py-0.5 text-[11px] font-medium ${resolveInventoryVarianceTone(varianceStatus)}`}>
+                                            {actualConsumptionCopy.variance}: {actualConsumptionCopy.varianceLabels[varianceStatus]}
+                                          </span>
                                         </div>
 
                                         <div className="mt-3 grid gap-3 md:grid-cols-2">

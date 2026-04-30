@@ -80,6 +80,13 @@ export type PetAppointmentInventoryConsumptionStatus =
   | 'READY_TO_APPLY'
   | 'SKIPPED';
 
+export type PetAppointmentInventoryVarianceStatus =
+  | 'PREVIEW_ONLY'
+  | 'PLANNED_ONLY'
+  | 'ADJUSTED_NOT_APPLIED'
+  | 'APPLIED_MATCHED'
+  | 'APPLIED_DIFFERENT';
+
 export type PetAppointmentServiceLineInventoryConsumption = {
   id?: string | null;
   inventoryItemId: string;
@@ -93,6 +100,10 @@ export type PetAppointmentServiceLineInventoryConsumption = {
   consumptionRule: PetServiceInventoryConsumptionRule;
   snapshotBacked: boolean;
   stockApplied: boolean;
+  appliedQuantity?: number | null;
+  plannedActualVarianceQuantity?: number | null;
+  plannedAppliedVarianceQuantity?: number | null;
+  varianceStatus?: PetAppointmentInventoryVarianceStatus;
   appliedInventoryMovementId?: string | null;
   stockAppliedAt?: string | null;
 };
