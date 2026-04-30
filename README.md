@@ -379,19 +379,48 @@ make up
 - Prometheus (optional): `http://localhost:9090` (`make observability-up`)
 - Grafana (optional): `http://localhost:3001` (`make observability-up`)
 
-## Local Development
+## Local Development Without Docker
 
-Backend:
+Windows local development can run directly against a locally installed PostgreSQL database without Docker.
 
-```bash
-make backend
+Required local database:
+
+- Database: `platform_db`
+- Username: `platform_user`
+- Password: `platform_pass`
+
+Copy the local env example:
+
+```powershell
+Copy-Item .env.local.example .env.local
 ```
 
-Frontend:
+Start backend and frontend in separate PowerShell windows:
 
-```bash
-make frontend
+```powershell
+.\scripts\start-local-backend.ps1
+.\scripts\start-local-frontend.ps1
 ```
+
+Smoke check:
+
+```powershell
+.\scripts\smoke-local.ps1
+```
+
+Local login:
+
+- Tenant: `default`
+- Email: `admin@local.test`
+- Password: `Admin@123`
+
+In local/dev, `admin@local.test` keeps unrestricted wildcard entitlement access for full platform validation. Keep `SPRING_PROFILES_ACTIVE=dev` for this behavior.
+
+Full Windows setup guide:
+
+- [docs/local-windows-development.md](docs/local-windows-development.md)
+
+Docker-based flows remain available for Linux validation and production-like testing.
 
 ## Makefile
 
