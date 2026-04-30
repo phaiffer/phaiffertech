@@ -122,6 +122,15 @@ export function Sidebar() {
         icon: <Calendar className="h-4 w-4" />,
       },
       {
+        href: '/pet/services',
+        label: petMessages.services,
+        anyOf: ['pet.service.read'],
+        anyEntitlements: petSubmoduleEntitlements,
+        moduleCode: 'PET',
+        group: 'principal',
+        icon: <ClipboardList className="h-4 w-4" />,
+      },
+      {
         href: '/pet/follow-up',
         label: petMessages.followUp,
         anyOf: ['crm.task.read', 'crm.note.read', 'crm.activity.read'],
@@ -206,8 +215,8 @@ export function Sidebar() {
       },
       {
         href: '/pet/commissions',
-        label: 'Comissões',
-        anyOf: ['pet.commission.read'],
+        label: petMessages.commissions,
+        anyOf: ['pet.appointment.read'],
         anyEntitlements: petSubmoduleEntitlements,
         moduleCode: 'PET',
         group: 'gestao',
@@ -224,6 +233,7 @@ export function Sidebar() {
       petMessages.appointments,
       petMessages.clients,
       petMessages.clinic,
+      petMessages.commissions,
       petMessages.commercial,
       petMessages.pos,
       petMessages.finance,
@@ -233,6 +243,7 @@ export function Sidebar() {
       petMessages.pets,
       petMessages.plans,
       petMessages.professionals,
+      petMessages.services,
       shellMessages.overview,
       shellMessages.settings,
     ]

@@ -133,6 +133,7 @@ const ptBRMessages = {
     clients: 'Clientes',
     pets: 'Pets',
     appointments: 'Atendimentos',
+    services: 'Catalogo Banho e Tosa',
     followUp: 'Follow-up',
     commercial: 'Comercial',
     clinic: 'Clínica',
@@ -141,7 +142,8 @@ const ptBRMessages = {
     plans: 'Planos',
     inventory: 'Estoque',
     invoices: 'Cobranca',
-    professionals: 'Equipe'
+    professionals: 'Equipe',
+    commissions: 'Fechamento'
   },
   dashboardRoutes: {
     mainEyebrow: 'PetFlow',
@@ -239,9 +241,9 @@ const ptBRMessages = {
   },
   petAppointments: {
     noPermission: 'Você não tem permissão para visualizar atendimentos.',
-    title: 'Atendimentos',
+    title: 'Agenda de Banho e Tosa',
     description:
-      'Organize a fila de banho e tosa com visibilidade de recorrentes e avulsos, extras de pet taxi, responsável e follow-up de retirada.',
+      'Organize a fila de banho e tosa com recorrentes e avulsos, pacotes de servicos, pet taxi, profissional responsavel, consumo de estoque e follow-up de retirada.',
     actions: {
       switchToList: 'Ver lista',
       switchToCalendar: 'Ver calendario',
@@ -249,12 +251,12 @@ const ptBRMessages = {
     },
     filters: {
       title: 'Filtros',
-      description: 'Refine a agenda por status, cliente, servico e profissional.',
-      searchPlaceholder: 'Servico, status ou observacoes',
+      description: 'Refine a agenda de banho e tosa por status, cliente, pacote de servicos e profissional.',
+      searchPlaceholder: 'Banho, tosa, status ou observacoes',
       status: 'Status',
       client: 'Cliente',
       pet: 'Pet',
-      service: 'Servico',
+      service: 'Pacote de servicos',
       professional: 'Profissional',
       activeCountSuffix: 'filtro(s) moldando a visao da agenda.',
       noActive: 'Nenhum filtro ativo na visao de atendimentos.'
@@ -289,7 +291,7 @@ const ptBRMessages = {
       createTitle: 'Agendar atendimento',
       editTitle: 'Editar atendimento',
       description:
-        'Selecione cliente e pet, escolha servico e profissional e depois defina pagamento avulso ou por plano com os extras do dia.'
+        'Selecione cliente e pet, monte o pacote de servicos, atribua o profissional responsavel e confirme pagamento avulso ou por plano com extras e execucao conectada ao estoque.'
     },
     dialog: {
       deleteTitle: 'Remover atendimento?',
@@ -300,7 +302,7 @@ const ptBRMessages = {
       all: 'Todos',
       selectClient: 'Selecione um cliente',
       selectPet: 'Selecione um pet',
-      selectService: 'Selecione um servico',
+      selectService: 'Selecione banho ou tosa',
       selectProfessional: 'Selecione um profissional',
       selectClientFirst: 'Selecione um cliente primeiro',
       loadingPlans: 'Carregando planos...',
@@ -336,11 +338,11 @@ const ptBRMessages = {
       noShow: 'Nao compareceu'
     },
     form: {
-      bookingTitle: 'Agendamento',
-      bookingDescription: 'Quem, o que e quando: o nucleo do atendimento.',
+      bookingTitle: 'Agendamento de banho e tosa',
+      bookingDescription: 'Cliente, pet, pacote de servicos, profissional responsavel e horario em uma etapa operacional.',
       packageTitle: 'Plano e checkout',
       packageDescription:
-        'Vincule um plano para cobrir o servico base ou deixe vazio para um pagamento avulso. Adicione extras cobrados hoje.',
+        'Vincule um plano recorrente para cobrir o servico base ou deixe vazio para pagamento avulso. Adicione pet taxi, adicionais ou extras do dia.',
       notes: 'Observacoes',
       notesPlaceholder: 'Observacoes da visita, como pele sensivel ou primeiro atendimento',
       dateTime: 'Data e hora',
@@ -354,19 +356,19 @@ const ptBRMessages = {
       packageCoverageExtras: 'Extras de R$ {amount} serao cobrados separadamente.',
       packageCoverageFull: 'O servico base ficara totalmente coberto pelo plano.',
       referencesRequired:
-        'Antes de agendar, cadastre pelo menos um cliente, um pet, um servico e um profissional. Depois volte aqui.',
+        'Antes de agendar, cadastre pelo menos um cliente, um pet, um servico de banho e tosa e um profissional. Depois volte aqui.',
       save: 'Salvando...',
       update: 'Atualizar atendimento',
       create: 'Agendar atendimento',
       cancel: 'Cancelar'
     },
     columns: {
-      service: 'Servico',
+      service: 'Pacote',
       scheduled: 'Agendado',
       status: 'Status',
       plan: 'Plano',
       payment: 'Pagamento',
-      care: 'Atendimento',
+      care: 'Clinico',
       client: 'Cliente',
       professional: 'Profissional',
       actions: 'Acoes',
@@ -494,7 +496,7 @@ const ptBRMessages = {
     sourceTypes: {
       manual: 'Ajuste manual',
       retailSale: 'Venda no varejo',
-      clinicalConsumption: 'Consumo operacional',
+      clinicalConsumption: 'Consumo de banho e tosa',
       productSync: 'Sincronizacao de catalogo',
       maintenanceConsumption: 'Consumo interno',
       stockReplacement: 'Reposicao de estoque',
@@ -560,9 +562,9 @@ const ptBRMessages = {
       directionLabel: 'Direcao',
       quantityLabel: 'Quantidade',
       noteLabel: 'Nota operacional',
-      notePlaceholder: 'Venda no varejo, uso no banho, ajuste manual de contagem...',
+      notePlaceholder: 'Shampoo usado no banho, venda no varejo, ajuste manual de contagem...',
       reminderTitle: 'Lembrete do operador',
-      reminderDescription: 'Deixe o motivo explicito para alinhar recepcao, estoque e cobranca durante a demo.',
+      reminderDescription: 'Deixe o motivo explicito para alinhar recepcao, execucao do banho, estoque e cobranca durante a demo.',
       saving: 'Salvando movimentacao...',
       update: 'Atualizar movimentacao',
       create: 'Criar movimentacao',

@@ -71,13 +71,13 @@ function ServiceFlagToggle({
 function buildServiceAvailabilityLabel(service: Pick<PetServiceCatalog, 'allowInPlans' | 'allowStandaloneBooking'>) {
   switch (resolvePetServiceBookingMode(service)) {
     case 'PLAN_ONLY':
-      return 'Plan sessions only';
+      return 'Somente sessoes de plano';
     case 'STANDALONE_ONLY':
-      return 'Standalone booking only';
+      return 'Somente atendimento avulso';
     case 'UNAVAILABLE':
-      return 'Unavailable for new scheduling';
+      return 'Indisponivel para novos atendimentos';
     default:
-      return 'Standalone booking and plan sessions enabled';
+      return 'Avulso e plano habilitados';
   }
 }
 
@@ -128,7 +128,7 @@ export function PetServicesPage() {
       });
       setPageData(result);
     } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : 'Unable to load PetFlow services.');
+      setError(err instanceof ApiClientError ? err.message : 'Nao foi possivel carregar o catalogo PetFlow.');
     } finally {
       setLoading(false);
     }
@@ -194,12 +194,12 @@ export function PetServicesPage() {
     const parsedBasePrice = Number(basePrice);
     const parsedDuration = Number(durationMinutes);
     if (Number.isNaN(parsedBasePrice) || Number.isNaN(parsedDuration) || parsedDuration < 1) {
-      setError('Enter a valid base price and duration.');
+      setError('Informe preco base e duracao validos.');
       return;
     }
 
     if (active && !allowInPlans && !allowStandaloneBooking) {
-      setError('Active services must allow standalone booking or plan-based scheduling.');
+      setError('Servicos ativos precisam permitir agendamento avulso ou por plano.');
       return;
     }
 
@@ -220,16 +220,16 @@ export function PetServicesPage() {
 
       if (editingId) {
         await petService.updateService(editingId, payload);
-        setSuccess('Service updated successfully.');
+        setSuccess('Servico atualizado.');
       } else {
         await petService.createService(payload);
-        setSuccess('Service created successfully.');
+        setSuccess('Servico criado.');
       }
 
       resetForm();
       await load(pageData.page, search, categoryFilter, activeFilter);
     } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : 'Unable to save the service.');
+      setError(err instanceof ApiClientError ? err.message : 'Nao foi possivel salvar o servico.');
     } finally {
       setSubmitting(false);
     }
@@ -243,10 +243,10 @@ export function PetServicesPage() {
     try {
       await petService.deleteService(deleteCandidate.id);
       setDeleteCandidate(null);
-      setSuccess('Service removed successfully.');
+      setSuccess('Servico removido.');
       await load(pageData.page, search, categoryFilter, activeFilter);
     } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : 'Unable to delete the selected service.');
+      setError(err instanceof ApiClientError ? err.message : 'Nao foi possivel excluir o servico selecionado.');
     }
   }
 
@@ -266,7 +266,7 @@ export function PetServicesPage() {
   const activeSchedulingConflict = active && !allowInPlans && !allowStandaloneBooking;
   const draftServicePreview = describePetServiceCatalogItem({
     id: editingId ?? 'draft-service',
-    name: name.trim() || 'Draft service',
+    name: name.trim() || 'Servico em preparo',
     description: description.trim() || undefined,
     category,
     active,
@@ -283,29 +283,29 @@ export function PetServicesPage() {
   const summaryCards: DashboardSummaryCard[] = [
     {
       key: 'services-in-scope',
-      label: 'Services in scope',
+      label: 'Catalogo visivel',
       value: totalItems,
       trend: activeFilterCount > 0
-        ? 'Results reflect the current scheduling filter mix.'
-        : 'Full service catalog visible for this workspace.'
+        ? 'Recorte atual do catalogo usado na agenda.'
+        : 'Servicos disponiveis para demonstrar banho e tosa.'
     },
     {
       key: 'active-services',
-      label: 'Active services',
+      label: 'Ativos para agenda',
       value: activeServices,
-      trend: 'Only active definitions can be used for new appointments.'
+      trend: 'Somente servicos ativos entram em novos atendimentos.'
     },
     {
       key: 'plan-ready-services',
-      label: 'Plan-ready services',
+      label: 'Aceitam plano',
       value: planReadyServices,
-      trend: 'Useful for recurring packages and plan-linked scheduling.'
+      trend: 'Base para pacotes recorrentes de banho e tosa.'
     },
     {
       key: 'average-service-duration',
-      label: 'Avg duration (min)',
+      label: 'Duracao media',
       value: averageDuration,
-      trend: `Visible base price average: BRL ${averageBasePrice}.`
+      trend: `Ticket base medio visivel: R$ ${averageBasePrice}.`
     }
   ];
 
@@ -315,65 +315,65 @@ export function PetServicesPage() {
   }));
 
   const filterCategoryOptions = [
-    { value: '', label: 'All categories' },
+    { value: '', label: 'Todas as categorias' },
     ...categoryOptions
   ];
 
   const activeFilterOptions = [
-    { value: 'all', label: 'All statuses' },
-    { value: 'active', label: 'Active only' },
-    { value: 'inactive', label: 'Inactive only' }
+    { value: 'all', label: 'Todos os status' },
+    { value: 'active', label: 'Somente ativos' },
+    { value: 'inactive', label: 'Somente inativos' }
   ];
 
   const columns: DataTableColumn<PetServiceCatalog>[] = [
     {
       key: 'service',
-      header: 'Service',
+      header: 'Servico',
       render: (item) => (
         <div>
           <p className="font-medium text-slate-900">{item.name}</p>
           <p className="mt-1 text-sm text-[color:var(--app-shell-muted)]">
-            {item.description ?? 'No service summary recorded yet.'}
+            {item.description ?? 'Sem resumo operacional cadastrado.'}
           </p>
         </div>
       )
     },
     {
       key: 'category',
-      header: 'Category',
+      header: 'Categoria',
       render: (item) => (
         <div className="space-y-1">
           <p className="text-sm font-medium text-slate-900">{formatPetServiceCategory(item.category)}</p>
           <p className="text-xs text-[color:var(--app-shell-muted)]">
-            {item.active ? 'Active for new bookings' : 'Inactive for new bookings'}
+            {item.active ? 'Ativo para novos atendimentos' : 'Inativo para novos atendimentos'}
           </p>
         </div>
       )
     },
     {
       key: 'basePrice',
-      header: 'Base price',
+      header: 'Preco base',
       render: (item) => item.basePrice.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
     },
     {
       key: 'durationMinutes',
-      header: 'Duration',
+      header: 'Duracao',
       render: (item) => `${item.durationMinutes} min`
     },
     {
       key: 'bookingRules',
-      header: 'Booking rules',
+      header: 'Uso na agenda',
       render: (item) => (
         <div className="space-y-1 text-xs text-[color:var(--app-shell-muted)]">
-          <p>{item.allowStandaloneBooking ? 'Standalone booking enabled' : 'Requires plan linkage'}</p>
-          <p>{item.allowInPlans ? 'Eligible for plan sessions' : 'One-time scheduling only'}</p>
-          <p>{item.commissionEligible ? 'Commission eligible' : 'Commission excluded'}</p>
+          <p>{item.allowStandaloneBooking ? 'Pode ser avulso' : 'Exige plano vinculado'}</p>
+          <p>{item.allowInPlans ? 'Pode consumir sessoes de plano' : 'Somente atendimento avulso'}</p>
+          <p>{item.commissionEligible ? 'Gera comissao' : 'Fora da comissao'}</p>
         </div>
       )
     },
     {
       key: 'actions',
-      header: 'Actions',
+      header: 'Acoes',
       render: (item) => (
         <div className={sharedInlineActionsClass}>
           <PermissionGuard permission="pet.service.update">
@@ -382,7 +382,7 @@ export function PetServicesPage() {
               onClick={() => beginEdit(item)}
               className="ui-inline-button"
             >
-              Edit
+              Editar
             </button>
           </PermissionGuard>
           <PermissionGuard permission="pet.service.delete">
@@ -391,7 +391,7 @@ export function PetServicesPage() {
               onClick={() => setDeleteCandidate(item)}
               className="ui-inline-danger-button"
             >
-              Delete
+              Excluir
             </button>
           </PermissionGuard>
         </div>
@@ -402,17 +402,17 @@ export function PetServicesPage() {
   return (
     <PermissionGuard
       permission="pet.service.read"
-      fallback={<div className="ui-notice-warning">You do not have permission to view PetFlow services.</div>}
+      fallback={<div className="ui-notice-warning">Voce nao tem permissao para visualizar o catalogo de servicos do PetFlow.</div>}
     >
       <div className={sharedPageStackClass}>
         <PageTitle
           eyebrow="PetFlow workspace"
-          title="Pet Services"
-          description="Define grooming and clinical services with enough structure for scheduling, base pricing, duration, plans, and future operational links."
+          title="Catalogo de Banho e Tosa"
+          description="Estruture banho, tosa, servicos combinados e itens clinicos disponiveis no pacote contratado, com preco, duracao, plano e regra de comissao claros para a agenda."
           actions={(
             <PermissionGuard permission="pet.service.create">
               <button type="button" onClick={beginCreateService} className="ui-primary-button">
-                Add service
+                Novo servico
               </button>
             </PermissionGuard>
           )}
@@ -422,19 +422,19 @@ export function PetServicesPage() {
 
         <PageSection
           tone="muted"
-          title="Service filters"
-          description="Refine the tenant-owned service catalog by search, category, and operational status."
+          title="Filtros do catalogo"
+          description="Encontre rapidamente o servico certo para montar um atendimento de banho e tosa durante a demo."
         >
           <div className={sharedFilterToolbarClass}>
             <div className="grid gap-3 xl:grid-cols-[minmax(0,1.45fr)_repeat(2,minmax(0,0.9fr))] xl:items-end">
               <SearchBar
-                label="Search"
+                label="Busca"
                 value={searchInput}
                 onChange={setSearchInput}
-                placeholder="Service name or summary"
+                placeholder="Nome do servico ou resumo"
               />
               <FormSelect
-                label="Category"
+                label="Categoria"
                 value={categoryFilter}
                 options={filterCategoryOptions}
                 onChange={setCategoryFilter}
@@ -452,7 +452,7 @@ export function PetServicesPage() {
                 onClick={() => setSearch(searchInput)}
                 className="ui-primary-button"
               >
-                Search
+                Buscar
               </button>
               <button
                 type="button"
@@ -464,12 +464,12 @@ export function PetServicesPage() {
                 }}
                 className="ui-secondary-button"
               >
-                Clear
+                Limpar
               </button>
               <p className="text-sm text-[color:var(--app-shell-muted)]">
                 {activeFilterCount > 0
-                  ? 'The catalog is narrowed to a more operationally relevant slice.'
-                  : 'No filters are active. Showing the broader service mix.'}
+                  ? 'Catalogo filtrado para o recorte operacional da demo.'
+                  : 'Sem filtros ativos. Exibindo o mix completo de servicos.'}
               </p>
             </div>
           </div>
@@ -478,40 +478,40 @@ export function PetServicesPage() {
         <PermissionGuard permission={editingId ? 'pet.service.update' : 'pet.service.create'}>
           <div id="pet-service-form-section">
             <PageSection
-              title={editingId ? 'Edit service' : 'Create service'}
-              description="Capture the structured definition the schedule needs: category, status, duration, base price, plan eligibility, and commission behavior."
+              title={editingId ? 'Editar servico' : 'Criar servico'}
+              description="Cadastre a definicao que a agenda usa: categoria, status, duracao, preco base, plano e regra de comissao."
             >
               <form onSubmit={handleSubmit} className="space-y-5">
                 <div className="grid gap-4 xl:grid-cols-2">
-                  <FormInput label="Name" value={name} onChange={setName} required />
-                  <FormSelect label="Category" value={category} options={categoryOptions} onChange={(value) => setCategory(value as PetServiceCategory)} />
-                  <FormInput label="Base price" value={basePrice} onChange={setBasePrice} type="number" required />
-                  <FormInput label="Duration (min)" value={durationMinutes} onChange={setDurationMinutes} type="number" required />
-                  <FormInput label="Description" value={description} onChange={setDescription} wrapperClassName="xl:col-span-2" />
+                  <FormInput label="Nome" value={name} onChange={setName} required />
+                  <FormSelect label="Categoria" value={category} options={categoryOptions} onChange={(value) => setCategory(value as PetServiceCategory)} />
+                  <FormInput label="Preco base" value={basePrice} onChange={setBasePrice} type="number" required />
+                  <FormInput label="Duracao (min)" value={durationMinutes} onChange={setDurationMinutes} type="number" required />
+                  <FormInput label="Resumo operacional" value={description} onChange={setDescription} wrapperClassName="xl:col-span-2" />
                 </div>
 
                 <div className="grid gap-3 xl:grid-cols-2">
                   <ServiceFlagToggle
-                    label="Active for scheduling"
-                    description="Inactive services remain historical records but stop being available for new bookings."
+                    label="Ativo para agenda"
+                    description="Servicos inativos ficam no historico, mas nao entram em novos atendimentos."
                     checked={active}
                     onChange={setActive}
                   />
                   <ServiceFlagToggle
-                    label="Commission eligible"
-                    description="Keeps the service ready for the next safe commission rollout without hard-coding exceptions later."
+                    label="Gera comissao"
+                    description="Mostra na demo quais servicos entram no fechamento de producao da equipe."
                     checked={commissionEligible}
                     onChange={setCommissionEligible}
                   />
                   <ServiceFlagToggle
-                    label="Allowed in plans"
-                    description="Enable this when the base service can be covered by recurring plans or prepaid session packs."
+                    label="Permitido em planos"
+                    description="Use para banho recorrente, pacotes mensais e sessoes pre-pagas."
                     checked={allowInPlans}
                     onChange={setAllowInPlans}
                   />
                   <ServiceFlagToggle
-                    label="Allowed as standalone booking"
-                    description="Disable this when the service should only be booked as part of a plan or structured follow-up package."
+                    label="Permitido como avulso"
+                    description="Use quando o servico pode ser vendido fora de um plano recorrente."
                     checked={allowStandaloneBooking}
                     onChange={setAllowStandaloneBooking}
                   />
@@ -523,23 +523,23 @@ export function PetServicesPage() {
                     : 'border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-panel-muted)]'
                 }`}>
                   <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--app-shell-muted)]">
-                    Scheduling preview
+                    Previa para a agenda
                   </p>
                   <p className="mt-2 text-sm font-medium text-[color:var(--app-shell-heading)]">
                     {draftServicePreview}
                   </p>
                   <div className="mt-3 grid gap-2 text-xs text-[color:var(--app-shell-muted)] xl:grid-cols-2">
-                    <p>Category: {formatPetServiceCategory(category)}</p>
-                    <p>Status: {active ? 'Active for new appointments' : 'Hidden from new appointments'}</p>
-                    <p>Scheduling mode: {draftAvailabilityLabel}</p>
-                    <p>{commissionEligible ? 'Commission ready' : 'Commission excluded'}</p>
+                    <p>Categoria: {formatPetServiceCategory(category)}</p>
+                    <p>Status: {active ? 'Ativo para novos atendimentos' : 'Oculto de novos atendimentos'}</p>
+                    <p>Uso: {draftAvailabilityLabel}</p>
+                    <p>{commissionEligible ? 'Entra na comissao' : 'Fora da comissao'}</p>
                   </div>
                   <p className={`mt-3 text-xs ${activeSchedulingConflict ? 'text-amber-800' : 'text-[color:var(--app-shell-muted)]'}`}>
                     {activeSchedulingConflict
-                      ? 'Active services need at least one booking path enabled so operators can actually schedule them.'
+                      ? 'Servicos ativos precisam de pelo menos um caminho de agendamento habilitado.'
                       : active
-                        ? 'This preview matches how the service will appear in the structured appointment picker.'
-                        : 'Inactive services stay available only for historical understanding and safe legacy edits.'}
+                        ? 'Esta previa corresponde ao que o operador ve ao montar um atendimento.'
+                        : 'Servicos inativos ficam disponiveis apenas para leitura historica e edicoes seguras.'}
                   </p>
                 </div>
 
@@ -549,14 +549,14 @@ export function PetServicesPage() {
                     disabled={submitting}
                     className="ui-primary-button"
                   >
-                    {submitting ? 'Saving...' : editingId ? 'Update service' : 'Create service'}
+                    {submitting ? 'Salvando...' : editingId ? 'Atualizar servico' : 'Criar servico'}
                   </button>
                   <button
                     type="button"
                     onClick={resetForm}
                     className="ui-secondary-button"
                   >
-                    {editingId ? 'Cancel edit' : 'Reset form'}
+                    {editingId ? 'Cancelar edicao' : 'Limpar formulario'}
                   </button>
                 </div>
               </form>
@@ -568,9 +568,9 @@ export function PetServicesPage() {
         {success ? <div className="ui-notice-success">{success}</div> : null}
 
         <PageSection
-          title="Service catalog"
-          description="Keep the catalog easy to scan while making each definition useful for scheduling, plans, pricing, and operational follow-up."
-          actions={<p className="text-sm text-[color:var(--app-shell-muted)]">Total {totalItems} service(s)</p>}
+          title="Catalogo operacional"
+          description="Revise o mix que sera usado para explicar preco, duracao, profissional, plano e comissao no fluxo de banho e tosa."
+          actions={<p className="text-sm text-[color:var(--app-shell-muted)]">Total {totalItems} servico(s)</p>}
         >
           <div className="space-y-5">
             <DataTable
@@ -578,17 +578,17 @@ export function PetServicesPage() {
               rows={rows}
               getRowKey={(row) => row.id}
               loading={loading}
-              loadingTitle="Loading services"
-              loadingDescription="Preparing the service catalog with category, booking, and pricing context."
+              loadingTitle="Carregando catalogo"
+              loadingDescription="Preparando servicos com categoria, regra de agendamento e preco."
               emptyState={{
-                title: 'No services found',
+                title: 'Nenhum servico encontrado',
                 description: activeFilterCount > 0
-                  ? 'Adjust the filters or add a service to keep the catalog ready for appointments and demos.'
-                  : 'Create the first service definition to make scheduling and plans feel structured.',
+                  ? 'Ajuste os filtros ou cadastre um servico para manter a demo pronta.'
+                  : 'Crie o primeiro servico para que a agenda, os planos e a comissao fiquem estruturados.',
                 action: (
                   <PermissionGuard permission="pet.service.create">
                     <button type="button" onClick={beginCreateService} className="ui-primary-button">
-                      Create first service
+                      Criar primeiro servico
                     </button>
                   </PermissionGuard>
                 )
@@ -606,8 +606,8 @@ export function PetServicesPage() {
 
         <ConfirmDialog
           open={deleteCandidate !== null}
-          title="Delete service?"
-          description={deleteCandidate ? `The service "${describePetServiceCatalogItem(deleteCandidate, 'pt-BR')}" will be removed from the catalog.` : undefined}
+          title="Excluir servico?"
+          description={deleteCandidate ? `O servico "${describePetServiceCatalogItem(deleteCandidate, 'pt-BR')}" sera removido do catalogo.` : undefined}
           onConfirm={handleConfirmDelete}
           onCancel={() => setDeleteCandidate(null)}
         />
