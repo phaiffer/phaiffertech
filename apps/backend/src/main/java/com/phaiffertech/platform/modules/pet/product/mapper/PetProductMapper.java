@@ -37,6 +37,7 @@ public final class PetProductMapper implements BaseCrudMapper<
     public PetProductResponse toResponse(PetProduct entity) {
         return new PetProductResponse(
                 entity.getId(),
+                entity.getInventoryItemId(),
                 entity.getName(),
                 entity.getSku(),
                 entity.getPrice(),

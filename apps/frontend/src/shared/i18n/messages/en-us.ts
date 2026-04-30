@@ -286,6 +286,7 @@ export const enUSMessages: AppMessages = {
       editTitle: 'Edit appointment',
       description:
         'Select the client and pet, build the service bundle, assign the responsible professional, then confirm one-time or plan-based payment with extras and stock-aware execution.'
+        'Select the client and pet, choose the services, set the default professional, and adjust the responsible professional per line when needed.'
     },
     dialog: {
       deleteTitle: 'Remove appointment?',
@@ -298,6 +299,7 @@ export const enUSMessages: AppMessages = {
       selectPet: 'Select a pet',
       selectService: 'Select a bath or grooming service',
       selectProfessional: 'Select a professional',
+      unassignedProfessional: 'Leave unassigned for now',
       selectClientFirst: 'Select a client first',
       loadingPlans: 'Loading plans...',
       oneTime: 'No plan — one-time payment',
@@ -340,6 +342,10 @@ export const enUSMessages: AppMessages = {
       notes: 'Notes',
       notesPlaceholder: 'Visit notes such as sensitive skin or first visit',
       dateTime: 'Date and time',
+      defaultProfessionalHint: 'Used as the compatibility anchor and as the default professional for new service lines.',
+      serviceLineProfessional: 'Responsible professional',
+      serviceLineProfessionalHint: 'Override the default professional for this service line when a different person owns the work.',
+      serviceLineProfessionalPending: 'No professional assigned to this service line yet.',
       packageLabel: 'Plan (optional)',
       packageSelectClient: 'Select a client first to see available plans.',
       packageUnavailable: 'No active plan for this client. The appointment will be charged individually.',
@@ -391,8 +397,13 @@ export const enUSMessages: AppMessages = {
       vaccines: 'vaccines',
       prescriptions: 'rx',
       recurring: 'Recurring',
+      serviceLines: 'structured lines',
+      commissionLines: 'commission eligible',
+      lineAssignments: 'Line responsibility',
+      pendingProfessional: 'Professional pending',
       professionalDetail: 'Responsible for the appointment and for the commission outcome.',
       commission: 'Commission',
+      commissionExcluded: 'excluded by service rule',
       pendingSetup: 'pending setup',
       careNotes: 'Care notes',
       continueCare: 'Continue care'

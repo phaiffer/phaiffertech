@@ -9,6 +9,8 @@ Thumbs.db
 
 # Env
 .env
+.env.local
+apps/frontend/.env.local
 .codex
 
 # Logs

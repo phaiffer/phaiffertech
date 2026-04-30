@@ -3,8 +3,10 @@ package com.phaiffertech.platform.modules.pet.servicecatalog.mapper;
 import com.phaiffertech.platform.modules.pet.servicecatalog.domain.PetServiceCatalog;
 import com.phaiffertech.platform.modules.pet.servicecatalog.dto.PetServiceCatalogCreateRequest;
 import com.phaiffertech.platform.modules.pet.servicecatalog.dto.PetServiceCatalogResponse;
+import com.phaiffertech.platform.modules.pet.servicecatalog.dto.PetServiceInventoryLinkResponse;
 import com.phaiffertech.platform.modules.pet.servicecatalog.dto.PetServiceCatalogUpdateRequest;
 import com.phaiffertech.platform.shared.crud.BaseCrudMapper;
+import java.util.List;
 
 public final class PetServiceCatalogMapper implements BaseCrudMapper<
         PetServiceCatalog,
@@ -47,6 +49,13 @@ public final class PetServiceCatalogMapper implements BaseCrudMapper<
 
     @Override
     public PetServiceCatalogResponse toResponse(PetServiceCatalog entity) {
+        return toResponse(entity, List.of());
+    }
+
+    public PetServiceCatalogResponse toResponse(
+            PetServiceCatalog entity,
+            List<PetServiceInventoryLinkResponse> inventoryLinks
+    ) {
         return new PetServiceCatalogResponse(
                 entity.getId(),
                 entity.getName(),
@@ -58,6 +67,7 @@ public final class PetServiceCatalogMapper implements BaseCrudMapper<
                 entity.isCommissionEligible(),
                 entity.isAllowInPlans(),
                 entity.isAllowStandaloneBooking(),
+                inventoryLinks,
                 entity.getCreatedAt(),
                 entity.getUpdatedAt()
         );

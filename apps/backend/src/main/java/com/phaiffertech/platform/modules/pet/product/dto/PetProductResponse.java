@@ -6,6 +6,7 @@ import java.util.UUID;
 
 public record PetProductResponse(
         UUID id,
+        UUID inventoryItemId,
         String name,
         String sku,
         BigDecimal price,

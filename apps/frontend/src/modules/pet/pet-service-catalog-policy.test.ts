@@ -54,6 +54,7 @@ describe('pet service catalog policy', () => {
       commissionEligible: false,
       allowInPlans: false,
       allowStandaloneBooking: true,
+      inventoryLinks: [],
       createdAt: '2026-04-03T00:00:00Z',
       updatedAt: '2026-04-03T00:00:00Z'
     }, 'en-US')).toContain('Vaccination · Clinical · 30 min');

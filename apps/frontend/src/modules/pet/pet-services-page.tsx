@@ -15,7 +15,7 @@ import { useFrontendPlatform } from '@/shared/platform/use-frontend-platform';
 import { petService } from '@/shared/services/pet-service';
 import { PageResponse } from '@/shared/types/common';
 import { DashboardSummaryCard } from '@/shared/types/dashboard';
-import { PetServiceCatalog, PetServiceCategory } from '@/shared/types/pet';
+import { PetProduct, PetServiceCatalog, PetServiceCategory } from '@/shared/types/pet';
 import { ConfirmDialog } from '@/shared/ui/confirm-dialog';
 import { DataTable, DataTableColumn } from '@/shared/ui/data-table';
 import { FormInput } from '@/shared/ui/form-input';
@@ -40,6 +40,38 @@ const initialPage: PageResponse<PetServiceCatalog> = {
   page: 0,
   size: pageSize
 };
+
+type ServiceInventoryLinkFormState = {
+  inventoryItemId: string;
+  inventoryItemName?: string;
+  inventoryItemSku?: string | null;
+  unitOfMeasure?: string;
+  expectedQuantity: string;
+  consumptionRule: 'FIXED_PER_SERVICE';
+  active: boolean;
+};
+
+const defaultInventoryRule: ServiceInventoryLinkFormState['consumptionRule'] = 'FIXED_PER_SERVICE';
+
+function formatExpectedQuantity(quantity: number) {
+  return Number.isInteger(quantity) ? String(quantity) : quantity.toFixed(2).replace(/\.?0+$/, '');
+}
+
+function formatInventoryLinkSummary(service: Pick<PetServiceCatalog, 'inventoryLinks'>) {
+  const activeLinks = service.inventoryLinks.filter((link) => link.active);
+  if (activeLinks.length === 0) {
+    return 'No planned stock usage';
+  }
+
+  const preview = activeLinks
+    .slice(0, 2)
+    .map((link) => `${link.inventoryItemName} x${formatExpectedQuantity(link.expectedQuantity)} ${link.unitOfMeasure}`)
+    .join(' • ');
+
+  return activeLinks.length > 2
+    ? `${preview} • +${activeLinks.length - 2} more`
+    : preview;
+}
 
 function ServiceFlagToggle({
   label,
@@ -93,6 +125,8 @@ export function PetServicesPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [products, setProducts] = useState<PetProduct[]>([]);
+  const [productsLookupError, setProductsLookupError] = useState<string | null>(null);
 
   const [searchInput, setSearchInput] = useState('');
   const [search, setSearch] = useState('');
@@ -109,6 +143,7 @@ export function PetServicesPage() {
   const [commissionEligible, setCommissionEligible] = useState(true);
   const [allowInPlans, setAllowInPlans] = useState(true);
   const [allowStandaloneBooking, setAllowStandaloneBooking] = useState(true);
+  const [inventoryLinks, setInventoryLinks] = useState<ServiceInventoryLinkFormState[]>([]);
   const [submitting, setSubmitting] = useState(false);
 
   const [deleteCandidate, setDeleteCandidate] = useState<PetServiceCatalog | null>(null);
@@ -138,6 +173,21 @@ export function PetServicesPage() {
     void load(0, search, categoryFilter, activeFilter);
   }, [activeFilter, categoryFilter, load, search]);
 
+  const loadProducts = useCallback(async () => {
+    try {
+      const result = await petService.listProducts(0, 200, '');
+      setProducts(resolvePageItems(result));
+      setProductsLookupError(null);
+    } catch (err) {
+      setProducts([]);
+      setProductsLookupError(err instanceof ApiClientError ? err.message : 'Unable to load products for inventory linking.');
+    }
+  }, []);
+
+  useEffect(() => {
+    void loadProducts();
+  }, [loadProducts]);
+
   useEffect(() => {
     if (editingId) {
       return;
@@ -159,6 +209,7 @@ export function PetServicesPage() {
     setCommissionEligible(true);
     setAllowInPlans(true);
     setAllowStandaloneBooking(true);
+    setInventoryLinks([]);
   }
 
   function scrollToServiceForm() {
@@ -181,9 +232,54 @@ export function PetServicesPage() {
     setCommissionEligible(item.commissionEligible);
     setAllowInPlans(item.allowInPlans);
     setAllowStandaloneBooking(item.allowStandaloneBooking);
+    setInventoryLinks(item.inventoryLinks.map((link) => ({
+      inventoryItemId: link.inventoryItemId,
+      inventoryItemName: link.inventoryItemName,
+      inventoryItemSku: link.inventoryItemSku ?? undefined,
+      unitOfMeasure: link.unitOfMeasure,
+      expectedQuantity: formatExpectedQuantity(link.expectedQuantity),
+      consumptionRule: link.consumptionRule,
+      active: link.active
+    })));
     setError(null);
     setSuccess(null);
     scrollToServiceForm();
+  }
+
+  function handleAddInventoryLink() {
+    setInventoryLinks((current) => [
+      ...current,
+      {
+        inventoryItemId: '',
+        expectedQuantity: '1',
+        consumptionRule: defaultInventoryRule,
+        active: true
+      }
+    ]);
+  }
+
+  function handleInventoryLinkChange(
+    index: number,
+    updates: Partial<ServiceInventoryLinkFormState>
+  ) {
+    setInventoryLinks((current) => current.map((link, currentIndex) => {
+      if (currentIndex !== index) {
+        return link;
+      }
+
+      const next = { ...link, ...updates };
+      if (updates.inventoryItemId !== undefined) {
+        const selectedProduct = products.find((product) => product.inventoryItemId === updates.inventoryItemId);
+        next.inventoryItemName = selectedProduct?.name ?? link.inventoryItemName;
+        next.inventoryItemSku = selectedProduct?.sku ?? link.inventoryItemSku;
+        next.unitOfMeasure = selectedProduct?.unitOfMeasure ?? link.unitOfMeasure;
+      }
+      return next;
+    }));
+  }
+
+  function handleRemoveInventoryLink(index: number) {
+    setInventoryLinks((current) => current.filter((_, currentIndex) => currentIndex !== index));
   }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -203,6 +299,22 @@ export function PetServicesPage() {
       return;
     }
 
+    const parsedInventoryLinks = inventoryLinks.map((link) => ({
+      ...link,
+      expectedQuantityNumber: Number(link.expectedQuantity)
+    }));
+
+    if (parsedInventoryLinks.some((link) => !link.inventoryItemId || Number.isNaN(link.expectedQuantityNumber) || link.expectedQuantityNumber <= 0)) {
+      setError('Select an inventory item and enter a positive quantity for every linked recipe line.');
+      return;
+    }
+
+    const selectedInventoryIds = parsedInventoryLinks.map((link) => link.inventoryItemId);
+    if (new Set(selectedInventoryIds).size !== selectedInventoryIds.length) {
+      setError('A service recipe cannot repeat the same inventory item.');
+      return;
+    }
+
     setSubmitting(true);
 
     try {
@@ -215,7 +327,13 @@ export function PetServicesPage() {
         durationMinutes: parsedDuration,
         commissionEligible,
         allowInPlans,
-        allowStandaloneBooking
+        allowStandaloneBooking,
+        inventoryLinks: parsedInventoryLinks.map((link) => ({
+          inventoryItemId: link.inventoryItemId,
+          expectedQuantity: link.expectedQuantityNumber,
+          consumptionRule: link.consumptionRule,
+          active: link.active
+        }))
       };
 
       if (editingId) {
@@ -264,6 +382,40 @@ export function PetServicesPage() {
   const parsedDraftBasePrice = Number(basePrice);
   const parsedDraftDuration = Number(durationMinutes);
   const activeSchedulingConflict = active && !allowInPlans && !allowStandaloneBooking;
+  const inventoryOptions = useMemo(() => {
+    const knownOptions = products.map((product) => ({
+      value: product.inventoryItemId,
+      label: `${product.name} (${product.sku})`
+    }));
+    const fallbackOptions = inventoryLinks
+      .filter((link) => link.inventoryItemId && !products.some((product) => product.inventoryItemId === link.inventoryItemId))
+      .map((link) => ({
+        value: link.inventoryItemId,
+        label: link.inventoryItemName
+          ? (link.inventoryItemSku ? `${link.inventoryItemName} (${link.inventoryItemSku})` : link.inventoryItemName)
+          : `Linked item ${link.inventoryItemId}`
+      }));
+
+    return [
+      { value: '', label: 'Select an inventory item' },
+      ...knownOptions,
+      ...fallbackOptions
+    ];
+  }, [inventoryLinks, products]);
+  const activeInventoryLinks = inventoryLinks.filter((link) => link.inventoryItemId && link.active);
+  const inventoryPreview = activeInventoryLinks.length > 0
+    ? activeInventoryLinks
+      .map((link) => {
+        const itemLabel = link.inventoryItemName
+          ?? products.find((product) => product.inventoryItemId === link.inventoryItemId)?.name
+          ?? 'Linked inventory item';
+        const unit = link.unitOfMeasure
+          ?? products.find((product) => product.inventoryItemId === link.inventoryItemId)?.unitOfMeasure
+          ?? 'UNIT';
+        return `${itemLabel} x${link.expectedQuantity || '0'} ${unit}`;
+      })
+      .join(' • ')
+    : 'No planned inventory consumption.';
   const draftServicePreview = describePetServiceCatalogItem({
     id: editingId ?? 'draft-service',
     name: name.trim() || 'Servico em preparo',
@@ -275,6 +427,7 @@ export function PetServicesPage() {
     commissionEligible,
     allowInPlans,
     allowStandaloneBooking,
+    inventoryLinks: [],
     createdAt: '',
     updatedAt: ''
   }, 'en-US');
@@ -368,6 +521,18 @@ export function PetServicesPage() {
           <p>{item.allowStandaloneBooking ? 'Pode ser avulso' : 'Exige plano vinculado'}</p>
           <p>{item.allowInPlans ? 'Pode consumir sessoes de plano' : 'Somente atendimento avulso'}</p>
           <p>{item.commissionEligible ? 'Gera comissao' : 'Fora da comissao'}</p>
+        </div>
+      )
+    },
+    {
+      key: 'inventoryRecipe',
+      header: 'Inventory recipe',
+      render: (item) => (
+        <div className="space-y-1 text-xs text-[color:var(--app-shell-muted)]">
+          <p className="font-medium text-slate-900">
+            {item.inventoryLinks.filter((link) => link.active).length} active linked item(s)
+          </p>
+          <p>{formatInventoryLinkSummary(item)}</p>
         </div>
       )
     },
@@ -517,6 +682,91 @@ export function PetServicesPage() {
                   />
                 </div>
 
+                <div className="rounded-2xl border border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-panel-muted)] px-4 py-4">
+                  <div className="flex flex-wrap items-start justify-between gap-3">
+                    <div>
+                      <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--app-shell-muted)]">
+                        Inventory recipe
+                      </p>
+                      <p className="mt-2 text-sm text-[color:var(--app-shell-muted)]">
+                        Link the products or materials this service is expected to consume. This first step is read-only and keeps current stock flows stable.
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={handleAddInventoryLink}
+                      disabled={Boolean(productsLookupError)}
+                      className="ui-secondary-button"
+                    >
+                      Add linked item
+                    </button>
+                  </div>
+
+                  {productsLookupError ? (
+                    <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+                      {productsLookupError}
+                    </div>
+                  ) : null}
+
+                  {inventoryLinks.length > 0 ? (
+                    <div className="mt-4 space-y-3">
+                      {inventoryLinks.map((link, index) => (
+                        <div
+                          key={`${link.inventoryItemId || 'draft'}-${index}`}
+                          className="rounded-xl border border-[color:var(--app-shell-border)] bg-white/80 px-3 py-3"
+                        >
+                          <div className="grid gap-3 xl:grid-cols-[minmax(0,1.5fr)_180px_auto] xl:items-end">
+                            <FormSelect
+                              label="Inventory item"
+                              value={link.inventoryItemId}
+                              options={inventoryOptions}
+                              onChange={(value) => handleInventoryLinkChange(index, { inventoryItemId: value })}
+                              disabled={Boolean(productsLookupError)}
+                            />
+                            <FormInput
+                              label="Qty per service"
+                              value={link.expectedQuantity}
+                              onChange={(value) => handleInventoryLinkChange(index, { expectedQuantity: value })}
+                              type="number"
+                              step="0.01"
+                              min="0.01"
+                            />
+                            <div className="flex gap-2 xl:justify-end">
+                              <label className="flex items-center gap-2 text-sm text-[color:var(--app-shell-muted)]">
+                                <input
+                                  type="checkbox"
+                                  checked={link.active}
+                                  onChange={(event) => handleInventoryLinkChange(index, { active: event.target.checked })}
+                                  className="h-4 w-4 rounded border-[color:var(--app-shell-border)]"
+                                />
+                                Active
+                              </label>
+                              <button
+                                type="button"
+                                onClick={() => handleRemoveInventoryLink(index)}
+                                className="ui-inline-button"
+                              >
+                                Remove
+                              </button>
+                            </div>
+                          </div>
+                          <p className="mt-2 text-xs text-[color:var(--app-shell-muted)]">
+                            {link.inventoryItemName
+                              ? `${link.inventoryItemName}${link.inventoryItemSku ? ` (${link.inventoryItemSku})` : ''}`
+                              : 'Pick a product or material from the current inventory catalog.'}
+                            {link.unitOfMeasure ? ` • Unit ${link.unitOfMeasure}` : ''}
+                            {link.active ? ' • Visible in appointment consumption previews.' : ' • Stored but hidden from appointment previews until reactivated.'}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="mt-4 text-xs text-[color:var(--app-shell-muted)]">
+                      Leave this empty for services that do not need planned stock visibility yet.
+                    </p>
+                  )}
+                </div>
+
                 <div className={`rounded-2xl border px-4 py-3 ${
                   activeSchedulingConflict
                     ? 'border-amber-200 bg-amber-50'
@@ -533,6 +783,11 @@ export function PetServicesPage() {
                     <p>Status: {active ? 'Ativo para novos atendimentos' : 'Oculto de novos atendimentos'}</p>
                     <p>Uso: {draftAvailabilityLabel}</p>
                     <p>{commissionEligible ? 'Entra na comissao' : 'Fora da comissao'}</p>
+                    <p>Category: {formatPetServiceCategory(category)}</p>
+                    <p>Status: {active ? 'Active for new appointments' : 'Hidden from new appointments'}</p>
+                    <p>Scheduling mode: {draftAvailabilityLabel}</p>
+                    <p>{commissionEligible ? 'Commission ready' : 'Commission excluded'}</p>
+                    <p className="xl:col-span-2">Inventory preview: {inventoryPreview}</p>
                   </div>
                   <p className={`mt-3 text-xs ${activeSchedulingConflict ? 'text-amber-800' : 'text-[color:var(--app-shell-muted)]'}`}>
                     {activeSchedulingConflict

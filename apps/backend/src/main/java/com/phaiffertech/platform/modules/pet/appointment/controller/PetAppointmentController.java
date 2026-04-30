@@ -3,6 +3,7 @@ package com.phaiffertech.platform.modules.pet.appointment.controller;
 import com.phaiffertech.platform.core.tenant.entitlement.TenantEntitlementKeys;
 import com.phaiffertech.platform.modules.pet.appointment.dto.PetAppointmentCreateRequest;
 import com.phaiffertech.platform.modules.pet.appointment.dto.PetAppointmentResponse;
+import com.phaiffertech.platform.modules.pet.appointment.dto.PetAppointmentServiceLineInventoryActualUpdateRequest;
 import com.phaiffertech.platform.modules.pet.appointment.dto.PetAppointmentUpdateRequest;
 import com.phaiffertech.platform.modules.pet.appointment.service.PetAppointmentService;
 import com.phaiffertech.platform.shared.pagination.PageRequestDto;
@@ -81,6 +82,26 @@ public class PetAppointmentController {
             @Valid @RequestBody PetAppointmentUpdateRequest request
     ) {
         return ApiResponse.success(service.update(id, request));
+    }
+
+    @PatchMapping("/{id}/service-lines/{serviceLineId}/inventory-consumptions")
+    @RequirePermission("pet.appointment.update")
+    public ApiResponse<PetAppointmentResponse> updateServiceLineInventoryConsumptions(
+            @PathVariable UUID id,
+            @PathVariable UUID serviceLineId,
+            @Valid @RequestBody PetAppointmentServiceLineInventoryActualUpdateRequest request
+    ) {
+        return ApiResponse.success(service.updateServiceLineInventoryConsumptions(id, serviceLineId, request));
+    }
+
+    @PostMapping("/{id}/service-lines/{serviceLineId}/inventory-consumptions/{inventoryConsumptionId}/apply-stock")
+    @RequirePermission("pet.appointment.update")
+    public ApiResponse<PetAppointmentResponse> applyServiceLineInventoryConsumption(
+            @PathVariable UUID id,
+            @PathVariable UUID serviceLineId,
+            @PathVariable UUID inventoryConsumptionId
+    ) {
+        return ApiResponse.success(service.applyServiceLineInventoryConsumption(id, serviceLineId, inventoryConsumptionId));
     }
 
     @DeleteMapping("/{id}")

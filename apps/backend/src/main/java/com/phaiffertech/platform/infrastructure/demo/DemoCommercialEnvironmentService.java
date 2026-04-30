@@ -307,6 +307,7 @@ public class DemoCommercialEnvironmentService {
                 deleteByTenant("pet_vaccinations", tenantId);
                 deleteByTenant("pet_prescriptions", tenantId);
                 deleteByTenant("pet_medical_records", tenantId);
+                deleteByTenant("pet_appointment_services", tenantId);
                 deleteByTenant("pet_appointments", tenantId);
                 deleteByTenant("pet_inventory_movements", tenantId);
                 deleteByTenant("pet_invoices", tenantId);

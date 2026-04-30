@@ -79,6 +79,8 @@ const { currentPlatformState, hasPermissionMock, hasAnyPermissionMock, petServic
     listAppointments: vi.fn(),
     createAppointment: vi.fn(),
     updateAppointment: vi.fn(),
+    updateAppointmentServiceLineInventoryConsumptions: vi.fn(),
+    applyAppointmentServiceLineInventoryConsumption: vi.fn(),
     deleteAppointment: vi.fn()
   }
 }));
@@ -148,6 +150,38 @@ describe('PetAppointmentsPage', () => {
         updatedAt: '2026-03-10T10:00:00Z'
       }
     ]));
+    petServiceMock.updateAppointmentServiceLineInventoryConsumptions.mockResolvedValue({
+      id: 'appointment-1',
+      clientId: 'client-1',
+      clientName: 'Owner Example',
+      petId: 'pet-1',
+      petName: 'Pet Example',
+      serviceId: 'service-1',
+      serviceName: 'Bath',
+      professionalId: 'professional-1',
+      professionalName: 'Dr Example',
+      scheduledAt: '2026-03-10T10:00:00Z',
+      status: 'COMPLETED',
+      createdAt: '2026-03-10T10:00:00Z',
+      updatedAt: '2026-03-10T10:00:00Z',
+      appointmentServices: []
+    });
+    petServiceMock.applyAppointmentServiceLineInventoryConsumption.mockResolvedValue({
+      id: 'appointment-1',
+      clientId: 'client-1',
+      clientName: 'Owner Example',
+      petId: 'pet-1',
+      petName: 'Pet Example',
+      serviceId: 'service-1',
+      serviceName: 'Bath',
+      professionalId: 'professional-1',
+      professionalName: 'Dr Example',
+      scheduledAt: '2026-03-10T10:00:00Z',
+      status: 'COMPLETED',
+      createdAt: '2026-03-10T10:00:00Z',
+      updatedAt: '2026-03-10T10:00:00Z',
+      appointmentServices: []
+    });
   });
 
   it('shows degraded lookup diagnostics and enriched labels in the appointment table', async () => {
@@ -267,6 +301,97 @@ describe('PetAppointmentsPage', () => {
     expect(screen.getByText('At least one selected service requires a linked plan before booking.')).toBeInTheDocument();
   });
 
+  it('shows commission-ready and excluded service lines in the multi-service summary', async () => {
+    setGrantedPermissions([
+      'pet.appointment.read',
+      'pet.appointment.create',
+      'pet.client.read',
+      'pet.profile.read',
+      'pet.service.read',
+      'pet.professional.read'
+    ]);
+
+    petServiceMock.listClients.mockResolvedValue(createPageResponse([
+      {
+        id: 'client-1',
+        name: 'Owner Example',
+        status: 'ACTIVE',
+        createdAt: '2026-03-10T10:00:00Z',
+        updatedAt: '2026-03-10T10:00:00Z'
+      }
+    ]));
+    petServiceMock.listProfiles.mockResolvedValue(createPageResponse([
+      {
+        id: 'pet-1',
+        clientId: 'client-1',
+        name: 'Pet Example',
+        species: 'Dog',
+        createdAt: '2026-03-10T10:00:00Z',
+        updatedAt: '2026-03-10T10:00:00Z'
+      }
+    ]));
+    petServiceMock.listServices.mockResolvedValue(createPageResponse([
+      {
+        id: 'service-grooming',
+        name: 'Grooming',
+        category: 'GROOMING',
+        active: true,
+        basePrice: 80,
+        durationMinutes: 60,
+        commissionEligible: true,
+        allowInPlans: true,
+        allowStandaloneBooking: true,
+        createdAt: '2026-03-10T10:00:00Z',
+        updatedAt: '2026-03-10T10:00:00Z'
+      },
+      {
+        id: 'service-vaccine',
+        name: 'Vaccination',
+        category: 'CLINICAL',
+        active: true,
+        basePrice: 50,
+        durationMinutes: 20,
+        commissionEligible: false,
+        allowInPlans: true,
+        allowStandaloneBooking: true,
+        createdAt: '2026-03-10T10:00:00Z',
+        updatedAt: '2026-03-10T10:00:00Z'
+      }
+    ]));
+    petServiceMock.listProfessionals.mockResolvedValue(createPageResponse([
+      {
+        id: 'professional-1',
+        name: 'Dr Example',
+        commissionRate: 0.15,
+        createdAt: '2026-03-10T10:00:00Z',
+        updatedAt: '2026-03-10T10:00:00Z'
+      }
+    ]));
+    petServiceMock.listAppointments.mockResolvedValue(createPageResponse([]));
+
+    render(<PetAppointmentsPage />);
+
+    await waitFor(() => {
+      expect(petServiceMock.listProfessionals).toHaveBeenCalled();
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: 'Book appointment' }));
+    fireEvent.change(screen.getAllByLabelText('Client')[1], { target: { value: 'client-1' } });
+    fireEvent.change(screen.getAllByLabelText('Pet')[1], { target: { value: 'pet-1' } });
+
+    const serviceSelect = screen.getAllByLabelText('Service')[1];
+    fireEvent.change(serviceSelect, { target: { value: 'service-grooming' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Add service' }));
+    fireEvent.change(serviceSelect, { target: { value: 'service-vaccine' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Add service' }));
+    fireEvent.change(screen.getAllByLabelText('Professional')[1], { target: { value: 'professional-1' } });
+
+    expect(screen.getByText((text) => text.includes('Commission ready') && text.includes('15%') && text.includes('12.00'))).toBeInTheDocument();
+    expect(screen.getByText('Commission excluded by service rule')).toBeInTheDocument();
+    expect(screen.getByText('Commission lines')).toBeInTheDocument();
+    expect(screen.getByText('1/2')).toBeInTheDocument();
+  });
+
   it('submits a multi-service appointment with the first service kept as the compatibility anchor', async () => {
     setGrantedPermissions([
       'pet.appointment.read',
@@ -365,8 +490,423 @@ describe('PetAppointmentsPage', () => {
     await waitFor(() => {
       expect(petServiceMock.createAppointment).toHaveBeenCalledWith(expect.objectContaining({
         serviceId: 'service-bath',
-        serviceIds: ['service-bath', 'service-hydration']
+        serviceIds: ['service-bath', 'service-hydration'],
+        serviceLineAssignments: [
+          { serviceId: 'service-bath', professionalId: 'professional-1' },
+          { serviceId: 'service-hydration', professionalId: 'professional-1' }
+        ]
       }));
+    });
+  });
+
+  it('allows a different professional per selected service line', async () => {
+    setGrantedPermissions([
+      'pet.appointment.read',
+      'pet.appointment.create',
+      'pet.client.read',
+      'pet.profile.read',
+      'pet.service.read',
+      'pet.professional.read'
+    ]);
+
+    petServiceMock.listClients.mockResolvedValue(createPageResponse([
+      {
+        id: 'client-1',
+        name: 'Owner Example',
+        status: 'ACTIVE',
+        createdAt: '2026-03-10T10:00:00Z',
+        updatedAt: '2026-03-10T10:00:00Z'
+      }
+    ]));
+    petServiceMock.listProfiles.mockResolvedValue(createPageResponse([
+      {
+        id: 'pet-1',
+        clientId: 'client-1',
+        name: 'Pet Example',
+        species: 'Dog',
+        createdAt: '2026-03-10T10:00:00Z',
+        updatedAt: '2026-03-10T10:00:00Z'
+      }
+    ]));
+    petServiceMock.listServices.mockResolvedValue(createPageResponse([
+      {
+        id: 'service-bath',
+        name: 'Bath',
+        category: 'GROOMING',
+        active: true,
+        basePrice: 80,
+        durationMinutes: 60,
+        commissionEligible: true,
+        allowInPlans: true,
+        allowStandaloneBooking: true,
+        createdAt: '2026-03-10T10:00:00Z',
+        updatedAt: '2026-03-10T10:00:00Z'
+      },
+      {
+        id: 'service-vaccine',
+        name: 'Vaccination',
+        category: 'CLINICAL',
+        active: true,
+        basePrice: 50,
+        durationMinutes: 20,
+        commissionEligible: false,
+        allowInPlans: true,
+        allowStandaloneBooking: true,
+        createdAt: '2026-03-10T10:00:00Z',
+        updatedAt: '2026-03-10T10:00:00Z'
+      }
+    ]));
+    petServiceMock.listProfessionals.mockResolvedValue(createPageResponse([
+      {
+        id: 'professional-1',
+        name: 'Groomer One',
+        commissionRate: 0.15,
+        createdAt: '2026-03-10T10:00:00Z',
+        updatedAt: '2026-03-10T10:00:00Z'
+      },
+      {
+        id: 'professional-2',
+        name: 'Vet Two',
+        commissionRate: 0.1,
+        createdAt: '2026-03-10T10:00:00Z',
+        updatedAt: '2026-03-10T10:00:00Z'
+      }
+    ]));
+    petServiceMock.listAppointments.mockResolvedValue(createPageResponse([]));
+    petServiceMock.createAppointment.mockResolvedValue({
+      id: 'appointment-new'
+    });
+
+    render(<PetAppointmentsPage />);
+
+    await waitFor(() => {
+      expect(petServiceMock.listProfessionals).toHaveBeenCalled();
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: 'Book appointment' }));
+    fireEvent.change(screen.getAllByLabelText('Client')[1], { target: { value: 'client-1' } });
+    fireEvent.change(screen.getAllByLabelText('Pet')[1], { target: { value: 'pet-1' } });
+
+    const serviceSelect = screen.getAllByLabelText('Service')[1];
+    fireEvent.change(serviceSelect, { target: { value: 'service-bath' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Add service' }));
+    fireEvent.change(serviceSelect, { target: { value: 'service-vaccine' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Add service' }));
+
+    fireEvent.change(screen.getAllByLabelText('Professional')[1], { target: { value: 'professional-1' } });
+
+    const lineProfessionalSelects = screen.getAllByLabelText('Responsible professional');
+    fireEvent.change(lineProfessionalSelects[1], { target: { value: 'professional-2' } });
+    fireEvent.change(screen.getByLabelText(/Date/i), { target: { value: '2026-03-10T10:30' } });
+
+    fireEvent.click(screen.getAllByRole('button', { name: 'Book appointment' })[1]);
+
+    await waitFor(() => {
+      expect(petServiceMock.createAppointment).toHaveBeenCalledWith(expect.objectContaining({
+        professionalId: 'professional-1',
+        serviceLineAssignments: [
+          { serviceId: 'service-bath', professionalId: 'professional-1' },
+          { serviceId: 'service-vaccine', professionalId: 'professional-2' }
+        ]
+      }));
+    });
+  });
+
+  it('saves actual inventory consumption without overwriting the planned snapshot', async () => {
+    setGrantedPermissions([
+      'pet.appointment.read',
+      'pet.appointment.update'
+    ]);
+
+    petServiceMock.listAppointments.mockResolvedValue(createPageResponse([
+      {
+        id: 'appointment-actual-1',
+        clientId: 'client-1',
+        clientName: 'Owner Example',
+        petId: 'pet-1',
+        petName: 'Pet Example',
+        serviceId: 'service-bath',
+        serviceName: 'Bath',
+        professionalId: 'professional-1',
+        professionalName: 'Dr Example',
+        scheduledAt: '2026-03-10T10:00:00Z',
+        status: 'IN_PROGRESS',
+        createdAt: '2026-03-10T10:00:00Z',
+        updatedAt: '2026-03-10T10:00:00Z',
+        appointmentServices: [
+          {
+            id: 'line-1',
+            serviceId: 'service-bath',
+            serviceName: 'Bath',
+            serviceCategory: 'GROOMING',
+            durationMinutes: 60,
+            basePrice: 80,
+            professionalId: 'professional-1',
+            professionalName: 'Dr Example',
+            commissionEligible: true,
+            commissionRate: 0.15,
+            commissionAmount: 12,
+            expectedInventoryConsumptions: [
+              {
+                id: 'inventory-row-1',
+                inventoryItemId: 'inventory-1',
+                inventoryItemName: 'Shampoo concentrate',
+                inventoryItemSku: 'SHA-1',
+                inventoryCategory: 'PET_RETAIL_GOOD',
+                unitOfMeasure: 'ML',
+                expectedQuantity: 30,
+                actualQuantity: 30,
+                consumptionStatus: 'READY_TO_APPLY',
+                consumptionRule: 'FIXED_PER_SERVICE',
+                snapshotBacked: true,
+                stockApplied: false,
+                appliedInventoryMovementId: null,
+                stockAppliedAt: null
+              }
+            ],
+            active: true,
+            allowInPlans: true,
+            allowStandaloneBooking: true,
+            lineOrder: 0,
+            primary: true,
+            missingFromCatalog: false
+          }
+        ]
+      }
+    ]));
+    petServiceMock.updateAppointmentServiceLineInventoryConsumptions.mockResolvedValue({
+      id: 'appointment-actual-1',
+      clientId: 'client-1',
+      clientName: 'Owner Example',
+      petId: 'pet-1',
+      petName: 'Pet Example',
+      serviceId: 'service-bath',
+      serviceName: 'Bath',
+      professionalId: 'professional-1',
+      professionalName: 'Dr Example',
+      scheduledAt: '2026-03-10T10:00:00Z',
+      status: 'IN_PROGRESS',
+      createdAt: '2026-03-10T10:00:00Z',
+      updatedAt: '2026-03-10T10:05:00Z',
+      appointmentServices: [
+        {
+          id: 'line-1',
+          serviceId: 'service-bath',
+          serviceName: 'Bath',
+          serviceCategory: 'GROOMING',
+          durationMinutes: 60,
+          basePrice: 80,
+          professionalId: 'professional-1',
+          professionalName: 'Dr Example',
+          commissionEligible: true,
+          commissionRate: 0.15,
+          commissionAmount: 12,
+          expectedInventoryConsumptions: [
+            {
+              id: 'inventory-row-1',
+              inventoryItemId: 'inventory-1',
+              inventoryItemName: 'Shampoo concentrate',
+              inventoryItemSku: 'SHA-1',
+              inventoryCategory: 'PET_RETAIL_GOOD',
+              unitOfMeasure: 'ML',
+              expectedQuantity: 30,
+              actualQuantity: 40,
+              consumptionStatus: 'READY_TO_APPLY',
+              consumptionRule: 'FIXED_PER_SERVICE',
+              snapshotBacked: true,
+              stockApplied: false,
+              appliedInventoryMovementId: null,
+              stockAppliedAt: null
+            }
+          ],
+          active: true,
+          allowInPlans: true,
+          allowStandaloneBooking: true,
+          lineOrder: 0,
+          primary: true,
+          missingFromCatalog: false
+        }
+      ]
+    });
+
+    render(<PetAppointmentsPage />);
+
+    await waitFor(() => {
+      expect(petServiceMock.listAppointments).toHaveBeenCalled();
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: 'Switch to list' }));
+
+    await waitFor(() => {
+      expect(screen.getByText('Bath')).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: 'Edit' }));
+
+    expect(await screen.findByText('Actual usage per line')).toBeInTheDocument();
+    expect(screen.getByText('Planned: 30 ML')).toBeInTheDocument();
+    expect(screen.getByText('Actual usage: Shampoo concentrate x30 ML')).toBeInTheDocument();
+
+    fireEvent.change(screen.getByLabelText('Actual'), { target: { value: '40' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Save actual usage' }));
+
+    await waitFor(() => {
+      expect(petServiceMock.updateAppointmentServiceLineInventoryConsumptions).toHaveBeenCalledWith(
+        'appointment-actual-1',
+        'line-1',
+        {
+          inventoryConsumptions: [
+            {
+              inventoryItemId: 'inventory-1',
+              actualQuantity: 40,
+              consumptionStatus: 'READY_TO_APPLY'
+            }
+          ]
+        }
+      );
+    });
+  });
+
+  it('applies stock explicitly for a ready inventory row', async () => {
+    setGrantedPermissions([
+      'pet.appointment.read',
+      'pet.appointment.update'
+    ]);
+
+    petServiceMock.listAppointments.mockResolvedValue(createPageResponse([
+      {
+        id: 'appointment-apply-1',
+        clientId: 'client-1',
+        clientName: 'Owner Example',
+        petId: 'pet-1',
+        petName: 'Pet Example',
+        serviceId: 'service-bath',
+        serviceName: 'Bath',
+        professionalId: 'professional-1',
+        professionalName: 'Dr Example',
+        scheduledAt: '2026-03-10T10:00:00Z',
+        status: 'IN_PROGRESS',
+        createdAt: '2026-03-10T10:00:00Z',
+        updatedAt: '2026-03-10T10:00:00Z',
+        appointmentServices: [
+          {
+            id: 'line-1',
+            serviceId: 'service-bath',
+            serviceName: 'Bath',
+            serviceCategory: 'GROOMING',
+            durationMinutes: 60,
+            basePrice: 80,
+            professionalId: 'professional-1',
+            professionalName: 'Dr Example',
+            commissionEligible: true,
+            commissionRate: 0.15,
+            commissionAmount: 12,
+            expectedInventoryConsumptions: [
+              {
+                id: 'inventory-row-1',
+                inventoryItemId: 'inventory-1',
+                inventoryItemName: 'Shampoo concentrate',
+                inventoryItemSku: 'SHA-1',
+                inventoryCategory: 'PET_RETAIL_GOOD',
+                unitOfMeasure: 'ML',
+                expectedQuantity: 30,
+                actualQuantity: 40,
+                consumptionStatus: 'READY_TO_APPLY',
+                consumptionRule: 'FIXED_PER_SERVICE',
+                snapshotBacked: true,
+                stockApplied: false,
+                appliedInventoryMovementId: null,
+                stockAppliedAt: null
+              }
+            ],
+            active: true,
+            allowInPlans: true,
+            allowStandaloneBooking: true,
+            lineOrder: 0,
+            primary: true,
+            missingFromCatalog: false
+          }
+        ]
+      }
+    ]));
+    petServiceMock.applyAppointmentServiceLineInventoryConsumption.mockResolvedValue({
+      id: 'appointment-apply-1',
+      clientId: 'client-1',
+      clientName: 'Owner Example',
+      petId: 'pet-1',
+      petName: 'Pet Example',
+      serviceId: 'service-bath',
+      serviceName: 'Bath',
+      professionalId: 'professional-1',
+      professionalName: 'Dr Example',
+      scheduledAt: '2026-03-10T10:00:00Z',
+      status: 'IN_PROGRESS',
+      createdAt: '2026-03-10T10:00:00Z',
+      updatedAt: '2026-03-10T10:05:00Z',
+      appointmentServices: [
+        {
+          id: 'line-1',
+          serviceId: 'service-bath',
+          serviceName: 'Bath',
+          serviceCategory: 'GROOMING',
+          durationMinutes: 60,
+          basePrice: 80,
+          professionalId: 'professional-1',
+          professionalName: 'Dr Example',
+          commissionEligible: true,
+          commissionRate: 0.15,
+          commissionAmount: 12,
+          expectedInventoryConsumptions: [
+            {
+              id: 'inventory-row-1',
+              inventoryItemId: 'inventory-1',
+              inventoryItemName: 'Shampoo concentrate',
+              inventoryItemSku: 'SHA-1',
+              inventoryCategory: 'PET_RETAIL_GOOD',
+              unitOfMeasure: 'ML',
+              expectedQuantity: 30,
+              actualQuantity: 40,
+              consumptionStatus: 'READY_TO_APPLY',
+              consumptionRule: 'FIXED_PER_SERVICE',
+              snapshotBacked: true,
+              stockApplied: true,
+              appliedInventoryMovementId: 'movement-1',
+              stockAppliedAt: '2026-03-10T10:05:00Z'
+            }
+          ],
+          active: true,
+          allowInPlans: true,
+          allowStandaloneBooking: true,
+          lineOrder: 0,
+          primary: true,
+          missingFromCatalog: false
+        }
+      ]
+    });
+
+    render(<PetAppointmentsPage />);
+
+    await waitFor(() => {
+      expect(petServiceMock.listAppointments).toHaveBeenCalled();
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: 'Switch to list' }));
+
+    await waitFor(() => {
+      expect(screen.getByText('Bath')).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: 'Edit' }));
+
+    expect(await screen.findByRole('button', { name: 'Apply stock' })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Apply stock' }));
+
+    await waitFor(() => {
+      expect(petServiceMock.applyAppointmentServiceLineInventoryConsumption).toHaveBeenCalledWith(
+        'appointment-apply-1',
+        'line-1',
+        'inventory-row-1'
+      );
     });
   });
 });

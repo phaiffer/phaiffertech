@@ -24,7 +24,7 @@ import { PetModuleSubnav } from '@/modules/pet/pet-module-subnav';
 import { PermissionGuard } from '@/shared/auth/PermissionGuard';
 import { usePermissions } from '@/shared/auth/usePermissions';
 import { useAppI18n, useAppMessages } from '@/shared/i18n/app-i18n-provider';
-import { formatCurrencyForLocale } from '@/shared/i18n/formatters';
+import { formatCurrencyForLocale, formatDateTimeForLocale } from '@/shared/i18n/formatters';
 import { ApiClientError } from '@/shared/lib/http';
 import { resolvePageItems, resolveTotalItems } from '@/shared/lib/pagination';
 import { petService } from '@/shared/services/pet-service';
@@ -32,7 +32,9 @@ import { PageResponse } from '@/shared/types/common';
 import {
   ClientPlan,
   PetAppointment,
+  PetAppointmentInventoryConsumptionStatus,
   PetAppointmentServiceLine,
+  PetAppointmentServiceLineInventoryConsumption,
   PetClient,
   PetProfessional,
   PetProfile,
@@ -40,6 +42,8 @@ import {
 } from '@/shared/types/pet';
 import { ConfirmDialog } from '@/shared/ui/confirm-dialog';
 import { DataTable } from '@/shared/ui/data-table';
+import { FormInput } from '@/shared/ui/form-input';
+import { FormSelect } from '@/shared/ui/form-select';
 import { PageSection } from '@/shared/ui/page-section';
 import { PageTitle } from '@/shared/ui/page-title';
 import { Pagination } from '@/shared/ui/pagination';
@@ -122,6 +126,227 @@ function hasPickupMessageCoverage(appointment: PetAppointment, clients: PetClien
   return Boolean(client?.email);
 }
 
+function roundCurrency(value: number) {
+  return Math.round((value + Number.EPSILON) * 100) / 100;
+}
+
+function formatCommissionRate(locale: string, rate: number) {
+  return new Intl.NumberFormat(locale === 'pt-BR' ? 'pt-BR' : 'en-US', {
+    style: 'percent',
+    maximumFractionDigits: 2
+  }).format(rate);
+}
+
+function formatInventoryQuantity(locale: string, quantity: number) {
+  return new Intl.NumberFormat(locale === 'pt-BR' ? 'pt-BR' : 'en-US', {
+    maximumFractionDigits: 2
+  }).format(quantity);
+}
+
+function formatInventoryPreview(
+  locale: string,
+  consumptions: PetAppointmentServiceLineInventoryConsumption[]
+) {
+  if (consumptions.length === 0) {
+    return locale === 'pt-BR'
+      ? 'Estoque previsto: nenhum item vinculado.'
+      : 'Expected stock: no linked item.';
+  }
+
+  const label = consumptions
+    .map((consumption) => `${consumption.inventoryItemName} x${formatInventoryQuantity(locale, consumption.expectedQuantity)} ${consumption.unitOfMeasure}`)
+    .join(' • ');
+
+  return locale === 'pt-BR'
+    ? `Estoque previsto: ${label}`
+    : `Expected stock: ${label}`;
+}
+
+function formatActualInventoryPreview(
+  locale: string,
+  consumptions: PetAppointmentServiceLineInventoryConsumption[]
+) {
+  const actualConsumptions = consumptions.filter((consumption) => consumption.actualQuantity != null);
+  if (actualConsumptions.length === 0) {
+    return locale === 'pt-BR'
+      ? 'Consumo real: ainda nao registrado.'
+      : 'Actual usage: not recorded yet.';
+  }
+
+  const label = actualConsumptions
+    .map((consumption) => `${consumption.inventoryItemName} x${formatInventoryQuantity(locale, consumption.actualQuantity ?? 0)} ${consumption.unitOfMeasure}`)
+    .join(' • ');
+
+  return locale === 'pt-BR'
+    ? `Consumo real: ${label}`
+    : `Actual usage: ${label}`;
+}
+
+type ActualConsumptionCopy = {
+  title: string;
+  description: string;
+  save: string;
+  saving: string;
+  apply: string;
+  applying: string;
+  planned: string;
+  actual: string;
+  status: string;
+  snapshotOnly: string;
+  noInventory: string;
+  saveFirst: string;
+  bookFirst: string;
+  rowUnavailable: string;
+  updated: string;
+  applySuccess: string;
+  stockAppliedBadge: string;
+  stockPendingBadge: string;
+  stockApplied: string;
+  stockAppliedOn: string;
+  stockPending: string;
+  stockNotReady: string;
+  stockNoAction: string;
+  wholeQuantityOnly: string;
+};
+
+function resolveActualConsumptionCopy(locale: string): ActualConsumptionCopy {
+  if (locale === 'pt-BR') {
+    return {
+      title: 'Consumo real por linha',
+      description: 'Edite o que foi realmente usado sem alterar a receita planejada nem gerar baixa de estoque automaticamente.',
+      save: 'Salvar consumo real',
+      saving: 'Salvando consumo real...',
+      apply: 'Aplicar estoque',
+      applying: 'Aplicando estoque...',
+      planned: 'Planejado',
+      actual: 'Real',
+      status: 'Status',
+      snapshotOnly: 'Somente leitura. Esta linha usa apenas o preview atual da receita porque o snapshot estruturado nao existe neste historico.',
+      noInventory: 'Nenhum item planejado nesta linha.',
+      saveFirst: 'Salve a composicao de servicos primeiro para registrar o consumo real com seguranca.',
+      bookFirst: 'Agende o atendimento primeiro para registrar consumo real por linha.',
+      rowUnavailable: 'Consumo real indisponivel para esta linha historica sem snapshot estruturado.',
+      updated: 'Consumo real atualizado.',
+      applySuccess: 'Consumo aplicado ao estoque.',
+      stockAppliedBadge: 'Estoque aplicado',
+      stockPendingBadge: 'Aplicacao pendente',
+      stockApplied: 'Consumo ja aplicado ao estoque.',
+      stockAppliedOn: 'Aplicado ao estoque em {value}.',
+      stockPending: 'Pronto para uma aplicacao explicita de estoque.',
+      stockNotReady: 'Registre uma quantidade real positiva e marque como pronto para aplicar antes de baixar estoque.',
+      stockNoAction: 'Nenhuma baixa de estoque necessaria para esta linha.',
+      wholeQuantityOnly: 'Esta primeira etapa aceita apenas quantidades inteiras de estoque.'
+    };
+  }
+
+  return {
+    title: 'Actual usage per line',
+    description: 'Edit what was actually used without changing the planned recipe or creating stock deductions automatically.',
+    save: 'Save actual usage',
+    saving: 'Saving actual usage...',
+    apply: 'Apply stock',
+    applying: 'Applying stock...',
+    planned: 'Planned',
+    actual: 'Actual',
+    status: 'Status',
+    snapshotOnly: 'Read-only. This line only has the current recipe preview because the structured snapshot is missing in this historical record.',
+    noInventory: 'No planned inventory rows on this line.',
+    saveFirst: 'Save the service composition first so actual usage can be recorded safely.',
+    bookFirst: 'Book the appointment first to record actual usage per line.',
+    rowUnavailable: 'Actual usage is unavailable for this historical line without a structured snapshot.',
+    updated: 'Actual usage updated.',
+    applySuccess: 'Usage applied to stock.',
+    stockAppliedBadge: 'Stock applied',
+    stockPendingBadge: 'Pending apply',
+    stockApplied: 'Usage already applied to stock.',
+    stockAppliedOn: 'Applied to stock on {value}.',
+    stockPending: 'Ready for an explicit stock application.',
+    stockNotReady: 'Record a positive actual quantity and mark the row ready to apply before updating stock.',
+    stockNoAction: 'No stock deduction is needed for this row.',
+    wholeQuantityOnly: 'This first step only supports whole stock quantities.'
+  };
+}
+
+function canApplyStockConsumption(row: PetAppointmentServiceLineInventoryConsumption) {
+  return row.snapshotBacked
+    && Boolean(row.id)
+    && !row.stockApplied
+    && row.consumptionStatus === 'READY_TO_APPLY'
+    && typeof row.actualQuantity === 'number'
+    && Number.isFinite(row.actualQuantity)
+    && row.actualQuantity > 0
+    && Number.isInteger(row.actualQuantity);
+}
+
+function resolveStockApplicationDetail(
+  locale: string,
+  row: PetAppointmentServiceLineInventoryConsumption,
+  copy: ActualConsumptionCopy
+) {
+  if (!row.snapshotBacked) {
+    return copy.snapshotOnly;
+  }
+  if (row.stockApplied) {
+    const appliedAt = row.stockAppliedAt
+      ? formatDateTimeForLocale(locale, row.stockAppliedAt, '', {
+          dateStyle: 'medium',
+          timeStyle: 'short'
+        })
+      : '';
+    return appliedAt ? copy.stockAppliedOn.replace('{value}', appliedAt) : copy.stockApplied;
+  }
+  if (row.consumptionStatus === 'SKIPPED') {
+    return copy.stockNoAction;
+  }
+  if (row.consumptionStatus === 'READY_TO_APPLY'
+      && typeof row.actualQuantity === 'number'
+      && Number.isFinite(row.actualQuantity)
+      && row.actualQuantity > 0
+      && !Number.isInteger(row.actualQuantity)) {
+    return copy.wholeQuantityOnly;
+  }
+  if (canApplyStockConsumption(row)) {
+    return copy.stockPending;
+  }
+  return copy.stockNotReady;
+}
+
+function resolveActualConsumptionStatusOptions(locale: string) {
+  return locale === 'pt-BR'
+    ? [
+        { value: 'PLANNED', label: 'Planejado' },
+        { value: 'ADJUSTED', label: 'Ajustado' },
+        { value: 'READY_TO_APPLY', label: 'Pronto para aplicar' },
+        { value: 'SKIPPED', label: 'Ignorado' }
+      ]
+    : [
+        { value: 'PLANNED', label: 'Planned' },
+        { value: 'ADJUSTED', label: 'Adjusted' },
+        { value: 'READY_TO_APPLY', label: 'Ready to apply' },
+        { value: 'SKIPPED', label: 'Skipped' }
+      ];
+}
+
+function aggregateInventoryConsumptions(
+  consumptionGroups: PetAppointmentServiceLineInventoryConsumption[][]
+) {
+  const aggregated = new Map<string, PetAppointmentServiceLineInventoryConsumption>();
+
+  consumptionGroups.forEach((group) => {
+    group.forEach((consumption) => {
+      const existing = aggregated.get(consumption.inventoryItemId);
+      if (existing) {
+        existing.expectedQuantity += consumption.expectedQuantity;
+        return;
+      }
+
+      aggregated.set(consumption.inventoryItemId, { ...consumption });
+    });
+  });
+
+  return Array.from(aggregated.values());
+}
+
 function resolveServiceSummaryCopy(locale: string) {
   if (locale === 'pt-BR') {
     return {
@@ -138,7 +363,11 @@ function resolveServiceSummaryCopy(locale: string) {
       scheduling: 'Regra de agendamento',
       duration: 'Duracao total',
       basePrice: 'Preco base total',
+      commissionLines: 'Linhas com comissao',
+      projectedCommission: 'Comissao projetada',
       checkout: 'Checkout previsto',
+      inventoryUsage: 'Consumo previsto',
+      inventoryNone: 'Sem consumo previsto',
       active: 'Ativo para novos agendamentos',
       inactive: 'Inativo para novos agendamentos',
       flexible: 'Avulso e plano habilitados',
@@ -151,6 +380,21 @@ function resolveServiceSummaryCopy(locale: string) {
       standaloneBlocked: 'Algum servico selecionado exige plano vinculado antes do agendamento.',
       inactiveLegacy: 'Servico inativo mantido apenas para preservar a edicao segura de um agendamento historico.',
       missingLegacy: 'A definicao original do servico nao esta mais no catalogo ativo. Mantenha o vinculo apenas para edicao historica segura.',
+      commissionReady: 'Comissao pronta',
+      commissionExcluded: 'Comissao excluida pela regra do servico',
+      commissionPending: 'Servico elegivel, mas o profissional ainda precisa de taxa de comissao.',
+      commissionUnavailable: 'Regra de comissao indisponivel para esta linha legada.',
+      commissionExcludedNotice: 'Nenhum servico selecionado gera comissao.',
+      commissionProjectedNotice: 'A projecao considera apenas as linhas que permitem comissao.',
+      commissionPendingNotice: (count: number) => count === 1
+        ? '1 linha elegivel ainda precisa de taxa de comissao no profissional.'
+        : `${count} linhas elegiveis ainda precisam de taxa de comissao no profissional.`,
+      commissionUnavailableNotice: (count: number) => count === 1
+        ? '1 linha legada ainda nao possui snapshot estruturado de comissao.'
+        : `${count} linhas legadas ainda nao possuem snapshot estruturado de comissao.`,
+      professionalPendingNotice: (count: number) => count === 1
+        ? '1 linha ainda esta sem profissional responsavel.'
+        : `${count} linhas ainda estao sem profissional responsavel.`,
       legacyHeadlineSuffix: 'reserva legada',
       bundleHeadlineSuffix: 'servicos selecionados'
     };
@@ -170,7 +414,11 @@ function resolveServiceSummaryCopy(locale: string) {
     scheduling: 'Scheduling rule',
     duration: 'Combined duration',
     basePrice: 'Combined base price',
+    commissionLines: 'Commission lines',
+    projectedCommission: 'Projected commission',
     checkout: 'Projected checkout',
+    inventoryUsage: 'Expected stock usage',
+    inventoryNone: 'No planned stock usage',
     active: 'Active for new bookings',
     inactive: 'Inactive for new bookings',
     flexible: 'Standalone booking and plan sessions enabled',
@@ -183,6 +431,21 @@ function resolveServiceSummaryCopy(locale: string) {
     standaloneBlocked: 'At least one selected service requires a linked plan before booking.',
     inactiveLegacy: 'This inactive service stays visible only to preserve safe editing of a historical appointment.',
     missingLegacy: 'The original service definition is no longer in the active catalog. Keep the link only for safe historical edits.',
+    commissionReady: 'Commission ready',
+    commissionExcluded: 'Commission excluded by service rule',
+    commissionPending: 'Commission eligible, but the professional still needs a commission rate.',
+    commissionUnavailable: 'Commission rule unavailable for this legacy line.',
+    commissionExcludedNotice: 'None of the selected service lines generates commission.',
+    commissionProjectedNotice: 'The projection considers only the service lines that allow commission.',
+    commissionPendingNotice: (count: number) => count === 1
+      ? '1 eligible service line still needs a professional commission rate.'
+      : `${count} eligible service lines still need a professional commission rate.`,
+    commissionUnavailableNotice: (count: number) => count === 1
+      ? '1 legacy service line does not yet carry a structured commission snapshot.'
+      : `${count} legacy service lines do not yet carry a structured commission snapshot.`,
+    professionalPendingNotice: (count: number) => count === 1
+      ? '1 service line is still missing a responsible professional.'
+      : `${count} service lines are still missing a responsible professional.`,
     legacyHeadlineSuffix: 'legacy booking',
     bundleHeadlineSuffix: 'services selected'
   };
@@ -224,6 +487,7 @@ export function PetAppointmentsPage() {
   const [servicePickerId, setServicePickerId] = useState('');
   const [selectedServiceIds, setSelectedServiceIds] = useState<string[]>([]);
   const [professionalId, setProfessionalId] = useState('');
+  const [serviceLineProfessionalIds, setServiceLineProfessionalIds] = useState<Record<string, string>>({});
   const [scheduledAt, setScheduledAt] = useState('');
   const [status, setStatus] = useState('SCHEDULED');
   const [notes, setNotes] = useState('');
@@ -234,6 +498,8 @@ export function PetAppointmentsPage() {
   const [plansLoading, setPlansLoading] = useState(false);
   const lastPlanClientIdRef = useRef<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [savingActualServiceLineId, setSavingActualServiceLineId] = useState<string | null>(null);
+  const [applyingInventoryRowId, setApplyingInventoryRowId] = useState<string | null>(null);
 
   const [deleteCandidate, setDeleteCandidate] = useState<PetAppointment | null>(null);
 
@@ -283,6 +549,14 @@ export function PetAppointmentsPage() {
     () => resolveServiceSummaryCopy(locale),
     [locale]
   );
+  const actualConsumptionCopy = useMemo(
+    () => resolveActualConsumptionCopy(locale),
+    [locale]
+  );
+  const actualConsumptionStatusOptions = useMemo(
+    () => resolveActualConsumptionStatusOptions(locale),
+    [locale]
+  );
   const servicesById = useMemo(
     () => new Map(services.map((service) => [service.id, service])),
     [services]
@@ -291,7 +565,6 @@ export function PetAppointmentsPage() {
     () => new Map(editingServiceLines.map((line) => [line.serviceId, line])),
     [editingServiceLines]
   );
-
   const serviceOptions = useMemo(() => {
     return [
       { value: '', label: messages.formOptions.all },
@@ -335,6 +608,13 @@ export function PetAppointmentsPage() {
     ];
   }, [messages.formOptions.selectProfessional, professionals]);
 
+  const serviceLineProfessionalOptions = useMemo(() => {
+    return [
+      { value: '', label: messages.formOptions.unassignedProfessional },
+      ...professionals.map((professional) => ({ value: professional.id, label: professional.name }))
+    ];
+  }, [messages.formOptions.unassignedProfessional, professionals]);
+
   // Plan options loaded server-side by clientId when the form is open
   const planOptions = useMemo(() => {
     if (!clientId) {
@@ -357,44 +637,120 @@ export function PetAppointmentsPage() {
     return selectedServiceIds
       .map((selectedId) => {
         const catalogService = servicesById.get(selectedId);
-        const legacyServiceLine = editingServiceLinesById.get(selectedId);
+        const existingServiceLine = editingServiceLinesById.get(selectedId);
+        const hasExplicitLineProfessional = Object.prototype.hasOwnProperty.call(serviceLineProfessionalIds, selectedId);
+        const assignedProfessionalId = hasExplicitLineProfessional
+          ? serviceLineProfessionalIds[selectedId]
+          : professionalId;
+        const assignedProfessional = professionals.find((professional) => professional.id === assignedProfessionalId);
 
-        if (!catalogService && !legacyServiceLine) {
+        if (!catalogService && !existingServiceLine) {
           return null;
         }
+
+        const assignedProfessionalName = assignedProfessionalId
+          ? assignedProfessional?.name
+            ?? (existingServiceLine?.professionalId === assignedProfessionalId ? existingServiceLine.professionalName ?? null : null)
+          : null;
+
+        const expectedInventoryConsumptions = existingServiceLine?.expectedInventoryConsumptions
+          ? existingServiceLine.expectedInventoryConsumptions
+          : catalogService
+            ? (catalogService.inventoryLinks ?? [])
+              .filter((link) => link.active)
+              .map((link) => ({
+                id: null,
+                inventoryItemId: link.inventoryItemId,
+                inventoryItemName: link.inventoryItemName,
+                inventoryItemSku: link.inventoryItemSku ?? null,
+                inventoryCategory: link.inventoryCategory ?? null,
+                unitOfMeasure: link.unitOfMeasure,
+                expectedQuantity: link.expectedQuantity,
+                actualQuantity: null,
+                consumptionStatus: 'PLANNED',
+                consumptionRule: link.consumptionRule,
+                snapshotBacked: false,
+                stockApplied: false,
+                appliedInventoryMovementId: null,
+                stockAppliedAt: null
+              }))
+            : [];
 
         return {
           serviceId: selectedId,
           catalogService,
-          legacyServiceLine
+          existingServiceLine,
+          assignedProfessionalId,
+          assignedProfessionalName,
+          expectedInventoryConsumptions,
+          commissionEligible: existingServiceLine?.commissionEligible ?? catalogService?.commissionEligible ?? null,
+          lineBasePrice: existingServiceLine?.basePrice ?? catalogService?.basePrice ?? null,
+          commissionRate: assignedProfessional?.commissionRate
+            ?? (existingServiceLine?.professionalId === assignedProfessionalId ? existingServiceLine?.commissionRate ?? null : null)
         };
       })
       .filter((entry): entry is {
         serviceId: string;
         catalogService: PetServiceCatalog | undefined;
-        legacyServiceLine: PetAppointmentServiceLine | undefined;
+        existingServiceLine: PetAppointmentServiceLine | undefined;
+        assignedProfessionalId: string;
+        assignedProfessionalName: string | null;
+        expectedInventoryConsumptions: PetAppointmentServiceLineInventoryConsumption[];
+        commissionEligible: boolean | null;
+        lineBasePrice: number | null;
+        commissionRate: number | null;
       } => entry !== null);
-  }, [editingServiceLinesById, selectedServiceIds, servicesById]);
+  }, [editingServiceLinesById, professionalId, professionals, selectedServiceIds, serviceLineProfessionalIds, servicesById]);
 
   const selectedServices = useMemo<PetAppointmentSelectedService[]>(() => {
     return selectedServiceEntries.map((entry) => {
+      const projectedCommissionAmount = entry.commissionEligible === true && entry.commissionRate != null && entry.lineBasePrice != null
+        ? roundCurrency(entry.lineBasePrice * entry.commissionRate)
+        : null;
+      const commissionContext = entry.commissionEligible === true
+        ? projectedCommissionAmount != null
+          ? `${serviceSummaryCopy.commissionReady} · ${formatCommissionRate(locale, entry.commissionRate ?? 0)} · ${formatCurrencyForLocale(locale, projectedCommissionAmount)}`
+          : serviceSummaryCopy.commissionPending
+        : entry.commissionEligible === false
+          ? serviceSummaryCopy.commissionExcluded
+          : serviceSummaryCopy.commissionUnavailable;
+      const commissionTone = entry.commissionEligible === true
+        ? projectedCommissionAmount != null
+          ? 'accent'
+          : 'warning'
+        : entry.commissionEligible === false
+          ? 'neutral'
+          : 'warning';
+
       if (entry.catalogService) {
         return {
           serviceId: entry.serviceId,
           label: describePetServiceCatalogItem(entry.catalogService, locale),
           note: entry.catalogService.active ? undefined : serviceSummaryCopy.inactiveLegacy,
+          inventoryPreview: formatInventoryPreview(locale, entry.expectedInventoryConsumptions),
+          professionalId: entry.assignedProfessionalId,
+          professionalName: entry.assignedProfessionalName,
+          professionalPending: !entry.assignedProfessionalId,
+          commissionContext,
+          commissionTone,
           removable: true
         };
       }
 
       return {
         serviceId: entry.serviceId,
-        label: `${entry.legacyServiceLine?.serviceName ?? messages.filters.service} · ${serviceSummaryCopy.legacyHeadlineSuffix}`,
+        label: `${entry.existingServiceLine?.serviceName ?? messages.filters.service} · ${serviceSummaryCopy.legacyHeadlineSuffix}`,
         note: serviceSummaryCopy.missingLegacy,
+        inventoryPreview: formatInventoryPreview(locale, entry.expectedInventoryConsumptions),
+        professionalId: entry.assignedProfessionalId,
+        professionalName: entry.assignedProfessionalName,
+        professionalPending: !entry.assignedProfessionalId,
+        commissionContext,
+        commissionTone,
         removable: true
       };
     });
-  }, [locale, messages.filters.service, selectedServiceEntries, serviceSummaryCopy.inactiveLegacy, serviceSummaryCopy.legacyHeadlineSuffix, serviceSummaryCopy.missingLegacy]);
+  }, [locale, messages.filters.service, selectedServiceEntries, serviceSummaryCopy]);
 
   const selectedServiceSummary = useMemo<PetAppointmentServiceSummary | null>(() => {
     if (selectedServiceEntries.length === 0) {
@@ -406,32 +762,65 @@ export function PetAppointmentsPage() {
     const notices: string[] = [];
     const categories = Array.from(new Set(
       selectedServiceEntries
-        .map((entry) => entry.catalogService?.category ?? entry.legacyServiceLine?.serviceCategory ?? null)
+        .map((entry) => entry.catalogService?.category ?? entry.existingServiceLine?.serviceCategory ?? null)
         .filter((category): category is NonNullable<typeof category> => Boolean(category))
         .map((category) => formatPetServiceCategory(category))
     ));
     const combinedDurationMinutes = selectedServiceEntries.reduce((total, entry) => (
-      total + (entry.catalogService?.durationMinutes ?? entry.legacyServiceLine?.durationMinutes ?? 0)
+      total + (entry.catalogService?.durationMinutes ?? entry.existingServiceLine?.durationMinutes ?? 0)
     ), 0);
     const combinedBasePrice = selectedServiceEntries.reduce((total, entry) => (
-      total + (entry.catalogService?.basePrice ?? entry.legacyServiceLine?.basePrice ?? 0)
+      total + (entry.catalogService?.basePrice ?? entry.existingServiceLine?.basePrice ?? 0)
     ), 0);
+    const aggregatedInventoryConsumptions = aggregateInventoryConsumptions(
+      selectedServiceEntries.map((entry) => entry.expectedInventoryConsumptions)
+    );
+    const commissionEligibleCount = selectedServiceEntries.filter((entry) => entry.commissionEligible === true).length;
+    const projectedCommission = roundCurrency(selectedServiceEntries.reduce((total, entry) => {
+      if (entry.commissionEligible !== true || entry.commissionRate == null || entry.lineBasePrice == null) {
+        return total;
+      }
+      return total + (entry.lineBasePrice * entry.commissionRate);
+    }, 0));
+    const professionalPendingCount = selectedServiceEntries.filter((entry) => !entry.assignedProfessionalId).length;
+    const commissionPendingCount = selectedServiceEntries.filter((entry) => (
+      entry.commissionEligible === true && (entry.commissionRate == null || entry.lineBasePrice == null)
+    )).length;
+    const commissionUnavailableCount = selectedServiceEntries.filter((entry) => entry.commissionEligible == null).length;
     const supportsSelectedBookingMode = clientPlanId
-      ? selectedServiceEntries.every((entry) => entry.catalogService?.allowInPlans ?? entry.legacyServiceLine?.allowInPlans ?? false)
-      : selectedServiceEntries.every((entry) => entry.catalogService?.allowStandaloneBooking ?? entry.legacyServiceLine?.allowStandaloneBooking ?? false);
+      ? selectedServiceEntries.every((entry) => entry.catalogService?.allowInPlans ?? entry.existingServiceLine?.allowInPlans ?? false)
+      : selectedServiceEntries.every((entry) => entry.catalogService?.allowStandaloneBooking ?? entry.existingServiceLine?.allowStandaloneBooking ?? false);
     const projectedCheckout = (clientPlanId && supportsSelectedBookingMode ? 0 : combinedBasePrice) + safeExtrasAmount;
 
     selectedServiceEntries.forEach((entry) => {
       if (entry.catalogService && !entry.catalogService.active) {
         notices.push(`${entry.catalogService.name}: ${serviceSummaryCopy.inactiveLegacy}`);
       } else if (!entry.catalogService) {
-        notices.push(`${entry.legacyServiceLine?.serviceName ?? messages.filters.service}: ${serviceSummaryCopy.missingLegacy}`);
+        notices.push(`${entry.existingServiceLine?.serviceName ?? messages.filters.service}: ${serviceSummaryCopy.missingLegacy}`);
       }
     });
 
     notices.push(clientPlanId
       ? (supportsSelectedBookingMode ? serviceSummaryCopy.planReady : serviceSummaryCopy.planBlocked)
       : (supportsSelectedBookingMode ? serviceSummaryCopy.standaloneReady : serviceSummaryCopy.standaloneBlocked));
+
+    if (commissionEligibleCount === 0) {
+      notices.push(serviceSummaryCopy.commissionExcludedNotice);
+    } else {
+      notices.push(serviceSummaryCopy.commissionProjectedNotice);
+    }
+
+    if (commissionPendingCount > 0) {
+      notices.push(serviceSummaryCopy.commissionPendingNotice(commissionPendingCount));
+    }
+
+    if (commissionUnavailableCount > 0) {
+      notices.push(serviceSummaryCopy.commissionUnavailableNotice(commissionUnavailableCount));
+    }
+
+    if (professionalPendingCount > 0) {
+      notices.push(serviceSummaryCopy.professionalPendingNotice(professionalPendingCount));
+    }
 
     return {
       title: serviceSummaryCopy.title,
@@ -454,11 +843,174 @@ export function PetAppointmentsPage() {
         },
         { label: serviceSummaryCopy.duration, value: `${combinedDurationMinutes} min` },
         { label: serviceSummaryCopy.basePrice, value: formatCurrencyForLocale(locale, combinedBasePrice) },
+        { label: serviceSummaryCopy.commissionLines, value: `${commissionEligibleCount}/${selectedServiceEntries.length}` },
+        {
+          label: serviceSummaryCopy.projectedCommission,
+          value: commissionEligibleCount === 0
+            ? serviceSummaryCopy.commissionExcluded
+            : commissionPendingCount === commissionEligibleCount && projectedCommission === 0
+              ? serviceSummaryCopy.commissionPending
+              : formatCurrencyForLocale(locale, projectedCommission)
+        },
+        { label: serviceSummaryCopy.inventoryUsage, value: aggregatedInventoryConsumptions.length > 0
+          ? formatInventoryPreview(locale, aggregatedInventoryConsumptions).replace(/^Expected stock:\s|^Estoque previsto:\s/, '')
+          : serviceSummaryCopy.inventoryNone },
         { label: serviceSummaryCopy.checkout, value: formatCurrencyForLocale(locale, projectedCheckout) }
       ],
       notices
     };
   }, [clientPlanId, extrasAmount, locale, messages.filters.service, selectedServiceEntries, selectedServices, serviceSummaryCopy]);
+
+  const actualConsumptionSelectionDirty = useMemo(() => {
+    if (!editingId) {
+      return false;
+    }
+
+    if (selectedServiceIds.length !== editingServiceLines.length) {
+      return true;
+    }
+
+    return selectedServiceIds.some((serviceId, index) => serviceId !== editingServiceLines[index]?.serviceId);
+  }, [editingId, editingServiceLines, selectedServiceIds]);
+
+  const editableActualConsumptionLines = useMemo(() => {
+    if (!editingId) {
+      return [];
+    }
+
+    const selectedIds = new Set(selectedServiceIds);
+    return editingServiceLines.filter((line) => selectedIds.has(line.serviceId));
+  }, [editingId, editingServiceLines, selectedServiceIds]);
+
+  function updateEditingServiceLineInventoryRow(
+    serviceLineId: string,
+    inventoryItemId: string,
+    updater: (row: PetAppointmentServiceLineInventoryConsumption) => PetAppointmentServiceLineInventoryConsumption
+  ) {
+    setEditingServiceLines((current) => current.map((line) => {
+      if (line.id !== serviceLineId) {
+        return line;
+      }
+
+      return {
+        ...line,
+        expectedInventoryConsumptions: (line.expectedInventoryConsumptions ?? []).map((row) => (
+          row.inventoryItemId === inventoryItemId ? updater(row) : row
+        ))
+      };
+    }));
+  }
+
+  function handleActualConsumptionStatusChange(
+    serviceLineId: string,
+    inventoryItemId: string,
+    nextStatus: PetAppointmentInventoryConsumptionStatus
+  ) {
+    updateEditingServiceLineInventoryRow(serviceLineId, inventoryItemId, (row) => ({
+      ...row,
+      actualQuantity: nextStatus === 'PLANNED'
+        ? null
+        : nextStatus === 'SKIPPED'
+          ? 0
+          : row.actualQuantity ?? null,
+      consumptionStatus: nextStatus
+    }));
+  }
+
+  function handleActualConsumptionQuantityChange(
+    serviceLineId: string,
+    inventoryItemId: string,
+    value: string
+  ) {
+    updateEditingServiceLineInventoryRow(serviceLineId, inventoryItemId, (row) => ({
+      ...row,
+      actualQuantity: value === '' ? null : Number(value)
+    }));
+  }
+
+  async function handleSaveActualConsumption(serviceLine: PetAppointmentServiceLine) {
+    if (!editingId || !serviceLine.id) {
+      setError(actualConsumptionCopy.bookFirst);
+      return;
+    }
+
+    const snapshotRows = (serviceLine.expectedInventoryConsumptions ?? []).filter((row) => row.snapshotBacked);
+    if (snapshotRows.length === 0) {
+      setError(actualConsumptionCopy.rowUnavailable);
+      return;
+    }
+
+    const invalidRow = snapshotRows.find((row) => (
+      (row.consumptionStatus === 'ADJUSTED' || row.consumptionStatus === 'READY_TO_APPLY')
+      && (row.actualQuantity == null || Number.isNaN(Number(row.actualQuantity)))
+    ));
+    if (invalidRow) {
+      setError(locale === 'pt-BR'
+        ? `Informe a quantidade real para ${invalidRow.inventoryItemName} antes de salvar.`
+        : `Enter the actual quantity for ${invalidRow.inventoryItemName} before saving.`);
+      return;
+    }
+
+    setSavingActualServiceLineId(serviceLine.id);
+    setError(null);
+    setSuccess(null);
+
+    try {
+      const updatedAppointment = await petService.updateAppointmentServiceLineInventoryConsumptions(
+        editingId,
+        serviceLine.id,
+        {
+          inventoryConsumptions: snapshotRows.map((row) => ({
+            inventoryItemId: row.inventoryItemId,
+            actualQuantity: row.consumptionStatus === 'PLANNED'
+              ? null
+              : row.consumptionStatus === 'SKIPPED'
+                ? 0
+                : row.actualQuantity ?? null,
+            consumptionStatus: row.consumptionStatus
+          }))
+        }
+      );
+
+      setEditingServiceLines(updatedAppointment.appointmentServices ?? []);
+      setSuccess(actualConsumptionCopy.updated);
+      await loadData(pageData.page, search, statusFilter, clientFilterId, petFilterId, serviceFilterId, professionalFilterId, viewMode, currentMonth);
+    } catch (err) {
+      setError(err instanceof ApiClientError ? err.message : messages.errors.save);
+    } finally {
+      setSavingActualServiceLineId(null);
+    }
+  }
+
+  async function handleApplyStockConsumption(
+    serviceLine: PetAppointmentServiceLine,
+    row: PetAppointmentServiceLineInventoryConsumption
+  ) {
+    if (!editingId || !serviceLine.id || !row.id) {
+      setError(actualConsumptionCopy.rowUnavailable);
+      return;
+    }
+
+    setApplyingInventoryRowId(row.id);
+    setError(null);
+    setSuccess(null);
+
+    try {
+      const updatedAppointment = await petService.applyAppointmentServiceLineInventoryConsumption(
+        editingId,
+        serviceLine.id,
+        row.id
+      );
+
+      setEditingServiceLines(updatedAppointment.appointmentServices ?? []);
+      setSuccess(actualConsumptionCopy.applySuccess);
+      await loadData(pageData.page, search, statusFilter, clientFilterId, petFilterId, serviceFilterId, professionalFilterId, viewMode, currentMonth);
+    } catch (err) {
+      setError(err instanceof ApiClientError ? err.message : messages.errors.save);
+    } finally {
+      setApplyingInventoryRowId(null);
+    }
+  }
 
   const loadReferences = useCallback(async () => {
     const [clientPage, profilePage, servicePage, professionalPage] = await Promise.allSettled([
@@ -598,6 +1150,7 @@ export function PetAppointmentsPage() {
     setServicePickerId('');
     setSelectedServiceIds([]);
     setProfessionalId('');
+    setServiceLineProfessionalIds({});
     setScheduledAt('');
     setStatus('SCHEDULED');
     setNotes('');
@@ -626,6 +1179,12 @@ export function PetAppointmentsPage() {
           serviceCategory: null,
           durationMinutes: appointment.totalServiceDurationMinutes ?? null,
           basePrice: appointment.servicePrice ?? appointment.totalServiceBasePrice ?? null,
+          professionalId: appointment.professionalId,
+          professionalName: appointment.professionalName ?? null,
+          commissionEligible: null,
+          commissionRate: null,
+          commissionAmount: appointment.commissionAmount ?? null,
+          expectedInventoryConsumptions: [],
           active: false,
           allowInPlans: Boolean(appointment.clientPlanId),
           allowStandaloneBooking: !appointment.clientPlanId,
@@ -639,6 +1198,12 @@ export function PetAppointmentsPage() {
     setPetId(appointment.petId);
     setServicePickerId('');
     setSelectedServiceIds(appointmentServices.map((service) => service.serviceId));
+    setServiceLineProfessionalIds(Object.fromEntries(
+      appointmentServices.map((service) => [
+        service.serviceId,
+        service.professionalId === undefined ? appointment.professionalId : (service.professionalId ?? '')
+      ])
+    ));
     setProfessionalId(appointment.professionalId);
     setScheduledAt(toDateTimeLocal(appointment.scheduledAt));
     setStatus(appointment.status);
@@ -662,11 +1227,40 @@ export function PetAppointmentsPage() {
     }
 
     setSelectedServiceIds((current) => [...current, servicePickerId]);
+    setServiceLineProfessionalIds((current) => ({
+      ...current,
+      [servicePickerId]: current[servicePickerId] ?? professionalId
+    }));
     setServicePickerId('');
   }
 
   function handleRemoveService(serviceToRemoveId: string) {
     setSelectedServiceIds((current) => current.filter((selectedId) => selectedId !== serviceToRemoveId));
+    setServiceLineProfessionalIds((current) => {
+      const next = { ...current };
+      delete next[serviceToRemoveId];
+      return next;
+    });
+  }
+
+  function handleProfessionalIdChange(nextProfessionalId: string) {
+    setServiceLineProfessionalIds((current) => {
+      const next = { ...current };
+      selectedServiceIds.forEach((serviceId) => {
+        if (!next[serviceId] || next[serviceId] === professionalId) {
+          next[serviceId] = nextProfessionalId;
+        }
+      });
+      return next;
+    });
+    setProfessionalId(nextProfessionalId);
+  }
+
+  function handleSelectedServiceProfessionalChange(serviceId: string, nextProfessionalId: string) {
+    setServiceLineProfessionalIds((current) => ({
+      ...current,
+      [serviceId]: nextProfessionalId
+    }));
   }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -701,13 +1295,13 @@ export function PetAppointmentsPage() {
       return;
     }
 
-    if (clientPlanId && selectedServiceEntries.some((entry) => !(entry.catalogService?.allowInPlans ?? entry.legacyServiceLine?.allowInPlans))) {
+    if (clientPlanId && selectedServiceEntries.some((entry) => !(entry.catalogService?.allowInPlans ?? entry.existingServiceLine?.allowInPlans))) {
       setSubmitting(false);
       setError('At least one selected service is not available for plan-based appointments.');
       return;
     }
 
-    if (!clientPlanId && selectedServiceEntries.some((entry) => !(entry.catalogService?.allowStandaloneBooking ?? entry.legacyServiceLine?.allowStandaloneBooking))) {
+    if (!clientPlanId && selectedServiceEntries.some((entry) => !(entry.catalogService?.allowStandaloneBooking ?? entry.existingServiceLine?.allowStandaloneBooking))) {
       setSubmitting(false);
       setError('At least one selected service requires a linked plan before booking.');
       return;
@@ -725,6 +1319,12 @@ export function PetAppointmentsPage() {
       serviceId: primaryServiceId,
       serviceIds: selectedServiceIds,
       professionalId,
+      serviceLineAssignments: selectedServiceIds.map((serviceId) => ({
+        serviceId,
+        professionalId: Object.prototype.hasOwnProperty.call(serviceLineProfessionalIds, serviceId)
+          ? (serviceLineProfessionalIds[serviceId] || null)
+          : (professionalId || null)
+      })),
       scheduledAt: isoScheduledAt,
       status,
       notes: notes || undefined,
@@ -1011,8 +1611,10 @@ export function PetAppointmentsPage() {
                   onRemoveService={handleRemoveService}
                   canAddSelectedService={Boolean(servicePickerId) && !selectedServiceIds.includes(servicePickerId)}
                   professionalId={professionalId}
-                  onProfessionalIdChange={setProfessionalId}
+                  onProfessionalIdChange={handleProfessionalIdChange}
                   formProfessionalOptions={formProfessionalOptions}
+                  serviceLineProfessionalOptions={serviceLineProfessionalOptions}
+                  onSelectedServiceProfessionalChange={handleSelectedServiceProfessionalChange}
                   professionalsLookupUnavailable={professionalsLookupUnavailable}
                   scheduledAt={scheduledAt}
                   onScheduledAtChange={setScheduledAt}
@@ -1034,6 +1636,167 @@ export function PetAppointmentsPage() {
                   appointmentReferencesReady={appointmentReferencesReady}
                   onCancelEdit={() => setIsEditorOpen(false)}
                 />
+
+                {editingId ? (
+                  <div className="ui-surface-panel p-4 space-y-4">
+                    <div>
+                      <p className="text-xs font-semibold uppercase tracking-wide text-[color:var(--app-shell-muted)]">
+                        {actualConsumptionCopy.title}
+                      </p>
+                      <p className="mt-0.5 text-xs text-[color:var(--app-shell-muted)]">
+                        {actualConsumptionCopy.description}
+                      </p>
+                    </div>
+
+                    {actualConsumptionSelectionDirty ? (
+                      <div className="ui-notice-warning">
+                        {actualConsumptionCopy.saveFirst}
+                      </div>
+                    ) : editableActualConsumptionLines.length === 0 ? (
+                      <div className="rounded-xl border border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-panel-muted)] px-4 py-3 text-sm text-[color:var(--app-shell-muted)]">
+                        {actualConsumptionCopy.bookFirst}
+                      </div>
+                    ) : (
+                      <div className="space-y-4">
+                        {editableActualConsumptionLines.map((line) => {
+                          const inventoryRows = line.expectedInventoryConsumptions ?? [];
+                          const snapshotRows = inventoryRows.filter((row) => row.snapshotBacked);
+                          const snapshotOnly = inventoryRows.length > 0 && snapshotRows.length === 0;
+
+                          return (
+                            <div
+                              key={line.id ?? `${line.serviceId}-${line.lineOrder}`}
+                              className="rounded-xl border border-[color:var(--app-shell-border)] bg-white/80 px-4 py-3"
+                            >
+                              <div className="flex items-start justify-between gap-3">
+                                <div>
+                                  <p className="text-sm font-semibold text-slate-900">{line.serviceName}</p>
+                                  <p className="mt-1 text-xs text-[color:var(--app-shell-muted)]">
+                                    {formatActualInventoryPreview(locale, inventoryRows)}
+                                  </p>
+                                </div>
+                                {line.lineOrder === 0 ? (
+                                  <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-700">
+                                    {locale === 'pt-BR' ? 'Linha principal' : 'Primary line'}
+                                  </span>
+                                ) : null}
+                              </div>
+
+                              {inventoryRows.length === 0 ? (
+                                <div className="mt-3 rounded-lg border border-dashed border-[color:var(--app-shell-border)] px-3 py-2 text-xs text-[color:var(--app-shell-muted)]">
+                                  {actualConsumptionCopy.noInventory}
+                                </div>
+                              ) : (
+                                <div className="mt-3 space-y-3">
+                                  {inventoryRows.map((row) => {
+                                    const quantityValue = row.actualQuantity == null ? '' : String(row.actualQuantity);
+                                    const quantityDisabled = !row.snapshotBacked
+                                      || row.stockApplied
+                                      || row.consumptionStatus === 'PLANNED'
+                                      || row.consumptionStatus === 'SKIPPED';
+                                    const canApplyStock = canApplyStockConsumption(row);
+                                    const stockApplicationDetail = resolveStockApplicationDetail(locale, row, actualConsumptionCopy);
+
+                                    return (
+                                      <div
+                                        key={`${line.id}-${row.inventoryItemId}`}
+                                        className="rounded-lg border border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-panel-muted)] px-3 py-3"
+                                      >
+                                        <div className="flex items-start justify-between gap-3">
+                                          <div>
+                                            <p className="text-sm font-medium text-slate-900">{row.inventoryItemName}</p>
+                                            <p className="mt-1 text-xs text-[color:var(--app-shell-muted)]">
+                                              {actualConsumptionCopy.planned}: {formatInventoryQuantity(locale, row.expectedQuantity)} {row.unitOfMeasure}
+                                            </p>
+                                            {row.inventoryItemSku ? (
+                                              <p className="mt-1 text-[11px] text-[color:var(--app-shell-muted)]">
+                                                SKU: {row.inventoryItemSku}
+                                              </p>
+                                            ) : null}
+                                            <p className={`mt-1 text-[11px] ${row.stockApplied ? 'text-emerald-700' : 'text-[color:var(--app-shell-muted)]'}`}>
+                                              {stockApplicationDetail}
+                                            </p>
+                                          </div>
+                                          {!row.snapshotBacked ? (
+                                            <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-medium text-amber-800">
+                                              {locale === 'pt-BR' ? 'Preview' : 'Preview only'}
+                                            </span>
+                                          ) : row.stockApplied ? (
+                                            <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-medium text-emerald-800">
+                                              {actualConsumptionCopy.stockAppliedBadge}
+                                            </span>
+                                          ) : canApplyStock ? (
+                                            <span className="rounded-full bg-sky-100 px-2 py-0.5 text-[11px] font-medium text-sky-800">
+                                              {actualConsumptionCopy.stockPendingBadge}
+                                            </span>
+                                          ) : null}
+                                        </div>
+
+                                        <div className="mt-3 grid gap-3 md:grid-cols-2">
+                                          <FormInput
+                                            label={actualConsumptionCopy.actual}
+                                            value={quantityValue}
+                                            onChange={(value) => handleActualConsumptionQuantityChange(line.id ?? '', row.inventoryItemId, value)}
+                                            type="number"
+                                            disabled={quantityDisabled}
+                                            description={!row.snapshotBacked ? actualConsumptionCopy.snapshotOnly : undefined}
+                                          />
+                                          <FormSelect
+                                            label={actualConsumptionCopy.status}
+                                            value={row.consumptionStatus}
+                                            options={actualConsumptionStatusOptions}
+                                            onChange={(value) => handleActualConsumptionStatusChange(
+                                              line.id ?? '',
+                                              row.inventoryItemId,
+                                              value as PetAppointmentInventoryConsumptionStatus
+                                            )}
+                                            disabled={!row.snapshotBacked || row.stockApplied}
+                                          />
+                                        </div>
+
+                                        {canApplyStock ? (
+                                          <div className="mt-3 flex justify-end">
+                                            <button
+                                              type="button"
+                                              onClick={() => handleApplyStockConsumption(line, row)}
+                                              disabled={applyingInventoryRowId === row.id}
+                                              className="ui-primary-button"
+                                            >
+                                              {applyingInventoryRowId === row.id ? actualConsumptionCopy.applying : actualConsumptionCopy.apply}
+                                            </button>
+                                          </div>
+                                        ) : null}
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              )}
+
+                              {snapshotOnly ? (
+                                <div className="mt-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+                                  {actualConsumptionCopy.snapshotOnly}
+                                </div>
+                              ) : null}
+
+                              {snapshotRows.length > 0 ? (
+                                <div className="mt-4 flex justify-end">
+                                  <button
+                                    type="button"
+                                    onClick={() => handleSaveActualConsumption(line)}
+                                    disabled={savingActualServiceLineId === line.id}
+                                    className="ui-secondary-button"
+                                  >
+                                    {savingActualServiceLineId === line.id ? actualConsumptionCopy.saving : actualConsumptionCopy.save}
+                                  </button>
+                                </div>
+                              ) : null}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                ) : null}
               </div>
             </div>
           </div>

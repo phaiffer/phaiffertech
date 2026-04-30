@@ -73,6 +73,30 @@ export type PetAppointment = {
   finalAmountDue?: number;
 };
 
+export type PetServiceInventoryConsumptionRule = 'FIXED_PER_SERVICE';
+export type PetAppointmentInventoryConsumptionStatus =
+  | 'PLANNED'
+  | 'ADJUSTED'
+  | 'READY_TO_APPLY'
+  | 'SKIPPED';
+
+export type PetAppointmentServiceLineInventoryConsumption = {
+  id?: string | null;
+  inventoryItemId: string;
+  inventoryItemName: string;
+  inventoryItemSku?: string | null;
+  inventoryCategory?: string | null;
+  unitOfMeasure: string;
+  expectedQuantity: number;
+  actualQuantity?: number | null;
+  consumptionStatus: PetAppointmentInventoryConsumptionStatus;
+  consumptionRule: PetServiceInventoryConsumptionRule;
+  snapshotBacked: boolean;
+  stockApplied: boolean;
+  appliedInventoryMovementId?: string | null;
+  stockAppliedAt?: string | null;
+};
+
 export type PetAppointmentServiceLine = {
   id?: string | null;
   serviceId: string;
@@ -80,6 +104,12 @@ export type PetAppointmentServiceLine = {
   serviceCategory?: PetServiceCategory | null;
   durationMinutes?: number | null;
   basePrice?: number | null;
+  professionalId?: string | null;
+  professionalName?: string | null;
+  commissionEligible?: boolean | null;
+  commissionRate?: number | null;
+  commissionAmount?: number | null;
+  expectedInventoryConsumptions?: PetAppointmentServiceLineInventoryConsumption[];
   active: boolean;
   allowInPlans: boolean;
   allowStandaloneBooking: boolean;
@@ -89,6 +119,18 @@ export type PetAppointmentServiceLine = {
 };
 
 export type PetServiceCategory = 'GROOMING' | 'CLINICAL';
+
+export type PetServiceInventoryLink = {
+  id: string;
+  inventoryItemId: string;
+  inventoryItemName: string;
+  inventoryItemSku?: string | null;
+  inventoryCategory?: string | null;
+  unitOfMeasure: string;
+  expectedQuantity: number;
+  consumptionRule: PetServiceInventoryConsumptionRule;
+  active: boolean;
+};
 
 export type PetServiceCatalog = {
   id: string;
@@ -101,6 +143,7 @@ export type PetServiceCatalog = {
   commissionEligible: boolean;
   allowInPlans: boolean;
   allowStandaloneBooking: boolean;
+  inventoryLinks: PetServiceInventoryLink[];
   createdAt: string;
   updatedAt: string;
 };
@@ -115,6 +158,65 @@ export type PetProfessional = {
   commissionRate?: number | null;
   createdAt: string;
   updatedAt: string;
+};
+
+export type PetCommissionLineStatus =
+  | 'GENERATED'
+  | 'EXCLUDED'
+  | 'ELIGIBLE_WITHOUT_AMOUNT'
+  | 'UNASSIGNED'
+  | 'LEGACY_UNAVAILABLE';
+
+export type PetCommissionDataSource =
+  | 'STRUCTURED_LINE'
+  | 'COMPATIBILITY_FALLBACK';
+
+export type PetCommissionSummaryProfessional = {
+  professionalId: string;
+  professionalName: string;
+  totalCommissionAmount: number;
+  generatedLineCount: number;
+  excludedLineCount: number;
+  eligibleWithoutAmountLineCount: number;
+  contributingAppointmentCount: number;
+};
+
+export type PetCommissionSummaryDetail = {
+  appointmentId: string;
+  appointmentServiceLineId?: string | null;
+  scheduledAt: string;
+  appointmentStatus: string;
+  clientId: string;
+  clientName: string;
+  petId: string;
+  petName: string;
+  serviceId: string;
+  serviceName: string;
+  lineOrder: number;
+  professionalId?: string | null;
+  professionalName?: string | null;
+  basePrice?: number | null;
+  commissionEligible?: boolean | null;
+  commissionRate?: number | null;
+  commissionAmount?: number | null;
+  lineStatus: PetCommissionLineStatus;
+  dataSource: PetCommissionDataSource;
+};
+
+export type PetCommissionSummary = {
+  scheduledFrom?: string | null;
+  scheduledTo?: string | null;
+  appointmentStatus: string;
+  totalCommissionAmount: number;
+  professionalCount: number;
+  generatedLineCount: number;
+  excludedLineCount: number;
+  eligibleWithoutAmountLineCount: number;
+  unassignedLineCount: number;
+  legacyLineCount: number;
+  contributingAppointmentCount: number;
+  professionals: PetCommissionSummaryProfessional[];
+  details: PetCommissionSummaryDetail[];
 };
 
 export type PetMedicalRecord = {
@@ -192,6 +294,7 @@ export type PetClinicalTimeline = {
 
 export type PetProduct = {
   id: string;
+  inventoryItemId: string;
   name: string;
   sku: string;
   price: number;

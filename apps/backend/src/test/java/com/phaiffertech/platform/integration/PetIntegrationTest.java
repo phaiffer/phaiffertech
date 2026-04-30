@@ -5,6 +5,7 @@ import com.phaiffertech.platform.support.AbstractIntegrationTest;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -12,6 +13,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.http.ResponseEntity;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class PetIntegrationTest extends AbstractIntegrationTest {
@@ -190,6 +192,220 @@ class PetIntegrationTest extends AbstractIntegrationTest {
     }
 
     @Test
+    void shouldAssignDifferentProfessionalsPerAppointmentServiceLine() {
+        AuthSession session = loginAsDefaultAdmin();
+        String marker = randomSearchMarker();
+
+        String clientId = createClient(session, marker);
+        String petId = createPet(session, clientId, marker);
+        String bathServiceId = createService(session, marker + "-bath", "GROOMING", true, 80.00);
+        String hygienicServiceId = createService(session, marker + "-hygienic", "GROOMING", true, 50.00);
+        String bathProfessionalId = createProfessional(session, marker + "-bath", 0.15);
+        String hygienicProfessionalId = createProfessional(session, marker + "-hygienic", 0.10);
+
+        ResponseEntity<JsonNode> createAppointment = post("/pet/appointments", Map.of(
+                "clientId", clientId,
+                "petId", petId,
+                "serviceId", bathServiceId,
+                "serviceIds", List.of(bathServiceId, hygienicServiceId),
+                "professionalId", bathProfessionalId,
+                "serviceLineAssignments", List.of(
+                        Map.of(
+                                "serviceId", bathServiceId,
+                                "professionalId", bathProfessionalId
+                        ),
+                        Map.of(
+                                "serviceId", hygienicServiceId,
+                                "professionalId", hygienicProfessionalId
+                        )
+                ),
+                "scheduledAt", Instant.now().plusSeconds(3600).toString(),
+                "status", "SCHEDULED",
+                "notes", "Split responsibility appointment"
+        ), session);
+
+        assertEquals(200, createAppointment.getStatusCode().value());
+        JsonNode createdAppointment = requireBody(createAppointment).path("data");
+        assertEquals(bathProfessionalId, createdAppointment.path("professionalId").asText());
+        assertEquals("Professional " + marker + "-bath", createdAppointment.path("professionalName").asText());
+        assertEquals(17.00, createdAppointment.path("commissionAmount").asDouble(), 0.01);
+
+        JsonNode firstLine = createdAppointment.path("appointmentServices").get(0);
+        assertEquals(bathProfessionalId, firstLine.path("professionalId").asText());
+        assertEquals("Professional " + marker + "-bath", firstLine.path("professionalName").asText());
+        assertEquals(12.00, firstLine.path("commissionAmount").asDouble(), 0.01);
+
+        JsonNode secondLine = createdAppointment.path("appointmentServices").get(1);
+        assertEquals(hygienicProfessionalId, secondLine.path("professionalId").asText());
+        assertEquals("Professional " + marker + "-hygienic", secondLine.path("professionalName").asText());
+        assertEquals(5.00, secondLine.path("commissionAmount").asDouble(), 0.01);
+
+        ResponseEntity<JsonNode> filteredBySecondaryProfessional = get(
+                "/pet/appointments?page=0&size=20&professionalId=" + hygienicProfessionalId + "&search=hygienic",
+                session
+        );
+        assertEquals(200, filteredBySecondaryProfessional.getStatusCode().value());
+        assertEquals(1, requireBody(filteredBySecondaryProfessional).path("data").path("items").size());
+        assertEquals(
+                hygienicProfessionalId,
+                requireBody(filteredBySecondaryProfessional)
+                        .path("data")
+                        .path("items")
+                        .get(0)
+                        .path("appointmentServices")
+                        .get(1)
+                        .path("professionalId")
+                        .asText()
+        );
+    }
+
+    @Test
+    void shouldTrackCommissionPerEligibleAppointmentServiceLine() {
+        AuthSession session = loginAsDefaultAdmin();
+        String marker = randomSearchMarker();
+
+        String clientId = createClient(session, marker);
+        String petId = createPet(session, clientId, marker);
+        String groomingServiceId = createService(session, marker + "-grooming", "GROOMING", true, 80.00);
+        String vaccinationServiceId = createService(session, marker + "-vaccination", "CLINICAL", false, 50.00);
+        String professionalId = createProfessional(session, marker, 0.15);
+
+        ResponseEntity<JsonNode> createAppointment = post("/pet/appointments", Map.of(
+                "clientId", clientId,
+                "petId", petId,
+                "serviceId", groomingServiceId,
+                "serviceIds", List.of(groomingServiceId, vaccinationServiceId),
+                "professionalId", professionalId,
+                "scheduledAt", Instant.now().plusSeconds(3600).toString(),
+                "status", "SCHEDULED",
+                "notes", "Mixed commission appointment"
+        ), session);
+
+        assertEquals(200, createAppointment.getStatusCode().value());
+        JsonNode createdAppointment = requireBody(createAppointment).path("data");
+        assertEquals(12.00, createdAppointment.path("commissionAmount").asDouble(), 0.01);
+        assertEquals(2, createdAppointment.path("appointmentServices").size());
+
+        JsonNode firstLine = createdAppointment.path("appointmentServices").get(0);
+        assertEquals(true, firstLine.path("commissionEligible").asBoolean());
+        assertEquals(0.15, firstLine.path("commissionRate").asDouble(), 0.0001);
+        assertEquals(12.00, firstLine.path("commissionAmount").asDouble(), 0.01);
+
+        JsonNode secondLine = createdAppointment.path("appointmentServices").get(1);
+        assertEquals(false, secondLine.path("commissionEligible").asBoolean());
+        assertTrue(secondLine.path("commissionRate").isMissingNode() || secondLine.path("commissionRate").isNull());
+        assertTrue(secondLine.path("commissionAmount").isMissingNode() || secondLine.path("commissionAmount").isNull());
+    }
+
+    @Test
+    void shouldSummarizeCommissionByResponsibleProfessional() {
+        AuthSession session = loginAsDefaultAdmin();
+        String marker = randomSearchMarker();
+
+        String clientId = createClient(session, marker);
+        String petId = createPet(session, clientId, marker);
+        String bathServiceId = createService(session, marker + "-bath", "GROOMING", true, 80.00);
+        String hygienicServiceId = createService(session, marker + "-hygienic", "GROOMING", true, 50.00);
+        String vaccinationServiceId = createService(session, marker + "-vaccination", "CLINICAL", false, 35.00);
+        String bathProfessionalId = createProfessional(session, marker + "-bath", 0.15);
+        String hygienicProfessionalId = createProfessional(session, marker + "-hygienic", 0.10);
+        String pendingProfessionalId = createProfessional(session, marker + "-pending");
+
+        ResponseEntity<JsonNode> splitAppointment = post("/pet/appointments", Map.of(
+                "clientId", clientId,
+                "petId", petId,
+                "serviceId", bathServiceId,
+                "serviceIds", List.of(bathServiceId, hygienicServiceId),
+                "professionalId", bathProfessionalId,
+                "serviceLineAssignments", List.of(
+                        Map.of("serviceId", bathServiceId, "professionalId", bathProfessionalId),
+                        Map.of("serviceId", hygienicServiceId, "professionalId", hygienicProfessionalId)
+                ),
+                "scheduledAt", Instant.parse("2026-02-10T13:00:00Z").toString(),
+                "status", "COMPLETED",
+                "notes", "Split professional attribution"
+        ), session);
+        assertEquals(200, splitAppointment.getStatusCode().value());
+
+        ResponseEntity<JsonNode> mixedAppointment = post("/pet/appointments", Map.of(
+                "clientId", clientId,
+                "petId", petId,
+                "serviceId", bathServiceId,
+                "serviceIds", List.of(bathServiceId, vaccinationServiceId),
+                "professionalId", bathProfessionalId,
+                "scheduledAt", Instant.parse("2026-02-12T13:00:00Z").toString(),
+                "status", "COMPLETED",
+                "notes", "Generated and excluded lines"
+        ), session);
+        assertEquals(200, mixedAppointment.getStatusCode().value());
+
+        ResponseEntity<JsonNode> pendingAppointment = post("/pet/appointments", Map.of(
+                "clientId", clientId,
+                "petId", petId,
+                "serviceId", bathServiceId,
+                "professionalId", pendingProfessionalId,
+                "scheduledAt", Instant.parse("2026-02-14T13:00:00Z").toString(),
+                "status", "COMPLETED",
+                "notes", "Eligible line without commission rate"
+        ), session);
+        assertEquals(200, pendingAppointment.getStatusCode().value());
+
+        ResponseEntity<JsonNode> legacyCompatibleAppointment = post("/pet/appointments", Map.of(
+                "clientId", clientId,
+                "petId", petId,
+                "serviceId", bathServiceId,
+                "professionalId", bathProfessionalId,
+                "scheduledAt", Instant.parse("2026-02-16T13:00:00Z").toString(),
+                "status", "COMPLETED",
+                "notes", "Historical single-line compatibility"
+        ), session);
+        assertEquals(200, legacyCompatibleAppointment.getStatusCode().value());
+        String legacyCompatibleAppointmentId = requireBody(legacyCompatibleAppointment).path("data").path("id").asText();
+        executeSql("DELETE FROM pet_appointment_services WHERE appointment_id = ?", legacyCompatibleAppointmentId);
+
+        ResponseEntity<JsonNode> summaryResponse = get(
+                "/pet/commissions/summary?scheduledFrom=2026-02-01T00:00:00Z&scheduledTo=2026-02-28T23:59:59Z",
+                session
+        );
+        assertEquals(200, summaryResponse.getStatusCode().value());
+
+        JsonNode data = requireBody(summaryResponse).path("data");
+        assertEquals(41.00, data.path("totalCommissionAmount").asDouble(), 0.01);
+        assertEquals(3, data.path("professionalCount").asInt());
+        assertEquals(4, data.path("generatedLineCount").asInt());
+        assertEquals(1, data.path("excludedLineCount").asInt());
+        assertEquals(1, data.path("eligibleWithoutAmountLineCount").asInt());
+        assertEquals(0, data.path("unassignedLineCount").asInt());
+        assertEquals(0, data.path("legacyLineCount").asInt());
+        assertEquals(3, data.path("contributingAppointmentCount").asInt());
+
+        JsonNode professionals = data.path("professionals");
+        JsonNode bathProfessionalSummary = findNodeByField(professionals, "professionalId", bathProfessionalId);
+        assertEquals(36.00, bathProfessionalSummary.path("totalCommissionAmount").asDouble(), 0.01);
+        assertEquals(3, bathProfessionalSummary.path("generatedLineCount").asInt());
+        assertEquals(1, bathProfessionalSummary.path("excludedLineCount").asInt());
+        assertEquals(0, bathProfessionalSummary.path("eligibleWithoutAmountLineCount").asInt());
+        assertEquals(3, bathProfessionalSummary.path("contributingAppointmentCount").asInt());
+
+        JsonNode hygienicProfessionalSummary = findNodeByField(professionals, "professionalId", hygienicProfessionalId);
+        assertEquals(5.00, hygienicProfessionalSummary.path("totalCommissionAmount").asDouble(), 0.01);
+        assertEquals(1, hygienicProfessionalSummary.path("generatedLineCount").asInt());
+        assertEquals(0, hygienicProfessionalSummary.path("excludedLineCount").asInt());
+        assertEquals(1, hygienicProfessionalSummary.path("contributingAppointmentCount").asInt());
+
+        JsonNode pendingProfessionalSummary = findNodeByField(professionals, "professionalId", pendingProfessionalId);
+        assertEquals(0.00, pendingProfessionalSummary.path("totalCommissionAmount").asDouble(), 0.01);
+        assertEquals(0, pendingProfessionalSummary.path("generatedLineCount").asInt());
+        assertEquals(1, pendingProfessionalSummary.path("eligibleWithoutAmountLineCount").asInt());
+
+        JsonNode compatibilityDetail = findNodeByField(data.path("details"), "appointmentId", legacyCompatibleAppointmentId);
+        assertEquals("GENERATED", compatibilityDetail.path("lineStatus").asText());
+        assertEquals("COMPATIBILITY_FALLBACK", compatibilityDetail.path("dataSource").asText());
+        assertEquals(bathProfessionalId, compatibilityDetail.path("professionalId").asText());
+        assertEquals(12.00, compatibilityDetail.path("commissionAmount").asDouble(), 0.01);
+    }
+
+    @Test
     void shouldCreateUpdateAndDeleteServiceCatalog() {
         AuthSession session = loginAsDefaultAdmin();
         String marker = randomSearchMarker();
@@ -315,6 +531,575 @@ class PetIntegrationTest extends AbstractIntegrationTest {
         ), session);
         assertEquals(409, newAppointmentWithInactiveService.getStatusCode().value());
         assertTrue(requireBody(newAppointmentWithInactiveService).path("message").asText().contains("inactive"));
+    }
+
+    @Test
+    void shouldExposeServiceInventoryRecipeAndSnapshotItOnAppointmentLines() {
+        AuthSession session = loginAsDefaultAdmin();
+        String marker = randomSearchMarker();
+
+        String clientId = createClient(session, marker);
+        String petId = createPet(session, clientId, marker);
+        String professionalId = createProfessional(session, marker);
+        JsonNode shampooProduct = createProduct(session, marker + "-shampoo", "PET_RETAIL_GOOD");
+        JsonNode towelProduct = createProduct(session, marker + "-towel", "PET_RETAIL_GOOD");
+
+        String shampooInventoryItemId = shampooProduct.path("inventoryItemId").asText();
+        String towelInventoryItemId = towelProduct.path("inventoryItemId").asText();
+
+        ResponseEntity<JsonNode> createService = post("/pet/services", Map.of(
+                "name", "Service " + marker,
+                "description", "Structured stock preview " + marker,
+                "category", "GROOMING",
+                "active", true,
+                "basePrice", 92.50,
+                "durationMinutes", 50,
+                "commissionEligible", true,
+                "allowInPlans", true,
+                "allowStandaloneBooking", true,
+                "inventoryLinks", List.of(
+                        Map.of(
+                                "inventoryItemId", shampooInventoryItemId,
+                                "expectedQuantity", 1.50,
+                                "consumptionRule", "FIXED_PER_SERVICE",
+                                "active", true
+                        ),
+                        Map.of(
+                                "inventoryItemId", towelInventoryItemId,
+                                "expectedQuantity", 1.00,
+                                "consumptionRule", "FIXED_PER_SERVICE",
+                                "active", false
+                        )
+                )
+        ), session);
+        assertEquals(200, createService.getStatusCode().value());
+
+        JsonNode createdService = requireBody(createService).path("data");
+        assertEquals(2, createdService.path("inventoryLinks").size());
+        JsonNode shampooLink = findNodeByField(createdService.path("inventoryLinks"), "inventoryItemId", shampooInventoryItemId);
+        assertEquals("Product " + marker + "-shampoo", shampooLink.path("inventoryItemName").asText());
+        assertEquals(1.50, shampooLink.path("expectedQuantity").asDouble(), 0.001);
+        assertEquals(true, shampooLink.path("active").asBoolean());
+
+        String serviceId = createdService.path("id").asText();
+
+        ResponseEntity<JsonNode> createAppointment = post("/pet/appointments", Map.of(
+                "clientId", clientId,
+                "petId", petId,
+                "serviceId", serviceId,
+                "professionalId", professionalId,
+                "scheduledAt", Instant.now().plusSeconds(3600).toString(),
+                "status", "SCHEDULED",
+                "notes", "Inventory recipe preview " + marker
+        ), session);
+        assertEquals(200, createAppointment.getStatusCode().value());
+
+        JsonNode line = requireBody(createAppointment).path("data").path("appointmentServices").get(0);
+        assertEquals(1, line.path("expectedInventoryConsumptions").size());
+        assertEquals(
+                shampooInventoryItemId,
+                line.path("expectedInventoryConsumptions").get(0).path("inventoryItemId").asText()
+        );
+        assertEquals(
+                "Product " + marker + "-shampoo",
+                line.path("expectedInventoryConsumptions").get(0).path("inventoryItemName").asText()
+        );
+        assertEquals(1.50, line.path("expectedInventoryConsumptions").get(0).path("expectedQuantity").asDouble(), 0.001);
+    }
+
+    @Test
+    void shouldFallbackToCurrentServiceInventoryRecipeWhenAppointmentLineSnapshotIsMissing() {
+        AuthSession session = loginAsDefaultAdmin();
+        String marker = randomSearchMarker();
+
+        String clientId = createClient(session, marker);
+        String petId = createPet(session, clientId, marker);
+        String professionalId = createProfessional(session, marker);
+        JsonNode supplyProduct = createProduct(session, marker + "-supply", "PET_VETERINARY_SUPPLY");
+        String inventoryItemId = supplyProduct.path("inventoryItemId").asText();
+
+        ResponseEntity<JsonNode> createService = post("/pet/services", Map.of(
+                "name", "Service " + marker,
+                "description", "Fallback preview " + marker,
+                "category", "CLINICAL",
+                "active", true,
+                "basePrice", 110.00,
+                "durationMinutes", 45,
+                "commissionEligible", false,
+                "allowInPlans", true,
+                "allowStandaloneBooking", true,
+                "inventoryLinks", List.of(
+                        Map.of(
+                                "inventoryItemId", inventoryItemId,
+                                "expectedQuantity", 1.00,
+                                "consumptionRule", "FIXED_PER_SERVICE",
+                                "active", true
+                        )
+                )
+        ), session);
+        assertEquals(200, createService.getStatusCode().value());
+        String serviceId = requireBody(createService).path("data").path("id").asText();
+
+        ResponseEntity<JsonNode> createAppointment = post("/pet/appointments", Map.of(
+                "clientId", clientId,
+                "petId", petId,
+                "serviceId", serviceId,
+                "professionalId", professionalId,
+                "scheduledAt", Instant.now().plusSeconds(5400).toString(),
+                "status", "SCHEDULED",
+                "notes", "Fallback recipe " + marker
+        ), session);
+        assertEquals(200, createAppointment.getStatusCode().value());
+
+        String appointmentServiceLineId = requireBody(createAppointment)
+                .path("data")
+                .path("appointmentServices")
+                .get(0)
+                .path("id")
+                .asText();
+
+        executeSql("DELETE FROM pet_appointment_service_inventory WHERE appointment_service_id = ?", appointmentServiceLineId);
+
+        ResponseEntity<JsonNode> getAppointment = get(
+                "/pet/appointments/" + requireBody(createAppointment).path("data").path("id").asText(),
+                session
+        );
+        assertEquals(200, getAppointment.getStatusCode().value());
+        assertEquals(
+                inventoryItemId,
+                requireBody(getAppointment)
+                        .path("data")
+                        .path("appointmentServices")
+                        .get(0)
+                        .path("expectedInventoryConsumptions")
+                        .get(0)
+                        .path("inventoryItemId")
+                        .asText()
+        );
+    }
+
+    @Test
+    void shouldCaptureActualInventoryConsumptionPerServiceLineWithoutCreatingStockMovements() {
+        AuthSession session = loginAsDefaultAdmin();
+        String marker = randomSearchMarker();
+
+        String clientId = createClient(session, marker);
+        String petId = createPet(session, clientId, marker);
+        String professionalId = createProfessional(session, marker);
+        JsonNode shampooProduct = createProduct(session, marker + "-actual", "PET_RETAIL_GOOD");
+        String inventoryItemId = shampooProduct.path("inventoryItemId").asText();
+
+        ResponseEntity<JsonNode> createService = post("/pet/services", Map.of(
+                "name", "Service " + marker,
+                "description", "Actual consumption " + marker,
+                "category", "GROOMING",
+                "active", true,
+                "basePrice", 90.00,
+                "durationMinutes", 45,
+                "commissionEligible", true,
+                "allowInPlans", true,
+                "allowStandaloneBooking", true,
+                "inventoryLinks", List.of(
+                        Map.of(
+                                "inventoryItemId", inventoryItemId,
+                                "expectedQuantity", 1.50,
+                                "consumptionRule", "FIXED_PER_SERVICE",
+                                "active", true
+                        )
+                )
+        ), session);
+        assertEquals(200, createService.getStatusCode().value());
+        String serviceId = requireBody(createService).path("data").path("id").asText();
+
+        ResponseEntity<JsonNode> createAppointment = post("/pet/appointments", Map.of(
+                "clientId", clientId,
+                "petId", petId,
+                "serviceId", serviceId,
+                "professionalId", professionalId,
+                "scheduledAt", Instant.now().plusSeconds(3600).toString(),
+                "status", "IN_PROGRESS",
+                "notes", "Actual usage " + marker
+        ), session);
+        assertEquals(200, createAppointment.getStatusCode().value());
+
+        String appointmentId = requireBody(createAppointment).path("data").path("id").asText();
+        String serviceLineId = requireBody(createAppointment)
+                .path("data")
+                .path("appointmentServices")
+                .get(0)
+                .path("id")
+                .asText();
+
+        int inventoryMovementCountBefore = countRows(
+                "SELECT COUNT(*) FROM inventory_movements WHERE tenant_id = ? AND deleted_at IS NULL",
+                session.tenantId()
+        );
+
+        ResponseEntity<JsonNode> updateActualConsumption = patch(
+                "/pet/appointments/" + appointmentId + "/service-lines/" + serviceLineId + "/inventory-consumptions",
+                Map.of(
+                        "inventoryConsumptions", List.of(
+                                Map.of(
+                                        "inventoryItemId", inventoryItemId,
+                                        "actualQuantity", 2.00,
+                                        "consumptionStatus", "READY_TO_APPLY"
+                                )
+                        )
+                ),
+                session
+        );
+        assertEquals(200, updateActualConsumption.getStatusCode().value());
+        JsonNode updatedLine = requireBody(updateActualConsumption)
+                .path("data")
+                .path("appointmentServices")
+                .get(0);
+        assertEquals(1.50, updatedLine.path("expectedInventoryConsumptions").get(0).path("expectedQuantity").asDouble(), 0.001);
+        assertEquals(2.00, updatedLine.path("expectedInventoryConsumptions").get(0).path("actualQuantity").asDouble(), 0.001);
+        assertEquals(
+                "READY_TO_APPLY",
+                updatedLine.path("expectedInventoryConsumptions").get(0).path("consumptionStatus").asText()
+        );
+        assertTrue(updatedLine.path("expectedInventoryConsumptions").get(0).path("snapshotBacked").asBoolean());
+        assertFalse(updatedLine.path("expectedInventoryConsumptions").get(0).path("stockApplied").asBoolean());
+        assertEquals("", updatedLine.path("expectedInventoryConsumptions").get(0).path("appliedInventoryMovementId").asText(""));
+
+        assertEquals(
+                inventoryMovementCountBefore,
+                countRows(
+                        "SELECT COUNT(*) FROM inventory_movements WHERE tenant_id = ? AND deleted_at IS NULL",
+                        session.tenantId()
+                )
+        );
+
+        ResponseEntity<JsonNode> completeAppointment = put("/pet/appointments/" + appointmentId, Map.of(
+                "clientId", clientId,
+                "petId", petId,
+                "serviceId", serviceId,
+                "professionalId", professionalId,
+                "scheduledAt", Instant.now().plusSeconds(3600).toString(),
+                "status", "COMPLETED",
+                "notes", "Completed after actual usage " + marker
+        ), session);
+        assertEquals(200, completeAppointment.getStatusCode().value());
+        assertEquals(
+                1.50,
+                requireBody(completeAppointment)
+                        .path("data")
+                        .path("appointmentServices")
+                        .get(0)
+                        .path("expectedInventoryConsumptions")
+                        .get(0)
+                        .path("expectedQuantity")
+                        .asDouble(),
+                0.001
+        );
+        assertEquals(
+                2.00,
+                requireBody(completeAppointment)
+                        .path("data")
+                        .path("appointmentServices")
+                        .get(0)
+                        .path("expectedInventoryConsumptions")
+                        .get(0)
+                        .path("actualQuantity")
+                        .asDouble(),
+                0.001
+        );
+        assertEquals(
+                "READY_TO_APPLY",
+                requireBody(completeAppointment)
+                        .path("data")
+                        .path("appointmentServices")
+                        .get(0)
+                        .path("expectedInventoryConsumptions")
+                        .get(0)
+                        .path("consumptionStatus")
+                        .asText()
+        );
+        assertFalse(
+                requireBody(completeAppointment)
+                        .path("data")
+                        .path("appointmentServices")
+                        .get(0)
+                        .path("expectedInventoryConsumptions")
+                        .get(0)
+                        .path("stockApplied")
+                        .asBoolean()
+        );
+    }
+
+    @Test
+    void shouldApplyActualInventoryConsumptionToStockOncePerInventoryRow() {
+        AuthSession session = loginAsDefaultAdmin();
+        String marker = randomSearchMarker();
+
+        String clientId = createClient(session, marker);
+        String petId = createPet(session, clientId, marker);
+        String professionalId = createProfessional(session, marker);
+        JsonNode product = createProduct(session, marker + "-apply", "PET_RETAIL_GOOD");
+        String productId = product.path("id").asText();
+        String inventoryItemId = product.path("inventoryItemId").asText();
+
+        ResponseEntity<JsonNode> createService = post("/pet/services", Map.of(
+                "name", "Service " + marker,
+                "description", "Apply stock " + marker,
+                "category", "GROOMING",
+                "active", true,
+                "basePrice", 95.00,
+                "durationMinutes", 45,
+                "commissionEligible", true,
+                "allowInPlans", true,
+                "allowStandaloneBooking", true,
+                "inventoryLinks", List.of(
+                        Map.of(
+                                "inventoryItemId", inventoryItemId,
+                                "expectedQuantity", 3.00,
+                                "consumptionRule", "FIXED_PER_SERVICE",
+                                "active", true
+                        )
+                )
+        ), session);
+        assertEquals(200, createService.getStatusCode().value());
+        String serviceId = requireBody(createService).path("data").path("id").asText();
+
+        ResponseEntity<JsonNode> createAppointment = post("/pet/appointments", Map.of(
+                "clientId", clientId,
+                "petId", petId,
+                "serviceId", serviceId,
+                "professionalId", professionalId,
+                "scheduledAt", Instant.now().plusSeconds(3600).toString(),
+                "status", "IN_PROGRESS",
+                "notes", "Apply stock " + marker
+        ), session);
+        assertEquals(200, createAppointment.getStatusCode().value());
+
+        String appointmentId = requireBody(createAppointment).path("data").path("id").asText();
+        String serviceLineId = requireBody(createAppointment)
+                .path("data")
+                .path("appointmentServices")
+                .get(0)
+                .path("id")
+                .asText();
+
+        ResponseEntity<JsonNode> updateActualConsumption = patch(
+                "/pet/appointments/" + appointmentId + "/service-lines/" + serviceLineId + "/inventory-consumptions",
+                Map.of(
+                        "inventoryConsumptions", List.of(
+                                Map.of(
+                                        "inventoryItemId", inventoryItemId,
+                                        "actualQuantity", 4.00,
+                                        "consumptionStatus", "READY_TO_APPLY"
+                                )
+                        )
+                ),
+                session
+        );
+        assertEquals(200, updateActualConsumption.getStatusCode().value());
+
+        JsonNode inventoryRow = requireBody(updateActualConsumption)
+                .path("data")
+                .path("appointmentServices")
+                .get(0)
+                .path("expectedInventoryConsumptions")
+                .get(0);
+        String inventoryRowId = inventoryRow.path("id").asText();
+        assertFalse(inventoryRow.path("stockApplied").asBoolean());
+
+        ResponseEntity<JsonNode> applyStock = post(
+                "/pet/appointments/" + appointmentId
+                        + "/service-lines/" + serviceLineId
+                        + "/inventory-consumptions/" + inventoryRowId
+                        + "/apply-stock",
+                null,
+                session
+        );
+        assertEquals(200, applyStock.getStatusCode().value());
+
+        JsonNode appliedRow = requireBody(applyStock)
+                .path("data")
+                .path("appointmentServices")
+                .get(0)
+                .path("expectedInventoryConsumptions")
+                .get(0);
+        String movementId = appliedRow.path("appliedInventoryMovementId").asText();
+        assertTrue(appliedRow.path("stockApplied").asBoolean());
+        assertTrue(!movementId.isBlank());
+        assertTrue(!appliedRow.path("stockAppliedAt").asText().isBlank());
+        assertEquals(3.00, appliedRow.path("expectedQuantity").asDouble(), 0.001);
+        assertEquals(4.00, appliedRow.path("actualQuantity").asDouble(), 0.001);
+        assertEquals("READY_TO_APPLY", appliedRow.path("consumptionStatus").asText());
+
+        ResponseEntity<JsonNode> productAfterApply = get("/pet/products/" + productId, session);
+        assertEquals(200, productAfterApply.getStatusCode().value());
+        assertEquals(16, requireBody(productAfterApply).path("data").path("stockQuantity").asInt());
+
+        assertEquals(1, countRows(
+                "SELECT COUNT(*) FROM inventory_movements WHERE tenant_id = ? AND source_type = 'PET_APPOINTMENT_SERVICE_CONSUMPTION' AND source_reference_id = ? AND deleted_at IS NULL",
+                session.tenantId(),
+                inventoryRowId
+        ));
+
+        ResponseEntity<JsonNode> completeAppointment = put("/pet/appointments/" + appointmentId, Map.of(
+                "clientId", clientId,
+                "petId", petId,
+                "serviceId", serviceId,
+                "professionalId", professionalId,
+                "scheduledAt", Instant.now().plusSeconds(3600).toString(),
+                "status", "COMPLETED",
+                "notes", "Completed after explicit stock application " + marker
+        ), session);
+        assertEquals(200, completeAppointment.getStatusCode().value());
+        assertTrue(
+                requireBody(completeAppointment)
+                        .path("data")
+                        .path("appointmentServices")
+                        .get(0)
+                        .path("expectedInventoryConsumptions")
+                        .get(0)
+                        .path("stockApplied")
+                        .asBoolean()
+        );
+        assertEquals(
+                movementId,
+                requireBody(completeAppointment)
+                        .path("data")
+                        .path("appointmentServices")
+                        .get(0)
+                        .path("expectedInventoryConsumptions")
+                        .get(0)
+                        .path("appliedInventoryMovementId")
+                        .asText()
+        );
+        assertEquals(16, requireBody(get("/pet/products/" + productId, session)).path("data").path("stockQuantity").asInt());
+        assertEquals(1, countRows(
+                "SELECT COUNT(*) FROM inventory_movements WHERE tenant_id = ? AND source_type = 'PET_APPOINTMENT_SERVICE_CONSUMPTION' AND source_reference_id = ? AND deleted_at IS NULL",
+                session.tenantId(),
+                inventoryRowId
+        ));
+
+        ResponseEntity<JsonNode> reapplyStock = post(
+                "/pet/appointments/" + appointmentId
+                        + "/service-lines/" + serviceLineId
+                        + "/inventory-consumptions/" + inventoryRowId
+                        + "/apply-stock",
+                null,
+                session
+        );
+        assertEquals(200, reapplyStock.getStatusCode().value());
+        assertEquals(1, countRows(
+                "SELECT COUNT(*) FROM inventory_movements WHERE tenant_id = ? AND source_type = 'PET_APPOINTMENT_SERVICE_CONSUMPTION' AND source_reference_id = ? AND deleted_at IS NULL",
+                session.tenantId(),
+                inventoryRowId
+        ));
+        assertEquals(16, requireBody(get("/pet/products/" + productId, session)).path("data").path("stockQuantity").asInt());
+    }
+
+    @Test
+    void shouldFailSafelyWhenApplyingInventoryConsumptionWithoutEnoughStock() {
+        AuthSession session = loginAsDefaultAdmin();
+        String marker = randomSearchMarker();
+
+        String clientId = createClient(session, marker);
+        String petId = createPet(session, clientId, marker);
+        String professionalId = createProfessional(session, marker);
+
+        ResponseEntity<JsonNode> createProduct = post("/pet/products", Map.of(
+                "name", "Low Stock " + marker,
+                "sku", "LOW-" + marker,
+                "price", 12.00,
+                "stockQuantity", 2,
+                "category", "PET_VETERINARY_SUPPLY",
+                "unitOfMeasure", "DOSE",
+                "minimumQuantity", 0,
+                "reorderPoint", 1
+        ), session);
+        assertEquals(200, createProduct.getStatusCode().value());
+        String productId = requireBody(createProduct).path("data").path("id").asText();
+        String inventoryItemId = requireBody(createProduct).path("data").path("inventoryItemId").asText();
+
+        ResponseEntity<JsonNode> createService = post("/pet/services", Map.of(
+                "name", "Service " + marker,
+                "description", "Low stock apply " + marker,
+                "category", "CLINICAL",
+                "active", true,
+                "basePrice", 120.00,
+                "durationMinutes", 30,
+                "commissionEligible", false,
+                "allowInPlans", true,
+                "allowStandaloneBooking", true,
+                "inventoryLinks", List.of(
+                        Map.of(
+                                "inventoryItemId", inventoryItemId,
+                                "expectedQuantity", 1.00,
+                                "consumptionRule", "FIXED_PER_SERVICE",
+                                "active", true
+                        )
+                )
+        ), session);
+        assertEquals(200, createService.getStatusCode().value());
+        String serviceId = requireBody(createService).path("data").path("id").asText();
+
+        ResponseEntity<JsonNode> createAppointment = post("/pet/appointments", Map.of(
+                "clientId", clientId,
+                "petId", petId,
+                "serviceId", serviceId,
+                "professionalId", professionalId,
+                "scheduledAt", Instant.now().plusSeconds(3600).toString(),
+                "status", "IN_PROGRESS",
+                "notes", "Insufficient stock " + marker
+        ), session);
+        assertEquals(200, createAppointment.getStatusCode().value());
+
+        String appointmentId = requireBody(createAppointment).path("data").path("id").asText();
+        String serviceLineId = requireBody(createAppointment)
+                .path("data")
+                .path("appointmentServices")
+                .get(0)
+                .path("id")
+                .asText();
+
+        ResponseEntity<JsonNode> updateActualConsumption = patch(
+                "/pet/appointments/" + appointmentId + "/service-lines/" + serviceLineId + "/inventory-consumptions",
+                Map.of(
+                        "inventoryConsumptions", List.of(
+                                Map.of(
+                                        "inventoryItemId", inventoryItemId,
+                                        "actualQuantity", 3.00,
+                                        "consumptionStatus", "READY_TO_APPLY"
+                                )
+                        )
+                ),
+                session
+        );
+        assertEquals(200, updateActualConsumption.getStatusCode().value());
+
+        String inventoryRowId = requireBody(updateActualConsumption)
+                .path("data")
+                .path("appointmentServices")
+                .get(0)
+                .path("expectedInventoryConsumptions")
+                .get(0)
+                .path("id")
+                .asText();
+
+        ResponseEntity<JsonNode> applyStock = post(
+                "/pet/appointments/" + appointmentId
+                        + "/service-lines/" + serviceLineId
+                        + "/inventory-consumptions/" + inventoryRowId
+                        + "/apply-stock",
+                null,
+                session
+        );
+        assertEquals(409, applyStock.getStatusCode().value());
+        assertEquals("CONFLICT", requireBody(applyStock).path("code").asText());
+        assertTrue(requireBody(applyStock).path("message").asText().contains("Insufficient stock"));
+
+        assertEquals(0, countRows(
+                "SELECT COUNT(*) FROM inventory_movements WHERE tenant_id = ? AND source_type = 'PET_APPOINTMENT_SERVICE_CONSUMPTION' AND source_reference_id = ? AND deleted_at IS NULL",
+                session.tenantId(),
+                inventoryRowId
+        ));
+        assertEquals(2, requireBody(get("/pet/products/" + productId, session)).path("data").path("stockQuantity").asInt());
     }
 
     @Test
@@ -982,14 +1767,24 @@ class PetIntegrationTest extends AbstractIntegrationTest {
     }
 
     private String createService(AuthSession session, String marker, String category) {
+        return createService(session, marker, category, true, 89.90);
+    }
+
+    private String createService(
+            AuthSession session,
+            String marker,
+            String category,
+            boolean commissionEligible,
+            double basePrice
+    ) {
         ResponseEntity<JsonNode> createService = post("/pet/services", Map.of(
                 "name", "Service " + marker,
                 "description", "Routine " + marker,
                 "category", category,
                 "active", true,
-                "basePrice", 89.90,
+                "basePrice", basePrice,
                 "durationMinutes", 40,
-                "commissionEligible", true,
+                "commissionEligible", commissionEligible,
                 "allowInPlans", true,
                 "allowStandaloneBooking", true
         ), session);
@@ -997,15 +1792,48 @@ class PetIntegrationTest extends AbstractIntegrationTest {
         return requireBody(createService).path("data").path("id").asText();
     }
 
-    private String createProfessional(AuthSession session, String marker) {
-        ResponseEntity<JsonNode> createProfessional = post("/pet/professionals", Map.of(
-                "name", "Professional " + marker,
-                "specialty", "Vet",
-                "licenseNumber", "LIC-" + marker,
-                "phone", "+5511888888888",
-                "email", "professional." + marker + "@example.test"
+    private JsonNode createProduct(AuthSession session, String marker, String category) {
+        ResponseEntity<JsonNode> createProduct = post("/pet/products", Map.of(
+                "name", "Product " + marker,
+                "sku", "SKU-" + marker,
+                "price", 25.00,
+                "stockQuantity", 20,
+                "category", category,
+                "unitOfMeasure", "UNIT",
+                "minimumQuantity", 0,
+                "reorderPoint", 5
         ), session);
+        assertEquals(200, createProduct.getStatusCode().value());
+        return requireBody(createProduct).path("data");
+    }
+
+    private String createProfessional(AuthSession session, String marker) {
+        return createProfessional(session, marker, null);
+    }
+
+    private String createProfessional(AuthSession session, String marker, Double commissionRate) {
+        Map<String, Object> payload = new LinkedHashMap<>();
+        payload.put("name", "Professional " + marker);
+        payload.put("specialty", "Vet");
+        payload.put("licenseNumber", "LIC-" + marker);
+        payload.put("phone", "+5511888888888");
+        payload.put("email", "professional." + marker + "@example.test");
+        if (commissionRate != null) {
+            payload.put("commissionRate", commissionRate);
+        }
+
+        ResponseEntity<JsonNode> createProfessional = post("/pet/professionals", payload, session);
         assertEquals(200, createProfessional.getStatusCode().value());
         return requireBody(createProfessional).path("data").path("id").asText();
+    }
+
+    private JsonNode findNodeByField(JsonNode nodes, String fieldName, String expectedValue) {
+        for (JsonNode node : nodes) {
+            if (expectedValue.equals(node.path(fieldName).asText())) {
+                return node;
+            }
+        }
+
+        throw new AssertionError("Node not found for " + fieldName + ": " + expectedValue);
     }
 }

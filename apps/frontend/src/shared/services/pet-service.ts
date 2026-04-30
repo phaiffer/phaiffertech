@@ -2,6 +2,8 @@ import { apiClient } from '@/shared/lib/http';
 import { PageResponse } from '@/shared/types/common';
 import {
   PetAppointment,
+  PetAppointmentInventoryConsumptionStatus,
+  PetCommissionSummary,
   PetClinicalTimeline,
   PetClient,
   PetClientDocumentType,
@@ -17,6 +19,7 @@ import {
   PetProfessional,
   PetProfile,
   PetServiceCatalog,
+  PetServiceInventoryConsumptionRule,
   PetServiceCategory,
   PetVaccination
 } from '@/shared/types/pet';
@@ -61,6 +64,13 @@ export type CreatePetProfileInput = {
 
 export type UpdatePetProfileInput = CreatePetProfileInput;
 
+export type CreatePetServiceInventoryLinkInput = {
+  inventoryItemId: string;
+  expectedQuantity: number;
+  consumptionRule: PetServiceInventoryConsumptionRule;
+  active: boolean;
+};
+
 export type CreatePetServiceCatalogInput = {
   name: string;
   description?: string;
@@ -71,6 +81,7 @@ export type CreatePetServiceCatalogInput = {
   commissionEligible: boolean;
   allowInPlans: boolean;
   allowStandaloneBooking: boolean;
+  inventoryLinks?: CreatePetServiceInventoryLinkInput[];
 };
 
 export type UpdatePetServiceCatalogInput = CreatePetServiceCatalogInput;
@@ -92,6 +103,7 @@ export type CreatePetAppointmentInput = {
   serviceId: string;
   serviceIds?: string[];
   professionalId: string;
+  serviceLineAssignments?: PetAppointmentServiceLineAssignmentInput[];
   scheduledAt: string;
   status?: string;
   notes?: string;
@@ -110,6 +122,7 @@ export type UpdatePetAppointmentInput = {
   serviceId: string;
   serviceIds?: string[];
   professionalId: string;
+  serviceLineAssignments?: PetAppointmentServiceLineAssignmentInput[];
   scheduledAt: string;
   status: string;
   notes?: string;
@@ -207,6 +220,19 @@ export type CreatePetInvoicePaymentInput = {
   notes?: string;
 };
 
+export type PetAppointmentServiceLineAssignmentInput = {
+  serviceId: string;
+  professionalId?: string | null;
+};
+
+export type UpdatePetAppointmentServiceLineInventoryActualInput = {
+  inventoryConsumptions: Array<{
+    inventoryItemId: string;
+    actualQuantity?: number | null;
+    consumptionStatus: PetAppointmentInventoryConsumptionStatus;
+  }>;
+};
+
 type PetClientFilters = {
   status?: string;
 };
@@ -221,6 +247,11 @@ type PetAppointmentFilters = {
   clientId?: string;
   petId?: string;
   serviceId?: string;
+  scheduledFrom?: string;
+  scheduledTo?: string;
+};
+
+type PetCommissionSummaryFilters = {
   scheduledFrom?: string;
   scheduledTo?: string;
 };
@@ -389,6 +420,14 @@ export const petService = {
 
   restoreProfessional: (id: string) => apiClient.patch<PetProfessional>(`/pet/professionals/${id}/restore`),
 
+  getCommissionSummary: (filters: PetCommissionSummaryFilters = {}) =>
+    apiClient.get<PetCommissionSummary>(
+      `/pet/commissions/summary?${simpleQueryString({
+        scheduledFrom: filters.scheduledFrom,
+        scheduledTo: filters.scheduledTo
+      })}`
+    ),
+
   listAppointments: (page = 0, size = 20, search = '', filters: PetAppointmentFilters = {}) =>
     apiClient.get<PageResponse<PetAppointment>>(
       `/pet/appointments?${queryString(page, size, search, {
@@ -409,6 +448,25 @@ export const petService = {
 
   updateAppointment: (id: string, input: UpdatePetAppointmentInput) =>
     apiClient.put<PetAppointment>(`/pet/appointments/${id}`, input),
+
+  updateAppointmentServiceLineInventoryConsumptions: (
+    appointmentId: string,
+    serviceLineId: string,
+    input: UpdatePetAppointmentServiceLineInventoryActualInput
+  ) =>
+    apiClient.patch<PetAppointment>(
+      `/pet/appointments/${appointmentId}/service-lines/${serviceLineId}/inventory-consumptions`,
+      input
+    ),
+
+  applyAppointmentServiceLineInventoryConsumption: (
+    appointmentId: string,
+    serviceLineId: string,
+    inventoryConsumptionId: string
+  ) =>
+    apiClient.post<PetAppointment>(
+      `/pet/appointments/${appointmentId}/service-lines/${serviceLineId}/inventory-consumptions/${inventoryConsumptionId}/apply-stock`
+    ),
 
   deleteAppointment: (id: string) => apiClient.delete<void>(`/pet/appointments/${id}`),
 

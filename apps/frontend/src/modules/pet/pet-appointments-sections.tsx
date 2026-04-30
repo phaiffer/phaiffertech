@@ -40,6 +40,12 @@ export type PetAppointmentSelectedService = {
   serviceId: string;
   label: string;
   note?: string;
+  inventoryPreview?: string;
+  professionalId: string;
+  professionalName?: string | null;
+  professionalPending: boolean;
+  commissionContext?: string;
+  commissionTone?: 'neutral' | 'accent' | 'warning';
   removable: boolean;
 };
 
@@ -229,6 +235,8 @@ type PetAppointmentFormProps = {
   professionalId: string;
   onProfessionalIdChange: (value: string) => void;
   formProfessionalOptions: PetSelectOption[];
+  serviceLineProfessionalOptions: PetSelectOption[];
+  onSelectedServiceProfessionalChange: (serviceId: string, professionalId: string) => void;
   professionalsLookupUnavailable: boolean;
   scheduledAt: string;
   onScheduledAtChange: (value: string) => void;
@@ -274,6 +282,8 @@ export function PetAppointmentForm({
   professionalId,
   onProfessionalIdChange,
   formProfessionalOptions,
+  serviceLineProfessionalOptions,
+  onSelectedServiceProfessionalChange,
   professionalsLookupUnavailable,
   scheduledAt,
   onScheduledAtChange,
@@ -349,6 +359,41 @@ export function PetAppointmentForm({
                           {service.note ? (
                             <p className="mt-1 text-xs text-[color:var(--app-shell-muted)]">{service.note}</p>
                           ) : null}
+                          {service.inventoryPreview ? (
+                            <p className="mt-1 text-xs text-[color:var(--app-shell-muted)]">
+                              {service.inventoryPreview}
+                            </p>
+                          ) : null}
+                          <div className="mt-3 space-y-1.5">
+                            <FormSelect
+                              label={t.form.serviceLineProfessional}
+                              value={service.professionalId}
+                              options={serviceLineProfessionalOptions}
+                              onChange={(value) => onSelectedServiceProfessionalChange(service.serviceId, value)}
+                              disabled={professionalsLookupUnavailable}
+                            />
+                            <p className="text-[11px] text-[color:var(--app-shell-muted)]">
+                              {service.professionalPending
+                                ? t.form.serviceLineProfessionalPending
+                                : service.professionalName}
+                            </p>
+                            <p className="text-[11px] text-[color:var(--app-shell-muted)]">
+                              {t.form.serviceLineProfessionalHint}
+                            </p>
+                          </div>
+                          {service.commissionContext ? (
+                            <span
+                              className={`mt-2 inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium ${
+                                service.commissionTone === 'accent'
+                                  ? 'bg-emerald-100 text-emerald-800'
+                                  : service.commissionTone === 'warning'
+                                    ? 'bg-amber-100 text-amber-800'
+                                    : 'bg-slate-100 text-slate-700'
+                              }`}
+                            >
+                              {service.commissionContext}
+                            </span>
+                          ) : null}
                         </div>
                         {service.removable ? (
                           <button
@@ -376,6 +421,9 @@ export function PetAppointmentForm({
               onChange={onProfessionalIdChange}
               disabled={professionalsLookupUnavailable}
             />
+            <p className="text-xs text-[color:var(--app-shell-muted)]">
+              {t.form.defaultProfessionalHint}
+            </p>
           </div>
           <div className="rounded-xl border border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-panel-muted)] px-4 py-3">
             <p className="text-xs font-semibold uppercase tracking-wide text-[color:var(--app-shell-muted)]">{serviceSummaryTitle}</p>
@@ -518,6 +566,21 @@ export function createPetAppointmentColumns({
     return clients.find((client) => client.id === appointment.clientId)?.email ?? null;
   };
 
+  const resolveServiceLineCount = (appointment: PetAppointment) =>
+    appointment.appointmentServices?.length ?? appointment.serviceCount ?? 1;
+
+  const resolveCommissionEligibleLineCount = (appointment: PetAppointment) =>
+    appointment.appointmentServices?.length
+      ? appointment.appointmentServices.filter((line) => line.commissionEligible === true).length
+      : null;
+
+  const resolveLineAssignments = (appointment: PetAppointment) =>
+    appointment.appointmentServices?.map((line) => ({
+      serviceId: line.serviceId,
+      serviceName: line.serviceName,
+      professionalName: line.professionalName ?? messages.columns.pendingProfessional
+    })) ?? [];
+
   return [
     {
       key: 'serviceName',
@@ -527,6 +590,11 @@ export function createPetAppointmentColumns({
           <div className="font-medium text-sm">{appointment.serviceName}</div>
           {appointment.petName ? (
             <div className="text-xs text-[color:var(--app-shell-muted)]">{appointment.petName}</div>
+          ) : null}
+          {resolveServiceLineCount(appointment) > 1 && resolveCommissionEligibleLineCount(appointment) != null ? (
+            <div className="text-xs text-[color:var(--app-shell-muted)]">
+              {resolveServiceLineCount(appointment)} {messages.columns.serviceLines} · {resolveCommissionEligibleLineCount(appointment)} {messages.columns.commissionLines}
+            </div>
           ) : null}
           <div className="text-xs text-[color:var(--app-shell-muted)]">
             {messages.columns.responsible}: {appointment.professionalName ??
@@ -538,6 +606,20 @@ export function createPetAppointmentColumns({
                 professionalsLookupUnavailable
               )}
           </div>
+          {resolveLineAssignments(appointment).length > 0 ? (
+            <div className="pt-1">
+              <div className="text-[11px] font-semibold uppercase tracking-wide text-[color:var(--app-shell-muted)]">
+                {messages.columns.lineAssignments}
+              </div>
+              <div className="mt-1 space-y-1">
+                {resolveLineAssignments(appointment).map((line) => (
+                  <div key={`${appointment.id}-${line.serviceId}`} className="text-xs text-[color:var(--app-shell-muted)]">
+                    {line.serviceName} · {line.professionalName}
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : null}
           {hasPetTaxi(appointment) ? (
             <div>
               <AppointmentSignalPill label={messages.columns.petTaxi} tone="accent" />
@@ -754,9 +836,18 @@ export function createPetAppointmentColumns({
               )}
           </p>
           <p className="text-xs text-[color:var(--app-shell-muted)]">{messages.columns.professionalDetail}</p>
-          <p className="text-xs text-[color:var(--app-shell-muted)]">
-            {messages.columns.commission} {appointment.commissionAmount != null ? formatCurrencyForLocale(locale, appointment.commissionAmount) : messages.columns.pendingSetup}
-          </p>
+          {(() => {
+            const commissionEligibleLineCount = resolveCommissionEligibleLineCount(appointment);
+            return (
+              <p className="text-xs text-[color:var(--app-shell-muted)]">
+                {messages.columns.commission} {appointment.commissionAmount != null
+                  ? formatCurrencyForLocale(locale, appointment.commissionAmount)
+                  : commissionEligibleLineCount === 0
+                    ? messages.columns.commissionExcluded
+                    : messages.columns.pendingSetup}
+              </p>
+            );
+          })()}
         </div>
       )
     },

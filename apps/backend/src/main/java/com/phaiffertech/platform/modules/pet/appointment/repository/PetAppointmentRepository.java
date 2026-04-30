@@ -62,7 +62,17 @@ public interface PetAppointmentRepository extends JpaRepository<PetAppointment, 
             FROM PetAppointment a
             WHERE a.tenantId = :tenantId
               AND (:status IS NULL OR a.status = :status)
-              AND (:professionalId IS NULL OR a.professionalId = :professionalId)
+              AND (
+                   :professionalId IS NULL OR
+                   a.professionalId = :professionalId OR
+                   EXISTS (
+                       SELECT 1
+                       FROM PetAppointmentServiceLine line
+                       WHERE line.tenantId = :tenantId
+                         AND line.appointmentId = a.id
+                         AND line.professionalId = :professionalId
+                   )
+              )
               AND (:clientId IS NULL OR a.clientId = :clientId)
               AND (:petId IS NULL OR a.petId = :petId)
               AND (
@@ -104,6 +114,30 @@ public interface PetAppointmentRepository extends JpaRepository<PetAppointment, 
     );
 
     Optional<PetAppointment> findByIdAndTenantId(UUID id, UUID tenantId);
+
+    List<PetAppointment> findAllByTenantIdAndDeletedAtIsNullAndStatusOrderByScheduledAtDescIdDesc(
+            UUID tenantId,
+            String status
+    );
+
+    List<PetAppointment> findAllByTenantIdAndDeletedAtIsNullAndStatusAndScheduledAtGreaterThanEqualOrderByScheduledAtDescIdDesc(
+            UUID tenantId,
+            String status,
+            Instant scheduledFrom
+    );
+
+    List<PetAppointment> findAllByTenantIdAndDeletedAtIsNullAndStatusAndScheduledAtLessThanEqualOrderByScheduledAtDescIdDesc(
+            UUID tenantId,
+            String status,
+            Instant scheduledTo
+    );
+
+    List<PetAppointment> findAllByTenantIdAndDeletedAtIsNullAndStatusAndScheduledAtBetweenOrderByScheduledAtDescIdDesc(
+            UUID tenantId,
+            String status,
+            Instant scheduledFrom,
+            Instant scheduledTo
+    );
 
     @Query(value = """
             SELECT *
