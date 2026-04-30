@@ -761,6 +761,15 @@ class PetIntegrationTest extends AbstractIntegrationTest {
         );
         assertTrue(updatedLine.path("expectedInventoryConsumptions").get(0).path("snapshotBacked").asBoolean());
         assertFalse(updatedLine.path("expectedInventoryConsumptions").get(0).path("stockApplied").asBoolean());
+        assertEquals(
+                "ADJUSTED_NOT_APPLIED",
+                updatedLine.path("expectedInventoryConsumptions").get(0).path("varianceStatus").asText()
+        );
+        assertEquals(
+                0.50,
+                updatedLine.path("expectedInventoryConsumptions").get(0).path("plannedActualVarianceQuantity").asDouble(),
+                0.001
+        );
         assertEquals("", updatedLine.path("expectedInventoryConsumptions").get(0).path("appliedInventoryMovementId").asText(""));
 
         assertEquals(
@@ -927,6 +936,9 @@ class PetIntegrationTest extends AbstractIntegrationTest {
         assertTrue(!appliedRow.path("stockAppliedAt").asText().isBlank());
         assertEquals(3.00, appliedRow.path("expectedQuantity").asDouble(), 0.001);
         assertEquals(4.00, appliedRow.path("actualQuantity").asDouble(), 0.001);
+        assertEquals(4.00, appliedRow.path("appliedQuantity").asDouble(), 0.001);
+        assertEquals(1.00, appliedRow.path("plannedAppliedVarianceQuantity").asDouble(), 0.001);
+        assertEquals("APPLIED_DIFFERENT", appliedRow.path("varianceStatus").asText());
         assertEquals("READY_TO_APPLY", appliedRow.path("consumptionStatus").asText());
 
         ResponseEntity<JsonNode> productAfterApply = get("/pet/products/" + productId, session);
