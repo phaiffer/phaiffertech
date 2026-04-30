@@ -5,8 +5,8 @@ import type { PetServiceCatalog, PetServiceCategory } from '@/shared/types/pet';
 export type PetServiceBookingMode = 'FLEXIBLE' | 'PLAN_ONLY' | 'STANDALONE_ONLY' | 'UNAVAILABLE';
 
 export const petServiceCategoryLabels: Record<PetServiceCategory, string> = {
-  GROOMING: 'Grooming',
-  CLINICAL: 'Clinical'
+  GROOMING: 'Banho e Tosa',
+  CLINICAL: 'Clinica'
 };
 
 export function resolveAllowedPetServiceCategories(
@@ -51,5 +51,5 @@ export function describePetServiceCatalogItem(service: PetServiceCatalog, locale
     currency: 'BRL'
   });
 
-  return `${service.name} · ${formatPetServiceCategory(service.category)} · ${service.durationMinutes} min · ${priceLabel}`;
+  return `${service.name} - ${formatPetServiceCategory(service.category)} - ${service.durationMinutes} min - ${priceLabel}`;
 }

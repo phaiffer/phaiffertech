@@ -223,7 +223,7 @@ describe('PetAppointmentsPage', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Book appointment' }));
 
     expect(
-      screen.getByText((text) => text.includes('Before booking, add at least one client, pet, service, and professional'))
+      screen.getByText((text) => text.includes('Before booking, add at least one client, pet, grooming service, and professional'))
     ).toBeInTheDocument();
   });
 
@@ -291,12 +291,12 @@ describe('PetAppointmentsPage', () => {
 
     expect(screen.getByText('Add one or more services to confirm the bundle, total duration, base price, and booking rule.')).toBeInTheDocument();
 
-    const serviceSelect = screen.getAllByLabelText('Service')[1];
+    const serviceSelect = screen.getAllByLabelText('Service bundle')[1];
     fireEvent.change(serviceSelect, { target: { value: 'service-plan-only' } });
     fireEvent.click(screen.getByRole('button', { name: 'Add service' }));
 
     expect(await screen.findByText('Structured services')).toBeInTheDocument();
-    expect(screen.getAllByText(/Hydration session · Grooming · 90 min/).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/Hydration session - Banho e Tosa - 90 min/).length).toBeGreaterThan(0);
     expect(screen.getByText('Unavailable for new scheduling')).toBeInTheDocument();
     expect(screen.getByText('At least one selected service requires a linked plan before booking.')).toBeInTheDocument();
   });
@@ -473,7 +473,7 @@ describe('PetAppointmentsPage', () => {
     fireEvent.change(screen.getAllByLabelText('Client')[1], { target: { value: 'client-1' } });
     fireEvent.change(screen.getAllByLabelText('Pet')[1], { target: { value: 'pet-1' } });
 
-    const serviceSelect = screen.getAllByLabelText('Service')[1];
+    const serviceSelect = screen.getAllByLabelText('Service bundle')[1];
     fireEvent.change(serviceSelect, { target: { value: 'service-bath' } });
     fireEvent.click(screen.getByRole('button', { name: 'Add service' }));
     fireEvent.change(serviceSelect, { target: { value: 'service-hydration' } });

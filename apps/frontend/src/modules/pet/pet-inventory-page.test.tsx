@@ -25,6 +25,23 @@ vi.mock('@/shared/services/pet-service', () => ({
   petService: petServiceMock
 }));
 
+vi.mock('@/shared/platform/use-frontend-platform', () => ({
+  useFrontendPlatform: () => ({
+    user: {
+      featureEntitlements: ['pet.aesthetics', 'pet.retail'],
+      permissions: ['pet.product.read', 'pet.inventory.read']
+    },
+    modules: {
+      availableCodes: ['PET'],
+      loading: false
+    },
+    workspace: {
+      canManagePlatformAdministration: false,
+      hasFullPlatformVisibility: false
+    }
+  })
+}));
+
 function createPageResponse<T>(items: T[]) {
   return {
     items,

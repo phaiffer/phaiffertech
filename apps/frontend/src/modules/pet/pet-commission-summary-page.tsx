@@ -1,5 +1,7 @@
 'use client';
 
+import { useCallback, useEffect, useState } from 'react';
+import { PetModuleSubnav } from '@/modules/pet/pet-module-subnav';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { PermissionGuard } from '@/shared/auth/PermissionGuard';
 import { sharedPageStackClass } from '@/shared/components/public-visual-system';
@@ -34,6 +36,24 @@ function buildDefaultTo(): string {
   return toDateString(new Date(now.getFullYear(), now.getMonth() + 1, 0));
 }
 
+function groupByProfessional(appointments: PetAppointment[]): CommissionRow[] {
+  const map = new Map<string, CommissionRow>();
+  for (const appointment of appointments) {
+    const key = appointment.professionalId;
+    const name = appointment.professionalName ?? appointment.professionalId;
+    const commission = appointment.commissionAmount ?? 0;
+    const existing = map.get(key);
+    if (existing) {
+      existing.appointmentCount += 1;
+      existing.totalCommission += commission;
+    } else {
+      map.set(key, {
+        professionalId: key,
+        professionalName: name,
+        appointmentCount: 1,
+        totalCommission: commission
+      });
+    }
 function toIsoBoundary(date: string, boundary: 'start' | 'end') {
   if (!date) {
     return undefined;
@@ -46,6 +66,13 @@ function formatCurrency(value?: number | null) {
   return (value ?? 0).toLocaleString(locale, { style: 'currency', currency: 'BRL' });
 }
 
+const columns: DataTableColumn<CommissionRow>[] = [
+  { key: 'professional', header: 'Profissional', render: (row) => row.professionalName },
+  { key: 'count', header: 'Atendimentos concluidos', render: (row) => row.appointmentCount },
+  {
+    key: 'total',
+    header: 'Comissao projetada',
+    render: (row) => row.totalCommission.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
 function formatCommissionRate(value?: number | null) {
   if (value == null) {
     return 'Taxa indisponivel';
@@ -130,6 +157,7 @@ export function PetCommissionSummaryPage() {
       });
       setReport(result);
     } catch (err) {
+      setError(err instanceof ApiClientError ? err.message : 'Nao foi possivel carregar os dados.');
       setError(err instanceof ApiClientError ? err.message : 'Nao foi possivel carregar o resumo de comissoes.');
     } finally {
       setLoading(false);
@@ -185,6 +213,21 @@ export function PetCommissionSummaryPage() {
     return report.details.filter((detail) => detail.professionalId === selectedProfessionalFilter);
   }, [report, selectedProfessionalFilter]);
 
+  const grandTotal = rows.reduce((sum, row) => sum + row.totalCommission, 0);
+  const totalAppointments = rows.reduce((sum, row) => sum + row.appointmentCount, 0);
+
+  return (
+    <PermissionGuard
+      permission="pet.appointment.read"
+      fallback={<div className="ui-notice-warning">Voce nao tem permissao para visualizar comissoes.</div>}
+    >
+      <div className="space-y-5">
+        <PetModuleSubnav />
+
+        <PageTitle
+          eyebrow="PetFlow workspace"
+          title="Fechamento de comissoes"
+          description="Mostre a producao de banho e tosa por profissional com valores projetados a partir dos atendimentos concluidos no periodo."
   const summaryColumns: DataTableColumn<PetCommissionSummaryProfessional>[] = [
     {
       key: 'professional',
@@ -328,6 +371,14 @@ export function PetCommissionSummaryPage() {
             </p>
           </div>
           <div className="rounded-2xl border border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-panel)] px-4 py-3">
+            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--app-shell-muted)]">Servicos fechados</p>
+            <p className="mt-2 text-lg font-semibold text-[color:var(--app-shell-heading)]">{totalAppointments}</p>
+          </div>
+          <div className="rounded-2xl border border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-panel)] px-4 py-3">
+            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--app-shell-muted)]">Comissao projetada</p>
+            <p className="mt-2 text-lg font-semibold text-[color:var(--app-shell-heading)]">
+              {grandTotal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+            </p>
             <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--app-shell-muted)]">Profissionais visiveis</p>
             <p className="mt-2 text-lg font-semibold text-[color:var(--app-shell-heading)]">{report?.professionalCount ?? 0}</p>
           </div>
@@ -343,6 +394,8 @@ export function PetCommissionSummaryPage() {
 
         <PageSection
           tone="muted"
+          title="Periodo de fechamento"
+          description="Use este recorte para explicar como a operacao transforma atendimento concluido em producao por profissional."
           title="Filtro do periodo"
           description="O primeiro passo seguro considera atendimentos concluidos e mostra o que gerou comissao, o que ficou excluido e o que ainda depende de compatibilidade historica."
         >
@@ -355,6 +408,7 @@ export function PetCommissionSummaryPage() {
                 onClick={() => void load(dateFrom, dateTo)}
                 className="ui-primary-button"
               >
+                Buscar
                 Atualizar resumo
               </button>
             </div>
@@ -363,6 +417,23 @@ export function PetCommissionSummaryPage() {
 
         {error ? <div className="ui-notice-error">{error}</div> : null}
 
+        <DataTable
+          columns={columns}
+          rows={rows}
+          getRowKey={(row) => row.professionalId}
+          loading={loading}
+          emptyState={{
+            title: 'Nenhuma comissao no periodo',
+            description: 'Conclua atendimentos de banho e tosa com profissional atribuido para demonstrar o fechamento de producao.'
+          }}
+        />
+
+        {!loading && rows.length > 0 ? (
+          <div className="flex items-center justify-end gap-3 ui-surface-panel p-4">
+            <span className="text-sm text-muted">Total geral</span>
+            <span className="text-sm font-semibold text-foreground">
+              {grandTotal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+            </span>
         <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
           <div className="ui-surface-panel p-4">
             <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Linhas excluidas</p>

@@ -127,6 +127,7 @@ export const enUSMessages: AppMessages = {
     clients: 'Clients',
     pets: 'Pets',
     appointments: 'Appointments',
+    services: 'Grooming catalog',
     followUp: 'Follow-up',
     commercial: 'Commercial',
     clinic: 'Clinic',
@@ -135,7 +136,8 @@ export const enUSMessages: AppMessages = {
     plans: 'Plans',
     inventory: 'Inventory',
     invoices: 'Billing',
-    professionals: 'Team'
+    professionals: 'Team',
+    commissions: 'Commission closing'
   },
   dashboardRoutes: {
     mainEyebrow: 'PetFlow',
@@ -233,9 +235,9 @@ export const enUSMessages: AppMessages = {
   },
   petAppointments: {
     noPermission: 'You do not have permission to view appointments.',
-    title: 'Appointments',
+    title: 'Grooming schedule',
     description:
-      'Run the grooming queue with recurring versus one-time visibility, pet taxi extras, responsible staff, and pickup follow-through.',
+      'Run the banho e tosa queue with recurring versus one-time visibility, multi-service bundles, pet taxi extras, responsible staff, stock usage, and pickup follow-through.',
     actions: {
       switchToList: 'Switch to list',
       switchToCalendar: 'Switch to calendar',
@@ -243,12 +245,12 @@ export const enUSMessages: AppMessages = {
     },
     filters: {
       title: 'Filters',
-      description: 'Refine the schedule by status, client, service, and professional.',
-      searchPlaceholder: 'Service, status, or notes',
+      description: 'Refine the banho e tosa agenda by status, client, service bundle, and professional.',
+      searchPlaceholder: 'Bath, grooming service, status, or notes',
       status: 'Status',
       client: 'Client',
       pet: 'Pet',
-      service: 'Service',
+      service: 'Service bundle',
       professional: 'Professional',
       activeCountSuffix: 'filter(s) shaping the schedule view.',
       noActive: 'No active filters in the appointment view.'
@@ -283,6 +285,7 @@ export const enUSMessages: AppMessages = {
       createTitle: 'Book appointment',
       editTitle: 'Edit appointment',
       description:
+        'Select the client and pet, build the service bundle, assign the responsible professional, then confirm one-time or plan-based payment with extras and stock-aware execution.'
         'Select the client and pet, choose the services, set the default professional, and adjust the responsible professional per line when needed.'
     },
     dialog: {
@@ -294,7 +297,7 @@ export const enUSMessages: AppMessages = {
       all: 'All',
       selectClient: 'Select a client',
       selectPet: 'Select a pet',
-      selectService: 'Select a service',
+      selectService: 'Select a bath or grooming service',
       selectProfessional: 'Select a professional',
       unassignedProfessional: 'Leave unassigned for now',
       selectClientFirst: 'Select a client first',
@@ -331,11 +334,11 @@ export const enUSMessages: AppMessages = {
       noShow: 'No show'
     },
     form: {
-      bookingTitle: 'Booking',
-      bookingDescription: 'Who, what, and when: the core of the appointment.',
+      bookingTitle: 'Banho e tosa booking',
+      bookingDescription: 'Client, pet, service bundle, responsible professional, and schedule in one operational step.',
       packageTitle: 'Plan and checkout',
       packageDescription:
-        'Link a plan to cover the base service or leave it empty for a one-time payment. Add any extras charged today.',
+        'Link a recurring plan to cover the base grooming service or leave it empty for one-time payment. Add pet taxi, add-ons, or same-day extras.',
       notes: 'Notes',
       notesPlaceholder: 'Visit notes such as sensitive skin or first visit',
       dateTime: 'Date and time',
@@ -353,19 +356,19 @@ export const enUSMessages: AppMessages = {
       packageCoverageExtras: 'Extras of R$ {amount} will be charged separately.',
       packageCoverageFull: 'The base service will be fully covered by the plan.',
       referencesRequired:
-        'Before booking, add at least one client, pet, service, and professional. Then return here.',
+        'Before booking, add at least one client, pet, grooming service, and professional. Then return here.',
       save: 'Saving...',
       update: 'Update appointment',
       create: 'Book appointment',
       cancel: 'Cancel'
     },
     columns: {
-      service: 'Service',
+      service: 'Service bundle',
       scheduled: 'Scheduled',
       status: 'Status',
       plan: 'Plan',
       payment: 'Payment',
-      care: 'Care',
+      care: 'Clinical notes',
       client: 'Client',
       professional: 'Professional',
       actions: 'Actions',
@@ -498,7 +501,7 @@ export const enUSMessages: AppMessages = {
     sourceTypes: {
       manual: 'Manual adjustment',
       retailSale: 'Retail sale',
-      clinicalConsumption: 'Clinical consumption',
+      clinicalConsumption: 'Bath and grooming consumption',
       productSync: 'Product catalog sync',
       maintenanceConsumption: 'Operational consumption',
       stockReplacement: 'Stock replacement',
@@ -564,9 +567,9 @@ export const enUSMessages: AppMessages = {
       directionLabel: 'Direction',
       quantityLabel: 'Quantity',
       noteLabel: 'Operational note',
-      notePlaceholder: 'Retail sale, clinical usage, manual count correction...',
+      notePlaceholder: 'Shampoo used in bath, retail sale, manual count correction...',
       reminderTitle: 'Operator reminder',
-      reminderDescription: 'Keep the movement reason explicit so reception, stock control, and billing stay aligned during the demo.',
+      reminderDescription: 'Keep the movement reason explicit so reception, grooming execution, stock control, and billing stay aligned during the demo.',
       saving: 'Saving movement...',
       update: 'Update movement',
       create: 'Create movement',

@@ -63,6 +63,14 @@ export function PetModuleSubnav() {
       group: 'pet' as const
     },
     {
+      href: '/pet/services',
+      label: t.services,
+      anyOf: ['pet.service.read'],
+      anyEntitlements: petSubmoduleEntitlements,
+      moduleCode: 'PET',
+      group: 'pet' as const
+    },
+    {
       href: '/pet/follow-up',
       label: t.followUp,
       anyOf: ['crm.task.read', 'crm.note.read', 'crm.activity.read'],
@@ -132,6 +140,14 @@ export function PetModuleSubnav() {
       href: '/pet/professionals',
       label: t.professionals,
       anyOf: ['pet.professional.read'],
+      anyEntitlements: petSubmoduleEntitlements,
+      moduleCode: 'PET',
+      group: 'pet' as const
+    },
+    {
+      href: '/pet/commissions',
+      label: t.commissions,
+      anyOf: ['pet.appointment.read'],
       anyEntitlements: petSubmoduleEntitlements,
       moduleCode: 'PET',
       group: 'pet' as const
