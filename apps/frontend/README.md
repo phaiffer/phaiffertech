@@ -84,6 +84,14 @@ From monorepo root:
 make frontend
 ```
 
+On Windows from the monorepo root, prefer:
+
+```powershell
+.\scripts\start-local-frontend.ps1
+```
+
+The local helper loads `.env.local` when present and defaults `NEXT_PUBLIC_API_URL` to `http://localhost:8080/api/v1`.
+
 ## Quality Checks
 
 ```bash

@@ -155,11 +155,26 @@ Dashboard-specific behavior:
 - platform dashboard includes only module summaries that are both available for the tenant and allowed by user permission
 - module dashboards build their own operational summaries and never expose repositories to other modules
 
-## Run Locally
+## Run Locally Without Docker
 
 ```bash
 mvn spring-boot:run
 ```
+
+On Windows from the monorepo root, prefer:
+
+```powershell
+.\scripts\start-local-backend.ps1
+```
+
+The local helper loads `.env.local` when present and defaults to:
+
+- `SPRING_PROFILES_ACTIVE=dev`
+- `SPRING_DATASOURCE_URL=jdbc:postgresql://localhost:5432/platform_db`
+- `SPRING_DATASOURCE_USERNAME=platform_user`
+- `SPRING_DATASOURCE_PASSWORD=platform_pass`
+
+The `dev` profile seeds `admin@local.test` / `Admin@123` and preserves unrestricted local administrator access for platform validation.
 
 ## Build
 
