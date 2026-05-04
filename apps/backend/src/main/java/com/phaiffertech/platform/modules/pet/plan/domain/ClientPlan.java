@@ -23,6 +23,12 @@ public class ClientPlan extends BaseTenantEntity {
     @Column(name = "client_id", nullable = false)
     private UUID clientId;
 
+    @Column(name = "pet_id")
+    private UUID petId;
+
+    @Column(name = "plan_template_id")
+    private UUID planTemplateId;
+
     @Column(name = "plan_name", nullable = false)
     private String planName;
 
@@ -32,8 +38,20 @@ public class ClientPlan extends BaseTenantEntity {
     @Column(name = "used_sessions", nullable = false)
     private Integer usedSessions = 0;
 
+    @Column(name = "started_at")
+    private OffsetDateTime startedAt;
+
     @Column(name = "expires_at")
     private OffsetDateTime expiresAt;
+
+    @Column(name = "final_price", precision = 10, scale = 2)
+    private java.math.BigDecimal finalPrice;
+
+    @Column(name = "status", nullable = false, length = 40)
+    private String status = "ACTIVE";
+
+    @Column(name = "renewal_rules", columnDefinition = "text")
+    private String renewalRules;
 
     public int getRemainingSessions() {
         if (totalSessions == null || usedSessions == null) {

@@ -20,6 +20,7 @@ import {
   PetProduct,
   PetProfessional,
   PetProfile,
+  PlanTemplate,
   PetServiceCatalog,
   PetServiceInventoryConsumptionRule,
   PetServiceCategory,
@@ -641,10 +642,58 @@ export const petService = {
 
   getClientPlan: (id: string) => apiClient.get<ClientPlan>(`/pet/plans/${id}`),
 
-  createClientPlan: (input: { clientId: string; planName: string; totalSessions: number; expiresAt?: string }) =>
+  listPlanTemplates: (page = 0, size = 20, search = '', active?: boolean) =>
+    apiClient.get<PageResponse<PlanTemplate>>(
+      `/pet/plans/templates?${queryString(page, size, search, {
+        active: active === undefined ? undefined : String(active)
+      })}`
+    ),
+
+  createPlanTemplate: (input: {
+    commercialName: string;
+    description?: string;
+    price: number;
+    validityDays: number;
+    totalSessions: number;
+    serviceIds: string[];
+    renewalRules?: string;
+    active: boolean;
+  }) => apiClient.post<PlanTemplate>('/pet/plans/templates', input),
+
+  updatePlanTemplate: (id: string, input: {
+    commercialName: string;
+    description?: string;
+    price: number;
+    validityDays: number;
+    totalSessions: number;
+    serviceIds: string[];
+    renewalRules?: string;
+    active: boolean;
+  }) => apiClient.put<PlanTemplate>(`/pet/plans/templates/${id}`, input),
+
+  deletePlanTemplate: (id: string) => apiClient.delete<void>(`/pet/plans/templates/${id}`),
+
+  createClientPlan: (input: {
+    clientId: string;
+    petId: string;
+    planTemplateId: string;
+    planName: string;
+    startedAt?: string;
+    totalSessions: number;
+    expiresAt?: string;
+    finalPrice?: number;
+    status?: string;
+  }) =>
     apiClient.post<ClientPlan>('/pet/plans', input),
 
-  updateClientPlan: (id: string, input: { planName: string; totalSessions: number; expiresAt?: string }) =>
+  updateClientPlan: (id: string, input: {
+    planName: string;
+    startedAt?: string;
+    totalSessions: number;
+    expiresAt?: string;
+    finalPrice?: number;
+    status?: string;
+  }) =>
     apiClient.put<ClientPlan>(`/pet/plans/${id}`, input),
 
   deleteClientPlan: (id: string) => apiClient.delete<void>(`/pet/plans/${id}`)

@@ -428,9 +428,28 @@ export type PetInsightsSummary = {
 export type ClientPlan = {
   id: string;
   clientId: string;
+  petId?: string | null;
+  planTemplateId?: string | null;
   planName: string;
   totalSessions: number;
   usedSessions: number;
   remainingSessions: number;
+  startedAt?: string | null;
   expiresAt?: string | null;
+  finalPrice?: number | null;
+  status?: string;
+  renewalState?: 'HEALTHY' | 'PENULTIMATE_USE' | 'LAST_USE' | 'EXHAUSTED' | string;
+  renewalRules?: string | null;
+};
+
+export type PlanTemplate = {
+  id: string;
+  commercialName: string;
+  description?: string | null;
+  price: number;
+  validityDays: number;
+  totalSessions: number;
+  serviceIds: string[];
+  renewalRules?: string | null;
+  active: boolean;
 };

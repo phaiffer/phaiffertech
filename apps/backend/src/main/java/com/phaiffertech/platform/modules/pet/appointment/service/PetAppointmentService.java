@@ -39,6 +39,7 @@ import com.phaiffertech.platform.modules.pet.professional.domain.PetProfessional
 import com.phaiffertech.platform.modules.pet.professional.repository.PetProfessionalRepository;
 import com.phaiffertech.platform.modules.pet.plan.domain.ClientPlan;
 import com.phaiffertech.platform.modules.pet.plan.repository.ClientPlanRepository;
+import com.phaiffertech.platform.modules.pet.plan.repository.PlanTemplateServiceRepository;
 import com.phaiffertech.platform.modules.pet.servicecatalog.domain.PetServiceCatalog;
 import com.phaiffertech.platform.modules.pet.servicecatalog.domain.PetServiceInventoryConsumptionRule;
 import com.phaiffertech.platform.modules.pet.servicecatalog.domain.PetServiceInventoryLink;
@@ -97,6 +98,7 @@ public class PetAppointmentService extends BaseTenantCrudService<
     private final PetPrescriptionRepository petPrescriptionRepository;
     private final PlatformMetricsService platformMetricsService;
     private final ClientPlanRepository clientPlanRepository;
+    private final PlanTemplateServiceRepository planTemplateServiceRepository;
     private final PetOperationalTriggerService operationalTriggerService;
     private final PetServiceCatalogCategoryPolicyService serviceCatalogCategoryPolicyService;
     private final CurrentUserService currentUserService;
@@ -117,6 +119,7 @@ public class PetAppointmentService extends BaseTenantCrudService<
             PetPrescriptionRepository petPrescriptionRepository,
             PlatformMetricsService platformMetricsService,
             ClientPlanRepository clientPlanRepository,
+            PlanTemplateServiceRepository planTemplateServiceRepository,
             PetOperationalTriggerService operationalTriggerService,
             PetServiceCatalogCategoryPolicyService serviceCatalogCategoryPolicyService,
             CurrentUserService currentUserService
@@ -137,6 +140,7 @@ public class PetAppointmentService extends BaseTenantCrudService<
         this.petPrescriptionRepository = petPrescriptionRepository;
         this.platformMetricsService = platformMetricsService;
         this.clientPlanRepository = clientPlanRepository;
+        this.planTemplateServiceRepository = planTemplateServiceRepository;
         this.operationalTriggerService = operationalTriggerService;
         this.serviceCatalogCategoryPolicyService = serviceCatalogCategoryPolicyService;
         this.currentUserService = currentUserService;
@@ -164,10 +168,6 @@ public class PetAppointmentService extends BaseTenantCrudService<
                 Map.of(),
                 entity
         );
-        if (request.clientPlanId() != null) {
-            validatePlanForClient(tenantId, request.clientPlanId(), request.clientId());
-        }
-
         PetAppointment saved = repository.save(entity);
         replaceAppointmentServiceLines(tenantId, saved, selection.services());
         platformMetricsService.incrementPetAppointmentsCreated();
@@ -439,6 +439,10 @@ public class PetAppointmentService extends BaseTenantCrudService<
         List<PetServiceCatalog> selectedServices = loadSelectedServices(tenantId, resolvedServiceIds);
         Set<UUID> previousServiceIdSet = new LinkedHashSet<>(previousServiceIds);
 
+        if (requestedClientPlanId != null) {
+            validatePlanForAppointment(tenantId, requestedClientPlanId, clientId, petId, resolvedServiceIds);
+        }
+
         for (PetServiceCatalog selectedService : selectedServices) {
             validateServiceCatalogBookingAccess(
                     tenantId,
@@ -613,14 +617,36 @@ public class PetAppointmentService extends BaseTenantCrudService<
      * Validates that the plan belongs to the tenant and to the specified client.
      * Does NOT consume a session — that happens only on COMPLETED transition.
      */
-    private void validatePlanForClient(UUID tenantId, UUID planId, UUID clientId) {
+    private void validatePlanForAppointment(
+            UUID tenantId,
+            UUID planId,
+            UUID clientId,
+            UUID petId,
+            List<UUID> serviceIds
+    ) {
         ClientPlan plan = clientPlanRepository.findByIdAndTenantId(planId, tenantId)
                 .orElseThrow(() -> new ResourceNotFoundException("Client plan not found for tenant."));
         if (!plan.getClientId().equals(clientId)) {
             throw new ConflictOperationException("Client plan does not belong to the informed client.");
         }
+        if (plan.getPetId() != null && !plan.getPetId().equals(petId)) {
+            throw new ConflictOperationException("Client plan does not belong to the informed pet.");
+        }
+        if (!"ACTIVE".equalsIgnoreCase(plan.getStatus())) {
+            throw new ConflictOperationException("Client plan is not active and cannot be used.");
+        }
         if (plan.getExpiresAt() != null && plan.getExpiresAt().toInstant().isBefore(java.time.Instant.now())) {
             throw new ConflictOperationException("Client plan has expired and cannot be used.");
+        }
+        if (plan.getPlanTemplateId() != null) {
+            Set<UUID> includedServiceIds = planTemplateServiceRepository
+                    .findAllByTenantIdAndPlanTemplateId(tenantId, plan.getPlanTemplateId())
+                    .stream()
+                    .map((link) -> link.getServiceId())
+                    .collect(Collectors.toSet());
+            if (!includedServiceIds.isEmpty() && !includedServiceIds.containsAll(serviceIds)) {
+                throw new ConflictOperationException("Selected service is not included in the client plan.");
+            }
         }
     }
 

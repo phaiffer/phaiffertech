@@ -16,7 +16,7 @@ import { ApiClientError } from '@/shared/lib/http';
 import { resolvePageItems, resolveTotalItems } from '@/shared/lib/pagination';
 import { petService } from '@/shared/services/pet-service';
 import { PageResponse } from '@/shared/types/common';
-import { ClientPlan, PetClient } from '@/shared/types/pet';
+import { ClientPlan, PetClient, PetProfile, PetServiceCatalog, PlanTemplate } from '@/shared/types/pet';
 import { ConfirmDialog } from '@/shared/ui/confirm-dialog';
 import { DataTable, DataTableColumn } from '@/shared/ui/data-table';
 import { FormInput } from '@/shared/ui/form-input';
@@ -35,6 +35,20 @@ const initialPage: PageResponse<ClientPlan> = {
   page: 0,
   size: pageSize
 };
+
+const initialTemplatePage: PageResponse<PlanTemplate> = {
+  items: [],
+  totalItems: 0,
+  totalPages: 0,
+  page: 0,
+  size: pageSize
+};
+
+const soldPlanStatusOptions = [
+  { value: 'ACTIVE', label: 'Ativo' },
+  { value: 'PAUSED', label: 'Pausado' },
+  { value: 'CANCELED', label: 'Cancelado' }
+];
 
 type PlanSignalCardProps = {
   icon: LucideIcon;
@@ -109,17 +123,36 @@ export function PetPlansPage() {
   const commonButtons = appMessages.common.buttons;
   const { hasPermission } = usePermissions();
   const [pageData, setPageData] = useState<PageResponse<ClientPlan>>(initialPage);
+  const [templatePageData, setTemplatePageData] = useState<PageResponse<PlanTemplate>>(initialTemplatePage);
   const [clients, setClients] = useState<PetClient[]>([]);
+  const [pets, setPets] = useState<PetProfile[]>([]);
+  const [services, setServices] = useState<PetServiceCatalog[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
   const [editingId, setEditingId] = useState<string | null>(null);
   const [clientId, setClientId] = useState('');
+  const [petId, setPetId] = useState('');
+  const [planTemplateId, setPlanTemplateId] = useState('');
   const [planName, setPlanName] = useState('');
+  const [startedAt, setStartedAt] = useState('');
   const [totalSessions, setTotalSessions] = useState('10');
   const [expiresAt, setExpiresAt] = useState('');
+  const [finalPrice, setFinalPrice] = useState('');
+  const [soldPlanStatus, setSoldPlanStatus] = useState('ACTIVE');
   const [submitting, setSubmitting] = useState(false);
+
+  const [editingTemplateId, setEditingTemplateId] = useState<string | null>(null);
+  const [templateName, setTemplateName] = useState('');
+  const [templateDescription, setTemplateDescription] = useState('');
+  const [templatePrice, setTemplatePrice] = useState('');
+  const [templateValidityDays, setTemplateValidityDays] = useState('30');
+  const [templateTotalSessions, setTemplateTotalSessions] = useState('4');
+  const [templateServiceIds, setTemplateServiceIds] = useState<string[]>([]);
+  const [templateRenewalRules, setTemplateRenewalRules] = useState('Avisar no penultimo uso e renovar antes do ultimo banho.');
+  const [templateActive, setTemplateActive] = useState(true);
+  const [templateSubmitting, setTemplateSubmitting] = useState(false);
 
   const [deleteCandidate, setDeleteCandidate] = useState<ClientPlan | null>(null);
   const [billingPixKey, setBillingPixKey] = useState('');
@@ -132,14 +165,9 @@ export function PetPlansPage() {
   const [preparingRenewalPlanId, setPreparingRenewalPlanId] = useState<string | null>(null);
 
   const canReadClients = hasPermission('pet.client.read');
+  const canReadPets = hasPermission('pet.profile.read');
+  const canReadServices = hasPermission('pet.service.read');
   const canManagePlan = hasPermission('pet.plan.create');
-
-  const clientOptions = useMemo(() => {
-    return [
-      { value: '', label: messages.filters.allClients },
-      ...clients.map((c) => ({ value: c.id, label: c.name ?? c.fullName ?? c.id }))
-    ];
-  }, [clients, messages.filters.allClients]);
 
   const formClientOptions = useMemo(() => {
     return [
@@ -147,6 +175,30 @@ export function PetPlansPage() {
       ...clients.map((c) => ({ value: c.id, label: c.name ?? c.fullName ?? c.id }))
     ];
   }, [clients, messages.filters.selectClient]);
+
+  const formPetOptions = useMemo(() => {
+    const visiblePets = clientId ? pets.filter((pet) => pet.clientId === clientId) : pets;
+    return [
+      { value: '', label: 'Selecione um pet' },
+      ...visiblePets.map((pet) => ({ value: pet.id, label: pet.name }))
+    ];
+  }, [clientId, pets]);
+
+  const templates = resolvePageItems(templatePageData);
+  const activeTemplates = templates.filter((template) => template.active);
+  const templateOptions = useMemo(() => [
+    { value: '', label: 'Selecione um plano do catalogo' },
+    ...activeTemplates.map((template) => ({
+      value: template.id,
+      label: `${template.commercialName} - ${template.totalSessions} sessoes`
+    }))
+  ], [activeTemplates]);
+
+  const selectedTemplate = activeTemplates.find((template) => template.id === planTemplateId);
+  const serviceOptions = useMemo(() => services.map((service) => ({
+    value: service.id,
+    label: service.name
+  })), [services]);
 
   const load = useCallback(async (page: number) => {
     setLoading(true);
@@ -161,9 +213,22 @@ export function PetPlansPage() {
     }
   }, [messages.loadingDescription]);
 
+  const loadTemplates = useCallback(async () => {
+    try {
+      const result = await petService.listPlanTemplates(0, pageSize, '');
+      setTemplatePageData(result);
+    } catch (err) {
+      setError(err instanceof ApiClientError ? err.message : 'Nao foi possivel carregar o catalogo de planos.');
+    }
+  }, []);
+
   useEffect(() => {
     void load(0);
   }, [load]);
+
+  useEffect(() => {
+    void loadTemplates();
+  }, [loadTemplates]);
 
   useEffect(() => {
     if (!canReadClients) return;
@@ -173,6 +238,24 @@ export function PetPlansPage() {
       // Non-critical — client names will fall back to IDs
     });
   }, [canReadClients]);
+
+  useEffect(() => {
+    if (!canReadPets) return;
+    petService.listProfiles(0, 200, '').then((result) => {
+      setPets(resolvePageItems(result));
+    }).catch(() => {
+      setPets([]);
+    });
+  }, [canReadPets]);
+
+  useEffect(() => {
+    if (!canReadServices) return;
+    petService.listServices(0, 200, '', { active: true }).then((result) => {
+      setServices(resolvePageItems(result));
+    }).catch(() => {
+      setServices([]);
+    });
+  }, [canReadServices]);
 
   useEffect(() => {
     setBillingSettingsLoading(true);
@@ -191,20 +274,72 @@ export function PetPlansPage() {
   function resetForm() {
     setEditingId(null);
     setClientId('');
+    setPetId('');
+    setPlanTemplateId('');
     setPlanName('');
+    setStartedAt('');
     setTotalSessions('10');
     setExpiresAt('');
+    setFinalPrice('');
+    setSoldPlanStatus('ACTIVE');
   }
 
   function beginEdit(plan: ClientPlan) {
     setEditingId(plan.id);
     setClientId(plan.clientId);
+    setPetId(plan.petId ?? '');
+    setPlanTemplateId(plan.planTemplateId ?? '');
     setPlanName(plan.planName);
     setTotalSessions(String(plan.totalSessions));
+    setStartedAt(plan.startedAt ? plan.startedAt.substring(0, 10) : '');
     setExpiresAt(plan.expiresAt ? plan.expiresAt.substring(0, 10) : '');
+    setFinalPrice(plan.finalPrice == null ? '' : String(plan.finalPrice));
+    setSoldPlanStatus(plan.status ?? 'ACTIVE');
     setError(null);
     setSuccess(null);
     document.getElementById('pet-plan-form-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  function resetTemplateForm() {
+    setEditingTemplateId(null);
+    setTemplateName('');
+    setTemplateDescription('');
+    setTemplatePrice('');
+    setTemplateValidityDays('30');
+    setTemplateTotalSessions('4');
+    setTemplateServiceIds([]);
+    setTemplateRenewalRules('Avisar no penultimo uso e renovar antes do ultimo banho.');
+    setTemplateActive(true);
+  }
+
+  function beginEditTemplate(template: PlanTemplate) {
+    setEditingTemplateId(template.id);
+    setTemplateName(template.commercialName);
+    setTemplateDescription(template.description ?? '');
+    setTemplatePrice(String(template.price));
+    setTemplateValidityDays(String(template.validityDays));
+    setTemplateTotalSessions(String(template.totalSessions));
+    setTemplateServiceIds(template.serviceIds ?? []);
+    setTemplateRenewalRules(template.renewalRules ?? '');
+    setTemplateActive(template.active);
+    document.getElementById('pet-plan-template-form-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  function handlePlanTemplateChange(value: string) {
+    setPlanTemplateId(value);
+    const template = activeTemplates.find((entry) => entry.id === value);
+    if (!template || editingId) {
+      return;
+    }
+
+    const start = startedAt || new Date().toISOString().slice(0, 10);
+    const startDate = new Date(`${start}T00:00:00`);
+    startDate.setDate(startDate.getDate() + template.validityDays);
+    setStartedAt(start);
+    setPlanName(template.commercialName);
+    setTotalSessions(String(template.totalSessions));
+    setFinalPrice(String(template.price));
+    setExpiresAt(startDate.toISOString().slice(0, 10));
   }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -215,9 +350,20 @@ export function PetPlansPage() {
       return;
     }
 
+    if (!editingId && (!petId || !planTemplateId)) {
+      setError('Selecione o pet e o plano do catalogo para ativar a venda.');
+      return;
+    }
+
     const parsed = parseInt(totalSessions, 10);
     if (isNaN(parsed) || parsed < 1) {
       setError(messages.validation.positiveSessions);
+      return;
+    }
+
+    const parsedFinalPrice = finalPrice.trim() ? Number(finalPrice) : undefined;
+    if (finalPrice.trim() && (parsedFinalPrice === undefined || Number.isNaN(parsedFinalPrice) || parsedFinalPrice < 0)) {
+      setError('Informe um preco final valido.');
       return;
     }
 
@@ -229,16 +375,24 @@ export function PetPlansPage() {
       if (editingId) {
         await petService.updateClientPlan(editingId, {
           planName,
+          startedAt: startedAt ? `${startedAt}T00:00:00-03:00` : undefined,
           totalSessions: parsed,
-          expiresAt: expiresAt || undefined
+          expiresAt: expiresAt ? `${expiresAt}T23:59:59-03:00` : undefined,
+          finalPrice: parsedFinalPrice,
+          status: soldPlanStatus
         });
         setSuccess(messages.form.update);
       } else {
         await petService.createClientPlan({
           clientId,
+          petId,
+          planTemplateId,
           planName,
+          startedAt: startedAt ? `${startedAt}T00:00:00-03:00` : undefined,
           totalSessions: parsed,
-          expiresAt: expiresAt || undefined
+          expiresAt: expiresAt ? `${expiresAt}T23:59:59-03:00` : undefined,
+          finalPrice: parsedFinalPrice,
+          status: soldPlanStatus
         });
         setSuccess(messages.form.create);
       }
@@ -248,6 +402,50 @@ export function PetPlansPage() {
       setError(err instanceof ApiClientError ? err.message : messages.feedback.saveError);
     } finally {
       setSubmitting(false);
+    }
+  }
+
+  async function handleTemplateSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    const parsedPrice = Number(templatePrice);
+    const parsedValidity = parseInt(templateValidityDays, 10);
+    const parsedSessions = parseInt(templateTotalSessions, 10);
+
+    if (Number.isNaN(parsedPrice) || parsedPrice < 0 || Number.isNaN(parsedValidity) || parsedValidity < 1 || Number.isNaN(parsedSessions) || parsedSessions < 1) {
+      setError('Informe preco, validade e sessoes validos para o catalogo.');
+      return;
+    }
+
+    setTemplateSubmitting(true);
+    setError(null);
+    setSuccess(null);
+
+    const payload = {
+      commercialName: templateName,
+      description: templateDescription || undefined,
+      price: parsedPrice,
+      validityDays: parsedValidity,
+      totalSessions: parsedSessions,
+      serviceIds: templateServiceIds,
+      renewalRules: templateRenewalRules || undefined,
+      active: templateActive
+    };
+
+    try {
+      if (editingTemplateId) {
+        await petService.updatePlanTemplate(editingTemplateId, payload);
+        setSuccess('Modelo de plano atualizado.');
+      } else {
+        await petService.createPlanTemplate(payload);
+        setSuccess('Modelo de plano criado.');
+      }
+      resetTemplateForm();
+      await loadTemplates();
+    } catch (err) {
+      setError(err instanceof ApiClientError ? err.message : 'Nao foi possivel salvar o modelo de plano.');
+    } finally {
+      setTemplateSubmitting(false);
     }
   }
 
@@ -315,6 +513,15 @@ export function PetPlansPage() {
     return client?.email ?? null;
   }
 
+  function resolvePetName(plan: ClientPlan) {
+    const pet = pets.find((entry) => entry.id === plan.petId);
+    return pet?.name ?? plan.petId ?? 'Pet nao vinculado';
+  }
+
+  function formatCurrency(value?: number | null) {
+    return (value ?? 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+  }
+
   const rows = resolvePageItems(pageData);
   const activePlans = rows.filter((plan) => resolvePlanStatusKey(plan) === 'active').length;
   const lowSessionPlans = rows.filter((plan) => plan.remainingSessions > 0 && plan.remainingSessions <= 2).length;
@@ -329,6 +536,7 @@ export function PetPlansPage() {
       render: (plan) => (
         <div className="space-y-1">
           <p className="font-medium text-slate-900">{resolveClientName(plan)}</p>
+          <p className="text-xs text-[color:var(--app-shell-muted)]">Pet: {resolvePetName(plan)}</p>
           <p className="text-xs text-[color:var(--app-shell-muted)]">
             {resolveClientEmail(plan) ?? messages.columns.noRenewalEmail}
           </p>
@@ -346,6 +554,9 @@ export function PetPlansPage() {
           <span className="font-medium">{plan.planName}</span>
           <p className="text-xs text-[color:var(--app-shell-muted)]">
             {plan.remainingSessions > 0 ? messages.columns.activeLinked : messages.columns.noSessionsLeft}
+          </p>
+          <p className="text-xs text-[color:var(--app-shell-muted)]">
+            Contratado por {formatCurrency(plan.finalPrice)}
           </p>
         </div>
       )
@@ -385,6 +596,7 @@ export function PetPlansPage() {
       render: (plan) => (
         <div className="space-y-2">
           <StatusBadge status={resolvePlanStatusKey(plan)} />
+          <p className="text-xs text-[color:var(--app-shell-muted)]">{plan.renewalState ?? 'HEALTHY'}</p>
           {plan.remainingSessions === 2 ? (
             <p className="text-xs text-[color:var(--app-shell-muted)]">
               {resolveClientEmail(plan) ? messages.columns.renewalSent : messages.columns.renewalNeedsEmail}
@@ -473,6 +685,99 @@ export function PetPlansPage() {
 
         {error ? <div className="ui-notice-error">{error}</div> : null}
         {success ? <div className="ui-notice-success">{success}</div> : null}
+
+        <PageSection
+          title="Catalogo de planos"
+          description="Modelos comerciais reutilizaveis. Eles definem preco, validade, sessoes e servicos incluidos antes da venda para cliente e pet."
+        >
+          <div className="grid gap-3 lg:grid-cols-3">
+            {templates.map((template) => (
+              <div key={template.id} className="rounded-2xl border border-slate-200 bg-white p-4">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="font-semibold text-slate-900">{template.commercialName}</p>
+                    <p className="mt-1 text-xs text-[color:var(--app-shell-muted)]">
+                      {template.description ?? 'Sem descricao comercial.'}
+                    </p>
+                  </div>
+                  <StatusBadge status={template.active ? 'active' : 'inactive'} />
+                </div>
+                <div className="mt-3 grid gap-2 text-xs text-[color:var(--app-shell-muted)]">
+                  <p>{formatCurrency(template.price)} - {template.totalSessions} sessoes</p>
+                  <p>Validade: {template.validityDays} dias</p>
+                  <p>Servicos incluidos: {template.serviceIds.length || 'todos os servicos permitidos em plano'}</p>
+                  <p>Renovacao: {template.renewalRules ?? 'Avisar no penultimo e ultimo uso.'}</p>
+                </div>
+                <PermissionGuard permission="pet.plan.create">
+                  <button type="button" onClick={() => beginEditTemplate(template)} className="ui-inline-button mt-3">
+                    Editar modelo
+                  </button>
+                </PermissionGuard>
+              </div>
+            ))}
+          </div>
+        </PageSection>
+
+        <PermissionGuard permission="pet.plan.create">
+          <div id="pet-plan-template-form-section">
+            <form onSubmit={handleTemplateSubmit} className="ui-surface-panel p-4 space-y-4">
+              <div>
+                <h3 className="text-sm font-semibold text-foreground">
+                  {editingTemplateId ? 'Editar modelo comercial' : 'Novo modelo comercial'}
+                </h3>
+                <p className="text-xs text-[color:var(--app-shell-muted)] mt-0.5">
+                  Este catalogo nao vende o plano ainda; ele prepara a oferta que sera ativada para cliente e pet.
+                </p>
+              </div>
+              <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
+                <FormInput label="Nome comercial" value={templateName} onChange={setTemplateName} required />
+                <FormInput label="Preco" value={templatePrice} onChange={setTemplatePrice} type="number" required />
+                <FormInput label="Validade em dias" value={templateValidityDays} onChange={setTemplateValidityDays} type="number" required />
+                <FormInput label="Total de sessoes" value={templateTotalSessions} onChange={setTemplateTotalSessions} type="number" required />
+                <FormInput label="Descricao" value={templateDescription} onChange={setTemplateDescription} wrapperClassName="lg:col-span-2" />
+                <FormInput label="Regras de renovacao" value={templateRenewalRules} onChange={setTemplateRenewalRules} wrapperClassName="lg:col-span-2" />
+              </div>
+              <div className="rounded-2xl border border-slate-200 bg-white/80 p-3">
+                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--app-shell-muted)]">
+                  Servicos incluidos
+                </p>
+                <div className="mt-3 grid gap-2 md:grid-cols-2 xl:grid-cols-3">
+                  {serviceOptions.map((option) => (
+                    <label key={option.value} className="flex items-center gap-2 text-sm text-slate-700">
+                      <input
+                        type="checkbox"
+                        checked={templateServiceIds.includes(option.value)}
+                        onChange={(event) => setTemplateServiceIds((current) => (
+                          event.target.checked
+                            ? [...current, option.value]
+                            : current.filter((id) => id !== option.value)
+                        ))}
+                      />
+                      {option.label}
+                    </label>
+                  ))}
+                </div>
+                {serviceOptions.length === 0 ? (
+                  <p className="mt-2 text-xs text-[color:var(--app-shell-muted)]">Nenhum servico ativo carregado para vinculo.</p>
+                ) : null}
+              </div>
+              <label className="flex items-center gap-2 text-sm text-slate-700">
+                <input type="checkbox" checked={templateActive} onChange={(event) => setTemplateActive(event.target.checked)} />
+                Modelo ativo para novas vendas
+              </label>
+              <div className="flex gap-2">
+                <button type="submit" disabled={templateSubmitting} className="ui-primary-button">
+                  {templateSubmitting ? 'Salvando...' : editingTemplateId ? 'Atualizar modelo' : 'Criar modelo'}
+                </button>
+                {editingTemplateId ? (
+                  <button type="button" onClick={resetTemplateForm} className="ui-secondary-button">
+                    Cancelar edicao
+                  </button>
+                ) : null}
+              </div>
+            </form>
+          </div>
+        </PermissionGuard>
 
         <PageSection
           tone="muted"
@@ -627,8 +932,25 @@ export function PetPlansPage() {
                   label={messages.form.client}
                   value={clientId}
                   options={formClientOptions}
-                  onChange={setClientId}
+                  onChange={(value) => {
+                    setClientId(value);
+                    setPetId('');
+                  }}
                   disabled={!!editingId || !canReadClients}
+                />
+                <FormSelect
+                  label="Pet"
+                  value={petId}
+                  options={formPetOptions}
+                  onChange={setPetId}
+                  disabled={!!editingId || !canReadPets}
+                />
+                <FormSelect
+                  label="Plano do catalogo"
+                  value={planTemplateId}
+                  options={templateOptions}
+                  onChange={handlePlanTemplateChange}
+                  disabled={!!editingId}
                 />
                 <FormInput
                   label={messages.form.planName}
@@ -646,12 +968,37 @@ export function PetPlansPage() {
                   required
                 />
                 <FormInput
+                  label="Inicio"
+                  value={startedAt}
+                  onChange={setStartedAt}
+                  type="date"
+                />
+                <FormInput
                   label={messages.form.expiresOn}
                   value={expiresAt}
                   onChange={setExpiresAt}
                   type="date"
                 />
+                <FormInput
+                  label="Preco final"
+                  value={finalPrice}
+                  onChange={setFinalPrice}
+                  type="number"
+                />
+                <FormSelect
+                  label="Status"
+                  value={soldPlanStatus}
+                  options={soldPlanStatusOptions}
+                  onChange={setSoldPlanStatus}
+                />
               </div>
+
+              {selectedTemplate ? (
+                <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
+                  Venda baseada em {selectedTemplate.commercialName}: {selectedTemplate.totalSessions} sessoes,
+                  validade de {selectedTemplate.validityDays} dias e preco catalogado de {formatCurrency(selectedTemplate.price)}.
+                </div>
+              ) : null}
 
               <div className="flex gap-2">
                 <button type="submit" disabled={submitting} className="ui-primary-button">

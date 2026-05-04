@@ -37,6 +37,36 @@ public class ClientPlanController {
         return ApiResponse.success(service.create(dto));
     }
 
+    @PostMapping("/templates")
+    @RequirePermission("pet.plan.create")
+    public ApiResponse<ClientPlanDtos.PlanTemplateResponseDto> createTemplate(
+            @Valid @RequestBody ClientPlanDtos.PlanTemplateCreateDto dto) {
+        return ApiResponse.success(service.createTemplate(dto));
+    }
+
+    @GetMapping("/templates")
+    @RequirePermission("pet.plan.read")
+    public ApiResponse<PageResponseDto<ClientPlanDtos.PlanTemplateResponseDto>> findTemplates(
+            @Valid @ModelAttribute PageRequestDto pageRequest,
+            @RequestParam(required = false) Boolean active) {
+        return ApiResponse.success(service.findTemplates(pageRequest, active));
+    }
+
+    @PutMapping("/templates/{id}")
+    @RequirePermission("pet.plan.create")
+    public ApiResponse<ClientPlanDtos.PlanTemplateResponseDto> updateTemplate(
+            @PathVariable UUID id,
+            @Valid @RequestBody ClientPlanDtos.PlanTemplateUpdateDto dto) {
+        return ApiResponse.success(service.updateTemplate(id, dto));
+    }
+
+    @DeleteMapping("/templates/{id}")
+    @RequirePermission("pet.plan.create")
+    public ApiResponse<Void> deleteTemplate(@PathVariable UUID id) {
+        service.deleteTemplate(id);
+        return ApiResponse.success(null);
+    }
+
     @GetMapping("/{id}")
     @RequirePermission("pet.plan.read")
     public ApiResponse<ClientPlanDtos.ClientPlanResponseDto> findById(@PathVariable UUID id) {
