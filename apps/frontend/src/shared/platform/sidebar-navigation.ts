@@ -18,6 +18,7 @@ type SidebarItemBase = {
   anyOf?: string[];
   anyEntitlements?: readonly string[];
   allowedPlanCodes?: readonly string[];
+  blockedPlanCodes?: readonly string[];
   moduleCode?: string;
   group: string;
   platformOnly?: boolean;
@@ -25,6 +26,8 @@ type SidebarItemBase = {
 
 export const petClinicNavigationPlanCodes = ['CLINICA_VETERINARIA', 'BANHO_TOSA_CLINICA'] as const;
 export const petPosNavigationPlanCodes = ['PETSHOP', 'PETSHOP_BANHO_TOSA'] as const;
+export const banhoTosaOnlyPlanCodes = ['BANHO_TOSA'] as const;
+export const petCommercialNavigationPlanCodes = ['PETSHOP', 'PETSHOP_BANHO_TOSA', 'BANHO_TOSA_CLINICA'] as const;
 
 export type SidebarNavigationContext = Pick<FrontendPlatformState, 'user'> & {
   modules: Pick<FrontendPlatformModules, 'availableCodes' | 'loading'>;
@@ -61,6 +64,10 @@ export function filterSidebarItems<T extends SidebarItemBase>(
     }
 
     if (item.moduleCode && !availableModuleCodes.has(item.moduleCode)) {
+      return false;
+    }
+
+    if (item.blockedPlanCodes && item.blockedPlanCodes.length > 0 && matchesAllowedPlanCodes(context.user, item.blockedPlanCodes)) {
       return false;
     }
 

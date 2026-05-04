@@ -25,7 +25,12 @@ public interface PetProfileRepository extends JpaRepository<PetProfile, UUID>, B
                    LOWER(p.name) LIKE :search OR
                    LOWER(COALESCE(p.species, '')) LIKE :search OR
                    LOWER(COALESCE(p.breed, '')) LIKE :search OR
-                   LOWER(COALESCE(p.color, '')) LIKE :search)
+                   LOWER(COALESCE(p.color, '')) LIKE :search OR
+                   LOWER(COALESCE(p.size, '')) LIKE :search OR
+                   LOWER(COALESCE(p.coatType, '')) LIKE :search OR
+                   LOWER(COALESCE(p.behavior, '')) LIKE :search OR
+                   LOWER(COALESCE(p.restrictions, '')) LIKE :search OR
+                   LOWER(COALESCE(p.groomingNotes, '')) LIKE :search)
             """)
     Page<PetProfile> findAllByTenantIdAndSearch(
             @Param("tenantId") UUID tenantId,

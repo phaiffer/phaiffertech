@@ -36,7 +36,9 @@ import { useAppMessages } from '@/shared/i18n/app-i18n-provider';
 import { useFrontendPlatform } from '@/shared/platform/use-frontend-platform';
 import {
   filterSidebarItems,
+  banhoTosaOnlyPlanCodes,
   petClinicNavigationPlanCodes,
+  petCommercialNavigationPlanCodes,
   petPosNavigationPlanCodes
 } from '@/shared/platform/sidebar-navigation';
 import { Avatar, AvatarFallback } from '@/shared/ui/shadcn/avatar';
@@ -54,6 +56,7 @@ type SidebarItem = {
   anyOf?: string[];
   anyEntitlements?: readonly string[];
   allowedPlanCodes?: readonly string[];
+  blockedPlanCodes?: readonly string[];
   moduleCode?: 'PET';
   group: 'principal' | 'gestao' | 'suporte';
   icon: ReactNode;
@@ -135,6 +138,8 @@ export function Sidebar() {
         label: petMessages.followUp,
         anyOf: ['crm.task.read', 'crm.note.read', 'crm.activity.read'],
         anyEntitlements: petSubmoduleEntitlements,
+        allowedPlanCodes: petCommercialNavigationPlanCodes,
+        blockedPlanCodes: banhoTosaOnlyPlanCodes,
         moduleCode: 'PET',
         group: 'principal',
         icon: <ClipboardList className="h-4 w-4" />,
@@ -144,6 +149,8 @@ export function Sidebar() {
         label: petMessages.commercial,
         anyOf: [...petCommercialNavigationPermissions],
         anyEntitlements: petSubmoduleEntitlements,
+        allowedPlanCodes: petCommercialNavigationPlanCodes,
+        blockedPlanCodes: banhoTosaOnlyPlanCodes,
         moduleCode: 'PET',
         group: 'principal',
         icon: <TrendingUp className="h-4 w-4" />,
@@ -154,6 +161,7 @@ export function Sidebar() {
         anyOf: ['pet.medical-record.read'],
         anyEntitlements: petClinicalEntitlements,
         allowedPlanCodes: petClinicNavigationPlanCodes,
+        blockedPlanCodes: banhoTosaOnlyPlanCodes,
         moduleCode: 'PET',
         group: 'principal',
         icon: <Stethoscope className="h-4 w-4" />,
@@ -164,6 +172,7 @@ export function Sidebar() {
         anyOf: ['pet.product.read', 'pet.invoice.write'],
         anyEntitlements: petRetailEntitlements,
         allowedPlanCodes: petPosNavigationPlanCodes,
+        blockedPlanCodes: banhoTosaOnlyPlanCodes,
         moduleCode: 'PET',
         group: 'principal',
         icon: <ShoppingCart className="h-4 w-4" />,
@@ -173,6 +182,7 @@ export function Sidebar() {
         label: petMessages.finance,
         anyOf: ['finance.read', 'pet.invoice.read'],
         anyEntitlements: petSubmoduleEntitlements,
+        blockedPlanCodes: banhoTosaOnlyPlanCodes,
         moduleCode: 'PET',
         group: 'gestao',
         icon: <Banknote className="h-4 w-4" />,

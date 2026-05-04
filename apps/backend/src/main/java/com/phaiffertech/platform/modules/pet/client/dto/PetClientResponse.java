@@ -12,6 +12,7 @@ public record PetClientResponse(
         String documentType,
         String document,
         String address,
+        String notes,
         String status,
         Instant createdAt,
         Instant updatedAt

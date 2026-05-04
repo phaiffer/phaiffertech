@@ -30,6 +30,7 @@ public final class PetClientMapper implements BaseCrudMapper<
         client.setDocumentType(normalizedDocumentType);
         client.setDocument(normalizeDocument(normalizedDocumentType, request.document()));
         client.setAddress(request.address());
+        client.setNotes(trimToNull(request.notes()));
         client.setStatus(resolveStatus(request.status()));
         return client;
     }
@@ -45,6 +46,7 @@ public final class PetClientMapper implements BaseCrudMapper<
         entity.setDocumentType(normalizedDocumentType);
         entity.setDocument(normalizeDocument(normalizedDocumentType, request.document()));
         entity.setAddress(request.address());
+        entity.setNotes(trimToNull(request.notes()));
         entity.setStatus(resolveStatus(request.status()));
     }
 
@@ -58,6 +60,7 @@ public final class PetClientMapper implements BaseCrudMapper<
                 client.getDocumentType(),
                 client.getDocument(),
                 client.getAddress(),
+                client.getNotes(),
                 client.getStatus(),
                 client.getCreatedAt(),
                 client.getUpdatedAt()
@@ -102,6 +105,13 @@ public final class PetClientMapper implements BaseCrudMapper<
             throw new IllegalArgumentException("Client RG must contain at least 3 characters.");
         }
         return normalizedDocument;
+    }
+
+    private String trimToNull(String value) {
+        if (value == null || value.isBlank()) {
+            return null;
+        }
+        return value.trim();
     }
 
     private boolean isValidCpf(String value) {

@@ -27,8 +27,13 @@ public final class PetProfileMapper implements BaseCrudMapper<
         profile.setBirthDate(request.birthDate());
         profile.setGender(normalizeUpper(request.gender()));
         profile.setWeight(request.weight());
-        profile.setColor(request.color());
-        profile.setNotes(request.notes());
+        profile.setSize(normalizeUpper(request.size()));
+        profile.setCoatType(trimToNull(request.coatType()));
+        profile.setBehavior(trimToNull(request.behavior()));
+        profile.setColor(trimToNull(request.color()));
+        profile.setRestrictions(trimToNull(request.restrictions()));
+        profile.setGroomingNotes(trimToNull(request.groomingNotes()));
+        profile.setNotes(trimToNull(request.notes()));
         return profile;
     }
 
@@ -41,8 +46,13 @@ public final class PetProfileMapper implements BaseCrudMapper<
         entity.setBirthDate(request.birthDate());
         entity.setGender(normalizeUpper(request.gender()));
         entity.setWeight(request.weight());
-        entity.setColor(request.color());
-        entity.setNotes(request.notes());
+        entity.setSize(normalizeUpper(request.size()));
+        entity.setCoatType(trimToNull(request.coatType()));
+        entity.setBehavior(trimToNull(request.behavior()));
+        entity.setColor(trimToNull(request.color()));
+        entity.setRestrictions(trimToNull(request.restrictions()));
+        entity.setGroomingNotes(trimToNull(request.groomingNotes()));
+        entity.setNotes(trimToNull(request.notes()));
     }
 
     @Override
@@ -56,7 +66,12 @@ public final class PetProfileMapper implements BaseCrudMapper<
                 profile.getBirthDate(),
                 profile.getGender(),
                 profile.getWeight(),
+                profile.getSize(),
+                profile.getCoatType(),
+                profile.getBehavior(),
                 profile.getColor(),
+                profile.getRestrictions(),
+                profile.getGroomingNotes(),
                 profile.getNotes(),
                 profile.getCreatedAt(),
                 profile.getUpdatedAt()
@@ -68,5 +83,12 @@ public final class PetProfileMapper implements BaseCrudMapper<
             return null;
         }
         return value.trim().toUpperCase();
+    }
+
+    private String trimToNull(String value) {
+        if (value == null || value.isBlank()) {
+            return null;
+        }
+        return value.trim();
     }
 }

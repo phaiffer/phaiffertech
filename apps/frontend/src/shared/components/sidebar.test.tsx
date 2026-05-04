@@ -129,7 +129,7 @@ describe('Sidebar', () => {
     expect(container.querySelector('a[href="/crm"]')).toBeNull();
   });
 
-  it('keeps grooming-friendly PetFlow navigation visible while filtering veterinary-only areas', () => {
+  it('keeps grooming-only PetFlow navigation visible while filtering generic and veterinary areas', () => {
     currentUser.role = 'TENANT_ADMIN';
     currentUser.platformAdmin = false;
     currentUser.platformOwner = false;
@@ -139,6 +139,7 @@ describe('Sidebar', () => {
       'pet.client.read',
       'pet.profile.read',
       'pet.appointment.read',
+      'pet.service.read',
       'pet.medical-record.read',
       'finance.read',
       'pet.plan.read',
@@ -155,16 +156,20 @@ describe('Sidebar', () => {
     expect(container.querySelector('a[href="/pet/clients"]')).not.toBeNull();
     expect(container.querySelector('a[href="/pet/pets"]')).not.toBeNull();
     expect(container.querySelector('a[href="/pet/appointments"]')).not.toBeNull();
-    expect(container.querySelector('a[href="/pet/finance"]')).not.toBeNull();
+    expect(container.querySelector('a[href="/pet/services"]')).not.toBeNull();
     expect(container.querySelector('a[href="/pet/plans"]')).not.toBeNull();
     expect(container.querySelector('a[href="/pet/inventory"]')).not.toBeNull();
     expect(container.querySelector('a[href="/pet/invoices"]')).not.toBeNull();
     expect(container.querySelector('a[href="/pet/professionals"]')).not.toBeNull();
+    expect(container.querySelector('a[href="/pet/commissions"]')).not.toBeNull();
+    expect(container.querySelector('a[href="/pet/follow-up"]')).toBeNull();
+    expect(container.querySelector('a[href="/pet/commercial"]')).toBeNull();
     expect(container.querySelector('a[href="/pet/clinic"]')).toBeNull();
     expect(container.querySelector('a[href="/pet/pos"]')).toBeNull();
+    expect(container.querySelector('a[href="/pet/finance"]')).toBeNull();
   });
 
-  it('keeps package-scoped navigation visible for wildcard local access even on restricted tenant packages', () => {
+  it('keeps grooming package exclusions even for wildcard local access', () => {
     currentUser.email = 'admin@local.test';
     currentUser.role = 'TENANT_ADMIN';
     currentUser.platformAdmin = false;
@@ -176,7 +181,7 @@ describe('Sidebar', () => {
 
     const { container } = render(<Sidebar />);
 
-    expect(container.querySelector('a[href="/pet/clinic"]')).not.toBeNull();
-    expect(container.querySelector('a[href="/pet/pos"]')).not.toBeNull();
+    expect(container.querySelector('a[href="/pet/clinic"]')).toBeNull();
+    expect(container.querySelector('a[href="/pet/pos"]')).toBeNull();
   });
 });

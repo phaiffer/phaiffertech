@@ -49,6 +49,15 @@ const genderOptions = [
   { value: 'FEMALE', label: 'Femea' }
 ];
 
+const sizeOptions = [
+  { value: '', label: 'Nao informado' },
+  { value: 'TOY', label: 'Toy' },
+  { value: 'SMALL', label: 'Pequeno' },
+  { value: 'MEDIUM', label: 'Medio' },
+  { value: 'LARGE', label: 'Grande' },
+  { value: 'GIANT', label: 'Gigante' }
+];
+
 function formatDate(value?: string) {
   if (!value) {
     return 'Nao informado';
@@ -80,7 +89,12 @@ export function PetProfilesPage({ initialView = 'list' }: PetProfilesPageProps) 
   const [birthDate, setBirthDate] = useState('');
   const [gender, setGender] = useState('');
   const [weight, setWeight] = useState('');
+  const [size, setSize] = useState('');
+  const [coatType, setCoatType] = useState('');
+  const [behavior, setBehavior] = useState('');
   const [color, setColor] = useState('');
+  const [restrictions, setRestrictions] = useState('');
+  const [groomingNotes, setGroomingNotes] = useState('');
   const [notes, setNotes] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
@@ -145,7 +159,12 @@ export function PetProfilesPage({ initialView = 'list' }: PetProfilesPageProps) 
     setBirthDate('');
     setGender('');
     setWeight('');
+    setSize('');
+    setCoatType('');
+    setBehavior('');
     setColor('');
+    setRestrictions('');
+    setGroomingNotes('');
     setNotes('');
   }
 
@@ -169,7 +188,12 @@ export function PetProfilesPage({ initialView = 'list' }: PetProfilesPageProps) 
     setBirthDate(profile.birthDate ?? '');
     setGender(profile.gender ?? '');
     setWeight(profile.weight === undefined ? '' : String(profile.weight));
+    setSize(profile.size ?? '');
+    setCoatType(profile.coatType ?? '');
+    setBehavior(profile.behavior ?? '');
     setColor(profile.color ?? '');
+    setRestrictions(profile.restrictions ?? '');
+    setGroomingNotes(profile.groomingNotes ?? '');
     setNotes(profile.notes ?? '');
     setSuccess(null);
     setError(null);
@@ -215,7 +239,12 @@ export function PetProfilesPage({ initialView = 'list' }: PetProfilesPageProps) 
       birthDate: birthDate || undefined,
       gender: gender || undefined,
       weight: parsedWeight,
+      size: size || undefined,
+      coatType: coatType || undefined,
+      behavior: behavior || undefined,
       color: color || undefined,
+      restrictions: restrictions || undefined,
+      groomingNotes: groomingNotes || undefined,
       notes: notes || undefined
     };
 
@@ -277,7 +306,10 @@ export function PetProfilesPage({ initialView = 'list' }: PetProfilesPageProps) 
         <div>
           <p className="font-medium text-slate-900">{profile.name}</p>
           <p className={`mt-1 ${sharedCompactTextClass}`}>
-            {profile.species}{profile.breed ? ` · ${profile.breed}` : ''}
+            {[profile.species, profile.breed].filter(Boolean).join(' - ')}
+          </p>
+          <p className={sharedCompactTextClass}>
+            {[profile.size, profile.coatType].filter(Boolean).join(' - ') || 'Porte e pelagem nao informados'}
           </p>
         </div>
       )
@@ -298,12 +330,15 @@ export function PetProfilesPage({ initialView = 'list' }: PetProfilesPageProps) 
     },
     {
       key: 'details',
-      header: 'Detalhes',
+      header: 'Banho e tosa',
       render: (profile) => (
         <div>
           <p className="font-medium text-slate-900">{profile.color ?? 'Cor nao informada'}</p>
           <p className={`mt-1 ${sharedCompactTextClass}`}>
             {profile.weight === undefined ? 'Peso nao informado' : `${profile.weight} kg`}
+          </p>
+          <p className={sharedCompactTextClass}>
+            {profile.behavior ?? profile.restrictions ?? 'Sem alerta de comportamento ou restricao'}
           </p>
         </div>
       )
@@ -424,7 +459,7 @@ export function PetProfilesPage({ initialView = 'list' }: PetProfilesPageProps) 
           <PermissionGuard permission={editingId ? 'pet.profile.update' : 'pet.profile.create'}>
             <PageSection
               title={editingId ? 'Editar pet' : 'Novo pet'}
-              description="Mantenha o cadastro simples: cliente, identificacao e os detalhes necessarios para agendar e cobrar corretamente."
+              description="Mantenha os dados que a recepcao e a equipe de banho e tosa precisam para agendar, executar e cobrar com seguranca."
             >
               <form onSubmit={handleSubmit} className="space-y-5">
                 <div className="grid gap-4 xl:grid-cols-2">
@@ -433,10 +468,15 @@ export function PetProfilesPage({ initialView = 'list' }: PetProfilesPageProps) 
                   <FormInput label="Especie" value={species} onChange={setSpecies} required />
                   <FormInput label="Raca" value={breed} onChange={setBreed} />
                   <FormInput label="Nascimento" value={birthDate} onChange={setBirthDate} type="date" />
-                  <FormSelect label="Genero" value={gender} options={genderOptions} onChange={setGender} />
+                  <FormSelect label="Sexo" value={gender} options={genderOptions} onChange={setGender} />
+                  <FormSelect label="Porte" value={size} options={sizeOptions} onChange={setSize} />
                   <FormInput label="Peso (kg)" value={weight} onChange={setWeight} type="number" />
+                  <FormInput label="Tipo de pelagem" value={coatType} onChange={setCoatType} placeholder="Curta, longa, dupla, cacheada..." />
+                  <FormInput label="Comportamento" value={behavior} onChange={setBehavior} placeholder="Calmo, ansioso, reativo, filhote..." />
                   <FormInput label="Cor" value={color} onChange={setColor} />
-                  <FormInput label="Observacoes" value={notes} onChange={setNotes} wrapperClassName="xl:col-span-2" />
+                  <FormInput label="Restricoes" value={restrictions} onChange={setRestrictions} placeholder="Alergias, sensibilidade, medicacao ou areas que exigem cuidado" wrapperClassName="xl:col-span-2" />
+                  <FormInput label="Observacoes de banho/tosa" value={groomingNotes} onChange={setGroomingNotes} placeholder="Preferencia de lamina, secagem, perfume, focinheira ou rotina do banho" wrapperClassName="xl:col-span-2" />
+                  <FormInput label="Observacoes gerais" value={notes} onChange={setNotes} wrapperClassName="xl:col-span-2" />
                 </div>
 
                 <div className={sharedFormActionsClass}>

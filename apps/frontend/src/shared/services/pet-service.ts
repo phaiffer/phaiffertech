@@ -36,6 +36,7 @@ export type CreatePetClientInput = {
   documentType: PetClientDocumentType;
   document: string;
   address?: string;
+  notes?: string;
   status?: string;
 };
 
@@ -49,6 +50,7 @@ export type UpdatePetClientInput = {
   documentType: PetClientDocumentType;
   document: string;
   address?: string;
+  notes?: string;
   status: string;
 };
 
@@ -60,7 +62,12 @@ export type CreatePetProfileInput = {
   birthDate?: string;
   gender?: string;
   weight?: number;
+  size?: string;
+  coatType?: string;
+  behavior?: string;
   color?: string;
+  restrictions?: string;
+  groomingNotes?: string;
   notes?: string;
 };
 
@@ -356,6 +363,7 @@ function normalizePetClientPayload(input: CreatePetClientInput | UpdatePetClient
     documentType: input.documentType,
     document: input.document,
     address: input.address,
+    notes: input.notes,
     status: input.status
   };
 }

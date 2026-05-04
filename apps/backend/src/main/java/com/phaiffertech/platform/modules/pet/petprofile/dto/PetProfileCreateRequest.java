@@ -14,7 +14,12 @@ public record PetProfileCreateRequest(
         LocalDate birthDate,
         String gender,
         BigDecimal weight,
+        String size,
+        String coatType,
+        String behavior,
         String color,
+        String restrictions,
+        String groomingNotes,
         String notes
 ) {
 }

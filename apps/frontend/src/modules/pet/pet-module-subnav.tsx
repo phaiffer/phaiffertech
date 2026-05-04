@@ -9,7 +9,13 @@ import {
 } from '@/shared/entitlements/tenant-entitlements';
 import { petCommercialNavigationPermissions } from '@/shared/auth/pet-commercial-permissions';
 import { useAppMessages } from '@/shared/i18n/app-i18n-provider';
-import { filterSidebarItems, petClinicNavigationPlanCodes, petPosNavigationPlanCodes } from '@/shared/platform/sidebar-navigation';
+import {
+  banhoTosaOnlyPlanCodes,
+  filterSidebarItems,
+  petClinicNavigationPlanCodes,
+  petPosNavigationPlanCodes,
+  petCommercialNavigationPlanCodes
+} from '@/shared/platform/sidebar-navigation';
 import { useFrontendPlatform } from '@/shared/platform/use-frontend-platform';
 
 function isActive(pathname: string | null, href: string) {
@@ -75,6 +81,8 @@ export function PetModuleSubnav() {
       label: t.followUp,
       anyOf: ['crm.task.read', 'crm.note.read', 'crm.activity.read'],
       anyEntitlements: petSubmoduleEntitlements,
+      allowedPlanCodes: petCommercialNavigationPlanCodes,
+      blockedPlanCodes: banhoTosaOnlyPlanCodes,
       moduleCode: 'PET',
       group: 'pet' as const
     },
@@ -83,6 +91,8 @@ export function PetModuleSubnav() {
       label: t.commercial,
       anyOf: [...petCommercialNavigationPermissions],
       anyEntitlements: petSubmoduleEntitlements,
+      allowedPlanCodes: petCommercialNavigationPlanCodes,
+      blockedPlanCodes: banhoTosaOnlyPlanCodes,
       moduleCode: 'PET',
       group: 'pet' as const
     },
@@ -92,6 +102,7 @@ export function PetModuleSubnav() {
       anyOf: ['pet.medical-record.read'],
       anyEntitlements: petClinicalEntitlements,
       allowedPlanCodes: petClinicNavigationPlanCodes,
+      blockedPlanCodes: banhoTosaOnlyPlanCodes,
       moduleCode: 'PET',
       group: 'pet' as const
     },
@@ -101,6 +112,7 @@ export function PetModuleSubnav() {
       anyOf: ['pet.product.read', 'pet.invoice.write'],
       anyEntitlements: petRetailEntitlements,
       allowedPlanCodes: petPosNavigationPlanCodes,
+      blockedPlanCodes: banhoTosaOnlyPlanCodes,
       moduleCode: 'PET',
       group: 'pet' as const
     },
@@ -109,6 +121,7 @@ export function PetModuleSubnav() {
       label: t.finance,
       anyOf: ['finance.read', 'pet.invoice.read'],
       anyEntitlements: petSubmoduleEntitlements,
+      blockedPlanCodes: banhoTosaOnlyPlanCodes,
       moduleCode: 'PET',
       group: 'pet' as const
     },

@@ -34,7 +34,8 @@ public interface PetClientRepository extends JpaRepository<PetClient, UUID>, Bas
                    LOWER(COALESCE(c.email, '')) LIKE :search OR
                    LOWER(COALESCE(c.phone, '')) LIKE :search OR
                    LOWER(COALESCE(c.document, '')) LIKE :search OR
-                   LOWER(COALESCE(c.address, '')) LIKE :search)
+                   LOWER(COALESCE(c.address, '')) LIKE :search OR
+                   LOWER(COALESCE(c.notes, '')) LIKE :search)
             """)
     Page<PetClient> findAllByTenantIdAndSearch(
             @Param("tenantId") UUID tenantId,

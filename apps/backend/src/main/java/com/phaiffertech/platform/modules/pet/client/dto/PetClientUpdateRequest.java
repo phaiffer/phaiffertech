@@ -11,6 +11,7 @@ public record PetClientUpdateRequest(
         @NotBlank String documentType,
         @NotBlank String document,
         String address,
+        String notes,
         @NotBlank String status
 ) {
 }

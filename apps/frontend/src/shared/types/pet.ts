@@ -14,6 +14,7 @@ export type PetClient = {
   documentType?: PetClientDocumentType;
   document?: string;
   address?: string;
+  notes?: string;
   status: string;
   createdAt: string;
   updatedAt: string;
@@ -28,7 +29,12 @@ export type PetProfile = {
   birthDate?: string;
   gender?: string;
   weight?: number;
+  size?: string;
+  coatType?: string;
+  behavior?: string;
   color?: string;
+  restrictions?: string;
+  groomingNotes?: string;
   notes?: string;
   createdAt: string;
   updatedAt: string;

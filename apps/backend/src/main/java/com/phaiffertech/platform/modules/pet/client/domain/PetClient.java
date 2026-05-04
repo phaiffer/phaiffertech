@@ -34,6 +34,9 @@ public class PetClient extends BaseTenantEntity {
     @Column(name = "address", length = 255)
     private String address;
 
+    @Column(name = "notes", columnDefinition = "text")
+    private String notes;
+
     @Column(name = "status", nullable = false, length = 40)
     private String status = "ACTIVE";
 
@@ -91,6 +94,14 @@ public class PetClient extends BaseTenantEntity {
 
     public void setAddress(String address) {
         this.address = address;
+    }
+
+    public String getNotes() {
+        return notes;
+    }
+
+    public void setNotes(String notes) {
+        this.notes = notes;
     }
 
     public String getStatus() {

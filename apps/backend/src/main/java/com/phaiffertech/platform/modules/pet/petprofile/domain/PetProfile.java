@@ -37,8 +37,23 @@ public class PetProfile extends BaseTenantEntity {
     @Column(name = "weight", precision = 10, scale = 2)
     private BigDecimal weight;
 
+    @Column(name = "size", length = 30)
+    private String size;
+
+    @Column(name = "coat_type", length = 80)
+    private String coatType;
+
+    @Column(name = "behavior", length = 80)
+    private String behavior;
+
     @Column(name = "color", length = 80)
     private String color;
+
+    @Column(name = "restrictions", columnDefinition = "text")
+    private String restrictions;
+
+    @Column(name = "grooming_notes", columnDefinition = "text")
+    private String groomingNotes;
 
     @Column(name = "notes", columnDefinition = "text")
     private String notes;
@@ -99,12 +114,52 @@ public class PetProfile extends BaseTenantEntity {
         this.weight = weight;
     }
 
+    public String getSize() {
+        return size;
+    }
+
+    public void setSize(String size) {
+        this.size = size;
+    }
+
+    public String getCoatType() {
+        return coatType;
+    }
+
+    public void setCoatType(String coatType) {
+        this.coatType = coatType;
+    }
+
+    public String getBehavior() {
+        return behavior;
+    }
+
+    public void setBehavior(String behavior) {
+        this.behavior = behavior;
+    }
+
     public String getColor() {
         return color;
     }
 
     public void setColor(String color) {
         this.color = color;
+    }
+
+    public String getRestrictions() {
+        return restrictions;
+    }
+
+    public void setRestrictions(String restrictions) {
+        this.restrictions = restrictions;
+    }
+
+    public String getGroomingNotes() {
+        return groomingNotes;
+    }
+
+    public void setGroomingNotes(String groomingNotes) {
+        this.groomingNotes = groomingNotes;
     }
 
     public String getNotes() {

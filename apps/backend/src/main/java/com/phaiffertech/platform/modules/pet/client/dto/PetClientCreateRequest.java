@@ -11,6 +11,7 @@ public record PetClientCreateRequest(
         @NotBlank String documentType,
         @NotBlank String document,
         String address,
+        String notes,
         String status
 ) {
 }

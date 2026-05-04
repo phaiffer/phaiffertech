@@ -99,6 +99,7 @@ export function PetClientsPage({ initialView = 'list' }: PetClientsPageProps) {
   const [documentType, setDocumentType] = useState<PetClientDocumentType | ''>('');
   const [document, setDocument] = useState('');
   const [address, setAddress] = useState('');
+  const [notes, setNotes] = useState('');
   const [status, setStatus] = useState('ACTIVE');
   const [submitting, setSubmitting] = useState(false);
 
@@ -133,6 +134,7 @@ export function PetClientsPage({ initialView = 'list' }: PetClientsPageProps) {
     setDocumentType('');
     setDocument('');
     setAddress('');
+    setNotes('');
     setStatus('ACTIVE');
   }
 
@@ -157,6 +159,7 @@ export function PetClientsPage({ initialView = 'list' }: PetClientsPageProps) {
     setDocumentType(resolvedDocumentType);
     setDocument(formatPetClientDocumentInput(resolvedDocumentType, client.document ?? ''));
     setAddress(client.address ?? '');
+    setNotes(client.notes ?? '');
     setStatus(client.status);
     setSuccess(null);
     setError(null);
@@ -226,6 +229,7 @@ export function PetClientsPage({ initialView = 'list' }: PetClientsPageProps) {
           documentType: normalizedDocumentType,
           document: normalizedDocument,
           address: address || undefined,
+          notes: notes || undefined,
           status
         });
         setSuccess('Cliente atualizado.');
@@ -241,6 +245,7 @@ export function PetClientsPage({ initialView = 'list' }: PetClientsPageProps) {
           documentType: normalizedDocumentType,
           document: normalizedDocument,
           address: address || undefined,
+          notes: notes || undefined,
           status
         });
 
@@ -331,7 +336,9 @@ export function PetClientsPage({ initialView = 'list' }: PetClientsPageProps) {
       render: (client) => (
         <div>
           <p className="font-medium text-slate-900">{client.address ?? 'Sem endereco'}</p>
-          <p className={`mt-1 ${sharedCompactTextClass}`}>Atualizado em {formatDateTime(client.updatedAt)}</p>
+          <p className={`mt-1 ${sharedCompactTextClass}`}>
+            {client.notes ? `Observacoes: ${client.notes}` : `Atualizado em ${formatDateTime(client.updatedAt)}`}
+          </p>
         </div>
       )
     },
@@ -464,7 +471,7 @@ export function PetClientsPage({ initialView = 'list' }: PetClientsPageProps) {
                   <FormInput
                     id="client-name"
                     name="name"
-                    label="Responsavel principal"
+                    label="Nome do responsavel"
                     value={name}
                     onChange={setName}
                     autoComplete="name"
@@ -539,6 +546,15 @@ export function PetClientsPage({ initialView = 'list' }: PetClientsPageProps) {
                     value={address}
                     onChange={setAddress}
                     autoComplete="street-address"
+                    wrapperClassName="xl:col-span-2"
+                  />
+                  <FormInput
+                    id="client-notes"
+                    name="notes"
+                    label="Observacoes"
+                    value={notes}
+                    onChange={setNotes}
+                    placeholder="Preferencias de contato, autorizacoes de retirada ou combinados do cliente"
                     wrapperClassName="xl:col-span-2"
                   />
                 </div>

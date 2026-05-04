@@ -60,7 +60,7 @@ function formatExpectedQuantity(quantity: number) {
 function formatInventoryLinkSummary(service: Pick<PetServiceCatalog, 'inventoryLinks'>) {
   const activeLinks = service.inventoryLinks.filter((link) => link.active);
   if (activeLinks.length === 0) {
-    return 'No planned stock usage';
+    return 'Sem insumo planejado';
   }
 
   const preview = activeLinks
@@ -69,7 +69,7 @@ function formatInventoryLinkSummary(service: Pick<PetServiceCatalog, 'inventoryL
     .join(' • ');
 
   return activeLinks.length > 2
-    ? `${preview} • +${activeLinks.length - 2} more`
+    ? `${preview} • +${activeLinks.length - 2} adicionais`
     : preview;
 }
 
@@ -415,7 +415,7 @@ export function PetServicesPage() {
         return `${itemLabel} x${link.expectedQuantity || '0'} ${unit}`;
       })
       .join(' • ')
-    : 'No planned inventory consumption.';
+    : 'Sem consumo planejado de insumos.';
   const draftServicePreview = describePetServiceCatalogItem({
     id: editingId ?? 'draft-service',
     name: name.trim() || 'Servico em preparo',
@@ -526,7 +526,7 @@ export function PetServicesPage() {
     },
     {
       key: 'inventoryRecipe',
-      header: 'Inventory recipe',
+      header: 'Insumos',
       render: (item) => (
         <div className="space-y-1 text-xs text-[color:var(--app-shell-muted)]">
           <p className="font-medium text-slate-900">
@@ -573,7 +573,7 @@ export function PetServicesPage() {
         <PageTitle
           eyebrow="PetFlow workspace"
           title="Catalogo de Banho e Tosa"
-          description="Estruture banho, tosa, servicos combinados e itens clinicos disponiveis no pacote contratado, com preco, duracao, plano e regra de comissao claros para a agenda."
+          description="Estruture banho, tosa e servicos combinados com preco, duracao, plano, comissao, insumos e base operacional para evoluir preco por porte, peso e pelagem."
           actions={(
             <PermissionGuard permission="pet.service.create">
               <button type="button" onClick={beginCreateService} className="ui-primary-button">
@@ -644,7 +644,7 @@ export function PetServicesPage() {
           <div id="pet-service-form-section">
             <PageSection
               title={editingId ? 'Editar servico' : 'Criar servico'}
-              description="Cadastre a definicao que a agenda usa: categoria, status, duracao, preco base, plano e regra de comissao."
+              description="Cadastre a definicao que a agenda usa: categoria, duracao, preco base, plano, booking avulso, comissao, resumo operacional e insumos."
             >
               <form onSubmit={handleSubmit} className="space-y-5">
                 <div className="grid gap-4 xl:grid-cols-2">
@@ -686,10 +686,10 @@ export function PetServicesPage() {
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div>
                       <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--app-shell-muted)]">
-                        Inventory recipe
+                        Insumos vinculados
                       </p>
                       <p className="mt-2 text-sm text-[color:var(--app-shell-muted)]">
-                        Link the products or materials this service is expected to consume. This first step is read-only and keeps current stock flows stable.
+                        Vincule os produtos ou materiais que este servico deve consumir. A agenda usa isto como consumo planejado antes do ajuste real.
                       </p>
                     </div>
                     <button
@@ -698,7 +698,7 @@ export function PetServicesPage() {
                       disabled={Boolean(productsLookupError)}
                       className="ui-secondary-button"
                     >
-                      Add linked item
+                      Adicionar insumo
                     </button>
                   </div>
 
@@ -717,14 +717,14 @@ export function PetServicesPage() {
                         >
                           <div className="grid gap-3 xl:grid-cols-[minmax(0,1.5fr)_180px_auto] xl:items-end">
                             <FormSelect
-                              label="Inventory item"
+                              label="Insumo"
                               value={link.inventoryItemId}
                               options={inventoryOptions}
                               onChange={(value) => handleInventoryLinkChange(index, { inventoryItemId: value })}
                               disabled={Boolean(productsLookupError)}
                             />
                             <FormInput
-                              label="Qty per service"
+                              label="Qtd. por servico"
                               value={link.expectedQuantity}
                               onChange={(value) => handleInventoryLinkChange(index, { expectedQuantity: value })}
                               type="number"
@@ -739,30 +739,30 @@ export function PetServicesPage() {
                                   onChange={(event) => handleInventoryLinkChange(index, { active: event.target.checked })}
                                   className="h-4 w-4 rounded border-[color:var(--app-shell-border)]"
                                 />
-                                Active
+                                Ativo
                               </label>
                               <button
                                 type="button"
                                 onClick={() => handleRemoveInventoryLink(index)}
                                 className="ui-inline-button"
                               >
-                                Remove
+                                Remover
                               </button>
                             </div>
                           </div>
                           <p className="mt-2 text-xs text-[color:var(--app-shell-muted)]">
                             {link.inventoryItemName
                               ? `${link.inventoryItemName}${link.inventoryItemSku ? ` (${link.inventoryItemSku})` : ''}`
-                              : 'Pick a product or material from the current inventory catalog.'}
+                              : 'Escolha um produto ou material do estoque atual.'}
                             {link.unitOfMeasure ? ` • Unit ${link.unitOfMeasure}` : ''}
-                            {link.active ? ' • Visible in appointment consumption previews.' : ' • Stored but hidden from appointment previews until reactivated.'}
+                            {link.active ? ' • Visivel no consumo planejado do atendimento.' : ' • Salvo, mas oculto do consumo planejado ate reativar.'}
                           </p>
                         </div>
                       ))}
                     </div>
                   ) : (
                     <p className="mt-4 text-xs text-[color:var(--app-shell-muted)]">
-                      Leave this empty for services that do not need planned stock visibility yet.
+                      Deixe vazio para servicos que ainda nao precisam de consumo planejado de estoque.
                     </p>
                   )}
                 </div>
@@ -783,11 +783,11 @@ export function PetServicesPage() {
                     <p>Status: {active ? 'Ativo para novos atendimentos' : 'Oculto de novos atendimentos'}</p>
                     <p>Uso: {draftAvailabilityLabel}</p>
                     <p>{commissionEligible ? 'Entra na comissao' : 'Fora da comissao'}</p>
-                    <p>Category: {formatPetServiceCategory(category)}</p>
-                    <p>Status: {active ? 'Active for new appointments' : 'Hidden from new appointments'}</p>
-                    <p>Scheduling mode: {draftAvailabilityLabel}</p>
-                    <p>{commissionEligible ? 'Commission ready' : 'Commission excluded'}</p>
-                    <p className="xl:col-span-2">Inventory preview: {inventoryPreview}</p>
+                    <p>Base futura: porte, peso e pelagem podem usar este preco base como ancora.</p>
+                    <p>Status: {active ? 'Ativo para novos atendimentos' : 'Oculto de novos atendimentos'}</p>
+                    <p>Modo de agenda: {draftAvailabilityLabel}</p>
+                    <p>{commissionEligible ? 'Pronto para comissao' : 'Fora da comissao'}</p>
+                    <p className="xl:col-span-2">Previa de insumos: {inventoryPreview}</p>
                   </div>
                   <p className={`mt-3 text-xs ${activeSchedulingConflict ? 'text-amber-800' : 'text-[color:var(--app-shell-muted)]'}`}>
                     {activeSchedulingConflict
