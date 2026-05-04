@@ -276,10 +276,7 @@ public class PetAppointmentService extends BaseTenantCrudService<
 
         // Fire "pet ready" operational signal after a successful COMPLETED transition.
         if ("COMPLETED".equals(entity.getStatus())) {
-            PetClient client = petClientRepository.findByIdAndTenantId(entity.getClientId(), tenantId).orElse(null);
-            String clientEmail = client != null ? client.getEmail() : null;
-            String clientName = client != null ? resolveClientName(client) : null;
-            operationalTriggerService.firePetReady(entity, clientEmail, clientName);
+            operationalTriggerService.preparePetReady(entity);
         }
 
         return response;
@@ -656,12 +653,9 @@ public class PetAppointmentService extends BaseTenantCrudService<
 
         entity.setPlanSessionConsumed(true);
 
-        // Fire "plan near end" signal when exactly 2 sessions remain after consumption.
-        if (plan.getRemainingSessions() == 2) {
-            PetClient client = petClientRepository.findByIdAndTenantId(plan.getClientId(), tenantId).orElse(null);
-            String clientEmail = client != null ? client.getEmail() : null;
-            String clientName = client != null ? resolveClientName(client) : null;
-            operationalTriggerService.firePlanNearEnd(plan, clientEmail, clientName, tenantId);
+        // Prepare the renewal reminder when the plan reaches the last remaining bath/use.
+        if (plan.getRemainingSessions() == 1) {
+            operationalTriggerService.preparePlanLastUseReminder(plan, tenantId);
         }
     }
 

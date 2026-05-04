@@ -65,6 +65,7 @@ public class TenantService {
                 tenant,
                 request.name(),
                 request.code(),
+                request.status(),
                 request.planCode(),
                 request.logoUrl(),
                 request.primaryColor(),
@@ -75,7 +76,6 @@ public class TenantService {
                 false,
                 false
         );
-        tenant.setStatus("ACTIVE");
         tenant = tenantRepository.save(tenant);
 
         tenantModuleContractService.syncEffectiveModules(tenant.getId(), tenant.getPlanCode(), request.contractedModules());
@@ -107,6 +107,7 @@ public class TenantService {
                 tenant,
                 request.name(),
                 request.code(),
+                request.status(),
                 request.planCode(),
                 request.logoUrl(),
                 request.primaryColor(),
@@ -171,6 +172,7 @@ public class TenantService {
             Tenant tenant,
             String name,
             String code,
+            String status,
             String planCode,
             String logoUrl,
             String primaryColor,
@@ -183,6 +185,7 @@ public class TenantService {
     ) {
         tenant.setName(name.trim());
         tenant.setCode(code.trim().toLowerCase());
+        tenant.setStatus(resolveStatus(status, tenant));
         tenant.setPlanCode(planResolutionService.normalizePlanCode(
                 planCode,
                 preserveExistingPlanCode ? tenant.getPlanCode() : null
@@ -200,6 +203,13 @@ public class TenantService {
             return null;
         }
         return value.trim();
+    }
+
+    private String resolveStatus(String status, Tenant tenant) {
+        if (status != null && !status.isBlank()) {
+            return status;
+        }
+        return tenant.getStatus() == null ? "ACTIVE" : tenant.getStatus();
     }
 
     private LocalDate resolveTrialEndDate(LocalDate trialEndDate, Tenant tenant, boolean preserveExistingTrialEndDate) {

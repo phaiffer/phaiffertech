@@ -304,6 +304,7 @@ describe('TenantsPage access model', () => {
       expect(tenantService.create).toHaveBeenCalledWith({
         name: 'Clinic East',
         code: 'clinic-east',
+        status: 'ACTIVE',
         logoUrl: null,
         primaryColor: '#0f172a',
         accentColor: '#2563eb',

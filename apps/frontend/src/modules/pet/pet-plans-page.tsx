@@ -21,6 +21,7 @@ import { ConfirmDialog } from '@/shared/ui/confirm-dialog';
 import { DataTable, DataTableColumn } from '@/shared/ui/data-table';
 import { FormInput } from '@/shared/ui/form-input';
 import { FormSelect } from '@/shared/ui/form-select';
+import { FormTextarea } from '@/shared/ui/form-textarea';
 import { PageSection } from '@/shared/ui/page-section';
 import { PageTitle } from '@/shared/ui/page-title';
 import { Pagination } from '@/shared/ui/pagination';
@@ -121,6 +122,14 @@ export function PetPlansPage() {
   const [submitting, setSubmitting] = useState(false);
 
   const [deleteCandidate, setDeleteCandidate] = useState<ClientPlan | null>(null);
+  const [billingPixKey, setBillingPixKey] = useState('');
+  const [billingDisplayName, setBillingDisplayName] = useState('');
+  const [planRenewalTemplate, setPlanRenewalTemplate] = useState('');
+  const [petReadyTemplate, setPetReadyTemplate] = useState('');
+  const [billingSettingsLoading, setBillingSettingsLoading] = useState(false);
+  const [billingSettingsSaving, setBillingSettingsSaving] = useState(false);
+  const [preparedRenewalMessage, setPreparedRenewalMessage] = useState('');
+  const [preparingRenewalPlanId, setPreparingRenewalPlanId] = useState<string | null>(null);
 
   const canReadClients = hasPermission('pet.client.read');
   const canManagePlan = hasPermission('pet.plan.create');
@@ -164,6 +173,20 @@ export function PetPlansPage() {
       // Non-critical — client names will fall back to IDs
     });
   }, [canReadClients]);
+
+  useEffect(() => {
+    setBillingSettingsLoading(true);
+    petService.getBillingMessageSettings().then((settings) => {
+      setBillingPixKey(settings.pixKey ?? '');
+      setBillingDisplayName(settings.billingDisplayName ?? '');
+      setPlanRenewalTemplate(settings.planRenewalMessageTemplate ?? '');
+      setPetReadyTemplate(settings.petReadyMessageTemplate ?? '');
+    }).catch((err) => {
+      setError(err instanceof ApiClientError ? err.message : 'Unable to load billing message settings.');
+    }).finally(() => {
+      setBillingSettingsLoading(false);
+    });
+  }, []);
 
   function resetForm() {
     setEditingId(null);
@@ -237,6 +260,48 @@ export function PetPlansPage() {
       await load(0);
     } catch (err) {
       setError(err instanceof ApiClientError ? err.message : messages.feedback.removeError);
+    }
+  }
+
+  async function handleSaveBillingSettings() {
+    setBillingSettingsSaving(true);
+    setError(null);
+    setSuccess(null);
+
+    try {
+      const settings = await petService.updateBillingMessageSettings({
+        pixKey: billingPixKey,
+        billingDisplayName,
+        planRenewalMessageTemplate: planRenewalTemplate,
+        petReadyMessageTemplate: petReadyTemplate
+      });
+      setBillingPixKey(settings.pixKey ?? '');
+      setBillingDisplayName(settings.billingDisplayName ?? '');
+      setPlanRenewalTemplate(settings.planRenewalMessageTemplate ?? '');
+      setPetReadyTemplate(settings.petReadyMessageTemplate ?? '');
+      setSuccess('Billing message settings updated.');
+    } catch (err) {
+      setError(err instanceof ApiClientError ? err.message : 'Unable to save billing message settings.');
+    } finally {
+      setBillingSettingsSaving(false);
+    }
+  }
+
+  async function handlePrepareRenewalMessage(plan: ClientPlan) {
+    setPreparingRenewalPlanId(plan.id);
+    setError(null);
+    setPreparedRenewalMessage('');
+
+    try {
+      const prepared = await petService.preparePlanRenewalMessage(plan.id);
+      setPreparedRenewalMessage(prepared.message);
+      setSuccess(prepared.pixConfigured
+        ? 'Renewal reminder prepared for manual send.'
+        : 'Renewal reminder prepared, but configure the tenant PIX key before sending.');
+    } catch (err) {
+      setError(err instanceof ApiClientError ? err.message : 'Unable to prepare the renewal reminder.');
+    } finally {
+      setPreparingRenewalPlanId(null);
     }
   }
 
@@ -365,6 +430,16 @@ export function PetPlansPage() {
               {commonButtons.remove}
             </button>
           </PermissionGuard>
+          {plan.remainingSessions <= 1 ? (
+            <button
+              type="button"
+              onClick={() => void handlePrepareRenewalMessage(plan)}
+              className="ui-inline-button"
+              disabled={preparingRenewalPlanId === plan.id}
+            >
+              {preparingRenewalPlanId === plan.id ? 'Preparing...' : 'Prepare PIX reminder'}
+            </button>
+          ) : null}
         </div>
       )
     }
@@ -398,6 +473,68 @@ export function PetPlansPage() {
 
         {error ? <div className="ui-notice-error">{error}</div> : null}
         {success ? <div className="ui-notice-success">{success}</div> : null}
+
+        <PageSection
+          tone="muted"
+          title="PIX and customer message setup"
+          description="Configure tenant billing copy for manual-send renewal and pet-ready messages. This does not connect a payment gateway or chatbot."
+        >
+          <div className="grid gap-4 lg:grid-cols-2">
+            <FormInput
+              label="PIX key"
+              value={billingPixKey}
+              onChange={setBillingPixKey}
+              placeholder="pix@petshop.com.br"
+              disabled={billingSettingsLoading}
+            />
+            <FormInput
+              label="Billing display name"
+              value={billingDisplayName}
+              onChange={setBillingDisplayName}
+              placeholder="PetFlow Reception"
+              disabled={billingSettingsLoading}
+            />
+            <FormTextarea
+              label="Renewal reminder template"
+              value={planRenewalTemplate}
+              onChange={setPlanRenewalTemplate}
+              placeholder="Use placeholders like {clientName}, {planName}, {remainingSessions}, {pixKey}, {billingDisplayName}."
+              rows={4}
+              disabled={billingSettingsLoading}
+            />
+            <FormTextarea
+              label="Pet-ready pickup template"
+              value={petReadyTemplate}
+              onChange={setPetReadyTemplate}
+              placeholder="Use placeholders like {clientName}, {petName}, {billingDisplayName}."
+              rows={4}
+              disabled={billingSettingsLoading}
+            />
+          </div>
+          <div className="flex flex-wrap items-center gap-3">
+            <PermissionGuard permission="pet.plan.create">
+              <button
+                type="button"
+                onClick={() => void handleSaveBillingSettings()}
+                className="ui-primary-button"
+                disabled={billingSettingsSaving}
+              >
+                {billingSettingsSaving ? 'Saving...' : 'Save message setup'}
+              </button>
+            </PermissionGuard>
+            <p className="text-sm text-[color:var(--app-shell-muted)]">
+              Generated messages are reviewed and sent manually in this first safe step.
+            </p>
+          </div>
+          {preparedRenewalMessage ? (
+            <FormTextarea
+              label="Prepared renewal reminder"
+              value={preparedRenewalMessage}
+              onChange={setPreparedRenewalMessage}
+              rows={6}
+            />
+          ) : null}
+        </PageSection>
 
         <PageSection
           tone="muted"

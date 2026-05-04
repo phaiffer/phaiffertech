@@ -9,6 +9,7 @@ import java.util.List;
 public record TenantUpdateRequest(
         @NotBlank String name,
         @NotBlank String code,
+        String status,
         @Pattern(regexp = "^[A-Za-z0-9_-]{2,80}$", message = "Package code must use letters, numbers, underscore or hyphen") String planCode,
         String logoUrl,
         @Pattern(regexp = "^#[0-9A-Fa-f]{6}$", message = "Primary color must use #RRGGBB format") String primaryColor,

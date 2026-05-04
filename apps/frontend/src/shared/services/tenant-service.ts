@@ -6,6 +6,7 @@ import { TenantThemeMode } from '@/shared/types/auth';
 export type TenantBaseInput = {
   name: string;
   code: string;
+  status?: string;
   logoUrl?: string | null;
   primaryColor?: string | null;
   accentColor?: string | null;

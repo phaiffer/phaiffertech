@@ -230,6 +230,36 @@ export type PetCommissionSummary = {
   details: PetCommissionSummaryDetail[];
 };
 
+export type PetBillingMessageSettings = {
+  pixKey?: string | null;
+  billingDisplayName?: string | null;
+  planRenewalMessageTemplate?: string | null;
+  petReadyMessageTemplate?: string | null;
+  pixConfigured: boolean;
+};
+
+export type PetPreparedCustomerMessage = {
+  type: string;
+  tenantId: string;
+  clientId: string;
+  clientName: string;
+  clientEmail?: string | null;
+  clientPhone?: string | null;
+  petId?: string | null;
+  petName?: string | null;
+  planId?: string | null;
+  planName?: string | null;
+  remainingSessions?: number | null;
+  appointmentId?: string | null;
+  subject: string;
+  message: string;
+  pixKey?: string | null;
+  billingDisplayName?: string | null;
+  pixConfigured: boolean;
+  eligible: boolean;
+  safetyNote: string;
+};
+
 export type PetMedicalRecord = {
   id: string;
   petId: string;

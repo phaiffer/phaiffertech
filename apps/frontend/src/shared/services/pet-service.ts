@@ -3,6 +3,7 @@ import { PageResponse } from '@/shared/types/common';
 import {
   PetAppointment,
   PetAppointmentInventoryConsumptionStatus,
+  PetBillingMessageSettings,
   PetCommissionSummary,
   PetClinicalTimeline,
   PetClient,
@@ -15,6 +16,7 @@ import {
   PetInventoryMovement,
   PetMedicalRecord,
   PetPrescription,
+  PetPreparedCustomerMessage,
   PetProduct,
   PetProfessional,
   PetProfile,
@@ -218,6 +220,13 @@ export type CreatePetInvoicePaymentInput = {
   receivedAt?: string;
   referenceCode?: string;
   notes?: string;
+};
+
+export type UpdatePetBillingMessageSettingsInput = {
+  pixKey?: string | null;
+  billingDisplayName?: string | null;
+  planRenewalMessageTemplate?: string | null;
+  petReadyMessageTemplate?: string | null;
 };
 
 export type PetAppointmentServiceLineAssignmentInput = {
@@ -427,6 +436,18 @@ export const petService = {
         scheduledTo: filters.scheduledTo
       })}`
     ),
+
+  getBillingMessageSettings: () =>
+    apiClient.get<PetBillingMessageSettings>('/pet/billing-message-settings'),
+
+  updateBillingMessageSettings: (input: UpdatePetBillingMessageSettingsInput) =>
+    apiClient.put<PetBillingMessageSettings>('/pet/billing-message-settings', input),
+
+  preparePlanRenewalMessage: (planId: string) =>
+    apiClient.get<PetPreparedCustomerMessage>(`/pet/messages/plans/${planId}/renewal-reminder`),
+
+  preparePetReadyMessage: (appointmentId: string) =>
+    apiClient.get<PetPreparedCustomerMessage>(`/pet/messages/appointments/${appointmentId}/pickup`),
 
   listAppointments: (page = 0, size = 20, search = '', filters: PetAppointmentFilters = {}) =>
     apiClient.get<PageResponse<PetAppointment>>(

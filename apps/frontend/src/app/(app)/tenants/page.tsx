@@ -55,6 +55,7 @@ const initialPage: PageResponse<Tenant> = {
 const emptyTenantForm: TenantFormInput = {
   name: '',
   code: '',
+  status: 'ACTIVE',
   logoUrl: '',
   primaryColor: '#0f172a',
   accentColor: '#2563eb',
@@ -214,6 +215,7 @@ function normalizeTenantInput(form: TenantFormInput): TenantFormInput {
     ...form,
     name: form.name.trim(),
     code: form.code.trim().toLowerCase(),
+    status: form.status || 'ACTIVE',
     logoUrl: form.logoUrl?.trim() ? form.logoUrl.trim() : null,
     primaryColor: form.primaryColor?.trim() ? form.primaryColor.trim() : null,
     accentColor: form.accentColor?.trim() ? form.accentColor.trim() : null,
@@ -249,6 +251,7 @@ function toTenantUpdateInput(form: TenantFormInput): TenantUpdateInput {
   return {
     name: normalized.name,
     code: normalized.code,
+    status: normalized.status,
     logoUrl: normalized.logoUrl,
     primaryColor: normalized.primaryColor,
     accentColor: normalized.accentColor,
@@ -477,6 +480,7 @@ export default function TenantsPage() {
       setForm({
       name: tenant.name,
       code: tenant.code,
+      status: tenant.status || 'ACTIVE',
       logoUrl: tenant.logoUrl ?? '',
       primaryColor: tenant.primaryColor ?? '#0f172a',
       accentColor: tenant.accentColor ?? '#2563eb',
@@ -977,6 +981,23 @@ export default function TenantsPage() {
                         placeholder="/branding/tenant-logo.png"
                         {...autofillIgnoreProps}
                       />
+                    </label>
+
+                    <label htmlFor="tenant-status" className="space-y-2">
+                      <span className={sharedInputLabelClass}>Workspace status</span>
+                      <select
+                        id="tenant-status"
+                        name="tenantStatus"
+                        value={form.status}
+                        onChange={(event) => setForm((current) => ({ ...current, status: event.target.value }))}
+                        data-filled="true"
+                        className={contrastInputClass}
+                      >
+                        <option value="ACTIVE">Active</option>
+                        <option value="TRIAL">Trial</option>
+                        <option value="SUSPENDED">Suspended</option>
+                        <option value="CANCELLED">Cancelled</option>
+                      </select>
                     </label>
                   </div>
 
