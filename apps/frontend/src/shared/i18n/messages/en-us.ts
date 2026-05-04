@@ -285,8 +285,7 @@ export const enUSMessages: AppMessages = {
       createTitle: 'Book appointment',
       editTitle: 'Edit appointment',
       description:
-        'Select the client and pet, build the service bundle, assign the responsible professional, then confirm one-time or plan-based payment with extras and stock-aware execution.'
-        'Select the client and pet, choose the services, set the default professional, and adjust the responsible professional per line when needed.'
+        'Select the client and pet, build the service bundle, assign the responsible professional, then confirm one-time or plan-based payment with extras and stock-aware execution. Select the client and pet, choose the services, set the default professional, and adjust the responsible professional per line when needed.'
     },
     dialog: {
       deleteTitle: 'Remove appointment?',

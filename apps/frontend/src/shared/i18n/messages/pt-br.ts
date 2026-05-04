@@ -291,8 +291,7 @@ const ptBRMessages = {
       createTitle: 'Agendar atendimento',
       editTitle: 'Editar atendimento',
       description:
-        'Selecione cliente e pet, monte o pacote de servicos, atribua o profissional responsavel e confirme pagamento avulso ou por plano com extras e execucao conectada ao estoque.'
-        'Selecione cliente e pet, escolha os servicos, defina o profissional padrao e ajuste o responsavel por linha quando necessario.'
+        'Selecione cliente e pet, monte o pacote de servicos, atribua o profissional responsavel e confirme pagamento avulso ou por plano com extras e execucao conectada ao estoque. Selecione cliente e pet, escolha os servicos, defina o profissional padrao e ajuste o responsavel por linha quando necessario.'
     },
     dialog: {
       deleteTitle: 'Remover atendimento?',
