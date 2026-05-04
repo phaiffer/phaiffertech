@@ -91,6 +91,7 @@ public class ClientPlanService extends BaseTenantCrudService<
         plan.setFinalPrice(finalPrice);
         plan.setStatus(dto.status() == null || dto.status().isBlank() ? "ACTIVE" : dto.status().trim().toUpperCase());
         plan.setRenewalRules(template.getRenewalRules());
+        plan.setNotes(trimToNull(dto.notes()));
         plan.setTenantId(tenantId);
         return ClientPlanMapper.INSTANCE.toResponse(repository.save(plan));
     }

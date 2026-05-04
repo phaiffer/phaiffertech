@@ -1,0 +1,2 @@
+ALTER TABLE pet_client_plans
+    ADD COLUMN IF NOT EXISTS notes TEXT NULL;

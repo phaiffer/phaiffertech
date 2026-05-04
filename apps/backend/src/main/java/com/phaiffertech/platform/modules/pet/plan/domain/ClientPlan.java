@@ -53,6 +53,9 @@ public class ClientPlan extends BaseTenantEntity {
     @Column(name = "renewal_rules", columnDefinition = "text")
     private String renewalRules;
 
+    @Column(name = "notes", columnDefinition = "text")
+    private String notes;
+
     public int getRemainingSessions() {
         if (totalSessions == null || usedSessions == null) {
             return 0;

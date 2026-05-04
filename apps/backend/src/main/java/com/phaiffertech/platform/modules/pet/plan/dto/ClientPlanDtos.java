@@ -54,7 +54,8 @@ public class ClientPlanDtos {
         @NotNull @Min(1) Integer totalSessions,
         BigDecimal finalPrice,
         String status,
-        OffsetDateTime expiresAt
+        OffsetDateTime expiresAt,
+        String notes
     ) {}
 
     public record ClientPlanUpdateDto(
@@ -63,13 +64,14 @@ public class ClientPlanDtos {
         @NotNull @Min(1) Integer totalSessions,
         BigDecimal finalPrice,
         String status,
-        OffsetDateTime expiresAt
+        OffsetDateTime expiresAt,
+        String notes
     ) {}
 
     public record ClientPlanResponseDto(
         UUID id, UUID clientId, UUID petId, UUID planTemplateId, String planName,
         Integer totalSessions, Integer usedSessions, int remainingSessions,
         OffsetDateTime startedAt, OffsetDateTime expiresAt, BigDecimal finalPrice,
-        String status, String renewalState, String renewalRules
+        String status, String renewalState, String renewalRules, String notes
     ) {}
 }

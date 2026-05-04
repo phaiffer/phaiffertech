@@ -78,7 +78,8 @@ describe('PetPlansPage', () => {
         finalPrice: 220,
         status: 'ACTIVE',
         renewalState: 'LAST_USE',
-        renewalRules: 'Avisar no penultimo uso.'
+        renewalRules: 'Avisar no penultimo uso.',
+        notes: 'Cliente prefere banho aos sabados.'
       }
     ]));
     petServiceMock.listClients.mockResolvedValue(createPageResponse([
@@ -164,6 +165,7 @@ describe('PetPlansPage', () => {
     expect(screen.getAllByText('Banho 4x/mes').length).toBeGreaterThan(0);
     expect(screen.getByText('Pacote mensal de banhos recorrentes.')).toBeInTheDocument();
     expect(screen.getByText('Pet: Luna')).toBeInTheDocument();
+    expect(screen.getByText('Obs: Cliente prefere banho aos sabados.')).toBeInTheDocument();
     expect(screen.getByText('1 left')).toBeInTheDocument();
     expect(screen.getByText('LAST_USE')).toBeInTheDocument();
 
@@ -175,5 +177,37 @@ describe('PetPlansPage', () => {
     expect(await screen.findByText('Cobranca de renovacao pendente')).toBeInTheDocument();
     expect(screen.getByText(/Fatura vinculada: invoice-1/)).toBeInTheDocument();
     expect(screen.getByLabelText('Mensagem de renovacao preparada')).toHaveValue('Maria, renove o plano da Luna por PIX.');
+  });
+
+  it('contracts a catalog plan for a client and pet with final price and notes', async () => {
+    petServiceMock.createClientPlan.mockResolvedValue({
+      id: 'plan-new'
+    });
+
+    render(<PetPlansPage />);
+
+    await waitFor(() => {
+      expect(petServiceMock.listPlanTemplates).toHaveBeenCalledTimes(1);
+    });
+
+    fireEvent.change(screen.getByLabelText('Client'), { target: { value: 'client-1' } });
+    fireEvent.change(screen.getByLabelText('Pet'), { target: { value: 'pet-1' } });
+    fireEvent.change(screen.getByLabelText('Plano do catalogo'), { target: { value: 'template-1' } });
+    fireEvent.change(screen.getByLabelText('Preco final'), { target: { value: '210' } });
+    fireEvent.change(screen.getByLabelText('Observacoes'), { target: { value: 'Aplicar desconto de fidelidade.' } });
+    fireEvent.click(screen.getAllByRole('button', { name: 'Create plan' }).at(-1)!);
+
+    await waitFor(() => {
+      expect(petServiceMock.createClientPlan).toHaveBeenCalledWith(expect.objectContaining({
+        clientId: 'client-1',
+        petId: 'pet-1',
+        planTemplateId: 'template-1',
+        planName: 'Banho 4x/mes',
+        totalSessions: 4,
+        finalPrice: 210,
+        status: 'ACTIVE',
+        notes: 'Aplicar desconto de fidelidade.'
+      }));
+    });
   });
 });

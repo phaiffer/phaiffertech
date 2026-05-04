@@ -141,6 +141,7 @@ export function PetPlansPage() {
   const [expiresAt, setExpiresAt] = useState('');
   const [finalPrice, setFinalPrice] = useState('');
   const [soldPlanStatus, setSoldPlanStatus] = useState('ACTIVE');
+  const [soldPlanNotes, setSoldPlanNotes] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
   const [editingTemplateId, setEditingTemplateId] = useState<string | null>(null);
@@ -290,6 +291,7 @@ export function PetPlansPage() {
     setExpiresAt('');
     setFinalPrice('');
     setSoldPlanStatus('ACTIVE');
+    setSoldPlanNotes('');
   }
 
   function beginEdit(plan: ClientPlan) {
@@ -303,6 +305,7 @@ export function PetPlansPage() {
     setExpiresAt(plan.expiresAt ? plan.expiresAt.substring(0, 10) : '');
     setFinalPrice(plan.finalPrice == null ? '' : String(plan.finalPrice));
     setSoldPlanStatus(plan.status ?? 'ACTIVE');
+    setSoldPlanNotes(plan.notes ?? '');
     setError(null);
     setSuccess(null);
     document.getElementById('pet-plan-form-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -387,7 +390,8 @@ export function PetPlansPage() {
           totalSessions: parsed,
           expiresAt: expiresAt ? `${expiresAt}T23:59:59-03:00` : undefined,
           finalPrice: parsedFinalPrice,
-          status: soldPlanStatus
+          status: soldPlanStatus,
+          notes: soldPlanNotes || undefined
         });
         setSuccess(messages.form.update);
       } else {
@@ -400,7 +404,8 @@ export function PetPlansPage() {
           totalSessions: parsed,
           expiresAt: expiresAt ? `${expiresAt}T23:59:59-03:00` : undefined,
           finalPrice: parsedFinalPrice,
-          status: soldPlanStatus
+          status: soldPlanStatus,
+          notes: soldPlanNotes || undefined
         });
         setSuccess(messages.form.create);
       }
@@ -578,6 +583,9 @@ export function PetPlansPage() {
           <p className="text-xs text-[color:var(--app-shell-muted)]">
             Contratado por {formatCurrency(plan.finalPrice)}
           </p>
+          {plan.notes ? (
+            <p className="text-xs text-[color:var(--app-shell-muted)]">Obs: {plan.notes}</p>
+          ) : null}
         </div>
       )
     },
@@ -1027,6 +1035,13 @@ export function PetPlansPage() {
                   value={soldPlanStatus}
                   options={soldPlanStatusOptions}
                   onChange={setSoldPlanStatus}
+                />
+                <FormTextarea
+                  label="Observacoes"
+                  value={soldPlanNotes}
+                  onChange={setSoldPlanNotes}
+                  rows={3}
+                  wrapperClassName="md:col-span-2 lg:col-span-4"
                 />
               </div>
 

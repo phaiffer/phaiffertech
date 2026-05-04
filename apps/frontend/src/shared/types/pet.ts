@@ -444,6 +444,7 @@ export type ClientPlan = {
   status?: string;
   renewalState?: 'HEALTHY' | 'PENULTIMATE_USE' | 'LAST_USE' | 'EXHAUSTED' | string;
   renewalRules?: string | null;
+  notes?: string | null;
 };
 
 export type PlanTemplate = {

@@ -683,6 +683,7 @@ export const petService = {
     expiresAt?: string;
     finalPrice?: number;
     status?: string;
+    notes?: string;
   }) =>
     apiClient.post<ClientPlan>('/pet/plans', input),
 
@@ -693,6 +694,7 @@ export const petService = {
     expiresAt?: string;
     finalPrice?: number;
     status?: string;
+    notes?: string;
   }) =>
     apiClient.put<ClientPlan>(`/pet/plans/${id}`, input),
 

@@ -26,6 +26,7 @@ public class ClientPlanMapper implements BaseCrudMapper<
         plan.setExpiresAt(request.expiresAt());
         plan.setFinalPrice(request.finalPrice());
         plan.setStatus(resolveStatus(request.status()));
+        plan.setNotes(trimToNull(request.notes()));
         return plan;
     }
 
@@ -49,6 +50,7 @@ public class ClientPlanMapper implements BaseCrudMapper<
         if (request.status() != null) {
             entity.setStatus(resolveStatus(request.status()));
         }
+        entity.setNotes(trimToNull(request.notes()));
     }
 
     @Override
@@ -67,7 +69,8 @@ public class ClientPlanMapper implements BaseCrudMapper<
                 entity.getFinalPrice(),
                 entity.getStatus(),
                 resolveRenewalState(entity),
-                entity.getRenewalRules()
+                entity.getRenewalRules(),
+                entity.getNotes()
         );
     }
 
@@ -76,6 +79,13 @@ public class ClientPlanMapper implements BaseCrudMapper<
             return "ACTIVE";
         }
         return status.trim().toUpperCase();
+    }
+
+    private String trimToNull(String value) {
+        if (value == null || value.isBlank()) {
+            return null;
+        }
+        return value.trim();
     }
 
     private String resolveRenewalState(ClientPlan entity) {
