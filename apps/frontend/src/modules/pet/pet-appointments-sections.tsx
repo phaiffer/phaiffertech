@@ -547,6 +547,8 @@ type CreatePetAppointmentColumnsArgs = {
   profilesLookupUnavailable: boolean;
   onEdit: (appointment: PetAppointment) => void;
   onDelete: (appointment: PetAppointment) => void;
+  onPreparePickupMessage: (appointment: PetAppointment) => void;
+  preparingPickupAppointmentId: string | null;
 };
 
 export function createPetAppointmentColumns({
@@ -560,7 +562,9 @@ export function createPetAppointmentColumns({
   professionalsLookupUnavailable,
   profilesLookupUnavailable,
   onEdit,
-  onDelete
+  onDelete,
+  onPreparePickupMessage,
+  preparingPickupAppointmentId
 }: CreatePetAppointmentColumnsArgs): DataTableColumn<PetAppointment>[] {
   const resolveClientEmail = (appointment: PetAppointment) => {
     return clients.find((client) => client.id === appointment.clientId)?.email ?? null;
@@ -886,6 +890,19 @@ export function createPetAppointmentColumns({
                   ? messages.columns.careNotes
                   : messages.columns.continueCare}
               </Link>
+            </PermissionGuard>
+          ) : null}
+
+          {appointment.status.toUpperCase() === 'COMPLETED' ? (
+            <PermissionGuard permission="pet.appointment.read">
+              <button
+                type="button"
+                onClick={() => onPreparePickupMessage(appointment)}
+                className="rounded-lg border border-sky-300 px-2 py-1 text-xs font-medium text-sky-700"
+                disabled={preparingPickupAppointmentId === appointment.id}
+              >
+                {preparingPickupAppointmentId === appointment.id ? 'Preparing...' : 'Pickup message'}
+              </button>
             </PermissionGuard>
           ) : null}
         </div>

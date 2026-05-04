@@ -4,6 +4,7 @@ import com.phaiffertech.platform.modules.pet.plan.domain.ClientPlan;
 import com.phaiffertech.platform.modules.pet.plan.dto.ClientPlanDtos;
 import com.phaiffertech.platform.modules.pet.plan.mapper.ClientPlanMapper;
 import com.phaiffertech.platform.modules.pet.plan.repository.ClientPlanRepository;
+import com.phaiffertech.platform.modules.pet.appointment.service.PetOperationalTriggerService;
 import com.phaiffertech.platform.shared.crud.BasePageQuery;
 import com.phaiffertech.platform.shared.crud.BaseTenantCrudService;
 import com.phaiffertech.platform.shared.exception.ConflictOperationException;
@@ -24,10 +25,12 @@ public class ClientPlanService extends BaseTenantCrudService<
     private static final Logger log = LoggerFactory.getLogger(ClientPlanService.class);
 
     private final ClientPlanRepository repository;
+    private final PetOperationalTriggerService operationalTriggerService;
 
-    public ClientPlanService(ClientPlanRepository repository) {
+    public ClientPlanService(ClientPlanRepository repository, PetOperationalTriggerService operationalTriggerService) {
         super(repository, repository, ClientPlanMapper.INSTANCE, "Client plan not found.");
         this.repository = repository;
+        this.operationalTriggerService = operationalTriggerService;
     }
 
     @Transactional
@@ -83,9 +86,9 @@ public class ClientPlanService extends BaseTenantCrudService<
         log.info("Successfully used a session for plan ID: {}. Used: {}, Total: {}",
                 planId, plan.getUsedSessions(), plan.getTotalSessions());
 
-        if (plan.getRemainingSessions() == 2) {
-            log.warn("Low session alert for plan ID: {}. Remaining sessions: 2", plan.getId());
-            // Low-session notification is pending the core.notification module implementation.
+        if (plan.getRemainingSessions() == 1) {
+            log.warn("Last bath reminder prepared for plan ID: {}. Remaining sessions: 1", plan.getId());
+            operationalTriggerService.preparePlanLastUseReminder(plan, tenantId);
         }
 
         return ClientPlanMapper.INSTANCE.toResponse(plan);

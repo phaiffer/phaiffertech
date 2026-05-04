@@ -45,6 +45,7 @@ import { ConfirmDialog } from '@/shared/ui/confirm-dialog';
 import { DataTable } from '@/shared/ui/data-table';
 import { FormInput } from '@/shared/ui/form-input';
 import { FormSelect } from '@/shared/ui/form-select';
+import { FormTextarea } from '@/shared/ui/form-textarea';
 import { PageSection } from '@/shared/ui/page-section';
 import { PageTitle } from '@/shared/ui/page-title';
 import { Pagination } from '@/shared/ui/pagination';
@@ -559,6 +560,8 @@ export function PetAppointmentsPage() {
   const [submitting, setSubmitting] = useState(false);
   const [savingActualServiceLineId, setSavingActualServiceLineId] = useState<string | null>(null);
   const [applyingInventoryRowId, setApplyingInventoryRowId] = useState<string | null>(null);
+  const [preparedPickupMessage, setPreparedPickupMessage] = useState('');
+  const [preparingPickupAppointmentId, setPreparingPickupAppointmentId] = useState<string | null>(null);
 
   const [deleteCandidate, setDeleteCandidate] = useState<PetAppointment | null>(null);
 
@@ -1424,6 +1427,25 @@ export function PetAppointmentsPage() {
     }
   }
 
+  async function handlePreparePickupMessage(appointment: PetAppointment) {
+    setPreparingPickupAppointmentId(appointment.id);
+    setPreparedPickupMessage('');
+    setError(null);
+    setSuccess(null);
+
+    try {
+      const prepared = await petService.preparePetReadyMessage(appointment.id);
+      setPreparedPickupMessage(prepared.message);
+      setSuccess(prepared.eligible
+        ? 'Pet-ready pickup message prepared for manual send.'
+        : 'Pickup message prepared, but confirm the appointment status before sending.');
+    } catch (err) {
+      setError(err instanceof ApiClientError ? err.message : 'Unable to prepare the pickup message.');
+    } finally {
+      setPreparingPickupAppointmentId(null);
+    }
+  }
+
   const rows = resolvePageItems(pageData);
   const totalItems = resolveTotalItems(pageData);
   const activeFilterCount = [search, statusFilter, clientFilterId, petFilterId, serviceFilterId, professionalFilterId].filter(Boolean).length;
@@ -1452,7 +1474,9 @@ export function PetAppointmentsPage() {
     professionalsLookupUnavailable,
     profilesLookupUnavailable,
     onEdit: beginEdit,
-    onDelete: setDeleteCandidate
+    onDelete: setDeleteCandidate,
+    onPreparePickupMessage: handlePreparePickupMessage,
+    preparingPickupAppointmentId
   }), [
     clients,
     clientsLookupUnavailable,
@@ -1462,7 +1486,8 @@ export function PetAppointmentsPage() {
     professionals,
     professionalsLookupUnavailable,
     profiles,
-    profilesLookupUnavailable
+    profilesLookupUnavailable,
+    preparingPickupAppointmentId
   ]);
 
   return (
@@ -1538,6 +1563,20 @@ export function PetAppointmentsPage() {
 
         {error ? <div className="ui-notice-error">{error}</div> : null}
         {success ? <div className="ui-notice-success">{success}</div> : null}
+        {preparedPickupMessage ? (
+          <PageSection
+            tone="muted"
+            title="Prepared pickup message"
+            description="Review this standard customer message, then copy it into the channel your operation already uses."
+          >
+            <FormTextarea
+              label="Pickup message"
+              value={preparedPickupMessage}
+              onChange={setPreparedPickupMessage}
+              rows={5}
+            />
+          </PageSection>
+        ) : null}
 
         <PageSection
           tone="muted"
