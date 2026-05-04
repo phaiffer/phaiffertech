@@ -23,6 +23,8 @@ import com.phaiffertech.platform.modules.pet.invoice.dto.PetInvoicePaymentRespon
 import com.phaiffertech.platform.modules.pet.invoice.dto.PetInvoiceResponse;
 import com.phaiffertech.platform.modules.pet.invoice.dto.PetInvoiceUpdateRequest;
 import com.phaiffertech.platform.modules.pet.invoice.repository.PetInvoiceRepository;
+import com.phaiffertech.platform.modules.pet.plan.domain.ClientPlan;
+import com.phaiffertech.platform.modules.pet.plan.repository.ClientPlanRepository;
 import com.phaiffertech.platform.modules.pet.servicecatalog.domain.PetServiceCatalog;
 import com.phaiffertech.platform.modules.pet.servicecatalog.repository.PetServiceCatalogRepository;
 import com.phaiffertech.platform.shared.crud.BasePageQuery;
@@ -56,6 +58,7 @@ public class PetInvoiceService {
     private final PetClientRepository petClientRepository;
     private final PetAppointmentRepository appointmentRepository;
     private final PetServiceCatalogRepository serviceCatalogRepository;
+    private final ClientPlanRepository clientPlanRepository;
     private final FinanceInvoiceService financeInvoiceService;
     private final FinancePaymentService financePaymentService;
 
@@ -64,6 +67,7 @@ public class PetInvoiceService {
             PetClientRepository petClientRepository,
             PetAppointmentRepository appointmentRepository,
             PetServiceCatalogRepository serviceCatalogRepository,
+            ClientPlanRepository clientPlanRepository,
             FinanceInvoiceService financeInvoiceService,
             FinancePaymentService financePaymentService
     ) {
@@ -71,6 +75,7 @@ public class PetInvoiceService {
         this.petClientRepository = petClientRepository;
         this.appointmentRepository = appointmentRepository;
         this.serviceCatalogRepository = serviceCatalogRepository;
+        this.clientPlanRepository = clientPlanRepository;
         this.financeInvoiceService = financeInvoiceService;
         this.financePaymentService = financePaymentService;
     }
@@ -157,6 +162,53 @@ public class PetInvoiceService {
                 resolveClientName(requireClient(tenantId, invoice.getClientId())),
                 financePaymentService.getByInvoiceIds(tenantId, List.of(financeInvoice.getId()))
         );
+    }
+
+    @Transactional
+    public PetInvoiceResponse ensurePlanRenewalInvoice(UUID planId, String description) {
+        UUID tenantId = currentTenantId();
+        ClientPlan plan = clientPlanRepository.findByIdAndTenantId(planId, tenantId)
+                .orElseThrow(() -> new ResourceNotFoundException("Client plan not found."));
+        PetClient client = requireClient(tenantId, plan.getClientId());
+        List<PetInvoice> existing = repository.findAllByBusinessContextExcludingStatus(
+                tenantId,
+                "PET.CLIENT_PLAN",
+                plan.getId(),
+                FinanceInvoiceStatus.CANCELED
+        );
+        if (!existing.isEmpty()) {
+            return getById(existing.get(0).getId());
+        }
+
+        BigDecimal amount = plan.getFinalPrice() == null ? BigDecimal.ZERO : plan.getFinalPrice();
+        Instant dueAt = plan.getExpiresAt() == null ? null : plan.getExpiresAt().toInstant();
+        FinanceInvoice financeInvoice = financeInvoiceService.create(
+                tenantId,
+                new FinanceInvoiceUpsertCommand(
+                        FinanceSourceModule.PET,
+                        "PET.CLIENT",
+                        client.getId(),
+                        clientName(client),
+                        "PET.CLIENT_PLAN",
+                        plan.getId(),
+                        description,
+                        FinanceInvoiceStatus.ISSUED,
+                        null,
+                        amount,
+                        Instant.now(),
+                        dueAt,
+                        null,
+                        null,
+                        null
+                )
+        );
+
+        PetInvoice invoice = new PetInvoice();
+        invoice.setTenantId(tenantId);
+        invoice.setClientId(client.getId());
+        invoice.setFinanceInvoiceId(financeInvoice.getId());
+        repository.save(invoice);
+        return getById(invoice.getId());
     }
 
     @Transactional

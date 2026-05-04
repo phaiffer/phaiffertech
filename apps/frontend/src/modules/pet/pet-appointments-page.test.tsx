@@ -81,6 +81,7 @@ const { currentPlatformState, hasPermissionMock, hasAnyPermissionMock, petServic
     updateAppointment: vi.fn(),
     updateAppointmentServiceLineInventoryConsumptions: vi.fn(),
     applyAppointmentServiceLineInventoryConsumption: vi.fn(),
+    preparePetReadyMessage: vi.fn(),
     deleteAppointment: vi.fn()
   }
 }));
@@ -182,6 +183,21 @@ describe('PetAppointmentsPage', () => {
       updatedAt: '2026-03-10T10:00:00Z',
       appointmentServices: []
     });
+    petServiceMock.preparePetReadyMessage.mockResolvedValue({
+      type: 'PET_READY_PICKUP',
+      tenantId: 'tenant-1',
+      clientId: 'client-1',
+      clientName: 'Owner Example',
+      clientEmail: null,
+      petId: 'pet-1',
+      petName: 'Pet Example',
+      appointmentId: 'appointment-1',
+      subject: 'Pet ready for pickup',
+      message: 'Pet Example is ready for pickup.',
+      pixConfigured: false,
+      eligible: true,
+      safetyNote: 'Manual send only.'
+    });
   });
 
   it('shows degraded lookup diagnostics and enriched labels in the appointment table', async () => {
@@ -219,6 +235,14 @@ describe('PetAppointmentsPage', () => {
         '/pet/medical-records?appointmentId=appointment-1'
       );
     });
+
+    fireEvent.click(screen.getByRole('button', { name: 'Pronto para retirada' }));
+
+    await waitFor(() => {
+      expect(petServiceMock.preparePetReadyMessage).toHaveBeenCalledWith('appointment-1');
+    });
+    expect((await screen.findAllByText('Pronto para retirada')).length).toBeGreaterThan(0);
+    expect(screen.getByLabelText('Mensagem preparada')).toHaveValue('Pet Example is ready for pickup.');
 
     fireEvent.click(screen.getByRole('button', { name: 'Book appointment' }));
 

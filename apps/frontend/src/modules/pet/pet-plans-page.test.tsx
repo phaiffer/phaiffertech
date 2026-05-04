@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { PetPlansPage } from '@/modules/pet/pet-plans-page';
 
@@ -71,13 +71,13 @@ describe('PetPlansPage', () => {
         planTemplateId: 'template-1',
         planName: 'Banho 4x/mes',
         totalSessions: 4,
-        usedSessions: 2,
-        remainingSessions: 2,
+        usedSessions: 3,
+        remainingSessions: 1,
         startedAt: '2026-05-01T00:00:00Z',
         expiresAt: '2026-05-31T23:59:59Z',
         finalPrice: 220,
         status: 'ACTIVE',
-        renewalState: 'PENULTIMATE_USE',
+        renewalState: 'LAST_USE',
         renewalRules: 'Avisar no penultimo uso.'
       }
     ]));
@@ -128,6 +128,29 @@ describe('PetPlansPage', () => {
       petReadyMessageTemplate: null,
       pixConfigured: false
     });
+    petServiceMock.preparePlanRenewalMessage.mockResolvedValue({
+      type: 'PLAN_RENEWAL_PIX_REMINDER',
+      tenantId: 'tenant-1',
+      clientId: 'client-1',
+      clientName: 'Maria Responsavel',
+      clientEmail: 'maria@example.com',
+      petId: 'pet-1',
+      petName: 'Luna',
+      planId: 'plan-1',
+      planName: 'Banho 4x/mes',
+      remainingSessions: 1,
+      subject: 'Plan renewal reminder',
+      message: 'Maria, renove o plano da Luna por PIX.',
+      pixKey: 'pix@petshop.com.br',
+      billingDisplayName: 'Pet Shop Teste',
+      invoiceId: 'invoice-1',
+      invoiceStatus: 'ISSUED',
+      invoiceAmount: 220,
+      invoiceOutstandingAmount: 220,
+      pixConfigured: true,
+      eligible: true,
+      safetyNote: 'Manual send only.'
+    });
   });
 
   it('separates plan catalog from sold client pet plans and shows remaining session balance', async () => {
@@ -141,7 +164,16 @@ describe('PetPlansPage', () => {
     expect(screen.getAllByText('Banho 4x/mes').length).toBeGreaterThan(0);
     expect(screen.getByText('Pacote mensal de banhos recorrentes.')).toBeInTheDocument();
     expect(screen.getByText('Pet: Luna')).toBeInTheDocument();
-    expect(screen.getByText('2 left')).toBeInTheDocument();
-    expect(screen.getByText('PENULTIMATE_USE')).toBeInTheDocument();
+    expect(screen.getByText('1 left')).toBeInTheDocument();
+    expect(screen.getByText('LAST_USE')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Prepare PIX reminder' }));
+
+    await waitFor(() => {
+      expect(petServiceMock.preparePlanRenewalMessage).toHaveBeenCalledWith('plan-1');
+    });
+    expect(await screen.findByText('Cobranca de renovacao pendente')).toBeInTheDocument();
+    expect(screen.getByText(/Fatura vinculada: invoice-1/)).toBeInTheDocument();
+    expect(screen.getByLabelText('Mensagem de renovacao preparada')).toHaveValue('Maria, renove o plano da Luna por PIX.');
   });
 });

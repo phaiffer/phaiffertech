@@ -5,6 +5,7 @@ import com.phaiffertech.platform.modules.pet.client.domain.PetClient;
 import com.phaiffertech.platform.modules.pet.client.repository.PetClientRepository;
 import com.phaiffertech.platform.modules.pet.petprofile.domain.PetProfile;
 import com.phaiffertech.platform.modules.pet.petprofile.repository.PetProfileRepository;
+import com.phaiffertech.platform.modules.pet.plan.repository.ClientPlanRepository;
 import com.phaiffertech.platform.modules.pet.servicecatalog.repository.PetServiceCatalogRepository;
 import com.phaiffertech.platform.shared.contracts.finance.FinanceReferenceCapability;
 import com.phaiffertech.platform.shared.exception.ResourceNotFoundException;
@@ -19,24 +20,28 @@ public class PetFinanceReferenceCapabilityService implements FinanceReferenceCap
     private static final Set<String> SUPPORTED_REFERENCE_TYPES = Set.of(
             "PET.CLIENT",
             "PET.APPOINTMENT",
-            "PET.SERVICE"
+            "PET.SERVICE",
+            "PET.CLIENT_PLAN"
     );
 
     private final PetClientRepository clientRepository;
     private final PetAppointmentRepository appointmentRepository;
     private final PetProfileRepository profileRepository;
     private final PetServiceCatalogRepository serviceCatalogRepository;
+    private final ClientPlanRepository clientPlanRepository;
 
     public PetFinanceReferenceCapabilityService(
             PetClientRepository clientRepository,
             PetAppointmentRepository appointmentRepository,
             PetProfileRepository profileRepository,
-            PetServiceCatalogRepository serviceCatalogRepository
+            PetServiceCatalogRepository serviceCatalogRepository,
+            ClientPlanRepository clientPlanRepository
     ) {
         this.clientRepository = clientRepository;
         this.appointmentRepository = appointmentRepository;
         this.profileRepository = profileRepository;
         this.serviceCatalogRepository = serviceCatalogRepository;
+        this.clientPlanRepository = clientPlanRepository;
     }
 
     @Override
@@ -62,6 +67,7 @@ public class PetFinanceReferenceCapabilityService implements FinanceReferenceCap
             case "PET.CLIENT" -> describeClient(tenantId, relatedId);
             case "PET.APPOINTMENT" -> describeAppointment(tenantId, relatedId);
             case "PET.SERVICE" -> describeService(tenantId, relatedId);
+            case "PET.CLIENT_PLAN" -> describeClientPlan(tenantId, relatedId);
             default -> Optional.empty();
         };
     }
@@ -75,6 +81,22 @@ public class PetFinanceReferenceCapabilityService implements FinanceReferenceCap
                         client.getId(),
                         clientName(client),
                         firstNonBlank(client.getEmail(), client.getPhone(), "Pet client")
+                ));
+    }
+
+    private Optional<ReferenceDescriptor> describeClientPlan(UUID tenantId, UUID relatedId) {
+        return clientPlanRepository.findByIdAndTenantId(relatedId, tenantId)
+                .map(plan -> new ReferenceDescriptor(
+                        "PET.CLIENT_PLAN",
+                        "PET",
+                        "CLIENT_PLAN",
+                        plan.getId(),
+                        firstNonBlank(plan.getPlanName(), "Pet plan renewal"),
+                        joinNonBlank(
+                                " Â· ",
+                                resolvePetName(tenantId, plan.getPetId()),
+                                plan.getRemainingSessions() + " sessoes restantes"
+                        )
                 ));
     }
 

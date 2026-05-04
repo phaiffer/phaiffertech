@@ -1,5 +1,6 @@
 package com.phaiffertech.platform.modules.pet.billing.dto;
 
+import java.math.BigDecimal;
 import java.util.UUID;
 
 public record PetPreparedCustomerMessageResponse(
@@ -19,6 +20,10 @@ public record PetPreparedCustomerMessageResponse(
         String message,
         String pixKey,
         String billingDisplayName,
+        UUID invoiceId,
+        String invoiceStatus,
+        BigDecimal invoiceAmount,
+        BigDecimal invoiceOutstandingAmount,
         boolean pixConfigured,
         boolean eligible,
         String safetyNote

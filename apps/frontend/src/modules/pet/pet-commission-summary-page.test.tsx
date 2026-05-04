@@ -6,7 +6,9 @@ const { hasPermissionMock, hasAnyPermissionMock, petServiceMock } = vi.hoisted((
   hasPermissionMock: vi.fn(),
   hasAnyPermissionMock: vi.fn(),
   petServiceMock: {
-    getCommissionSummary: vi.fn()
+    getCommissionSummary: vi.fn(),
+    listInvoices: vi.fn(),
+    listClientPlans: vi.fn()
   }
 }));
 
@@ -143,6 +145,53 @@ describe('PetCommissionSummaryPage', () => {
         }
       ]
     });
+    petServiceMock.listInvoices.mockResolvedValue({
+      items: [
+        {
+          id: 'invoice-1',
+          financeInvoiceId: 'finance-1',
+          clientId: 'client-1',
+          clientName: 'Owner One',
+          totalAmount: 220,
+          paidAmount: 0,
+          outstandingAmount: 220,
+          status: 'ISSUED',
+          description: 'Renovacao de plano PetFlow',
+          businessContextType: 'PET.CLIENT_PLAN',
+          businessContextId: 'plan-1',
+          businessContextLabel: 'Banho 4x/mes',
+          createdAt: '2026-02-12T13:00:00Z',
+          updatedAt: '2026-02-12T13:00:00Z',
+          payments: []
+        }
+      ],
+      totalItems: 1,
+      totalPages: 1,
+      page: 0,
+      size: 100
+    });
+    petServiceMock.listClientPlans.mockResolvedValue({
+      items: [
+        {
+          id: 'plan-1',
+          clientId: 'client-1',
+          petId: 'pet-1',
+          planName: 'Banho 4x/mes',
+          totalSessions: 4,
+          usedSessions: 3,
+          remainingSessions: 1,
+          startedAt: '2026-02-01T00:00:00Z',
+          expiresAt: '2026-02-28T23:59:59Z',
+          finalPrice: 220,
+          status: 'ACTIVE',
+          renewalState: 'LAST_USE'
+        }
+      ],
+      totalItems: 1,
+      totalPages: 1,
+      page: 0,
+      size: 100
+    });
   });
 
   it('renders commission totals, professional summary, and line-level status detail', async () => {
@@ -152,7 +201,7 @@ describe('PetCommissionSummaryPage', () => {
       expect(petServiceMock.getCommissionSummary).toHaveBeenCalledTimes(1);
     });
 
-    expect(screen.getByText('Resumo de comissoes por profissional')).toBeInTheDocument();
+    expect(screen.getByText('Fechamento operacional')).toBeInTheDocument();
     expect(screen.getAllByText('Ana Groomer').length).toBeGreaterThan(0);
     expect(screen.getAllByText('Beto Groomer').length).toBeGreaterThan(0);
     expect(screen.getAllByText('Gerou comissao').length).toBeGreaterThan(0);
@@ -162,5 +211,8 @@ describe('PetCommissionSummaryPage', () => {
     expect(screen.getByText('Legacy Bath')).toBeInTheDocument();
     expect(screen.getByText('Linhas excluidas')).toBeInTheDocument();
     expect(screen.getByText('Linhas com comissao')).toBeInTheDocument();
+    expect(screen.getByText('Cobrancas pendentes')).toBeInTheDocument();
+    expect(screen.getByText('Planos perto do fim')).toBeInTheDocument();
+    expect(screen.getByText(/R\$\s?220,00/)).toBeInTheDocument();
   });
 });

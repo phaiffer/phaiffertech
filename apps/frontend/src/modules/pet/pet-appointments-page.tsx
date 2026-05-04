@@ -562,6 +562,7 @@ export function PetAppointmentsPage() {
   const [applyingInventoryRowId, setApplyingInventoryRowId] = useState<string | null>(null);
   const [preparedPickupMessage, setPreparedPickupMessage] = useState('');
   const [preparingPickupAppointmentId, setPreparingPickupAppointmentId] = useState<string | null>(null);
+  const [preparedPickupAppointmentId, setPreparedPickupAppointmentId] = useState<string | null>(null);
 
   const [deleteCandidate, setDeleteCandidate] = useState<PetAppointment | null>(null);
 
@@ -1436,8 +1437,12 @@ export function PetAppointmentsPage() {
     try {
       const prepared = await petService.preparePetReadyMessage(appointment.id);
       setPreparedPickupMessage(prepared.message);
+      setPreparedPickupAppointmentId(appointment.id);
+      if (typeof navigator !== 'undefined' && navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(prepared.message);
+      }
       setSuccess(prepared.eligible
-        ? 'Pet-ready pickup message prepared for manual send.'
+        ? 'Pet ready pickup message prepared and copied for manual send.'
         : 'Pickup message prepared, but confirm the appointment status before sending.');
     } catch (err) {
       setError(err instanceof ApiClientError ? err.message : 'Unable to prepare the pickup message.');
@@ -1476,7 +1481,8 @@ export function PetAppointmentsPage() {
     onEdit: beginEdit,
     onDelete: setDeleteCandidate,
     onPreparePickupMessage: handlePreparePickupMessage,
-    preparingPickupAppointmentId
+    preparingPickupAppointmentId,
+    preparedPickupAppointmentId
   }), [
     clients,
     clientsLookupUnavailable,
@@ -1487,6 +1493,7 @@ export function PetAppointmentsPage() {
     professionalsLookupUnavailable,
     profiles,
     profilesLookupUnavailable,
+    preparedPickupAppointmentId,
     preparingPickupAppointmentId
   ]);
 
@@ -1566,11 +1573,11 @@ export function PetAppointmentsPage() {
         {preparedPickupMessage ? (
           <PageSection
             tone="muted"
-            title="Prepared pickup message"
-            description="Review this standard customer message, then copy it into the channel your operation already uses."
+            title="Pronto para retirada"
+            description="Mensagem padrao preparada e copiada para envio manual no canal que a operacao ja usa."
           >
             <FormTextarea
-              label="Pickup message"
+              label="Mensagem preparada"
               value={preparedPickupMessage}
               onChange={setPreparedPickupMessage}
               rows={5}

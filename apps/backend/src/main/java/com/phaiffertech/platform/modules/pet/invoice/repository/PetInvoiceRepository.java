@@ -43,6 +43,23 @@ public interface PetInvoiceRepository extends JpaRepository<PetInvoice, UUID>, B
     java.util.List<PetInvoice> findAllByTenantIdAndFinanceInvoiceIdIn(UUID tenantId, Collection<UUID> financeInvoiceIds);
 
     @Query("""
+            SELECT i
+            FROM PetInvoice i
+            JOIN i.financeInvoice f
+            WHERE i.tenantId = :tenantId
+              AND f.businessContextType = :businessContextType
+              AND f.businessContextId = :businessContextId
+              AND f.status <> :excludedStatus
+            ORDER BY COALESCE(f.issuedAt, f.createdAt) DESC
+            """)
+    java.util.List<PetInvoice> findAllByBusinessContextExcludingStatus(
+            @Param("tenantId") UUID tenantId,
+            @Param("businessContextType") String businessContextType,
+            @Param("businessContextId") UUID businessContextId,
+            @Param("excludedStatus") FinanceInvoiceStatus excludedStatus
+    );
+
+    @Query("""
             SELECT COUNT(i)
             FROM PetInvoice i
             JOIN i.financeInvoice f

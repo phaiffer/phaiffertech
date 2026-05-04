@@ -4,11 +4,14 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { PermissionGuard } from '@/shared/auth/PermissionGuard';
 import { sharedPageStackClass } from '@/shared/components/public-visual-system';
 import { ApiClientError } from '@/shared/lib/http';
+import { resolvePageItems } from '@/shared/lib/pagination';
 import { petService } from '@/shared/services/pet-service';
 import {
+  ClientPlan,
   PetCommissionSummary,
   PetCommissionSummaryDetail,
-  PetCommissionSummaryProfessional
+  PetCommissionSummaryProfessional,
+  PetInvoice
 } from '@/shared/types/pet';
 import { DataTable, DataTableColumn } from '@/shared/ui/data-table';
 import { FormInput } from '@/shared/ui/form-input';
@@ -116,6 +119,8 @@ export function PetCommissionSummaryPage() {
   const [dateTo, setDateTo] = useState(buildDefaultTo);
   const [selectedProfessionalFilter, setSelectedProfessionalFilter] = useState(allProfessionalsOption);
   const [report, setReport] = useState<PetCommissionSummary | null>(null);
+  const [pendingInvoices, setPendingInvoices] = useState<PetInvoice[]>([]);
+  const [endingPlans, setEndingPlans] = useState<ClientPlan[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -124,13 +129,19 @@ export function PetCommissionSummaryPage() {
     setError(null);
 
     try {
-      const result = await petService.getCommissionSummary({
-        scheduledFrom: toIsoBoundary(from, 'start'),
-        scheduledTo: toIsoBoundary(to, 'end')
-      });
+      const [result, invoicesPage, plansPage] = await Promise.all([
+        petService.getCommissionSummary({
+          scheduledFrom: toIsoBoundary(from, 'start'),
+          scheduledTo: toIsoBoundary(to, 'end')
+        }),
+        petService.listInvoices(0, 100, '', { status: 'ISSUED' }),
+        petService.listClientPlans(undefined, 0, 100)
+      ]);
       setReport(result);
+      setPendingInvoices(resolvePageItems(invoicesPage).filter((invoice) => invoice.status !== 'PAID' && invoice.status !== 'CANCELED' && invoice.outstandingAmount > 0));
+      setEndingPlans(resolvePageItems(plansPage).filter((plan) => plan.remainingSessions > 0 && plan.remainingSessions <= 2));
     } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : 'Nao foi possivel carregar o resumo de comissoes.');
+      setError(err instanceof ApiClientError ? err.message : 'Nao foi possivel carregar o fechamento operacional.');
     } finally {
       setLoading(false);
     }
@@ -167,6 +178,7 @@ export function PetCommissionSummaryPage() {
   }, [professionalOptions, selectedProfessionalFilter]);
 
   const summaryRows = report?.professionals ?? [];
+  const pendingChargeTotal = pendingInvoices.reduce((total, invoice) => total + invoice.outstandingAmount, 0);
   const detailRows = useMemo(() => {
     if (!report) {
       return [];
@@ -316,8 +328,8 @@ export function PetCommissionSummaryPage() {
       <div className={sharedPageStackClass}>
         <PageTitle
           eyebrow="PetFlow workspace"
-          title="Resumo de comissoes por profissional"
-          description="Leia a comissao gerada por profissional com base nas linhas estruturadas do atendimento, sem antecipar fechamento de folha ou liquidacao financeira."
+          title="Fechamento operacional"
+          description="Leia atendimentos concluidos, comissoes por profissional, cobrancas pendentes e planos perto de terminar no mesmo recorte operacional de Banho e Tosa."
         />
 
         <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
@@ -336,7 +348,7 @@ export function PetCommissionSummaryPage() {
             <p className="mt-2 text-lg font-semibold text-slate-900">{report?.generatedLineCount ?? 0}</p>
           </div>
           <div className="ui-surface-panel p-4">
-            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Atendimentos contribuintes</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Atendimentos concluidos</p>
             <p className="mt-2 text-lg font-semibold text-slate-900">{report?.contributingAppointmentCount ?? 0}</p>
           </div>
         </div>
@@ -362,6 +374,35 @@ export function PetCommissionSummaryPage() {
         </PageSection>
 
         {error ? <div className="ui-notice-error">{error}</div> : null}
+
+        <PageSection
+          tone="muted"
+          title="Fechamento de Banho e Tosa"
+          description="Visao simples para fechar o dia: o que concluiu, quanto ha em aberto e quais planos precisam de renovacao operacional."
+        >
+          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+            <div className="ui-surface-panel p-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Concluidos no periodo</p>
+              <p className="mt-2 text-lg font-semibold text-slate-900">{report?.contributingAppointmentCount ?? 0}</p>
+              <p className="mt-1 text-xs text-slate-600">Base do fechamento e das comissoes.</p>
+            </div>
+            <div className="ui-surface-panel p-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Comissoes</p>
+              <p className="mt-2 text-lg font-semibold text-slate-900">{formatCurrency(report?.totalCommissionAmount)}</p>
+              <p className="mt-1 text-xs text-slate-600">Total gerado por linha elegivel.</p>
+            </div>
+            <div className="ui-surface-panel p-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Cobrancas pendentes</p>
+              <p className="mt-2 text-lg font-semibold text-slate-900">{pendingInvoices.length}</p>
+              <p className="mt-1 text-xs text-slate-600">{formatCurrency(pendingChargeTotal)} em aberto.</p>
+            </div>
+            <div className="ui-surface-panel p-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Planos perto do fim</p>
+              <p className="mt-2 text-lg font-semibold text-slate-900">{endingPlans.length}</p>
+              <p className="mt-1 text-xs text-slate-600">Ultimos ou penultimos usos.</p>
+            </div>
+          </div>
+        </PageSection>
 
         <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
           <div className="ui-surface-panel p-4">

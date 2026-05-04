@@ -549,6 +549,7 @@ type CreatePetAppointmentColumnsArgs = {
   onDelete: (appointment: PetAppointment) => void;
   onPreparePickupMessage: (appointment: PetAppointment) => void;
   preparingPickupAppointmentId: string | null;
+  preparedPickupAppointmentId: string | null;
 };
 
 export function createPetAppointmentColumns({
@@ -564,7 +565,8 @@ export function createPetAppointmentColumns({
   onEdit,
   onDelete,
   onPreparePickupMessage,
-  preparingPickupAppointmentId
+  preparingPickupAppointmentId,
+  preparedPickupAppointmentId
 }: CreatePetAppointmentColumnsArgs): DataTableColumn<PetAppointment>[] {
   const resolveClientEmail = (appointment: PetAppointment) => {
     return clients.find((client) => client.id === appointment.clientId)?.email ?? null;
@@ -901,9 +903,12 @@ export function createPetAppointmentColumns({
                 className="rounded-lg border border-sky-300 px-2 py-1 text-xs font-medium text-sky-700"
                 disabled={preparingPickupAppointmentId === appointment.id}
               >
-                {preparingPickupAppointmentId === appointment.id ? 'Preparing...' : 'Pickup message'}
+                {preparingPickupAppointmentId === appointment.id ? 'Preparando...' : 'Pronto para retirada'}
               </button>
             </PermissionGuard>
+          ) : null}
+          {preparedPickupAppointmentId === appointment.id ? (
+            <AppointmentSignalPill label="Mensagem preparada" tone="success" />
           ) : null}
         </div>
       )

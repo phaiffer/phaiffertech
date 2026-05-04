@@ -162,6 +162,14 @@ export function PetPlansPage() {
   const [billingSettingsLoading, setBillingSettingsLoading] = useState(false);
   const [billingSettingsSaving, setBillingSettingsSaving] = useState(false);
   const [preparedRenewalMessage, setPreparedRenewalMessage] = useState('');
+  const [preparedRenewalCharge, setPreparedRenewalCharge] = useState<{
+    invoiceId?: string | null;
+    status?: string | null;
+    amount?: number | null;
+    outstandingAmount?: number | null;
+    pixKey?: string | null;
+    billingDisplayName?: string | null;
+  } | null>(null);
   const [preparingRenewalPlanId, setPreparingRenewalPlanId] = useState<string | null>(null);
 
   const canReadClients = hasPermission('pet.client.read');
@@ -489,13 +497,25 @@ export function PetPlansPage() {
     setPreparingRenewalPlanId(plan.id);
     setError(null);
     setPreparedRenewalMessage('');
+    setPreparedRenewalCharge(null);
 
     try {
       const prepared = await petService.preparePlanRenewalMessage(plan.id);
       setPreparedRenewalMessage(prepared.message);
+      setPreparedRenewalCharge({
+        invoiceId: prepared.invoiceId,
+        status: prepared.invoiceStatus,
+        amount: prepared.invoiceAmount,
+        outstandingAmount: prepared.invoiceOutstandingAmount,
+        pixKey: prepared.pixKey,
+        billingDisplayName: prepared.billingDisplayName
+      });
+      if (typeof navigator !== 'undefined' && navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(prepared.message);
+      }
       setSuccess(prepared.pixConfigured
-        ? 'Renewal reminder prepared for manual send.'
-        : 'Renewal reminder prepared, but configure the tenant PIX key before sending.');
+        ? 'Mensagem PIX de renovacao preparada, cobrada e copiada para envio manual.'
+        : 'Mensagem de renovacao preparada com cobranca pendente; configure a chave PIX do tenant antes de enviar.');
     } catch (err) {
       setError(err instanceof ApiClientError ? err.message : 'Unable to prepare the renewal reminder.');
     } finally {
@@ -832,12 +852,29 @@ export function PetPlansPage() {
             </p>
           </div>
           {preparedRenewalMessage ? (
-            <FormTextarea
-              label="Prepared renewal reminder"
-              value={preparedRenewalMessage}
-              onChange={setPreparedRenewalMessage}
-              rows={6}
-            />
+            <div className="space-y-3">
+              {preparedRenewalCharge ? (
+                <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+                  <p className="font-semibold">Cobranca de renovacao pendente</p>
+                  <p className="mt-1">
+                    Valor {formatCurrency(preparedRenewalCharge.outstandingAmount ?? preparedRenewalCharge.amount ?? 0)}
+                    {' '}· Status {preparedRenewalCharge.status ?? 'ISSUED'}
+                  </p>
+                  <p className="mt-1">
+                    PIX: {preparedRenewalCharge.pixKey || 'chave PIX nao configurada'} · Recebedor: {preparedRenewalCharge.billingDisplayName || 'nome de cobranca nao configurado'}
+                  </p>
+                  {preparedRenewalCharge.invoiceId ? (
+                    <p className="mt-1 text-xs">Fatura vinculada: {preparedRenewalCharge.invoiceId}</p>
+                  ) : null}
+                </div>
+              ) : null}
+              <FormTextarea
+                label="Mensagem de renovacao preparada"
+                value={preparedRenewalMessage}
+                onChange={setPreparedRenewalMessage}
+                rows={6}
+              />
+            </div>
           ) : null}
         </PageSection>
 

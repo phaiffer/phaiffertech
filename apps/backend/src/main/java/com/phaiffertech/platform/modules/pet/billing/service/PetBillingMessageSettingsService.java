@@ -9,6 +9,8 @@ import com.phaiffertech.platform.modules.pet.billing.dto.PetPreparedCustomerMess
 import com.phaiffertech.platform.modules.pet.billing.repository.PetBillingMessageSettingsRepository;
 import com.phaiffertech.platform.modules.pet.client.domain.PetClient;
 import com.phaiffertech.platform.modules.pet.client.repository.PetClientRepository;
+import com.phaiffertech.platform.modules.pet.invoice.dto.PetInvoiceResponse;
+import com.phaiffertech.platform.modules.pet.invoice.service.PetInvoiceService;
 import com.phaiffertech.platform.modules.pet.petprofile.domain.PetProfile;
 import com.phaiffertech.platform.modules.pet.petprofile.repository.PetProfileRepository;
 import com.phaiffertech.platform.modules.pet.plan.domain.ClientPlan;
@@ -44,19 +46,22 @@ public class PetBillingMessageSettingsService {
     private final PetClientRepository petClientRepository;
     private final PetProfileRepository petProfileRepository;
     private final PetAppointmentRepository petAppointmentRepository;
+    private final PetInvoiceService petInvoiceService;
 
     public PetBillingMessageSettingsService(
             PetBillingMessageSettingsRepository settingsRepository,
             ClientPlanRepository clientPlanRepository,
             PetClientRepository petClientRepository,
             PetProfileRepository petProfileRepository,
-            PetAppointmentRepository petAppointmentRepository
+            PetAppointmentRepository petAppointmentRepository,
+            PetInvoiceService petInvoiceService
     ) {
         this.settingsRepository = settingsRepository;
         this.clientPlanRepository = clientPlanRepository;
         this.petClientRepository = petClientRepository;
         this.petProfileRepository = petProfileRepository;
         this.petAppointmentRepository = petAppointmentRepository;
+        this.petInvoiceService = petInvoiceService;
     }
 
     @Transactional(readOnly = true)
@@ -82,7 +87,7 @@ public class PetBillingMessageSettingsService {
         return toResponse(settingsRepository.save(settings));
     }
 
-    @Transactional(readOnly = true)
+    @Transactional
     public PetPreparedCustomerMessageResponse preparePlanRenewalMessage(UUID planId) {
         UUID tenantId = TenantContext.getRequiredTenantId();
         ClientPlan plan = clientPlanRepository.findByIdAndTenantId(planId, tenantId)
@@ -92,7 +97,10 @@ public class PetBillingMessageSettingsService {
         PetBillingMessageSettings settings = resolveSettings(tenantId);
 
         String clientName = resolveClientName(client);
-        String petName = "your pet";
+        PetProfile pet = plan.getPetId() == null
+                ? null
+                : petProfileRepository.findByIdAndTenantId(plan.getPetId(), tenantId).orElse(null);
+        String petName = pet == null ? "your pet" : pet.getName();
         Map<String, String> variables = Map.of(
                 "clientName", clientName,
                 "petName", petName,
@@ -105,6 +113,9 @@ public class PetBillingMessageSettingsService {
         String template = settings.getPlanRenewalMessageTemplate() == null
                 ? DEFAULT_PLAN_RENEWAL_TEMPLATE
                 : settings.getPlanRenewalMessageTemplate();
+        String message = applyTemplate(template, variables);
+        String invoiceDescription = "Renovacao de plano PetFlow - " + plan.getPlanName();
+        PetInvoiceResponse renewalInvoice = petInvoiceService.ensurePlanRenewalInvoice(plan.getId(), invoiceDescription);
 
         return new PetPreparedCustomerMessageResponse(
                 "PLAN_RENEWAL_PIX_REMINDER",
@@ -113,16 +124,20 @@ public class PetBillingMessageSettingsService {
                 clientName,
                 client.getEmail(),
                 client.getPhone(),
-                null,
+                pet == null ? null : pet.getId(),
                 petName,
                 plan.getId(),
                 plan.getPlanName(),
                 plan.getRemainingSessions(),
                 null,
                 "Plan renewal reminder",
-                applyTemplate(template, variables),
+                message,
                 settings.getPixKey(),
                 settings.getBillingDisplayName(),
+                renewalInvoice.id(),
+                renewalInvoice.status(),
+                renewalInvoice.totalAmount(),
+                renewalInvoice.outstandingAmount(),
                 hasText(settings.getPixKey()),
                 plan.getRemainingSessions() <= 1,
                 MANUAL_SEND_NOTE
@@ -170,6 +185,10 @@ public class PetBillingMessageSettingsService {
                 applyTemplate(template, variables),
                 settings.getPixKey(),
                 settings.getBillingDisplayName(),
+                null,
+                null,
+                null,
+                null,
                 hasText(settings.getPixKey()),
                 "COMPLETED".equalsIgnoreCase(appointment.getStatus()),
                 MANUAL_SEND_NOTE

@@ -261,6 +261,10 @@ export type PetPreparedCustomerMessage = {
   message: string;
   pixKey?: string | null;
   billingDisplayName?: string | null;
+  invoiceId?: string | null;
+  invoiceStatus?: string | null;
+  invoiceAmount?: number | null;
+  invoiceOutstandingAmount?: number | null;
   pixConfigured: boolean;
   eligible: boolean;
   safetyNote: string;
