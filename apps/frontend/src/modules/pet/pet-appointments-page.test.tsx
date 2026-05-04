@@ -379,7 +379,7 @@ describe('PetAppointmentsPage', () => {
     fireEvent.change(screen.getAllByLabelText('Client')[1], { target: { value: 'client-1' } });
     fireEvent.change(screen.getAllByLabelText('Pet')[1], { target: { value: 'pet-1' } });
 
-    const serviceSelect = screen.getAllByLabelText('Service')[1];
+    const serviceSelect = screen.getAllByLabelText('Service bundle')[1];
     fireEvent.change(serviceSelect, { target: { value: 'service-grooming' } });
     fireEvent.click(screen.getByRole('button', { name: 'Add service' }));
     fireEvent.change(serviceSelect, { target: { value: 'service-vaccine' } });
@@ -587,7 +587,7 @@ describe('PetAppointmentsPage', () => {
     fireEvent.change(screen.getAllByLabelText('Client')[1], { target: { value: 'client-1' } });
     fireEvent.change(screen.getAllByLabelText('Pet')[1], { target: { value: 'pet-1' } });
 
-    const serviceSelect = screen.getAllByLabelText('Service')[1];
+    const serviceSelect = screen.getAllByLabelText('Service bundle')[1];
     fireEvent.change(serviceSelect, { target: { value: 'service-bath' } });
     fireEvent.click(screen.getByRole('button', { name: 'Add service' }));
     fireEvent.change(serviceSelect, { target: { value: 'service-vaccine' } });
