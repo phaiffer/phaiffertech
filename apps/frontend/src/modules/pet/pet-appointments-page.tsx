@@ -49,12 +49,7 @@ import { FormTextarea } from '@/shared/ui/form-textarea';
 import { PageSection } from '@/shared/ui/page-section';
 import { PageTitle } from '@/shared/ui/page-title';
 import { Pagination } from '@/shared/ui/pagination';
-import {
-  sharedDrawerContainerClass,
-  sharedDrawerHeaderClass,
-  sharedDrawerOverlayClass,
-  sharedPageStackClass
-} from '@/shared/components/public-visual-system';
+import { sharedPageStackClass } from '@/shared/components/public-visual-system';
 
 const pageSize = 10;
 
@@ -695,6 +690,10 @@ export function PetAppointmentsPage() {
       }))
     ];
   }, [clientPlans, clientId, messages.formOptions, plansLoading]);
+  const selectedClientPlan = useMemo(
+    () => clientPlans.find((plan) => plan.id === clientPlanId) ?? null,
+    [clientPlanId, clientPlans]
+  );
 
   const selectedServiceEntries = useMemo(() => {
     return selectedServiceIds
@@ -1674,28 +1673,35 @@ export function PetAppointmentsPage() {
           </>
         )}
 
-        {/* SIDE DRAWER FOR APPOINTMENT */}
+        {/* APPOINTMENT EDITOR DIALOG */}
         {isEditorOpen && (
-          <div className={sharedDrawerOverlayClass}>
-            <div className={`${sharedDrawerContainerClass} max-w-lg`}>
-              <div className={sharedDrawerHeaderClass}>
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/35 px-3 py-4 backdrop-blur-[2px] sm:px-6">
+            <div
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="pet-appointment-editor-title"
+              className="flex max-h-[92vh] w-full max-w-6xl flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_32px_90px_-42px_rgba(15,23,42,0.45)]"
+            >
+              <div className="flex items-start justify-between gap-4 border-b border-slate-200 bg-white px-5 py-4 sm:px-6">
                 <div>
-                  <h2 className="text-xl font-semibold tracking-tight text-slate-900">
+                  <h2 id="pet-appointment-editor-title" className="text-xl font-semibold tracking-tight text-slate-900">
                     {editingId ? messages.drawer.editTitle : messages.drawer.createTitle}
                   </h2>
-                  <p className="mt-1 text-sm text-slate-700">
+                  <p className="mt-1 max-w-3xl text-sm leading-6 text-slate-700">
                     {messages.drawer.description}
                   </p>
                 </div>
                 <button
+                  type="button"
                   onClick={() => setIsEditorOpen(false)}
+                  aria-label={messages.form.cancel}
                   className="rounded-full p-2 text-slate-600 transition-colors duration-200 hover:bg-surface-inset hover:text-slate-900"
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
                 </button>
               </div>
 
-              <div className="space-y-6 pb-20">
+              <div className="overflow-y-auto px-5 py-5 sm:px-6">
                 <PetAppointmentForm
                   editingId={editingId}
                   onSubmit={handleSubmit}
@@ -1730,6 +1736,7 @@ export function PetAppointmentsPage() {
                   clientPlanId={clientPlanId}
                   onClientPlanIdChange={setClientPlanId}
                   planOptions={planOptions}
+                  selectedClientPlan={selectedClientPlan}
                   extrasAmount={extrasAmount}
                   onExtrasAmountChange={setExtrasAmount}
                   extrasDescription={extrasDescription}

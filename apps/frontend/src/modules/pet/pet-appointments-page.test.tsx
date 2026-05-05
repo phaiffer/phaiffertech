@@ -325,6 +325,98 @@ describe('PetAppointmentsPage', () => {
     expect(screen.getByText('At least one selected service requires a linked plan before booking.')).toBeInTheDocument();
   });
 
+  it('opens the appointment editor as a dialog and explains plan coverage without replacing the base service', async () => {
+    setGrantedPermissions([
+      'pet.appointment.read',
+      'pet.appointment.create',
+      'pet.client.read',
+      'pet.profile.read',
+      'pet.service.read',
+      'pet.professional.read'
+    ]);
+
+    petServiceMock.listClients.mockResolvedValue(createPageResponse([
+      {
+        id: 'client-1',
+        name: 'Owner Example',
+        status: 'ACTIVE',
+        createdAt: '2026-03-10T10:00:00Z',
+        updatedAt: '2026-03-10T10:00:00Z'
+      }
+    ]));
+    petServiceMock.listProfiles.mockResolvedValue(createPageResponse([
+      {
+        id: 'pet-1',
+        clientId: 'client-1',
+        name: 'Pet Example',
+        species: 'Dog',
+        createdAt: '2026-03-10T10:00:00Z',
+        updatedAt: '2026-03-10T10:00:00Z'
+      }
+    ]));
+    petServiceMock.listServices.mockResolvedValue(createPageResponse([
+      {
+        id: 'service-bath',
+        name: 'Bath',
+        category: 'GROOMING',
+        active: true,
+        basePrice: 80,
+        durationMinutes: 60,
+        commissionEligible: true,
+        allowInPlans: true,
+        allowStandaloneBooking: true,
+        createdAt: '2026-03-10T10:00:00Z',
+        updatedAt: '2026-03-10T10:00:00Z'
+      }
+    ]));
+    petServiceMock.listProfessionals.mockResolvedValue(createPageResponse([
+      {
+        id: 'professional-1',
+        name: 'Groomer One',
+        createdAt: '2026-03-10T10:00:00Z',
+        updatedAt: '2026-03-10T10:00:00Z'
+      }
+    ]));
+    petServiceMock.listClientPlans.mockResolvedValue(createPageResponse([
+      {
+        id: 'plan-1',
+        clientId: 'client-1',
+        petId: 'pet-1',
+        planTemplateId: 'template-1',
+        planName: 'Bath 4x/month',
+        totalSessions: 4,
+        usedSessions: 1,
+        remainingSessions: 3,
+        status: 'ACTIVE'
+      }
+    ]));
+    petServiceMock.listAppointments.mockResolvedValue(createPageResponse([]));
+
+    render(<PetAppointmentsPage />);
+
+    await waitFor(() => {
+      expect(petServiceMock.listServices).toHaveBeenCalled();
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: 'Book appointment' }));
+
+    expect(screen.getByRole('dialog', { name: 'Book appointment' })).toBeInTheDocument();
+    expect(screen.getByText('Select the base service covered by the plan.')).toBeInTheDocument();
+    expect(screen.getByText('The plan does not replace the appointment service; it covers checkout for the eligible base service.')).toBeInTheDocument();
+
+    fireEvent.change(screen.getAllByLabelText('Client')[1], { target: { value: 'client-1' } });
+
+    await waitFor(() => {
+      expect(petServiceMock.listClientPlans).toHaveBeenCalledWith('client-1', 0, 100);
+    });
+
+    fireEvent.change(await screen.findByLabelText('Plan (optional)'), { target: { value: 'plan-1' } });
+
+    expect(screen.getByText('Bath 4x/month')).toBeInTheDocument();
+    expect(screen.getByText('3 sessions remaining.')).toBeInTheDocument();
+    expect(screen.getByText('1 session will be consumed when the appointment is completed.')).toBeInTheDocument();
+  });
+
   it('shows commission-ready and excluded service lines in the multi-service summary', async () => {
     setGrantedPermissions([
       'pet.appointment.read',

@@ -346,12 +346,17 @@ export const enUSMessages: AppMessages = {
       serviceLineProfessionalHint: 'Override the default professional for this service line when a different person owns the work.',
       serviceLineProfessionalPending: 'No professional assigned to this service line yet.',
       packageLabel: 'Plan (optional)',
+      packageServiceRequiredTitle: 'Select the base service covered by the plan.',
+      packageServiceRequiredDescription:
+        'The plan does not replace the appointment service; it covers checkout for the eligible base service.',
+      packageSelectedTitle: 'Selected plan',
+      packageRemainingSessions: '{count} sessions remaining.',
       packageSelectClient: 'Select a client first to see available plans.',
       packageUnavailable: 'No active plan for this client. The appointment will be charged individually.',
       extrasAmount: 'Extras',
       extrasDescription: 'Extras description',
       extrasPlaceholder: 'E.g. Pet taxi, nail trim, perfume',
-      packageCoverageIntro: '1 session will be consumed from this plan when the appointment is marked Completed.',
+      packageCoverageIntro: '1 session will be consumed when the appointment is completed.',
       packageCoverageExtras: 'Extras of R$ {amount} will be charged separately.',
       packageCoverageFull: 'The base service will be fully covered by the plan.',
       referencesRequired:

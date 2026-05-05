@@ -12,7 +12,7 @@ import { DataTableColumn } from '@/shared/ui/data-table';
 import { DateTimeInput } from '@/shared/ui/datetime-input';
 import { FormInput } from '@/shared/ui/form-input';
 import { FormSelect } from '@/shared/ui/form-select';
-import { PetAppointment, PetClient, PetProfessional, PetProfile } from '@/shared/types/pet';
+import { ClientPlan, PetAppointment, PetClient, PetProfessional, PetProfile } from '@/shared/types/pet';
 import { resolvePetLookupLabel } from '@/modules/pet/pet-lookup-feedback';
 import { SearchBar } from '@/shared/ui/search-bar';
 
@@ -248,6 +248,7 @@ type PetAppointmentFormProps = {
   clientPlanId: string;
   onClientPlanIdChange: (value: string) => void;
   planOptions: PetSelectOption[];
+  selectedClientPlan: ClientPlan | null;
   extrasAmount: string;
   onExtrasAmountChange: (value: string) => void;
   extrasDescription: string;
@@ -294,6 +295,7 @@ export function PetAppointmentForm({
   clientPlanId,
   onClientPlanIdChange,
   planOptions,
+  selectedClientPlan,
   extrasAmount,
   onExtrasAmountChange,
   extrasDescription,
@@ -312,21 +314,21 @@ export function PetAppointmentForm({
 
   return (
     <PermissionGuard permission={editingId ? 'pet.appointment.update' : 'pet.appointment.create'}>
-      <form onSubmit={onSubmit} className="space-y-5">
+      <form onSubmit={onSubmit} className="space-y-6">
 
         {/* Section: Booking */}
-        <div className="ui-surface-panel p-4 space-y-3">
+        <div className="ui-surface-panel space-y-5 p-5">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-wide text-[color:var(--app-shell-muted)]">{t.form.bookingTitle}</p>
-            <p className="text-xs text-[color:var(--app-shell-muted)] mt-0.5">{t.form.bookingDescription}</p>
+            <p className="text-sm font-semibold text-slate-900">{t.form.bookingTitle}</p>
+            <p className="mt-1 text-sm leading-6 text-[color:var(--app-shell-muted)]">{t.form.bookingDescription}</p>
           </div>
-          <div className="grid gap-3 grid-cols-2">
+          <div className="grid gap-4 md:grid-cols-2">
             <FormSelect label={t.filters.client} value={clientId} options={formClientOptions} onChange={onClientIdChange} disabled={clientsLookupUnavailable} />
             <FormSelect label={t.filters.pet} value={petId} options={formPetOptions} onChange={onPetIdChange} disabled={profilesLookupUnavailable} />
           </div>
-          <div className="grid gap-3 grid-cols-2">
+          <div className="grid gap-5 xl:grid-cols-[minmax(0,1.7fr)_minmax(260px,0.8fr)]">
             <div className="space-y-3">
-              <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
+              <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
                 <FormSelect
                   label={t.filters.service}
                   value={servicePickerId}
@@ -453,7 +455,7 @@ export function PetAppointmentForm({
               <p className="mt-2 text-xs text-[color:var(--app-shell-muted)]">{serviceSummaryEmpty}</p>
             )}
           </div>
-          <div className="grid gap-3 grid-cols-2">
+          <div className="grid gap-4 md:grid-cols-2">
             <DateTimeInput label={t.form.dateTime} value={scheduledAt} onChange={onScheduledAtChange} required />
             <FormSelect label={t.filters.status} value={status} options={statusOptions} onChange={onStatusChange} />
           </div>
@@ -461,26 +463,32 @@ export function PetAppointmentForm({
         </div>
 
         {/* Section: Plan & Checkout */}
-        <div className="ui-surface-panel p-4 space-y-3">
+        <div className="ui-surface-panel space-y-5 p-5">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-wide text-[color:var(--app-shell-muted)]">{t.form.packageTitle}</p>
-            <p className="text-xs text-[color:var(--app-shell-muted)] mt-0.5">{t.form.packageDescription}</p>
+            <p className="text-sm font-semibold text-slate-900">{t.form.packageTitle}</p>
+            <p className="mt-1 text-sm leading-6 text-[color:var(--app-shell-muted)]">{t.form.packageDescription}</p>
           </div>
-          <div>
-            <FormSelect
-              label={t.form.packageLabel}
-              value={clientPlanId}
-              options={planOptions}
-              onChange={onClientPlanIdChange}
-              disabled={!clientId || !hasPlanOptions}
-            />
-            {!clientId ? (
-              <p className="mt-1 text-xs text-[color:var(--app-shell-muted)]">{t.form.packageSelectClient}</p>
-            ) : !hasPlanOptions ? (
-              <p className="mt-1 text-xs text-[color:var(--app-shell-muted)]">{t.form.packageUnavailable}</p>
-            ) : null}
+          <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(280px,0.72fr)]">
+            <div>
+              <FormSelect
+                label={t.form.packageLabel}
+                value={clientPlanId}
+                options={planOptions}
+                onChange={onClientPlanIdChange}
+                disabled={!clientId || !hasPlanOptions}
+              />
+              {!clientId ? (
+                <p className="mt-1 text-xs text-[color:var(--app-shell-muted)]">{t.form.packageSelectClient}</p>
+              ) : !hasPlanOptions ? (
+                <p className="mt-1 text-xs text-[color:var(--app-shell-muted)]">{t.form.packageUnavailable}</p>
+              ) : null}
+            </div>
+            <div className="rounded-xl border border-sky-200 bg-sky-50 px-4 py-3 text-sm leading-6 text-sky-900">
+              <p className="font-medium">{t.form.packageServiceRequiredTitle}</p>
+              <p className="mt-1">{t.form.packageServiceRequiredDescription}</p>
+            </div>
           </div>
-          <div className="grid gap-3 grid-cols-2">
+          <div className="grid gap-4 md:grid-cols-2">
             <FormInput
               label={t.form.extrasAmount}
               value={extrasAmount}
@@ -497,11 +505,20 @@ export function PetAppointmentForm({
           </div>
 
           {clientPlanId ? (
-            <div className="rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs text-emerald-800">
-              ✓ {t.form.packageCoverageIntro}
-              {extrasAmount && parseFloat(extrasAmount) > 0
-                ? ` ${t.form.packageCoverageExtras.replace('{amount}', formatCurrencyForLocale(locale, parseFloat(extrasAmount)).replace(/^R\$\s?/, ''))}`
-                : ` ${t.form.packageCoverageFull}`}
+            <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm leading-6 text-emerald-900">
+              <p className="font-medium">{selectedClientPlan?.planName ?? t.form.packageSelectedTitle}</p>
+              <p className="mt-1">
+                {selectedClientPlan
+                  ? t.form.packageRemainingSessions.replace('{count}', String(selectedClientPlan.remainingSessions))
+                  : t.form.packageCoverageFull}
+              </p>
+              <p className="mt-1">{t.form.packageCoverageIntro}</p>
+              <p className="mt-1">{t.form.packageServiceRequiredDescription}</p>
+              {extrasAmount && parseFloat(extrasAmount) > 0 ? (
+                <p className="mt-1">
+                  {t.form.packageCoverageExtras.replace('{amount}', formatCurrencyForLocale(locale, parseFloat(extrasAmount)).replace(/^R\$\s?/, ''))}
+                </p>
+              ) : null}
             </div>
           ) : null}
 

@@ -352,12 +352,17 @@ const ptBRMessages = {
       serviceLineProfessionalHint: 'Sobrescreva o profissional padrao nesta linha quando outra pessoa assumir a execucao.',
       serviceLineProfessionalPending: 'Nenhum profissional atribuido a esta linha ainda.',
       packageLabel: 'Plano (opcional)',
+      packageServiceRequiredTitle: 'Selecione o servico base coberto pelo plano.',
+      packageServiceRequiredDescription:
+        'O plano nao substitui o servico do atendimento; ele cobre o checkout do servico elegivel.',
+      packageSelectedTitle: 'Plano selecionado',
+      packageRemainingSessions: '{count} sessoes restantes.',
       packageSelectClient: 'Selecione um cliente primeiro para ver os planos disponiveis.',
       packageUnavailable: 'Nenhum plano ativo para este cliente. O atendimento sera cobrado de forma avulsa.',
       extrasAmount: 'Extras (R$)',
       extrasDescription: 'Descricao dos extras',
       extrasPlaceholder: 'Ex.: Pet taxi, corte de unhas, perfume',
-      packageCoverageIntro: '1 sessao sera consumida deste plano quando o atendimento for marcado como Concluido.',
+      packageCoverageIntro: '1 sessao sera consumida quando o atendimento for concluido.',
       packageCoverageExtras: 'Extras de R$ {amount} serao cobrados separadamente.',
       packageCoverageFull: 'O servico base ficara totalmente coberto pelo plano.',
       referencesRequired:
