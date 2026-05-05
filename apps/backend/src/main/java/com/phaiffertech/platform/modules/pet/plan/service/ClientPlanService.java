@@ -171,12 +171,18 @@ public class ClientPlanService extends BaseTenantCrudService<
     ) {
         UUID tenantId = currentTenantId();
         BasePageQuery query = BasePageQuery.of(pageRequest, Sort.by(Sort.Direction.DESC, "createdAt"));
-        var templates = planTemplateRepository.findAllByTenantIdAndSearch(
-                tenantId,
-                active,
-                query.search(),
-                query.pageable()
-        );
+        var templates = active == null
+                ? planTemplateRepository.findAllByTenantIdAndSearch(
+                        tenantId,
+                        query.search(),
+                        query.pageable()
+                )
+                : planTemplateRepository.findAllByTenantIdAndActiveAndSearch(
+                        tenantId,
+                        active,
+                        query.search(),
+                        query.pageable()
+                );
         Map<UUID, List<UUID>> serviceIdsByTemplate = loadServiceIdsByTemplate(
                 tenantId,
                 templates.getContent().stream().map(PlanTemplate::getId).collect(Collectors.toSet())

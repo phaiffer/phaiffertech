@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -44,6 +45,24 @@ class ClientPlanServiceTest {
     }
 
     @Test
+    void findTemplatesReturnsEmptyPageWithoutActiveFilter() {
+        UUID tenantId = UUID.randomUUID();
+        TenantContext.setTenantId(tenantId);
+
+        when(planTemplateRepository.findAllByTenantIdAndSearch(
+                eq(tenantId),
+                eq("%"),
+                any(Pageable.class)
+        )).thenReturn(Page.empty());
+
+        PageResponseDto<ClientPlanDtos.PlanTemplateResponseDto> response =
+                service.findTemplates(new PageRequestDto(0, 20, null, null, null), null);
+
+        assertEquals(0, response.items().size());
+        assertEquals(0, response.totalItems());
+    }
+
+    @Test
     void findTemplatesReturnsPageWhenTemplateHasNoLinkedServices() {
         UUID tenantId = UUID.randomUUID();
         UUID templateId = UUID.randomUUID();
@@ -58,9 +77,9 @@ class ClientPlanServiceTest {
         template.setTotalSessions(4);
         template.setActive(true);
 
-        when(planTemplateRepository.findAllByTenantIdAndSearch(
+        when(planTemplateRepository.findAllByTenantIdAndActiveAndSearch(
                 eq(tenantId),
-                eq(null),
+                eq(true),
                 eq("%"),
                 any(Pageable.class)
         )).thenReturn(new PageImpl<>(List.of(template)));
@@ -68,9 +87,10 @@ class ClientPlanServiceTest {
                 .thenReturn(List.of());
 
         PageResponseDto<ClientPlanDtos.PlanTemplateResponseDto> response =
-                service.findTemplates(new PageRequestDto(0, 20, null, null, null), null);
+                service.findTemplates(new PageRequestDto(0, 20, null, null, null), true);
 
         assertEquals(1, response.items().size());
+        assertEquals(1, response.totalItems());
         assertEquals("Banho 4x/mes", response.items().get(0).commercialName());
         assertEquals(List.of(), response.items().get(0).serviceIds());
     }

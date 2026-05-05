@@ -14,35 +14,38 @@ public interface PlanTemplateRepository extends JpaRepository<PlanTemplate, UUID
 
     Optional<PlanTemplate> findByIdAndTenantId(UUID id, UUID tenantId);
 
-    @Query(
-            value = """
-                    SELECT *
-                    FROM pet_plan_templates t
-                    WHERE t.tenant_id = :tenantId
-                      AND (:active IS NULL OR t.active = :active)
-                      AND (:search = '%' OR
-                           LOWER(t.commercial_name) LIKE :search OR
-                           LOWER(COALESCE(t.description, '')) LIKE :search OR
-                           LOWER(COALESCE(t.renewal_rules, '')) LIKE :search)
-                      AND t.deleted_at IS NULL
-                    ORDER BY t.created_at DESC
-                    """,
-            countQuery = """
-                    SELECT COUNT(*)
-                    FROM pet_plan_templates t
-                    WHERE t.tenant_id = :tenantId
-                      AND (:active IS NULL OR t.active = :active)
-                      AND (:search = '%' OR
-                           LOWER(t.commercial_name) LIKE :search OR
-                           LOWER(COALESCE(t.description, '')) LIKE :search OR
-                           LOWER(COALESCE(t.renewal_rules, '')) LIKE :search)
-                      AND t.deleted_at IS NULL
-                    """,
-            nativeQuery = true
-    )
+    @Query("""
+            SELECT t
+            FROM PlanTemplate t
+            WHERE t.tenantId = :tenantId
+              AND (:search = '%' OR
+                   LOWER(t.commercialName) LIKE :search OR
+                   LOWER(COALESCE(t.description, '')) LIKE :search OR
+                   LOWER(COALESCE(t.renewalRules, '')) LIKE :search)
+              AND t.deletedAt IS NULL
+            ORDER BY t.createdAt DESC
+            """)
     Page<PlanTemplate> findAllByTenantIdAndSearch(
             @Param("tenantId") UUID tenantId,
-            @Param("active") Boolean active,
+            @Param("search") String search,
+            Pageable pageable
+    );
+
+    @Query("""
+            SELECT t
+            FROM PlanTemplate t
+            WHERE t.tenantId = :tenantId
+              AND t.active = :active
+              AND (:search = '%' OR
+                   LOWER(t.commercialName) LIKE :search OR
+                   LOWER(COALESCE(t.description, '')) LIKE :search OR
+                   LOWER(COALESCE(t.renewalRules, '')) LIKE :search)
+              AND t.deletedAt IS NULL
+            ORDER BY t.createdAt DESC
+            """)
+    Page<PlanTemplate> findAllByTenantIdAndActiveAndSearch(
+            @Param("tenantId") UUID tenantId,
+            @Param("active") boolean active,
             @Param("search") String search,
             Pageable pageable
     );
