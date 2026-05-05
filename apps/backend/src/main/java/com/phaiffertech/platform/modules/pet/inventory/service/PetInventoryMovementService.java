@@ -75,12 +75,12 @@ public class PetInventoryMovementService {
                 PaginationUtils.toPageableWithoutSort(pageRequest),
                 pageRequest == null ? "%" : pageRequest.normalizedSearchPattern()
         );
-        Page<InventoryMovement> movements = movementRepository.findAllByTenantIdAndSearch(
+        InventoryMovementType normalizedMovementType = normalizeType(movementType);
+        Page<InventoryMovement> movements = findMovements(
                 tenantId,
                 inventoryItemId,
-                movementType == null ? null : normalizeType(movementType).name(),
-                query.search(),
-                query.pageable()
+                normalizedMovementType,
+                query
         );
 
         Map<UUID, PetProduct> productsByInventoryItemId = loadProductsByInventoryItemId(
@@ -171,6 +171,44 @@ public class PetInventoryMovementService {
             return null;
         }
         return InventoryMovementType.valueOf(movementType.trim().toUpperCase());
+    }
+
+    private Page<InventoryMovement> findMovements(
+            UUID tenantId,
+            UUID inventoryItemId,
+            InventoryMovementType movementType,
+            BasePageQuery query
+    ) {
+        if (inventoryItemId != null && movementType != null) {
+            return movementRepository.findAllByTenantIdAndInventoryItemIdAndMovementTypeAndSearch(
+                    tenantId,
+                    inventoryItemId,
+                    movementType.name(),
+                    query.search(),
+                    query.pageable()
+            );
+        }
+        if (inventoryItemId != null) {
+            return movementRepository.findAllByTenantIdAndInventoryItemIdAndSearch(
+                    tenantId,
+                    inventoryItemId,
+                    query.search(),
+                    query.pageable()
+            );
+        }
+        if (movementType != null) {
+            return movementRepository.findAllByTenantIdAndMovementTypeAndSearch(
+                    tenantId,
+                    movementType.name(),
+                    query.search(),
+                    query.pageable()
+            );
+        }
+        return movementRepository.findAllByTenantIdAndSearch(
+                tenantId,
+                query.search(),
+                query.pageable()
+        );
     }
 
     private InventoryMovementSource resolveSource(InventoryItemCategory category, InventoryMovementType movementType) {

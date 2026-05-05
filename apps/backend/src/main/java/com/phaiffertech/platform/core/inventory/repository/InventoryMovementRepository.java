@@ -33,8 +33,6 @@ public interface InventoryMovementRepository
             FROM inventory_movements m
             WHERE m.tenant_id = :tenantId
               AND m.deleted_at IS NULL
-              AND (:inventoryItemId IS NULL OR m.inventory_item_id = :inventoryItemId)
-              AND (:movementType IS NULL OR m.movement_type = :movementType)
               AND (:search = '%' OR
                    LOWER(COALESCE(m.reason, '')) LIKE :search OR
                    LOWER(m.source_type) LIKE :search)
@@ -45,14 +43,100 @@ public interface InventoryMovementRepository
                     FROM inventory_movements m
                     WHERE m.tenant_id = :tenantId
                       AND m.deleted_at IS NULL
-                      AND (:inventoryItemId IS NULL OR m.inventory_item_id = :inventoryItemId)
-                      AND (:movementType IS NULL OR m.movement_type = :movementType)
                       AND (:search = '%' OR
                            LOWER(COALESCE(m.reason, '')) LIKE :search OR
                            LOWER(m.source_type) LIKE :search)
                     """,
             nativeQuery = true)
     Page<InventoryMovement> findAllByTenantIdAndSearch(
+            @Param("tenantId") UUID tenantId,
+            @Param("search") String search,
+            Pageable pageable
+    );
+
+    @Query(value = """
+            SELECT *
+            FROM inventory_movements m
+            WHERE m.tenant_id = :tenantId
+              AND m.deleted_at IS NULL
+              AND m.inventory_item_id = :inventoryItemId
+              AND (:search = '%' OR
+                   LOWER(COALESCE(m.reason, '')) LIKE :search OR
+                   LOWER(m.source_type) LIKE :search)
+            ORDER BY m.created_at DESC
+            """,
+            countQuery = """
+                    SELECT COUNT(*)
+                    FROM inventory_movements m
+                    WHERE m.tenant_id = :tenantId
+                      AND m.deleted_at IS NULL
+                      AND m.inventory_item_id = :inventoryItemId
+                      AND (:search = '%' OR
+                           LOWER(COALESCE(m.reason, '')) LIKE :search OR
+                           LOWER(m.source_type) LIKE :search)
+                    """,
+            nativeQuery = true)
+    Page<InventoryMovement> findAllByTenantIdAndInventoryItemIdAndSearch(
+            @Param("tenantId") UUID tenantId,
+            @Param("inventoryItemId") UUID inventoryItemId,
+            @Param("search") String search,
+            Pageable pageable
+    );
+
+    @Query(value = """
+            SELECT *
+            FROM inventory_movements m
+            WHERE m.tenant_id = :tenantId
+              AND m.deleted_at IS NULL
+              AND m.movement_type = :movementType
+              AND (:search = '%' OR
+                   LOWER(COALESCE(m.reason, '')) LIKE :search OR
+                   LOWER(m.source_type) LIKE :search)
+            ORDER BY m.created_at DESC
+            """,
+            countQuery = """
+                    SELECT COUNT(*)
+                    FROM inventory_movements m
+                    WHERE m.tenant_id = :tenantId
+                      AND m.deleted_at IS NULL
+                      AND m.movement_type = :movementType
+                      AND (:search = '%' OR
+                           LOWER(COALESCE(m.reason, '')) LIKE :search OR
+                           LOWER(m.source_type) LIKE :search)
+                    """,
+            nativeQuery = true)
+    Page<InventoryMovement> findAllByTenantIdAndMovementTypeAndSearch(
+            @Param("tenantId") UUID tenantId,
+            @Param("movementType") String movementType,
+            @Param("search") String search,
+            Pageable pageable
+    );
+
+    @Query(value = """
+            SELECT *
+            FROM inventory_movements m
+            WHERE m.tenant_id = :tenantId
+              AND m.deleted_at IS NULL
+              AND m.inventory_item_id = :inventoryItemId
+              AND m.movement_type = :movementType
+              AND (:search = '%' OR
+                   LOWER(COALESCE(m.reason, '')) LIKE :search OR
+                   LOWER(m.source_type) LIKE :search)
+            ORDER BY m.created_at DESC
+            """,
+            countQuery = """
+                    SELECT COUNT(*)
+                    FROM inventory_movements m
+                    WHERE m.tenant_id = :tenantId
+                      AND m.deleted_at IS NULL
+                      AND m.inventory_item_id = :inventoryItemId
+                      AND m.movement_type = :movementType
+                      AND (:search = '%' OR
+                           LOWER(COALESCE(m.reason, '')) LIKE :search OR
+                           LOWER(m.source_type) LIKE :search)
+                    """,
+            nativeQuery = true)
+    Page<InventoryMovement> findAllByTenantIdAndInventoryItemIdAndMovementTypeAndSearch(
             @Param("tenantId") UUID tenantId,
             @Param("inventoryItemId") UUID inventoryItemId,
             @Param("movementType") String movementType,
