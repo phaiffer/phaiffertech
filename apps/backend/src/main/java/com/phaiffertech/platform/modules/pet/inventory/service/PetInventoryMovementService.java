@@ -183,7 +183,7 @@ public class PetInventoryMovementService {
             return movementRepository.findAllByTenantIdAndInventoryItemIdAndMovementTypeAndSearch(
                     tenantId,
                     inventoryItemId,
-                    movementType.name(),
+                    movementType,
                     query.search(),
                     query.pageable()
             );
@@ -199,7 +199,7 @@ public class PetInventoryMovementService {
         if (movementType != null) {
             return movementRepository.findAllByTenantIdAndMovementTypeAndSearch(
                     tenantId,
-                    movementType.name(),
+                    movementType,
                     query.search(),
                     query.pageable()
             );

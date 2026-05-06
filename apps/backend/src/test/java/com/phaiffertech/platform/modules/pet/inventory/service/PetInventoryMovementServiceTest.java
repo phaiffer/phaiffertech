@@ -109,14 +109,14 @@ class PetInventoryMovementServiceTest {
         )).thenReturn(Page.empty());
         when(movementRepository.findAllByTenantIdAndMovementTypeAndSearch(
                 eq(tenantId),
-                eq("IN"),
+                eq(InventoryMovementType.IN),
                 eq("%"),
                 any(Pageable.class)
         )).thenReturn(Page.empty());
         when(movementRepository.findAllByTenantIdAndInventoryItemIdAndMovementTypeAndSearch(
                 eq(tenantId),
                 eq(inventoryItemId),
-                eq("OUT"),
+                eq(InventoryMovementType.OUT),
                 eq("%"),
                 any(Pageable.class)
         )).thenReturn(Page.empty());
@@ -135,14 +135,14 @@ class PetInventoryMovementServiceTest {
         );
         verify(movementRepository).findAllByTenantIdAndMovementTypeAndSearch(
                 eq(tenantId),
-                eq("IN"),
+                eq(InventoryMovementType.IN),
                 eq("%"),
                 any(Pageable.class)
         );
         verify(movementRepository).findAllByTenantIdAndInventoryItemIdAndMovementTypeAndSearch(
                 eq(tenantId),
                 eq(inventoryItemId),
-                eq("OUT"),
+                eq(InventoryMovementType.OUT),
                 eq("%"),
                 any(Pageable.class)
         );

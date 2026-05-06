@@ -28,54 +28,31 @@ public interface InventoryMovementRepository
             @Param("tenantId") UUID tenantId
     );
 
-    @Query(value = """
-            SELECT *
-            FROM inventory_movements m
-            WHERE m.tenant_id = :tenantId
-              AND m.deleted_at IS NULL
+    @Query("""
+            SELECT m
+            FROM InventoryMovement m
+            WHERE m.tenantId = :tenantId
+              AND m.deletedAt IS NULL
               AND (:search = '%' OR
-                   LOWER(COALESCE(m.reason, '')) LIKE :search OR
-                   LOWER(m.source_type) LIKE :search)
-            ORDER BY m.created_at DESC
-            """,
-            countQuery = """
-                    SELECT COUNT(*)
-                    FROM inventory_movements m
-                    WHERE m.tenant_id = :tenantId
-                      AND m.deleted_at IS NULL
-                      AND (:search = '%' OR
-                           LOWER(COALESCE(m.reason, '')) LIKE :search OR
-                           LOWER(m.source_type) LIKE :search)
-                    """,
-            nativeQuery = true)
+                   LOWER(COALESCE(m.reason, '')) LIKE :search)
+            ORDER BY m.createdAt DESC
+            """)
     Page<InventoryMovement> findAllByTenantIdAndSearch(
             @Param("tenantId") UUID tenantId,
             @Param("search") String search,
             Pageable pageable
     );
 
-    @Query(value = """
-            SELECT *
-            FROM inventory_movements m
-            WHERE m.tenant_id = :tenantId
-              AND m.deleted_at IS NULL
-              AND m.inventory_item_id = :inventoryItemId
+    @Query("""
+            SELECT m
+            FROM InventoryMovement m
+            WHERE m.tenantId = :tenantId
+              AND m.deletedAt IS NULL
+              AND m.inventoryItemId = :inventoryItemId
               AND (:search = '%' OR
-                   LOWER(COALESCE(m.reason, '')) LIKE :search OR
-                   LOWER(m.source_type) LIKE :search)
-            ORDER BY m.created_at DESC
-            """,
-            countQuery = """
-                    SELECT COUNT(*)
-                    FROM inventory_movements m
-                    WHERE m.tenant_id = :tenantId
-                      AND m.deleted_at IS NULL
-                      AND m.inventory_item_id = :inventoryItemId
-                      AND (:search = '%' OR
-                           LOWER(COALESCE(m.reason, '')) LIKE :search OR
-                           LOWER(m.source_type) LIKE :search)
-                    """,
-            nativeQuery = true)
+                   LOWER(COALESCE(m.reason, '')) LIKE :search)
+            ORDER BY m.createdAt DESC
+            """)
     Page<InventoryMovement> findAllByTenantIdAndInventoryItemIdAndSearch(
             @Param("tenantId") UUID tenantId,
             @Param("inventoryItemId") UUID inventoryItemId,
@@ -83,63 +60,38 @@ public interface InventoryMovementRepository
             Pageable pageable
     );
 
-    @Query(value = """
-            SELECT *
-            FROM inventory_movements m
-            WHERE m.tenant_id = :tenantId
-              AND m.deleted_at IS NULL
-              AND m.movement_type = :movementType
+    @Query("""
+            SELECT m
+            FROM InventoryMovement m
+            WHERE m.tenantId = :tenantId
+              AND m.deletedAt IS NULL
+              AND m.movementType = :movementType
               AND (:search = '%' OR
-                   LOWER(COALESCE(m.reason, '')) LIKE :search OR
-                   LOWER(m.source_type) LIKE :search)
-            ORDER BY m.created_at DESC
-            """,
-            countQuery = """
-                    SELECT COUNT(*)
-                    FROM inventory_movements m
-                    WHERE m.tenant_id = :tenantId
-                      AND m.deleted_at IS NULL
-                      AND m.movement_type = :movementType
-                      AND (:search = '%' OR
-                           LOWER(COALESCE(m.reason, '')) LIKE :search OR
-                           LOWER(m.source_type) LIKE :search)
-                    """,
-            nativeQuery = true)
+                   LOWER(COALESCE(m.reason, '')) LIKE :search)
+            ORDER BY m.createdAt DESC
+            """)
     Page<InventoryMovement> findAllByTenantIdAndMovementTypeAndSearch(
             @Param("tenantId") UUID tenantId,
-            @Param("movementType") String movementType,
+            @Param("movementType") InventoryMovementType movementType,
             @Param("search") String search,
             Pageable pageable
     );
 
-    @Query(value = """
-            SELECT *
-            FROM inventory_movements m
-            WHERE m.tenant_id = :tenantId
-              AND m.deleted_at IS NULL
-              AND m.inventory_item_id = :inventoryItemId
-              AND m.movement_type = :movementType
+    @Query("""
+            SELECT m
+            FROM InventoryMovement m
+            WHERE m.tenantId = :tenantId
+              AND m.deletedAt IS NULL
+              AND m.inventoryItemId = :inventoryItemId
+              AND m.movementType = :movementType
               AND (:search = '%' OR
-                   LOWER(COALESCE(m.reason, '')) LIKE :search OR
-                   LOWER(m.source_type) LIKE :search)
-            ORDER BY m.created_at DESC
-            """,
-            countQuery = """
-                    SELECT COUNT(*)
-                    FROM inventory_movements m
-                    WHERE m.tenant_id = :tenantId
-                      AND m.deleted_at IS NULL
-                      AND m.inventory_item_id = :inventoryItemId
-                      AND m.movement_type = :movementType
-                      AND (:search = '%' OR
-                           LOWER(COALESCE(m.reason, '')) LIKE :search OR
-                           LOWER(m.source_type) LIKE :search)
-                    """,
-            nativeQuery = true)
+                   LOWER(COALESCE(m.reason, '')) LIKE :search)
+            ORDER BY m.createdAt DESC
+            """)
     Page<InventoryMovement> findAllByTenantIdAndInventoryItemIdAndMovementTypeAndSearch(
             @Param("tenantId") UUID tenantId,
             @Param("inventoryItemId") UUID inventoryItemId,
-            @Param("movementType") String movementType,
+            @Param("movementType") InventoryMovementType movementType,
             @Param("search") String search,
             Pageable pageable
     );
