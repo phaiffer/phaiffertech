@@ -17,6 +17,9 @@ import com.phaiffertech.platform.modules.pet.plan.domain.ClientPlan;
 import com.phaiffertech.platform.modules.pet.plan.repository.ClientPlanRepository;
 import com.phaiffertech.platform.shared.exception.ResourceNotFoundException;
 import com.phaiffertech.platform.shared.tenancy.TenantContext;
+import java.math.BigDecimal;
+import java.text.NumberFormat;
+import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
 import org.springframework.stereotype.Service;
@@ -26,12 +29,13 @@ import org.springframework.transaction.annotation.Transactional;
 public class PetBillingMessageSettingsService {
 
     private static final String DEFAULT_PLAN_RENEWAL_TEMPLATE = """
-            Hi {clientName}, {petName}'s plan "{planName}" has {remainingSessions} bath/use remaining.
+            Ola, {clientName}! O plano {planName} do pet {petName} esta no ultimo banho do ciclo atual.
 
-            To renew, send PIX to {pixKey}.
-            Billing contact: {billingDisplayName}.
+            Para renovar o proximo ciclo, o valor e {renewalAmount}.
+            PIX: {pixKey}
+            Favorecido: {billingDisplayName}
 
-            Reply here after payment so we can confirm the next cycle.
+            Assim que pagar, nos envie o comprovante.
             """;
     private static final String DEFAULT_PET_READY_TEMPLATE = """
             Hi {clientName}, {petName} is ready for pickup.
@@ -101,11 +105,20 @@ public class PetBillingMessageSettingsService {
                 ? null
                 : petProfileRepository.findByIdAndTenantId(plan.getPetId(), tenantId).orElse(null);
         String petName = pet == null ? "your pet" : pet.getName();
+        String invoiceDescription = "Renovacao de plano PetFlow - " + plan.getPlanName();
+        PetInvoiceResponse renewalInvoice = petInvoiceService.ensurePlanRenewalInvoice(plan.getId(), invoiceDescription);
+        BigDecimal renewalAmount = renewalInvoice.outstandingAmount() == null
+                ? renewalInvoice.totalAmount()
+                : renewalInvoice.outstandingAmount();
+        String formattedRenewalAmount = formatCurrency(renewalAmount);
         Map<String, String> variables = Map.of(
                 "clientName", clientName,
                 "petName", petName,
                 "planName", plan.getPlanName(),
                 "remainingSessions", String.valueOf(plan.getRemainingSessions()),
+                "renewalAmount", formattedRenewalAmount,
+                "invoiceAmount", formatCurrency(renewalInvoice.totalAmount()),
+                "invoiceOutstandingAmount", formattedRenewalAmount,
                 "pixKey", resolvePixKey(settings),
                 "billingDisplayName", resolveBillingDisplayName(settings)
         );
@@ -114,8 +127,6 @@ public class PetBillingMessageSettingsService {
                 ? DEFAULT_PLAN_RENEWAL_TEMPLATE
                 : settings.getPlanRenewalMessageTemplate();
         String message = applyTemplate(template, variables);
-        String invoiceDescription = "Renovacao de plano PetFlow - " + plan.getPlanName();
-        PetInvoiceResponse renewalInvoice = petInvoiceService.ensurePlanRenewalInvoice(plan.getId(), invoiceDescription);
 
         return new PetPreparedCustomerMessageResponse(
                 "PLAN_RENEWAL_PIX_REMINDER",
@@ -231,7 +242,13 @@ public class PetBillingMessageSettingsService {
     }
 
     private String resolveBillingDisplayName(PetBillingMessageSettings settings) {
-        return hasText(settings.getBillingDisplayName()) ? settings.getBillingDisplayName().trim() : "the PetFlow team";
+        return hasText(settings.getBillingDisplayName()) ? settings.getBillingDisplayName().trim() : "Equipe PetFlow";
+    }
+
+    private String formatCurrency(BigDecimal amount) {
+        BigDecimal safeAmount = amount == null ? BigDecimal.ZERO : amount;
+        return NumberFormat.getCurrencyInstance(Locale.forLanguageTag("pt-BR")).format(safeAmount)
+                .replace('\u00A0', ' ');
     }
 
     private String normalizeOptional(String value) {

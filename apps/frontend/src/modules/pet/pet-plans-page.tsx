@@ -164,6 +164,9 @@ export function PetPlansPage() {
   const [billingSettingsSaving, setBillingSettingsSaving] = useState(false);
   const [preparedRenewalMessage, setPreparedRenewalMessage] = useState('');
   const [preparedRenewalCharge, setPreparedRenewalCharge] = useState<{
+    clientName?: string | null;
+    petName?: string | null;
+    planName?: string | null;
     invoiceId?: string | null;
     status?: string | null;
     amount?: number | null;
@@ -508,6 +511,9 @@ export function PetPlansPage() {
       const prepared = await petService.preparePlanRenewalMessage(plan.id);
       setPreparedRenewalMessage(prepared.message);
       setPreparedRenewalCharge({
+        clientName: prepared.clientName,
+        petName: prepared.petName,
+        planName: prepared.planName,
         invoiceId: prepared.invoiceId,
         status: prepared.invoiceStatus,
         amount: prepared.invoiceAmount,
@@ -525,6 +531,16 @@ export function PetPlansPage() {
       setError(err instanceof ApiClientError ? err.message : 'Unable to prepare the renewal reminder.');
     } finally {
       setPreparingRenewalPlanId(null);
+    }
+  }
+
+  async function copyManualRenewalText(value: string, successMessage: string) {
+    if (!value) {
+      return;
+    }
+    if (typeof navigator !== 'undefined' && navigator.clipboard?.writeText) {
+      await navigator.clipboard.writeText(value);
+      setSuccess(successMessage);
     }
   }
 
@@ -831,7 +847,7 @@ export function PetPlansPage() {
               label="Renewal reminder template"
               value={planRenewalTemplate}
               onChange={setPlanRenewalTemplate}
-              placeholder="Use placeholders like {clientName}, {planName}, {remainingSessions}, {pixKey}, {billingDisplayName}."
+              placeholder="Use placeholders like {clientName}, {petName}, {planName}, {renewalAmount}, {pixKey}, {billingDisplayName}."
               rows={4}
               disabled={billingSettingsLoading}
             />
@@ -863,7 +879,58 @@ export function PetPlansPage() {
             <div className="space-y-3">
               {preparedRenewalCharge ? (
                 <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
-                  <p className="font-semibold">Cobranca de renovacao pendente</p>
+                  <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+                    <div>
+                      <p className="font-semibold">Cobranca de renovacao pendente</p>
+                      <p className="mt-1 text-amber-800">
+                        Fluxo manual assistido: copie a mensagem e envie pelo canal combinado com o cliente.
+                      </p>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      <button
+                        type="button"
+                        className="ui-secondary-button"
+                        onClick={() => void copyManualRenewalText(preparedRenewalMessage, 'Mensagem de renovacao copiada.')}
+                      >
+                        Copiar mensagem
+                      </button>
+                      {preparedRenewalCharge.pixKey ? (
+                        <button
+                          type="button"
+                          className="ui-inline-button"
+                          onClick={() => void copyManualRenewalText(preparedRenewalCharge.pixKey ?? '', 'Chave PIX copiada.')}
+                        >
+                          Copiar chave PIX
+                        </button>
+                      ) : null}
+                    </div>
+                  </div>
+                  <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+                    <div>
+                      <p className="text-xs font-semibold uppercase tracking-[0.14em] text-amber-700">Plano</p>
+                      <p className="mt-1 font-medium">{preparedRenewalCharge.planName || 'Plano nao informado'}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs font-semibold uppercase tracking-[0.14em] text-amber-700">Cliente</p>
+                      <p className="mt-1 font-medium">{preparedRenewalCharge.clientName || 'Cliente nao informado'}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs font-semibold uppercase tracking-[0.14em] text-amber-700">Pet</p>
+                      <p className="mt-1 font-medium">{preparedRenewalCharge.petName || 'Pet nao informado'}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs font-semibold uppercase tracking-[0.14em] text-amber-700">Valor</p>
+                      <p className="mt-1 font-medium">{formatCurrency(preparedRenewalCharge.outstandingAmount ?? preparedRenewalCharge.amount ?? 0)}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs font-semibold uppercase tracking-[0.14em] text-amber-700">Chave PIX</p>
+                      <p className="mt-1 break-all font-medium">{preparedRenewalCharge.pixKey || 'chave PIX nao configurada'}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs font-semibold uppercase tracking-[0.14em] text-amber-700">Nome de cobranca</p>
+                      <p className="mt-1 font-medium">{preparedRenewalCharge.billingDisplayName || 'nome de cobranca nao configurado'}</p>
+                    </div>
+                  </div>
                   <p className="mt-1">
                     Valor {formatCurrency(preparedRenewalCharge.outstandingAmount ?? preparedRenewalCharge.amount ?? 0)}
                     {' '}· Status {preparedRenewalCharge.status ?? 'ISSUED'}

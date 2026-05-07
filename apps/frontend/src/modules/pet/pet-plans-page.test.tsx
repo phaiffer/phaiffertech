@@ -49,6 +49,10 @@ function createPageResponse<T>(items: T[]) {
 describe('PetPlansPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    Object.defineProperty(navigator, 'clipboard', {
+      configurable: true,
+      value: { writeText: vi.fn().mockResolvedValue(undefined) }
+    });
     hasPermissionMock.mockReturnValue(true);
     petServiceMock.listPlanTemplates.mockResolvedValue(createPageResponse([
       {
@@ -141,7 +145,7 @@ describe('PetPlansPage', () => {
       planName: 'Banho 4x/mes',
       remainingSessions: 1,
       subject: 'Plan renewal reminder',
-      message: 'Maria, renove o plano da Luna por PIX.',
+      message: 'Ola, Maria Responsavel! O plano Banho 4x/mes do pet Luna esta no ultimo banho do ciclo atual.\n\nPara renovar o proximo ciclo, o valor e R$ 220,00.\nPIX: pix@petshop.com.br\nFavorecido: Pet Shop Teste\n\nAssim que pagar, nos envie o comprovante.',
       pixKey: 'pix@petshop.com.br',
       billingDisplayName: 'Pet Shop Teste',
       invoiceId: 'invoice-1',
@@ -175,8 +179,21 @@ describe('PetPlansPage', () => {
       expect(petServiceMock.preparePlanRenewalMessage).toHaveBeenCalledWith('plan-1');
     });
     expect(await screen.findByText('Cobranca de renovacao pendente')).toBeInTheDocument();
+    expect(screen.getByText('Fluxo manual assistido: copie a mensagem e envie pelo canal combinado com o cliente.')).toBeInTheDocument();
+    expect(screen.getAllByText('Maria Responsavel').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('Luna').length).toBeGreaterThan(0);
+    expect(screen.getAllByText((text) => text.includes('220,00')).length).toBeGreaterThan(0);
+    expect(screen.getAllByText('pix@petshop.com.br').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('Pet Shop Teste').length).toBeGreaterThan(0);
     expect(screen.getByText(/Fatura vinculada: invoice-1/)).toBeInTheDocument();
-    expect(screen.getByLabelText('Mensagem de renovacao preparada')).toHaveValue('Maria, renove o plano da Luna por PIX.');
+    expect((screen.getByLabelText('Mensagem de renovacao preparada') as HTMLTextAreaElement).value)
+      .toContain('Assim que pagar, nos envie o comprovante.');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Copiar chave PIX' }));
+
+    await waitFor(() => {
+      expect(navigator.clipboard.writeText).toHaveBeenCalledWith('pix@petshop.com.br');
+    });
   });
 
   it('contracts a catalog plan for a client and pet with final price and notes', async () => {
