@@ -557,7 +557,9 @@ export function PetAppointmentsPage() {
   const [applyingInventoryRowId, setApplyingInventoryRowId] = useState<string | null>(null);
   const [preparedPickupMessage, setPreparedPickupMessage] = useState('');
   const [preparingPickupAppointmentId, setPreparingPickupAppointmentId] = useState<string | null>(null);
+  const [dispatchingPickupAppointmentId, setDispatchingPickupAppointmentId] = useState<string | null>(null);
   const [preparedPickupAppointmentId, setPreparedPickupAppointmentId] = useState<string | null>(null);
+  const [dispatchedPickupAppointmentId, setDispatchedPickupAppointmentId] = useState<string | null>(null);
 
   const [deleteCandidate, setDeleteCandidate] = useState<PetAppointment | null>(null);
 
@@ -1454,6 +1456,29 @@ export function PetAppointmentsPage() {
     messages.preparedPickup.success
   ]);
 
+  const handleDispatchPickupMessage = useCallback(async (appointment: PetAppointment) => {
+    setDispatchingPickupAppointmentId(appointment.id);
+    setError(null);
+    setSuccess(null);
+
+    try {
+      const dispatch = await petService.dispatchPetReadyWhatsApp(appointment.id);
+      if (dispatch.status === 'SENT') {
+        setDispatchedPickupAppointmentId(appointment.id);
+        setSuccess(messages.preparedPickup.officialSuccess.replace('{id}', dispatch.id));
+        return;
+      }
+      setError(dispatch.failureReason ?? messages.preparedPickup.officialFailure);
+    } catch (err) {
+      setError(err instanceof ApiClientError ? err.message : messages.preparedPickup.officialFailure);
+    } finally {
+      setDispatchingPickupAppointmentId(null);
+    }
+  }, [
+    messages.preparedPickup.officialFailure,
+    messages.preparedPickup.officialSuccess
+  ]);
+
   const rows = resolvePageItems(pageData);
   const totalItems = resolveTotalItems(pageData);
   const activeFilterCount = [search, statusFilter, clientFilterId, petFilterId, serviceFilterId, professionalFilterId].filter(Boolean).length;
@@ -1484,8 +1509,11 @@ export function PetAppointmentsPage() {
     onEdit: beginEdit,
     onDelete: setDeleteCandidate,
     onPreparePickupMessage: handlePreparePickupMessage,
+    onDispatchPickupMessage: handleDispatchPickupMessage,
     preparingPickupAppointmentId,
-    preparedPickupAppointmentId
+    dispatchingPickupAppointmentId,
+    preparedPickupAppointmentId,
+    dispatchedPickupAppointmentId
   }), [
     clients,
     clientsLookupUnavailable,
@@ -1497,6 +1525,9 @@ export function PetAppointmentsPage() {
     professionalsLookupUnavailable,
     profiles,
     profilesLookupUnavailable,
+    dispatchedPickupAppointmentId,
+    dispatchingPickupAppointmentId,
+    handleDispatchPickupMessage,
     preparedPickupAppointmentId,
     preparingPickupAppointmentId
   ]);

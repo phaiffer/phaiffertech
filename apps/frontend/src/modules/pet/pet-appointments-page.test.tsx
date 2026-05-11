@@ -82,6 +82,7 @@ const { currentPlatformState, hasPermissionMock, hasAnyPermissionMock, petServic
     updateAppointmentServiceLineInventoryConsumptions: vi.fn(),
     applyAppointmentServiceLineInventoryConsumption: vi.fn(),
     preparePetReadyMessage: vi.fn(),
+    dispatchPetReadyWhatsApp: vi.fn(),
     deleteAppointment: vi.fn()
   }
 }));
@@ -120,7 +121,7 @@ describe('PetAppointmentsPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
 
-    setGrantedPermissions(['pet.appointment.read', 'pet.appointment.create', 'pet.medical-record.read']);
+    setGrantedPermissions(['pet.appointment.read', 'pet.appointment.create', 'pet.appointment.update', 'pet.medical-record.read']);
 
     petServiceMock.listClients.mockResolvedValue(createPageResponse([]));
     petServiceMock.listProfiles.mockResolvedValue(createPageResponse([]));
@@ -198,6 +199,14 @@ describe('PetAppointmentsPage', () => {
       eligible: true,
       safetyNote: 'Manual send only.'
     });
+    petServiceMock.dispatchPetReadyWhatsApp.mockResolvedValue({
+      id: 'dispatch-1',
+      businessKey: 'PET_READY_PICKUP',
+      recipientPhone: '11999999999',
+      status: 'SENT',
+      providerMessageId: 'wamid.123',
+      failureReason: null
+    });
   });
 
   it('shows degraded lookup diagnostics and enriched labels in the appointment table', async () => {
@@ -243,6 +252,13 @@ describe('PetAppointmentsPage', () => {
     });
     expect((await screen.findAllByText('Pronto para retirada')).length).toBeGreaterThan(0);
     expect(screen.getByLabelText('Prepared pickup message')).toHaveValue('Pet Example is ready for pickup.');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Send WhatsApp' }));
+
+    await waitFor(() => {
+      expect(petServiceMock.dispatchPetReadyWhatsApp).toHaveBeenCalledWith('appointment-1');
+    });
+    expect(screen.getByText('Official WhatsApp dispatch sent. Dispatch: dispatch-1.')).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: 'Book appointment' }));
 

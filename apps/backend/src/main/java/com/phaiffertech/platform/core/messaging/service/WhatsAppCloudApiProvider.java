@@ -3,13 +3,14 @@ package com.phaiffertech.platform.core.messaging.service;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.phaiffertech.platform.core.messaging.domain.MessageChannel;
-import com.phaiffertech.platform.core.messaging.dto.OutboundMessageRequest;
 import com.phaiffertech.platform.core.messaging.dto.ProviderSendResult;
+import com.phaiffertech.platform.core.messaging.dto.WhatsAppOutboundMessageRequest;
 import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.util.List;
 import java.util.Map;
 import org.springframework.stereotype.Service;
 
@@ -24,7 +25,7 @@ public class WhatsAppCloudApiProvider implements WhatsAppProvider {
     }
 
     @Override
-    public ProviderSendResult sendText(MessageChannel channel, String accessToken, OutboundMessageRequest request) {
+    public ProviderSendResult send(MessageChannel channel, String accessToken, WhatsAppOutboundMessageRequest request) {
         if (!channel.isEnabled()) {
             return new ProviderSendResult(false, null, null, null, "WhatsApp channel is disabled.");
         }
@@ -33,13 +34,7 @@ public class WhatsAppCloudApiProvider implements WhatsAppProvider {
         }
 
         try {
-            String payload = objectMapper.writeValueAsString(Map.of(
-                    "messaging_product", "whatsapp",
-                    "recipient_type", "individual",
-                    "to", request.recipientPhone(),
-                    "type", "text",
-                    "text", Map.of("preview_url", false, "body", request.body())
-            ));
+            String payload = objectMapper.writeValueAsString(buildPayload(request));
             String version = hasText(channel.getProviderApiVersion()) ? channel.getProviderApiVersion() : "v25.0";
             HttpRequest httpRequest = HttpRequest.newBuilder()
                     .uri(URI.create("https://graph.facebook.com/" + version + "/" + channel.getPhoneNumberId() + "/messages"))
@@ -63,6 +58,40 @@ public class WhatsAppCloudApiProvider implements WhatsAppProvider {
             Thread.currentThread().interrupt();
             return new ProviderSendResult(false, null, null, ex.getMessage(), "WhatsApp Cloud API request was interrupted.");
         }
+    }
+
+    private Map<String, Object> buildPayload(WhatsAppOutboundMessageRequest request) {
+        if (hasText(request.providerTemplateName())) {
+            return Map.of(
+                    "messaging_product", "whatsapp",
+                    "recipient_type", "individual",
+                    "to", request.recipientPhone(),
+                    "type", "template",
+                    "template", Map.of(
+                            "name", request.providerTemplateName().trim(),
+                            "language", Map.of("code", resolveTemplateLanguage(request)),
+                            "components", List.of(Map.of(
+                                    "type", "body",
+                                    "parameters", List.of(Map.of(
+                                            "type", "text",
+                                            "text", request.body()
+                                    ))
+                            ))
+                    )
+            );
+        }
+
+        return Map.of(
+                "messaging_product", "whatsapp",
+                "recipient_type", "individual",
+                "to", request.recipientPhone(),
+                "type", "text",
+                "text", Map.of("preview_url", false, "body", request.body())
+        );
+    }
+
+    private String resolveTemplateLanguage(WhatsAppOutboundMessageRequest request) {
+        return hasText(request.providerTemplateLanguage()) ? request.providerTemplateLanguage().trim() : "pt_BR";
     }
 
     private String extractProviderMessageId(String responseBody) throws IOException {

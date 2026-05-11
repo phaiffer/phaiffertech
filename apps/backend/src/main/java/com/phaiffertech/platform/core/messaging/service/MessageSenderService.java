@@ -9,9 +9,11 @@ import com.phaiffertech.platform.core.messaging.domain.MessageTemplateMapping;
 import com.phaiffertech.platform.core.messaging.dto.MessageDispatchResponse;
 import com.phaiffertech.platform.core.messaging.dto.OutboundMessageRequest;
 import com.phaiffertech.platform.core.messaging.dto.ProviderSendResult;
+import com.phaiffertech.platform.core.messaging.dto.WhatsAppOutboundMessageRequest;
 import com.phaiffertech.platform.core.messaging.repository.MessageChannelRepository;
 import com.phaiffertech.platform.core.messaging.repository.MessageDispatchRepository;
 import com.phaiffertech.platform.core.messaging.repository.MessageTemplateMappingRepository;
+import com.phaiffertech.platform.shared.exception.ResourceNotFoundException;
 import com.phaiffertech.platform.shared.tenancy.TenantContext;
 import java.time.Instant;
 import java.util.UUID;
@@ -60,32 +62,37 @@ public class MessageSenderService {
         dispatch.setChannelType(MessageChannelType.WHATSAPP);
         dispatch.setProvider(MessageProvider.WHATSAPP_CLOUD_API);
         dispatch.setBusinessKey(request.businessKey());
-        dispatch.setRecipientPhone(normalizePhone(request.recipientPhone()));
+        String normalizedPhone = normalizePhone(request.recipientPhone());
+        dispatch.setRecipientPhone(normalizedPhone == null ? "" : normalizedPhone);
         dispatch.setRecipientName(request.recipientName());
         dispatch.setSubject(request.subject());
         dispatch.setBody(request.body());
         dispatch.setRelatedType(request.relatedType());
         dispatch.setRelatedId(request.relatedId());
+        dispatch.setStatus(MessageDispatchStatus.PENDING);
+        dispatch = dispatchRepository.save(dispatch);
 
-        if (!hasText(dispatch.getRecipientPhone())) {
+        if (!isValidWhatsAppPhone(normalizedPhone)) {
             dispatch.setStatus(MessageDispatchStatus.FAILED);
-            dispatch.setFailureReason("Recipient phone is required for WhatsApp dispatch.");
+            dispatch.setFailureReason("Recipient phone must include 10 to 15 digits for WhatsApp dispatch.");
             return toResponse(dispatchRepository.save(dispatch));
         }
 
         String accessToken = hasText(channel.getAccessTokenSecret())
                 ? secretCipherService.decrypt(channel.getAccessTokenSecret())
                 : null;
-        OutboundMessageRequest providerRequest = new OutboundMessageRequest(
+        WhatsAppOutboundMessageRequest providerRequest = new WhatsAppOutboundMessageRequest(
                 request.businessKey(),
                 dispatch.getRecipientPhone(),
                 request.recipientName(),
                 request.subject(),
                 request.body(),
                 request.relatedType(),
-                request.relatedId()
+                request.relatedId(),
+                mapping == null ? null : mapping.getProviderTemplateName(),
+                mapping == null ? null : mapping.getProviderTemplateLanguage()
         );
-        ProviderSendResult result = whatsAppProvider.sendText(channel, accessToken, providerRequest);
+        ProviderSendResult result = whatsAppProvider.send(channel, accessToken, providerRequest);
         dispatch.setProviderRequestPayload(result.requestPayload());
         dispatch.setProviderResponsePayload(result.responsePayload());
         dispatch.setProviderMessageId(result.providerMessageId());
@@ -93,6 +100,14 @@ public class MessageSenderService {
         dispatch.setStatus(result.sent() ? MessageDispatchStatus.SENT : MessageDispatchStatus.FAILED);
         dispatch.setSentAt(result.sent() ? Instant.now() : null);
         return toResponse(dispatchRepository.save(dispatch));
+    }
+
+    @Transactional(readOnly = true)
+    public MessageDispatchResponse getCurrentTenantDispatch(UUID dispatchId) {
+        UUID tenantId = TenantContext.getRequiredTenantId();
+        return dispatchRepository.findByIdAndTenantId(dispatchId, tenantId)
+                .map(this::toResponse)
+                .orElseThrow(() -> new ResourceNotFoundException("Message dispatch not found."));
     }
 
     private MessageDispatchResponse toResponse(MessageDispatch dispatch) {
@@ -107,7 +122,11 @@ public class MessageSenderService {
     }
 
     private String normalizePhone(String value) {
-        return hasText(value) ? value.replaceAll("[^0-9+]", "").trim() : null;
+        return hasText(value) ? value.replaceAll("\\D", "").trim() : null;
+    }
+
+    private boolean isValidWhatsAppPhone(String value) {
+        return hasText(value) && value.length() >= 10 && value.length() <= 15;
     }
 
     private boolean hasText(String value) {

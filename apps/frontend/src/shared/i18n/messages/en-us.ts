@@ -341,10 +341,15 @@ export const enUSMessages: AppMessages = {
       description: 'Manual-send message prepared for the channel already used by reception.',
       label: 'Prepared pickup message',
       reviewTitle: 'Review before sending',
-      reviewDescription: 'The official WhatsApp integration is not part of this sprint; the demo shows a safe prepared-message workflow.',
+      reviewDescription: 'Use this as the manual fallback when the official WhatsApp channel is unavailable or the dispatch fails.',
       success: 'Pickup message prepared and copied for manual sending.',
       needsReview: 'Pickup message prepared; confirm the appointment is completed before sending.',
-      error: 'Unable to prepare the pickup message.'
+      error: 'Unable to prepare the pickup message.',
+      officialSend: 'Send WhatsApp',
+      officialSending: 'Sending...',
+      officialSent: 'WhatsApp sent',
+      officialSuccess: 'Official WhatsApp dispatch sent. Dispatch: {id}.',
+      officialFailure: 'Unable to send the official WhatsApp message. Use the prepared manual fallback.'
     },
     statuses: {
       all: 'All statuses',

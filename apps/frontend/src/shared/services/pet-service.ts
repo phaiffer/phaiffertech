@@ -237,6 +237,15 @@ export type UpdatePetBillingMessageSettingsInput = {
   petReadyMessageTemplate?: string | null;
 };
 
+export type MessageDispatchResponse = {
+  id: string;
+  businessKey: string;
+  recipientPhone: string;
+  status: 'PENDING' | 'SENT' | 'DELIVERED' | 'READ' | 'FAILED';
+  providerMessageId?: string | null;
+  failureReason?: string | null;
+};
+
 export type PetAppointmentServiceLineAssignmentInput = {
   serviceId: string;
   professionalId?: string | null;
@@ -457,6 +466,12 @@ export const petService = {
 
   preparePetReadyMessage: (appointmentId: string) =>
     apiClient.get<PetPreparedCustomerMessage>(`/pet/messages/appointments/${appointmentId}/pickup`),
+
+  dispatchPetReadyWhatsApp: (appointmentId: string) =>
+    apiClient.post<MessageDispatchResponse>('/messages/whatsapp/pet-ready', { appointmentId }),
+
+  getWhatsAppDispatch: (dispatchId: string) =>
+    apiClient.get<MessageDispatchResponse>(`/messages/whatsapp/dispatches/${dispatchId}`),
 
   listAppointments: (page = 0, size = 20, search = '', filters: PetAppointmentFilters = {}) =>
     apiClient.get<PageResponse<PetAppointment>>(

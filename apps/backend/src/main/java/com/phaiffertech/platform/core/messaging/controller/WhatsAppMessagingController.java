@@ -4,6 +4,7 @@ import com.phaiffertech.platform.core.messaging.dto.MessageDispatchResponse;
 import com.phaiffertech.platform.core.messaging.dto.PetReadyDispatchRequest;
 import com.phaiffertech.platform.core.messaging.dto.WhatsAppChannelConfigRequest;
 import com.phaiffertech.platform.core.messaging.dto.WhatsAppChannelConfigResponse;
+import com.phaiffertech.platform.core.messaging.service.MessageSenderService;
 import com.phaiffertech.platform.core.messaging.service.MessageWebhookService;
 import com.phaiffertech.platform.core.messaging.service.PetReadyMessageDispatchService;
 import com.phaiffertech.platform.core.messaging.service.WhatsAppChannelConfigService;
@@ -11,6 +12,7 @@ import com.phaiffertech.platform.core.tenant.entitlement.TenantEntitlementKeys;
 import com.phaiffertech.platform.shared.response.ApiResponse;
 import com.phaiffertech.platform.shared.security.RequirePermission;
 import jakarta.validation.Valid;
+import java.util.UUID;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -26,15 +28,18 @@ import org.springframework.web.bind.annotation.RestController;
 public class WhatsAppMessagingController {
 
     private final WhatsAppChannelConfigService configService;
+    private final MessageSenderService messageSenderService;
     private final MessageWebhookService webhookService;
     private final PetReadyMessageDispatchService petReadyMessageDispatchService;
 
     public WhatsAppMessagingController(
             WhatsAppChannelConfigService configService,
+            MessageSenderService messageSenderService,
             MessageWebhookService webhookService,
             PetReadyMessageDispatchService petReadyMessageDispatchService
     ) {
         this.configService = configService;
+        this.messageSenderService = messageSenderService;
         this.webhookService = webhookService;
         this.petReadyMessageDispatchService = petReadyMessageDispatchService;
     }
@@ -59,6 +64,12 @@ public class WhatsAppMessagingController {
             @Valid @RequestBody PetReadyDispatchRequest request
     ) {
         return ApiResponse.success(petReadyMessageDispatchService.dispatchPetReady(request.appointmentId()));
+    }
+
+    @GetMapping("/dispatches/{dispatchId}")
+    @RequirePermission(value = "pet.appointment.read", anyEntitlements = {TenantEntitlementKeys.PET_AESTHETICS})
+    public ApiResponse<MessageDispatchResponse> getDispatch(@PathVariable UUID dispatchId) {
+        return ApiResponse.success(messageSenderService.getCurrentTenantDispatch(dispatchId));
     }
 
     @GetMapping("/webhook/{phoneNumberId}")

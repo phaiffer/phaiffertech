@@ -565,8 +565,11 @@ type CreatePetAppointmentColumnsArgs = {
   onEdit: (appointment: PetAppointment) => void;
   onDelete: (appointment: PetAppointment) => void;
   onPreparePickupMessage: (appointment: PetAppointment) => void;
+  onDispatchPickupMessage: (appointment: PetAppointment) => void;
   preparingPickupAppointmentId: string | null;
+  dispatchingPickupAppointmentId: string | null;
   preparedPickupAppointmentId: string | null;
+  dispatchedPickupAppointmentId: string | null;
 };
 
 export function createPetAppointmentColumns({
@@ -582,8 +585,11 @@ export function createPetAppointmentColumns({
   onEdit,
   onDelete,
   onPreparePickupMessage,
+  onDispatchPickupMessage,
   preparingPickupAppointmentId,
-  preparedPickupAppointmentId
+  dispatchingPickupAppointmentId,
+  preparedPickupAppointmentId,
+  dispatchedPickupAppointmentId
 }: CreatePetAppointmentColumnsArgs): DataTableColumn<PetAppointment>[] {
   const resolveClientEmail = (appointment: PetAppointment) => {
     return clients.find((client) => client.id === appointment.clientId)?.email ?? null;
@@ -924,8 +930,23 @@ export function createPetAppointmentColumns({
               </button>
             </PermissionGuard>
           ) : null}
+          {appointment.status.toUpperCase() === 'COMPLETED' ? (
+            <PermissionGuard permission="pet.appointment.update">
+              <button
+                type="button"
+                onClick={() => onDispatchPickupMessage(appointment)}
+                className="rounded-lg border border-emerald-300 px-2 py-1 text-xs font-medium text-emerald-700"
+                disabled={dispatchingPickupAppointmentId === appointment.id}
+              >
+                {dispatchingPickupAppointmentId === appointment.id ? messages.preparedPickup.officialSending : messages.preparedPickup.officialSend}
+              </button>
+            </PermissionGuard>
+          ) : null}
           {preparedPickupAppointmentId === appointment.id ? (
             <AppointmentSignalPill label="Mensagem preparada" tone="success" />
+          ) : null}
+          {dispatchedPickupAppointmentId === appointment.id ? (
+            <AppointmentSignalPill label={messages.preparedPickup.officialSent} tone="success" />
           ) : null}
         </div>
       )

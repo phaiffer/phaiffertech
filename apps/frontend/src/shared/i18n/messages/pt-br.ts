@@ -347,10 +347,15 @@ const ptBRMessages = {
       description: 'Mensagem de envio manual preparada para o canal que a recepcao ja usa.',
       label: 'Mensagem de retirada preparada',
       reviewTitle: 'Revise antes de enviar',
-      reviewDescription: 'A integracao oficial do WhatsApp nao faz parte desta sprint; a demo mostra um fluxo seguro de mensagem preparada.',
+      reviewDescription: 'Use este texto como fallback manual quando o canal oficial de WhatsApp estiver indisponivel ou o envio falhar.',
       success: 'Mensagem de retirada preparada e copiada para envio manual.',
       needsReview: 'Mensagem de retirada preparada; confirme se o atendimento foi concluido antes de enviar.',
-      error: 'Nao foi possivel preparar a mensagem de retirada.'
+      error: 'Nao foi possivel preparar a mensagem de retirada.',
+      officialSend: 'Enviar WhatsApp',
+      officialSending: 'Enviando...',
+      officialSent: 'WhatsApp enviado',
+      officialSuccess: 'Envio oficial por WhatsApp realizado. Dispatch: {id}.',
+      officialFailure: 'Nao foi possivel enviar o WhatsApp oficial. Use o fallback manual preparado.'
     },
     statuses: {
       all: 'Todos os status',

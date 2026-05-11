@@ -8,4 +8,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 public interface MessageDispatchRepository extends JpaRepository<MessageDispatch, UUID> {
 
     Optional<MessageDispatch> findFirstByProviderMessageId(String providerMessageId);
+
+    Optional<MessageDispatch> findByIdAndTenantId(UUID id, UUID tenantId);
 }
