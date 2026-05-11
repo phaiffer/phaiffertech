@@ -31,6 +31,16 @@ Operational hardening notes:
 
 - `docs/platform/demo-sysadmin-secrets-hardening.pt-BR.md`
 
+## PetFlow Banho e Tosa Documentation
+
+Technical documentation focused on the current PetFlow grooming scope:
+
+- [Architecture overview](docs/architecture/overview.md)
+- [Grooming domain model](docs/domain/petflow-grooming-domain.md)
+- [Manual validation checklist](docs/validation/manual-validation-checklist.md)
+- [TCC decision log](docs/tcc/decision-log.md)
+- [TCC roadmap](docs/tcc/roadmap.md)
+
 ## Package Root
 
 Backend package root is fixed:
