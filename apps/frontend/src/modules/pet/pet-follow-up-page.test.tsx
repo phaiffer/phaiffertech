@@ -49,7 +49,7 @@ describe('PetFollowUpPage', () => {
     render(<PetFollowUpPage />);
 
     expect(screen.getByTestId('pet-subnav')).toBeInTheDocument();
-    expect(screen.getByText('PetFlow follow-up')).toBeInTheDocument();
+    expect(screen.getByText('Follow-up Banho e Tosa')).toBeInTheDocument();
     expect(screen.getByText('tasks-surface:pet')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Tarefas' })).toHaveAttribute('href', '/pet/follow-up');
   });
@@ -68,6 +68,6 @@ describe('PetFollowUpPage', () => {
 
     render(<PetFollowUpPage />);
 
-    expect(screen.getByText('Você não possui permissão para visualizar o follow-up do PetFlow.')).toBeInTheDocument();
+    expect(screen.getByText('Voce nao possui permissao para visualizar o follow-up do PetFlow.')).toBeInTheDocument();
   });
 });

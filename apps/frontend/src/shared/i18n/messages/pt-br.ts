@@ -210,6 +210,19 @@ const ptBRMessages = {
       balance: 'saldo',
       noAlerts: 'Sem alertas de plano ou cobranca neste momento.'
     },
+    closing: {
+      title: 'Fechamento operacional',
+      description: 'Leitura compacta para a demo comercial: o que concluiu, o que gera comissao, o que precisa renovar e o que segue em aberto.',
+      badge: 'Fechamento banho e tosa',
+      completed: 'Atendimentos concluidos',
+      completedDetail: 'Banhos e tosas finalizados no mes atual.',
+      commission: 'Comissao para conferir',
+      commissionDetail: 'Valor projetado a partir dos atendimentos concluidos.',
+      plansNearEnd: 'Planos perto do fim',
+      plansNearEndDetail: 'Clientes com uma ou duas sessoes restantes para acao de renovacao.',
+      pendingCharges: 'Cobrancas pendentes',
+      pendingChargesDetail: 'Saldo de faturas em aberto que ainda precisa de follow-up da recepcao.'
+    },
     inventory: {
       title: 'Estoque abaixo do ponto',
       description: 'Mantenha shampoo, loja e consumo operacional visiveis antes de perder venda ou atrasar atendimento.',
@@ -328,6 +341,16 @@ const ptBRMessages = {
       updated: 'Atendimento atualizado.',
       created: 'Atendimento agendado.',
       deleted: 'Atendimento removido.'
+    },
+    preparedPickup: {
+      title: 'Pronto para retirada',
+      description: 'Mensagem de envio manual preparada para o canal que a recepcao ja usa.',
+      label: 'Mensagem de retirada preparada',
+      reviewTitle: 'Revise antes de enviar',
+      reviewDescription: 'A integracao oficial do WhatsApp nao faz parte desta sprint; a demo mostra um fluxo seguro de mensagem preparada.',
+      success: 'Mensagem de retirada preparada e copiada para envio manual.',
+      needsReview: 'Mensagem de retirada preparada; confirme se o atendimento foi concluido antes de enviar.',
+      error: 'Nao foi possivel preparar a mensagem de retirada.'
     },
     statuses: {
       all: 'Todos os status',
@@ -455,6 +478,29 @@ const ptBRMessages = {
     feedback: {
       saveError: 'Nao foi possivel salvar o plano.',
       removeError: 'Nao foi possivel remover o plano.'
+    },
+    messageSetup: {
+      title: 'Cobranca e mensagens preparadas',
+      description: 'Configure mensagens de renovacao e retirada para envio manual na operacao de banho e tosa. Isto nao conecta gateway de pagamento nem chatbot.',
+      pixKey: 'Chave PIX',
+      billingDisplayName: 'Nome de cobranca',
+      renewalTemplate: 'Modelo de lembrete de renovacao',
+      pickupTemplate: 'Modelo de pet pronto para retirada',
+      saving: 'Salvando...',
+      save: 'Salvar mensagens',
+      manualNotice: 'As mensagens geradas sao revisadas e enviadas manualmente nesta primeira etapa segura.',
+      pendingTitle: 'Cobranca de renovacao pendente',
+      pendingDescription: 'Fluxo manual assistido: copie a mensagem, revise os dados de cobranca e envie pelo canal combinado com o cliente.',
+      preparedRenewalLabel: 'Mensagem de renovacao preparada',
+      copyMessage: 'Copiar mensagem',
+      copyPix: 'Copiar chave PIX',
+      messageCopied: 'Mensagem de renovacao copiada.',
+      pixCopied: 'Chave PIX copiada.',
+      settingsUpdated: 'Configuracao de mensagens preparadas atualizada.',
+      settingsError: 'Nao foi possivel salvar a configuracao de mensagens preparadas.',
+      renewalPrepared: 'Mensagem de renovacao preparada, cobrada e copiada para envio manual.',
+      renewalNeedsBilling: 'Mensagem de renovacao preparada com dados de cobranca pendentes; revise os campos do tenant antes de enviar.',
+      prepareError: 'Nao foi possivel preparar o lembrete de renovacao.'
     },
     columns: {
       noRenewalEmail: 'Sem e-mail para renovacao automatica',

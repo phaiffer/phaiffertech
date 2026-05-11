@@ -3,7 +3,7 @@
 import type { ReactNode } from 'react';
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import { Calendar, DollarSign, PawPrint, TrendingUp } from 'lucide-react';
+import { Calendar, DollarSign, PawPrint, Scissors, TrendingUp } from 'lucide-react';
 import { PetModuleSubnav } from '@/modules/pet/pet-module-subnav';
 import { sharedCompactTextClass, sharedPageStackClass } from '@/shared/components/public-visual-system';
 import { StatusBadge } from '@/shared/dashboard/status-badge';
@@ -367,10 +367,59 @@ export function PetOperationsDashboard({
     () => state.completedMonthAppointments.reduce((total, appointment) => total + (appointment.commissionAmount ?? 0), 0),
     [state.completedMonthAppointments]
   );
+  const openInvoicesTotal = useMemo(
+    () => openInvoices.reduce((total, invoice) => total + invoice.outstandingAmount, 0),
+    [openInvoices]
+  );
   const penultimateBathCount = useMemo(
     () => planAlerts.filter((plan) => plan.remainingSessions === 2).length,
     [planAlerts]
   );
+  const operationalClosingItems = useMemo(() => [
+    {
+      key: 'completed',
+      label: t.closing.completed,
+      value: new Intl.NumberFormat(locale).format(state.completedMonthAppointments.length),
+      detail: t.closing.completedDetail,
+      tone: 'success' as const
+    },
+    {
+      key: 'commission',
+      label: t.closing.commission,
+      value: formatCurrencyForLocale(locale, monthCommissionTotal),
+      detail: t.closing.commissionDetail,
+      tone: monthCommissionTotal > 0 ? 'warning' as const : 'neutral' as const
+    },
+    {
+      key: 'plans',
+      label: t.closing.plansNearEnd,
+      value: new Intl.NumberFormat(locale).format(planAlerts.length),
+      detail: t.closing.plansNearEndDetail,
+      tone: planAlerts.length > 0 ? 'warning' as const : 'neutral' as const
+    },
+    {
+      key: 'billing',
+      label: t.closing.pendingCharges,
+      value: formatCurrencyForLocale(locale, openInvoicesTotal),
+      detail: t.closing.pendingChargesDetail,
+      tone: openInvoices.length > 0 ? 'danger' as const : 'neutral' as const
+    }
+  ], [
+    locale,
+    monthCommissionTotal,
+    openInvoices.length,
+    openInvoicesTotal,
+    planAlerts.length,
+    state.completedMonthAppointments.length,
+    t.closing.commission,
+    t.closing.commissionDetail,
+    t.closing.completed,
+    t.closing.completedDetail,
+    t.closing.pendingCharges,
+    t.closing.pendingChargesDetail,
+    t.closing.plansNearEnd,
+    t.closing.plansNearEndDetail
+  ]);
 
   const productionByProfessional = useMemo(() => {
     const grouped = new Map<string, { professionalName: string; completed: number; commission: number }>();
@@ -551,6 +600,40 @@ export function PetOperationsDashboard({
             />
           </div>
 
+          <section className="rounded-[2rem] border border-slate-200/80 bg-white/95 p-6 shadow-[0_22px_48px_-40px_rgba(15,23,42,0.12)]">
+            <div className="mb-5 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+              <div>
+                <h2 className="text-lg font-semibold text-slate-900">{t.closing.title}</h2>
+                <p className="mt-1 text-sm text-slate-700">{t.closing.description}</p>
+              </div>
+              <span className="inline-flex w-fit items-center gap-2 rounded-full bg-[color:var(--accent)]/10 px-3 py-1 text-xs font-semibold text-[color:var(--accent)]">
+                <Scissors className="h-3.5 w-3.5" />
+                {t.closing.badge}
+              </span>
+            </div>
+
+            <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+              {operationalClosingItems.map((item) => (
+                <div
+                  key={item.key}
+                  className={`rounded-[1.35rem] border p-4 ${
+                    item.tone === 'danger'
+                      ? 'border-red-200 bg-red-50 text-red-950'
+                      : item.tone === 'warning'
+                        ? 'border-amber-200 bg-amber-50 text-amber-950'
+                        : item.tone === 'success'
+                          ? 'border-emerald-200 bg-emerald-50 text-emerald-950'
+                          : 'border-slate-200 bg-slate-50 text-slate-900'
+                  }`}
+                >
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.18em] opacity-75">{item.label}</p>
+                  <p className="mt-3 text-2xl font-bold tracking-[-0.03em]">{item.value}</p>
+                  <p className="mt-2 text-sm leading-6 opacity-80">{item.detail}</p>
+                </div>
+              ))}
+            </div>
+          </section>
+
           <div className="grid gap-6 xl:grid-cols-[minmax(0,1.75fr)_minmax(320px,1fr)]">
             <section className="rounded-[2rem] border border-slate-200/80 bg-white/95 p-6 shadow-[0_22px_48px_-40px_rgba(15,23,42,0.12)]">
               <div className="mb-6 flex items-center justify-between gap-4">
@@ -581,7 +664,7 @@ export function PetOperationsDashboard({
                       <div className="min-w-0 flex-1">
                         <p className="font-semibold text-slate-900">{appointment.petName ?? appointment.petId}</p>
                         <p className="text-sm text-slate-700">
-                          {resolveClientName(clientLookup, appointment.clientId, appointment.clientName)} · {appointment.professionalName ?? t.queue.missingProfessional}
+                          {resolveClientName(clientLookup, appointment.clientId, appointment.clientName)} - {appointment.professionalName ?? t.queue.missingProfessional}
                         </p>
                         <div className="mt-2 flex flex-wrap gap-1.5">
                           <SignalPill
@@ -763,7 +846,7 @@ export function PetOperationsDashboard({
                         {product.currentQuantity} {product.unitOfMeasure}
                       </p>
                       <p className={`mt-2 ${sharedCompactTextClass}`}>
-                        {t.inventory.minimum} {product.minimumQuantity} · {t.inventory.reorder} {product.reorderPoint}
+                        {t.inventory.minimum} {product.minimumQuantity} - {t.inventory.reorder} {product.reorderPoint}
                       </p>
                     </div>
                   ))}

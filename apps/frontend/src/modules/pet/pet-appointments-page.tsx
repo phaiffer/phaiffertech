@@ -1427,7 +1427,7 @@ export function PetAppointmentsPage() {
     }
   }
 
-  async function handlePreparePickupMessage(appointment: PetAppointment) {
+  const handlePreparePickupMessage = useCallback(async (appointment: PetAppointment) => {
     setPreparingPickupAppointmentId(appointment.id);
     setPreparedPickupMessage('');
     setError(null);
@@ -1441,14 +1441,18 @@ export function PetAppointmentsPage() {
         await navigator.clipboard.writeText(prepared.message);
       }
       setSuccess(prepared.eligible
-        ? 'Pet ready pickup message prepared and copied for manual send.'
-        : 'Pickup message prepared, but confirm the appointment status before sending.');
+        ? messages.preparedPickup.success
+        : messages.preparedPickup.needsReview);
     } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : 'Unable to prepare the pickup message.');
+      setError(err instanceof ApiClientError ? err.message : messages.preparedPickup.error);
     } finally {
       setPreparingPickupAppointmentId(null);
     }
-  }
+  }, [
+    messages.preparedPickup.error,
+    messages.preparedPickup.needsReview,
+    messages.preparedPickup.success
+  ]);
 
   const rows = resolvePageItems(pageData);
   const totalItems = resolveTotalItems(pageData);
@@ -1486,6 +1490,7 @@ export function PetAppointmentsPage() {
     clients,
     clientsLookupUnavailable,
     commonButtons,
+    handlePreparePickupMessage,
     locale,
     messages,
     professionals,
@@ -1572,11 +1577,15 @@ export function PetAppointmentsPage() {
         {preparedPickupMessage ? (
           <PageSection
             tone="muted"
-            title="Pronto para retirada"
-            description="Mensagem padrao preparada e copiada para envio manual no canal que a operacao ja usa."
+            title={messages.preparedPickup.title}
+            description={messages.preparedPickup.description}
           >
+            <div className="mb-4 rounded-[1.35rem] border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-950">
+              <p className="font-semibold">{messages.preparedPickup.reviewTitle}</p>
+              <p className="mt-1 text-emerald-800">{messages.preparedPickup.reviewDescription}</p>
+            </div>
             <FormTextarea
-              label="Mensagem preparada"
+              label={messages.preparedPickup.label}
               value={preparedPickupMessage}
               onChange={setPreparedPickupMessage}
               rows={5}

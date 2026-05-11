@@ -37,11 +37,11 @@ export function PetFollowUpPage() {
           <section className="ui-surface-panel space-y-4 p-4">
             <div className="space-y-2">
               <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[color:var(--accent)]">
-                PetFlow follow-up
+                Follow-up Banho e Tosa
               </p>
               <p className="max-w-3xl text-sm text-[color:var(--app-shell-muted)]">
-                Tarefas, notas e trilha de atividade agora entram pela navegação do PetFlow. Os endpoints de CRM
-                continuam por baixo apenas como camada temporária de compatibilidade nesta etapa da absorção.
+                Tarefas, notas e atividade ajudam a recepcao a lembrar retirada, retorno, renovacao de plano e pendencias
+                do atendimento sem sair da leitura operacional do PetFlow.
               </p>
             </div>
 
@@ -72,7 +72,7 @@ export function PetFollowUpPage() {
           {activeTab.key === 'activity' ? <CrmActivityPage surface="pet" /> : null}
         </>
       ) : (
-        <div className="ui-notice-warning">Você não possui permissão para visualizar o follow-up do PetFlow.</div>
+        <div className="ui-notice-warning">Voce nao possui permissao para visualizar o follow-up do PetFlow.</div>
       )}
     </div>
   );

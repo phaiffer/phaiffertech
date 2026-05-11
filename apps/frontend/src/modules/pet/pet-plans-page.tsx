@@ -493,9 +493,9 @@ export function PetPlansPage() {
       setBillingDisplayName(settings.billingDisplayName ?? '');
       setPlanRenewalTemplate(settings.planRenewalMessageTemplate ?? '');
       setPetReadyTemplate(settings.petReadyMessageTemplate ?? '');
-      setSuccess('Billing message settings updated.');
+      setSuccess(messages.messageSetup.settingsUpdated);
     } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : 'Unable to save billing message settings.');
+      setError(err instanceof ApiClientError ? err.message : messages.messageSetup.settingsError);
     } finally {
       setBillingSettingsSaving(false);
     }
@@ -525,10 +525,10 @@ export function PetPlansPage() {
         await navigator.clipboard.writeText(prepared.message);
       }
       setSuccess(prepared.pixConfigured
-        ? 'Mensagem PIX de renovacao preparada, cobrada e copiada para envio manual.'
-        : 'Mensagem de renovacao preparada com cobranca pendente; configure a chave PIX do tenant antes de enviar.');
+        ? messages.messageSetup.renewalPrepared
+        : messages.messageSetup.renewalNeedsBilling);
     } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : 'Unable to prepare the renewal reminder.');
+      setError(err instanceof ApiClientError ? err.message : messages.messageSetup.prepareError);
     } finally {
       setPreparingRenewalPlanId(null);
     }
@@ -825,26 +825,26 @@ export function PetPlansPage() {
 
         <PageSection
           tone="muted"
-          title="PIX and customer message setup"
-          description="Configure tenant billing copy for manual-send renewal and pet-ready messages. This does not connect a payment gateway or chatbot."
+          title={messages.messageSetup.title}
+          description={messages.messageSetup.description}
         >
           <div className="grid gap-4 lg:grid-cols-2">
             <FormInput
-              label="PIX key"
+              label={messages.messageSetup.pixKey}
               value={billingPixKey}
               onChange={setBillingPixKey}
               placeholder="pix@petshop.com.br"
               disabled={billingSettingsLoading}
             />
             <FormInput
-              label="Billing display name"
+              label={messages.messageSetup.billingDisplayName}
               value={billingDisplayName}
               onChange={setBillingDisplayName}
               placeholder="PetFlow Reception"
               disabled={billingSettingsLoading}
             />
             <FormTextarea
-              label="Renewal reminder template"
+              label={messages.messageSetup.renewalTemplate}
               value={planRenewalTemplate}
               onChange={setPlanRenewalTemplate}
               placeholder="Use placeholders like {clientName}, {petName}, {planName}, {renewalAmount}, {pixKey}, {billingDisplayName}."
@@ -852,7 +852,7 @@ export function PetPlansPage() {
               disabled={billingSettingsLoading}
             />
             <FormTextarea
-              label="Pet-ready pickup template"
+              label={messages.messageSetup.pickupTemplate}
               value={petReadyTemplate}
               onChange={setPetReadyTemplate}
               placeholder="Use placeholders like {clientName}, {petName}, {billingDisplayName}."
@@ -868,39 +868,39 @@ export function PetPlansPage() {
                 className="ui-primary-button"
                 disabled={billingSettingsSaving}
               >
-                {billingSettingsSaving ? 'Saving...' : 'Save message setup'}
+                {billingSettingsSaving ? messages.messageSetup.saving : messages.messageSetup.save}
               </button>
             </PermissionGuard>
             <p className="text-sm text-[color:var(--app-shell-muted)]">
-              Generated messages are reviewed and sent manually in this first safe step.
+              {messages.messageSetup.manualNotice}
             </p>
           </div>
           {preparedRenewalMessage ? (
             <div className="space-y-3">
               {preparedRenewalCharge ? (
-                <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+                <div className="rounded-[1.35rem] border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
                   <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
                     <div>
-                      <p className="font-semibold">Cobranca de renovacao pendente</p>
+                      <p className="font-semibold">{messages.messageSetup.pendingTitle}</p>
                       <p className="mt-1 text-amber-800">
-                        Fluxo manual assistido: copie a mensagem e envie pelo canal combinado com o cliente.
+                        {messages.messageSetup.pendingDescription}
                       </p>
                     </div>
                     <div className="flex flex-wrap gap-2">
                       <button
                         type="button"
                         className="ui-secondary-button"
-                        onClick={() => void copyManualRenewalText(preparedRenewalMessage, 'Mensagem de renovacao copiada.')}
+                        onClick={() => void copyManualRenewalText(preparedRenewalMessage, messages.messageSetup.messageCopied)}
                       >
-                        Copiar mensagem
+                        {messages.messageSetup.copyMessage}
                       </button>
                       {preparedRenewalCharge.pixKey ? (
                         <button
                           type="button"
                           className="ui-inline-button"
-                          onClick={() => void copyManualRenewalText(preparedRenewalCharge.pixKey ?? '', 'Chave PIX copiada.')}
+                          onClick={() => void copyManualRenewalText(preparedRenewalCharge.pixKey ?? '', messages.messageSetup.pixCopied)}
                         >
-                          Copiar chave PIX
+                          {messages.messageSetup.copyPix}
                         </button>
                       ) : null}
                     </div>
@@ -944,7 +944,7 @@ export function PetPlansPage() {
                 </div>
               ) : null}
               <FormTextarea
-                label="Mensagem de renovacao preparada"
+                label={messages.messageSetup.preparedRenewalLabel}
                 value={preparedRenewalMessage}
                 onChange={setPreparedRenewalMessage}
                 rows={6}

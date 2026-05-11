@@ -116,7 +116,7 @@ type InventorySpotlightCardProps = {
   label: string;
   value: string;
   detail: string;
-  tone?: 'default' | 'accent' | 'warning';
+  tone?: 'default' | 'accent' | 'warning' | 'danger';
 };
 
 function InventorySpotlightCard({
@@ -128,6 +128,8 @@ function InventorySpotlightCard({
 }: InventorySpotlightCardProps) {
   const toneClass = tone === 'accent'
     ? 'border-transparent bg-[linear-gradient(135deg,var(--accent),var(--petflow-teal))] text-white shadow-[0_20px_40px_-28px_rgba(16,185,129,0.5)]'
+    : tone === 'danger'
+      ? 'border-red-200 bg-[linear-gradient(180deg,rgba(254,226,226,0.9),rgba(255,255,255,0.98))] shadow-[0_18px_36px_-30px_rgba(220,38,38,0.35)]'
     : tone === 'warning'
       ? 'border-amber-200/80 bg-[linear-gradient(180deg,rgba(251,191,36,0.12),rgba(255,255,255,0.98))]'
       : 'border-slate-200/90 bg-[linear-gradient(180deg,rgba(16,185,129,0.05),rgba(255,255,255,0.99)_140px)]';
@@ -147,6 +149,8 @@ function InventorySpotlightCard({
           className={`flex h-11 w-11 items-center justify-center rounded-xl ${
             tone === 'accent'
               ? 'bg-white/12 text-white'
+              : tone === 'danger'
+                ? 'bg-red-100 text-red-700'
               : tone === 'warning'
                 ? 'bg-amber-100 text-amber-700'
                 : 'bg-[color:var(--accent)]/10 text-[color:var(--accent)]'
@@ -287,7 +291,7 @@ export function PetInventoryPage() {
       detail: criticalLowStockProducts.length > 0
         ? messages.summary.belowMinimumDetail
         : messages.summary.belowMinimumSafe,
-      tone: criticalLowStockProducts.length > 0 ? 'warning' as const : 'default' as const
+      tone: criticalLowStockProducts.length > 0 ? 'danger' as const : 'default' as const
     },
     {
       key: 'reorder-products',
@@ -297,7 +301,7 @@ export function PetInventoryPage() {
       detail: lowStockProducts.length > 0
         ? messages.summary.reorderDetail
         : messages.summary.reorderSafe,
-      tone: lowStockProducts.length > 0 ? 'accent' as const : 'default' as const
+      tone: lowStockProducts.length > 0 ? 'warning' as const : 'default' as const
     },
     {
       key: 'outbound-movements',
@@ -584,20 +588,24 @@ export function PetInventoryPage() {
                 return (
                   <div
                     key={product.id}
-                    className="rounded-3xl border border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-panel)] p-5 shadow-xs"
+                    className={`rounded-[1.35rem] border p-5 shadow-xs ${
+                      stockHealth.status === 'alert'
+                        ? 'border-red-200 bg-red-50'
+                        : 'border-amber-200 bg-amber-50'
+                    }`}
                   >
                     <div className="flex items-start justify-between gap-3">
                       <div>
-                        <p className="text-sm font-semibold text-[color:var(--app-shell-heading)]">{product.name}</p>
+                        <p className="text-sm font-semibold text-slate-950">{product.name}</p>
                         <p className={`mt-1 ${sharedCompactTextClass}`}>SKU {product.sku}</p>
                       </div>
                       <StatusBadge status={stockHealth.status} />
                     </div>
-                    <p className="mt-4 text-lg font-semibold text-[color:var(--app-shell-heading)]">
+                    <p className={`mt-4 text-lg font-semibold ${stockHealth.status === 'alert' ? 'text-red-800' : 'text-amber-800'}`}>
                       {product.currentQuantity} {product.unitOfMeasure}
                     </p>
                     <p className={`mt-2 ${sharedCompactTextClass}`}>
-                      {messages.health.belowMinimum} {product.minimumQuantity} • {messages.health.reorderNow} {product.reorderPoint}
+                      {messages.health.belowMinimum} {product.minimumQuantity} - {messages.health.reorderNow} {product.reorderPoint}
                     </p>
                     <p className={`mt-2 ${sharedCompactTextClass}`}>{stockHealth.detail}</p>
                   </div>

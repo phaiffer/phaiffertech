@@ -242,7 +242,7 @@ describe('PetAppointmentsPage', () => {
       expect(petServiceMock.preparePetReadyMessage).toHaveBeenCalledWith('appointment-1');
     });
     expect((await screen.findAllByText('Pronto para retirada')).length).toBeGreaterThan(0);
-    expect(screen.getByLabelText('Mensagem preparada')).toHaveValue('Pet Example is ready for pickup.');
+    expect(screen.getByLabelText('Prepared pickup message')).toHaveValue('Pet Example is ready for pickup.');
 
     fireEvent.click(screen.getByRole('button', { name: 'Book appointment' }));
 

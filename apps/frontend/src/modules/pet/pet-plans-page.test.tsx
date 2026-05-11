@@ -178,18 +178,18 @@ describe('PetPlansPage', () => {
     await waitFor(() => {
       expect(petServiceMock.preparePlanRenewalMessage).toHaveBeenCalledWith('plan-1');
     });
-    expect(await screen.findByText('Cobranca de renovacao pendente')).toBeInTheDocument();
-    expect(screen.getByText('Fluxo manual assistido: copie a mensagem e envie pelo canal combinado com o cliente.')).toBeInTheDocument();
+    expect(await screen.findByText('Renewal charge pending')).toBeInTheDocument();
+    expect(screen.getByText('Assisted manual flow: copy the message, review the billing data, and send it through the agreed customer channel.')).toBeInTheDocument();
     expect(screen.getAllByText('Maria Responsavel').length).toBeGreaterThan(0);
     expect(screen.getAllByText('Luna').length).toBeGreaterThan(0);
     expect(screen.getAllByText((text) => text.includes('220,00')).length).toBeGreaterThan(0);
     expect(screen.getAllByText('pix@petshop.com.br').length).toBeGreaterThan(0);
     expect(screen.getAllByText('Pet Shop Teste').length).toBeGreaterThan(0);
     expect(screen.getByText(/Fatura vinculada: invoice-1/)).toBeInTheDocument();
-    expect((screen.getByLabelText('Mensagem de renovacao preparada') as HTMLTextAreaElement).value)
+    expect((screen.getByLabelText('Prepared renewal message') as HTMLTextAreaElement).value)
       .toContain('Assim que pagar, nos envie o comprovante.');
 
-    fireEvent.click(screen.getByRole('button', { name: 'Copiar chave PIX' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Copy PIX key' }));
 
     await waitFor(() => {
       expect(navigator.clipboard.writeText).toHaveBeenCalledWith('pix@petshop.com.br');
