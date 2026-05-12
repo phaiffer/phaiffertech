@@ -37,8 +37,12 @@ Technical documentation focused on the current PetFlow grooming scope:
 
 - [Architecture overview](docs/architecture/overview.md)
 - [Grooming domain model](docs/domain/petflow-grooming-domain.md)
+- [Payments layer overview](docs/payments/payment-layer-overview.md)
+- [Payments domain model](docs/payments/payment-domain-model.md)
+- [Payments roadmap](docs/payments/payment-roadmap.md)
 - [Manual validation checklist](docs/validation/manual-validation-checklist.md)
 - [TCC decision log](docs/tcc/decision-log.md)
+- [TCC payment architecture notes](docs/tcc/payment-architecture-notes.md)
 - [TCC roadmap](docs/tcc/roadmap.md)
 
 ## Package Root
