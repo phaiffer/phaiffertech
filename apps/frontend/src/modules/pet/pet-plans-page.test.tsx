@@ -13,6 +13,7 @@ const { hasPermissionMock, petServiceMock } = vi.hoisted(() => ({
     getBillingMessageSettings: vi.fn(),
     updateBillingMessageSettings: vi.fn(),
     preparePlanRenewalMessage: vi.fn(),
+    dispatchPlanRenewalWhatsApp: vi.fn(),
     createClientPlan: vi.fn(),
     updateClientPlan: vi.fn(),
     deleteClientPlan: vi.fn(),
@@ -156,6 +157,14 @@ describe('PetPlansPage', () => {
       eligible: true,
       safetyNote: 'Manual send only.'
     });
+    petServiceMock.dispatchPlanRenewalWhatsApp.mockResolvedValue({
+      id: 'dispatch-renewal-1',
+      businessKey: 'PLAN_RENEWAL_PIX_REMINDER',
+      recipientPhone: '11999999999',
+      status: 'SENT',
+      providerMessageId: 'wamid.renewal',
+      failureReason: null
+    });
   });
 
   it('separates plan catalog from sold client pet plans and shows remaining session balance', async () => {
@@ -172,6 +181,13 @@ describe('PetPlansPage', () => {
     expect(screen.getByText('Obs: Cliente prefere banho aos sabados.')).toBeInTheDocument();
     expect(screen.getByText('1 left')).toBeInTheDocument();
     expect(screen.getByText('LAST_USE')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Send WhatsApp renewal' }));
+
+    await waitFor(() => {
+      expect(petServiceMock.dispatchPlanRenewalWhatsApp).toHaveBeenCalledWith('plan-1');
+    });
+    expect(screen.getByText('Official WhatsApp renewal dispatch sent. Dispatch: dispatch-renewal-1.')).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: 'Prepare PIX reminder' }));
 

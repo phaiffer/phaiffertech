@@ -33,4 +33,17 @@ public class PetReadyMessageDispatchService {
                 prepared.appointmentId()
         ));
     }
+
+    public MessageDispatchResponse dispatchPlanRenewal(UUID planId) {
+        PetPreparedCustomerMessageResponse prepared = petBillingMessageSettingsService.preparePlanRenewalMessage(planId);
+        return messageSenderService.sendWhatsAppText(new OutboundMessageRequest(
+                prepared.type(),
+                prepared.clientPhone(),
+                prepared.clientName(),
+                prepared.subject(),
+                prepared.message(),
+                "PET_CLIENT_PLAN",
+                prepared.planId()
+        ));
+    }
 }

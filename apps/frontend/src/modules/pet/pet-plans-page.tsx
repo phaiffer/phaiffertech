@@ -175,6 +175,8 @@ export function PetPlansPage() {
     billingDisplayName?: string | null;
   } | null>(null);
   const [preparingRenewalPlanId, setPreparingRenewalPlanId] = useState<string | null>(null);
+  const [dispatchingRenewalPlanId, setDispatchingRenewalPlanId] = useState<string | null>(null);
+  const [dispatchedRenewalPlanId, setDispatchedRenewalPlanId] = useState<string | null>(null);
 
   const canReadClients = hasPermission('pet.client.read');
   const canReadPets = hasPermission('pet.profile.read');
@@ -534,6 +536,26 @@ export function PetPlansPage() {
     }
   }
 
+  async function handleDispatchRenewalMessage(plan: ClientPlan) {
+    setDispatchingRenewalPlanId(plan.id);
+    setError(null);
+    setSuccess(null);
+
+    try {
+      const dispatch = await petService.dispatchPlanRenewalWhatsApp(plan.id);
+      if (dispatch.status === 'SENT') {
+        setDispatchedRenewalPlanId(plan.id);
+        setSuccess(messages.messageSetup.officialRenewalSuccess.replace('{id}', dispatch.id));
+        return;
+      }
+      setError(dispatch.failureReason ?? messages.messageSetup.officialRenewalFailure);
+    } catch (err) {
+      setError(err instanceof ApiClientError ? err.message : messages.messageSetup.officialRenewalFailure);
+    } finally {
+      setDispatchingRenewalPlanId(null);
+    }
+  }
+
   async function copyManualRenewalText(value: string, successMessage: string) {
     if (!value) {
       return;
@@ -675,7 +697,7 @@ export function PetPlansPage() {
       key: 'actions',
       header: messages.columns.actions,
       render: (plan) => (
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <PermissionGuard permission="pet.plan.create">
             <button type="button" onClick={() => beginEdit(plan)} className="ui-inline-button">
               {commonButtons.edit}
@@ -695,6 +717,25 @@ export function PetPlansPage() {
             >
               {preparingRenewalPlanId === plan.id ? 'Preparing...' : 'Prepare PIX reminder'}
             </button>
+          ) : null}
+          {plan.remainingSessions <= 1 ? (
+            <PermissionGuard permission="pet.plan.read">
+              <button
+                type="button"
+                onClick={() => void handleDispatchRenewalMessage(plan)}
+                className="rounded-lg border border-emerald-300 px-2 py-1 text-xs font-medium text-emerald-700"
+                disabled={dispatchingRenewalPlanId === plan.id}
+              >
+                {dispatchingRenewalPlanId === plan.id
+                  ? messages.messageSetup.officialRenewalSending
+                  : messages.messageSetup.officialRenewalSend}
+              </button>
+            </PermissionGuard>
+          ) : null}
+          {dispatchedRenewalPlanId === plan.id ? (
+            <span className="inline-flex items-center rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-medium text-emerald-800">
+              {messages.messageSetup.officialRenewalSent}
+            </span>
           ) : null}
         </div>
       )

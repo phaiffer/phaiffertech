@@ -499,7 +499,12 @@ export const enUSMessages: AppMessages = {
       settingsError: 'Unable to save prepared-message settings.',
       renewalPrepared: 'Renewal message prepared, charged, and copied for manual sending.',
       renewalNeedsBilling: 'Renewal message prepared with pending billing data; review the tenant billing fields before sending.',
-      prepareError: 'Unable to prepare the renewal reminder.'
+      prepareError: 'Unable to prepare the renewal reminder.',
+      officialRenewalSend: 'Send WhatsApp renewal',
+      officialRenewalSending: 'Sending...',
+      officialRenewalSent: 'WhatsApp renewal sent',
+      officialRenewalSuccess: 'Official WhatsApp renewal dispatch sent. Dispatch: {id}.',
+      officialRenewalFailure: 'Unable to send the official WhatsApp renewal. Use the prepared manual fallback.'
     },
     columns: {
       noRenewalEmail: 'No email on file for automatic renewal',

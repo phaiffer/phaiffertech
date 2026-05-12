@@ -505,7 +505,12 @@ const ptBRMessages = {
       settingsError: 'Nao foi possivel salvar a configuracao de mensagens preparadas.',
       renewalPrepared: 'Mensagem de renovacao preparada, cobrada e copiada para envio manual.',
       renewalNeedsBilling: 'Mensagem de renovacao preparada com dados de cobranca pendentes; revise os campos do tenant antes de enviar.',
-      prepareError: 'Nao foi possivel preparar o lembrete de renovacao.'
+      prepareError: 'Nao foi possivel preparar o lembrete de renovacao.',
+      officialRenewalSend: 'Enviar renovacao WhatsApp',
+      officialRenewalSending: 'Enviando...',
+      officialRenewalSent: 'Renovacao WhatsApp enviada',
+      officialRenewalSuccess: 'Envio oficial de renovacao por WhatsApp realizado. Dispatch: {id}.',
+      officialRenewalFailure: 'Nao foi possivel enviar a renovacao por WhatsApp oficial. Use o fallback manual preparado.'
     },
     columns: {
       noRenewalEmail: 'Sem e-mail para renovacao automatica',

@@ -470,6 +470,9 @@ export const petService = {
   dispatchPetReadyWhatsApp: (appointmentId: string) =>
     apiClient.post<MessageDispatchResponse>('/messages/whatsapp/pet-ready', { appointmentId }),
 
+  dispatchPlanRenewalWhatsApp: (planId: string) =>
+    apiClient.post<MessageDispatchResponse>('/messages/whatsapp/plan-renewal', { planId }),
+
   getWhatsAppDispatch: (dispatchId: string) =>
     apiClient.get<MessageDispatchResponse>(`/messages/whatsapp/dispatches/${dispatchId}`),
 

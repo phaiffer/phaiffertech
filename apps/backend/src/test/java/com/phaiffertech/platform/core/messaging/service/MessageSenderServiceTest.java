@@ -79,7 +79,7 @@ class MessageSenderServiceTest {
         TenantContext.setTenantId(tenantId);
         mockChannel(channel);
         when(templateMappingRepository.findByTenantIdAndChannelIdAndBusinessKeyAndActiveTrue(any(), any(), any()))
-                .thenReturn(Optional.empty());
+                .thenReturn(Optional.of(templateMapping(tenantId, channel, "PET_READY_PICKUP", "pet_ready_pickup")));
         when(whatsAppProvider.send(any(), any(), any()))
                 .thenReturn(new ProviderSendResult(false, null, null, null, "WhatsApp credentials are not configured."));
         when(dispatchRepository.save(any(MessageDispatch.class))).thenAnswer(invocation -> withId(invocation.getArgument(0)));
@@ -92,17 +92,27 @@ class MessageSenderServiceTest {
     }
 
     @Test
+    void recordsFailedDispatchWhenTemplateMappingIsMissing() {
+        UUID tenantId = UUID.randomUUID();
+        MessageChannel channel = configuredChannel(tenantId);
+        TenantContext.setTenantId(tenantId);
+        mockChannel(channel);
+        when(templateMappingRepository.findByTenantIdAndChannelIdAndBusinessKeyAndActiveTrue(any(), any(), any()))
+                .thenReturn(Optional.empty());
+        when(dispatchRepository.save(any(MessageDispatch.class))).thenAnswer(invocation -> withId(invocation.getArgument(0)));
+
+        MessageDispatchResponse response = service.sendWhatsAppText(request("(11) 99999-9999"));
+
+        assertEquals(MessageDispatchStatus.FAILED, response.status());
+        assertEquals("WhatsApp template mapping is not configured for business key PET_READY_PICKUP.", response.failureReason());
+        verify(whatsAppProvider, never()).send(any(), any(), any());
+    }
+
+    @Test
     void createsPendingDispatchBeforeProviderCallAndMapsLogicalTemplate() {
         UUID tenantId = UUID.randomUUID();
-        UUID mappingId = UUID.randomUUID();
         MessageChannel channel = configuredChannel(tenantId);
-        MessageTemplateMapping mapping = new MessageTemplateMapping();
-        ReflectionTestUtils.setField(mapping, "id", mappingId);
-        mapping.setTenantId(tenantId);
-        mapping.setChannelId(channel.getId());
-        mapping.setBusinessKey("PET_READY_PICKUP");
-        mapping.setProviderTemplateName("pet_ready_pickup");
-        mapping.setProviderTemplateLanguage("pt_BR");
+        MessageTemplateMapping mapping = templateMapping(tenantId, channel, "PET_READY_PICKUP", "pet_ready_pickup");
         TenantContext.setTenantId(tenantId);
         mockChannel(channel);
         when(templateMappingRepository.findByTenantIdAndChannelIdAndBusinessKeyAndActiveTrue(tenantId, channel.getId(), "PET_READY_PICKUP"))
@@ -126,7 +136,7 @@ class MessageSenderServiceTest {
         verify(dispatchRepository, org.mockito.Mockito.times(2)).save(dispatchCaptor.capture());
         assertEquals(MessageDispatchStatus.PENDING, savedStatuses.get(0));
         assertEquals(MessageDispatchStatus.SENT, savedStatuses.get(1));
-        assertEquals(mappingId, dispatchCaptor.getAllValues().get(0).getTemplateMappingId());
+        assertEquals(mapping.getId(), dispatchCaptor.getAllValues().get(0).getTemplateMappingId());
 
         ArgumentCaptor<WhatsAppOutboundMessageRequest> providerCaptor =
                 ArgumentCaptor.forClass(WhatsAppOutboundMessageRequest.class);
@@ -142,7 +152,7 @@ class MessageSenderServiceTest {
         TenantContext.setTenantId(tenantId);
         mockChannel(channel);
         when(templateMappingRepository.findByTenantIdAndChannelIdAndBusinessKeyAndActiveTrue(any(), any(), any()))
-                .thenReturn(Optional.empty());
+                .thenReturn(Optional.of(templateMapping(tenantId, channel, "PET_READY_PICKUP", "pet_ready_pickup")));
         when(whatsAppProvider.send(any(), any(), any()))
                 .thenReturn(new ProviderSendResult(false, null, "{\"to\":\"11999999999\"}", "{\"error\":true}", "WhatsApp Cloud API rejected the dispatch with HTTP 400."));
         when(dispatchRepository.save(any(MessageDispatch.class))).thenAnswer(invocation -> withId(invocation.getArgument(0)));
@@ -171,6 +181,17 @@ class MessageSenderServiceTest {
         channel.setAccessTokenSecret(secretCipherService.encrypt("test-access-token"));
         channel.setEnabled(true);
         return channel;
+    }
+
+    private MessageTemplateMapping templateMapping(UUID tenantId, MessageChannel channel, String businessKey, String templateName) {
+        MessageTemplateMapping mapping = new MessageTemplateMapping();
+        ReflectionTestUtils.setField(mapping, "id", UUID.randomUUID());
+        mapping.setTenantId(tenantId);
+        mapping.setChannelId(channel.getId());
+        mapping.setBusinessKey(businessKey);
+        mapping.setProviderTemplateName(templateName);
+        mapping.setProviderTemplateLanguage("pt_BR");
+        return mapping;
     }
 
     private MessageDispatch withId(MessageDispatch dispatch) {

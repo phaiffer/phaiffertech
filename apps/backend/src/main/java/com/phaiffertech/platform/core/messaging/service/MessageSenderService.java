@@ -78,6 +78,12 @@ public class MessageSenderService {
             return toResponse(dispatchRepository.save(dispatch));
         }
 
+        if (mapping == null || !hasText(mapping.getProviderTemplateName())) {
+            dispatch.setStatus(MessageDispatchStatus.FAILED);
+            dispatch.setFailureReason("WhatsApp template mapping is not configured for business key " + request.businessKey() + ".");
+            return toResponse(dispatchRepository.save(dispatch));
+        }
+
         String accessToken = hasText(channel.getAccessTokenSecret())
                 ? secretCipherService.decrypt(channel.getAccessTokenSecret())
                 : null;

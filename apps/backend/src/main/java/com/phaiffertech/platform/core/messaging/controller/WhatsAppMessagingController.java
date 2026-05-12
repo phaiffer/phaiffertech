@@ -1,6 +1,7 @@
 package com.phaiffertech.platform.core.messaging.controller;
 
 import com.phaiffertech.platform.core.messaging.dto.MessageDispatchResponse;
+import com.phaiffertech.platform.core.messaging.dto.PlanRenewalDispatchRequest;
 import com.phaiffertech.platform.core.messaging.dto.PetReadyDispatchRequest;
 import com.phaiffertech.platform.core.messaging.dto.WhatsAppChannelConfigRequest;
 import com.phaiffertech.platform.core.messaging.dto.WhatsAppChannelConfigResponse;
@@ -64,6 +65,14 @@ public class WhatsAppMessagingController {
             @Valid @RequestBody PetReadyDispatchRequest request
     ) {
         return ApiResponse.success(petReadyMessageDispatchService.dispatchPetReady(request.appointmentId()));
+    }
+
+    @PostMapping("/plan-renewal")
+    @RequirePermission(value = "pet.plan.read", anyEntitlements = {TenantEntitlementKeys.PET_AESTHETICS})
+    public ApiResponse<MessageDispatchResponse> dispatchPlanRenewal(
+            @Valid @RequestBody PlanRenewalDispatchRequest request
+    ) {
+        return ApiResponse.success(petReadyMessageDispatchService.dispatchPlanRenewal(request.planId()));
     }
 
     @GetMapping("/dispatches/{dispatchId}")
