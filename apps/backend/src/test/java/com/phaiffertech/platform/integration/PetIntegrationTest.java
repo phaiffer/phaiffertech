@@ -1744,6 +1744,220 @@ class PetIntegrationTest extends AbstractIntegrationTest {
         assertEquals(403, response.getStatusCode().value());
     }
 
+    @Test
+    void shouldCompletePetFlowGroomingGoldenPath() {
+        String marker = randomSearchMarker();
+        AuthSession session = createTenantAdminSession(
+                "pet-golden-" + marker,
+                "pet-golden-" + marker + "@local.test",
+                "CORE_PLATFORM",
+                "PET"
+        );
+        String clientId = createClient(session, marker);
+        String petId = createPet(session, clientId, marker);
+        String bathProfessionalId = createProfessional(session, marker + "-bath", 0.15);
+        String trimProfessionalId = createProfessional(session, marker + "-trim", 0.10);
+        JsonNode shampoo = createProduct(session, marker + "-shampoo", "PET_RETAIL_GOOD");
+        String productId = shampoo.path("id").asText();
+        String inventoryItemId = shampoo.path("inventoryItemId").asText();
+
+        ResponseEntity<JsonNode> bathResponse = post("/pet/services", Map.of(
+                "name", "Bath " + marker,
+                "category", "GROOMING",
+                "active", true,
+                "basePrice", 80.00,
+                "durationMinutes", 40,
+                "commissionEligible", true,
+                "allowInPlans", true,
+                "allowStandaloneBooking", true,
+                "inventoryLinks", List.of(Map.of(
+                        "inventoryItemId", inventoryItemId,
+                        "expectedQuantity", 1.00,
+                        "consumptionRule", "FIXED_PER_SERVICE",
+                        "active", true
+                ))
+        ), session);
+        assertEquals(200, bathResponse.getStatusCode().value());
+        String bathServiceId = requireBody(bathResponse).path("data").path("id").asText();
+        String trimServiceId = createService(session, marker + "-trim", "GROOMING", true, 50.00);
+
+        ResponseEntity<JsonNode> templateResponse = post("/pet/plans/templates", Map.of(
+                "commercialName", "Grooming plan " + marker,
+                "price", 130.00,
+                "validityDays", 30,
+                "totalSessions", 2,
+                "serviceIds", List.of(bathServiceId, trimServiceId),
+                "active", true
+        ), session);
+        assertEquals(200, templateResponse.getStatusCode().value());
+        String templateId = requireBody(templateResponse).path("data").path("id").asText();
+        ResponseEntity<JsonNode> planResponse = post("/pet/plans", Map.of(
+                "clientId", clientId,
+                "petId", petId,
+                "planTemplateId", templateId,
+                "planName", "Grooming plan " + marker,
+                "totalSessions", 2
+        ), session);
+        assertEquals(200, planResponse.getStatusCode().value());
+        String planId = requireBody(planResponse).path("data").path("id").asText();
+        assertEquals(2, requireBody(planResponse).path("data").path("remainingSessions").asInt());
+
+        String scheduledAt = Instant.now().plusSeconds(3600).toString();
+        List<String> serviceIds = List.of(bathServiceId, trimServiceId);
+        List<Map<String, String>> assignments = List.of(
+                Map.of("serviceId", bathServiceId, "professionalId", bathProfessionalId),
+                Map.of("serviceId", trimServiceId, "professionalId", trimProfessionalId)
+        );
+        Map<String, Object> appointmentPayload = new LinkedHashMap<>();
+        appointmentPayload.put("clientId", clientId);
+        appointmentPayload.put("petId", petId);
+        appointmentPayload.put("serviceId", bathServiceId);
+        appointmentPayload.put("serviceIds", serviceIds);
+        appointmentPayload.put("professionalId", bathProfessionalId);
+        appointmentPayload.put("serviceLineAssignments", assignments);
+        appointmentPayload.put("clientPlanId", planId);
+        appointmentPayload.put("scheduledAt", scheduledAt);
+        appointmentPayload.put("status", "IN_PROGRESS");
+        ResponseEntity<JsonNode> appointmentResponse = post("/pet/appointments", appointmentPayload, session);
+        assertEquals(200, appointmentResponse.getStatusCode().value());
+        JsonNode appointment = requireBody(appointmentResponse).path("data");
+        String appointmentId = appointment.path("id").asText();
+        assertEquals(2, appointment.path("appointmentServices").size());
+        assertEquals(planId, appointment.path("clientPlanId").asText());
+        JsonNode bathLine = findNodeByField(appointment.path("appointmentServices"), "serviceId", bathServiceId);
+        JsonNode trimLine = findNodeByField(appointment.path("appointmentServices"), "serviceId", trimServiceId);
+        String bathLineId = bathLine.path("id").asText();
+        assertEquals(bathProfessionalId, bathLine.path("professionalId").asText());
+        assertEquals(trimProfessionalId, trimLine.path("professionalId").asText());
+        assertEquals(12.00, bathLine.path("commissionAmount").asDouble(), 0.01);
+        assertEquals(5.00, trimLine.path("commissionAmount").asDouble(), 0.01);
+        assertEquals(1.00, bathLine.path("expectedInventoryConsumptions").get(0).path("expectedQuantity").asDouble(), 0.001);
+        assertEquals(0, requireBody(get("/pet/plans/" + planId, session)).path("data").path("usedSessions").asInt());
+
+        ResponseEntity<JsonNode> actualResponse = patch(
+                "/pet/appointments/" + appointmentId + "/service-lines/" + bathLineId + "/inventory-consumptions",
+                Map.of("inventoryConsumptions", List.of(Map.of(
+                        "inventoryItemId", inventoryItemId,
+                        "actualQuantity", 2.00,
+                        "consumptionStatus", "READY_TO_APPLY"
+                ))),
+                session
+        );
+        assertEquals(200, actualResponse.getStatusCode().value());
+        JsonNode actualRow = findNodeByField(
+                findNodeByField(requireBody(actualResponse).path("data").path("appointmentServices"), "serviceId", bathServiceId)
+                        .path("expectedInventoryConsumptions"),
+                "inventoryItemId", inventoryItemId
+        );
+        String inventoryRowId = actualRow.path("id").asText();
+        assertEquals(2.00, actualRow.path("actualQuantity").asDouble(), 0.001);
+        assertFalse(actualRow.path("stockApplied").asBoolean());
+        assertEquals(20, requireBody(get("/pet/products/" + productId, session)).path("data").path("stockQuantity").asInt());
+
+        appointmentPayload.put("status", "COMPLETED");
+        ResponseEntity<JsonNode> completedResponse = put("/pet/appointments/" + appointmentId, appointmentPayload, session);
+        assertEquals(200, completedResponse.getStatusCode().value());
+        JsonNode completed = requireBody(completedResponse).path("data");
+        assertEquals("COMPLETED", completed.path("status").asText());
+        assertTrue(completed.path("planSessionConsumed").asBoolean());
+        assertEquals(1, completed.path("planRemainingSessions").asInt());
+        assertEquals(1, requireBody(get("/pet/plans/" + planId, session)).path("data").path("usedSessions").asInt());
+        assertEquals(17.00, completed.path("commissionAmount").asDouble(), 0.01);
+        JsonNode completedBathLine = findNodeByField(completed.path("appointmentServices"), "serviceId", bathServiceId);
+        assertEquals(2.00, completedBathLine.path("expectedInventoryConsumptions").get(0).path("actualQuantity").asDouble(), 0.001);
+        assertFalse(completedBathLine.path("expectedInventoryConsumptions").get(0).path("stockApplied").asBoolean());
+
+        ResponseEntity<JsonNode> stockResponse = post(
+                "/pet/appointments/" + appointmentId + "/service-lines/" + bathLineId
+                        + "/inventory-consumptions/" + inventoryRowId + "/apply-stock",
+                null,
+                session
+        );
+        assertEquals(200, stockResponse.getStatusCode().value());
+        JsonNode appliedRow = findNodeByField(
+                findNodeByField(requireBody(stockResponse).path("data").path("appointmentServices"), "serviceId", bathServiceId)
+                        .path("expectedInventoryConsumptions"),
+                "inventoryItemId", inventoryItemId
+        );
+        assertTrue(appliedRow.path("stockApplied").asBoolean());
+        assertEquals(2.00, appliedRow.path("appliedQuantity").asDouble(), 0.001);
+        String movementId = appliedRow.path("appliedInventoryMovementId").asText();
+        assertFalse(movementId.isBlank());
+        assertEquals(18, requireBody(get("/pet/products/" + productId, session)).path("data").path("stockQuantity").asInt());
+        assertEquals(1, countRows(
+                "SELECT COUNT(*) FROM inventory_movements WHERE tenant_id = ? AND source_type = 'PET_APPOINTMENT_SERVICE_CONSUMPTION' AND source_reference_id = ? AND deleted_at IS NULL",
+                session.tenantId(), inventoryRowId
+        ));
+        assertEquals(200, post(
+                "/pet/appointments/" + appointmentId + "/service-lines/" + bathLineId
+                        + "/inventory-consumptions/" + inventoryRowId + "/apply-stock",
+                null,
+                session
+        ).getStatusCode().value());
+        assertEquals(18, requireBody(get("/pet/products/" + productId, session)).path("data").path("stockQuantity").asInt());
+        assertEquals(1, countRows(
+                "SELECT COUNT(*) FROM inventory_movements WHERE tenant_id = ? AND source_type = 'PET_APPOINTMENT_SERVICE_CONSUMPTION' AND source_reference_id = ? AND deleted_at IS NULL",
+                session.tenantId(), inventoryRowId
+        ));
+
+        ResponseEntity<JsonNode> commissionResponse = get(
+                "/pet/commissions/summary?scheduledFrom=" + Instant.now().minusSeconds(86400)
+                        + "&scheduledTo=" + Instant.now().plusSeconds(86400),
+                session
+        );
+        assertEquals(200, commissionResponse.getStatusCode().value());
+        JsonNode commission = requireBody(commissionResponse).path("data");
+        assertEquals(17.00, commission.path("totalCommissionAmount").asDouble(), 0.01);
+        assertEquals(12.00, findNodeByField(commission.path("professionals"), "professionalId", bathProfessionalId)
+                .path("totalCommissionAmount").asDouble(), 0.01);
+        assertEquals(5.00, findNodeByField(commission.path("professionals"), "professionalId", trimProfessionalId)
+                .path("totalCommissionAmount").asDouble(), 0.01);
+
+        ResponseEntity<JsonNode> renewalResponse = get("/pet/messages/plans/" + planId + "/renewal-reminder", session);
+        assertEquals(200, renewalResponse.getStatusCode().value());
+        JsonNode renewal = requireBody(renewalResponse).path("data");
+        assertEquals(planId, renewal.path("planId").asText());
+        assertEquals(1, renewal.path("remainingSessions").asInt());
+        String invoiceId = renewal.path("invoiceId").asText();
+        assertFalse(invoiceId.isBlank());
+        JsonNode invoice = requireBody(get("/pet/invoices/" + invoiceId, session)).path("data");
+        String financeInvoiceId = invoice.path("financeInvoiceId").asText();
+        assertEquals(clientId, invoice.path("clientId").asText());
+        assertEquals("PET.CLIENT_PLAN", invoice.path("businessContextType").asText());
+        assertEquals(planId, invoice.path("businessContextId").asText());
+        assertEquals("ISSUED", invoice.path("status").asText());
+        assertEquals(130.00, invoice.path("totalAmount").asDouble(), 0.01);
+        assertEquals(0.00, invoice.path("paidAmount").asDouble(), 0.01);
+        ResponseEntity<JsonNode> paymentResponse = post("/pet/invoices/" + invoiceId + "/payments", Map.of(
+                "amount", 130.00,
+                "method", "MANUAL",
+                "receivedAt", Instant.now().toString(),
+                "referenceCode", "FRONT-DESK-" + marker
+        ), session);
+        assertEquals(200, paymentResponse.getStatusCode().value());
+        assertEquals("CONFIRMED", requireBody(paymentResponse).path("data").path("status").asText());
+        assertEquals("MANUAL", requireBody(paymentResponse).path("data").path("method").asText());
+        JsonNode paidInvoice = requireBody(get("/pet/invoices/" + invoiceId, session)).path("data");
+        assertEquals("PAID", paidInvoice.path("status").asText());
+        assertEquals(130.00, paidInvoice.path("paidAmount").asDouble(), 0.01);
+        assertEquals(1, paidInvoice.path("payments").size());
+        assertEquals("MANUAL", paidInvoice.path("payments").get(0).path("method").asText());
+        assertEquals(1, countRows(
+                "SELECT COUNT(*) FROM finance_payments WHERE tenant_id = ? AND invoice_id = ? AND status = 'CONFIRMED'",
+                session.tenantId(), financeInvoiceId
+        ));
+
+        ResponseEntity<JsonNode> pickupResponse = get("/pet/messages/appointments/" + appointmentId + "/pickup", session);
+        assertEquals(200, pickupResponse.getStatusCode().value());
+        JsonNode pickup = requireBody(pickupResponse).path("data");
+        assertEquals("PET_READY_PICKUP", pickup.path("type").asText());
+        assertEquals(clientId, pickup.path("clientId").asText());
+        assertEquals(appointmentId, pickup.path("appointmentId").asText());
+        assertTrue(pickup.path("eligible").asBoolean());
+        assertTrue(pickup.path("message").asText().contains("Pet " + marker));
+        assertTrue(pickup.path("safetyNote").asText().contains("manual review/copy"));
+    }
+
     private String createClient(AuthSession session, String marker) {
         ResponseEntity<JsonNode> createClient = post("/pet/clients", Map.of(
                 "name", "Owner " + marker,
