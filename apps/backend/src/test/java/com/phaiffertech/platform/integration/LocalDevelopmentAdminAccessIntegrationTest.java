@@ -47,8 +47,6 @@ class LocalDevelopmentAdminAccessIntegrationTest extends AbstractIntegrationTest
         assertEquals(200, startResponse.getStatusCode().value());
         JsonNode data = requireBody(startResponse).path("data");
         JsonNode user = data.path("user");
-        assertTrue(containsValue(user.path("featureEntitlements"), "*"));
-
         AuthSession impersonatedSession = authSession(
                 data.path("accessToken").asText(),
                 platformAdmin.refreshCookie(),
@@ -56,19 +54,23 @@ class LocalDevelopmentAdminAccessIntegrationTest extends AbstractIntegrationTest
                 user.path("userId").asText()
         );
 
-        ResponseEntity<JsonNode> modulesResponse = get("/modules", impersonatedSession);
-        assertEquals(200, modulesResponse.getStatusCode().value());
+        try {
+            assertTrue(containsValue(user.path("featureEntitlements"), "*"));
 
-        JsonNode crmModule = findModule(requireBody(modulesResponse).path("data"), "CRM");
-        assertTrue(crmModule.path("moduleEnabled").asBoolean());
-        assertTrue(crmModule.path("featureFlagEnabled").asBoolean());
-        assertTrue(crmModule.path("available").asBoolean());
+            ResponseEntity<JsonNode> modulesResponse = get("/modules", impersonatedSession);
+            assertEquals(200, modulesResponse.getStatusCode().value());
 
-        ResponseEntity<JsonNode> dashboardResponse = get("/crm/dashboard/summary", impersonatedSession);
-        assertEquals(200, dashboardResponse.getStatusCode().value());
+            JsonNode crmModule = findModule(requireBody(modulesResponse).path("data"), "CRM");
+            assertTrue(crmModule.path("moduleEnabled").asBoolean());
+            assertTrue(crmModule.path("featureFlagEnabled").asBoolean());
+            assertTrue(crmModule.path("available").asBoolean());
 
-        ResponseEntity<JsonNode> stopResponse = post("/auth/impersonation/stop", null, impersonatedSession);
-        assertEquals(200, stopResponse.getStatusCode().value());
+            ResponseEntity<JsonNode> dashboardResponse = get("/crm/dashboard/summary", impersonatedSession);
+            assertEquals(200, dashboardResponse.getStatusCode().value());
+        } finally {
+            ResponseEntity<JsonNode> stopResponse = post("/auth/impersonation/stop", null, impersonatedSession);
+            assertEquals(200, stopResponse.getStatusCode().value());
+        }
     }
 
     @Test
@@ -93,26 +95,28 @@ class LocalDevelopmentAdminAccessIntegrationTest extends AbstractIntegrationTest
                 user.path("userId").asText()
         );
 
-        ResponseEntity<JsonNode> clientResponse = post("/pet/clients", Map.of(
-                "name", "Local Development Owner",
-                "documentType", "RG",
-                "document", "LOCAL-DEV-001",
-                "status", "ACTIVE"
-        ), impersonatedSession);
+        try {
+            ResponseEntity<JsonNode> clientResponse = post("/pet/clients", Map.of(
+                    "name", "Local Development Owner",
+                    "documentType", "RG",
+                    "document", "LOCAL-DEV-001",
+                    "status", "ACTIVE"
+            ), impersonatedSession);
 
-        assertEquals(200, clientResponse.getStatusCode().value());
-        String clientId = requireBody(clientResponse).path("data").path("id").asText();
+            assertEquals(200, clientResponse.getStatusCode().value());
+            String clientId = requireBody(clientResponse).path("data").path("id").asText();
 
-        ResponseEntity<JsonNode> petResponse = post("/pet/pets", Map.of(
-                "clientId", clientId,
-                "name", "Local Development Pet",
-                "species", "DOG"
-        ), impersonatedSession);
+            ResponseEntity<JsonNode> petResponse = post("/pet/pets", Map.of(
+                    "clientId", clientId,
+                    "name", "Local Development Pet",
+                    "species", "DOG"
+            ), impersonatedSession);
 
-        assertEquals(200, petResponse.getStatusCode().value());
-
-        ResponseEntity<JsonNode> stopResponse = post("/auth/impersonation/stop", null, impersonatedSession);
-        assertEquals(200, stopResponse.getStatusCode().value());
+            assertEquals(200, petResponse.getStatusCode().value());
+        } finally {
+            ResponseEntity<JsonNode> stopResponse = post("/auth/impersonation/stop", null, impersonatedSession);
+            assertEquals(200, stopResponse.getStatusCode().value());
+        }
     }
 
     @Test
@@ -137,15 +141,17 @@ class LocalDevelopmentAdminAccessIntegrationTest extends AbstractIntegrationTest
                 user.path("userId").asText()
         );
 
-        ResponseEntity<JsonNode> commissionSummaryResponse = get(
-                "/pet/commissions/summary?scheduledFrom=2026-02-01T00:00:00Z&scheduledTo=2026-02-28T23:59:59Z",
-                impersonatedSession
-        );
+        try {
+            ResponseEntity<JsonNode> commissionSummaryResponse = get(
+                    "/pet/commissions/summary?scheduledFrom=2026-02-01T00:00:00Z&scheduledTo=2026-02-28T23:59:59Z",
+                    impersonatedSession
+            );
 
-        assertEquals(200, commissionSummaryResponse.getStatusCode().value());
-
-        ResponseEntity<JsonNode> stopResponse = post("/auth/impersonation/stop", null, impersonatedSession);
-        assertEquals(200, stopResponse.getStatusCode().value());
+            assertEquals(200, commissionSummaryResponse.getStatusCode().value());
+        } finally {
+            ResponseEntity<JsonNode> stopResponse = post("/auth/impersonation/stop", null, impersonatedSession);
+            assertEquals(200, stopResponse.getStatusCode().value());
+        }
     }
 
     @Test

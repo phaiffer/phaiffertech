@@ -20,6 +20,7 @@ import com.phaiffertech.platform.core.user.domain.User;
 import com.phaiffertech.platform.core.user.repository.UserRepository;
 import jakarta.persistence.EntityManager;
 import java.math.BigDecimal;
+import java.nio.charset.StandardCharsets;
 import java.sql.Timestamp;
 import java.time.Duration;
 import java.time.Instant;
@@ -340,7 +341,7 @@ public class DemoCommercialEnvironmentService {
 
         private void seedCrm(UUID tenantId, UUID userId, Instant now) {
                 insertCrmCompany(
-                                CRM_AGROTECH_COMPANY_ID,
+                                seedId(tenantId, CRM_AGROTECH_COMPANY_ID),
                                 tenantId,
                                 "AgroTech Sul",
                                 "AgroTech Sul Automacao Industrial Ltda",
@@ -353,7 +354,7 @@ public class DemoCommercialEnvironmentService {
                                 userId,
                                 now.minus(Duration.ofDays(30)));
                 insertCrmCompany(
-                                CRM_PETCARE_COMPANY_ID,
+                                seedId(tenantId, CRM_PETCARE_COMPANY_ID),
                                 tenantId,
                                 "PetCare Curitiba",
                                 "PetCare Curitiba Clinica Veterinaria Ltda",
@@ -366,7 +367,7 @@ public class DemoCommercialEnvironmentService {
                                 userId,
                                 now.minus(Duration.ofDays(24)));
                 insertCrmCompany(
-                                CRM_DELTA_COMPANY_ID,
+                                seedId(tenantId, CRM_DELTA_COMPANY_ID),
                                 tenantId,
                                 "Industria Delta",
                                 "Industria Delta Componentes S.A.",
@@ -380,44 +381,44 @@ public class DemoCommercialEnvironmentService {
                                 now.minus(Duration.ofDays(18)));
 
                 insertCrmContact(
-                                CRM_CARLOS_CONTACT_ID,
+                                seedId(tenantId, CRM_CARLOS_CONTACT_ID),
                                 tenantId,
                                 "Carlos",
                                 "Mendes",
                                 "carlos.mendes@agrotechsul.com.br",
                                 "+55 41 99800-1101",
                                 "AgroTech Sul",
-                                CRM_AGROTECH_COMPANY_ID,
+                                seedId(tenantId, CRM_AGROTECH_COMPANY_ID),
                                 "ACTIVE",
                                 userId,
                                 now.minus(Duration.ofDays(17)));
                 insertCrmContact(
-                                CRM_ANA_CONTACT_ID,
+                                seedId(tenantId, CRM_ANA_CONTACT_ID),
                                 tenantId,
                                 "Ana",
                                 "Ferreira",
                                 "ana.ferreira@petcarecuritiba.com.br",
                                 "+55 41 99800-2202",
                                 "PetCare Curitiba",
-                                CRM_PETCARE_COMPANY_ID,
+                                seedId(tenantId, CRM_PETCARE_COMPANY_ID),
                                 "ACTIVE",
                                 userId,
                                 now.minus(Duration.ofDays(12)));
                 insertCrmContact(
-                                CRM_JULIANA_CONTACT_ID,
+                                seedId(tenantId, CRM_JULIANA_CONTACT_ID),
                                 tenantId,
                                 "Juliana",
                                 "Costa",
                                 "juliana.costa@industriadelta.com.br",
                                 "+55 41 99800-3303",
                                 "Industria Delta",
-                                CRM_DELTA_COMPANY_ID,
+                                seedId(tenantId, CRM_DELTA_COMPANY_ID),
                                 "ACTIVE",
                                 userId,
                                 now.minus(Duration.ofDays(9)));
 
                 insertCrmLead(
-                                CRM_AGROTECH_LEAD_ID,
+                                seedId(tenantId, CRM_AGROTECH_LEAD_ID),
                                 tenantId,
                                 "Industrial monitoring proposal",
                                 "monitoring@agrotechsul.com.br",
@@ -425,12 +426,12 @@ public class DemoCommercialEnvironmentService {
                                 "FIELD_VISIT",
                                 "QUALIFIED",
                                 userId,
-                                CRM_AGROTECH_COMPANY_ID,
-                                CRM_CARLOS_CONTACT_ID,
+                                seedId(tenantId, CRM_AGROTECH_COMPANY_ID),
+                                seedId(tenantId, CRM_CARLOS_CONTACT_ID),
                                 "Pilot scope confirmed for compressor, oven and energy panel monitoring.",
                                 now.minus(Duration.ofDays(8)));
                 insertCrmLead(
-                                CRM_PETCARE_LEAD_ID,
+                                seedId(tenantId, CRM_PETCARE_LEAD_ID),
                                 tenantId,
                                 "Veterinary software expansion",
                                 "expansao@petcarecuritiba.com.br",
@@ -438,12 +439,12 @@ public class DemoCommercialEnvironmentService {
                                 "REFERRAL",
                                 "NEGOTIATION",
                                 userId,
-                                CRM_PETCARE_COMPANY_ID,
-                                CRM_ANA_CONTACT_ID,
+                                seedId(tenantId, CRM_PETCARE_COMPANY_ID),
+                                seedId(tenantId, CRM_ANA_CONTACT_ID),
                                 "Clinic wants scheduling, records and billing in a single tenant workspace.",
                                 now.minus(Duration.ofDays(6)));
                 insertCrmLead(
-                                CRM_DELTA_LEAD_ID,
+                                seedId(tenantId, CRM_DELTA_LEAD_ID),
                                 tenantId,
                                 "Predictive maintenance contract",
                                 "projetos@industriadelta.com.br",
@@ -451,75 +452,75 @@ public class DemoCommercialEnvironmentService {
                                 "EXECUTIVE_MEETING",
                                 "CLOSED_WON",
                                 userId,
-                                CRM_DELTA_COMPANY_ID,
-                                CRM_JULIANA_CONTACT_ID,
+                                seedId(tenantId, CRM_DELTA_COMPANY_ID),
+                                seedId(tenantId, CRM_JULIANA_CONTACT_ID),
                                 "Board approved the connected maintenance rollout after the plant walkthrough.",
                                 now.minus(Duration.ofDays(3)));
 
-                insertCrmPipeline(tenantId, CRM_PIPELINE_ID, "Commercial Demo Pipeline", true,
+                insertCrmPipeline(tenantId, seedId(tenantId, CRM_PIPELINE_ID), "Commercial Demo Pipeline", true,
                                 now.minus(Duration.ofDays(10)));
-                insertCrmPipelineStage(tenantId, CRM_STAGE_LEAD_ID, CRM_PIPELINE_ID, "Lead", "LEAD", 1, "#2563eb",
+                insertCrmPipelineStage(tenantId, seedId(tenantId, CRM_STAGE_LEAD_ID), seedId(tenantId, CRM_PIPELINE_ID), "Lead", "LEAD", 1, "#2563eb",
                                 false, now.minus(Duration.ofDays(10)));
-                insertCrmPipelineStage(tenantId, CRM_STAGE_QUALIFICATION_ID, CRM_PIPELINE_ID, "Qualification",
+                insertCrmPipelineStage(tenantId, seedId(tenantId, CRM_STAGE_QUALIFICATION_ID), seedId(tenantId, CRM_PIPELINE_ID), "Qualification",
                                 "QUALIFICATION", 2, "#0ea5e9", false, now.minus(Duration.ofDays(10)));
-                insertCrmPipelineStage(tenantId, CRM_STAGE_PROPOSAL_ID, CRM_PIPELINE_ID, "Proposal", "PROPOSAL", 3,
+                insertCrmPipelineStage(tenantId, seedId(tenantId, CRM_STAGE_PROPOSAL_ID), seedId(tenantId, CRM_PIPELINE_ID), "Proposal", "PROPOSAL", 3,
                                 "#14b8a6", false, now.minus(Duration.ofDays(10)));
-                insertCrmPipelineStage(tenantId, CRM_STAGE_NEGOTIATION_ID, CRM_PIPELINE_ID, "Negotiation",
+                insertCrmPipelineStage(tenantId, seedId(tenantId, CRM_STAGE_NEGOTIATION_ID), seedId(tenantId, CRM_PIPELINE_ID), "Negotiation",
                                 "NEGOTIATION", 4, "#f59e0b", false, now.minus(Duration.ofDays(10)));
-                insertCrmPipelineStage(tenantId, CRM_STAGE_CLOSED_ID, CRM_PIPELINE_ID, "Closed", "CLOSED", 5, "#22c55e",
+                insertCrmPipelineStage(tenantId, seedId(tenantId, CRM_STAGE_CLOSED_ID), seedId(tenantId, CRM_PIPELINE_ID), "Closed", "CLOSED", 5, "#22c55e",
                                 true, now.minus(Duration.ofDays(10)));
 
                 insertCrmDeal(
-                                CRM_AGROTECH_DEAL_ID,
+                                seedId(tenantId, CRM_AGROTECH_DEAL_ID),
                                 tenantId,
                                 "Industrial monitoring proposal",
                                 "AgroTech Sul wants connected visibility for compressor, oven and panel telemetry.",
                                 new BigDecimal("185000.00"),
                                 "BRL",
                                 "OPEN",
-                                CRM_PIPELINE_ID,
-                                CRM_STAGE_PROPOSAL_ID,
-                                CRM_AGROTECH_COMPANY_ID,
-                                CRM_CARLOS_CONTACT_ID,
-                                CRM_AGROTECH_LEAD_ID,
+                                seedId(tenantId, CRM_PIPELINE_ID),
+                                seedId(tenantId, CRM_STAGE_PROPOSAL_ID),
+                                seedId(tenantId, CRM_AGROTECH_COMPANY_ID),
+                                seedId(tenantId, CRM_CARLOS_CONTACT_ID),
+                                seedId(tenantId, CRM_AGROTECH_LEAD_ID),
                                 userId,
                                 LocalDate.now(ZoneOffset.UTC).plusDays(21),
                                 now.minus(Duration.ofDays(5)));
                 insertCrmDeal(
-                                CRM_PETCARE_DEAL_ID,
+                                seedId(tenantId, CRM_PETCARE_DEAL_ID),
                                 tenantId,
                                 "Veterinary software expansion",
                                 "PetCare Curitiba is negotiating rollout for appointments, records and invoicing.",
                                 new BigDecimal("96000.00"),
                                 "BRL",
                                 "OPEN",
-                                CRM_PIPELINE_ID,
-                                CRM_STAGE_NEGOTIATION_ID,
-                                CRM_PETCARE_COMPANY_ID,
-                                CRM_ANA_CONTACT_ID,
-                                CRM_PETCARE_LEAD_ID,
+                                seedId(tenantId, CRM_PIPELINE_ID),
+                                seedId(tenantId, CRM_STAGE_NEGOTIATION_ID),
+                                seedId(tenantId, CRM_PETCARE_COMPANY_ID),
+                                seedId(tenantId, CRM_ANA_CONTACT_ID),
+                                seedId(tenantId, CRM_PETCARE_LEAD_ID),
                                 userId,
                                 LocalDate.now(ZoneOffset.UTC).plusDays(12),
                                 now.minus(Duration.ofDays(4)));
                 insertCrmDeal(
-                                CRM_DELTA_DEAL_ID,
+                                seedId(tenantId, CRM_DELTA_DEAL_ID),
                                 tenantId,
                                 "Predictive maintenance contract",
                                 "Industry Delta closed the predictive maintenance program after the executive review.",
                                 new BigDecimal("240000.00"),
                                 "BRL",
                                 "CLOSED_WON",
-                                CRM_PIPELINE_ID,
-                                CRM_STAGE_CLOSED_ID,
-                                CRM_DELTA_COMPANY_ID,
-                                CRM_JULIANA_CONTACT_ID,
-                                CRM_DELTA_LEAD_ID,
+                                seedId(tenantId, CRM_PIPELINE_ID),
+                                seedId(tenantId, CRM_STAGE_CLOSED_ID),
+                                seedId(tenantId, CRM_DELTA_COMPANY_ID),
+                                seedId(tenantId, CRM_JULIANA_CONTACT_ID),
+                                seedId(tenantId, CRM_DELTA_LEAD_ID),
                                 userId,
                                 LocalDate.now(ZoneOffset.UTC).minusDays(8),
                                 now.minus(Duration.ofDays(2)));
 
                 insertCrmTask(
-                                CRM_AGROTECH_TASK_ID,
+                                seedId(tenantId, CRM_AGROTECH_TASK_ID),
                                 tenantId,
                                 "Confirm plant network topology",
                                 "Validate Modbus TCP segmentation before sending the final proposal revision.",
@@ -527,15 +528,15 @@ public class DemoCommercialEnvironmentService {
                                 "OPEN",
                                 "HIGH",
                                 userId,
-                                CRM_AGROTECH_COMPANY_ID,
-                                CRM_CARLOS_CONTACT_ID,
-                                CRM_AGROTECH_LEAD_ID,
-                                CRM_AGROTECH_DEAL_ID,
+                                seedId(tenantId, CRM_AGROTECH_COMPANY_ID),
+                                seedId(tenantId, CRM_CARLOS_CONTACT_ID),
+                                seedId(tenantId, CRM_AGROTECH_LEAD_ID),
+                                seedId(tenantId, CRM_AGROTECH_DEAL_ID),
                                 "CRM.DEAL",
-                                CRM_AGROTECH_DEAL_ID,
+                                seedId(tenantId, CRM_AGROTECH_DEAL_ID),
                                 now.minus(Duration.ofDays(1)));
                 insertCrmTask(
-                                CRM_PETCARE_TASK_ID,
+                                seedId(tenantId, CRM_PETCARE_TASK_ID),
                                 tenantId,
                                 "Review rollout milestones",
                                 "Align onboarding dates for reception, medical records and billing flows.",
@@ -543,15 +544,15 @@ public class DemoCommercialEnvironmentService {
                                 "IN_PROGRESS",
                                 "MEDIUM",
                                 userId,
-                                CRM_PETCARE_COMPANY_ID,
-                                CRM_ANA_CONTACT_ID,
-                                CRM_PETCARE_LEAD_ID,
-                                CRM_PETCARE_DEAL_ID,
+                                seedId(tenantId, CRM_PETCARE_COMPANY_ID),
+                                seedId(tenantId, CRM_ANA_CONTACT_ID),
+                                seedId(tenantId, CRM_PETCARE_LEAD_ID),
+                                seedId(tenantId, CRM_PETCARE_DEAL_ID),
                                 "CRM.DEAL",
-                                CRM_PETCARE_DEAL_ID,
+                                seedId(tenantId, CRM_PETCARE_DEAL_ID),
                                 now.minus(Duration.ofHours(20)));
                 insertCrmTask(
-                                CRM_DELTA_TASK_ID,
+                                seedId(tenantId, CRM_DELTA_TASK_ID),
                                 tenantId,
                                 "Share kickoff checklist",
                                 "Send the post-sale checklist to the Delta maintenance manager.",
@@ -559,48 +560,48 @@ public class DemoCommercialEnvironmentService {
                                 "DONE",
                                 "LOW",
                                 userId,
-                                CRM_DELTA_COMPANY_ID,
-                                CRM_JULIANA_CONTACT_ID,
-                                CRM_DELTA_LEAD_ID,
-                                CRM_DELTA_DEAL_ID,
+                                seedId(tenantId, CRM_DELTA_COMPANY_ID),
+                                seedId(tenantId, CRM_JULIANA_CONTACT_ID),
+                                seedId(tenantId, CRM_DELTA_LEAD_ID),
+                                seedId(tenantId, CRM_DELTA_DEAL_ID),
                                 "CRM.DEAL",
-                                CRM_DELTA_DEAL_ID,
+                                seedId(tenantId, CRM_DELTA_DEAL_ID),
                                 now.minus(Duration.ofHours(8)));
 
                 insertCrmNote(
-                                CRM_AGROTECH_NOTE_ID,
+                                seedId(tenantId, CRM_AGROTECH_NOTE_ID),
                                 tenantId,
                                 "Operations manager requested a proposal that includes temperature, vibration and power dashboards for the compressor line.",
-                                CRM_AGROTECH_COMPANY_ID,
-                                CRM_CARLOS_CONTACT_ID,
-                                CRM_AGROTECH_LEAD_ID,
-                                CRM_AGROTECH_DEAL_ID,
+                                seedId(tenantId, CRM_AGROTECH_COMPANY_ID),
+                                seedId(tenantId, CRM_CARLOS_CONTACT_ID),
+                                seedId(tenantId, CRM_AGROTECH_LEAD_ID),
+                                seedId(tenantId, CRM_AGROTECH_DEAL_ID),
                                 "CRM.DEAL",
-                                CRM_AGROTECH_DEAL_ID,
+                                seedId(tenantId, CRM_AGROTECH_DEAL_ID),
                                 userId,
                                 now.minus(Duration.ofHours(6)));
                 insertCrmNote(
-                                CRM_PETCARE_NOTE_ID,
+                                seedId(tenantId, CRM_PETCARE_NOTE_ID),
                                 tenantId,
                                 "Clinic director wants the PetFlow pilot to start with vaccination, checkup and billing flows already configured.",
-                                CRM_PETCARE_COMPANY_ID,
-                                CRM_ANA_CONTACT_ID,
-                                CRM_PETCARE_LEAD_ID,
-                                CRM_PETCARE_DEAL_ID,
+                                seedId(tenantId, CRM_PETCARE_COMPANY_ID),
+                                seedId(tenantId, CRM_ANA_CONTACT_ID),
+                                seedId(tenantId, CRM_PETCARE_LEAD_ID),
+                                seedId(tenantId, CRM_PETCARE_DEAL_ID),
                                 "CRM.DEAL",
-                                CRM_PETCARE_DEAL_ID,
+                                seedId(tenantId, CRM_PETCARE_DEAL_ID),
                                 userId,
                                 now.minus(Duration.ofHours(3)));
 
-                insertAuditLog(tenantId, userId, "CREATE", "crm_contact", CRM_ANA_CONTACT_ID,
+                insertAuditLog(tenantId, userId, "CREATE", "crm_contact", seedId(tenantId, CRM_ANA_CONTACT_ID),
                                 "{\"company\":\"PetCare Curitiba\"}", now.minus(Duration.ofHours(9)));
-                insertAuditLog(tenantId, userId, "CREATE", "crm_lead", CRM_PETCARE_LEAD_ID, "{\"source\":\"REFERRAL\"}",
+                insertAuditLog(tenantId, userId, "CREATE", "crm_lead", seedId(tenantId, CRM_PETCARE_LEAD_ID), "{\"source\":\"REFERRAL\"}",
                                 now.minus(Duration.ofHours(8)));
-                insertAuditLog(tenantId, userId, "UPDATE", "crm_deal", CRM_PETCARE_DEAL_ID,
+                insertAuditLog(tenantId, userId, "UPDATE", "crm_deal", seedId(tenantId, CRM_PETCARE_DEAL_ID),
                                 "{\"stage\":\"NEGOTIATION\"}", now.minus(Duration.ofHours(5)));
-                insertAuditLog(tenantId, userId, "CREATE", "crm_task", CRM_AGROTECH_TASK_ID, "{\"priority\":\"HIGH\"}",
+                insertAuditLog(tenantId, userId, "CREATE", "crm_task", seedId(tenantId, CRM_AGROTECH_TASK_ID), "{\"priority\":\"HIGH\"}",
                                 now.minus(Duration.ofHours(4)));
-                insertAuditLog(tenantId, userId, "CREATE", "crm_note", CRM_PETCARE_NOTE_ID,
+                insertAuditLog(tenantId, userId, "CREATE", "crm_note", seedId(tenantId, CRM_PETCARE_NOTE_ID),
                                 "{\"related\":\"CRM.DEAL\"}", now.minus(Duration.ofHours(2)));
         }
 
@@ -615,7 +616,7 @@ public class DemoCommercialEnvironmentService {
                 Instant joaoInvoiceIssuedAt = currentDate.minusDays(2).atTime(17, 30).toInstant(ZoneOffset.UTC);
 
                 insertPetClient(
-                                PET_MARIA_CLIENT_ID,
+                                seedId(tenantId, PET_MARIA_CLIENT_ID),
                                 tenantId,
                                 "Maria Oliveira",
                                 "Maria Oliveira",
@@ -626,7 +627,7 @@ public class DemoCommercialEnvironmentService {
                                 "ACTIVE",
                                 now.minus(Duration.ofDays(20)));
                 insertPetClient(
-                                PET_JOAO_CLIENT_ID,
+                                seedId(tenantId, PET_JOAO_CLIENT_ID),
                                 tenantId,
                                 "Joao Batista",
                                 "Joao Batista",
@@ -637,59 +638,59 @@ public class DemoCommercialEnvironmentService {
                                 "ACTIVE",
                                 now.minus(Duration.ofDays(15)));
 
-                insertPetProfile(PET_REX_ID, tenantId, PET_MARIA_CLIENT_ID, "Rex", "DOG", "Golden Retriever",
+                insertPetProfile(seedId(tenantId, PET_REX_ID), tenantId, seedId(tenantId, PET_MARIA_CLIENT_ID), "Rex", "DOG", "Golden Retriever",
                                 LocalDate.of(2020, 5, 14), "MALE", new BigDecimal("31.20"), "Golden",
                                 "Recurring grooming client with renewal close to the penultimate bath.", now.minus(Duration.ofDays(14)));
-                insertPetProfile(PET_LUNA_ID, tenantId, PET_MARIA_CLIENT_ID, "Luna", "DOG", "Shih Tzu",
+                insertPetProfile(seedId(tenantId, PET_LUNA_ID), tenantId, seedId(tenantId, PET_MARIA_CLIENT_ID), "Luna", "DOG", "Shih Tzu",
                                 LocalDate.of(2021, 8, 9), "FEMALE", new BigDecimal("5.40"), "Caramel",
                                 "Pickup and delivery client for the next monthly cycle.", now.minus(Duration.ofDays(13)));
-                insertPetProfile(PET_THOR_ID, tenantId, PET_JOAO_CLIENT_ID, "Thor", "DOG", "German Shepherd",
+                insertPetProfile(seedId(tenantId, PET_THOR_ID), tenantId, seedId(tenantId, PET_JOAO_CLIENT_ID), "Thor", "DOG", "German Shepherd",
                                 LocalDate.of(2019, 11, 3), "MALE", new BigDecimal("34.80"), "Black and tan",
                                 "One-time bath and grooming client with pet taxi extra.", now.minus(Duration.ofDays(12)));
 
-                insertPetService(PET_SERVICE_VACCINATION_ID, tenantId, "Banho e tosa premium",
+                insertPetService(seedId(tenantId, PET_SERVICE_VACCINATION_ID), tenantId, "Banho e tosa premium",
                                 "Full bath and grooming package for recurring customers.", new BigDecimal("95.00"), 120,
                                 now.minus(Duration.ofDays(11)));
-                insertPetService(PET_SERVICE_CHECKUP_ID, tenantId, "Banho essencial",
+                insertPetService(seedId(tenantId, PET_SERVICE_CHECKUP_ID), tenantId, "Banho essencial",
                                 "Core bath package with reception and checkout ready for retail add-ons.", new BigDecimal("70.00"), 60,
                                 now.minus(Duration.ofDays(11)));
-                insertPetService(PET_SERVICE_CONSULTATION_ID, tenantId, "Tosa higienica",
+                insertPetService(seedId(tenantId, PET_SERVICE_CONSULTATION_ID), tenantId, "Tosa higienica",
                                 "Focused grooming finish for between-cycle maintenance.", new BigDecimal("45.00"),
                                 45, now.minus(Duration.ofDays(11)));
 
-                insertPetProfessional(PET_PROFESSIONAL_MARINA_ID, tenantId, "Marina Lopes", "Banho e tosa premium",
+                insertPetProfessional(seedId(tenantId, PET_PROFESSIONAL_MARINA_ID), tenantId, "Marina Lopes", "Banho e tosa premium",
                                 "PR-GRM-11234", "+55 41 98800-1101", "marina@misterdog.demo",
                                 new BigDecimal("0.1500"),
                                 now.minus(Duration.ofDays(10)));
-                insertPetProfessional(PET_PROFESSIONAL_RAFAEL_ID, tenantId, "Rafael Souza", "Acabamento e tosa higienica",
+                insertPetProfessional(seedId(tenantId, PET_PROFESSIONAL_RAFAEL_ID), tenantId, "Rafael Souza", "Acabamento e tosa higienica",
                                 "PR-GRM-11888", "+55 41 98800-2202", "rafael@misterdog.demo",
                                 new BigDecimal("0.1200"),
                                 now.minus(Duration.ofDays(10)));
 
                 insertPetClientPlan(
-                                PET_PLAN_MARIA_ID,
+                                seedId(tenantId, PET_PLAN_MARIA_ID),
                                 tenantId,
-                                PET_MARIA_CLIENT_ID,
+                                seedId(tenantId, PET_MARIA_CLIENT_ID),
                                 "Plano mensal banho e tosa",
                                 6,
                                 4,
                                 mariaPlanExpiresAt,
                                 now.minus(Duration.ofDays(7)));
 
-                insertPetAppointment(PET_APPOINTMENT_REX_ID, tenantId, PET_MARIA_CLIENT_ID, PET_REX_ID,
-                                PET_SERVICE_VACCINATION_ID, PET_PROFESSIONAL_MARINA_ID, recurringBathCompletedAt,
+                insertPetAppointment(seedId(tenantId, PET_APPOINTMENT_REX_ID), tenantId, seedId(tenantId, PET_MARIA_CLIENT_ID), seedId(tenantId, PET_REX_ID),
+                                seedId(tenantId, PET_SERVICE_VACCINATION_ID), seedId(tenantId, PET_PROFESSIONAL_MARINA_ID), recurringBathCompletedAt,
                                 "Banho e tosa premium",
                                 "COMPLETED",
                                 "Recurring appointment completed. Pet ready and pickup message already covered by client email.",
                                 new BigDecimal("95.00"),
                                 new BigDecimal("14.25"),
-                                PET_PLAN_MARIA_ID,
+                                seedId(tenantId, PET_PLAN_MARIA_ID),
                                 true,
                                 null,
                                 null,
                                 now.minus(Duration.ofHours(8)));
-                insertPetAppointment(PET_APPOINTMENT_THOR_ID, tenantId, PET_JOAO_CLIENT_ID, PET_THOR_ID,
-                                PET_SERVICE_CHECKUP_ID, PET_PROFESSIONAL_RAFAEL_ID, oneTimeBathInProgressAt,
+                insertPetAppointment(seedId(tenantId, PET_APPOINTMENT_THOR_ID), tenantId, seedId(tenantId, PET_JOAO_CLIENT_ID), seedId(tenantId, PET_THOR_ID),
+                                seedId(tenantId, PET_SERVICE_CHECKUP_ID), seedId(tenantId, PET_PROFESSIONAL_RAFAEL_ID), oneTimeBathInProgressAt,
                                 "Banho essencial",
                                 "IN_PROGRESS",
                                 "One-time visit with pet taxi return already approved at checkout.",
@@ -700,81 +701,81 @@ public class DemoCommercialEnvironmentService {
                                 new BigDecimal("18.00"),
                                 "Pet taxi ida e volta",
                                 now.minus(Duration.ofHours(2)));
-                insertPetAppointment(PET_APPOINTMENT_LUNA_ID, tenantId, PET_MARIA_CLIENT_ID, PET_LUNA_ID,
-                                PET_SERVICE_VACCINATION_ID, PET_PROFESSIONAL_MARINA_ID, nextCycleRecurringAt,
+                insertPetAppointment(seedId(tenantId, PET_APPOINTMENT_LUNA_ID), tenantId, seedId(tenantId, PET_MARIA_CLIENT_ID), seedId(tenantId, PET_LUNA_ID),
+                                seedId(tenantId, PET_SERVICE_VACCINATION_ID), seedId(tenantId, PET_PROFESSIONAL_MARINA_ID), nextCycleRecurringAt,
                                 "Banho e tosa premium",
                                 "SCHEDULED",
                                 "Next cycle already reserved with pickup service on the way in.",
                                 new BigDecimal("95.00"),
                                 new BigDecimal("14.25"),
-                                PET_PLAN_MARIA_ID,
+                                seedId(tenantId, PET_PLAN_MARIA_ID),
                                 false,
                                 new BigDecimal("9.00"),
                                 "Pet taxi ida",
                                 now.minus(Duration.ofHours(1)));
 
                 insertPetMedicalRecord(
-                                PET_RECORD_REX_ID,
+                                seedId(tenantId, PET_RECORD_REX_ID),
                                 tenantId,
-                                PET_REX_ID,
-                                PET_PROFESSIONAL_MARINA_ID,
-                                PET_APPOINTMENT_REX_ID,
+                                seedId(tenantId, PET_REX_ID),
+                                seedId(tenantId, PET_PROFESSIONAL_MARINA_ID),
+                                seedId(tenantId, PET_APPOINTMENT_REX_ID),
                                 "Bath and grooming finished with coat hydration and routine owner guidance.",
                                 "Recurring package delivery completed successfully.",
                                 "Hold the renewal conversation at the penultimate bath and keep pickup messaging active.",
                                 now.minus(Duration.ofHours(7)));
                 insertPetMedicalRecord(
-                                PET_RECORD_THOR_ID,
+                                seedId(tenantId, PET_RECORD_THOR_ID),
                                 tenantId,
-                                PET_THOR_ID,
-                                PET_PROFESSIONAL_RAFAEL_ID,
-                                PET_APPOINTMENT_THOR_ID,
+                                seedId(tenantId, PET_THOR_ID),
+                                seedId(tenantId, PET_PROFESSIONAL_RAFAEL_ID),
+                                seedId(tenantId, PET_APPOINTMENT_THOR_ID),
                                 "One-time grooming visit in progress with pet taxi already tied to checkout.",
                                 "Commercial demo flow active for standalone customer.",
                                 "Keep the responsible professional, pet taxi extra, and charge visibility explicit at the end of the visit.",
                                 now.minus(Duration.ofHours(5)));
 
-                insertPetVaccination(PET_VACCINATION_REX_ID, tenantId, PET_REX_ID, PET_APPOINTMENT_REX_ID,
+                insertPetVaccination(seedId(tenantId, PET_VACCINATION_REX_ID), tenantId, seedId(tenantId, PET_REX_ID), seedId(tenantId, PET_APPOINTMENT_REX_ID),
                                 "Operational reminder",
                                 recurringBathCompletedAt, currentDate.plusMonths(1).atTime(8, 0).toInstant(ZoneOffset.UTC),
                                 "Internal follow-up reminder preserved for timeline completeness.", now.minus(Duration.ofHours(7)));
-                insertPetVaccination(PET_VACCINATION_LUNA_ID, tenantId, PET_LUNA_ID, PET_APPOINTMENT_LUNA_ID,
+                insertPetVaccination(seedId(tenantId, PET_VACCINATION_LUNA_ID), tenantId, seedId(tenantId, PET_LUNA_ID), seedId(tenantId, PET_APPOINTMENT_LUNA_ID),
                                 "Next cycle reminder",
                                 nextCycleRecurringAt, nextCycleRecurringAt.plus(Duration.ofDays(30)),
                                 "Next recurring cycle already visible in the commercial demo queue.",
                                 now.minus(Duration.ofHours(1)));
 
-                insertPetProduct(PET_PRODUCT_RABIES_ID, tenantId, "Shampoo hipoalergenico", "PET-SHAM-001",
+                insertPetProduct(seedId(tenantId, PET_PRODUCT_RABIES_ID), tenantId, "Shampoo hipoalergenico", "PET-SHAM-001",
                                 new BigDecimal("48.00"), 1, 2, 5, now.minus(Duration.ofDays(6)));
-                insertPetProduct(PET_PRODUCT_SUPPLEMENT_ID, tenantId, "Mascara hidratante", "PET-HYDR-014",
+                insertPetProduct(seedId(tenantId, PET_PRODUCT_SUPPLEMENT_ID), tenantId, "Mascara hidratante", "PET-HYDR-014",
                                 new BigDecimal("36.00"), 6, 2, 4, now.minus(Duration.ofDays(6)));
-                insertPetProduct(PET_PRODUCT_PARASITE_ID, tenantId, "Lacos sortidos", "PET-ACC-020",
+                insertPetProduct(seedId(tenantId, PET_PRODUCT_PARASITE_ID), tenantId, "Lacos sortidos", "PET-ACC-020",
                                 new BigDecimal("18.00"), 2, 1, 3, now.minus(Duration.ofDays(6)));
 
-                insertPetInventoryMovement(PET_INVENTORY_RABIES_ID, tenantId, PET_PRODUCT_RABIES_ID, "OUTBOUND", 2,
+                insertPetInventoryMovement(seedId(tenantId, PET_INVENTORY_RABIES_ID), tenantId, seedId(tenantId, PET_PRODUCT_RABIES_ID), "OUTBOUND", 2,
                                 "Busy grooming days consumed more shampoo than expected before the next purchase window.",
                                 now.minus(Duration.ofHours(12)));
-                insertPetInventoryMovement(PET_INVENTORY_SUPPLEMENT_ID, tenantId, PET_PRODUCT_SUPPLEMENT_ID, "INBOUND",
+                insertPetInventoryMovement(seedId(tenantId, PET_INVENTORY_SUPPLEMENT_ID), tenantId, seedId(tenantId, PET_PRODUCT_SUPPLEMENT_ID), "INBOUND",
                                 4, "Partial replenishment received for the hydration line before the weekend rush.",
                                 now.minus(Duration.ofDays(2)));
-                insertPetInventoryMovement(PET_INVENTORY_PARASITE_ID, tenantId, PET_PRODUCT_PARASITE_ID, "OUTBOUND", 3,
+                insertPetInventoryMovement(seedId(tenantId, PET_INVENTORY_PARASITE_ID), tenantId, seedId(tenantId, PET_PRODUCT_PARASITE_ID), "OUTBOUND", 3,
                                 "Accessory stock reserved for premium pickups and retail upsell.", now.minus(Duration.ofHours(18)));
 
                 insertPetInvoice(
-                                PET_INVOICE_MARIA_ID,
+                                seedId(tenantId, PET_INVOICE_MARIA_ID),
                                 tenantId,
-                                PET_MARIA_CLIENT_ID,
+                                seedId(tenantId, PET_MARIA_CLIENT_ID),
                                 new BigDecimal("95.00"),
                                 "PAID",
                                 mariaInvoiceIssuedAt,
                                 now.minus(Duration.ofDays(1)),
                                 "Recurring package service settled during the last completed shift.",
                                 "PET.APPOINTMENT",
-                                PET_APPOINTMENT_REX_ID);
+                                seedId(tenantId, PET_APPOINTMENT_REX_ID));
                 insertFinancePayment(
-                                PET_PAYMENT_MARIA_ID,
+                                seedId(tenantId, PET_PAYMENT_MARIA_ID),
                                 tenantId,
-                                PET_INVOICE_MARIA_ID,
+                                seedId(tenantId, PET_INVOICE_MARIA_ID),
                                 new BigDecimal("95.00"),
                                 "PIX",
                                 mariaInvoiceIssuedAt.plus(Duration.ofHours(2)),
@@ -782,10 +783,10 @@ public class DemoCommercialEnvironmentService {
                                 "Customer settled the recurring grooming charge after pickup confirmation.",
                                 now.minus(Duration.ofDays(1)));
                 insertFinanceCashMovement(
-                                PET_CASH_MARIA_ID,
+                                seedId(tenantId, PET_CASH_MARIA_ID),
                                 tenantId,
-                                PET_INVOICE_MARIA_ID,
-                                PET_PAYMENT_MARIA_ID,
+                                seedId(tenantId, PET_INVOICE_MARIA_ID),
+                                seedId(tenantId, PET_PAYMENT_MARIA_ID),
                                 "IN",
                                 "INVOICE_PAYMENT",
                                 new BigDecimal("95.00"),
@@ -794,16 +795,16 @@ public class DemoCommercialEnvironmentService {
                                 now.minus(Duration.ofDays(1)));
 
                 insertPetInvoice(
-                                PET_INVOICE_JOAO_ID,
+                                seedId(tenantId, PET_INVOICE_JOAO_ID),
                                 tenantId,
-                                PET_JOAO_CLIENT_ID,
+                                seedId(tenantId, PET_JOAO_CLIENT_ID),
                                 new BigDecimal("88.00"),
                                 "ISSUED",
                                 joaoInvoiceIssuedAt,
                                 now.minus(Duration.ofDays(2)),
                                 "One-time grooming visit still open with pet taxi extra pending collection.",
                                 "PET.APPOINTMENT",
-                                PET_APPOINTMENT_THOR_ID);
+                                seedId(tenantId, PET_APPOINTMENT_THOR_ID));
         }
 
         private void insertCrmCompany(
@@ -1183,7 +1184,8 @@ public class DemoCommercialEnvironmentService {
                         int minimumQuantity,
                         int reorderPoint,
                         Instant createdAt) {
-                UUID inventoryItemId = UUID.randomUUID();
+                UUID inventoryItemId = UUID.nameUUIDFromBytes(("inventory-item:" + id)
+                                .getBytes(StandardCharsets.UTF_8));
                 insert(
                                 """
                                                 INSERT INTO inventory_items (
@@ -1269,7 +1271,7 @@ public class DemoCommercialEnvironmentService {
                                                     created_at, updated_at, created_by, updated_by
                                                 ) VALUES (?, ?, 'PET', 'PET.CLIENT', ?, ?, ?, ?, ?, ?, ?, 'BRL', ?, ?, ?, ?, ?, NULL, ?, ?, ?, ?)
                                                 """,
-                                id, tenantId, clientId, resolvePetClientName(clientId), businessContextType, businessContextId,
+                                id, tenantId, clientId, resolvePetClientName(tenantId, clientId), businessContextType, businessContextId,
                                 businessContextType == null ? null : description, description, status,
                                 totalAmount, paidAmount, ts(issuedAt), ts(issuedAt.plus(Duration.ofDays(7))), ts(paidAt),
                                 ts(createdAt), ts(createdAt), SEED_ACTOR, SEED_ACTOR);
@@ -1327,11 +1329,11 @@ public class DemoCommercialEnvironmentService {
                                 ts(createdAt), ts(createdAt), SEED_ACTOR, SEED_ACTOR);
         }
 
-        private String resolvePetClientName(UUID clientId) {
-                if (PET_MARIA_CLIENT_ID.equals(clientId)) {
+        private String resolvePetClientName(UUID tenantId, UUID clientId) {
+                if (seedId(tenantId, PET_MARIA_CLIENT_ID).equals(clientId)) {
                         return "Maria Oliveira";
                 }
-                if (PET_JOAO_CLIENT_ID.equals(clientId)) {
+                if (seedId(tenantId, PET_JOAO_CLIENT_ID).equals(clientId)) {
                         return "Joao Batista";
                 }
                 return "Pet client";
@@ -1367,6 +1369,11 @@ public class DemoCommercialEnvironmentService {
 
         private static UUID uuid(String value) {
                 return UUID.fromString(value);
+        }
+
+        private static UUID seedId(UUID tenantId, UUID logicalId) {
+                return UUID.nameUUIDFromBytes((tenantId + ":commercial-demo:" + logicalId)
+                                .getBytes(StandardCharsets.UTF_8));
         }
 
         public record DemoCommercialSeedSummary(
