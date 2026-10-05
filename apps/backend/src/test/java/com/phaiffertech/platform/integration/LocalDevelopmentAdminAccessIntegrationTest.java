@@ -11,6 +11,8 @@ import org.springframework.test.context.ActiveProfiles;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @ActiveProfiles(profiles = {"test", "dev"}, inheritProfiles = false)
@@ -60,10 +62,13 @@ class LocalDevelopmentAdminAccessIntegrationTest extends AbstractIntegrationTest
             ResponseEntity<JsonNode> modulesResponse = get("/modules", impersonatedSession);
             assertEquals(200, modulesResponse.getStatusCode().value());
 
-            JsonNode crmModule = findModule(requireBody(modulesResponse).path("data"), "CRM");
-            assertTrue(crmModule.path("moduleEnabled").asBoolean());
-            assertTrue(crmModule.path("featureFlagEnabled").asBoolean());
-            assertTrue(crmModule.path("available").asBoolean());
+            JsonNode modules = requireBody(modulesResponse).path("data");
+            assertNull(findModule(modules, "CRM"));
+            JsonNode petModule = findModule(modules, "PET");
+            assertNotNull(petModule);
+            assertTrue(petModule.path("moduleEnabled").asBoolean());
+            assertTrue(petModule.path("featureFlagEnabled").asBoolean());
+            assertTrue(petModule.path("available").asBoolean());
 
             ResponseEntity<JsonNode> dashboardResponse = get("/crm/dashboard/summary", impersonatedSession);
             assertEquals(200, dashboardResponse.getStatusCode().value());
@@ -165,9 +170,12 @@ class LocalDevelopmentAdminAccessIntegrationTest extends AbstractIntegrationTest
         ResponseEntity<JsonNode> modulesResponse = get("/modules", session);
         assertEquals(200, modulesResponse.getStatusCode().value());
 
-        JsonNode crmModule = findModule(requireBody(modulesResponse).path("data"), "CRM");
-        assertFalse(crmModule.path("moduleEnabled").asBoolean());
-        assertFalse(crmModule.path("available").asBoolean());
+        JsonNode modules = requireBody(modulesResponse).path("data");
+        assertNull(findModule(modules, "CRM"));
+        JsonNode petModule = findModule(modules, "PET");
+        assertNotNull(petModule);
+        assertFalse(petModule.path("moduleEnabled").asBoolean());
+        assertFalse(petModule.path("available").asBoolean());
 
         ResponseEntity<JsonNode> dashboardResponse = get("/crm/dashboard/summary", session);
         assertEquals(403, dashboardResponse.getStatusCode().value());
@@ -233,7 +241,7 @@ class LocalDevelopmentAdminAccessIntegrationTest extends AbstractIntegrationTest
                 return module;
             }
         }
-        throw new AssertionError("Module not found: " + code);
+        return null;
     }
 
     private boolean containsValue(JsonNode values, String expectedValue) {

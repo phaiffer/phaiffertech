@@ -4,16 +4,15 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.phaiffertech.platform.support.AbstractIntegrationTest;
 import java.time.Instant;
 import java.time.LocalDate;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.ResponseEntity;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class ModuleEnablementIntegrationTest extends AbstractIntegrationTest {
@@ -51,32 +50,24 @@ class ModuleEnablementIntegrationTest extends AbstractIntegrationTest {
         JsonNode crm = findModule(modules, "CRM");
         JsonNode pet = findModule(modules, "PET");
 
-        assertNotNull(crm);
+        assertNull(crm);
         assertNotNull(pet);
-
-        assertTrue(crm.path("moduleEnabled").asBoolean());
-        assertTrue(crm.path("featureFlagEnabled").asBoolean());
-        assertTrue(crm.path("available").asBoolean());
-        assertTrue(crm.path("enabled").asBoolean());
 
         assertTrue(pet.path("moduleEnabled").asBoolean());
         assertFalse(pet.path("featureFlagEnabled").asBoolean());
         assertFalse(pet.path("available").asBoolean());
         assertFalse(pet.path("enabled").asBoolean());
 
+        ResponseEntity<JsonNode> crmDashboardResponse = get("/crm/dashboard/summary", session);
+        assertEquals(200, crmDashboardResponse.getStatusCode().value());
+        assertTrue(requireBody(crmDashboardResponse).path("data").path("summaryCards").size() > 0);
+
         ResponseEntity<JsonNode> dashboardResponse = get("/dashboard/summary", session);
         assertEquals(200, dashboardResponse.getStatusCode().value());
 
         JsonNode summaries = requireBody(dashboardResponse).path("data").path("modules");
-        Set<String> moduleCodes = new HashSet<>();
-        summaries.forEach(summary -> moduleCodes.add(summary.path("moduleCode").asText()));
-
-        assertEquals(1, summaries.size());
-        assertTrue(moduleCodes.contains("CRM"));
-        assertFalse(moduleCodes.contains("PET"));
+        assertEquals(0, summaries.size());
         assertTrue(requireBody(dashboardResponse).path("data").path("coreSummary").path("cards").size() > 0);
-        assertTrue(summaries.get(0).path("summaryCards").size() > 0);
-        assertTrue(summaries.get(0).path("sections").size() > 0);
     }
 
     @Test
@@ -258,11 +249,16 @@ class ModuleEnablementIntegrationTest extends AbstractIntegrationTest {
         JsonNode coreSummary = data.path("coreSummary");
         JsonNode summaries = data.path("modules");
 
-        assertEquals(1, summaries.size());
-        assertTrue(coreSummary.path("items").size() >= 1);
-        assertTrue(findCard(coreSummary.path("cards"), "attention-signals").path("value").asLong() >= 1);
-        assertTrue(findCard(coreSummary.path("cards"), "modules-needing-setup").path("value").asLong() == 0);
-        assertTrue(summaries.get(0).path("sections").size() >= 2);
+        assertEquals(0, summaries.size());
+        assertEquals(0, coreSummary.path("items").size());
+        assertEquals(0, findCard(coreSummary.path("cards"), "attention-signals").path("value").asLong());
+        assertEquals(0, findCard(coreSummary.path("cards"), "modules-needing-setup").path("value").asLong());
+
+        ResponseEntity<JsonNode> crmDashboardResponse = get("/crm/dashboard/summary", session);
+        assertEquals(200, crmDashboardResponse.getStatusCode().value());
+        JsonNode crmSummary = requireBody(crmDashboardResponse).path("data");
+        assertTrue(crmSummary.path("overdueTasks").asLong() >= 1);
+        assertTrue(crmSummary.path("sections").size() >= 2);
     }
 
     private JsonNode findModule(JsonNode modules, String code) {
