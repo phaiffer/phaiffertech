@@ -181,7 +181,10 @@ class TenantManagementIntegrationTest extends AbstractIntegrationTest {
 
         assertEquals(200, createResponse.getStatusCode().value());
         String tenantId = requireBody(createResponse).path("data").path("id").asText();
-        assertEquals(4, countRows("SELECT COUNT(*) FROM tenant_modules WHERE tenant_id = ?", tenantId));
+        assertEquals(3, countRows("SELECT COUNT(*) FROM tenant_modules WHERE tenant_id = ?", tenantId));
+        assertTenantModuleState(tenantId, "CORE_PLATFORM", true);
+        assertTenantModuleState(tenantId, "PET", true);
+        assertTenantModuleState(tenantId, "CRM", true);
 
         ResponseEntity<JsonNode> updateResponse = put("/tenants/" + tenantId, tenantUpdatePayload(
                 "Clinic West",
@@ -204,6 +207,9 @@ class TenantManagementIntegrationTest extends AbstractIntegrationTest {
         assertFalse(containsValue(updated.path("contractedModules"), "CRM"));
 
         assertEquals(3, countRows("SELECT COUNT(*) FROM tenant_modules WHERE tenant_id = ?", tenantId));
+        assertTenantModuleState(tenantId, "CORE_PLATFORM", true);
+        assertTenantModuleState(tenantId, "PET", true);
+        assertTenantModuleState(tenantId, "CRM", false);
         assertEquals(2, countRows(
                 """
                 SELECT COUNT(*)
@@ -214,7 +220,7 @@ class TenantManagementIntegrationTest extends AbstractIntegrationTest {
                 """,
                 tenantId
         ));
-        assertEquals(2, countRows(
+        assertEquals(1, countRows(
                 """
                 SELECT COUNT(*)
                 FROM tenant_modules tm
@@ -298,6 +304,23 @@ class TenantManagementIntegrationTest extends AbstractIntegrationTest {
                   AND tm.enabled = TRUE
                 """,
                 tenantId
+        ));
+    }
+
+    private void assertTenantModuleState(String tenantId, String moduleCode, boolean enabled) {
+        assertEquals(1, countRows(
+                """
+                SELECT COUNT(*)
+                FROM tenant_modules tm
+                JOIN module_definitions md ON md.id = tm.module_definition_id
+                WHERE tm.tenant_id = ?
+                  AND md.code = ?
+                  AND tm.enabled = ?
+                  AND tm.deleted_at IS NULL
+                """,
+                tenantId,
+                moduleCode,
+                enabled
         ));
     }
 
