@@ -14,13 +14,24 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class TenantRoleResolutionIntegrationTest extends AbstractIntegrationTest {
 
     private static final String DEFAULT_TENANT_ID = "11111111-1111-1111-1111-111111111111";
-    private static final String DEFAULT_USER_TENANT_ID = "33333333-3333-3333-3333-333333333333";
     private static final String TENANT_ADMIN_ROLE_ID = "00000000-0000-0000-0000-000000000003";
     private static final String VIEWER_ROLE_ID = "00000000-0000-0000-0000-000000000006";
     private static final String DEV_PASSWORD_HASH = "$2a$10$28RqVTDwgyR5J0XvjGFsUOhADXAU/xi/VX0fhlSoBv46MgMc3HDJi";
 
     @Test
     void loginShouldResolveRolesFromUserTenantRoleModel() {
+        loginAsDefaultAdmin();
+        UUID userTenantId = jdbcTemplate.queryForObject("""
+                SELECT ut.id
+                FROM user_tenants ut
+                JOIN tenants t ON t.id = ut.tenant_id
+                JOIN users u ON u.id = ut.user_id
+                WHERE t.code = 'default'
+                  AND u.email = 'admin@local.test'
+                  AND ut.active = TRUE
+                  AND ut.deleted_at IS NULL
+                """, UUID.class);
+
         executeSql("""
                 INSERT INTO user_tenant_roles (id, user_tenant_id, role_id, created_at)
                 SELECT ?, ?, ?, NOW()
@@ -32,9 +43,9 @@ class TenantRoleResolutionIntegrationTest extends AbstractIntegrationTest {
                 )
                 """,
                 UUID.randomUUID().toString(),
-                DEFAULT_USER_TENANT_ID,
+                userTenantId,
                 TENANT_ADMIN_ROLE_ID,
-                DEFAULT_USER_TENANT_ID,
+                userTenantId,
                 TENANT_ADMIN_ROLE_ID
         );
 
