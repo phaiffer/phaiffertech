@@ -16,7 +16,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
         "app.security.jwt.refresh-cookie-same-site=Strict",
         "app.security.public-endpoints.docs-enabled=false",
         "app.security.public-endpoints.observability-enabled=false",
-        "management.endpoint.health.show-details=never"
+        "management.endpoint.health.show-details=never",
+        "management.endpoint.health.show-components=never"
 })
 class ProductionOperationalReadinessIntegrationTest extends AbstractIntegrationTest {
 
@@ -49,6 +50,7 @@ class ProductionOperationalReadinessIntegrationTest extends AbstractIntegrationT
         JsonNode body = requireBody(response);
         assertEquals("UP", body.path("status").asText());
         assertTrue(body.path("components").isMissingNode());
+        assertTrue(body.path("details").isMissingNode());
     }
 
     @Test
