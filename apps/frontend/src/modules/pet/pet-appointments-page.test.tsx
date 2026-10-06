@@ -336,7 +336,7 @@ describe('PetAppointmentsPage', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Add service' }));
 
     expect(await screen.findByText('Structured services')).toBeInTheDocument();
-    expect(screen.getAllByText(/Hydration session - Banho e Tosa - 90 min/).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/Hydration session - Grooming - 90 min/).length).toBeGreaterThan(0);
     expect(screen.getByText('Unavailable for new scheduling')).toBeInTheDocument();
     expect(screen.getByText('At least one selected service requires a linked plan before booking.')).toBeInTheDocument();
   });

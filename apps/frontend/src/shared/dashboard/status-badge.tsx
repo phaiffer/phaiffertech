@@ -1,3 +1,8 @@
+'use client';
+
+import { useAppI18n } from '@/shared/i18n/app-i18n-provider';
+import type { AppMessages } from '@/shared/i18n/messages/pt-br';
+
 type StatusBadgeProps = {
   status?: string | null;
 };
@@ -142,8 +147,24 @@ const labelMap: Record<string, string> = {
   'no show': 'Nao compareceu',
 };
 
-function prettify(status: string) {
+const capabilityStatusKeys: Record<string, keyof AppMessages['moduleCapability']['badge']> = {
+  'no permission': 'noPermission',
+  'sem permissao': 'noPermission',
+  'feature disabled': 'featureDisabled',
+  'recurso desativado': 'featureDisabled',
+  'setup required': 'setupRequired',
+  'configuracao necessaria': 'setupRequired',
+  'no data': 'noData',
+  'sem dados': 'noData',
+  unavailable: 'unavailable',
+  indisponivel: 'unavailable'
+};
+
+function prettify(status: string, locale: string, badgeCopy: AppMessages['moduleCapability']['badge']) {
   const normalized = status.trim().toLowerCase();
+  if (locale === 'en-US' && capabilityStatusKeys[normalized]) {
+    return badgeCopy[capabilityStatusKeys[normalized]];
+  }
   if (labelMap[normalized]) {
     return labelMap[normalized];
   }
@@ -154,6 +175,7 @@ function prettify(status: string) {
 }
 
 export function StatusBadge({ status }: StatusBadgeProps) {
+  const { locale, messages } = useAppI18n();
   if (!status) {
     return null;
   }
@@ -165,7 +187,7 @@ export function StatusBadge({ status }: StatusBadgeProps) {
     <span
       className={`inline-flex items-center rounded-lg border px-2.5 py-1 text-2xs font-medium ${classes}`}
     >
-      {prettify(status)}
+      {prettify(status, locale, messages.moduleCapability.badge)}
     </span>
   );
 }

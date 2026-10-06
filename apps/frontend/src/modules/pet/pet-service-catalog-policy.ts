@@ -9,6 +9,11 @@ export const petServiceCategoryLabels: Record<PetServiceCategory, string> = {
   CLINICAL: 'Clinica'
 };
 
+const petServiceCategoryLabelsEnUs: Record<PetServiceCategory, string> = {
+  GROOMING: 'Grooming',
+  CLINICAL: 'Clinical'
+};
+
 export function resolveAllowedPetServiceCategories(
   user: AuthenticatedUser | null | undefined
 ): PetServiceCategory[] {
@@ -25,8 +30,8 @@ export function resolveAllowedPetServiceCategories(
   return categories;
 }
 
-export function formatPetServiceCategory(category: PetServiceCategory) {
-  return petServiceCategoryLabels[category];
+export function formatPetServiceCategory(category: PetServiceCategory, locale = 'pt-BR') {
+  return locale === 'en-US' ? petServiceCategoryLabelsEnUs[category] : petServiceCategoryLabels[category];
 }
 
 export function resolvePetServiceBookingMode(service: Pick<PetServiceCatalog, 'allowInPlans' | 'allowStandaloneBooking'>): PetServiceBookingMode {
@@ -51,5 +56,5 @@ export function describePetServiceCatalogItem(service: PetServiceCatalog, locale
     currency: 'BRL'
   });
 
-  return `${service.name} - ${formatPetServiceCategory(service.category)} - ${service.durationMinutes} min - ${priceLabel}`;
+  return `${service.name} - ${formatPetServiceCategory(service.category, locale)} - ${service.durationMinutes} min - ${priceLabel}`;
 }

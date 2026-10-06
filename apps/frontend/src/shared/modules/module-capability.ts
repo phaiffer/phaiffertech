@@ -1,3 +1,5 @@
+import type { AppLocale } from '@/shared/i18n/app-i18n-provider';
+import { getAppMessages } from '@/shared/i18n/messages';
 import type { ModuleItem } from '@/shared/types/module';
 
 export type ModuleCapabilityKind =
@@ -28,26 +30,22 @@ type CapabilityInput = {
 
 type ModuleBoundaryModule = Pick<ModuleItem, 'moduleEnabled' | 'featureFlagEnabled' | 'available'>;
 
-const defaultActionLabel = 'Abrir fluxo do ambiente';
-const defaultLockedActionLabel = 'Indisponivel neste ambiente';
-const defaultRoleLockedActionLabel = 'Indisponivel para este perfil';
-const defaultSetupActionLabel = 'Abrir fluxo de configuracao';
+function withModuleCode(template: string, moduleCode: string) {
+  return template.replace('{moduleCode}', moduleCode);
+}
 
-export function readyCapability(status?: string | null): ModuleCapability {
+export function readyCapability(status?: string | null, locale: AppLocale = 'pt-BR'): ModuleCapability {
   return {
     kind: 'ready',
     interactive: true,
     status: status ?? null,
-    actionLabel: defaultActionLabel
+    actionLabel: getAppMessages(locale).moduleCapability.openWorkspaceFlow
   };
 }
 
-export function permissionCapability({
-  title,
-  description,
-  actionLabel = defaultRoleLockedActionLabel,
-  status = 'sem permissao'
-}: CapabilityInput): ModuleCapability {
+export function permissionCapability(input: CapabilityInput, locale: AppLocale = 'pt-BR'): ModuleCapability {
+  const copy = getAppMessages(locale).moduleCapability;
+  const { title, description, actionLabel = copy.unavailableForRole, status = copy.status.noPermission } = input;
   return {
     kind: 'no-permission',
     interactive: false,
@@ -58,13 +56,9 @@ export function permissionCapability({
   };
 }
 
-export function featureDisabledCapability({
-  title,
-  description,
-  interactive = false,
-  actionLabel = interactive ? defaultActionLabel : 'Recurso desativado neste ambiente',
-  status = 'recurso desativado'
-}: CapabilityInput): ModuleCapability {
+export function featureDisabledCapability(input: CapabilityInput, locale: AppLocale = 'pt-BR'): ModuleCapability {
+  const copy = getAppMessages(locale).moduleCapability;
+  const { title, description, interactive = false, actionLabel = interactive ? copy.openWorkspaceFlow : copy.featureDisabledAction, status = copy.status.featureDisabled } = input;
   return {
     kind: 'feature-disabled',
     interactive,
@@ -75,13 +69,9 @@ export function featureDisabledCapability({
   };
 }
 
-export function notConfiguredCapability({
-  title,
-  description,
-  interactive = true,
-  actionLabel = interactive ? defaultSetupActionLabel : defaultLockedActionLabel,
-  status = 'configuracao necessaria'
-}: CapabilityInput): ModuleCapability {
+export function notConfiguredCapability(input: CapabilityInput, locale: AppLocale = 'pt-BR'): ModuleCapability {
+  const copy = getAppMessages(locale).moduleCapability;
+  const { title, description, interactive = true, actionLabel = interactive ? copy.openSetupFlow : copy.unavailableInWorkspace, status = copy.status.setupRequired } = input;
   return {
     kind: 'not-configured',
     interactive,
@@ -92,13 +82,9 @@ export function notConfiguredCapability({
   };
 }
 
-export function noDataCapability({
-  title,
-  description,
-  interactive = true,
-  actionLabel = defaultActionLabel,
-  status = 'sem dados'
-}: CapabilityInput): ModuleCapability {
+export function noDataCapability(input: CapabilityInput, locale: AppLocale = 'pt-BR'): ModuleCapability {
+  const copy = getAppMessages(locale).moduleCapability;
+  const { title, description, interactive = true, actionLabel = copy.openWorkspaceFlow, status = copy.status.noData } = input;
   return {
     kind: 'no-data',
     interactive,
@@ -109,13 +95,9 @@ export function noDataCapability({
   };
 }
 
-export function unavailableCapability({
-  title,
-  description,
-  interactive = false,
-  actionLabel = defaultLockedActionLabel,
-  status = 'indisponivel'
-}: CapabilityInput): ModuleCapability {
+export function unavailableCapability(input: CapabilityInput, locale: AppLocale = 'pt-BR'): ModuleCapability {
+  const copy = getAppMessages(locale).moduleCapability;
+  const { title, description, interactive = false, actionLabel = copy.unavailableInWorkspace, status = copy.status.unavailable } = input;
   return {
     kind: 'unavailable',
     interactive,
@@ -128,34 +110,36 @@ export function unavailableCapability({
 
 export function resolveModuleBoundaryCapability(
   moduleCode: string,
-  moduleItem?: ModuleBoundaryModule | null
+  moduleItem?: ModuleBoundaryModule | null,
+  locale: AppLocale = 'pt-BR'
 ): ModuleCapability {
+  const copy = getAppMessages(locale).moduleCapability;
   if (!moduleItem || !moduleItem.moduleEnabled) {
     return {
       kind: 'not-contracted',
       interactive: false,
-      status: 'indisponivel',
-      title: `${moduleCode} nao esta contratado neste ambiente`,
-      description: `Este ambiente nao expoe o modulo ${moduleCode} no momento. Peca ao administrador para incluir o modulo no contrato do ambiente antes de tentar novamente.`,
-      actionLabel: defaultLockedActionLabel
+      status: copy.status.unavailable,
+      title: withModuleCode(copy.notContractedTitle, moduleCode),
+      description: withModuleCode(copy.notContractedDescription, moduleCode),
+      actionLabel: copy.unavailableInWorkspace
     };
   }
 
   if (!moduleItem.featureFlagEnabled) {
     return featureDisabledCapability({
-      title: `${moduleCode} esta desativado no ambiente atual`,
-      description: 'O modulo esta contratado, mas sua exposicao esta desativada neste ambiente. A navegacao continua bloqueada ate a feature ser reativada.'
-    });
+      title: withModuleCode(copy.featureDisabledTitle, moduleCode),
+      description: copy.featureDisabledDescription
+    }, locale);
   }
 
   if (!moduleItem.available) {
     return unavailableCapability({
-      title: `${moduleCode} esta indisponivel no ambiente atual`,
-      description: 'O modulo esta contratado, mas o contexto atual ainda nao esta pronto para abri-lo. O acesso segue bloqueado ate a disponibilidade do ambiente ser restaurada.'
-    });
+      title: withModuleCode(copy.unavailableTitle, moduleCode),
+      description: copy.unavailableDescription
+    }, locale);
   }
 
-  return readyCapability();
+  return readyCapability(undefined, locale);
 }
 
 export function isCapabilityReady(capability?: ModuleCapability | null) {

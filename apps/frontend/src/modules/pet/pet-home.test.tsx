@@ -181,7 +181,7 @@ describe('PetHome', () => {
 
     expect(petService.getDashboardSummary).not.toHaveBeenCalled();
     expect(screen.getByText('Resumo operacional restrito')).toBeInTheDocument();
-    expect(screen.getAllByText('Sem permissao').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('No Permission').length).toBeGreaterThan(0);
     expect(screen.getByText(/panorama operacional exige `pet.dashboard.read`/i)).toBeInTheDocument();
   });
 

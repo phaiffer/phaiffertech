@@ -1,10 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import {
   describePetServiceCatalogItem,
+  formatPetServiceCategory,
   resolvePetServiceBookingMode,
   resolveAllowedPetServiceCategories
 } from '@/modules/pet/pet-service-catalog-policy';
 import type { AuthenticatedUser } from '@/shared/types/auth';
+import type { PetServiceCatalog } from '@/shared/types/pet';
 
 function createUser(featureEntitlements: string[]): AuthenticatedUser {
   return {
@@ -44,7 +46,7 @@ describe('pet service catalog policy', () => {
   });
 
   it('describes service catalog items with category, duration, and price context', () => {
-    expect(describePetServiceCatalogItem({
+    const service: PetServiceCatalog = {
       id: 'service-1',
       name: 'Vaccination',
       category: 'CLINICAL',
@@ -57,7 +59,12 @@ describe('pet service catalog policy', () => {
       inventoryLinks: [],
       createdAt: '2026-04-03T00:00:00Z',
       updatedAt: '2026-04-03T00:00:00Z'
-    }, 'en-US')).toContain('Vaccination · Clinical · 30 min');
+    };
+
+    expect(describePetServiceCatalogItem(service, 'en-US')).toBe('Vaccination - Clinical - 30 min - R$95.00');
+    expect(describePetServiceCatalogItem(service, 'pt-BR')).toMatch(/^Vaccination - Clinica - 30 min - R\$\s95,00$/);
+    expect(formatPetServiceCategory('GROOMING', 'en-US')).toBe('Grooming');
+    expect(formatPetServiceCategory('GROOMING')).toBe('Banho e Tosa');
   });
 
   it('resolves booking mode from standalone and plan flags', () => {

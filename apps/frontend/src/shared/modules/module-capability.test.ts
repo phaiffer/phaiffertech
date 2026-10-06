@@ -10,7 +10,7 @@ import {
 
 describe('module-capability', () => {
   it('builds ready capabilities as interactive states', () => {
-    expect(readyCapability('active')).toEqual({
+    expect(readyCapability('active', 'en-US')).toEqual({
       kind: 'ready',
       interactive: true,
       status: 'active',
@@ -22,7 +22,7 @@ describe('module-capability', () => {
     expect(permissionCapability({
       title: 'Dashboard permission required',
       description: 'The current role cannot open the dashboard.'
-    })).toEqual({
+    }, 'en-US')).toEqual({
       kind: 'no-permission',
       interactive: false,
       status: 'no permission',
@@ -36,7 +36,7 @@ describe('module-capability', () => {
     expect(notConfiguredCapability({
       title: 'Setup required',
       description: 'Create the first records to configure this workspace.'
-    })).toEqual({
+    }, 'en-US')).toEqual({
       kind: 'not-configured',
       interactive: true,
       status: 'setup required',
@@ -48,7 +48,7 @@ describe('module-capability', () => {
     expect(noDataCapability({
       title: 'No telemetry yet',
       description: 'Signals will appear after the first collection cycle.'
-    })).toEqual({
+    }, 'en-US')).toEqual({
       kind: 'no-data',
       interactive: true,
       status: 'no data',
@@ -62,7 +62,7 @@ describe('module-capability', () => {
     expect(featureDisabledCapability({
       title: 'Feature disabled',
       description: 'Exposure is currently disabled.'
-    })).toEqual({
+    }, 'en-US')).toEqual({
       kind: 'feature-disabled',
       interactive: false,
       status: 'feature disabled',
@@ -73,7 +73,7 @@ describe('module-capability', () => {
   });
 
   it('resolves module boundary states from the module catalog contract', () => {
-    expect(resolveModuleBoundaryCapability('CRM', null)).toMatchObject({
+    expect(resolveModuleBoundaryCapability('CRM', null, 'en-US')).toMatchObject({
       kind: 'not-contracted',
       interactive: false,
       status: 'unavailable',
@@ -84,7 +84,7 @@ describe('module-capability', () => {
       moduleEnabled: true,
       featureFlagEnabled: false,
       available: false
-    })).toMatchObject({
+    }, 'en-US')).toMatchObject({
       kind: 'feature-disabled',
       interactive: false,
       status: 'feature disabled',
@@ -95,11 +95,25 @@ describe('module-capability', () => {
       moduleEnabled: true,
       featureFlagEnabled: true,
       available: false
-    })).toMatchObject({
+    }, 'en-US')).toMatchObject({
       kind: 'unavailable',
       interactive: false,
       status: 'unavailable',
       title: 'CRM is unavailable in the current workspace'
+    });
+  });
+
+  it('keeps Portuguese capability copy as the default without changing access state', () => {
+    expect(permissionCapability({ title: 'Permissao necessaria', description: 'Acesso restrito.' })).toMatchObject({
+      kind: 'no-permission',
+      interactive: false,
+      status: 'sem permissao',
+      actionLabel: 'Indisponivel para este perfil'
+    });
+    expect(resolveModuleBoundaryCapability('CRM', null)).toMatchObject({
+      kind: 'not-contracted',
+      interactive: false,
+      title: 'CRM nao esta contratado neste ambiente'
     });
   });
 });

@@ -36,6 +36,23 @@ vi.mock('@/shared/services/finance-service', () => ({
   financeService: financeServiceMock
 }));
 
+vi.mock('@/shared/platform/use-frontend-platform', () => ({
+  useFrontendPlatform: () => ({
+    user: {
+      featureEntitlements: ['pet.aesthetics'],
+      permissions: ['pet.invoice.read']
+    },
+    modules: {
+      availableCodes: ['PET'],
+      loading: false
+    },
+    workspace: {
+      canManagePlatformAdministration: false,
+      hasFullPlatformVisibility: false
+    }
+  })
+}));
+
 function createPageResponse<T>(items: T[]) {
   return {
     items,

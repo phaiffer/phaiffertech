@@ -1,6 +1,7 @@
 'use client';
 
 import { ReactNode } from 'react';
+import { useAppI18n } from '@/shared/i18n/app-i18n-provider';
 import { resolveModuleBoundaryCapability } from '@/shared/modules/module-capability';
 import { findModule, useModuleCatalog } from '@/shared/modules/use-module-catalog';
 
@@ -33,15 +34,17 @@ function ModuleGuardNotice({
 }
 
 export function ModuleGuard({ moduleCode, children }: ModuleGuardProps) {
+  const { locale, messages } = useAppI18n();
+  const copy = messages.moduleGuard;
   const { modules, loading, error } = useModuleCatalog();
   const moduleItem = findModule(modules, moduleCode);
-  const boundary = resolveModuleBoundaryCapability(moduleCode, moduleItem);
+  const boundary = resolveModuleBoundaryCapability(moduleCode, moduleItem, locale);
 
   if (loading) {
     return (
       <ModuleGuardNotice
-        title={`Checking ${moduleCode} workspace access`}
-        description="The authenticated shell is validating the workspace contract and current module exposure before opening this workspace."
+        title={copy.checkingTitle.replace('{moduleCode}', moduleCode)}
+        description={copy.checkingDescription}
         tone="neutral"
       />
     );
@@ -50,8 +53,8 @@ export function ModuleGuard({ moduleCode, children }: ModuleGuardProps) {
   if (error) {
     return (
       <ModuleGuardNotice
-        title={`${moduleCode} availability could not be verified`}
-        description="The current workspace could not confirm module contract status. Try again after the module catalog finishes syncing."
+        title={copy.errorTitle.replace('{moduleCode}', moduleCode)}
+        description={copy.errorDescription}
         tone="error"
       />
     );
@@ -60,8 +63,8 @@ export function ModuleGuard({ moduleCode, children }: ModuleGuardProps) {
   if (!boundary.interactive) {
     return (
       <ModuleGuardNotice
-        title={boundary.title ?? `${moduleCode} is unavailable in the current workspace`}
-        description={boundary.description ?? 'The module cannot be opened from the current workspace context.'}
+        title={boundary.title ?? copy.unavailableTitle.replace('{moduleCode}', moduleCode)}
+        description={boundary.description ?? copy.unavailableDescription}
         tone="warn"
       />
     );
