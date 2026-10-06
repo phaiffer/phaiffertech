@@ -501,8 +501,7 @@ Notes:
 - Workflow file: `.github/workflows/ci.yml`
 - Stages:
   - backend `mvn clean verify`
-  - frontend `npm ci && npm run lint && npm run build`
-  - docker build (`docker compose build backend frontend`)
+  - frontend `npm ci && npm test && npm run lint && npm run build`
 
 ## Terraform (GCP)
 
