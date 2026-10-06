@@ -28,6 +28,7 @@ import { GettingStartedChecklist } from '@/shared/onboarding/getting-started';
 import { useFrontendPlatform } from '@/shared/platform/use-frontend-platform';
 import { crmService } from '@/shared/services/crm-service';
 import { usePermissions } from '@/shared/auth/usePermissions';
+import { useAppI18n } from '@/shared/i18n/app-i18n-provider';
 import { CrmDashboardSummary } from '@/shared/types/crm';
 
 type CrmPrimaryAction = {
@@ -236,6 +237,7 @@ function resolveCrmPrimaryAction(actions: ModuleWorkspaceAction[], summary: CrmD
 }
 
 export function CrmHome() {
+  const { locale } = useAppI18n();
   const platform = useFrontendPlatform();
   const { hasPermission } = usePermissions();
   const [summary, setSummary] = useState<CrmDashboardSummary | null>(null);
@@ -261,11 +263,11 @@ export function CrmHome() {
     .map((action) => {
       const allowed = !action.permission || hasPermission(action.permission);
       const capability = allowed
-        ? readyCapability(action.status)
+        ? readyCapability(action.status, locale)
         : permissionCapability({
             title: action.restrictionTitle ?? 'Permission required',
             description: action.restrictionDescription ?? action.description
-          });
+          }, locale);
 
       return {
         ...action,
@@ -283,7 +285,7 @@ export function CrmHome() {
         const capability = notConfiguredCapability({
           title: 'Deal flow not configured yet',
           description: 'Create the first companies, contacts, and leads before active deals appear in this CRM workspace.'
-        });
+        }, locale);
 
         return { ...action, capability, status: capability.status };
       }
@@ -292,7 +294,7 @@ export function CrmHome() {
         const capability = notConfiguredCapability({
           title: 'Activity feed not configured yet',
           description: 'Commercial activity appears after the first CRM records and follow-up tasks are created.'
-        });
+        }, locale);
 
         return { ...action, capability, status: capability.status };
       }
@@ -301,7 +303,7 @@ export function CrmHome() {
         const capability = noDataCapability({
           title: 'No recent CRM activity yet',
           description: 'The workspace has CRM records, but no compact recent-activity feed is available right now.'
-        });
+        }, locale);
 
         return { ...action, capability, status: capability.status };
       }
@@ -430,12 +432,12 @@ export function CrmHome() {
               ? permissionCapability({
                   title: 'Dashboard visibility required',
                   description: 'Grant `crm.dashboard.read` to surface CRM contact totals on this workspace landing page.'
-                })
+                }, locale)
               : summary && firstUse
                 ? notConfiguredCapability({
                     title: 'Contact base not configured yet',
                     description: 'Add the first companies and contacts so this CRM workspace can start surfacing commercial volume.'
-                  })
+                  }, locale)
                 : undefined
           },
           {
@@ -447,12 +449,12 @@ export function CrmHome() {
               ? permissionCapability({
                   title: 'Pipeline metrics require dashboard access',
                   description: 'Grant `crm.dashboard.read` to surface lead and deal volume on this workspace overview.'
-                })
+                }, locale)
               : summary && firstUse
                 ? notConfiguredCapability({
                     title: 'Pipeline not configured yet',
                     description: 'Lead and deal flow start after the first commercial records are created in this workspace.'
-                  })
+                  }, locale)
                 : undefined
           },
           {
@@ -478,12 +480,12 @@ export function CrmHome() {
               ? permissionCapability({
                   title: 'Follow-up visibility requires dashboard access',
                   description: 'Grant `crm.dashboard.read` to surface pending CRM tasks from this landing page.'
-                })
+                }, locale)
               : summary && firstUse
                 ? notConfiguredCapability({
                     title: 'Follow-up queue not configured yet',
                     description: 'CRM tasks appear after the first companies, contacts, leads, and deals create operational follow-up.'
-                  })
+                  }, locale)
                 : undefined
           }
         ]}

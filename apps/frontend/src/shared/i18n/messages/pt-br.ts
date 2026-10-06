@@ -22,6 +22,44 @@ const ptBRMessages = {
       open: 'Abrir'
     }
   },
+  moduleCapability: {
+    openWorkspaceFlow: 'Abrir fluxo do ambiente',
+    unavailableInWorkspace: 'Indisponivel neste ambiente',
+    unavailableForRole: 'Indisponivel para este perfil',
+    unavailableGenericTitle: 'Indisponivel no ambiente atual',
+    openSetupFlow: 'Abrir fluxo de configuracao',
+    openNextStep: 'Abrir proximo passo',
+    guidedWorkspaceStep: 'Etapa guiada do ambiente',
+    featureDisabledAction: 'Recurso desativado neste ambiente',
+    status: {
+      noPermission: 'sem permissao',
+      featureDisabled: 'recurso desativado',
+      setupRequired: 'configuracao necessaria',
+      noData: 'sem dados',
+      unavailable: 'indisponivel'
+    },
+    badge: {
+      noPermission: 'Sem permissao',
+      featureDisabled: 'Recurso desativado',
+      setupRequired: 'Configuracao necessaria',
+      noData: 'Sem dados',
+      unavailable: 'Indisponivel'
+    },
+    notContractedTitle: '{moduleCode} nao esta contratado neste ambiente',
+    notContractedDescription: 'Este ambiente nao expoe o modulo {moduleCode} no momento. Peca ao administrador para incluir o modulo no contrato do ambiente antes de tentar novamente.',
+    featureDisabledTitle: '{moduleCode} esta desativado no ambiente atual',
+    featureDisabledDescription: 'O modulo esta contratado, mas sua exposicao esta desativada neste ambiente. A navegacao continua bloqueada ate a feature ser reativada.',
+    unavailableTitle: '{moduleCode} esta indisponivel no ambiente atual',
+    unavailableDescription: 'O modulo esta contratado, mas o contexto atual ainda nao esta pronto para abri-lo. O acesso segue bloqueado ate a disponibilidade do ambiente ser restaurada.'
+  },
+  moduleGuard: {
+    checkingTitle: 'Verificando o acesso ao ambiente {moduleCode}',
+    checkingDescription: 'A aplicacao esta validando o contrato do ambiente e a exposicao atual do modulo antes de abrir este espaco.',
+    errorTitle: 'Nao foi possivel verificar a disponibilidade de {moduleCode}',
+    errorDescription: 'Este ambiente nao conseguiu confirmar o contrato do modulo. Tente novamente apos a sincronizacao do catalogo.',
+    unavailableTitle: '{moduleCode} esta indisponivel no ambiente atual',
+    unavailableDescription: 'O modulo nao pode ser aberto no contexto atual do ambiente.'
+  },
   publicShell: {
     brandEyebrow: 'PhaifferTech',
     brandTitle: 'PetFlow para operacoes pet reais',

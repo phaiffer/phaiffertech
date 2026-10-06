@@ -16,6 +16,44 @@ export const enUSMessages: AppMessages = {
       open: 'Open'
     }
   },
+  moduleCapability: {
+    openWorkspaceFlow: 'Open workspace flow',
+    unavailableInWorkspace: 'Unavailable in current workspace',
+    unavailableForRole: 'Unavailable in current workspace role',
+    unavailableGenericTitle: 'Unavailable in current workspace',
+    openSetupFlow: 'Open setup flow',
+    openNextStep: 'Open next step',
+    guidedWorkspaceStep: 'Guided workspace step',
+    featureDisabledAction: 'Feature disabled in workspace',
+    status: {
+      noPermission: 'no permission',
+      featureDisabled: 'feature disabled',
+      setupRequired: 'setup required',
+      noData: 'no data',
+      unavailable: 'unavailable'
+    },
+    badge: {
+      noPermission: 'No Permission',
+      featureDisabled: 'Feature Disabled',
+      setupRequired: 'Setup Required',
+      noData: 'No Data',
+      unavailable: 'Unavailable'
+    },
+    notContractedTitle: '{moduleCode} is not contracted for this workspace',
+    notContractedDescription: 'This workspace does not expose the {moduleCode} module right now. Ask your tenant administrator to add it to the workspace contract before trying again.',
+    featureDisabledTitle: '{moduleCode} is disabled in the current workspace',
+    featureDisabledDescription: 'The module is contracted, but feature exposure is currently disabled in this workspace. Navigation remains blocked until the feature is enabled again.',
+    unavailableTitle: '{moduleCode} is unavailable in the current workspace',
+    unavailableDescription: 'The module is contracted, but the current workspace context is not ready to open it yet. Access remains blocked until workspace availability is restored.'
+  },
+  moduleGuard: {
+    checkingTitle: 'Checking {moduleCode} workspace access',
+    checkingDescription: 'The authenticated shell is validating the workspace contract and current module exposure before opening this workspace.',
+    errorTitle: '{moduleCode} availability could not be verified',
+    errorDescription: 'The current workspace could not confirm module contract status. Try again after the module catalog finishes syncing.',
+    unavailableTitle: '{moduleCode} is unavailable in the current workspace',
+    unavailableDescription: 'The module cannot be opened from the current workspace context.'
+  },
   publicShell: {
     brandEyebrow: 'PhaifferTech',
     brandTitle: 'PetFlow for real pet operations',

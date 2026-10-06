@@ -35,6 +35,7 @@ import {
   readyCapability
 } from '@/shared/modules/module-capability';
 import { resolveModuleWorkspaceVisualState } from '@/shared/modules/module-workspace-visual';
+import { useAppI18n } from '@/shared/i18n/app-i18n-provider';
 import { GettingStartedChecklist } from '@/shared/onboarding/getting-started';
 import { useFrontendPlatform } from '@/shared/platform/use-frontend-platform';
 import { petService } from '@/shared/services/pet-service';
@@ -477,6 +478,7 @@ function localizePetSummaryCard<T extends { key: string; label: string; status?:
 }
 
 export function PetHome() {
+  const { locale } = useAppI18n();
   const platform = useFrontendPlatform();
   const { hasPermission, hasAnyPermission } = usePermissions();
   const [summary, setSummary] = useState<PetDashboardSummary | null>(null);
@@ -523,11 +525,11 @@ export function PetHome() {
           ? hasAnyPermission(action.anyOf)
           : true;
       const capability = allowed
-        ? readyCapability(action.status)
+        ? readyCapability(action.status, locale)
         : permissionCapability({
             title: action.restrictionTitle ?? 'Permissao necessaria',
             description: action.restrictionDescription ?? action.description
-          });
+          }, locale);
 
       return {
         ...action,
@@ -545,7 +547,7 @@ export function PetHome() {
         const capability = notConfiguredCapability({
           title: 'O fluxo de atendimentos precisa de um pouco de setup primeiro',
           description: 'Crie clientes e perfis de pets, depois confirme servicos e profissionais antes de agendar a primeira visita.'
-        });
+        }, locale);
 
         return { ...action, capability, status: capability.status };
       }
@@ -554,7 +556,7 @@ export function PetHome() {
         const capability = notConfiguredCapability({
           title: 'A cobranca comeca depois da primeira visita agendada',
           description: 'Emita a primeira fatura depois que um atendimento ou servico estiver pronto para que o recebimento pareca real na demo.'
-        });
+        }, locale);
 
         return { ...action, capability, status: capability.status };
       }
@@ -563,7 +565,7 @@ export function PetHome() {
         const capability = notConfiguredCapability({
           title: 'Os insights ganham forca depois do primeiro ciclo operacional',
           description: 'Clientes, pets, atendimentos e dados de cobranca transformam esta pagina em um momento mais forte de fechamento.'
-        });
+        }, locale);
 
         return { ...action, capability, status: capability.status };
       }
@@ -572,7 +574,7 @@ export function PetHome() {
         const capability = notConfiguredCapability({
           title: 'Os prontuarios ainda nao foram configurados',
           description: 'Os registros clinicos comecam quando os primeiros pacientes e atendimentos passam a existir neste ambiente do PetFlow.'
-        });
+        }, locale);
 
         return { ...action, capability, status: capability.status };
       }
@@ -581,7 +583,7 @@ export function PetHome() {
         const capability = notConfiguredCapability({
           title: 'Os planos de clientes comecam depois do primeiro cadastro',
           description: 'Adicione um cliente, registre o pet e agende o primeiro atendimento; depois crie um pacote de sessoes para acompanhar o retorno.'
-        });
+        }, locale);
 
         return { ...action, capability, status: capability.status };
       }
@@ -592,7 +594,7 @@ export function PetHome() {
           description: petMode === 'grooming'
             ? 'O ambiente ja tem registros do PetFlow, mas ainda nao existe um bloco compacto de atividade recente de servicos.'
             : 'O ambiente ja tem registros do PetFlow, mas ainda nao existe um bloco compacto de atividade recente de atendimentos.'
-        });
+        }, locale);
 
         return { ...action, capability, status: capability.status };
       }
@@ -747,14 +749,14 @@ export function PetHome() {
               ? permissionCapability({
                   title: 'Visibilidade do dashboard necessaria',
                   description: 'Conceda `pet.dashboard.read` para mostrar a contagem de atendimentos nesta abertura de ambiente.'
-                })
+                }, locale)
               : summary && firstUse
                 ? notConfiguredCapability({
                     title: 'Os atendimentos ainda nao foram configurados',
                     description: petMode === 'grooming'
                       ? 'Crie os primeiros clientes e perfis de pets antes que este ambiente consiga agendar e mostrar o ritmo dos servicos.'
                       : 'Crie os primeiros clientes e perfis de pets antes que este ambiente consiga agendar e mostrar o ritmo clinico.'
-                  })
+                  }, locale)
                 : undefined
           },
           {
@@ -766,14 +768,14 @@ export function PetHome() {
               ? permissionCapability({
                   title: 'A previsao depende do acesso ao dashboard',
                   description: 'Conceda `pet.dashboard.read` para mostrar a carga dos proximos atendimentos a partir da visao geral do ambiente.'
-                })
+                }, locale)
               : summary && firstUse
                 ? notConfiguredCapability({
                     title: petMode === 'grooming' ? 'Os proximos servicos ainda nao foram configurados' : 'Os proximos cuidados ainda nao foram configurados',
                     description: petMode === 'grooming'
                       ? 'Os servicos de curto prazo aparecem depois que os primeiros agendamentos sao criados dentro deste ambiente.'
                       : 'Os cuidados de curto prazo aparecem depois que os primeiros atendimentos sao agendados dentro deste ambiente.'
-                  })
+                  }, locale)
                 : undefined
           },
           {
@@ -797,12 +799,12 @@ export function PetHome() {
               ? permissionCapability({
                   title: 'A fila operacional depende do acesso ao dashboard',
                   description: 'Conceda `pet.dashboard.read` para mostrar sinais de estoque baixo e cobranca a partir desta tela inicial.'
-                })
+                }, locale)
               : summary && firstUse
                 ? notConfiguredCapability({
                     title: 'A fila operacional ainda nao foi configurada',
                     description: 'Os sinais de estoque e cobranca aparecem depois que servicos, produtos e faturas comecam a circular no ambiente.'
-                  })
+                  }, locale)
                 : undefined
           }
         ]}

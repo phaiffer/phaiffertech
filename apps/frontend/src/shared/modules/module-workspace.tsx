@@ -1,5 +1,7 @@
 'use client';
 
+'use client';
+
 import Link from 'next/link';
 import type { ReactNode } from 'react';
 import {
@@ -14,6 +16,9 @@ import {
 } from '@/shared/components/public-visual-system';
 import { EmptyStateCard } from '@/shared/dashboard/empty-state-card';
 import { StatusBadge } from '@/shared/dashboard/status-badge';
+import { useAppI18n } from '@/shared/i18n/app-i18n-provider';
+import type { AppLocale } from '@/shared/i18n/app-i18n-provider';
+import { getAppMessages } from '@/shared/i18n/messages';
 import {
   workspaceDashedSurfaceStyle,
   workspaceMutedSurfaceStyle,
@@ -69,21 +74,22 @@ export type ModuleWorkspaceGuidanceStep = GettingStartedStep & {
   capability?: ModuleCapability;
 };
 
-function resolveActionCapability(action: ModuleWorkspaceAction) {
+function resolveActionCapability(action: ModuleWorkspaceAction, locale: AppLocale) {
+  const copy = getAppMessages(locale).moduleCapability;
   if (action.capability) {
     return action.capability;
   }
 
   if (action.available === false) {
     return unavailableCapability({
-      title: action.restrictionTitle ?? 'Indisponivel no ambiente atual',
+      title: action.restrictionTitle ?? copy.unavailableGenericTitle,
       description: action.restrictionDescription ?? action.description,
       status: action.status ?? 'restrito',
-      actionLabel: 'Indisponivel para este perfil'
-    });
+      actionLabel: copy.unavailableForRole
+    }, locale);
   }
 
-  return readyCapability(action.status);
+  return readyCapability(action.status, locale);
 }
 
 function chipClasses(tone: ModuleWorkspaceChipTone) {
@@ -261,6 +267,7 @@ export function ModuleWorkspaceQuickActionGrid({
   emptyTitle: string;
   emptyDescription: string;
 }) {
+  const { locale } = useAppI18n();
   return (
     <ModuleWorkspaceSection title={title} description={description}>
       {actions.length === 0 ? (
@@ -268,7 +275,7 @@ export function ModuleWorkspaceQuickActionGrid({
       ) : (
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           {actions.map((action) => {
-            const capability = resolveActionCapability(action);
+            const capability = resolveActionCapability(action, locale);
             const interactive = capability.interactive;
             const content = (
               <>
@@ -341,6 +348,7 @@ export function ModuleWorkspaceGuidance({
   description: string;
   steps: ModuleWorkspaceGuidanceStep[];
 }) {
+  const { messages } = useAppI18n();
   if (steps.length === 0) {
     return <EmptyStateCard title={title} description={description} />;
   }
@@ -370,7 +378,7 @@ export function ModuleWorkspaceGuidance({
               </div>
               <p className={workspaceSupportingCopyClass}>{step.description}</p>
               <span className="mt-5 inline-flex text-sm font-semibold text-[color:var(--tenant-accent)]">
-                {href ? step.capability?.actionLabel ?? 'Abrir proximo passo' : 'Etapa guiada do ambiente'}
+                {href ? step.capability?.actionLabel ?? messages.moduleCapability.openNextStep : messages.moduleCapability.guidedWorkspaceStep}
               </span>
             </>
           );

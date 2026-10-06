@@ -1,6 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { ModuleGuard } from '@/shared/modules/module-guard';
+import { AppI18nProvider } from '@/shared/i18n/app-i18n-provider';
 
 const { moduleCatalog } = vi.hoisted(() => ({
   moduleCatalog: {
@@ -27,6 +28,7 @@ vi.mock('@/shared/modules/use-module-catalog', () => ({
 
 describe('ModuleGuard', () => {
   beforeEach(() => {
+    window.localStorage.clear();
     moduleCatalog.modules = [
       {
         code: 'CRM',
@@ -109,5 +111,22 @@ describe('ModuleGuard', () => {
 
     expect(screen.getByText('CRM is unavailable in the current workspace')).toBeInTheDocument();
     expect(screen.getByText(/workspace context is not ready to open it yet/i)).toBeInTheDocument();
+  });
+
+  it('explains blocked access in Portuguese when pt-BR is active', () => {
+    window.localStorage.setItem('phaiffertech-locale', 'pt-BR');
+    moduleCatalog.modules = [];
+
+    render(
+      <AppI18nProvider>
+        <ModuleGuard moduleCode="CRM">
+          <div>CRM workspace</div>
+        </ModuleGuard>
+      </AppI18nProvider>
+    );
+
+    expect(screen.queryByText('CRM workspace')).not.toBeInTheDocument();
+    expect(screen.getByText('CRM nao esta contratado neste ambiente')).toBeInTheDocument();
+    expect(screen.getByText(/Peca ao administrador para incluir o modulo no contrato do ambiente/)).toBeInTheDocument();
   });
 });
