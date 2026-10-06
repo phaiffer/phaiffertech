@@ -430,7 +430,7 @@ export function PetServicesPage() {
     inventoryLinks: [],
     createdAt: '',
     updatedAt: ''
-  }, 'en-US');
+  }, 'pt-BR');
   const draftAvailabilityLabel = buildServiceAvailabilityLabel({ allowInPlans, allowStandaloneBooking });
 
   const summaryCards: DashboardSummaryCard[] = [
