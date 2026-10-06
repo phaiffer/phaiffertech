@@ -1,10 +1,10 @@
-package com.phaiffertech.platform.core.messaging.service;
+package com.phaiffertech.platform.modules.pet.billing.service;
 
 import com.phaiffertech.platform.core.messaging.domain.MessageDispatchStatus;
 import com.phaiffertech.platform.core.messaging.dto.MessageDispatchResponse;
 import com.phaiffertech.platform.core.messaging.dto.OutboundMessageRequest;
+import com.phaiffertech.platform.core.messaging.service.MessageSenderService;
 import com.phaiffertech.platform.modules.pet.billing.dto.PetPreparedCustomerMessageResponse;
-import com.phaiffertech.platform.modules.pet.billing.service.PetBillingMessageSettingsService;
 import java.math.BigDecimal;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;

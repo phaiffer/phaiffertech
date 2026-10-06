@@ -1,13 +1,10 @@
 package com.phaiffertech.platform.core.messaging.controller;
 
 import com.phaiffertech.platform.core.messaging.dto.MessageDispatchResponse;
-import com.phaiffertech.platform.core.messaging.dto.PlanRenewalDispatchRequest;
-import com.phaiffertech.platform.core.messaging.dto.PetReadyDispatchRequest;
 import com.phaiffertech.platform.core.messaging.dto.WhatsAppChannelConfigRequest;
 import com.phaiffertech.platform.core.messaging.dto.WhatsAppChannelConfigResponse;
 import com.phaiffertech.platform.core.messaging.service.MessageSenderService;
 import com.phaiffertech.platform.core.messaging.service.MessageWebhookService;
-import com.phaiffertech.platform.core.messaging.service.PetReadyMessageDispatchService;
 import com.phaiffertech.platform.core.messaging.service.WhatsAppChannelConfigService;
 import com.phaiffertech.platform.core.tenant.entitlement.TenantEntitlementKeys;
 import com.phaiffertech.platform.shared.response.ApiResponse;
@@ -31,18 +28,15 @@ public class WhatsAppMessagingController {
     private final WhatsAppChannelConfigService configService;
     private final MessageSenderService messageSenderService;
     private final MessageWebhookService webhookService;
-    private final PetReadyMessageDispatchService petReadyMessageDispatchService;
 
     public WhatsAppMessagingController(
             WhatsAppChannelConfigService configService,
             MessageSenderService messageSenderService,
-            MessageWebhookService webhookService,
-            PetReadyMessageDispatchService petReadyMessageDispatchService
+            MessageWebhookService webhookService
     ) {
         this.configService = configService;
         this.messageSenderService = messageSenderService;
         this.webhookService = webhookService;
-        this.petReadyMessageDispatchService = petReadyMessageDispatchService;
     }
 
     @GetMapping("/config")
@@ -57,22 +51,6 @@ public class WhatsAppMessagingController {
             @Valid @RequestBody WhatsAppChannelConfigRequest request
     ) {
         return ApiResponse.success(configService.updateCurrentTenantConfig(request));
-    }
-
-    @PostMapping("/pet-ready")
-    @RequirePermission(value = "pet.appointment.update", anyEntitlements = {TenantEntitlementKeys.PET_AESTHETICS})
-    public ApiResponse<MessageDispatchResponse> dispatchPetReady(
-            @Valid @RequestBody PetReadyDispatchRequest request
-    ) {
-        return ApiResponse.success(petReadyMessageDispatchService.dispatchPetReady(request.appointmentId()));
-    }
-
-    @PostMapping("/plan-renewal")
-    @RequirePermission(value = "pet.plan.read", anyEntitlements = {TenantEntitlementKeys.PET_AESTHETICS})
-    public ApiResponse<MessageDispatchResponse> dispatchPlanRenewal(
-            @Valid @RequestBody PlanRenewalDispatchRequest request
-    ) {
-        return ApiResponse.success(petReadyMessageDispatchService.dispatchPlanRenewal(request.planId()));
     }
 
     @GetMapping("/dispatches/{dispatchId}")

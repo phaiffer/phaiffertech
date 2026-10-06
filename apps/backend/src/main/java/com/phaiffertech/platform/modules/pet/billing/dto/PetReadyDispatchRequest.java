@@ -1,4 +1,4 @@
-package com.phaiffertech.platform.core.messaging.dto;
+package com.phaiffertech.platform.modules.pet.billing.dto;
 
 import jakarta.validation.constraints.NotNull;
 import java.util.UUID;
