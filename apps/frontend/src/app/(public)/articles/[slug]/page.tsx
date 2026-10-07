@@ -7,17 +7,20 @@ import {
 import { WebsiteArticlePage } from '@/modules/website/website-article-page';
 
 type ArticlePageProps = {
-  params: {
+  params: Promise<{
     slug: string;
-  };
+  }>;
 };
 
 export function generateStaticParams() {
   return getWebsiteArticleSlugs().map((slug) => ({ slug }));
 }
 
-export function generateMetadata({ params }: ArticlePageProps): Metadata {
-  const article = getWebsiteArticle('en-US', params.slug);
+export async function generateMetadata({
+  params
+}: ArticlePageProps): Promise<Metadata> {
+  const { slug } = await params;
+  const article = getWebsiteArticle('en-US', slug);
 
   return {
     title: article?.title ?? 'Article',
@@ -25,10 +28,14 @@ export function generateMetadata({ params }: ArticlePageProps): Metadata {
   };
 }
 
-export default function ArticlePage({ params }: ArticlePageProps) {
-  if (!getWebsiteArticle('en-US', params.slug)) {
+export default async function ArticlePage({
+  params
+}: ArticlePageProps) {
+  const { slug } = await params;
+
+  if (!getWebsiteArticle('en-US', slug)) {
     notFound();
   }
 
-  return <WebsiteArticlePage slug={params.slug} />;
+  return <WebsiteArticlePage slug={slug} />;
 }

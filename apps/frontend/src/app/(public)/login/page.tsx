@@ -1,9 +1,9 @@
 import LoginPageClient from './login-page-client';
 
 type LoginPageProps = {
-  searchParams?: {
+  searchParams?: Promise<{
     next?: string | string[];
-  };
+  }>;
 };
 
 function sanitizeNextPath(nextParam?: string | string[]) {
@@ -16,6 +16,14 @@ function sanitizeNextPath(nextParam?: string | string[]) {
   return nextPath;
 }
 
-export default function LoginPage({ searchParams }: LoginPageProps) {
-  return <LoginPageClient nextPath={sanitizeNextPath(searchParams?.next)} />;
+export default async function LoginPage({
+  searchParams
+}: LoginPageProps) {
+  const resolvedSearchParams = await searchParams;
+
+  return (
+    <LoginPageClient
+      nextPath={sanitizeNextPath(resolvedSearchParams?.next)}
+    />
+  );
 }

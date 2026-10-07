@@ -1,9 +1,9 @@
 import ResetPasswordPageClient from './reset-password-page-client';
 
 type ResetPasswordPageProps = {
-  searchParams?: {
+  searchParams?: Promise<{
     token?: string | string[];
-  };
+  }>;
 };
 
 function sanitizeToken(tokenParam?: string | string[]) {
@@ -16,6 +16,8 @@ function sanitizeToken(tokenParam?: string | string[]) {
   return token.trim();
 }
 
-export default function ResetPasswordPage({ searchParams }: ResetPasswordPageProps) {
-  return <ResetPasswordPageClient token={sanitizeToken(searchParams?.token)} />;
+export default async function ResetPasswordPage({ searchParams }: ResetPasswordPageProps) {
+  const resolvedSearchParams = await searchParams;
+
+  return <ResetPasswordPageClient token={sanitizeToken(resolvedSearchParams?.token)} />;
 }
