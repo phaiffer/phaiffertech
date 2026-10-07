@@ -1007,6 +1007,102 @@ class PetIntegrationTest extends AbstractIntegrationTest {
     }
 
     @Test
+    void shouldApplyGroomingStockWithoutRetailEntitlementAndExposeItsMovement() {
+        String marker = randomSearchMarker();
+        AuthSession grooming = createTenantAdminSession(
+                "grooming-stock-" + marker,
+                "grooming-stock-" + marker + "@example.test",
+                "PET"
+        );
+        String clientId = createClient(grooming, marker);
+        String petId = createPet(grooming, clientId, marker);
+        String professionalId = createProfessional(grooming, marker);
+        JsonNode product = createProduct(grooming, marker, "PET_RETAIL_GOOD");
+        String inventoryItemId = product.path("inventoryItemId").asText();
+
+        ResponseEntity<JsonNode> service = post("/pet/services", Map.of(
+                "name", "Grooming service " + marker,
+                "category", "GROOMING",
+                "active", true,
+                "basePrice", 50.00,
+                "durationMinutes", 40,
+                "commissionEligible", false,
+                "allowInPlans", true,
+                "allowStandaloneBooking", true,
+                "inventoryLinks", List.of(Map.of(
+                        "inventoryItemId", inventoryItemId,
+                        "expectedQuantity", 2.00,
+                        "consumptionRule", "FIXED_PER_SERVICE",
+                        "active", true
+                ))
+        ), grooming);
+        assertEquals(200, service.getStatusCode().value());
+        String serviceId = requireBody(service).path("data").path("id").asText();
+
+        executeSql(
+                "UPDATE tenant_feature_entitlements SET enabled = FALSE WHERE tenant_id = ? AND feature_key = 'pet.full'",
+                grooming.tenantId()
+        );
+        upsertTenantEntitlement(grooming.tenantId(), "pet.aesthetics", "MANUAL");
+
+        ResponseEntity<JsonNode> appointment = post("/pet/appointments", Map.of(
+                "clientId", clientId,
+                "petId", petId,
+                "serviceId", serviceId,
+                "professionalId", professionalId,
+                "scheduledAt", Instant.now().plusSeconds(3600).toString(),
+                "status", "IN_PROGRESS"
+        ), grooming);
+        assertEquals(200, appointment.getStatusCode().value());
+        String appointmentId = requireBody(appointment).path("data").path("id").asText();
+        JsonNode initialLine = requireBody(appointment).path("data").path("appointmentServices").get(0);
+        String serviceLineId = initialLine.path("id").asText();
+        assertEquals(2.00, initialLine.path("expectedInventoryConsumptions").get(0)
+                .path("expectedQuantity").asDouble(), 0.001);
+
+        ResponseEntity<JsonNode> actual = patch(
+                "/pet/appointments/" + appointmentId + "/service-lines/" + serviceLineId + "/inventory-consumptions",
+                Map.of("inventoryConsumptions", List.of(Map.of(
+                        "inventoryItemId", inventoryItemId,
+                        "actualQuantity", 3.00,
+                        "consumptionStatus", "READY_TO_APPLY"
+                ))),
+                grooming
+        );
+        assertEquals(200, actual.getStatusCode().value());
+        JsonNode readyRow = requireBody(actual).path("data").path("appointmentServices").get(0)
+                .path("expectedInventoryConsumptions").get(0);
+        assertEquals("READY_TO_APPLY", readyRow.path("consumptionStatus").asText());
+        String inventoryRowId = readyRow.path("id").asText();
+        String applyPath = "/pet/appointments/" + appointmentId + "/service-lines/" + serviceLineId
+                + "/inventory-consumptions/" + inventoryRowId + "/apply-stock";
+
+        ResponseEntity<JsonNode> applied = post(applyPath, null, grooming);
+        assertEquals(200, applied.getStatusCode().value());
+        JsonNode appliedRow = requireBody(applied).path("data").path("appointmentServices").get(0)
+                .path("expectedInventoryConsumptions").get(0);
+        assertTrue(appliedRow.path("stockApplied").asBoolean());
+        String movementId = appliedRow.path("appliedInventoryMovementId").asText();
+        assertEquals(200, get("/pet/inventory/" + movementId, grooming).getStatusCode().value());
+        assertEquals(200, get("/pet/inventory?page=0&size=20", grooming).getStatusCode().value());
+        assertEquals(403, get("/pet/products?page=0&size=20", grooming).getStatusCode().value());
+        assertEquals(17, countRows(
+                "SELECT current_quantity FROM inventory_items WHERE id = ? AND tenant_id = ?",
+                inventoryItemId, grooming.tenantId()
+        ));
+        assertEquals(1, countRows(
+                "SELECT COUNT(*) FROM inventory_movements WHERE tenant_id = ? AND source_type = 'PET_APPOINTMENT_SERVICE_CONSUMPTION' AND source_reference_id = ? AND deleted_at IS NULL",
+                grooming.tenantId(), inventoryRowId
+        ));
+
+        assertEquals(200, post(applyPath, null, grooming).getStatusCode().value());
+        assertEquals(1, countRows(
+                "SELECT COUNT(*) FROM inventory_movements WHERE tenant_id = ? AND source_type = 'PET_APPOINTMENT_SERVICE_CONSUMPTION' AND source_reference_id = ? AND deleted_at IS NULL",
+                grooming.tenantId(), inventoryRowId
+        ));
+    }
+
+    @Test
     void shouldFailSafelyWhenApplyingInventoryConsumptionWithoutEnoughStock() {
         AuthSession session = loginAsDefaultAdmin();
         String marker = randomSearchMarker();

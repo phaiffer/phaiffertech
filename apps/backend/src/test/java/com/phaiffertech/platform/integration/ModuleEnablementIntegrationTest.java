@@ -200,7 +200,9 @@ class ModuleEnablementIntegrationTest extends AbstractIntegrationTest {
                 .path("data").path("status").asText());
 
         assertEquals(403, get("/pet/products?page=0&size=20", authorized).getStatusCode().value());
-        assertEquals(403, get("/pet/inventory?page=0&size=20", authorized).getStatusCode().value());
+        ResponseEntity<JsonNode> inventoryMovements = get("/pet/inventory?page=0&size=20", authorized);
+        assertEquals(200, inventoryMovements.getStatusCode().value());
+        assertEquals(0, requireBody(inventoryMovements).path("data").path("items").size());
         assertEquals(403, get("/pet/medical-records?page=0&size=20", authorized).getStatusCode().value());
 
         AuthSession otherTenant = createTenantSessionWithPermissions(
@@ -241,6 +243,117 @@ class ModuleEnablementIntegrationTest extends AbstractIntegrationTest {
         assertEquals(200, invoice.getStatusCode().value());
         String invoiceId = requireBody(invoice).path("data").path("id").asText();
         assertEquals(200, get("/pet/invoices/" + invoiceId, retail).getStatusCode().value());
+    }
+
+    @Test
+    void shouldAllowAestheticsToReadInventoryMovementsWithoutRetailManagementAccess() {
+        String tenantCode = "tenant-grooming-inventory";
+        String email = "tenant-grooming-inventory@example.test";
+        AuthSession grooming = createTenantSessionWithPermissions(
+                tenantCode,
+                email,
+                List.of(
+                        "pet.product.create", "pet.product.read", "pet.inventory.create",
+                        "pet.inventory.update", "pet.inventory.delete", "pet.medical-record.read"
+                ),
+                "PET"
+        );
+
+        ResponseEntity<JsonNode> product = post("/pet/products", Map.of(
+                "name", "Grooming shampoo",
+                "sku", "GROOMING-INV-SHAMPOO",
+                "price", 25.00,
+                "stockQuantity", 10
+        ), grooming);
+        assertEquals(200, product.getStatusCode().value());
+        String productId = requireBody(product).path("data").path("id").asText();
+        ResponseEntity<JsonNode> movement = post("/pet/inventory", Map.of(
+                "productId", productId,
+                "movementType", "IN",
+                "quantity", 2,
+                "notes", "Initial grooming supply"
+        ), grooming);
+        assertEquals(200, movement.getStatusCode().value());
+        String movementId = requireBody(movement).path("data").path("id").asText();
+
+        disableFullPetEntitlement(grooming);
+        upsertTenantEntitlement(grooming.tenantId(), "pet.aesthetics", "MANUAL");
+
+        ResponseEntity<JsonNode> deniedRead = get("/pet/inventory?page=0&size=20", grooming);
+        assertEquals(403, deniedRead.getStatusCode().value());
+        assertTrue(requireBody(deniedRead).path("message").asText().contains("pet.inventory.read"));
+
+        executeSql(
+                """
+                INSERT INTO role_permissions (role_id, permission_id)
+                SELECT ut.role_id, p.id
+                FROM user_tenants ut
+                CROSS JOIN permissions p
+                WHERE ut.tenant_id = ?
+                  AND ut.user_id = ?
+                  AND p.code = 'pet.inventory.read'
+                """,
+                grooming.tenantId(),
+                grooming.userId()
+        );
+        ResponseEntity<JsonNode> loginResponse = postPublic("/auth/login", Map.of(
+                "tenantCode", tenantCode,
+                "email", email,
+                "password", "Admin@123"
+        ));
+        assertEquals(200, loginResponse.getStatusCode().value());
+        AuthSession authorized = sessionFromLoginResponse(loginResponse);
+
+        assertEquals(200, get("/pet/inventory?page=0&size=20", authorized).getStatusCode().value());
+        assertEquals(200, get("/pet/inventory/" + movementId, authorized).getStatusCode().value());
+        assertEquals(403, get("/pet/products?page=0&size=20", authorized).getStatusCode().value());
+        assertEquals(403, get("/pet/medical-records?page=0&size=20", authorized).getStatusCode().value());
+        assertEquals(403, post("/pet/inventory", Map.of(
+                "productId", productId,
+                "movementType", "IN",
+                "quantity", 1
+        ), authorized).getStatusCode().value());
+        assertEquals(403, put("/pet/inventory/" + movementId, Map.of(
+                "productId", productId,
+                "movementType", "OUT",
+                "quantity", 1
+        ), authorized).getStatusCode().value());
+        assertEquals(403, delete("/pet/inventory/" + movementId, authorized).getStatusCode().value());
+        assertEquals(403, patch("/pet/inventory/" + movementId + "/restore", null, authorized)
+                .getStatusCode().value());
+
+        AuthSession otherTenant = createTenantSessionWithPermissions(
+                "tenant-other-grooming-inventory",
+                "tenant-other-grooming-inventory@example.test",
+                List.of("pet.inventory.read"),
+                "PET"
+        );
+        disableFullPetEntitlement(otherTenant);
+        upsertTenantEntitlement(otherTenant.tenantId(), "pet.aesthetics", "MANUAL");
+        assertEquals(404, get("/pet/inventory/" + movementId, otherTenant).getStatusCode().value());
+
+        AuthSession retail = createTenantSessionWithPermissions(
+                "tenant-retail-inventory",
+                "tenant-retail-inventory@example.test",
+                List.of("pet.product.create", "pet.inventory.read", "pet.inventory.create"),
+                "PET"
+        );
+        disableFullPetEntitlement(retail);
+        upsertTenantEntitlement(retail.tenantId(), "pet.retail", "MANUAL");
+        assertEquals(200, get("/pet/inventory?page=0&size=20", retail).getStatusCode().value());
+        ResponseEntity<JsonNode> retailProduct = post("/pet/products", Map.of(
+                "name", "Retail stock item",
+                "sku", "RETAIL-INV-ITEM",
+                "price", 15.00,
+                "stockQuantity", 5
+        ), retail);
+        assertEquals(200, retailProduct.getStatusCode().value());
+        assertEquals(200, post("/pet/inventory", Map.of(
+                "productId", requireBody(retailProduct).path("data").path("id").asText(),
+                "movementType", "IN",
+                "quantity", 1,
+                "notes", "Retail replenishment"
+        ), retail).getStatusCode().value());
     }
 
     private void disableFullPetEntitlement(AuthSession session) {
