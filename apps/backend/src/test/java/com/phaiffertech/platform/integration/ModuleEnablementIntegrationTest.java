@@ -136,6 +136,126 @@ class ModuleEnablementIntegrationTest extends AbstractIntegrationTest {
     }
 
     @Test
+    void shouldAllowAestheticsInvoicesWithPermissionWhileKeepingRetailAndClinicalEndpointsClosed() {
+        String tenantCode = "tenant-grooming-invoices";
+        String email = "tenant-grooming-invoices@example.test";
+        AuthSession withoutInvoicePermission = createTenantSessionWithPermissions(
+                tenantCode,
+                email,
+                List.of("pet.client.create", "pet.product.read", "pet.inventory.read", "pet.medical-record.read"),
+                "PET"
+        );
+        disableFullPetEntitlement(withoutInvoicePermission);
+        upsertTenantEntitlement(withoutInvoicePermission.tenantId(), "pet.aesthetics", "MANUAL");
+
+        ResponseEntity<JsonNode> deniedInvoice = get("/pet/invoices?page=0&size=20", withoutInvoicePermission);
+        assertEquals(403, deniedInvoice.getStatusCode().value());
+        assertTrue(requireBody(deniedInvoice).path("message").asText().contains("pet.invoice.read"));
+
+        executeSql(
+                """
+                INSERT INTO role_permissions (role_id, permission_id)
+                SELECT ut.role_id, p.id
+                FROM user_tenants ut
+                CROSS JOIN permissions p
+                WHERE ut.tenant_id = ?
+                  AND ut.user_id = ?
+                  AND p.code IN ('pet.invoice.create', 'pet.invoice.read', 'pet.invoice.update')
+                """,
+                withoutInvoicePermission.tenantId(),
+                withoutInvoicePermission.userId()
+        );
+        ResponseEntity<JsonNode> loginResponse = postPublic("/auth/login", Map.of(
+                "tenantCode", tenantCode,
+                "email", email,
+                "password", "Admin@123"
+        ));
+        assertEquals(200, loginResponse.getStatusCode().value());
+        AuthSession authorized = sessionFromLoginResponse(loginResponse);
+
+        ResponseEntity<JsonNode> client = post("/pet/clients", Map.of(
+                "name", "Grooming Invoice Owner",
+                "documentType", "RG",
+                "document", "GROOM-INVOICE-001",
+                "status", "ACTIVE"
+        ), authorized);
+        assertEquals(200, client.getStatusCode().value());
+        String clientId = requireBody(client).path("data").path("id").asText();
+
+        ResponseEntity<JsonNode> createdInvoice = post("/pet/invoices", Map.of(
+                "clientId", clientId,
+                "totalAmount", 75.00
+        ), authorized);
+        assertEquals(200, createdInvoice.getStatusCode().value());
+        String invoiceId = requireBody(createdInvoice).path("data").path("id").asText();
+        assertEquals(200, get("/pet/invoices/" + invoiceId, authorized).getStatusCode().value());
+
+        ResponseEntity<JsonNode> payment = post("/pet/invoices/" + invoiceId + "/payments", Map.of(
+                "amount", 75.00,
+                "method", "MANUAL"
+        ), authorized);
+        assertEquals(200, payment.getStatusCode().value());
+        assertEquals("CONFIRMED", requireBody(payment).path("data").path("status").asText());
+        assertEquals("PAID", requireBody(get("/pet/invoices/" + invoiceId, authorized))
+                .path("data").path("status").asText());
+
+        assertEquals(403, get("/pet/products?page=0&size=20", authorized).getStatusCode().value());
+        assertEquals(403, get("/pet/inventory?page=0&size=20", authorized).getStatusCode().value());
+        assertEquals(403, get("/pet/medical-records?page=0&size=20", authorized).getStatusCode().value());
+
+        AuthSession otherTenant = createTenantSessionWithPermissions(
+                "tenant-other-grooming-invoices",
+                "tenant-other-grooming-invoices@example.test",
+                List.of("pet.invoice.read"),
+                "PET"
+        );
+        disableFullPetEntitlement(otherTenant);
+        assertEquals(403, get("/pet/invoices?page=0&size=20", otherTenant).getStatusCode().value());
+        upsertTenantEntitlement(otherTenant.tenantId(), "pet.aesthetics", "MANUAL");
+        assertEquals(404, get("/pet/invoices/" + invoiceId, otherTenant).getStatusCode().value());
+    }
+
+    @Test
+    void shouldKeepRetailOnlyInvoiceAccess() {
+        AuthSession retail = createTenantSessionWithPermissions(
+                "tenant-retail-invoices",
+                "tenant-retail-invoices@example.test",
+                List.of("pet.client.create", "pet.invoice.create", "pet.invoice.read"),
+                "PET"
+        );
+        disableFullPetEntitlement(retail);
+        upsertTenantEntitlement(retail.tenantId(), "pet.retail", "MANUAL");
+
+        ResponseEntity<JsonNode> client = post("/pet/clients", Map.of(
+                "name", "Retail Invoice Owner",
+                "documentType", "RG",
+                "document", "RETAIL-INVOICE-001",
+                "status", "ACTIVE"
+        ), retail);
+        assertEquals(200, client.getStatusCode().value());
+
+        ResponseEntity<JsonNode> invoice = post("/pet/invoices", Map.of(
+                "clientId", requireBody(client).path("data").path("id").asText(),
+                "totalAmount", 40.00
+        ), retail);
+        assertEquals(200, invoice.getStatusCode().value());
+        String invoiceId = requireBody(invoice).path("data").path("id").asText();
+        assertEquals(200, get("/pet/invoices/" + invoiceId, retail).getStatusCode().value());
+    }
+
+    private void disableFullPetEntitlement(AuthSession session) {
+        executeSql(
+                """
+                UPDATE tenant_feature_entitlements
+                SET enabled = FALSE
+                WHERE tenant_id = ?
+                  AND feature_key = 'pet.full'
+                """,
+                session.tenantId()
+        );
+    }
+
+    @Test
     void shouldAllowBasicPetProfilesWithoutVeterinaryEntitlement() {
         AuthSession session = createTenantSessionWithPermissions(
                 "tenant-pet-profile-operational",
