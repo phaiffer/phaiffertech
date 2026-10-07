@@ -67,11 +67,12 @@ describe('LoginPage', () => {
 
   it('login cria a sessao corretamente', async () => {
     vi.mocked(authService.login).mockResolvedValue(authResponseFixture);
+    const ui = await LoginPage({});
 
     render(
       <PublicSiteProvider>
         <AuthProvider>
-          <LoginPage />
+          {ui}
         </AuthProvider>
       </PublicSiteProvider>
     );
@@ -98,11 +99,14 @@ describe('LoginPage', () => {
 
   it('respects the requested next path after login', async () => {
     vi.mocked(authService.login).mockResolvedValue(authResponseFixture);
+    const ui = await LoginPage({
+      searchParams: Promise.resolve({ next: '/settings' })
+    });
 
     render(
       <PublicSiteProvider>
         <AuthProvider>
-          <LoginPage searchParams={{ next: '/settings' }} />
+          {ui}
         </AuthProvider>
       </PublicSiteProvider>
     );
@@ -120,11 +124,12 @@ describe('LoginPage', () => {
   it('aciona o fluxo de demo assistida sem expor credenciais no formulario', async () => {
     process.env.NEXT_PUBLIC_DEMO_ASSISTED_ENABLED = 'true';
     vi.mocked(authService.demoLogin).mockResolvedValue(authResponseFixture);
+    const ui = await LoginPage({});
 
     render(
       <PublicSiteProvider>
         <AuthProvider>
-          <LoginPage />
+          {ui}
         </AuthProvider>
       </PublicSiteProvider>
     );
@@ -144,11 +149,12 @@ describe('LoginPage', () => {
 
   it('renders the password reset notice on the next login screen', async () => {
     setAuthNotice('password-reset');
+    const ui = await LoginPage({});
 
     render(
       <PublicSiteProvider>
         <AuthProvider>
-          <LoginPage />
+          {ui}
         </AuthProvider>
       </PublicSiteProvider>
     );
@@ -157,10 +163,12 @@ describe('LoginPage', () => {
   });
 
   it('keeps the visual context stable while typing the tenant code and only commits it on blur', async () => {
+    const ui = await LoginPage({});
+
     const { container } = render(
       <PublicSiteProvider>
         <AuthProvider>
-          <LoginPage />
+          {ui}
         </AuthProvider>
       </PublicSiteProvider>
     );
@@ -181,11 +189,13 @@ describe('LoginPage', () => {
     });
   });
 
-  it('renders login fields with stable autofill metadata', () => {
+  it('renders login fields with stable autofill metadata', async () => {
+    const ui = await LoginPage({});
+
     render(
       <PublicSiteProvider>
         <AuthProvider>
-          <LoginPage />
+          {ui}
         </AuthProvider>
       </PublicSiteProvider>
     );

@@ -39,10 +39,12 @@ describe('ResetPasswordPage', () => {
     window.sessionStorage.clear();
   });
 
-  it('shows an invalid state when the reset token is missing', () => {
+  it('shows an invalid state when the reset token is missing', async () => {
+    const ui = await ResetPasswordPage({});
+
     render(
       <PublicSiteProvider>
-        <ResetPasswordPage />
+        {ui}
       </PublicSiteProvider>
     );
 
@@ -87,9 +89,13 @@ describe('ResetPasswordPage', () => {
       }
     });
 
+    const ui = await ResetPasswordPage({
+      searchParams: Promise.resolve({ token: 'raw-reset-token' })
+    });
+
     render(
       <PublicSiteProvider>
-        <ResetPasswordPage searchParams={{ token: 'raw-reset-token' }} />
+        {ui}
       </PublicSiteProvider>
     );
 
