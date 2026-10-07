@@ -25,7 +25,10 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/v1/pet/inventory")
-@RequirePermission(entitlement = TenantEntitlementKeys.PET_RETAIL)
+@RequirePermission(anyEntitlements = {
+        TenantEntitlementKeys.PET_AESTHETICS,
+        TenantEntitlementKeys.PET_RETAIL
+})
 public class PetInventoryMovementController {
 
     private final PetInventoryMovementService service;
@@ -51,13 +54,13 @@ public class PetInventoryMovementController {
     }
 
     @PostMapping
-    @RequirePermission("pet.inventory.create")
+    @RequirePermission(value = "pet.inventory.create", entitlement = TenantEntitlementKeys.PET_RETAIL)
     public ApiResponse<PetInventoryMovementResponse> create(@Valid @RequestBody PetInventoryMovementCreateRequest request) {
         return ApiResponse.success(service.create(request));
     }
 
     @PutMapping("/{id}")
-    @RequirePermission("pet.inventory.update")
+    @RequirePermission(value = "pet.inventory.update", entitlement = TenantEntitlementKeys.PET_RETAIL)
     public ApiResponse<PetInventoryMovementResponse> update(
             @PathVariable UUID id,
             @Valid @RequestBody PetInventoryMovementUpdateRequest request
@@ -66,14 +69,14 @@ public class PetInventoryMovementController {
     }
 
     @DeleteMapping("/{id}")
-    @RequirePermission("pet.inventory.delete")
+    @RequirePermission(value = "pet.inventory.delete", entitlement = TenantEntitlementKeys.PET_RETAIL)
     public ApiResponse<Void> delete(@PathVariable UUID id) {
         service.delete(id);
         return ApiResponse.success(null);
     }
 
     @PatchMapping("/{id}/restore")
-    @RequirePermission("pet.inventory.delete")
+    @RequirePermission(value = "pet.inventory.delete", entitlement = TenantEntitlementKeys.PET_RETAIL)
     public ApiResponse<PetInventoryMovementResponse> restore(@PathVariable UUID id) {
         return ApiResponse.success(service.restore(id));
     }
