@@ -12,10 +12,7 @@ public enum ProductPackageDefinition {
     BANHO_TOSA(
             "BANHO_TOSA",
             List.of("PET"),
-            List.of(
-                    TenantEntitlementKeys.PET_AESTHETICS,
-                    TenantEntitlementKeys.PET_RETAIL
-            )
+            List.of(TenantEntitlementKeys.PET_AESTHETICS)
     ),
     CLINICA_VETERINARIA(
             "CLINICA_VETERINARIA",

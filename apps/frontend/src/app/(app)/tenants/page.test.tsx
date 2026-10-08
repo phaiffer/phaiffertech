@@ -206,6 +206,23 @@ describe('TenantsPage access model', () => {
     const packagePreview = screen.getByText(/Selected package:/);
     expect(packagePreview).toHaveTextContent('PETSHOP');
 
+    const groomingPackage = screen.getByDisplayValue('BANHO_TOSA');
+    fireEvent.click(groomingPackage);
+    expect(groomingPackage).toBeChecked();
+    expect(groomingPackage.closest('label')).toHaveTextContent('pet.aesthetics');
+    expect(groomingPackage.closest('label')).not.toHaveTextContent('pet.retail');
+    expect(packagePreview.parentElement).toHaveTextContent('pet.aesthetics');
+    expect(packagePreview.parentElement).not.toHaveTextContent('pet.retail');
+
+    const retailPackage = screen.getByDisplayValue('PETSHOP');
+    fireEvent.click(retailPackage);
+    expect(retailPackage.closest('label')).toHaveTextContent('pet.retail');
+
+    const combinedPackage = screen.getByDisplayValue('PETSHOP_BANHO_TOSA');
+    fireEvent.click(combinedPackage);
+    expect(combinedPackage.closest('label')).toHaveTextContent('pet.aesthetics');
+    expect(combinedPackage.closest('label')).toHaveTextContent('pet.retail');
+
     const hybridPackage = screen.getByRole('radio', { name: /BANHO_TOSA_CLINICA/i });
     fireEvent.click(hybridPackage);
 

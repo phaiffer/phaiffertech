@@ -92,9 +92,9 @@ const PLAN_DETAILS: Record<ProductPackageCode, PlanDetails> = {
   },
   BANHO_TOSA: {
     label: 'Bath and grooming workspace',
-    description: 'Banho e Tosa flow with aesthetics routines, recurring execution, and retail support in the same contract.',
+    description: 'Banho e Tosa flow with aesthetics routines and recurring grooming execution.',
     defaultModules: ['PET'],
-    defaultEntitlements: ['pet.aesthetics', 'pet.retail']
+    defaultEntitlements: ['pet.aesthetics']
   },
   CLINICA_VETERINARIA: {
     label: 'Veterinary clinic workspace',
