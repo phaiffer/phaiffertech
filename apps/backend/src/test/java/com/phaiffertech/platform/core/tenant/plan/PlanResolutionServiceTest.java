@@ -13,11 +13,17 @@ class PlanResolutionServiceTest {
     @Test
     void shouldResolveKnownPackageDefinitions() {
         PlanDefinition petshop = planResolutionService.resolve("petshop");
+        PlanDefinition banhoTosa = planResolutionService.resolve("BANHO_TOSA");
+        PlanDefinition petshopBanhoTosa = planResolutionService.resolve("PETSHOP_BANHO_TOSA");
         PlanDefinition banhoTosaClinica = planResolutionService.resolve("BANHO_TOSA_CLINICA");
 
         assertEquals(PlanDefinition.PETSHOP, petshop);
         assertIterableEquals(java.util.List.of("PET"), petshop.getDefaultModules());
         assertIterableEquals(java.util.List.of("pet.retail"), petshop.getDefaultEntitlements());
+
+        assertIterableEquals(java.util.List.of("PET"), banhoTosa.getDefaultModules());
+        assertIterableEquals(java.util.List.of("pet.aesthetics"), banhoTosa.getDefaultEntitlements());
+        assertIterableEquals(java.util.List.of("pet.aesthetics", "pet.retail"), petshopBanhoTosa.getDefaultEntitlements());
 
         assertEquals(PlanDefinition.BANHO_TOSA_CLINICA, banhoTosaClinica);
         assertIterableEquals(java.util.List.of("PET"), banhoTosaClinica.getDefaultModules());
@@ -38,6 +44,14 @@ class PlanResolutionServiceTest {
         ProductPackageDefinition productPackage = planResolutionService.resolveProductPackage("clinica_veterinaria");
 
         assertEquals(ProductPackageDefinition.CLINICA_VETERINARIA, productPackage);
+        assertIterableEquals(
+                java.util.List.of("pet.aesthetics"),
+                planResolutionService.resolveProductPackage("BANHO_TOSA").getDefaultEntitlements()
+        );
+        assertIterableEquals(
+                java.util.List.of("pet.aesthetics", "pet.retail"),
+                planResolutionService.resolveProductPackage("PETSHOP_BANHO_TOSA").getDefaultEntitlements()
+        );
         assertIterableEquals(
                 java.util.List.of(
                         ProductPackageDefinition.PETSHOP,

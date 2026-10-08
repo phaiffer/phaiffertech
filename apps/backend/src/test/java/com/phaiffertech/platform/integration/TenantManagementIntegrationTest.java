@@ -16,6 +16,79 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class TenantManagementIntegrationTest extends AbstractIntegrationTest {
 
     @Test
+    void newBanhoTosaTenantKeepsGroomingAccessWithoutRetailOrClinicalAccess() {
+        AuthSession platformAdmin = loginAsDefaultAdmin();
+        AuthSession grooming = createPackageTenant(platformAdmin, "package-grooming-only", "BANHO_TOSA", List.of());
+
+        assertTenantModuleState(grooming.tenantId(), "CORE_PLATFORM", true);
+        assertTenantModuleState(grooming.tenantId(), "PET", true);
+        assertEquals(1, countRows(
+                "SELECT COUNT(*) FROM tenant_feature_entitlements WHERE tenant_id = ? AND feature_key = 'pet.aesthetics' AND enabled = TRUE AND source = 'PLAN' AND deleted_at IS NULL",
+                grooming.tenantId()
+        ));
+        assertEquals(0, countRows(
+                "SELECT COUNT(*) FROM tenant_feature_entitlements WHERE tenant_id = ? AND feature_key IN ('pet.retail', 'pet.clinic', 'pet.veterinary', 'pet.full') AND enabled = TRUE AND deleted_at IS NULL",
+                grooming.tenantId()
+        ));
+
+        assertEquals(200, get("/pet/appointments?page=0&size=20", grooming).getStatusCode().value());
+        assertEquals(200, get("/pet/services?page=0&size=20", grooming).getStatusCode().value());
+        assertEquals(200, get("/pet/invoices?page=0&size=20", grooming).getStatusCode().value());
+        assertEquals(200, get("/pet/inventory?page=0&size=20", grooming).getStatusCode().value());
+        ResponseEntity<JsonNode> products = get("/pet/products?page=0&size=20", grooming);
+        assertEquals(403, products.getStatusCode().value());
+        assertTrue(requireBody(products).path("message").asText().contains("pet.retail"));
+
+        ResponseEntity<JsonNode> inventoryWrite = post("/pet/inventory", Map.of(), grooming);
+        assertEquals(403, inventoryWrite.getStatusCode().value());
+        assertTrue(requireBody(inventoryWrite).path("message").asText().contains("pet.retail"));
+
+        ResponseEntity<JsonNode> medicalRecords = get("/pet/medical-records?page=0&size=20", grooming);
+        assertEquals(403, medicalRecords.getStatusCode().value());
+        assertTrue(requireBody(medicalRecords).path("message").asText().contains("pet.veterinary"));
+    }
+
+    @Test
+    void newRetailAndCombinedTenantsKeepTheirRetailAccess() {
+        AuthSession platformAdmin = loginAsDefaultAdmin();
+        AuthSession retail = createPackageTenant(platformAdmin, "package-retail-only", "PETSHOP", List.of());
+        AuthSession combined = createPackageTenant(platformAdmin, "package-grooming-retail", "PETSHOP_BANHO_TOSA", List.of());
+
+        assertEquals(1, countRows(
+                "SELECT COUNT(*) FROM tenant_feature_entitlements WHERE tenant_id = ? AND feature_key = 'pet.retail' AND enabled = TRUE AND source = 'PLAN' AND deleted_at IS NULL",
+                retail.tenantId()
+        ));
+        assertEquals(0, countRows(
+                "SELECT COUNT(*) FROM tenant_feature_entitlements WHERE tenant_id = ? AND feature_key = 'pet.aesthetics' AND enabled = TRUE AND deleted_at IS NULL",
+                retail.tenantId()
+        ));
+        assertEquals(1, countRows(
+                "SELECT COUNT(*) FROM tenant_feature_entitlements WHERE tenant_id = ? AND feature_key = 'pet.aesthetics' AND enabled = TRUE AND source = 'PLAN' AND deleted_at IS NULL",
+                combined.tenantId()
+        ));
+        assertEquals(1, countRows(
+                "SELECT COUNT(*) FROM tenant_feature_entitlements WHERE tenant_id = ? AND feature_key = 'pet.retail' AND enabled = TRUE AND source = 'PLAN' AND deleted_at IS NULL",
+                combined.tenantId()
+        ));
+        assertEquals(200, get("/pet/products?page=0&size=20", retail).getStatusCode().value());
+        assertEquals(200, get("/pet/products?page=0&size=20", combined).getStatusCode().value());
+    }
+
+    @Test
+    void explicitRetailGrantStillExtendsNewBanhoTosaTenant() {
+        AuthSession platformAdmin = loginAsDefaultAdmin();
+        AuthSession groomingWithRetail = createPackageTenant(
+                platformAdmin, "package-grooming-manual-retail", "BANHO_TOSA", List.of("pet.retail")
+        );
+
+        assertEquals(1, countRows(
+                "SELECT COUNT(*) FROM tenant_feature_entitlements WHERE tenant_id = ? AND feature_key = 'pet.retail' AND enabled = TRUE AND source = 'MANUAL' AND deleted_at IS NULL",
+                groomingWithRetail.tenantId()
+        ));
+        assertEquals(200, get("/pet/products?page=0&size=20", groomingWithRetail).getStatusCode().value());
+    }
+
+    @Test
     void platformAdminShouldApplyPlanDefaultsAndPreserveManualOverrides() {
         AuthSession session = loginAsDefaultAdmin();
         String initialAdminEmail = "clinic-north-admin@local.test";
@@ -322,6 +395,22 @@ class TenantManagementIntegrationTest extends AbstractIntegrationTest {
                 moduleCode,
                 enabled
         ));
+    }
+
+    private AuthSession createPackageTenant(AuthSession platformAdmin, String code, String planCode, List<String> manualEntitlements) {
+        String email = code + "@example.test";
+        String password = "TempPackageAdmin@123";
+        ResponseEntity<JsonNode> createResponse = post("/tenants", tenantCreatePayload(
+                code, code, planCode, null, null, null, "SYSTEM", true,
+                List.of("PET"), manualEntitlements, code, email, password, false, "2027-12-31"
+        ), platformAdmin);
+        assertEquals(200, createResponse.getStatusCode().value());
+
+        ResponseEntity<JsonNode> loginResponse = postPublic("/auth/login", Map.of(
+                "tenantCode", code, "email", email, "password", password
+        ));
+        assertEquals(200, loginResponse.getStatusCode().value());
+        return sessionFromLoginResponse(loginResponse);
     }
 
     private boolean containsValue(JsonNode arrayNode, String expected) {
