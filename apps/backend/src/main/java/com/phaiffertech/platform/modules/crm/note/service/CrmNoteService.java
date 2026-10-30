@@ -43,6 +43,7 @@ public class CrmNoteService {
     public PageResponseDto<CrmNoteResponse> list(
             PageRequestDto pageRequest,
             String relatedReferenceType,
+            String relatedModule,
             UUID relatedId,
             UUID companyId,
             UUID contactId,
@@ -53,6 +54,7 @@ public class CrmNoteService {
         Page<CrmNoteResponse> result = repository.findAllByTenantAndRelation(
                         tenantId,
                         normalizeRelatedReferenceType(relatedReferenceType),
+                        relationResolverService.normalizeFilterModulePrefix(relatedModule),
                         relatedId,
                         companyId,
                         contactId,

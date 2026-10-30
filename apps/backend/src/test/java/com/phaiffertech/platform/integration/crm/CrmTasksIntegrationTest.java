@@ -165,6 +165,39 @@ class CrmTasksIntegrationTest extends AbstractIntegrationTest {
         assertEquals("BAD_REQUEST", requireBody(createResponse).path("code").asText());
     }
 
+    @Test
+    void shouldFilterTasksByRelatedModule() {
+        AuthSession session = loginAsDefaultAdmin();
+        String marker = randomSearchMarker();
+        String companyId = createCompany(session, marker);
+        String petClientId = createPetClient(session, marker);
+
+        post("/crm/tasks", Map.of(
+                "title", "Crm Module Task " + marker,
+                "status", "OPEN",
+                "priority", "MEDIUM",
+                "dueDate", Instant.now().plusSeconds(86400).toString(),
+                "companyId", companyId
+        ), session);
+        post("/crm/tasks", Map.of(
+                "title", "Pet Module Task " + marker,
+                "status", "OPEN",
+                "priority", "MEDIUM",
+                "dueDate", Instant.now().plusSeconds(86400).toString(),
+                "relatedReferenceType", "PET.CLIENT",
+                "relatedId", petClientId
+        ), session);
+
+        ResponseEntity<JsonNode> petResponse = get("/crm/tasks?page=0&size=20&relatedModule=pet&search=" + marker, session);
+        assertEquals(200, petResponse.getStatusCode().value());
+        JsonNode petItems = requireBody(petResponse).path("data").path("items");
+        assertEquals(1, petItems.size());
+        assertEquals("Pet Module Task " + marker, petItems.get(0).path("title").asText());
+
+        ResponseEntity<JsonNode> invalidResponse = get("/crm/tasks?page=0&size=20&relatedModule=PET%25", session);
+        assertEquals(400, invalidResponse.getStatusCode().value());
+    }
+
     private String createCompany(AuthSession session, String marker) {
         ResponseEntity<JsonNode> response = post("/crm/companies", Map.of(
                 "name", "Task Company " + marker,

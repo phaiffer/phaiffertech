@@ -103,6 +103,17 @@ public class CrmRelationResolverService {
         return parseReferenceDescriptor(null, referenceType).referenceType();
     }
 
+    public String normalizeFilterModulePrefix(String relatedModule) {
+        if (relatedModule == null || relatedModule.isBlank()) {
+            return null;
+        }
+        String normalized = relatedModule.trim().toUpperCase();
+        if (!normalized.matches("[A-Z]+")) {
+            throw new IllegalArgumentException("Invalid related module filter.");
+        }
+        return normalized + ".%";
+    }
+
     private RelationSelection explicitSelection(UUID companyId, UUID contactId, UUID leadId, UUID dealId) {
         int count = countNonNull(companyId, contactId, leadId, dealId);
         if (count == 0) {
