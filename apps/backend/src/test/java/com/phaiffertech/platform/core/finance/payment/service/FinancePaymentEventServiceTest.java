@@ -12,9 +12,12 @@ import com.phaiffertech.platform.core.finance.payment.domain.PaymentEventType;
 import com.phaiffertech.platform.core.finance.payment.domain.PaymentProviderType;
 import com.phaiffertech.platform.core.finance.payment.dto.FinancePaymentEventResponse;
 import com.phaiffertech.platform.core.finance.payment.repository.FinancePaymentEventRepository;
+import com.phaiffertech.platform.core.user.domain.User;
+import com.phaiffertech.platform.core.user.repository.UserRepository;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -29,11 +32,14 @@ class FinancePaymentEventServiceTest {
     @Mock
     private FinancePaymentEventRepository repository;
 
+    @Mock
+    private UserRepository userRepository;
+
     private FinancePaymentEventService service;
 
     @BeforeEach
     void setUp() {
-        service = new FinancePaymentEventService(repository);
+        service = new FinancePaymentEventService(repository, userRepository);
     }
 
     @Test
@@ -141,5 +147,41 @@ class FinancePaymentEventServiceTest {
         assertThat(responses).hasSize(1);
         assertThat(responses.get(0).eventType()).isEqualTo("INVOICE_CREATED");
         assertThat(responses.get(0).provider()).isEqualTo("MANUAL");
+        assertThat(responses.get(0).recordedByName()).isNull();
+    }
+
+    @Test
+    void shouldResolveRecorderNameFromUserIdAndKeepSystemEventsAnonymous() {
+        UUID tenantId = UUID.randomUUID();
+        UUID invoiceId = UUID.randomUUID();
+        UUID userId = UUID.randomUUID();
+        FinancePaymentEvent manualEvent = eventCreatedBy(tenantId, invoiceId, userId.toString(), PaymentEventType.PAYMENT_CONFIRMED);
+        FinancePaymentEvent systemEvent = eventCreatedBy(tenantId, invoiceId, "system", PaymentEventType.INVOICE_CREATED);
+        User recorder = new User();
+        ReflectionTestUtils.setField(recorder, "id", userId);
+        recorder.setFullName("Recepcao Demo");
+
+        when(repository.findAllByTenantIdAndInvoiceIdOrderByOccurredAtDescCreatedAtDesc(tenantId, invoiceId))
+                .thenReturn(List.of(manualEvent, systemEvent));
+        when(userRepository.findAllById(Set.of(userId))).thenReturn(List.of(recorder));
+
+        List<FinancePaymentEventResponse> responses = service.listByInvoice(tenantId, invoiceId);
+
+        assertThat(responses).extracting(FinancePaymentEventResponse::recordedByName)
+                .containsExactly("Recepcao Demo", null);
+    }
+
+    private FinancePaymentEvent eventCreatedBy(UUID tenantId, UUID invoiceId, String createdBy, PaymentEventType type) {
+        FinancePaymentEvent event = new FinancePaymentEvent();
+        ReflectionTestUtils.setField(event, "id", UUID.randomUUID());
+        ReflectionTestUtils.setField(event, "createdBy", createdBy);
+        event.setTenantId(tenantId);
+        event.setInvoiceId(invoiceId);
+        event.setProvider(PaymentProviderType.MANUAL);
+        event.setEventType(type);
+        event.setEventStatus(PaymentEventStatus.RECORDED);
+        event.setOccurredAt(Instant.parse("2026-10-20T14:00:00Z"));
+        event.setSummary(type.name());
+        return event;
     }
 }

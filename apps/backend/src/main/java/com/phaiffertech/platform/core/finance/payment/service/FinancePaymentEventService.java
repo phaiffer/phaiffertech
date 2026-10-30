@@ -6,11 +6,17 @@ import com.phaiffertech.platform.core.finance.payment.domain.PaymentEventType;
 import com.phaiffertech.platform.core.finance.payment.domain.PaymentProviderType;
 import com.phaiffertech.platform.core.finance.payment.dto.FinancePaymentEventResponse;
 import com.phaiffertech.platform.core.finance.payment.repository.FinancePaymentEventRepository;
+import com.phaiffertech.platform.core.user.domain.User;
+import com.phaiffertech.platform.core.user.repository.UserRepository;
 import com.phaiffertech.platform.shared.tenancy.TenantContext;
 import java.time.Instant;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -18,9 +24,11 @@ import org.springframework.transaction.annotation.Transactional;
 public class FinancePaymentEventService {
 
     private final FinancePaymentEventRepository repository;
+    private final UserRepository userRepository;
 
-    public FinancePaymentEventService(FinancePaymentEventRepository repository) {
+    public FinancePaymentEventService(FinancePaymentEventRepository repository, UserRepository userRepository) {
         this.repository = repository;
+        this.userRepository = userRepository;
     }
 
     @Transactional
@@ -66,10 +74,42 @@ public class FinancePaymentEventService {
 
     @Transactional(readOnly = true)
     public List<FinancePaymentEventResponse> listByInvoice(UUID tenantId, UUID invoiceId) {
-        return repository.findAllByTenantIdAndInvoiceIdOrderByOccurredAtDescCreatedAtDesc(tenantId, invoiceId)
-                .stream()
-                .map(FinancePaymentEventResponse::fromEntity)
+        List<FinancePaymentEvent> events = repository
+                .findAllByTenantIdAndInvoiceIdOrderByOccurredAtDescCreatedAtDesc(tenantId, invoiceId);
+        Map<UUID, String> recorderNames = resolveRecorderNames(events);
+        return events.stream()
+                .map(event -> FinancePaymentEventResponse.fromEntity(event, recorderName(event, recorderNames)))
                 .toList();
+    }
+
+    // created_by holds the acting user id, or "system" for seeds and background jobs.
+    private Map<UUID, String> resolveRecorderNames(List<FinancePaymentEvent> events) {
+        Set<UUID> userIds = events.stream()
+                .map(event -> parseUserId(event.getCreatedBy()))
+                .filter(Objects::nonNull)
+                .collect(Collectors.toSet());
+        if (userIds.isEmpty()) {
+            return Map.of();
+        }
+        return userRepository.findAllById(userIds).stream()
+                .filter(user -> user.getFullName() != null)
+                .collect(Collectors.toMap(User::getId, User::getFullName, (first, second) -> first));
+    }
+
+    private String recorderName(FinancePaymentEvent event, Map<UUID, String> recorderNames) {
+        UUID userId = parseUserId(event.getCreatedBy());
+        return userId == null ? null : recorderNames.get(userId);
+    }
+
+    private UUID parseUserId(String createdBy) {
+        if (createdBy == null || createdBy.isBlank()) {
+            return null;
+        }
+        try {
+            return UUID.fromString(createdBy.trim());
+        } catch (IllegalArgumentException ignored) {
+            return null;
+        }
     }
 
     @Transactional(readOnly = true)
