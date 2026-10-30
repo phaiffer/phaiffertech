@@ -35,9 +35,11 @@ class TenantManagementIntegrationTest extends AbstractIntegrationTest {
         assertEquals(200, get("/pet/services?page=0&size=20", grooming).getStatusCode().value());
         assertEquals(200, get("/pet/invoices?page=0&size=20", grooming).getStatusCode().value());
         assertEquals(200, get("/pet/inventory?page=0&size=20", grooming).getStatusCode().value());
-        ResponseEntity<JsonNode> products = get("/pet/products?page=0&size=20", grooming);
-        assertEquals(403, products.getStatusCode().value());
-        assertTrue(requireBody(products).path("message").asText().contains("pet.retail"));
+        // Grooming reads its supplies; managing the product catalog stays a retail feature.
+        assertEquals(200, get("/pet/products?page=0&size=20", grooming).getStatusCode().value());
+        ResponseEntity<JsonNode> productWrite = post("/pet/products", Map.of(), grooming);
+        assertEquals(403, productWrite.getStatusCode().value());
+        assertTrue(requireBody(productWrite).path("message").asText().contains("pet.retail"));
 
         ResponseEntity<JsonNode> inventoryWrite = post("/pet/inventory", Map.of(), grooming);
         assertEquals(403, inventoryWrite.getStatusCode().value());
