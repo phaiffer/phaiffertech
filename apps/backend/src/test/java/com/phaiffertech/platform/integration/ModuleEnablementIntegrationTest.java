@@ -199,7 +199,8 @@ class ModuleEnablementIntegrationTest extends AbstractIntegrationTest {
         assertEquals("PAID", requireBody(get("/pet/invoices/" + invoiceId, authorized))
                 .path("data").path("status").asText());
 
-        assertEquals(403, get("/pet/products?page=0&size=20", authorized).getStatusCode().value());
+        // Grooming reads supplies (shampoo, masks) but product management stays a retail feature.
+        assertEquals(200, get("/pet/products?page=0&size=20", authorized).getStatusCode().value());
         ResponseEntity<JsonNode> inventoryMovements = get("/pet/inventory?page=0&size=20", authorized);
         assertEquals(200, inventoryMovements.getStatusCode().value());
         assertEquals(0, requireBody(inventoryMovements).path("data").path("items").size());
@@ -306,7 +307,13 @@ class ModuleEnablementIntegrationTest extends AbstractIntegrationTest {
 
         assertEquals(200, get("/pet/inventory?page=0&size=20", authorized).getStatusCode().value());
         assertEquals(200, get("/pet/inventory/" + movementId, authorized).getStatusCode().value());
-        assertEquals(403, get("/pet/products?page=0&size=20", authorized).getStatusCode().value());
+        assertEquals(200, get("/pet/products?page=0&size=20", authorized).getStatusCode().value());
+        assertEquals(403, post("/pet/products", Map.of(
+                "name", "Grooming conditioner",
+                "sku", "GROOMING-INV-CONDITIONER",
+                "price", 30.00,
+                "stockQuantity", 5
+        ), authorized).getStatusCode().value());
         assertEquals(403, get("/pet/medical-records?page=0&size=20", authorized).getStatusCode().value());
         assertEquals(403, post("/pet/inventory", Map.of(
                 "productId", productId,

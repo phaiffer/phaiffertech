@@ -1085,7 +1085,7 @@ class PetIntegrationTest extends AbstractIntegrationTest {
         String movementId = appliedRow.path("appliedInventoryMovementId").asText();
         assertEquals(200, get("/pet/inventory/" + movementId, grooming).getStatusCode().value());
         assertEquals(200, get("/pet/inventory?page=0&size=20", grooming).getStatusCode().value());
-        assertEquals(403, get("/pet/products?page=0&size=20", grooming).getStatusCode().value());
+        assertEquals(200, get("/pet/products?page=0&size=20", grooming).getStatusCode().value());
         assertEquals(17, countRows(
                 "SELECT current_quantity FROM inventory_items WHERE id = ? AND tenant_id = ?",
                 inventoryItemId, grooming.tenantId()
