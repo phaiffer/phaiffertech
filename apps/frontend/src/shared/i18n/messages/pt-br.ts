@@ -62,7 +62,7 @@ const ptBRMessages = {
   },
   publicShell: {
     brandEyebrow: 'PhaifferTech',
-    brandTitle: 'PetFlow para operacoes pet reais',
+    brandTitle: 'Gestão para operações pet reais',
     brandSubtitle:
       'Software para banho e tosa, recorrencia mensal e operacao de pet shop com base tecnica solida.',
     localeLabel: 'Alternar idioma do site',
@@ -70,16 +70,16 @@ const ptBRMessages = {
     navPlatform: 'Plataforma',
     navProducts: 'Produtos',
     navContact: 'Contato',
-    navLogin: 'Acesso PetFlow',
+    navLogin: 'Acessar sistema',
     navLabel: 'Navegação',
     footerNarrativeText:
-      'PhaifferTech apresenta o PetFlow como produto principal para agenda, planos mensais, estoque e cobranca de operacoes pet.',
+      'PhaifferTech apresenta sua plataforma principal para agenda, planos mensais, estoque e cobranca de operacoes pet.',
     footerProductsTitle: 'Produtos',
     footerAccessTitle: 'Acesso',
     footerPlatformLabel: 'Fundação da plataforma',
     footerDemoLabel: 'Solicitar demo',
     footerCopyright:
-      'PhaifferTech · PetFlow para banho e tosa, pet shop e operacao recorrente, sustentado por fundacao SaaS multi-tenant.'
+      'PhaifferTech · Gestão para banho e tosa, pet shop e operacao recorrente, sustentado por fundacao SaaS multi-tenant.'
   },
   publicHome: {
     framework: 'Soluções',
@@ -87,16 +87,16 @@ const ptBRMessages = {
     expertiseEyebrow: 'Porque a demo convence'
   },
   publicHero: {
-    panelEyebrow: 'Demo PetFlow',
+    panelEyebrow: 'Demo Operacional',
     panelTitle: 'Foco operacional',
     panelBadge: 'Pronto para apresentar',
     storyEyebrow: 'Roteiro da demo',
     storyText:
-      'Mostre o ciclo completo com o PetFlow no centro: atendimento, plano recorrente, pressão de estoque, cobrança e follow-up automatizado.'
+      'Mostre o ciclo completo na operação pet: atendimento, plano recorrente, pressão de estoque, cobrança e follow-up automatizado.'
   },
   login: {
     title: 'Acessar workspace',
-    description: 'Entre com o workspace e suas credenciais para abrir o PetFlow.',
+    description: 'Entre com o workspace e suas credenciais para abrir a operação.',
     tenantCodeLabel: 'Empresa ou workspace',
     emailLabel: 'E-mail',
     passwordLabel: 'Senha',
@@ -117,7 +117,7 @@ const ptBRMessages = {
         'Use o código do workspace e suas credenciais para abrir a operação sem sair da linguagem visual do produto.',
       backLabel: 'Voltar ao site',
       contactLabel: 'Solicitar demo',
-      heroTitle: 'PetFlow pronto para abrir a operacao do dia.',
+      heroTitle: 'Operacao pet pronta para abrir o dia.',
       heroDescription:
         'Agenda, planos, cobranca e follow-up continuam na mesma linguagem visual do produto, sem distracao e sem uma landing pesada no meio do acesso.',
       laneQueueTitle: 'Fila',
@@ -126,22 +126,22 @@ const ptBRMessages = {
       lanePlansDescription: 'Recorrencia mensal, penultimo banho e renovacao no radar.',
       laneBillingTitle: 'Cobranca',
       laneBillingDescription: 'Extras, estoque e comissao sem sair do fluxo comercial.',
-      accessCardTitle: 'Acesso PetFlow',
+      accessCardTitle: 'Acesso ao sistema',
       accessCardDescription:
         'O login mantém o foco no acesso enquanto preserva a atmosfera premium do produto e da demo.'
     }
   },
   appShell: {
     mobileOverview: 'Visão geral',
-    mobilePetFlow: 'PetFlow',
+    mobilePetFlow: 'Gestão Pet',
     mobileSettings: 'Configurações',
     quickSearchWorkspace: 'Buscar no workspace',
     quickSearchPet: 'Buscar atendimentos, clientes ou cobrança',
     localeButtonLabel: 'Alternar idioma',
     header: {
       crmLabel: 'Relacionamento',
-      crmDescription: 'Faixa de continuidade para follow-up, contexto comercial e histórico herdado enquanto o PetFlow absorve a operação.',
-      petLabel: 'PetFlow',
+      crmDescription: 'Faixa de continuidade para follow-up, contexto comercial e histórico herdado integrado à operação pet.',
+      petLabel: 'Gestão Pet',
       petDescription: 'Fila do dia, planos, estoque, cobrança e responsabilidade do time em uma única frente.',
       workspacesLabel: 'Workspaces',
       workspacesDescription: 'Gerencie a camada de workspaces sem expandir a superfície visível do produto.',
@@ -150,18 +150,18 @@ const ptBRMessages = {
       settingsLabel: 'Configurações',
       settingsDescription: 'Branding, acesso e configuração do workspace atual.',
       platformLabel: 'Plataforma',
-      petOverviewLabel: 'Visão geral do PetFlow',
+      petOverviewLabel: 'Visão geral da operação',
       overviewLabel: 'Visão geral',
       petOverviewDescription:
-        'Plataforma comercial da demo PetFlow com contexto operacional no centro da leitura.',
+        'Painel comercial da operação pet com contexto operacional no centro da leitura.',
       overviewDescription: 'Resumo compartilhado do workspace com a superfície visível atual.'
     }
   },
   sidebar: {
     overview: 'Visão geral',
     settings: 'Configurações',
-    petFlow: 'PetFlow',
-    focusLabel: 'Foco PetFlow',
+    petFlow: 'Gestão Pet',
+    focusLabel: 'Foco operacional',
     workspaceLabel: 'Workspace',
     signOut: 'Sair'
   },
@@ -184,23 +184,23 @@ const ptBRMessages = {
     commissions: 'Fechamento'
   },
   dashboardRoutes: {
-    mainEyebrow: 'PetFlow',
-    mainTitle: 'Visão geral do PetFlow',
+    mainEyebrow: 'Gestão Pet',
+    mainTitle: 'Visão geral da operação',
     mainDescription:
       'Visão principal da demo com atendimentos do dia, planos perto do fim, estoque baixo, cobrança do próximo ciclo e comissão do time.',
     surfaceLabel: 'Superfície oficial da demo',
-    petDashboardEyebrow: 'Dashboard PetFlow',
+    petDashboardEyebrow: 'Dashboard Operacional',
     petDashboardTitle: 'Dashboard operacional',
     petDashboardDescription:
       'Acompanhe fila do dia, pets prontos, recorrencia, estoque baixo, cobranca do proximo ciclo e comissao em uma unica leitura operacional.'
   },
   petDashboard: {
-    noPermission: 'Você não possui permissão para visualizar o dashboard do PetFlow.',
+    noPermission: 'Você não possui permissão para visualizar o dashboard operacional.',
     actions: {
       appointments: 'Agenda operacional',
       billing: 'Cobranca e proximo ciclo'
     },
-    loading: 'Carregando o panorama operacional do PetFlow...',
+    loading: 'Carregando o panorama operacional...',
     errors: {
       appointments: 'Nao foi possivel carregar os atendimentos do dia.',
       plans: 'Nao foi possivel carregar os planos do workspace.',
@@ -487,7 +487,7 @@ const ptBRMessages = {
   },
   petPlans: {
     noPermission: 'Você não tem permissão para visualizar planos de clientes.',
-    eyebrow: 'PetFlow · Banho e tosa',
+    eyebrow: 'Gestão Pet · Banho e tosa',
     title: 'Planos mensais',
     description:
       'Gerencie clientes recorrentes, visitas restantes, alertas de penultimo banho e uso dos planos ao longo dos atendimentos.',
@@ -587,8 +587,8 @@ const ptBRMessages = {
     }
   },
   petInventory: {
-    noPermission: 'Você não tem permissão para visualizar o estoque do PetFlow.',
-    eyebrow: 'Operacao PetFlow',
+    noPermission: 'Você não tem permissão para visualizar o estoque.',
+    eyebrow: 'Operacao Pet',
     title: 'Estoque e reposicao',
     description:
       'Mantenha banho, tosa e varejo visiveis com alertas abaixo do minimo, contexto de reposicao e historico de movimentacao confiavel.',
@@ -683,7 +683,7 @@ const ptBRMessages = {
       title: 'Razao de estoque',
       description: 'Revise o que mudou, por que mudou e qual foi o efeito no saldo visivel do produto.',
       loadingTitle: 'Carregando operacoes de estoque',
-      loadingDescription: 'Preparando o historico mais recente de movimentacao deste workspace PetFlow.',
+      loadingDescription: 'Preparando o historico mais recente de movimentacao deste workspace.',
       emptyTitle: 'Nenhuma movimentacao registrada',
       emptyDescription: 'Registre a primeira venda, consumo de banho e tosa, ajuste manual ou reposicao para tornar o estoque operacional na demo.',
       firstMovement: 'Registrar primeira movimentacao'
@@ -712,7 +712,7 @@ const ptBRMessages = {
   },
   petProfessionals: {
     noPermission: 'Você não tem permissão para visualizar a equipe.',
-    eyebrow: 'Workspace PetFlow',
+    eyebrow: 'Gestão Pet',
     title: 'Profissionais e comissao',
     description:
       'Mantenha groomers e atendentes visiveis com responsabilidade operacional, regra de comissao e contexto de fechamento do mes.',
@@ -1049,16 +1049,16 @@ const ptBRMessages = {
     }
   },
   petInvoices: {
-    noPermission: 'Você não tem permissão para visualizar as cobrancas do PetFlow.',
+    noPermission: 'Você não tem permissão para visualizar as cobrancas.',
     title: 'Cobranca e proximo ciclo',
     description:
-      'Mostre como os servicos do PetFlow viram faturas, pagamentos e uma previsao clara do proximo ciclo mensal.',
+      'Mostre como os servicos viram faturas, pagamentos e uma previsao clara do proximo ciclo mensal.',
     filtersTitle: 'Filtros de cobranca',
     filtersDescription:
       'Refine a lista financeira por cliente ou ciclo sem perder a historia comercial por tras de cada documento.',
     nextCycleTitle: 'Previsao de cobranca do proximo ciclo',
     pipelineTitle: 'Pipeline de cobranca',
-    pipelineDescription: 'Revise status, saldo em aberto e o registro financeiro por tras de cada cobranca do PetFlow.'
+    pipelineDescription: 'Revise status, saldo em aberto e o registro financeiro por tras de cada cobranca.'
   }
 } as const;
 

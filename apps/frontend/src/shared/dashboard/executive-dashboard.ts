@@ -155,7 +155,7 @@ function resolvePetNextAction(platform: FrontendPlatformState, summary: Dashboar
       key: 'pet-first-client',
       eyebrow: 'PET',
       title: 'Register first client',
-      description: 'Start the PetFlow workspace by creating the first client and pet profile.',
+      description: 'Start the Pet Management workspace by creating the first client and pet profile.',
       href: resolveTargetHref(platform, 'pet.client.read', '/pet/clients', fallbackHref),
       priority: 85
     };
@@ -191,7 +191,7 @@ function resolvePetNextAction(platform: FrontendPlatformState, summary: Dashboar
       key: 'pet-review-stock',
       eyebrow: 'PET',
       title: 'Check low stock items',
-      description: `${lowStockProducts} product SKU(s) are approaching stock pressure in PetFlow.`,
+      description: `${lowStockProducts} product SKU(s) are approaching stock pressure in Pet Management.`,
       href: resolveTargetHref(platform, 'pet.product.read', '/pet/products', fallbackHref),
       priority: 74
     };
@@ -200,7 +200,7 @@ function resolvePetNextAction(platform: FrontendPlatformState, summary: Dashboar
   return {
     key: 'pet-open-workspace',
     eyebrow: 'PET',
-    title: 'Open PetFlow workspace',
+    title: 'Open Pet Management workspace',
     description: 'Review appointment load, recent clinical work, and the next operational step.',
     href: fallbackHref,
     priority: 58
@@ -253,7 +253,7 @@ export function buildExecutiveContextCards(
         ? `${moduleSummaries.length} live modules`
         : `${accessibleModules.length} visible module${accessibleModules.length === 1 ? '' : 's'}`,
       description: demoWorkspace
-        ? 'The seeded demo workspace is ready to show PetFlow value from the first screen.'
+        ? 'The seeded demo workspace is ready to show Pet Management value from the first screen.'
         : 'Start with the modules already returning real signals for the current workspace.',
       tone: 'accent'
     },
@@ -367,7 +367,7 @@ export function buildExecutiveAttentionSignals(
           return [{
             key: 'attention-pet-invoices',
             eyebrow: 'PET',
-            title: 'PetFlow pending invoices',
+            title: 'Pet pending invoices',
             description: `${pendingInvoices} invoice(s) still need billing follow-through.`,
             href: resolveTargetHref(platform, 'pet.invoice.read', '/pet/invoices', resolveModuleWorkspaceHref('PET') ?? '/pet')
           }];
@@ -377,7 +377,7 @@ export function buildExecutiveAttentionSignals(
           return [{
             key: 'attention-pet-stock',
             eyebrow: 'PET',
-            title: 'PetFlow low stock',
+            title: 'Pet low stock',
             description: `${lowStockProducts} product SKU(s) need replenishment planning.`,
             href: resolveTargetHref(platform, 'pet.product.read', '/pet/products', resolveModuleWorkspaceHref('PET') ?? '/pet')
           }];
@@ -426,10 +426,10 @@ export function buildExecutiveOnboardingSteps(
           key: 'onboarding-pet-client',
           eyebrow: 'PET',
           title: 'Register first client',
-          description: 'Open PetFlow and add the first client and pet profile so clinical and schedule context can start building.',
+          description: 'Open Pet Management and add the first client and pet profile so clinical and schedule context can start building.',
           href: resolveTargetHref(platform, 'pet.client.read', '/pet/clients', resolveModuleWorkspaceHref('PET') ?? '/pet'),
           status: 'setup required',
-          actionLabel: 'Start PetFlow setup'
+          actionLabel: 'Start Pet Management setup'
         };
       default:
         return {
@@ -485,7 +485,7 @@ export function buildExecutiveModuleSnapshots(
           return {
             moduleCode: summary.moduleCode,
             title: summary.title,
-            description: 'Appointments, patient coverage, and commercial follow-through for the current PetFlow workspace.',
+            description: 'Appointments, patient coverage, and commercial follow-through for the current Pet Management workspace.',
             status: readCardValue(summary, 'pending-invoices') > 0 || readCardValue(summary, 'low-stock-products') > 0
               ? 'pending'
               : empty
@@ -495,7 +495,7 @@ export function buildExecutiveModuleSnapshots(
             featuredItems: featured.items,
             featuredTitle: featured.title,
             featuredDescription: featured.description,
-            emptyTitle: 'No PetFlow activity yet',
+            emptyTitle: 'No Pet Management activity yet',
             emptyDescription: 'Register the first client, patient, and appointment to make the clinic pulse useful.',
             nextAction
           };

@@ -68,6 +68,6 @@ describe('PetFollowUpPage', () => {
 
     render(<PetFollowUpPage />);
 
-    expect(screen.getByText('Voce nao possui permissao para visualizar o follow-up do PetFlow.')).toBeInTheDocument();
+    expect(screen.getByText('Voce nao possui permissao para visualizar o follow-up operacional.')).toBeInTheDocument();
   });
 });

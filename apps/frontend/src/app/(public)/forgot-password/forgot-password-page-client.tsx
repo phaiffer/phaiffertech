@@ -72,7 +72,7 @@ export default function ForgotPasswordPageClient() {
           <Link href="/" className="mb-8 inline-flex items-center gap-3 text-foreground">
             <PetFlowMark className="h-14 w-14" />
             <div>
-              <span className="block text-lg font-semibold tracking-tight">PetFlow</span>
+              <span className="block text-lg font-semibold tracking-tight">Gestão Pet</span>
               <span className="mt-1 inline-flex items-center gap-1.5 text-[10px] font-medium uppercase tracking-[0.16em] text-slate-500">
                 <BrandMark
                   priority

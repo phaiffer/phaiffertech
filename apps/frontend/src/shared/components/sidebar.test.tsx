@@ -94,7 +94,7 @@ describe('Sidebar', () => {
     const { container, getAllByText } = render(<Sidebar />);
 
     expect(container.textContent).toContain('PhaifferTech');
-    expect(getAllByText('PetFlow').length).toBeGreaterThan(0);
+    expect(getAllByText('Pet Management').length).toBeGreaterThan(0);
     expect(container.querySelector('a[href="/dashboard"]')).not.toBeNull();
     expect(container.querySelector('a[href="/pet/appointments"]')).not.toBeNull();
     expect(container.querySelector('a[href="/pet/follow-up"]')).not.toBeNull();

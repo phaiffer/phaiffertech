@@ -120,7 +120,7 @@ export function WebsiteHomePage() {
                   <TrendingUp className="h-5 w-5" />
                 </div>
                 <div>
-                  <p className="font-semibold text-slate-900">PetFlow</p>
+                  <p className="font-semibold text-slate-900">{locale === 'pt-BR' ? 'Gestão Pet' : 'Pet Management'}</p>
                   <p className="text-sm text-slate-700">{content.signalTitle}</p>
                 </div>
               </div>

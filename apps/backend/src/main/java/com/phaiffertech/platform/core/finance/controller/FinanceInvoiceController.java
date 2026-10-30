@@ -5,6 +5,8 @@ import com.phaiffertech.platform.core.finance.domain.FinanceSourceModule;
 import com.phaiffertech.platform.core.finance.dto.FinanceInvoiceCreateRequest;
 import com.phaiffertech.platform.core.finance.dto.FinanceInvoiceResponse;
 import com.phaiffertech.platform.core.finance.dto.FinanceInvoiceUpdateRequest;
+import com.phaiffertech.platform.core.finance.payment.dto.FinancePaymentEventResponse;
+import com.phaiffertech.platform.core.finance.payment.service.FinancePaymentEventService;
 import com.phaiffertech.platform.core.finance.service.FinanceInvoiceService;
 import com.phaiffertech.platform.core.finance.service.FinanceInvoiceUpsertCommand;
 import com.phaiffertech.platform.shared.pagination.PageRequestDto;
@@ -12,6 +14,7 @@ import com.phaiffertech.platform.shared.pagination.PageResponseDto;
 import com.phaiffertech.platform.shared.response.ApiResponse;
 import com.phaiffertech.platform.shared.security.RequirePermission;
 import jakarta.validation.Valid;
+import java.util.List;
 import java.util.UUID;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -30,9 +33,14 @@ import org.springframework.web.bind.annotation.RestController;
 public class FinanceInvoiceController {
 
     private final FinanceInvoiceService service;
+    private final FinancePaymentEventService paymentEventService;
 
-    public FinanceInvoiceController(FinanceInvoiceService service) {
+    public FinanceInvoiceController(
+            FinanceInvoiceService service,
+            FinancePaymentEventService paymentEventService
+    ) {
         this.service = service;
+        this.paymentEventService = paymentEventService;
     }
 
     @GetMapping
@@ -51,6 +59,14 @@ public class FinanceInvoiceController {
     @RequirePermission("finance.invoice.read")
     public ApiResponse<FinanceInvoiceResponse> getById(@PathVariable UUID id) {
         return ApiResponse.success(FinanceInvoiceResponse.fromEntity(service.getCurrentTenantOrThrow(id)));
+    }
+
+    @GetMapping("/{id}/events")
+    @RequirePermission("finance.invoice.read")
+    public ApiResponse<List<FinancePaymentEventResponse>> listEvents(@PathVariable UUID id) {
+        UUID tenantId = service.currentTenantId();
+        service.getOrThrow(id, tenantId);
+        return ApiResponse.success(paymentEventService.listByInvoice(tenantId, id));
     }
 
     @PostMapping

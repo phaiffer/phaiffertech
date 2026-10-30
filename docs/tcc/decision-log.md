@@ -1,4 +1,4 @@
-# PetFlow Banho e Tosa - Decision Log
+# Gestão Pet Banho e Tosa - Decision Log
 
 Data de referencia: 2026-05-11.
 
@@ -38,7 +38,7 @@ Consequencias:
 
 ## DL-003 - Foco comercial em Banho e Tosa
 
-Decisao: a narrativa atual do PetFlow e Banho e Tosa, nao clinica.
+Decisao: a narrativa atual do Gestão Pet e Banho e Tosa, nao clinica.
 
 Motivo:
 
@@ -139,7 +139,7 @@ Decisao: manter canais, templates, dispatches, eventos e provider de WhatsApp em
 Motivo:
 
 - mensageria e capacidade transversal;
-- PetFlow nao deve acoplar suas regras diretamente a um provider;
+- Gestão Pet nao deve acoplar suas regras diretamente a um provider;
 - a base prepara futura ativacao quando billing/credenciais estiverem resolvidos.
 
 Consequencias:

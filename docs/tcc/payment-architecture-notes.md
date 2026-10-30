@@ -2,16 +2,16 @@
 
 Data de referencia: 2026-05-12.
 
-Estas notas conectam a proposta de pagamentos/cobranca ao roadmap academico do PetFlow Banho e Tosa. O objetivo e explicar uma fundacao futura sem afirmar que gateway, PIX dinamico ou cartao real ja estao prontos.
+Estas notas conectam a proposta de pagamentos/cobranca ao roadmap academico do Gestão Pet Banho e Tosa. O objetivo e explicar uma fundacao futura sem afirmar que gateway, PIX dinamico ou cartao real ja estao prontos.
 
 ## Posicionamento no TCC
 
-O PetFlow demonstra uma operacao de Banho e Tosa com agenda, planos, estoque, comissao, cobranca e mensagens preparadas. A camada de pagamentos deve ser apresentada como evolucao da cobranca operacional, nao como entrega de integracao financeira externa.
+O Gestão Pet demonstra uma operacao de Banho e Tosa com agenda, planos, estoque, comissao, cobranca e mensagens preparadas. A camada de pagamentos deve ser apresentada como evolucao da cobranca operacional, nao como entrega de integracao financeira externa.
 
 Estado real:
 
 - faturas e pagamentos existem na base financeira compartilhada;
-- faturas PetFlow usam especializacao em `pet_invoices`;
+- faturas Gestão Pet usam especializacao em `pet_invoices`;
 - renovacao de plano pode preparar mensagem com dados de cobranca;
 - PIX aparece como informacao textual para pagamento manual;
 - WhatsApp oficial ainda nao esta validado ponta a ponta por bloqueio de billing externo da Meta;
@@ -31,7 +31,7 @@ Essa abordagem evita um "modulo PIX" prematuro. PIX, debito, credito e manual pa
 
 ## Relacao com Banho e Tosa
 
-Os principais contextos de cobranca do PetFlow sao:
+Os principais contextos de cobranca do Gestão Pet sao:
 
 - atendimento avulso;
 - extras de atendimento;
@@ -47,7 +47,7 @@ Para apresentacao:
 
 1. Mostrar que o produto resolve a operacao do dia: agenda, plano, estoque e cobranca.
 2. Explicar que a cobranca atual e manual assistida, adequada para demo e validacao.
-3. Mostrar que o backend ja separa PetFlow de financeiro compartilhado.
+3. Mostrar que o backend ja separa Gestão Pet de financeiro compartilhado.
 4. Apresentar a evolucao para tentativas/eventos/providers como arquitetura futura.
 5. Deixar claro que PIX dinamico, cartao e webhooks sao fases futuras.
 

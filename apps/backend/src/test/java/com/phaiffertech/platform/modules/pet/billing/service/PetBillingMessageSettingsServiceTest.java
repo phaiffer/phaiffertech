@@ -33,13 +33,14 @@ class PetBillingMessageSettingsServiceTest {
     private final ClientPlanRepository clientPlanRepository = mock(ClientPlanRepository.class);
     private final PetClientRepository petClientRepository = mock(PetClientRepository.class);
     private final PetProfileRepository petProfileRepository = mock(PetProfileRepository.class);
+    private final PetAppointmentRepository petAppointmentRepository = mock(PetAppointmentRepository.class);
     private final PetInvoiceService petInvoiceService = mock(PetInvoiceService.class);
     private final PetBillingMessageSettingsService service = new PetBillingMessageSettingsService(
             settingsRepository,
             clientPlanRepository,
             petClientRepository,
             petProfileRepository,
-            mock(PetAppointmentRepository.class),
+            petAppointmentRepository,
             petInvoiceService
     );
 
@@ -89,7 +90,7 @@ class PetBillingMessageSettingsServiceTest {
         when(petClientRepository.findByIdAndTenantId(clientId, tenantId)).thenReturn(Optional.of(client));
         when(petProfileRepository.findByIdAndTenantId(petId, tenantId)).thenReturn(Optional.of(pet));
         when(settingsRepository.findByTenantId(tenantId)).thenReturn(Optional.of(settings));
-        when(petInvoiceService.ensurePlanRenewalInvoice(eq(planId), eq("Renovacao de plano PetFlow - Banho 4x/mes")))
+        when(petInvoiceService.ensurePlanRenewalInvoice(eq(planId), eq("Renovacao de plano - Banho 4x/mes")))
                 .thenReturn(new PetInvoiceResponse(
                         invoiceId,
                         UUID.randomUUID(),
@@ -99,7 +100,7 @@ class PetBillingMessageSettingsServiceTest {
                         BigDecimal.ZERO,
                         BigDecimal.valueOf(220),
                         "ISSUED",
-                        "Renovacao de plano PetFlow - Banho 4x/mes",
+                        "Renovacao de plano - Banho 4x/mes",
                         "PET.CLIENT_PLAN",
                         planId,
                         "Banho 4x/mes",
@@ -121,5 +122,55 @@ class PetBillingMessageSettingsServiceTest {
         assertTrue(response.message().contains("PIX: pix@petshop.com.br"));
         assertTrue(response.message().contains("Favorecido: Pet Shop Teste"));
         assertTrue(response.message().contains("nos envie o comprovante"));
+    }
+
+    @Test
+    void preparePetReadyMessageFormatsPickupTextAndMarksCompletedAsReady() {
+        UUID tenantId = UUID.randomUUID();
+        UUID appointmentId = UUID.randomUUID();
+        UUID clientId = UUID.randomUUID();
+        UUID petId = UUID.randomUUID();
+        TenantContext.setTenantId(tenantId);
+
+        com.phaiffertech.platform.modules.pet.appointment.domain.PetAppointment appointment =
+                new com.phaiffertech.platform.modules.pet.appointment.domain.PetAppointment();
+        ReflectionTestUtils.setField(appointment, "id", appointmentId);
+        appointment.setTenantId(tenantId);
+        appointment.setClientId(clientId);
+        appointment.setPetId(petId);
+        appointment.setServiceName("Banho e Tosa Premium");
+        appointment.setStatus("COMPLETED");
+
+        PetClient client = new PetClient();
+        ReflectionTestUtils.setField(client, "id", clientId);
+        client.setTenantId(tenantId);
+        client.setName("Carlos Tutor");
+        client.setPhone("+5511999990000");
+
+        PetProfile pet = new PetProfile();
+        ReflectionTestUtils.setField(pet, "id", petId);
+        pet.setTenantId(tenantId);
+        pet.setClientId(clientId);
+        pet.setName("Thor");
+
+        PetBillingMessageSettings settings = new PetBillingMessageSettings();
+        settings.setTenantId(tenantId);
+        settings.setPixKey("pix@misterdog.demo");
+        settings.setBillingDisplayName("Mister Dog Banho e Tosa");
+        settings.setPetReadyMessageTemplate("Ola, {clientName}! O pet {petName} concluiu {serviceName} em {billingDisplayName}.");
+
+        when(petAppointmentRepository.findByIdAndTenantId(appointmentId, tenantId)).thenReturn(Optional.of(appointment));
+        when(petClientRepository.findByIdAndTenantId(clientId, tenantId)).thenReturn(Optional.of(client));
+        when(petProfileRepository.findByIdAndTenantId(petId, tenantId)).thenReturn(Optional.of(pet));
+        when(settingsRepository.findByTenantId(tenantId)).thenReturn(Optional.of(settings));
+
+        PetPreparedCustomerMessageResponse response = service.preparePetReadyMessage(appointmentId);
+
+        assertEquals("PET_READY_PICKUP", response.type());
+        assertEquals(appointmentId, response.appointmentId());
+        assertTrue(response.eligible());
+        assertTrue(response.pixConfigured());
+        assertEquals("Ola, Carlos Tutor! O pet Thor concluiu Banho e Tosa Premium em Mister Dog Banho e Tosa.", response.message());
+        assertTrue(response.safetyNote().contains("No external message provider or PIX gateway was invoked."));
     }
 }

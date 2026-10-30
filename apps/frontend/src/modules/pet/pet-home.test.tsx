@@ -138,12 +138,12 @@ describe('PetHome', () => {
       expect(petService.getDashboardSummary).toHaveBeenCalledTimes(1);
     });
 
-    expect(screen.getByRole('heading', { name: 'Clinic North · PetFlow' })).toBeInTheDocument();
-    expect(screen.getByText('Fluxos centrais da demo PetFlow')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Clinic North · Gestão Pet' })).toBeInTheDocument();
+    expect(screen.getByText('Fluxos centrais de Gestão Pet')).toBeInTheDocument();
     expect(screen.getByText('Revisar clientes')).toBeInTheDocument();
     expect(screen.getByText('Agendar atendimentos')).toBeInTheDocument();
     expect(screen.getByText('Gerir cobranca')).toBeInTheDocument();
-    expect(screen.getAllByText('Abrir dashboard do PetFlow').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('Abrir dashboard operacional').length).toBeGreaterThan(0);
     expect(screen.getByText('Operacao ao vivo')).toBeInTheDocument();
     expect(screen.getByText('Fluxo clinico')).toBeInTheDocument();
   }, 10000);
@@ -167,8 +167,8 @@ describe('PetHome', () => {
       expect(petService.getDashboardSummary).toHaveBeenCalledTimes(1);
     });
 
-    expect(screen.getByText('Configuracao PetFlow')).toBeInTheDocument();
-    expect(screen.getByText('Configure o seu ambiente PetFlow')).toBeInTheDocument();
+    expect(screen.getByText('Configuracao Gestão Pet')).toBeInTheDocument();
+    expect(screen.getByText('Configure o seu ambiente de Gestão Pet')).toBeInTheDocument();
     expect(screen.getByText(/comece com clientes e pets/i)).toBeInTheDocument();
     expect(screen.getAllByText('Comece por clientes').length).toBeGreaterThan(0);
     expect(screen.getAllByText('Agendar atendimentos').length).toBeGreaterThan(0);
@@ -223,8 +223,8 @@ describe('PetHome', () => {
       expect(petService.getDashboardSummary).toHaveBeenCalledTimes(1);
     });
 
-    expect(screen.getByText('Ambiente PetFlow Grooming')).toBeInTheDocument();
-    expect(screen.getByText('Fluxos centrais da demo PetFlow')).toBeInTheDocument();
+    expect(screen.getByText('Ambiente Banho & Tosa')).toBeInTheDocument();
+    expect(screen.getByText('Fluxos centrais de Gestão Pet')).toBeInTheDocument();
     expect(screen.getByText('Panorama vivo de servicos')).toBeInTheDocument();
 
     currentPlatformState.visualProfile = {

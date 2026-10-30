@@ -141,7 +141,7 @@ export default function LoginPageClient({ nextPath }: LoginPageClientProps) {
               <Link href="/" className="inline-flex items-center gap-2.5 text-foreground">
                 <PetFlowMark className="h-11 w-11 shrink-0 rounded-[1.15rem]" />
                 <div>
-                  <span className="block text-lg font-semibold tracking-tight text-slate-900">PetFlow</span>
+                  <span className="block text-lg font-semibold tracking-tight text-slate-900">Gestão Pet</span>
                   <span className="mt-1 inline-flex items-center gap-1.5 text-[10px] font-medium uppercase tracking-[0.16em] text-slate-600">
                     <BrandMark
                       priority
@@ -290,7 +290,7 @@ export default function LoginPageClient({ nextPath }: LoginPageClientProps) {
         <section className="relative hidden overflow-hidden bg-slate-950 lg:flex">
           <Image
             src="/images/login-dog.jpg"
-            alt="PetFlow login visual"
+            alt="Pet management login visual"
             fill
             priority
             className="object-cover"
@@ -305,7 +305,7 @@ export default function LoginPageClient({ nextPath }: LoginPageClientProps) {
             </div>
 
             <div className="max-w-lg">
-              <p className="text-sm font-semibold uppercase tracking-[0.18em] text-emerald-100">PetFlow</p>
+              <p className="text-sm font-semibold uppercase tracking-[0.18em] text-emerald-100">Gestão Pet</p>
               <h2 className="mt-4 text-[2.5rem] font-bold leading-[1.02] tracking-[-0.05em] text-white xl:text-[2.85rem]">
                 {supportCopy.heroTitle}
               </h2>

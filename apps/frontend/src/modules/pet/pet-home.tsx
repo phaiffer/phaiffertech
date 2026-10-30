@@ -110,17 +110,17 @@ function getPetWorkspaceActions(mode: PetWorkspaceMode): ModuleWorkspaceAction[]
       permission: 'pet.dashboard.read',
       anyEntitlements: petSubmoduleEntitlements,
       restrictionTitle: 'Acesso ao dashboard necessario',
-      restrictionDescription: 'Esse pulso do ambiente aparece quando o seu perfil inclui acesso ao dashboard do PetFlow.'
+      restrictionDescription: 'Esse pulso do ambiente aparece quando o seu perfil inclui acesso ao dashboard de Gestão Pet.'
     },
     {
       href: '/pet/clients',
       eyebrow: 'Recepcao',
       title: 'Revisar clientes',
-      description: 'Comece a historia do PetFlow com cadastros de clientes e um contexto de contato confiavel.',
+      description: 'Comece a operacao com cadastros de clientes e um contexto de contato confiavel.',
       permission: 'pet.client.read',
       anyEntitlements: petSubmoduleEntitlements,
       restrictionTitle: 'Acesso a clientes necessario',
-      restrictionDescription: 'A gestao de clientes aparece aqui quando o seu perfil pode ler clientes do PetFlow.'
+      restrictionDescription: 'A gestao de clientes aparece aqui quando o seu perfil pode ler clientes da Gestão Pet.'
     },
     {
       href: '/pet/pets',
@@ -132,7 +132,7 @@ function getPetWorkspaceActions(mode: PetWorkspaceMode): ModuleWorkspaceAction[]
       permission: 'pet.profile.read',
       anyEntitlements: petSubmoduleEntitlements,
       restrictionTitle: 'Acesso a perfis de pets necessario',
-      restrictionDescription: 'Os perfis dos pets ficam indisponiveis ate o seu perfil poder ler os registros do PetFlow.'
+      restrictionDescription: 'Os perfis dos pets ficam indisponiveis ate o seu perfil poder ler os registros da Gestão Pet.'
     },
     {
       href: '/pet/appointments',
@@ -144,7 +144,7 @@ function getPetWorkspaceActions(mode: PetWorkspaceMode): ModuleWorkspaceAction[]
       permission: 'pet.appointment.read',
       anyEntitlements: petOperationalEntitlements,
       restrictionTitle: 'Acesso a atendimentos necessario',
-      restrictionDescription: 'O fluxo de atendimentos aparece quando o seu perfil pode ler atendimentos do PetFlow.'
+      restrictionDescription: 'O fluxo de atendimentos aparece quando o seu perfil pode ler atendimentos da Gestão Pet.'
     },
     {
       href: '/pet/plans',
@@ -156,7 +156,7 @@ function getPetWorkspaceActions(mode: PetWorkspaceMode): ModuleWorkspaceAction[]
       permission: 'pet.plan.read',
       anyEntitlements: petOperationalEntitlements,
       restrictionTitle: 'Acesso a planos necessario',
-      restrictionDescription: 'Os planos de clientes aparecem aqui quando o seu perfil pode ler planos do PetFlow.'
+      restrictionDescription: 'Os planos de clientes aparecem aqui quando o seu perfil pode ler planos da Gestão Pet.'
     },
     {
       href: '/pet/services',
@@ -166,7 +166,7 @@ function getPetWorkspaceActions(mode: PetWorkspaceMode): ModuleWorkspaceAction[]
       permission: 'pet.service.read',
       anyEntitlements: petOperationalEntitlements,
       restrictionTitle: 'Acesso a servicos necessario',
-      restrictionDescription: 'O catalogo de servicos aparece aqui quando o seu perfil pode ler servicos do PetFlow.'
+      restrictionDescription: 'O catalogo de servicos aparece aqui quando o seu perfil pode ler servicos da Gestão Pet.'
     },
     {
       href: '/pet/professionals',
@@ -178,7 +178,7 @@ function getPetWorkspaceActions(mode: PetWorkspaceMode): ModuleWorkspaceAction[]
       permission: 'pet.professional.read',
       anyEntitlements: petOperationalEntitlements,
       restrictionTitle: 'Acesso a profissionais necessario',
-      restrictionDescription: 'A gestao da equipe fica oculta ate o seu perfil poder ler profissionais do PetFlow.'
+      restrictionDescription: 'A gestao da equipe fica oculta ate o seu perfil poder ler profissionais da Gestão Pet.'
     },
     {
       href: '/pet/medical-records',
@@ -196,11 +196,11 @@ function getPetWorkspaceActions(mode: PetWorkspaceMode): ModuleWorkspaceAction[]
       href: '/pet/products',
       eyebrow: 'Comercial',
       title: 'Revisar produtos',
-      description: 'Revise SKUs, precos e itens ligados ao ambiente comercial do PetFlow.',
+      description: 'Revise SKUs, precos e itens ligados ao ambiente comercial da Gestão Pet.',
       permission: 'pet.product.read',
       anyEntitlements: petRetailEntitlements,
       restrictionTitle: 'Acesso a produtos necessario',
-      restrictionDescription: 'A gestao de produtos aparece aqui quando o seu perfil pode ler produtos do PetFlow.'
+      restrictionDescription: 'A gestao de produtos aparece aqui quando o seu perfil pode ler produtos da Gestão Pet.'
     },
     {
       href: '/pet/inventory',
@@ -210,7 +210,7 @@ function getPetWorkspaceActions(mode: PetWorkspaceMode): ModuleWorkspaceAction[]
       permission: 'pet.inventory.read',
       anyEntitlements: petRetailEntitlements,
       restrictionTitle: 'Acesso a estoque necessario',
-      restrictionDescription: 'O fluxo de estoque aparece quando o seu perfil pode ler estoque do PetFlow.'
+      restrictionDescription: 'O fluxo de estoque aparece quando o seu perfil pode ler estoque da Gestão Pet.'
     },
     {
       href: '/pet/invoices',
@@ -220,7 +220,7 @@ function getPetWorkspaceActions(mode: PetWorkspaceMode): ModuleWorkspaceAction[]
       permission: 'pet.invoice.read',
       anyEntitlements: petRetailEntitlements,
       restrictionTitle: 'Acesso a cobranca necessario',
-      restrictionDescription: 'Os sinais de cobranca aparecem aqui quando o seu perfil pode ler faturas do PetFlow.'
+      restrictionDescription: 'Os sinais de cobranca aparecem aqui quando o seu perfil pode ler faturas da Gestão Pet.'
     },
     {
       href: '/pet/insights',
@@ -232,7 +232,7 @@ function getPetWorkspaceActions(mode: PetWorkspaceMode): ModuleWorkspaceAction[]
       permission: 'pet.dashboard.read',
       anyEntitlements: petSubmoduleEntitlements,
       restrictionTitle: 'Acesso ao dashboard necessario',
-      restrictionDescription: 'Os insights do negocio aparecem quando o seu perfil inclui acesso ao dashboard do PetFlow.'
+      restrictionDescription: 'Os insights do negocio aparecem quando o seu perfil inclui acesso ao dashboard de Gestão Pet.'
     }
   ];
 }
@@ -246,12 +246,12 @@ function resolvePetWorkspaceDescription(
 ) {
   if (isPlatformOwnerTenant) {
     return mode === 'grooming'
-      ? 'Use este ambiente do PetFlow para revisar a superficie de servicos e operacao a partir do ambiente principal da plataforma.'
-      : 'Use este ambiente do PetFlow para revisar a superficie clinica e operacional a partir do ambiente principal da plataforma.';
+      ? 'Use este ambiente de Gestão Pet para revisar a superficie de servicos e operacao a partir do ambiente principal da plataforma.'
+      : 'Use este ambiente de Gestão Pet para revisar a superficie clinica e operacional a partir do ambiente principal da plataforma.';
   }
 
   if (hasSystemAdminRole) {
-    return `Este ambiente do PetFlow esta limitado a ${scopeName} enquanto um perfil interno de suporte permanece ativo nesta sessao.`;
+    return `Este ambiente de Gestão Pet esta limitado a ${scopeName} enquanto um perfil interno de suporte permanece ativo nesta sessao.`;
   }
 
   return mode === 'grooming'
@@ -297,7 +297,7 @@ function buildPetGuidanceSteps(actions: ModuleWorkspaceAction[], keys: string[])
 function getPetWorkspaceCopy(mode: PetWorkspaceMode): PetWorkspaceCopy {
   if (mode === 'grooming') {
     return {
-      heroEyebrow: 'Ambiente PetFlow Grooming',
+      heroEyebrow: 'Ambiente Banho & Tosa',
       overviewAppointmentsLabel: 'Servicos hoje',
       overviewAppointmentsDescription: 'Servicos agendados para o dia operacional atual.',
       overviewUpcomingLabel: 'Proximos atendimentos',
@@ -309,26 +309,26 @@ function getPetWorkspaceCopy(mode: PetWorkspaceMode): PetWorkspaceCopy {
       snapshotTitle: 'Panorama vivo de servicos',
       snapshotDescription: 'Leia o momento atual da operacao aqui e siga para cobranca e insights.',
       restrictedTitle: 'Resumo de servicos restrito',
-      restrictedDescription: 'Este ambiente do PetFlow esta disponivel, mas o panorama de servicos exige `pet.dashboard.read`. Continue pelos fluxos liberados de clientes, agenda e cuidado abaixo.',
-      loadingTitle: 'Carregando resumo do PetFlow',
+      restrictedDescription: 'Este ambiente de Gestão Pet esta disponivel, mas o panorama de servicos exige `pet.dashboard.read`. Continue pelos fluxos liberados de clientes, agenda e cuidado abaixo.',
+      loadingTitle: 'Carregando resumo operacional',
       loadingDescription: 'Coletando a visao mais recente de servicos e operacao para este ambiente.',
-      errorGuidanceTitle: 'Siga com o PetFlow',
-      errorGuidanceDescription: 'Use os fluxos do PetFlow abaixo enquanto o resumo se recupera.',
-      onboardingEyebrow: 'Configuracao PetFlow',
-      onboardingTitle: 'Configure o seu ambiente PetFlow',
+      errorGuidanceTitle: 'Siga com a operacao',
+      errorGuidanceDescription: 'Use os fluxos abaixo enquanto o resumo se recupera.',
+      onboardingEyebrow: 'Configuracao Gestão Pet',
+      onboardingTitle: 'Configure o seu ambiente de Gestão Pet',
       onboardingDescription: 'Comece com clientes e pets, depois adicione servicos e equipe, agende atendimentos e acompanhe a cobranca.',
       emptyActivityTitle: 'Ainda nao ha atividade recente de servicos',
-      emptyActivityDescription: 'Os registros do PetFlow ja existem, mas ainda nao ha um bloco compacto de atividade para mostrar aqui.',
-      emptyGuidanceTitle: 'Continue com o PetFlow',
+      emptyActivityDescription: 'Os registros da Gestão Pet ja existem, mas ainda nao ha um bloco compacto de atividade para mostrar aqui.',
+      emptyGuidanceTitle: 'Continue com a Gestão Pet',
       emptyGuidanceDescription: 'Use os fluxos abaixo enquanto a atividade cresce dentro do ambiente.',
       emptySummaryTitle: 'Ainda nao ha panorama operacional',
-      emptySummaryDescription: 'O PetFlow ainda nao devolveu um panorama vivo da operacao deste ambiente.',
+      emptySummaryDescription: 'A Gestão Pet ainda nao devolveu um panorama vivo da operacao deste ambiente.',
       moduleSurfaceDescription: 'Agenda, cuidado, comercial e estoque seguem limitados ao contrato ativo do ambiente.'
     };
   }
 
   return {
-    heroEyebrow: 'Ambiente PetFlow',
+    heroEyebrow: 'Ambiente Gestão Pet',
     overviewAppointmentsLabel: 'Atendimentos hoje',
     overviewAppointmentsDescription: 'Atendimentos previstos para o dia operacional atual.',
     overviewUpcomingLabel: 'Proximas agendas',
@@ -340,20 +340,20 @@ function getPetWorkspaceCopy(mode: PetWorkspaceMode): PetWorkspaceCopy {
     snapshotTitle: 'Operacao ao vivo',
     snapshotDescription: 'Leia o momento atual da operacao aqui e siga para cobranca e insights.',
     restrictedTitle: 'Resumo operacional restrito',
-    restrictedDescription: 'Este ambiente do PetFlow esta disponivel, mas o panorama operacional exige `pet.dashboard.read`. Continue pelos fluxos liberados de clientes, atendimentos e cuidado abaixo.',
-    loadingTitle: 'Carregando resumo do PetFlow',
+    restrictedDescription: 'Este ambiente de Gestão Pet esta disponivel, mas o panorama operacional exige `pet.dashboard.read`. Continue pelos fluxos liberados de clientes, atendimentos e cuidado abaixo.',
+    loadingTitle: 'Carregando resumo operacional',
     loadingDescription: 'Coletando a visao mais recente da operacao e da frente comercial deste ambiente pet.',
-    errorGuidanceTitle: 'Siga com o PetFlow',
-    errorGuidanceDescription: 'Use os fluxos do PetFlow abaixo enquanto o resumo se recupera.',
-    onboardingEyebrow: 'Configuracao PetFlow',
-    onboardingTitle: 'Configure o seu ambiente PetFlow',
+    errorGuidanceTitle: 'Siga com a operacao',
+    errorGuidanceDescription: 'Use os fluxos abaixo enquanto o resumo se recupera.',
+    onboardingEyebrow: 'Configuracao Gestão Pet',
+    onboardingTitle: 'Configure o seu ambiente de Gestão Pet',
     onboardingDescription: 'Comece com clientes e pets, depois adicione servicos e equipe, agende atendimentos e acompanhe a cobranca.',
     emptyActivityTitle: 'Ainda nao ha atividade operacional recente',
-    emptyActivityDescription: 'Os registros do PetFlow ja existem, mas ainda nao ha um bloco compacto de atividade ao vivo para mostrar aqui.',
-    emptyGuidanceTitle: 'Continue com o PetFlow',
+    emptyActivityDescription: 'Os registros da Gestão Pet ja existem, mas ainda nao ha um bloco compacto de atividade ao vivo para mostrar aqui.',
+    emptyGuidanceTitle: 'Continue com a Gestão Pet',
     emptyGuidanceDescription: 'Use os fluxos abaixo enquanto a atividade cresce dentro do ambiente.',
     emptySummaryTitle: 'Ainda nao ha panorama operacional',
-    emptySummaryDescription: 'O PetFlow ainda nao devolveu um panorama vivo da operacao deste ambiente.',
+    emptySummaryDescription: 'A Gestão Pet ainda nao devolveu um panorama vivo da operacao deste ambiente.',
     moduleSurfaceDescription: 'Servicos, produtos, cuidado e cobranca seguem limitados ao contrato ativo do ambiente.'
   };
 }
@@ -393,8 +393,8 @@ function resolvePetPrimaryAction(actions: ModuleWorkspaceAction[], summary: PetD
     return {
       title: 'Comece por clientes',
       description: mode === 'grooming'
-        ? 'Cadastre o primeiro cliente e depois adicione um pet para iniciar o setup do PetFlow.'
-        : 'Cadastre o primeiro cliente e depois adicione um pet para iniciar o setup do PetFlow.',
+        ? 'Cadastre o primeiro cliente e depois adicione um pet para iniciar o setup da Gestão Pet.'
+        : 'Cadastre o primeiro cliente e depois adicione um pet para iniciar o setup da Gestão Pet.',
       href: resolvePetActionHref(actions, '/pet/clients', fallbackAction.href)
     } satisfies PetPrimaryAction;
   }
@@ -410,7 +410,7 @@ function resolvePetPrimaryAction(actions: ModuleWorkspaceAction[], summary: PetD
   if ((summary?.pendingInvoices ?? 0) > 0) {
     return {
       title: 'Revisar cobrancas pendentes',
-      description: `${summary?.pendingInvoices ?? 0} fatura(s) ainda pedem acompanhamento de cobranca no PetFlow.`,
+      description: `${summary?.pendingInvoices ?? 0} fatura(s) ainda pedem acompanhamento de cobranca na Gestão Pet.`,
       href: resolvePetActionHref(actions, '/pet/invoices', fallbackAction.href)
     } satisfies PetPrimaryAction;
   }
@@ -573,7 +573,7 @@ export function PetHome() {
       if (firstUse && action.href === '/pet/medical-records') {
         const capability = notConfiguredCapability({
           title: 'Os prontuarios ainda nao foram configurados',
-          description: 'Os registros clinicos comecam quando os primeiros pacientes e atendimentos passam a existir neste ambiente do PetFlow.'
+          description: 'Os registros clinicos comecam quando os primeiros pacientes e atendimentos passam a existir neste ambiente de Gestão Pet.'
         }, locale);
 
         return { ...action, capability, status: capability.status };
@@ -592,8 +592,8 @@ export function PetHome() {
         const capability = noDataCapability({
           title: 'Ainda nao ha atividade recente de atendimentos',
           description: petMode === 'grooming'
-            ? 'O ambiente ja tem registros do PetFlow, mas ainda nao existe um bloco compacto de atividade recente de servicos.'
-            : 'O ambiente ja tem registros do PetFlow, mas ainda nao existe um bloco compacto de atividade recente de atendimentos.'
+            ? 'O ambiente ja tem registros da Gestão Pet, mas ainda nao existe um bloco compacto de atividade recente de servicos.'
+            : 'O ambiente ja tem registros da Gestão Pet, mas ainda nao existe um bloco compacto de atividade recente de atendimentos.'
         }, locale);
 
         return { ...action, capability, status: capability.status };
@@ -675,7 +675,7 @@ export function PetHome() {
         }
 
         setSummary(null);
-        setError(err instanceof ApiClientError ? err.message : 'Nao foi possivel carregar o resumo do ambiente PetFlow.');
+        setError(err instanceof ApiClientError ? err.message : 'Nao foi possivel carregar o resumo do ambiente de Gestão Pet.');
         setLoadingSummary(false);
       });
 
@@ -694,7 +694,7 @@ export function PetHome() {
 
       <ModuleWorkspaceHero
         eyebrow={petCopy.heroEyebrow}
-        title={`${platform.branding.scopeName} · PetFlow`}
+        title={`${platform.branding.scopeName} · Gestão Pet`}
         description={resolvePetWorkspaceDescription(
           platform.branding.scopeName,
           localizedWorkspaceLabel,
@@ -720,11 +720,11 @@ export function PetHome() {
               {
                 label: 'Codigo do ambiente',
                 value: platform.branding.tenantCode ?? 'Nao informado',
-                description: 'Identificador estavel do ambiente PetFlow.'
+                description: 'Identificador estavel do ambiente de Gestão Pet.'
               },
               {
                 label: 'Proxima acao',
-                value: primaryAction?.title ?? 'Abrir ambiente PetFlow',
+                value: primaryAction?.title ?? 'Abrir ambiente de Gestão Pet',
                 description: primaryAction?.description ?? 'Use os fluxos do ambiente abaixo para continuar.',
                 status: firstUse ? 'configuracao necessaria' : summary && (summary.pendingInvoices > 0 || summary.lowStockProducts > 0) ? 'pendente' : 'ativo'
               }
@@ -738,7 +738,7 @@ export function PetHome() {
           {
             label: 'Escopo do ambiente',
             value: platform.branding.scopeName,
-            description: 'A operacao do PetFlow permanece ancorada no ambiente ativo.'
+            description: 'A operacao de Gestão Pet permanece ancorada no ambiente ativo.'
           },
           {
             label: petCopy.overviewAppointmentsLabel,
@@ -811,11 +811,11 @@ export function PetHome() {
       />
 
       <ModuleWorkspaceQuickActionGrid
-        title="Fluxos centrais da demo PetFlow"
-        description="Mantenha a historia curta para a demo: recepcao, servicos, planos recorrentes, equipe, estoque e cobranca."
+        title="Fluxos centrais de Gestão Pet"
+        description="Mantenha a operacao integrada: recepcao, servicos, planos recorrentes, equipe, estoque e cobranca."
         actions={landingActions}
-        emptyTitle="Nenhum fluxo do PetFlow disponivel"
-        emptyDescription="Este ambiente tem o modulo PetFlow ativo, mas o usuario atual ainda nao possui permissoes de leitura."
+        emptyTitle="Nenhum fluxo de Gestão Pet disponivel"
+        emptyDescription="Este ambiente tem o modulo de Gestão Pet ativo, mas o usuario atual ainda nao possui permissoes de leitura."
       />
 
       <ModuleWorkspaceSection
@@ -826,7 +826,7 @@ export function PetHome() {
             href={dashboardHref}
             className="inline-flex text-sm font-semibold text-[color:var(--tenant-accent)]"
           >
-            Abrir dashboard do PetFlow
+            Abrir dashboard operacional
           </Link>
         ) : primaryAction ? (
           <Link
@@ -845,7 +845,7 @@ export function PetHome() {
               description={petCopy.restrictedDescription}
             />
             <ModuleWorkspaceGuidance
-              title="Continue com o ambiente PetFlow"
+              title="Continue com o ambiente de Gestão Pet"
               description="Estes proximos passos seguem disponiveis mesmo com a visibilidade do dashboard restrita."
               steps={restrictedGuidance}
             />
@@ -858,7 +858,7 @@ export function PetHome() {
           />
         ) : error ? (
           <div className="space-y-4">
-            <ModuleWorkspaceState tone="error" title="Resumo do PetFlow indisponivel" description={error} />
+            <ModuleWorkspaceState tone="error" title="Resumo operacional indisponivel" description={error} />
             <ModuleWorkspaceGuidance
               title={petCopy.errorGuidanceTitle}
               description={petCopy.errorGuidanceDescription}

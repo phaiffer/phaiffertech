@@ -371,7 +371,7 @@ export function PetProfilesPage({ initialView = 'list' }: PetProfilesPageProps) 
     >
       <div className={sharedPageStackClass}>
         <PageTitle
-          eyebrow="PetFlow workspace"
+          eyebrow="Gestão Pet"
           title={isCreateRoute ? 'Novo pet' : 'Pets'}
           description={
             isCreateRoute

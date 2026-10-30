@@ -49,9 +49,9 @@ export function InventoryHubPage() {
   return (
     <div className={sharedPageStackClass}>
       <PageTitle
-        eyebrow="PetFlow operations"
+        eyebrow="Operação Pet"
         title="Inventory"
-        description="Inventory keeps stock, replenishment, and movement history visible for the PetFlow demo without inflating the visible product surface."
+        description="Inventory keeps stock, replenishment, and movement history visible for the pet operation without inflating the visible product surface."
       />
 
       {lowStockCount > 0 && (
@@ -62,7 +62,7 @@ export function InventoryHubPage() {
               {lowStockCount} item{lowStockCount === 1 ? '' : 's'} with low stock
             </p>
             <p className="mt-0.5 text-xs text-warning/80">
-              Stock levels are at or below the minimum threshold. Open PetFlow inventory to plan replenishment before service delivery is affected.
+              Stock levels are at or below the minimum threshold. Open inventory to plan replenishment before service delivery is affected.
             </p>
           </div>
         </div>
@@ -71,10 +71,10 @@ export function InventoryHubPage() {
       <div className="grid gap-6 md:grid-cols-1">
         <PermissionGuard permission="pet.inventory.read">
           <InventorySurfaceCard
-            title="PetFlow — Products & Stock"
+            title="Operação Pet — Products & Stock"
             description="Manage product catalog and stock movements for retail, clinics, and grooming operations. Includes inbound supply and outbound sales."
             href="/pet/inventory"
-            label="Go to PetFlow Inventory"
+            label="Go to Pet Inventory"
           />
         </PermissionGuard>
       </div>
@@ -82,7 +82,7 @@ export function InventoryHubPage() {
       <div className="rounded-2xl border border-dashed border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-panel-muted)] p-6">
         <p className="text-sm font-semibold text-[color:var(--app-shell-muted)]">How inventory works on this platform</p>
         <p className="mt-2 text-sm text-[color:var(--app-shell-muted)]">
-          Inventory stays readable when operators can answer three questions quickly: what is low, what moved, and why it changed. The PetFlow demo keeps those answers visible for products, retail items, and grooming supplies.
+          Inventory stays readable when operators can answer three questions quickly: what is low, what moved, and why it changed. The workspace keeps those answers visible for products, retail items, and grooming supplies.
         </p>
       </div>
     </div>

@@ -308,7 +308,7 @@ export function Sidebar() {
             <PetFlowMark className="h-9 w-9 shrink-0 rounded-[1rem]" />
             <div className="min-w-0">
               <p className="truncate text-sm font-bold tracking-[-0.02em] text-[var(--sidebar-foreground)]">
-                PetFlow
+                {shellMessages.petFlow}
               </p>
               <span className="mt-0.5 inline-flex items-center gap-1 truncate text-[9px] font-medium uppercase tracking-[0.18em] text-[var(--muted-foreground)]">
                 by

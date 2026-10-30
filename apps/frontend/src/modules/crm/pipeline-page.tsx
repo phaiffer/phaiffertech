@@ -194,17 +194,17 @@ export function CrmPipelinePage({ surface = 'crm' }: CrmPipelinePageProps) {
       fallback={(
         <div className="ui-notice-warning">
           {isPetSurface
-            ? 'Voce nao possui permissao para visualizar o comercial do PetFlow.'
+            ? 'Voce nao possui permissao para visualizar o comercial da Gestão Pet.'
             : 'Voce nao possui permissao para visualizar o pipeline.'}
         </div>
       )}
     >
       <div className="space-y-5">
         <PageTitle
-          eyebrow={isPetSurface ? 'PetFlow commercial' : 'CRM workspace'}
+          eyebrow={isPetSurface ? 'Gestão Pet · Comercial' : 'CRM workspace'}
           title={isPetSurface ? 'Pipeline comercial' : 'CRM Pipeline'}
           description={isPetSurface
-            ? 'Gerencie as etapas do pipeline comercial do PetFlow mantendo o backend atual apenas como compatibilidade.'
+            ? 'Gerencie as etapas do pipeline comercial da Gestão Pet mantendo o backend atual apenas como compatibilidade.'
             : 'Gestao das etapas do pipeline comercial.'}
         />
 

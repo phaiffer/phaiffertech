@@ -171,7 +171,7 @@ function formatCategoryLabel(value?: string | null) {
     INVOICE: 'Fatura',
     MANUAL: 'Ajuste manual',
     OTHER: 'Outro',
-    PET: 'PetFlow',
+    PET: 'Gestão Pet',
     PLAN: 'Plano',
     PRODUCT: 'Produto',
     SERVICE: 'Servico'
@@ -394,7 +394,7 @@ export function PetInvoicesPage() {
       });
       setPageData(result);
     } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : 'Nao foi possivel carregar as faturas do PetFlow.');
+      setError(err instanceof ApiClientError ? err.message : 'Nao foi possivel carregar as faturas.');
     } finally {
       setLoading(false);
     }
@@ -950,7 +950,7 @@ export function PetInvoicesPage() {
         <PetModuleSubnav />
 
         <PageTitle
-          eyebrow="Financeiro PetFlow"
+          eyebrow="Financeiro Operacional"
           title={messages.title}
           description={messages.description}
           actions={(
@@ -979,7 +979,7 @@ export function PetInvoicesPage() {
             value={new Intl.NumberFormat('pt-BR').format(totalItems)}
             detail={activeFilterCount > 0
               ? 'Os resultados refletem os filtros financeiros atuais.'
-              : 'Lista completa de faturas do PetFlow neste ambiente.'}
+              : 'Lista completa de faturas neste ambiente.'}
           />
           <SnapshotCard
             icon={ArrowUpRight}
@@ -1270,7 +1270,7 @@ export function PetInvoicesPage() {
           <div id="pet-invoice-finance-section">
             <PageSection
               title="Visao financeira vinculada"
-              description="Use este painel para explicar status da fatura, pagamentos e movimentos de caixa sem sair do PetFlow."
+              description="Use este painel para explicar status da fatura, pagamentos e movimentos de caixa sem sair da operação."
               actions={(
                 <button
                   type="button"
@@ -1405,7 +1405,7 @@ export function PetInvoicesPage() {
                     <p className={billingPanelEyebrowClass}>Fonte de verdade</p>
                     <p className={billingPanelTitleClass}>Base financeira</p>
                     <p className={billingPanelTextClass}>
-                      Esta e a fonte financeira de verdade no backend vinculada a esta fatura do PetFlow.
+                      Esta e a fonte financeira de verdade no backend vinculada a esta fatura.
                     </p>
 
                     <div className="mt-4 space-y-3">
@@ -1583,7 +1583,7 @@ export function PetInvoicesPage() {
                     <p className={billingPanelEyebrowClass}>Caixa</p>
                     <p className={billingPanelTitleClass}>Visibilidade dos movimentos</p>
                     <p className={billingPanelTextClass}>
-                      Revise como esta fatura afetou o caixa do ambiente sem sair do fluxo do PetFlow.
+                      Revise como esta fatura afetou o caixa do ambiente sem sair do fluxo operacional.
                     </p>
                   </div>
                   {canReadFinanceCash ? <StatusBadge status="info" /> : <StatusBadge status="restricted" />}

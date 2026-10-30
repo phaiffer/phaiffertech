@@ -144,7 +144,7 @@ export function CrmDealsPage({ surface = 'crm' }: CrmDealsPageProps) {
         err instanceof ApiClientError
           ? err.message
           : isPetSurface
-            ? 'Nao foi possivel carregar as dependencias do comercial do PetFlow.'
+            ? 'Nao foi possivel carregar as dependencias do comercial da Gestão Pet.'
             : 'Unable to load deal dependencies for the CRM workspace.'
       );
     }
@@ -430,17 +430,17 @@ export function CrmDealsPage({ surface = 'crm' }: CrmDealsPageProps) {
       fallback={(
         <div className="ui-notice-warning">
           {isPetSurface
-            ? 'Voce nao possui permissao para visualizar o comercial do PetFlow.'
+            ? 'Voce nao possui permissao para visualizar o comercial da Gestão Pet.'
             : 'You do not have permission to view CRM deals.'}
         </div>
       )}
     >
       <div className={sharedPageStackClass}>
         <PageTitle
-          eyebrow={isPetSurface ? 'PetFlow commercial' : 'CRM workspace'}
+          eyebrow={isPetSurface ? 'Gestão Pet · Comercial' : 'CRM workspace'}
           title={isPetSurface ? 'Negocios comerciais' : 'Deals'}
           description={isPetSurface
-            ? 'Acompanhe o pipeline comercial do PetFlow sem reabrir uma superficie comercial legada.'
+            ? 'Acompanhe o pipeline comercial da Gestão Pet sem reabrir uma superficie comercial legada.'
             : 'Track opportunities on a single board without turning the page into a reporting layer.'}
           actions={(
             <PermissionGuard permission={dealPermissions.create}>

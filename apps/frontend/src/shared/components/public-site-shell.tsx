@@ -50,7 +50,7 @@ export function PublicSiteShell({ children }: PublicSiteShellProps) {
           <Link href="/" className="inline-flex shrink-0 items-center gap-2.5">
             <PetFlowMark className="h-9 w-9 shrink-0" iconClassName="scale-95" />
             <div className="flex flex-col leading-none">
-              <span className="text-base font-bold tracking-tight text-slate-900">PetFlow</span>
+              <span className="text-base font-bold tracking-tight text-slate-900">Gestão Pet</span>
               <span className="mt-0.5 flex items-center gap-1 text-[10px] font-medium uppercase tracking-[0.14em] text-slate-600">
                 by
                 <BrandMark className="h-3.5 w-3.5 rounded-sm" imageClassName="scale-110" />
@@ -121,7 +121,7 @@ export function PublicSiteShell({ children }: PublicSiteShellProps) {
             <Link href="/" className="inline-flex items-center gap-2.5">
               <PetFlowMark className="h-9 w-9 shrink-0" iconClassName="scale-95" />
               <div className="flex flex-col leading-none">
-                <span className="text-base font-bold tracking-tight text-slate-900">PetFlow</span>
+                <span className="text-base font-bold tracking-tight text-slate-900">Gestão Pet</span>
                 <span className="mt-0.5 flex items-center gap-1 text-[10px] font-medium uppercase tracking-[0.14em] text-slate-600">
                   by
                   <BrandMark className="h-3.5 w-3.5 rounded-sm" imageClassName="scale-110" />

@@ -327,14 +327,14 @@ export function CrmLeadsPage({ surface = 'crm' }: CrmLeadsPageProps) {
       fallback={(
         <div className="ui-notice-warning">
           {isPetSurface
-            ? 'Você não possui permissão para visualizar o comercial do PetFlow.'
+            ? 'Você não possui permissão para visualizar o comercial da Gestão Pet.'
             : 'Você não possui permissão para visualizar leads.'}
         </div>
       )}
     >
       <div className={sharedPageStackClass}>
         <PageTitle
-          eyebrow={isPetSurface ? 'PetFlow commercial' : 'CRM workspace'}
+          eyebrow={isPetSurface ? 'Gestão Pet · Comercial' : 'CRM workspace'}
           title={isPetSurface ? 'Leads comerciais' : 'Leads'}
           description={isPetSurface
             ? 'Concentre captura, origem e contexto de conversão sem reabrir uma superfície comercial legada.'
@@ -355,7 +355,7 @@ export function CrmLeadsPage({ surface = 'crm' }: CrmLeadsPageProps) {
           tone="muted"
           title={isPetSurface ? 'Filtros comerciais' : 'Filters'}
           description={isPetSurface
-            ? 'Refine a fila por status, origem e contexto comercial sem tirar o PetFlow do centro da navegação.'
+            ? 'Refine a fila por status, origem e contexto comercial sem tirar a Gestão Pet do centro da navegação.'
             : 'Refine the queue by status, source, company, and contact.'}
         >
           <div className={sharedFilterToolbarClass}>
@@ -453,7 +453,7 @@ export function CrmLeadsPage({ surface = 'crm' }: CrmLeadsPageProps) {
               emptyState={{
                 title: isPetSurface ? 'Nenhum lead comercial encontrado' : 'Nenhum lead encontrado',
                 description: isPetSurface
-                  ? 'Abra o primeiro lead para iniciar a captação comercial do PetFlow neste workspace.'
+                  ? 'Abra o primeiro lead para iniciar a captação comercial da Gestão Pet neste workspace.'
                   : 'Abra o primeiro lead para iniciar a fila comercial deste workspace.',
                 action: (
                   <PermissionGuard permission={leadPermissions.create}>
@@ -479,7 +479,7 @@ export function CrmLeadsPage({ surface = 'crm' }: CrmLeadsPageProps) {
           title={isPetSurface ? 'Remover lead comercial' : 'Excluir lead'}
           description={deleteCandidate
             ? (isPetSurface
-              ? `Remover ${deleteCandidate.name} da fila comercial do PetFlow?`
+              ? `Remover ${deleteCandidate.name} da fila comercial da Gestão Pet?`
               : `Confirma a exclusão de ${deleteCandidate.name}?`)
             : undefined}
           confirmLabel={isPetSurface ? 'Remover' : 'Excluir'}

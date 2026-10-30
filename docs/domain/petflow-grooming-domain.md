@@ -1,8 +1,8 @@
-# PetFlow Banho e Tosa - Modelagem de Dominio
+# Gestão Pet Banho e Tosa - Modelagem de Dominio
 
 Data de referencia: 2026-05-11.
 
-Este documento descreve o dominio funcional de Banho e Tosa implementado no PetFlow. O objetivo e apoiar apresentacao tecnica, TCC e validacao manual sem afirmar funcionalidades que ainda nao estao prontas.
+Este documento descreve o dominio funcional de Banho e Tosa implementado no Gestão Pet. O objetivo e apoiar apresentacao tecnica, TCC e validacao manual sem afirmar funcionalidades que ainda nao estao prontas.
 
 ## Linguagem Ubicua
 

@@ -84,7 +84,7 @@ export function PetInsightsPage() {
     >
       <div className={sharedPageStackClass}>
         <PageTitle
-          eyebrow="PetFlow business"
+          eyebrow="Gestão Pet"
           title="Business Insights"
           description="Client growth, top services, pet mix, and appointment patterns — built from your real business activity."
         />

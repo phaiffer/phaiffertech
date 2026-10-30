@@ -171,11 +171,11 @@ const websiteContent: Record<PublicLocale, WebsiteContent> = {
   'en-US': {
     home: {
       hero: {
-        eyebrow: 'PetFlow · PetShop · grooming · veterinary clinic',
+        eyebrow: 'Pet Management · PetShop · grooming · veterinary clinic',
         title:
-          'PetFlow for PetShop, grooming, veterinary clinic, and combined packages.',
+          'Pet Management for PetShop, grooming, veterinary clinic, and combined packages.',
         description:
-          'Run PetShop, Banho e Tosa, veterinary clinic routines, and combined packages in one PetFlow workspace with scheduling, stock, care context, and billing connected.',
+          'Run PetShop, Banho e Tosa, veterinary clinic routines, and combined packages in one Pet Management workspace with scheduling, stock, care context, and billing connected.',
         highlights: [
           'PetShop, grooming, and clinic workflows in one place',
           'Combined packages and recurring service control',
@@ -196,11 +196,11 @@ const websiteContent: Record<PublicLocale, WebsiteContent> = {
           }
         ],
         primaryCta: { label: 'Request a demo', href: '/contact' },
-        secondaryCta: { label: 'PetFlow access', href: '/login' }
+        secondaryCta: { label: 'System access', href: '/login' }
       },
       signalTitle: 'A clearer operating system for real pet businesses.',
       signalDescription:
-        'PetFlow keeps retail, service execution, clinical care, combined packages, stock, and billing on the same workflow so pet businesses do not need fragmented tools.',
+        'Pet Management keeps retail, service execution, clinical care, combined packages, stock, and billing on the same workflow so pet businesses do not need fragmented tools.',
       signals: [
         {
           value: 'Operation',
@@ -223,14 +223,14 @@ const websiteContent: Record<PublicLocale, WebsiteContent> = {
       ],
       productsTitle: 'One system. Four commercial fronts for real pet operations.',
       productsDescription:
-        'PetFlow presents PetShop, Banho e Tosa, veterinary clinic, and combined packages in one coherent commercial offer with one operating system behind it.',
+        'Pet Management presents PetShop, Banho e Tosa, veterinary clinic, and combined packages in one coherent commercial offer with one operating system behind it.',
       products: [
         {
           eyebrow: 'PetShop',
           title: 'Retail, stock, and counter operation',
           description:
             'Manage catalog, stock alerts, add-ons, and front-desk flow with the client and pet context visible in the same workspace.',
-          bullets: ['Product catalog with stock visibility', 'Retail linked to client and pet history', 'Counter operation inside PetFlow']
+          bullets: ['Product catalog with stock visibility', 'Retail linked to client and pet history', 'Counter operation inside Pet Management']
         },
         {
           eyebrow: 'Banho e Tosa',
@@ -256,7 +256,7 @@ const websiteContent: Record<PublicLocale, WebsiteContent> = {
       ],
       expertiseTitle: 'Operational details that make the demo credible.',
       expertiseDescription:
-        'PetFlow sells better when the story sounds like a real operation: PetShop rhythm, Banho e Tosa execution, clinic routine, combined packages, billing follow-through, and a solid technical base underneath.',
+        'Pet Management sells better when the story sounds like a real operation: PetShop rhythm, Banho e Tosa execution, clinic routine, combined packages, billing follow-through, and a solid technical base underneath.',
       expertise: [
         {
           eyebrow: 'Counter, queue, and clinic schedule',
@@ -272,7 +272,7 @@ const websiteContent: Record<PublicLocale, WebsiteContent> = {
         },
         {
           eyebrow: 'Stock, services, and clinic billing',
-          title: 'Operational billing without leaving the PetFlow flow',
+          title: 'Operational billing without leaving the Pet Management flow',
           description:
             'Product sales, service add-ons, clinical charges, invoices, and professional commission remain part of the same commercial story instead of separate disconnected tools.'
         },
@@ -307,22 +307,22 @@ const websiteContent: Record<PublicLocale, WebsiteContent> = {
         }
       ],
       cta: {
-        eyebrow: 'PetFlow available now',
+        eyebrow: 'Pet Management available now',
         title: 'Run PetShop, grooming, and clinic operations with more control.',
         description:
           'Show a clearer offer from the first conversation: PetShop, Banho e Tosa, veterinary clinic, and combined packages in one system.',
         primaryCta: { label: 'Get in touch', href: '/contact' },
-        secondaryCta: { label: 'PetFlow access', href: '/login' }
+        secondaryCta: { label: 'System access', href: '/login' }
       }
     },
     about: {
       eyebrow: 'About PhaifferTech',
       title: 'Software house specialised in management systems for the pet industry.',
       description:
-        'PhaifferTech builds PetFlow — a management system for veterinary clinics, pet shops and grooming services — on a modular SaaS platform built from scratch with scalability and maintainability in mind.',
+        'PhaifferTech builds Pet Management — a management system for veterinary clinics, pet shops and grooming services — on a modular SaaS platform built from scratch with scalability and maintainability in mind.',
       principlesTitle: 'What we deliver in practice',
       principlesDescription:
-        'PetFlow is a functional system, not a prototype. Every part of the product was built and tested for real use.',
+        'Pet Management is a functional system, not a prototype. Every part of the product was built and tested for real use.',
       principles: [
         {
           eyebrow: 'Real product',
@@ -351,11 +351,11 @@ const websiteContent: Record<PublicLocale, WebsiteContent> = {
       ],
       directionTitle: 'Company direction',
       directionDescription:
-        'PetFlow is the commercial focus today. The platform is ready for what comes next.',
+        'Pet Management is the commercial focus today. The platform is ready for what comes next.',
       direction: [
         {
           eyebrow: 'Now',
-          title: 'PetFlow — complete management for pet businesses',
+          title: 'Pet Management — complete management for pet businesses',
           description:
             'Scheduling, monthly plans, inventory, professionals, billing and clinical records in a single system. Available for veterinary clinics, pet shops and grooming services.'
         },
@@ -363,7 +363,7 @@ const websiteContent: Record<PublicLocale, WebsiteContent> = {
           eyebrow: 'In progress',
           title: 'Shared foundation and guided evolution',
           description:
-            'Permissions, notifications, multi-tenancy and billing scaffolding remain ready behind the scenes while the visible product stays centered on PetFlow.'
+            'Permissions, notifications, multi-tenancy and billing scaffolding remain ready behind the scenes while the visible product stays centered on Pet Management.'
         },
         {
           eyebrow: 'Future phase',
@@ -386,7 +386,7 @@ const websiteContent: Record<PublicLocale, WebsiteContent> = {
           value: '1',
           label: 'Official product surface',
           description:
-            'PetFlow is the only product being promoted commercially right now.'
+            'Pet Management is the only product being promoted commercially right now.'
         },
         {
           value: 'GCP',
@@ -398,9 +398,9 @@ const websiteContent: Record<PublicLocale, WebsiteContent> = {
     },
     platform: {
       eyebrow: 'Platform',
-      title: 'The technical foundation behind PetFlow.',
+      title: 'The technical foundation behind Pet Management.',
       description:
-        'PhaifferTech Platform is the shared core of authentication, multi-tenancy, permissions and modules that powers PetFlow today. The goal is to keep the visible product simple without discarding the technical base.',
+        'PhaifferTech Platform is the shared core of authentication, multi-tenancy, permissions and modules that powers Pet Management today. The goal is to keep the visible product simple without discarding the technical base.',
       foundationTitle: 'Shared foundation',
       foundationDescription:
         'The platform already exposes cross-cutting concerns that matter in real SaaS operations and future integration work.',
@@ -438,24 +438,24 @@ const websiteContent: Record<PublicLocale, WebsiteContent> = {
           eyebrow: 'Core and shared',
           title: 'Technical foundation without vertical business logic',
           description:
-            'Auth, tenancy, IAM, module access, feature flags and reusable technical contracts stay out of PetFlow business rules.'
+            'Auth, tenancy, IAM, module access, feature flags and reusable technical contracts stay out of Pet Management business rules.'
         },
         {
           eyebrow: 'Visible product',
-          title: 'PetFlow owns the commercial story',
+          title: 'Pet Management owns the commercial story',
           description:
-            'The platform stays behind the scenes while PetFlow carries the visible story for PetShop, grooming, veterinary clinic routines, combined packages, stock, and billing.'
+            'The platform stays behind the scenes while Pet Management carries the visible story for PetShop, grooming, veterinary clinic routines, combined packages, stock, and billing.'
         }
       ],
       modulesTitle: 'What is visible on this foundation now',
       modulesDescription:
-        'The value of the platform is not showing every module at once. It is keeping PetFlow strong while the rest of the codebase remains preserved for later decisions.',
+        'The value of the platform is not showing every module at once. It is keeping Pet Management strong while the rest of the codebase remains preserved for later decisions.',
       modules: [
         {
-          eyebrow: 'PetFlow · primary product',
+          eyebrow: 'Pet Management · primary product',
           title: 'Operations for PetShop, grooming, veterinary clinic, and combined packages',
           description:
-            'PetFlow connects appointments, combined packages, professionals, stock alerts, billing, and customer follow-through — the current commercial focus of the platform.'
+            'Pet Management connects appointments, combined packages, professionals, stock alerts, billing, and customer follow-through — the current commercial focus of the platform.'
         },
         {
           eyebrow: 'Shared foundation',
@@ -467,9 +467,9 @@ const websiteContent: Record<PublicLocale, WebsiteContent> = {
     },
     products: {
       eyebrow: 'Products',
-      title: 'PetFlow packages the real pet operation in one offer.',
+      title: 'Pet Management packages the real pet operation in one offer.',
       description:
-        'PhaifferTech now focuses its commercial execution on PetFlow for PetShop, Banho e Tosa, veterinary clinic routines, and combined packages.',
+        'PhaifferTech now focuses its commercial execution on Pet Management for PetShop, Banho e Tosa, veterinary clinic routines, and combined packages.',
       products: [
         {
           eyebrow: 'PetShop',
@@ -498,7 +498,7 @@ const websiteContent: Record<PublicLocale, WebsiteContent> = {
       ],
       fitTitle: 'Built for the way pet businesses actually work',
       fitDescription:
-        'Whether you run PetShop, Banho e Tosa, veterinary clinic routines, or a hybrid operation with combined packages, PetFlow adapts to the daily routine without forcing generic workflows.',
+        'Whether you run PetShop, Banho e Tosa, veterinary clinic routines, or a hybrid operation with combined packages, Pet Management adapts to the daily routine without forcing generic workflows.',
       fit: [
         {
           eyebrow: 'Veterinary clinic',
@@ -516,7 +516,7 @@ const websiteContent: Record<PublicLocale, WebsiteContent> = {
           eyebrow: 'Pet shop',
           title: 'Product catalog, inventory, and retail operations',
           description:
-            'Manage SKUs, pricing, stock levels, and reorder signals alongside client and appointment workflows — all in PetFlow.'
+            'Manage SKUs, pricing, stock levels, and reorder signals alongside client and appointment workflows — all in Pet Management.'
         },
         {
           eyebrow: 'Combined packages',
@@ -539,7 +539,7 @@ const websiteContent: Record<PublicLocale, WebsiteContent> = {
           eyebrow: 'Data Engineering & Analytics',
           title: 'Operational data flows, analytical aggregations and integration posture',
           description:
-            'Systems are designed with data lifecycles, observability, analytical continuity, and business insight in mind. PetFlow surfaces decision-support data directly from operations.'
+            'Systems are designed with data lifecycles, observability, analytical continuity, and business insight in mind. Pet Management surfaces decision-support data directly from operations.'
         },
         {
           eyebrow: 'Cloud Architecture',
@@ -574,7 +574,7 @@ const websiteContent: Record<PublicLocale, WebsiteContent> = {
           eyebrow: 'Operational software',
           title: 'Products are framed as systems, not isolated screens',
           description:
-            'PetFlow is explained through workflows, contracts and platform posture, without inflating the visible surface.'
+            'Pet Management is explained through workflows, contracts and platform posture, without inflating the visible surface.'
         },
         {
           eyebrow: 'Progressive evolution',
@@ -638,7 +638,7 @@ const websiteContent: Record<PublicLocale, WebsiteContent> = {
           eyebrow: 'Applied domain systems',
           title: 'Recurring pet operations as an applied system',
           description:
-            'PetFlow already provides a concrete context for applied analysis in service execution, recurring billing, stock flow and customer follow-through.'
+            'Pet Management already provides a concrete context for applied analysis in service execution, recurring billing, stock flow and customer follow-through.'
         }
       ],
       outputsTitle: 'What this page prepares the brand to publish',
@@ -678,7 +678,7 @@ const websiteContent: Record<PublicLocale, WebsiteContent> = {
           value: 'Products',
           label: 'Operational contexts for applied analysis',
           description:
-            'PetFlow and the shared foundation create enough operational depth for applied analysis without inflating the visible story.'
+            'Pet Management and the shared foundation create enough operational depth for applied analysis without inflating the visible story.'
         },
         {
           value: 'Future',
@@ -717,7 +717,7 @@ const websiteContent: Record<PublicLocale, WebsiteContent> = {
             {
               title: 'Shared capabilities without shared business confusion',
               paragraphs: [
-                'Tenancy, IAM, auditing, feature gating and module access are shared because they are platform concerns. PetFlow stays vertical because its business rules should not be diluted into generic infrastructure layers.',
+                'Tenancy, IAM, auditing, feature gating and module access are shared because they are platform concerns. Pet Management stays vertical because its business rules should not be diluted into generic infrastructure layers.',
                 'This separation makes the codebase easier to explain publicly and easier to evolve internally.'
               ]
             },
@@ -753,7 +753,7 @@ const websiteContent: Record<PublicLocale, WebsiteContent> = {
               title: 'Why platform posture matters',
               paragraphs: [
                 'The platform foundation matters because grooming use cases still pressure identity, module access, tenant separation, auditing and billing visibility at the same time.',
-                'Having those concerns already built into the shared layers makes PetFlow easier to extend without rewriting its foundations.'
+                'Having those concerns already built into the shared layers makes Pet Management easier to extend without rewriting its foundations.'
               ]
             },
             {
@@ -765,7 +765,7 @@ const websiteContent: Record<PublicLocale, WebsiteContent> = {
             }
           ],
           closing:
-            'The PetFlow story becomes stronger when it is explained as an operational data system for recurring pet services.'
+            'The Pet Management story becomes stronger when it is explained as an operational data system for recurring pet services.'
         },
         {
           slug: 'shared-foundations-for-service-and-billing-operations',
@@ -773,7 +773,7 @@ const websiteContent: Record<PublicLocale, WebsiteContent> = {
           readTime: '9 min read',
           title: 'Shared foundations for service and billing operations',
           description:
-            'What PetFlow reveals about building service execution, recurring plans and billing follow-through on one architectural base.',
+            'What Pet Management reveals about building service execution, recurring plans and billing follow-through on one architectural base.',
           highlight:
             'Reception, service execution, stock and billing look different on the surface, but they all benefit from explicit contracts, shared governance and progressive integration.',
           sections: [
@@ -788,7 +788,7 @@ const websiteContent: Record<PublicLocale, WebsiteContent> = {
               title: 'Where shared foundation actually helps',
               paragraphs: [
                 'Canonical references, tenancy, permissions, dashboards, notifications and authenticated shell concerns are the kind of capabilities that compound value across the same visible product surface.',
-                'That makes it possible to expand PetFlow incrementally without violating ownership boundaries or inflating the commercial story.'
+                'That makes it possible to expand Pet Management incrementally without violating ownership boundaries or inflating the commercial story.'
               ]
             },
             {
@@ -806,12 +806,12 @@ const websiteContent: Record<PublicLocale, WebsiteContent> = {
     },
     contact: {
       eyebrow: 'Contact',
-      title: 'Request a quote, hiring plan, or demo for PetFlow.',
+      title: 'Request a quote, hiring plan, or demo for Pet Management.',
       description:
         'Talk to PhaifferTech about PetShop, Banho e Tosa, veterinary clinic routines, or combined packages. Email willian.phaiffer@phaiffertech.com.br or call +55 41 9629-4533.',
       lanesTitle: 'What you can request here',
       lanesDescription:
-        'The contact page supports the three commercial requests that matter right now for the real PetFlow offer.',
+        'The contact page supports the three commercial requests that matter right now for the real Pet Management offer.',
       lanes: [
         {
           eyebrow: 'Quotation',
@@ -821,9 +821,9 @@ const websiteContent: Record<PublicLocale, WebsiteContent> = {
         },
         {
           eyebrow: 'Hiring',
-          title: 'Plan the PetFlow hiring and rollout',
+          title: 'Plan the Pet Management hiring and rollout',
           description:
-            'Use this lane when you want to understand onboarding, rollout timing, package mix, and how PetFlow lands in your business.'
+            'Use this lane when you want to understand onboarding, rollout timing, package mix, and how Pet Management lands in your business.'
         },
         {
           eyebrow: 'Demo',
@@ -857,7 +857,7 @@ const websiteContent: Record<PublicLocale, WebsiteContent> = {
       ],
       cta: {
         eyebrow: 'Contact',
-        title: 'Contact PhaifferTech about the real PetFlow offer.',
+        title: 'Contact PhaifferTech about the real Pet Management offer.',
         description:
           'Use email for quotation and hiring requests, or call to speed up demo scheduling and commercial follow-up.',
         primaryCta: { label: 'Send email', href: 'mailto:willian.phaiffer@phaiffertech.com.br' },
@@ -868,8 +868,8 @@ const websiteContent: Record<PublicLocale, WebsiteContent> = {
   'pt-BR': {
     home: {
       hero: {
-        eyebrow: 'PetFlow · PetShop · Banho e Tosa · Clinica Veterinaria',
-        title: 'PetFlow para PetShop, Banho e Tosa, Clinica Veterinaria e pacotes combinados.',
+        eyebrow: 'Gestão Pet · PetShop · Banho e Tosa · Clinica Veterinaria',
+        title: 'Gestão Pet para PetShop, Banho e Tosa, Clinica Veterinaria e pacotes combinados.',
         titleHighlight: 'PetShop',
         description:
           'Organize PetShop, Banho e Tosa, Clinica Veterinaria e pacotes combinados em um unico fluxo operacional com agenda, estoque, contexto clinico e cobranca conectados.',
@@ -893,11 +893,11 @@ const websiteContent: Record<PublicLocale, WebsiteContent> = {
           }
         ],
         primaryCta: { label: 'Solicitar demo', href: '/contact' },
-        secondaryCta: { label: 'Acesso PetFlow', href: '/login' }
+        secondaryCta: { label: 'Acesso ao sistema', href: '/login' }
       },
       signalTitle: 'Uma operacao mais clara para o pet business real.',
       signalDescription:
-        'O PetFlow conecta varejo, execucao de servicos, rotina clinica, pacotes combinados, estoque e cobranca no mesmo fluxo para evitar operacao fragmentada.',
+        'A Gestão Pet conecta varejo, execucao de servicos, rotina clinica, pacotes combinados, estoque e cobranca no mesmo fluxo para evitar operacao fragmentada.',
       signals: [
         {
           value: 'Operacao',
@@ -920,14 +920,14 @@ const websiteContent: Record<PublicLocale, WebsiteContent> = {
       ],
       productsTitle: 'Um sistema. Quatro frentes comerciais para a operacao pet real.',
       productsDescription:
-        'O PetFlow apresenta PetShop, Banho e Tosa, Clinica Veterinaria e pacotes combinados na mesma oferta comercial e no mesmo sistema operacional.',
+        'A Gestão Pet apresenta PetShop, Banho e Tosa, Clinica Veterinaria e pacotes combinados na mesma oferta comercial e no mesmo sistema operacional.',
       products: [
         {
           eyebrow: 'PetShop',
           title: 'Varejo, estoque e operacao de balcao',
           description:
             'Organize catalogo, alertas de estoque, adicionais e atendimento de balcao com cliente e pet no mesmo workspace.',
-          bullets: ['Catalogo de produtos com visibilidade de estoque', 'Varejo conectado ao historico do cliente e do pet', 'Operacao de balcao dentro do PetFlow']
+          bullets: ['Catalogo de produtos com visibilidade de estoque', 'Varejo conectado ao historico do cliente e do pet', 'Operacao de balcao dentro da Gestão Pet']
         },
         {
           eyebrow: 'Banho e Tosa',
@@ -953,7 +953,7 @@ const websiteContent: Record<PublicLocale, WebsiteContent> = {
       ],
       expertiseTitle: 'Detalhes operacionais que deixam a demo crivel.',
       expertiseDescription:
-        'O PetFlow vende melhor quando a historia parece operacao real: ritmo de PetShop, execucao de Banho e Tosa, rotina clinica, pacotes combinados, cobranca e uma base tecnica firme por tras.',
+        'A Gestão Pet vende melhor quando a historia parece operacao real: ritmo de PetShop, execucao de Banho e Tosa, rotina clinica, pacotes combinados, cobranca e uma base tecnica firme por tras.',
       expertise: [
         {
           eyebrow: 'Balcao, fila e agenda clinica',
@@ -969,7 +969,7 @@ const websiteContent: Record<PublicLocale, WebsiteContent> = {
         },
         {
           eyebrow: 'Estoque, servicos e clinica',
-          title: 'Cobranca operacional sem sair do fluxo do PetFlow',
+          title: 'Cobranca operacional sem sair do fluxo da Gestão Pet',
           description:
             'Produtos, adicionais, cobranca clinica, invoices e comissao por profissional entram na mesma narrativa comercial.'
         },
@@ -1004,22 +1004,22 @@ const websiteContent: Record<PublicLocale, WebsiteContent> = {
         }
       ],
       cta: {
-        eyebrow: 'PetFlow disponivel agora',
+        eyebrow: 'Gestão Pet disponivel agora',
         title: 'Pronto para operar PetShop, Banho e Tosa e Clinica com mais controle?',
         description:
           'Mostre desde a primeira conversa uma oferta mais clara: PetShop, Banho e Tosa, Clinica Veterinaria e pacotes combinados no mesmo sistema.',
         primaryCta: { label: 'Solicitar demo', href: '/contact' },
-        secondaryCta: { label: 'Acesso PetFlow', href: '/login' }
+        secondaryCta: { label: 'Acesso ao sistema', href: '/login' }
       }
     },
     about: {
       eyebrow: 'Sobre a PhaifferTech',
       title: 'Software house especializada em sistemas de gestão para o setor pet.',
       description:
-        'A PhaifferTech desenvolve o PetFlow — sistema de gestão para clínicas veterinárias, pet shops e serviços de banho e tosa — sobre uma plataforma SaaS modular construída do zero com foco em escalabilidade e manutenibilidade.',
+        'A PhaifferTech desenvolve a Gestão Pet — sistema de gestão para clínicas veterinárias, pet shops e serviços de banho e tosa — sobre uma plataforma SaaS modular construída do zero com foco em escalabilidade e manutenibilidade.',
       principlesTitle: 'O que entregamos na prática',
       principlesDescription:
-        'O PetFlow é um sistema funcional, não um protótipo. Cada parte do produto foi construída e testada para uso real.',
+        'A Gestão Pet é um sistema funcional, não um protótipo. Cada parte do produto foi construída e testada para uso real.',
       principles: [
         {
           eyebrow: 'Produto real',
@@ -1048,11 +1048,11 @@ const websiteContent: Record<PublicLocale, WebsiteContent> = {
       ],
       directionTitle: 'Direção da empresa',
       directionDescription:
-        'PetFlow é o foco comercial hoje. A plataforma está preparada para o que vem depois.',
+        'Gestão Pet é o foco comercial hoje. A plataforma está preparada para o que vem depois.',
       direction: [
         {
           eyebrow: 'Agora',
-          title: 'PetFlow — gestão completa para pet businesses',
+          title: 'Gestão Pet — gestão completa para pet businesses',
           description:
             'Agenda, planos mensais, estoque, profissionais, faturamento e prontuário clínico em um único sistema. Disponível para clínicas veterinárias, pet shops e serviços de banho e tosa.'
         },
@@ -1060,7 +1060,7 @@ const websiteContent: Record<PublicLocale, WebsiteContent> = {
           eyebrow: 'Em evolução',
           title: 'Fundação compartilhada e evolução guiada',
           description:
-            'Permissões, notificações, multi-tenancy e base de cobran��a continuam prontas nos bastidores enquanto o produto visível permanece centrado no PetFlow.'
+            'Permissões, notificações, multi-tenancy e base de cobran��a continuam prontas nos bastidores enquanto o produto visível permanece centrado na Gestão Pet.'
         },
         {
           eyebrow: 'Fase futura',
@@ -1083,7 +1083,7 @@ const websiteContent: Record<PublicLocale, WebsiteContent> = {
           value: '1',
           label: 'Produto oficial visível',
           description:
-            'PetFlow é o único produto promovido comercialmente neste momento.'
+            'Gestão Pet é o único produto promovido comercialmente neste momento.'
         },
         {
           value: 'GCP',
@@ -1095,9 +1095,9 @@ const websiteContent: Record<PublicLocale, WebsiteContent> = {
     },
     platform: {
       eyebrow: 'Plataforma',
-      title: 'A fundacao tecnica por tras do PetFlow.',
+      title: 'A fundacao tecnica por tras da Gestão Pet.',
       description:
-        'A PhaifferTech Platform e o nucleo compartilhado de autenticacao, multi-tenancy, permissoes e modulos que sustenta o PetFlow hoje. A meta e manter o produto visivel simples sem descartar a base tecnica.',
+        'A PhaifferTech Platform e o nucleo compartilhado de autenticacao, multi-tenancy, permissoes e modulos que sustenta a Gestão Pet hoje. A meta e manter o produto visivel simples sem descartar a base tecnica.',
       foundationTitle: 'Fundação compartilhada',
       foundationDescription:
         'A plataforma já expõe preocupações transversais que importam em SaaS real e em integração futura.',
@@ -1135,24 +1135,24 @@ const websiteContent: Record<PublicLocale, WebsiteContent> = {
           eyebrow: 'Core e shared',
           title: 'Fundação técnica sem regra de negócio vertical',
           description:
-            'Auth, tenancy, IAM, module access, feature flags e contratos tecnicos reutilizaveis ficam fora das regras do PetFlow.'
+            'Auth, tenancy, IAM, module access, feature flags e contratos tecnicos reutilizaveis ficam fora das regras da Gestão Pet.'
         },
         {
           eyebrow: 'Produto visivel',
-          title: 'PetFlow conduz a historia comercial',
+          title: 'Gestão Pet conduz a historia comercial',
           description:
-            'A plataforma fica nos bastidores enquanto o PetFlow carrega a historia visivel de PetShop, Banho e Tosa, Clinica Veterinaria, pacotes combinados, estoque e cobranca.'
+            'A plataforma fica nos bastidores enquanto a Gestão Pet carrega a historia visivel de PetShop, Banho e Tosa, Clinica Veterinaria, pacotes combinados, estoque e cobranca.'
         }
       ],
       modulesTitle: 'O que fica visivel nesta fundacao agora',
       modulesDescription:
-        'O valor da plataforma nao esta em mostrar todos os modulos ao mesmo tempo. Esta em manter o PetFlow forte enquanto o restante da base fica preservado para decisoes futuras.',
+        'O valor da plataforma nao esta em mostrar todos os modulos ao mesmo tempo. Esta em manter a Gestão Pet forte enquanto o restante da base fica preservado para decisoes futuras.',
       modules: [
         {
-          eyebrow: 'PetFlow · produto principal',
+          eyebrow: 'Gestão Pet · produto principal',
           title: 'Operacao para PetShop, Banho e Tosa, Clinica Veterinaria e pacotes combinados',
           description:
-            'O PetFlow conecta appointments, pacotes combinados, profissionais, alertas de estoque, cobranca e follow-up com clientes — foco comercial atual da plataforma.'
+            'A Gestão Pet conecta appointments, pacotes combinados, profissionais, alertas de estoque, cobranca e follow-up com clientes — foco comercial atual da plataforma.'
         },
         {
           eyebrow: 'Fundacao compartilhada',
@@ -1164,9 +1164,9 @@ const websiteContent: Record<PublicLocale, WebsiteContent> = {
     },
     products: {
       eyebrow: 'Produtos',
-      title: 'PetFlow empacota a operacao pet real em uma unica oferta.',
+      title: 'Gestão Pet empacota a operacao pet real em uma unica oferta.',
       description:
-        'A PhaifferTech concentra sua execucao comercial no PetFlow para PetShop, Banho e Tosa, Clinica Veterinaria e pacotes combinados.',
+        'A PhaifferTech concentra sua execucao comercial na Gestão Pet para PetShop, Banho e Tosa, Clinica Veterinaria e pacotes combinados.',
       products: [
         {
           eyebrow: 'PetShop',
@@ -1195,7 +1195,7 @@ const websiteContent: Record<PublicLocale, WebsiteContent> = {
       ],
       fitTitle: 'Feito para o jeito que negocios pet realmente funcionam',
       fitDescription:
-        'Seja um PetShop, uma operacao de Banho e Tosa, uma Clinica Veterinaria ou um negocio com pacotes combinados, o PetFlow se adapta ao ritmo diario sem impor fluxo generico.',
+        'Seja um PetShop, uma operacao de Banho e Tosa, uma Clinica Veterinaria ou um negocio com pacotes combinados, a Gestão Pet se adapta ao ritmo diario sem impor fluxo generico.',
       fit: [
         {
           eyebrow: 'Clínica veterinária',
@@ -1236,7 +1236,7 @@ const websiteContent: Record<PublicLocale, WebsiteContent> = {
           eyebrow: 'Data Engineering & Analytics',
           title: 'Fluxos operacionais de dados, análise e postura de integração',
           description:
-            'Os sistemas são pensados com ciclos de vida de dados, observabilidade, continuidade analítica e suporte à decisão. O PetFlow expõe insights de negócio diretamente da operação.'
+            'Os sistemas são pensados com ciclos de vida de dados, observabilidade, continuidade analítica e suporte à decisão. A Gestão Pet expõe insights de negócio diretamente da operação.'
         },
         {
           eyebrow: 'Cloud Architecture',
@@ -1271,7 +1271,7 @@ const websiteContent: Record<PublicLocale, WebsiteContent> = {
           eyebrow: 'Software operacional',
           title: 'Produtos apresentados como sistemas, não como telas isoladas',
           description:
-            'O PetFlow é explicado por fluxos, contratos e postura de plataforma, sem inflar a superfície visível.'
+            'A Gestão Pet é explicado por fluxos, contratos e postura de plataforma, sem inflar a superfície visível.'
         },
         {
           eyebrow: 'Evolução progressiva',
@@ -1335,7 +1335,7 @@ const websiteContent: Record<PublicLocale, WebsiteContent> = {
           eyebrow: 'Sistemas aplicados',
           title: 'Operação pet recorrente como sistema aplicado',
           description:
-            'O PetFlow já fornece um contexto concreto para análise aplicada em execução de serviços, cobrança recorrente, estoque e follow-up com clientes.'
+            'A Gestão Pet já fornece um contexto concreto para análise aplicada em execução de serviços, cobrança recorrente, estoque e follow-up com clientes.'
         }
       ],
       outputsTitle: 'O que esta página prepara a marca para publicar',
@@ -1375,7 +1375,7 @@ const websiteContent: Record<PublicLocale, WebsiteContent> = {
           value: 'Produtos',
           label: 'Contextos operacionais para análise aplicada',
           description:
-            'O PetFlow e a fundação compartilhada criam profundidade operacional suficiente para análise aplicada sem inflar a narrativa visível.'
+            'A Gestão Pet e a fundação compartilhada criam profundidade operacional suficiente para análise aplicada sem inflar a narrativa visível.'
         },
         {
           value: 'Futuro',
@@ -1414,7 +1414,7 @@ const websiteContent: Record<PublicLocale, WebsiteContent> = {
             {
               title: 'Capabilities compartilhadas sem confusão de negócio compartilhada',
               paragraphs: [
-                'Tenancy, IAM, auditing, feature gating e module access são compartilhados porque são concerns de plataforma. O PetFlow continua vertical porque suas regras de negócio não devem ser diluídas em camadas genéricas.',
+                'Tenancy, IAM, auditing, feature gating e module access são compartilhados porque são concerns de plataforma. A Gestão Pet continua vertical porque suas regras de negócio não devem ser diluídas em camadas genéricas.',
                 'Essa separação torna o codebase mais fácil de explicar publicamente e mais fácil de evoluir internamente.'
               ]
             },
@@ -1450,7 +1450,7 @@ const websiteContent: Record<PublicLocale, WebsiteContent> = {
               title: 'Por que a postura de plataforma importa',
               paragraphs: [
                 'A fundacao de plataforma importa porque casos de uso de banho e tosa ainda pressionam identity, module access, separacao por tenant, auditing e visibilidade de cobranca ao mesmo tempo.',
-                'Ter essas concerns ja construidas nas camadas compartilhadas torna o PetFlow mais facil de expandir sem reescrever sua base.'
+                'Ter essas concerns ja construidas nas camadas compartilhadas torna a Gestão Pet mais facil de expandir sem reescrever sua base.'
               ]
             },
             {
@@ -1462,7 +1462,7 @@ const websiteContent: Record<PublicLocale, WebsiteContent> = {
             }
           ],
           closing:
-            'A narrativa do PetFlow fica mais forte quando e explicada como sistema operacional de dados para servicos pet recorrentes.'
+            'A narrativa da Gestão Pet fica mais forte quando e explicada como sistema operacional de dados para servicos pet recorrentes.'
         },
         {
           slug: 'shared-foundations-for-service-and-billing-operations',
@@ -1470,7 +1470,7 @@ const websiteContent: Record<PublicLocale, WebsiteContent> = {
           readTime: '9 min read',
           title: 'Shared foundations for service and billing operations',
           description:
-            'O que o PetFlow revela sobre construir execucao de servicos, planos recorrentes e cobranca sobre a mesma base arquitetural.',
+            'O que a Gestão Pet revela sobre construir execucao de servicos, planos recorrentes e cobranca sobre a mesma base arquitetural.',
           highlight:
             'Recepcao, execucao de servico, estoque e cobranca parecem diferentes na superficie, mas todos se beneficiam de contratos explicitos, governanca compartilhada e integracao progressiva.',
           sections: [
@@ -1485,7 +1485,7 @@ const websiteContent: Record<PublicLocale, WebsiteContent> = {
               title: 'Onde a fundação compartilhada realmente ajuda',
               paragraphs: [
                 'Referencias canonicas, tenancy, permissions, dashboards, notificacoes e concerns do shell autenticado sao o tipo de capability que acumula valor dentro da mesma superficie visivel.',
-                'Isso permite expandir o PetFlow de forma incremental sem violar ownership nem inflar a historia comercial.'
+                'Isso permite expandir a Gestão Pet de forma incremental sem violar ownership nem inflar a historia comercial.'
               ]
             },
             {
@@ -1503,12 +1503,12 @@ const websiteContent: Record<PublicLocale, WebsiteContent> = {
     },
     contact: {
       eyebrow: 'Contato',
-      title: 'Solicite cotacao, contratacao ou demo do PetFlow.',
+      title: 'Solicite cotacao, contratacao ou demo da Gestão Pet.',
       description:
         'Fale com a PhaifferTech sobre PetShop, Banho e Tosa, Clinica Veterinaria ou pacotes combinados. Escreva para willian.phaiffer@phaiffertech.com.br ou ligue para +55 41 9629-4533.',
       lanesTitle: 'O que voce pode solicitar aqui',
       lanesDescription:
-        'A pagina de contato cobre os tres pedidos comerciais que importam agora para a oferta real do PetFlow.',
+        'A pagina de contato cobre os tres pedidos comerciais que importam agora para a oferta real da Gestão Pet.',
       lanes: [
         {
           eyebrow: 'Cotacao',
@@ -1518,9 +1518,9 @@ const websiteContent: Record<PublicLocale, WebsiteContent> = {
         },
         {
           eyebrow: 'Contratacao',
-          title: 'Planeje a entrada do PetFlow no negocio',
+          title: 'Planeje a entrada da Gestão Pet no negocio',
           description:
-            'Use esta trilha para entender onboarding, prazo de rollout, combinacao de pacotes e como o PetFlow entra na sua operacao.'
+            'Use esta trilha para entender onboarding, prazo de rollout, combinacao de pacotes e como a Gestão Pet entra na sua operacao.'
         },
         {
           eyebrow: 'Demo',
@@ -1554,7 +1554,7 @@ const websiteContent: Record<PublicLocale, WebsiteContent> = {
       ],
       cta: {
         eyebrow: 'Contato',
-        title: 'Fale com a PhaifferTech sobre a oferta real do PetFlow.',
+        title: 'Fale com a PhaifferTech sobre a oferta real da Gestão Pet.',
         description:
           'Use o e-mail para cotacao e contratacao, ou ligue para acelerar o agendamento de demo e o follow-up comercial.',
         primaryCta: { label: 'Enviar e-mail', href: 'mailto:willian.phaiffer@phaiffertech.com.br' },

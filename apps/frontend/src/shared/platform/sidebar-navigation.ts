@@ -101,7 +101,7 @@ export function groupSidebarItems<T extends SidebarItemBase>(
         ? (canManagePlatformAdministration ? 'Platform' : 'Workspace')
         : group === 'finance'
           ? 'Finance'
-          : 'PetFlow';
+          : 'Gestão Pet';
 
       return {
         key: group,

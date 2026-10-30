@@ -17,13 +17,13 @@ export function WebsitePlatformPage() {
           action: 'Ver em ação',
           platformLabel: 'Infraestrutura confiável',
           devicesTitle: 'Acesse de qualquer dispositivo',
-          devicesDescription: 'A plataforma preserva a base técnica enquanto o PetFlow segue como produto visível.'
+          devicesDescription: 'A plataforma preserva a base técnica enquanto a Gestão Pet segue como produto visível.'
         }
       : {
           action: 'See it in action',
           platformLabel: 'Reliable foundation',
           devicesTitle: 'Access from any device',
-          devicesDescription: 'The platform preserves the technical base while PetFlow remains the visible product.'
+          devicesDescription: 'The platform preserves the technical base while Pet Management remains the visible product.'
         };
 
   return (

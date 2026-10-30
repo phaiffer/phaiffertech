@@ -133,7 +133,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             <PetFlowMark className="h-9 w-9 shrink-0 rounded-[1rem]" />
             <div className="min-w-0">
               <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[color:var(--accent)]">
-                PetFlow workspace
+                {messages.mobilePetFlow}
               </p>
               <p className="truncate text-sm font-semibold text-slate-900">
                 {headerMeta.label}
@@ -274,10 +274,10 @@ export function AppShell({ children }: { children: ReactNode }) {
                 <PetFlowMark className="h-8 w-8 shrink-0 rounded-[0.95rem]" />
                 <div className="min-w-0">
                   <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[color:var(--accent)]">
-                    PetFlow administration
+                    Administração da operação
                   </p>
                   <p className="text-sm text-slate-700">
-                    Superfície administrativa do PetFlow com assinatura discreta da
+                    Superfície administrativa com assinatura discreta da
                     {' '}
                     <span className="font-medium text-slate-900">PhaifferTech</span>.
                   </p>
@@ -301,9 +301,9 @@ export function AppShell({ children }: { children: ReactNode }) {
             <footer className="mt-8 border-t border-slate-200/80 pt-4">
               <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                 <div>
-                  <p className="text-sm font-semibold text-slate-900">PetFlow</p>
+                  <p className="text-sm font-semibold text-slate-900">{messages.mobilePetFlow}</p>
                   <p className="text-xs text-slate-600">
-                    Continuação direta da experiência institucional do PetFlow.
+                    Continuação direta da experiência operacional.
                   </p>
                 </div>
 

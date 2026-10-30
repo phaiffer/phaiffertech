@@ -94,7 +94,7 @@ function resolveLegacyAccountId(value?: { accountId?: string; companyId?: string
 function resolveRequiredLegacyAccountId(value?: { accountId?: string; companyId?: string }) {
   const accountId = resolveLegacyAccountId(value);
   if (!accountId) {
-    throw new Error('PetFlow commercial deals require an account identifier.');
+    throw new Error('Pet commercial deals require an account identifier.');
   }
   return accountId;
 }

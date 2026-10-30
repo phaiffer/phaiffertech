@@ -50,7 +50,7 @@ describe('PetCommercialPage', () => {
     render(<PetCommercialPage />);
 
     expect(screen.getByTestId('pet-subnav')).toBeInTheDocument();
-    expect(screen.getByText('PetFlow commercial')).toBeInTheDocument();
+    expect(screen.getByText('Gestão Comercial')).toBeInTheDocument();
     expect(screen.getByText('pet-commercial-leads')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Leads' })).toHaveAttribute('href', '/pet/commercial');
     expect(screen.getByRole('link', { name: 'Negócios' })).toHaveAttribute('href', '/pet/commercial?tab=deals');
@@ -71,6 +71,6 @@ describe('PetCommercialPage', () => {
 
     render(<PetCommercialPage />);
 
-    expect(screen.getByText('Você não possui permissão para visualizar o comercial do PetFlow.')).toBeInTheDocument();
+    expect(screen.getByText('Você não possui permissão para visualizar o comercial da operação.')).toBeInTheDocument();
   });
 });

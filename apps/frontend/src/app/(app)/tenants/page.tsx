@@ -86,7 +86,7 @@ type PlanDetails = {
 const PLAN_DETAILS: Record<ProductPackageCode, PlanDetails> = {
   PETSHOP: {
     label: 'Pet retail workspace',
-    description: 'Retail-led PetFlow operation for storefront sales, service add-ons, and front-desk follow-through.',
+    description: 'Retail-led Pet Management operation for storefront sales, service add-ons, and front-desk follow-through.',
     defaultModules: ['PET'],
     defaultEntitlements: ['pet.retail']
   },
@@ -1061,7 +1061,7 @@ export default function TenantsPage() {
                     <div>
                       <p className="text-sm font-medium text-[color:var(--app-shell-heading)]">Contracted modules</p>
                       <p className={panelCopyClass}>
-                        CORE_PLATFORM remains active for every workspace. PetFlow stays visible through the selected package, while preserved legacy standalone modules remain hidden from this administration surface.
+                        CORE_PLATFORM remains active for every workspace. Pet Management stays visible through the selected package, while preserved legacy standalone modules remain hidden from this administration surface.
                       </p>
                     </div>
 
@@ -1606,7 +1606,7 @@ export default function TenantsPage() {
                     <div>
                       <p className="text-sm font-medium text-[color:var(--app-shell-heading)]">Feature flags</p>
                       <p className={panelCopyClass}>
-                        Rollout controls sit on top of contracts. Only PetFlow-visible rollout toggles remain exposed on this administration surface.
+                        Rollout controls sit on top of contracts. Only Pet Management-visible rollout toggles remain exposed on this administration surface.
                       </p>
                     </div>
 

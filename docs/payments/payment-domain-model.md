@@ -1,4 +1,4 @@
-# PetFlow Payments - Modelo de Dominio Proposto
+# Gestão Pet Payments - Modelo de Dominio Proposto
 
 Data de referencia: 2026-05-12.
 
@@ -9,7 +9,7 @@ Este documento descreve o modelo de dominio sugerido para a camada de pagamentos
 - Invoice e independente do meio de pagamento.
 - Metodo de pagamento descreve capacidade ou escolha; tentativa descreve execucao.
 - Confirmacao financeira deve ser rastreavel por evento.
-- Provider externo e detalhe de infraestrutura, nao regra de negocio do PetFlow.
+- Provider externo e detalhe de infraestrutura, nao regra de negocio do Gestão Pet.
 - Manual deve ser um canal de primeira classe, nao excecao.
 - Dados sensiveis de cartao nunca devem ser persistidos no banco da aplicacao.
 - Todo registro deve ser tenant-scoped e compatibilizado com auditoria/soft delete existentes.
@@ -28,7 +28,7 @@ Campos sugeridos:
 | `tenant_id` | UUID | Isolamento multi-tenant. |
 | `source_module` | enum | `PET`, `CRM`, `MANUAL`, legado quando necessario. |
 | `counterparty_reference_type` | varchar | Ex.: `PET.CLIENT`. |
-| `counterparty_reference_id` | UUID | Cliente/responsavel no PetFlow. |
+| `counterparty_reference_id` | UUID | Cliente/responsavel no Gestão Pet. |
 | `counterparty_name` | varchar | Snapshot do nome para leitura financeira. |
 | `business_context_type` | varchar | Ex.: `PET.APPOINTMENT`, `PET.PLAN_RENEWAL`, `PET.MONTHLY_CLOSE`. |
 | `business_context_id` | UUID | Id do atendimento/plano/fechamento quando aplicavel. |
@@ -167,7 +167,7 @@ DEBIT_CARD
 CREDIT_CARD
 ```
 
-O enum atual `FinancePaymentMethod` ja inclui `PIX`, `CREDIT_CARD`, `DEBIT_CARD`, `MANUAL`, alem de outros metodos financeiros. A camada de tentativa pode usar um enum mais restrito para a primeira expansao PetFlow.
+O enum atual `FinancePaymentMethod` ja inclui `PIX`, `CREDIT_CARD`, `DEBIT_CARD`, `MANUAL`, alem de outros metodos financeiros. A camada de tentativa pode usar um enum mais restrito para a primeira expansao Gestão Pet.
 
 ### `PaymentAttemptStatus`
 

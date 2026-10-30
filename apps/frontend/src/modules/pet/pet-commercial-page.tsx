@@ -39,10 +39,10 @@ export function PetCommercialPage() {
           <section className="ui-surface-panel space-y-4 p-4">
             <div className="space-y-2">
               <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[color:var(--accent)]">
-                PetFlow commercial
+                Gestão Comercial
               </p>
               <p className="max-w-3xl text-sm text-[color:var(--app-shell-muted)]">
-                Leads, negócios e pipeline entram pelo PetFlow como uma capacidade comercial única. A infraestrutura
+                Leads, negócios e pipeline entram na operação pet como uma capacidade comercial única. A infraestrutura
                 legada continua por baixo apenas como camada temporária de compatibilidade enquanto a consolidação
                 avança com segurança.
               </p>
@@ -75,7 +75,7 @@ export function PetCommercialPage() {
           {activeTab.key === 'pipeline' ? <PetCommercialPipelinePage /> : null}
         </>
       ) : (
-        <div className="ui-notice-warning">Você não possui permissão para visualizar o comercial do PetFlow.</div>
+        <div className="ui-notice-warning">Você não possui permissão para visualizar o comercial da operação.</div>
       )}
     </div>
   );
