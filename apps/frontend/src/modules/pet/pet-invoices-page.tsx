@@ -139,7 +139,7 @@ function formatCycleLabel(date: Date) {
 
 function buildCollectionReference(clientId: string, cycleDate: Date) {
   const month = `${cycleDate.getMonth() + 1}`.padStart(2, '0');
-  return `PETFLOW:${clientId}:${cycleDate.getFullYear()}${month}`;
+  return `COB-${cycleDate.getFullYear()}${month}-${clientId.slice(0, 8).toUpperCase()}`;
 }
 
 function resolveProjectedDue(appointment: PetAppointment) {

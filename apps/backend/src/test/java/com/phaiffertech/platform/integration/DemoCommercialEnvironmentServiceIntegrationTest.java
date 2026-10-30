@@ -69,8 +69,14 @@ class DemoCommercialEnvironmentServiceIntegrationTest extends AbstractIntegratio
                 JOIN pet_profiles p ON p.id = a.pet_id
                 WHERE a.tenant_id = ? AND p.name = 'Rex'
                 """, UUID.class, tenantId);
-        UUID serviceId = jdbcTemplate.queryForObject(
-                "SELECT service_id FROM pet_appointments WHERE id = ?", UUID.class, appointmentId);
+        // The seed already owns line 0 of this appointment, so the legacy row uses another line and service.
+        UUID serviceId = jdbcTemplate.queryForObject("""
+                SELECT s.id FROM pet_services s
+                WHERE s.tenant_id = ?
+                  AND s.id <> (SELECT service_id FROM pet_appointments WHERE id = ?)
+                ORDER BY s.id
+                LIMIT 1
+                """, UUID.class, tenantId, appointmentId);
 
         executeSql(
                 """
@@ -83,7 +89,7 @@ class DemoCommercialEnvironmentServiceIntegrationTest extends AbstractIntegratio
                 tenantId.toString(),
                 appointmentId,
                 serviceId,
-                0,
+                1,
                 "Vacinacao",
                 "CLINICAL",
                 30,
@@ -92,8 +98,16 @@ class DemoCommercialEnvironmentServiceIntegrationTest extends AbstractIntegratio
 
         demoCommercialEnvironmentService.seed();
 
-        assertEquals(0, countRows(
+        assertEquals(3, countRows(
                 "SELECT COUNT(*) FROM pet_appointment_services WHERE tenant_id = ?",
+                tenantId.toString()
+        ));
+        assertEquals(0, countRows(
+                "SELECT COUNT(*) FROM pet_appointment_services WHERE tenant_id = ? AND service_name = 'Vacinacao'",
+                tenantId.toString()
+        ));
+        assertEquals(3, countRows(
+                "SELECT COUNT(*) FROM pet_appointment_services WHERE tenant_id = ? AND commission_rate IS NOT NULL",
                 tenantId.toString()
         ));
     }

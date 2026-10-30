@@ -15,6 +15,7 @@ public interface CrmNoteRepository extends JpaRepository<CrmNote, UUID> {
             FROM CrmNote n
             WHERE n.tenantId = :tenantId
               AND (:relatedReferenceType IS NULL OR n.relatedType = :relatedReferenceType)
+              AND (:relatedTypePrefix IS NULL OR n.relatedType LIKE :relatedTypePrefix)
               AND (:relatedId IS NULL OR n.relatedId = :relatedId)
               AND (:companyId IS NULL OR n.companyId = :companyId)
               AND (:contactId IS NULL OR n.contactId = :contactId)
@@ -25,6 +26,7 @@ public interface CrmNoteRepository extends JpaRepository<CrmNote, UUID> {
     Page<CrmNote> findAllByTenantAndRelation(
             @Param("tenantId") UUID tenantId,
             @Param("relatedReferenceType") String relatedReferenceType,
+            @Param("relatedTypePrefix") String relatedTypePrefix,
             @Param("relatedId") UUID relatedId,
             @Param("companyId") UUID companyId,
             @Param("contactId") UUID contactId,

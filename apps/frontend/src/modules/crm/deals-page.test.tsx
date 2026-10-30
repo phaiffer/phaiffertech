@@ -84,7 +84,7 @@ describe('CrmDealsPage', () => {
     });
 
     expect(screen.getByText('Negocios comerciais')).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Configurar pipeline comercial' })).toHaveAttribute('href', '/pet/commercial?tab=pipeline');
+    expect(await screen.findByRole('link', { name: 'Configurar pipeline comercial' })).toHaveAttribute('href', '/pet/commercial?tab=pipeline');
   });
 
   it('renders kanban board when stages and deals exist', async () => {

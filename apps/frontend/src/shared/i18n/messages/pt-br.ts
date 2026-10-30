@@ -544,6 +544,8 @@ const ptBRMessages = {
       renewalPrepared: 'Mensagem de renovacao preparada, cobrada e copiada para envio manual.',
       renewalNeedsBilling: 'Mensagem de renovacao preparada com dados de cobranca pendentes; revise os campos do tenant antes de enviar.',
       prepareError: 'Nao foi possivel preparar o lembrete de renovacao.',
+      prepareRenewal: 'Preparar lembrete PIX',
+      preparingRenewal: 'Preparando...',
       officialRenewalSend: 'Enviar renovacao WhatsApp',
       officialRenewalSending: 'Enviando...',
       officialRenewalSent: 'Renovacao WhatsApp enviada',
@@ -561,6 +563,14 @@ const ptBRMessages = {
       status: 'Status',
       renewalSent: 'E-mail de renovacao pode ser enviado automaticamente',
       renewalNeedsEmail: 'Renovacao depende de e-mail do cliente',
+      lastVisitHint: 'O proximo atendimento concluido encerra o plano atual.',
+      activeCycleHint: 'Plano ativo e ainda cobre o ciclo recorrente.',
+      renewalStates: {
+        HEALTHY: 'Em dia',
+        PENULTIMATE_USE: 'Penultimo uso',
+        LAST_USE: 'Ultimo uso',
+        EXHAUSTED: 'Sessoes esgotadas'
+      },
       expiryAlign: 'Alinhe esta data com o proximo ciclo de cobranca.',
       sessionTrigger: 'O volume de sessoes segue como gatilho principal de renovacao.',
       actions: 'Acoes',

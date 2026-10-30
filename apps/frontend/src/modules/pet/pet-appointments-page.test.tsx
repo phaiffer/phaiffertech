@@ -1,5 +1,5 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { PetAppointmentsPage } from '@/modules/pet/pet-appointments-page';
 import type { FrontendPlatformState } from '@/shared/platform/frontend-platform.types';
 
@@ -118,8 +118,13 @@ function setGrantedPermissions(granted: string[]) {
 }
 
 describe('PetAppointmentsPage', () => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.stubEnv('NEXT_PUBLIC_WHATSAPP_OFFICIAL_ENABLED', 'true');
 
     setGrantedPermissions(['pet.appointment.read', 'pet.appointment.create', 'pet.appointment.update', 'pet.medical-record.read']);
 

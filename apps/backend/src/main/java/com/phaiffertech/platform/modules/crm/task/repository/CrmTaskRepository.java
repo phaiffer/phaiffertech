@@ -19,6 +19,7 @@ public interface CrmTaskRepository extends JpaRepository<CrmTask, UUID> {
               AND (:priority IS NULL OR t.priority = :priority)
               AND (:assignedUserId IS NULL OR t.assignedUserId = :assignedUserId)
               AND (:relatedReferenceType IS NULL OR t.relatedType = :relatedReferenceType)
+              AND (:relatedTypePrefix IS NULL OR t.relatedType LIKE :relatedTypePrefix)
               AND (:relatedId IS NULL OR t.relatedId = :relatedId)
               AND (:companyId IS NULL OR t.companyId = :companyId)
               AND (:contactId IS NULL OR t.contactId = :contactId)
@@ -36,6 +37,7 @@ public interface CrmTaskRepository extends JpaRepository<CrmTask, UUID> {
             @Param("priority") String priority,
             @Param("assignedUserId") UUID assignedUserId,
             @Param("relatedReferenceType") String relatedReferenceType,
+            @Param("relatedTypePrefix") String relatedTypePrefix,
             @Param("relatedId") UUID relatedId,
             @Param("companyId") UUID companyId,
             @Param("contactId") UUID contactId,

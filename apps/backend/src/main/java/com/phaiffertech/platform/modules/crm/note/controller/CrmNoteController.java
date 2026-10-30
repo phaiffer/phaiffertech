@@ -36,13 +36,23 @@ public class CrmNoteController {
     public ApiResponse<PageResponseDto<CrmNoteResponse>> list(
             @Valid @ModelAttribute PageRequestDto pageRequest,
             @RequestParam(required = false) String relatedReferenceType,
+            @RequestParam(required = false) String relatedModule,
             @RequestParam(required = false) UUID relatedId,
             @RequestParam(required = false) UUID companyId,
             @RequestParam(required = false) UUID contactId,
             @RequestParam(required = false) UUID leadId,
             @RequestParam(required = false) UUID dealId
     ) {
-        return ApiResponse.success(service.list(pageRequest, relatedReferenceType, relatedId, companyId, contactId, leadId, dealId));
+        return ApiResponse.success(service.list(
+                pageRequest,
+                relatedReferenceType,
+                relatedModule,
+                relatedId,
+                companyId,
+                contactId,
+                leadId,
+                dealId
+        ));
     }
 
     @GetMapping("/{id}")

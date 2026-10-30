@@ -538,6 +538,8 @@ export const enUSMessages: AppMessages = {
       renewalPrepared: 'Renewal message prepared, charged, and copied for manual sending.',
       renewalNeedsBilling: 'Renewal message prepared with pending billing data; review the tenant billing fields before sending.',
       prepareError: 'Unable to prepare the renewal reminder.',
+      prepareRenewal: 'Prepare PIX reminder',
+      preparingRenewal: 'Preparing...',
       officialRenewalSend: 'Send WhatsApp renewal',
       officialRenewalSending: 'Sending...',
       officialRenewalSent: 'WhatsApp renewal sent',
@@ -555,6 +557,14 @@ export const enUSMessages: AppMessages = {
       status: 'Status',
       renewalSent: 'Renewal email can be sent automatically',
       renewalNeedsEmail: 'Renewal needs client email',
+      lastVisitHint: 'Next completed visit will finish the current plan.',
+      activeCycleHint: 'Plan is active and still supports the recurring cycle.',
+      renewalStates: {
+        HEALTHY: 'On track',
+        PENULTIMATE_USE: 'Penultimate use',
+        LAST_USE: 'Last use',
+        EXHAUSTED: 'No sessions left'
+      },
       expiryAlign: 'Keep this date aligned with the next billing cycle.',
       sessionTrigger: 'Session volume remains the main renewal trigger.',
       actions: 'Actions',

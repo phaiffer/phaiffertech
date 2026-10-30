@@ -8,6 +8,7 @@ import { StatusBadge } from '@/shared/dashboard/status-badge';
 import type { AppLocale } from '@/shared/i18n/app-i18n-provider';
 import { useAppI18n, useAppMessages } from '@/shared/i18n/app-i18n-provider';
 import { formatCurrencyForLocale, formatDateTimeForLocale } from '@/shared/i18n/formatters';
+import { isOfficialWhatsAppEnabled } from '@/shared/messaging/official-whatsapp';
 import { DataTableColumn } from '@/shared/ui/data-table';
 import { DateTimeInput } from '@/shared/ui/datetime-input';
 import { FormInput } from '@/shared/ui/form-input';
@@ -930,7 +931,7 @@ export function createPetAppointmentColumns({
               </button>
             </PermissionGuard>
           ) : null}
-          {appointment.status.toUpperCase() === 'COMPLETED' ? (
+          {appointment.status.toUpperCase() === 'COMPLETED' && isOfficialWhatsAppEnabled() ? (
             <PermissionGuard permission="pet.appointment.update">
               <button
                 type="button"
