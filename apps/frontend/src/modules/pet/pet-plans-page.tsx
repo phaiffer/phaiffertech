@@ -101,6 +101,11 @@ function PlanSignalCard({
 }
 
 // Returns a toneMap-compatible status key for StatusBadge
+function resolveRenewalStateLabel(renewalState: string | undefined, labels: Record<string, string>): string {
+  const state = renewalState ?? 'HEALTHY';
+  return labels[state] ?? state;
+}
+
 function resolvePlanStatusKey(plan: ClientPlan): string {
   if (plan.remainingSessions <= 0) return 'canceled'; // exhausted → destructive tone
   if (plan.expiresAt && new Date(plan.expiresAt) < new Date()) return 'error'; // expired → destructive tone
@@ -525,7 +530,9 @@ export function PetPlansPage() {
         billingDisplayName: prepared.billingDisplayName
       });
       if (typeof navigator !== 'undefined' && navigator.clipboard?.writeText) {
-        await navigator.clipboard.writeText(prepared.message);
+        // Best-effort copy: a pending or denied clipboard permission must not lock the
+        // button, and the prepared message stays on screen with its own copy action.
+        void navigator.clipboard.writeText(prepared.message).catch(() => undefined);
       }
       setSuccess(prepared.pixConfigured
         ? messages.messageSetup.renewalPrepared
@@ -663,18 +670,20 @@ export function PetPlansPage() {
       render: (plan) => (
         <div className="space-y-2">
           <StatusBadge status={resolvePlanStatusKey(plan)} />
-          <p className="text-xs text-[color:var(--app-shell-muted)]">{plan.renewalState ?? 'HEALTHY'}</p>
+          <p className="text-xs text-[color:var(--app-shell-muted)]">
+            {resolveRenewalStateLabel(plan.renewalState, messages.columns.renewalStates)}
+          </p>
           {plan.remainingSessions === 2 ? (
             <p className="text-xs text-[color:var(--app-shell-muted)]">
               {resolveClientEmail(plan) ? messages.columns.renewalSent : messages.columns.renewalNeedsEmail}
             </p>
           ) : plan.remainingSessions === 1 ? (
             <p className="text-xs text-[color:var(--app-shell-muted)]">
-              Next completed visit will finish the current plan.
+              {messages.columns.lastVisitHint}
             </p>
           ) : plan.remainingSessions > 2 ? (
             <p className="text-xs text-[color:var(--app-shell-muted)]">
-              Plan is active and still supports the recurring cycle.
+              {messages.columns.activeCycleHint}
             </p>
           ) : null}
         </div>
@@ -716,7 +725,7 @@ export function PetPlansPage() {
               className="ui-inline-button"
               disabled={preparingRenewalPlanId === plan.id}
             >
-              {preparingRenewalPlanId === plan.id ? 'Preparing...' : 'Prepare PIX reminder'}
+              {preparingRenewalPlanId === plan.id ? messages.messageSetup.preparingRenewal : messages.messageSetup.prepareRenewal}
             </button>
           ) : null}
           {plan.remainingSessions <= 1 && isOfficialWhatsAppEnabled() ? (

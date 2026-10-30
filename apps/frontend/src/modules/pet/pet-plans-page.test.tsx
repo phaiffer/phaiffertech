@@ -185,7 +185,7 @@ describe('PetPlansPage', () => {
     expect(screen.getByText('Pet: Luna')).toBeInTheDocument();
     expect(screen.getByText('Obs: Cliente prefere banho aos sabados.')).toBeInTheDocument();
     expect(screen.getByText('1 left')).toBeInTheDocument();
-    expect(screen.getByText('LAST_USE')).toBeInTheDocument();
+    expect(screen.getByText('Last use')).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: 'Send WhatsApp renewal' }));
 

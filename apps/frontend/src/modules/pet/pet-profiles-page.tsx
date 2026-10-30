@@ -58,6 +58,13 @@ const sizeOptions = [
   { value: 'GIANT', label: 'Gigante' }
 ];
 
+function resolveSizeLabel(size?: string | null): string | undefined {
+  if (!size) {
+    return undefined;
+  }
+  return sizeOptions.find((option) => option.value === size)?.label ?? size;
+}
+
 function formatDate(value?: string) {
   if (!value) {
     return 'Nao informado';
@@ -309,7 +316,7 @@ export function PetProfilesPage({ initialView = 'list' }: PetProfilesPageProps) 
             {[profile.species, profile.breed].filter(Boolean).join(' - ')}
           </p>
           <p className={sharedCompactTextClass}>
-            {[profile.size, profile.coatType].filter(Boolean).join(' - ') || 'Porte e pelagem nao informados'}
+            {[resolveSizeLabel(profile.size), profile.coatType].filter(Boolean).join(' - ') || 'Porte e pelagem nao informados'}
           </p>
         </div>
       )
