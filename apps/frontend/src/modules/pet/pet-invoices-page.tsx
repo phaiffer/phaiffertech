@@ -28,7 +28,7 @@ import {
 import { financeService } from '@/shared/services/finance-service';
 import { CreatePetInvoicePaymentInput, petService } from '@/shared/services/pet-service';
 import { PageResponse } from '@/shared/types/common';
-import { FinanceCashMovement, FinanceInvoice } from '@/shared/types/finance';
+import { FinanceCashMovement, FinanceInvoice, FinancePaymentEvent } from '@/shared/types/finance';
 import { ClientPlan, PetAppointment, PetClient, PetInvoice } from '@/shared/types/pet';
 import { ConfirmDialog } from '@/shared/ui/confirm-dialog';
 import { DataTable, DataTableColumn } from '@/shared/ui/data-table';
@@ -131,6 +131,29 @@ function getNextCycleDateRange() {
   const end = new Date(now.getFullYear(), now.getMonth() + 2, 0, 23, 59, 59, 999);
 
   return { start, end };
+}
+
+const paymentEventLabels: Record<string, string> = {
+  INVOICE_CREATED: 'Fatura criada',
+  INVOICE_ISSUED: 'Fatura emitida para cobranca',
+  INVOICE_CANCELED: 'Fatura cancelada',
+  CHARGE_REQUESTED: 'Cobranca solicitada',
+  CHARGE_CREATED: 'Cobranca gerada',
+  CHARGE_FAILED: 'Falha ao gerar cobranca',
+  WEBHOOK_RECEIVED: 'Aviso do provedor recebido',
+  PAYMENT_RECORDED: 'Pagamento registrado',
+  PAYMENT_CONFIRMED: 'Pagamento confirmado',
+  PAYMENT_CANCELED: 'Pagamento cancelado',
+  REFUND_RECORDED: 'Estorno registrado'
+};
+
+function formatPaymentEventLabel(eventType: string) {
+  return paymentEventLabels[eventType] ?? eventType;
+}
+
+function formatPaymentEventSource(event: FinancePaymentEvent) {
+  const channel = event.provider === 'MANUAL' ? 'Registro manual' : `Provedor ${event.provider}`;
+  return event.recordedByName ? `${channel} por ${event.recordedByName}` : `${channel} pelo sistema`;
 }
 
 function formatCycleLabel(date: Date) {
@@ -329,6 +352,7 @@ export function PetInvoicesPage() {
   const [reviewInvoiceId, setReviewInvoiceId] = useState<string | null>(null);
   const [financeInvoice, setFinanceInvoice] = useState<FinanceInvoice | null>(null);
   const [cashMovements, setCashMovements] = useState<FinanceCashMovement[]>([]);
+  const [paymentEvents, setPaymentEvents] = useState<FinancePaymentEvent[]>([]);
   const [financeLoading, setFinanceLoading] = useState(false);
   const [financeError, setFinanceError] = useState<string | null>(null);
 
@@ -478,6 +502,7 @@ export function PetInvoicesPage() {
     if (!reviewedInvoice?.financeInvoiceId) {
       setFinanceInvoice(null);
       setCashMovements([]);
+      setPaymentEvents([]);
       setFinanceError(null);
       setFinanceLoading(false);
       return;
@@ -486,6 +511,7 @@ export function PetInvoicesPage() {
     if (!canReadFinanceInvoices && !canReadFinanceCash) {
       setFinanceInvoice(null);
       setCashMovements([]);
+      setPaymentEvents([]);
       setFinanceError(null);
       setFinanceLoading(false);
       return;
@@ -508,8 +534,12 @@ export function PetInvoicesPage() {
         size: financePreviewSize
       });
 
-    Promise.allSettled([invoiceRequest, cashRequest])
-      .then(([invoiceResult, cashResult]) => {
+    const eventsRequest = canReadFinanceInvoices
+      ? financeService.listInvoiceEvents(reviewedInvoice.financeInvoiceId)
+      : Promise.resolve<FinancePaymentEvent[]>([]);
+
+    Promise.allSettled([invoiceRequest, cashRequest, eventsRequest])
+      .then(([invoiceResult, cashResult, eventsResult]) => {
         if (!active) {
           return;
         }
@@ -535,6 +565,17 @@ export function PetInvoicesPage() {
             cashResult.reason instanceof Error
               ? cashResult.reason.message
               : 'Nao foi possivel carregar os movimentos de caixa da fatura vinculada.'
+          );
+        }
+
+        if (eventsResult.status === 'fulfilled') {
+          setPaymentEvents(eventsResult.value);
+        } else {
+          setPaymentEvents([]);
+          nextErrors.push(
+            eventsResult.reason instanceof Error
+              ? eventsResult.reason.message
+              : 'Nao foi possivel carregar o historico da cobranca.'
           );
         }
 
@@ -1621,6 +1662,39 @@ export function PetInvoicesPage() {
                       </div>
                     ))}
                   </div>
+                )}
+              </div>
+
+              <div className={billingPanelClass}>
+                <div>
+                  <p className={billingPanelEyebrowClass}>Rastreabilidade</p>
+                  <p className={billingPanelTitleClass}>Historico da cobranca</p>
+                  <p className={billingPanelTextClass}>
+                    Linha do tempo de emissao, pagamentos e cancelamentos desta fatura, com quem registrou cada etapa.
+                  </p>
+                </div>
+
+                {!canReadFinanceInvoices ? (
+                  <div className="ui-notice-neutral mt-4">
+                    O historico exige a permissao <strong>finance.invoice.read</strong>.
+                  </div>
+                ) : paymentEvents.length === 0 ? (
+                  <div className="ui-notice-warning mt-4">
+                    Nenhum evento de cobranca foi registrado para esta fatura ate agora.
+                  </div>
+                ) : (
+                  <ol className="mt-4 grid gap-3" aria-label="Historico da cobranca">
+                    {paymentEvents.map((event) => (
+                      <li key={event.id} className={billingPanelMutedClass}>
+                        <p className="text-sm font-semibold text-[color:var(--app-shell-heading)]">
+                          {formatPaymentEventLabel(event.eventType)}
+                        </p>
+                        <p className={`mt-1 ${sharedCompactTextClass}`}>
+                          {formatDateTime(event.occurredAt)} • {formatPaymentEventSource(event)}
+                        </p>
+                      </li>
+                    ))}
+                  </ol>
                 )}
               </div>
             </PageSection>

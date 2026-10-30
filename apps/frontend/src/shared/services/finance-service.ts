@@ -1,6 +1,6 @@
 import { apiClient } from '@/shared/lib/http';
 import { PageResponse } from '@/shared/types/common';
-import { FinanceCashMovement, FinanceInvoice, FinancePayment } from '@/shared/types/finance';
+import { FinanceCashMovement, FinanceInvoice, FinancePayment, FinancePaymentEvent } from '@/shared/types/finance';
 
 export type FinanceInvoiceCreateRequest = {
   sourceModule?: string;
@@ -65,6 +65,8 @@ export const financeService = {
     ),
 
   getInvoice: (id: string) => apiClient.get<FinanceInvoice>(`/finance/invoices/${id}`),
+
+  listInvoiceEvents: (id: string) => apiClient.get<FinancePaymentEvent[]>(`/finance/invoices/${id}/events`),
 
   createInvoice: (request: FinanceInvoiceCreateRequest) =>
     apiClient.post<FinanceInvoice>('/finance/invoices', request),
