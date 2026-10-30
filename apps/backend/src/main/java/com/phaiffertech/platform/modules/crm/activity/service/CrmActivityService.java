@@ -41,12 +41,14 @@ public class CrmActivityService {
     public PageResponseDto<CrmActivityResponse> list(
             PageRequestDto pageRequest,
             String relatedReferenceType,
+            String relatedModule,
             UUID relatedId
     ) {
         UUID tenantId = TenantContext.getRequiredTenantId();
         String normalizedRelatedReferenceType = relationResolverService.normalizeFilterReferenceType(relatedReferenceType);
+        String normalizedRelatedModule = relationResolverService.normalizeFilterModule(relatedModule);
 
-        if (normalizedRelatedReferenceType == null && relatedId == null) {
+        if (normalizedRelatedReferenceType == null && normalizedRelatedModule == null && relatedId == null) {
             Page<CrmActivityResponse> result = repository.findCrmActivity(
                             tenantId,
                             PaginationUtils.toPageable(pageRequest, Sort.by(Sort.Direction.DESC, "createdAt"))
@@ -55,13 +57,14 @@ public class CrmActivityService {
             return PaginationUtils.fromPage(result);
         }
 
-        return listFiltered(tenantId, pageRequest, normalizedRelatedReferenceType, relatedId);
+        return listFiltered(tenantId, pageRequest, normalizedRelatedReferenceType, normalizedRelatedModule, relatedId);
     }
 
     private PageResponseDto<CrmActivityResponse> listFiltered(
             UUID tenantId,
             PageRequestDto pageRequest,
             String relatedReferenceType,
+            String relatedModule,
             UUID relatedId
     ) {
         int requestedPage = pageRequest.resolvedPage();
@@ -81,7 +84,7 @@ public class CrmActivityService {
             );
 
             for (AuditLog auditLog : scannedPage.getContent()) {
-                if (!matchesRelatedFilter(auditLog, relatedReferenceType, relatedId)) {
+                if (!matchesRelatedFilter(auditLog, relatedReferenceType, relatedModule, relatedId)) {
                     continue;
                 }
 
@@ -126,9 +129,15 @@ public class CrmActivityService {
         );
     }
 
-    private boolean matchesRelatedFilter(AuditLog auditLog, String relatedReferenceType, UUID relatedId) {
+    private boolean matchesRelatedFilter(AuditLog auditLog, String relatedReferenceType, String relatedModule, UUID relatedId) {
         JsonNode payload = readPayload(auditLog.getPayload());
         var relatedSelection = extractRelatedSelection(payload);
+
+        if (relatedModule != null) {
+            if (relatedSelection == null || !relatedModule.equals(relatedSelection.relatedModule())) {
+                return false;
+            }
+        }
 
         if (relatedReferenceType != null) {
             if (relatedSelection == null || !relatedReferenceType.equals(relatedSelection.relatedReferenceType())) {

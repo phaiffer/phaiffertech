@@ -215,8 +215,8 @@ const ptBRMessages = {
       pickupMessage: 'Mensagem de retirada',
       pickupMessageMissing: 'pets prontos ainda sem email do cliente para o envio automatico.',
       pickupMessageReady: 'Todos os pets prontos desta lista ja entram com mensagem automatica.',
-      penultimateBath: 'Penultimo banho',
-      penultimateBathDetail: 'planos expiram nas proximas duas semanas.',
+      expiringPlans: 'Planos vencendo',
+      expiringPlansDetail: 'planos expiram nas proximas duas semanas.',
       petTaxi: 'Pet taxi',
       petTaxiEmpty: 'Nenhum extra de pet taxi visivel na agenda de hoje.',
       lowStock: 'Estoque baixo',
@@ -379,6 +379,11 @@ const ptBRMessages = {
       updated: 'Atendimento atualizado.',
       created: 'Atendimento agendado.',
       deleted: 'Atendimento removido.'
+    },
+    calendar: {
+      previous: 'Anterior',
+      today: 'Hoje',
+      next: 'Proximo'
     },
     preparedPickup: {
       title: 'Pronto para retirada',
@@ -742,6 +747,7 @@ const ptBRMessages = {
       professionals: 'Profissionais',
       configured: 'Comissao configurada',
       projected: 'Projetado no mes',
+      projectedDetail: 'Comissao dos atendimentos concluidos neste mes.',
       needSetup: 'Pendente de setup',
       loading: 'Carregando...'
     },

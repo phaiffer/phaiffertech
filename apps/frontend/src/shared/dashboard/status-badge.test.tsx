@@ -43,4 +43,21 @@ describe('StatusBadge capability labels', () => {
       expect(screen.getByText(label)).toBeInTheDocument();
     }
   });
+
+  it('translates backend enum statuses written with underscores', () => {
+    window.localStorage.setItem('phaiffertech-locale', 'pt-BR');
+
+    render(
+      <AppI18nProvider>
+        <StatusBadge status="IN_PROGRESS" />
+        <StatusBadge status="NO_SHOW" />
+        <StatusBadge status="DONE" />
+        <StatusBadge status="HIGH" />
+      </AppI18nProvider>
+    );
+
+    for (const label of ['Em progresso', 'Nao compareceu', 'Concluida', 'Alta']) {
+      expect(screen.getByText(label)).toBeInTheDocument();
+    }
+  });
 });

@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { PermissionGuard } from '@/shared/auth/PermissionGuard';
 import { sharedPageStackClass } from '@/shared/components/public-visual-system';
+import { StatusBadge } from '@/shared/dashboard/status-badge';
 import { ApiClientError } from '@/shared/lib/http';
 import { resolvePageItems } from '@/shared/lib/pagination';
 import { petService } from '@/shared/services/pet-service';
@@ -270,7 +271,7 @@ export function PetCommissionSummaryPage() {
       render: (row) => (
         <div className="space-y-1">
           <p className="font-medium text-slate-900">{row.professionalName ?? 'Sem atribuicao segura'}</p>
-          <p className="text-xs text-slate-700">{row.appointmentStatus}</p>
+          <StatusBadge status={row.appointmentStatus} />
         </div>
       )
     },

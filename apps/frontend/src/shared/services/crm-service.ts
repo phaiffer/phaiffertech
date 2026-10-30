@@ -173,6 +173,7 @@ type NoteFilters = {
 
 type ActivityFilters = {
   relatedReferenceType?: string;
+  relatedModule?: string;
   relatedId?: string;
 };
 
@@ -337,6 +338,7 @@ export const crmService = {
     apiClient.get<PageResponse<CrmActivityItem>>(
       `/crm/activity?${queryString(page, size, '', {
         relatedReferenceType: filters.relatedReferenceType,
+        relatedModule: filters.relatedModule,
         relatedId: filters.relatedId
       })}`
     ),

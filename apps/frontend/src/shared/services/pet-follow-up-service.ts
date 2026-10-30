@@ -13,6 +13,7 @@ export type UpdatePetFollowUpNoteInput = UpdateNoteInput;
 
 type TaskFilters = NonNullable<Parameters<typeof crmService.listTasks>[3]>;
 type NoteFilters = NonNullable<Parameters<typeof crmService.listNotes>[3]>;
+type ActivityFilters = NonNullable<Parameters<typeof crmService.listActivity>[2]>;
 
 // Gestão Pet owns the visible follow-up surface now. CRM endpoints remain behind
 // this adapter until the backend persistence layer is absorbed safely, so lists
@@ -30,5 +31,6 @@ export const petFollowUpService = {
   createNote: crmService.createNote,
   updateNote: crmService.updateNote,
   deleteNote: crmService.deleteNote,
-  listActivity: crmService.listActivity
+  listActivity: (page = 0, size = 20, filters: ActivityFilters = {}) =>
+    crmService.listActivity(page, size, { ...filters, relatedModule: PET_RELATED_MODULE })
 };

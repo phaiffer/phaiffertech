@@ -530,7 +530,7 @@ export function PetServicesPage() {
       render: (item) => (
         <div className="space-y-1 text-xs text-[color:var(--app-shell-muted)]">
           <p className="font-medium text-slate-900">
-            {item.inventoryLinks.filter((link) => link.active).length} active linked item(s)
+            {item.inventoryLinks.filter((link) => link.active).length} insumo(s) vinculado(s)
           </p>
           <p>{formatInventoryLinkSummary(item)}</p>
         </div>

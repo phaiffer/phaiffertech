@@ -480,9 +480,9 @@ export function PetOperationsDashboard({
       },
       {
         key: 'plans',
-        title: t.stats.penultimateBath,
+        title: t.stats.expiringPlans,
         description: expiringPlans.length > 0
-          ? `${expiringPlans.length} ${t.stats.penultimateBathDetail}`
+          ? `${expiringPlans.length} ${t.stats.expiringPlansDetail}`
           : t.billing.noAlerts,
         tone: expiringPlans.length > 0 ? 'warning' as const : 'neutral' as const
       },
@@ -521,8 +521,8 @@ export function PetOperationsDashboard({
     t.queue.title,
     t.stats.lowStock,
     t.stats.nextCycle,
-    t.stats.penultimateBath,
-    t.stats.penultimateBathDetail,
+    t.stats.expiringPlans,
+    t.stats.expiringPlansDetail,
     t.stats.petTaxiEmpty,
     t.stats.pickupMessageReady
   ]);

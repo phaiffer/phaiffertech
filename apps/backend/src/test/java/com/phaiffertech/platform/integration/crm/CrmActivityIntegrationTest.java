@@ -87,6 +87,17 @@ class CrmActivityIntegrationTest extends AbstractIntegrationTest {
         assertEquals(1, requireBody(compatibilityFilteredResponse).path("data").path("items").size());
         assertEquals("CRM.COMPANY", requireBody(compatibilityFilteredResponse).path("data").path("items").get(0).path("relatedReferenceType").asText());
 
+        ResponseEntity<JsonNode> moduleFilteredResponse = get("/crm/activity?page=0&size=100&relatedModule=pet", session);
+        assertEquals(200, moduleFilteredResponse.getStatusCode().value());
+        JsonNode moduleItems = requireBody(moduleFilteredResponse).path("data").path("items");
+        assertTrue(moduleItems.size() >= 1);
+        for (JsonNode item : moduleItems) {
+            assertEquals("PET", item.path("relatedModule").asText());
+        }
+
+        ResponseEntity<JsonNode> invalidModuleResponse = get("/crm/activity?page=0&size=20&relatedModule=PET.CLIENT", session);
+        assertEquals(400, invalidModuleResponse.getStatusCode().value());
+
         Set<String> eventTypes = new HashSet<>();
         boolean taskEntityFound = false;
         boolean noteEntityFound = false;

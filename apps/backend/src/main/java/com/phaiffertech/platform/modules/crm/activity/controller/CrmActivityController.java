@@ -29,8 +29,9 @@ public class CrmActivityController {
     public ApiResponse<PageResponseDto<CrmActivityResponse>> list(
             @Valid @ModelAttribute PageRequestDto pageRequest,
             @RequestParam(required = false) String relatedReferenceType,
+            @RequestParam(required = false) String relatedModule,
             @RequestParam(required = false) UUID relatedId
     ) {
-        return ApiResponse.success(service.list(pageRequest, relatedReferenceType, relatedId));
+        return ApiResponse.success(service.list(pageRequest, relatedReferenceType, relatedModule, relatedId));
     }
 }

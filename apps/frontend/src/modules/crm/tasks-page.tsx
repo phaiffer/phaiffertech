@@ -16,6 +16,7 @@ import {
 } from '@/modules/crm/crm-related-reference-catalog';
 import { PermissionGuard } from '@/shared/auth/PermissionGuard';
 import { usePermissions } from '@/shared/auth/usePermissions';
+import { StatusBadge } from '@/shared/dashboard/status-badge';
 import { ApiClientError } from '@/shared/lib/http';
 import { resolvePageItems, resolveTotalItems } from '@/shared/lib/pagination';
 import { crmService, CreateTaskInput, UpdateTaskInput } from '@/shared/services/crm-service';
@@ -36,15 +37,15 @@ import { SearchBar } from '@/shared/ui/search-bar';
 const pageSize = 10;
 const statusOptions = [
   { value: '', label: 'Todos' },
-  { value: 'OPEN', label: 'OPEN' },
-  { value: 'IN_PROGRESS', label: 'IN_PROGRESS' },
-  { value: 'DONE', label: 'DONE' }
+  { value: 'OPEN', label: 'Em aberto' },
+  { value: 'IN_PROGRESS', label: 'Em progresso' },
+  { value: 'DONE', label: 'Concluida' }
 ];
 const priorityOptions = [
   { value: '', label: 'Todas' },
-  { value: 'LOW', label: 'LOW' },
-  { value: 'MEDIUM', label: 'MEDIUM' },
-  { value: 'HIGH', label: 'HIGH' }
+  { value: 'LOW', label: 'Baixa' },
+  { value: 'MEDIUM', label: 'Media' },
+  { value: 'HIGH', label: 'Alta' }
 ];
 const initialPage: PageResponse<CrmTask> = { items: [], totalItems: 0, totalPages: 0, page: 0, size: pageSize };
 const emptyCommonPage: PageResponse<CrmCompany | CrmContact | CrmLead | CrmDeal | PetClient | PetProfile | PetAppointment> = {
@@ -308,8 +309,8 @@ export function CrmTasksPage({ surface = 'crm' }: CrmTasksPageProps) {
       }
     },
     { key: 'dueDate', header: 'Prazo', render: (row) => row.dueDate ? new Date(row.dueDate).toLocaleDateString('pt-BR') : '-' },
-    { key: 'status', header: 'Status', render: (row) => row.status },
-    { key: 'priority', header: 'Prioridade', render: (row) => row.priority },
+    { key: 'status', header: 'Status', render: (row) => <StatusBadge status={row.status} /> },
+    { key: 'priority', header: 'Prioridade', render: (row) => <StatusBadge status={row.priority} /> },
     {
       key: 'actions',
       header: 'Ações',

@@ -75,6 +75,10 @@ const toneMap: Record<string, string> = {
   canceled: 'border-destructive/30 bg-destructive-muted text-destructive',
   cancelled: 'border-destructive/30 bg-destructive-muted text-destructive',
   'no show': 'border-destructive/30 bg-destructive-muted text-destructive',
+  done: 'border-success/30 bg-success-muted text-success',
+  low: 'border-success/30 bg-success-muted text-success',
+  medium: 'border-warning/30 bg-warning-muted text-warning',
+  high: 'border-destructive/30 bg-destructive-muted text-destructive',
 };
 
 const labelMap: Record<string, string> = {
@@ -145,7 +149,16 @@ const labelMap: Record<string, string> = {
   canceled: 'Cancelada',
   cancelled: 'Cancelada',
   'no show': 'Nao compareceu',
+  done: 'Concluida',
+  low: 'Baixa',
+  medium: 'Media',
+  high: 'Alta',
 };
+
+// Backend enums arrive as IN_PROGRESS / NO_SHOW, while the maps are keyed by spaced words.
+function normalizeStatus(status: string): string {
+  return status.trim().toLowerCase().replace(/[_-]+/g, ' ');
+}
 
 const capabilityStatusKeys: Record<string, keyof AppMessages['moduleCapability']['badge']> = {
   'no permission': 'noPermission',
@@ -161,7 +174,7 @@ const capabilityStatusKeys: Record<string, keyof AppMessages['moduleCapability']
 };
 
 function prettify(status: string, locale: string, badgeCopy: AppMessages['moduleCapability']['badge']) {
-  const normalized = status.trim().toLowerCase();
+  const normalized = normalizeStatus(status);
   if (locale === 'en-US' && capabilityStatusKeys[normalized]) {
     return badgeCopy[capabilityStatusKeys[normalized]];
   }
@@ -169,9 +182,7 @@ function prettify(status: string, locale: string, badgeCopy: AppMessages['module
     return labelMap[normalized];
   }
 
-  return normalized
-    .replace(/[_-]+/g, ' ')
-    .replace(/\b\w/g, (char) => char.toUpperCase());
+  return normalized.replace(/\b\w/g, (char) => char.toUpperCase());
 }
 
 export function StatusBadge({ status }: StatusBadgeProps) {
@@ -180,8 +191,7 @@ export function StatusBadge({ status }: StatusBadgeProps) {
     return null;
   }
 
-  const normalized = status.trim().toLowerCase();
-  const classes = toneMap[normalized] ?? 'border-border bg-surface-inset text-muted';
+  const classes = toneMap[normalizeStatus(status)] ?? 'border-border bg-surface-inset text-muted';
 
   return (
     <span

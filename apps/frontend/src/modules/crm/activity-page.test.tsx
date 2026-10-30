@@ -114,6 +114,9 @@ describe('CrmActivityPage', () => {
     });
 
     expect(screen.getByLabelText('Tipo de vínculo')).toHaveValue('PET.CLIENT');
-    expect(screen.getByLabelText('Registro vinculado')).toHaveValue('87654321-4321-4321-4321-1234567890ab');
+    // The record options arrive with the async client lookup, so wait for the selected value.
+    await waitFor(() => {
+      expect(screen.getByLabelText('Registro vinculado')).toHaveValue('87654321-4321-4321-4321-1234567890ab');
+    });
   });
 });

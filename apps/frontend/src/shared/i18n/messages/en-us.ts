@@ -209,8 +209,8 @@ export const enUSMessages: AppMessages = {
       pickupMessage: 'Pickup message',
       pickupMessageMissing: 'ready pets still missing client email for automated sending.',
       pickupMessageReady: 'Every ready pet in this list already qualifies for the automated message.',
-      penultimateBath: 'Penultimate bath',
-      penultimateBathDetail: 'plans expire in the next two weeks.',
+      expiringPlans: 'Expiring plans',
+      expiringPlansDetail: 'plans expire in the next two weeks.',
       petTaxi: 'Pet taxi',
       petTaxiEmpty: 'No pet taxi extra is visible in today schedule.',
       lowStock: 'Low stock',
@@ -373,6 +373,11 @@ export const enUSMessages: AppMessages = {
       updated: 'Appointment updated.',
       created: 'Appointment booked.',
       deleted: 'Appointment removed.'
+    },
+    calendar: {
+      previous: 'Prev',
+      today: 'Today',
+      next: 'Next'
     },
     preparedPickup: {
       title: 'Ready for pickup',
@@ -736,6 +741,7 @@ export const enUSMessages: AppMessages = {
       professionals: 'Professionals',
       configured: 'Commission configured',
       projected: 'Projected this month',
+      projectedDetail: 'Commission from visits completed this month.',
       needSetup: 'Need setup',
       loading: 'Loading...'
     },

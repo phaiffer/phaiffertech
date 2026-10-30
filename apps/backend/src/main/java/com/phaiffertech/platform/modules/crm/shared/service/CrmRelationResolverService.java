@@ -103,7 +103,7 @@ public class CrmRelationResolverService {
         return parseReferenceDescriptor(null, referenceType).referenceType();
     }
 
-    public String normalizeFilterModulePrefix(String relatedModule) {
+    public String normalizeFilterModule(String relatedModule) {
         if (relatedModule == null || relatedModule.isBlank()) {
             return null;
         }
@@ -111,7 +111,12 @@ public class CrmRelationResolverService {
         if (!normalized.matches("[A-Z]+")) {
             throw new IllegalArgumentException("Invalid related module filter.");
         }
-        return normalized + ".%";
+        return normalized;
+    }
+
+    public String normalizeFilterModulePrefix(String relatedModule) {
+        String normalized = normalizeFilterModule(relatedModule);
+        return normalized == null ? null : normalized + ".%";
     }
 
     private RelationSelection explicitSelection(UUID companyId, UUID contactId, UUID leadId, UUID dealId) {
