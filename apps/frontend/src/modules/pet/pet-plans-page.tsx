@@ -14,6 +14,7 @@ import { useAppI18n, useAppMessages } from '@/shared/i18n/app-i18n-provider';
 import { formatDateForLocale } from '@/shared/i18n/formatters';
 import { ApiClientError } from '@/shared/lib/http';
 import { resolvePageItems, resolveTotalItems } from '@/shared/lib/pagination';
+import { isOfficialWhatsAppEnabled } from '@/shared/messaging/official-whatsapp';
 import { petService } from '@/shared/services/pet-service';
 import { PageResponse } from '@/shared/types/common';
 import { ClientPlan, PetClient, PetProfile, PetServiceCatalog, PlanTemplate } from '@/shared/types/pet';
@@ -718,7 +719,7 @@ export function PetPlansPage() {
               {preparingRenewalPlanId === plan.id ? 'Preparing...' : 'Prepare PIX reminder'}
             </button>
           ) : null}
-          {plan.remainingSessions <= 1 ? (
+          {plan.remainingSessions <= 1 && isOfficialWhatsAppEnabled() ? (
             <PermissionGuard permission="pet.plan.read">
               <button
                 type="button"

@@ -1,5 +1,5 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { PetPlansPage } from '@/modules/pet/pet-plans-page';
 
 const { hasPermissionMock, petServiceMock } = vi.hoisted(() => ({
@@ -48,8 +48,13 @@ function createPageResponse<T>(items: T[]) {
 }
 
 describe('PetPlansPage', () => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.stubEnv('NEXT_PUBLIC_WHATSAPP_OFFICIAL_ENABLED', 'true');
     Object.defineProperty(navigator, 'clipboard', {
       configurable: true,
       value: { writeText: vi.fn().mockResolvedValue(undefined) }
@@ -210,6 +215,19 @@ describe('PetPlansPage', () => {
     await waitFor(() => {
       expect(navigator.clipboard.writeText).toHaveBeenCalledWith('pix@petshop.com.br');
     });
+  });
+
+  it('hides the official WhatsApp renewal action until the channel is enabled', async () => {
+    vi.stubEnv('NEXT_PUBLIC_WHATSAPP_OFFICIAL_ENABLED', '');
+
+    render(<PetPlansPage />);
+
+    await waitFor(() => {
+      expect(petServiceMock.listPlanTemplates).toHaveBeenCalledTimes(1);
+    });
+
+    expect(await screen.findByRole('button', { name: 'Prepare PIX reminder' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Send WhatsApp renewal' })).not.toBeInTheDocument();
   });
 
   it('contracts a catalog plan for a client and pet with final price and notes', async () => {
