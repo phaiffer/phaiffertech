@@ -187,7 +187,7 @@ describe('DashboardPage workspace context', () => {
     };
   });
 
-  it('prioritizes the PetFlow demo surface for the platform tenant admin workspace', async () => {
+  it('prioritizes the pet operations demo surface for the platform tenant admin workspace', async () => {
     vi.mocked(moduleService.getDashboardSummary).mockResolvedValue({
       coreSummary: {
         key: 'executive-summary',
@@ -220,7 +220,7 @@ describe('DashboardPage workspace context', () => {
 
     expect(screen.getByRole('heading', { name: 'Operations overview' })).toBeInTheDocument();
     expect(screen.getByText('Official demo surface')).toBeInTheDocument();
-    expect(screen.getAllByText('PetFlow').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('Pet Management').length).toBeGreaterThan(0);
     expect(screen.queryByText('Visible products')).not.toBeInTheDocument();
     expect(screen.queryByText('Products in this workspace')).not.toBeInTheDocument();
     expect(screen.queryByText('CRM Snapshot')).not.toBeInTheDocument();

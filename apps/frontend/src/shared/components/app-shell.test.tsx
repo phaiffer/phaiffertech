@@ -79,7 +79,7 @@ describe('AppShell', () => {
 
     expect(screen.getByText('Overview')).toBeInTheDocument();
     expect(screen.getByText('Dashboard content')).toBeInTheDocument();
-    expect(screen.getByText('Pet Management')).toBeInTheDocument();
+    expect(screen.getAllByText('Pet Management').length).toBeGreaterThan(0);
     expect(screen.getByText('by PhaifferTech')).toBeInTheDocument();
 
     const shell = screen.getByTestId('sidebar').parentElement;
