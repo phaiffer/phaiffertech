@@ -186,7 +186,7 @@ describe('SettingsPage', () => {
     expect(screen.getByRole('heading', { name: 'Workspace Configuration' })).toBeInTheDocument();
     expect(screen.getByText('Platform Owner Workspace')).toBeInTheDocument();
     expect(screen.getAllByText('Full platform visibility')).toHaveLength(2);
-    expect(screen.getByText('PetFlow Branding Preview')).toBeInTheDocument();
+    expect(screen.getByText('Workspace Branding Preview')).toBeInTheDocument();
     expect(screen.getByText('Theme Policy')).toBeInTheDocument();
     expect(screen.getByText('Contracted Modules')).toBeInTheDocument();
     expect(screen.getByText('Account Security')).toBeInTheDocument();

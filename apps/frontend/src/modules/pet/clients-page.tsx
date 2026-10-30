@@ -375,7 +375,7 @@ export function PetClientsPage({ initialView = 'list' }: PetClientsPageProps) {
     > 
       <div className={sharedPageStackClass}>
         <PageTitle
-          eyebrow="PetFlow workspace"
+          eyebrow="Gestão Pet"
           title={isCreateRoute ? 'Novo cliente' : 'Clientes'}
           description={
             isCreateRoute
@@ -585,10 +585,10 @@ export function PetClientsPage({ initialView = 'list' }: PetClientsPageProps) {
                 getRowKey={(row) => row.id}
                 loading={loading}
                 loadingTitle="Carregando clientes"
-                loadingDescription="Preparando a base de clientes deste workspace PetFlow."
+                loadingDescription="Preparando a base de clientes deste workspace."
                 emptyState={{
                   title: 'Nenhum cliente ainda',
-                  description: 'Crie o primeiro cliente para liberar pets, atendimentos e o restante do fluxo PetFlow.',
+                  description: 'Crie o primeiro cliente para liberar pets, atendimentos e o restante do fluxo operacional.',
                   action: (
                     <PermissionGuard permission="pet.client.create">
                       <Link href="/pet/clients/new" className="ui-primary-button">

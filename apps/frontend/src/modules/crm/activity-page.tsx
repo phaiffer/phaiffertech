@@ -81,12 +81,12 @@ export function CrmActivityPage({ surface = 'crm' }: CrmActivityPageProps) {
     [canReadPetAppointments, canReadPetClients, canReadPetProfiles, isPetSurface]
   );
   const relationFilterTypeOptions = [{ value: '', label: 'Todos' }, ...relationTypeOptions];
-  const pageTitle = isPetSurface ? 'Atividade de follow-up do PetFlow' : 'CRM Activity';
+  const pageTitle = isPetSurface ? 'Atividade de follow-up da Gestão Pet' : 'CRM Activity';
   const pageDescription = isPetSurface
-    ? 'Acompanhe a trilha de tarefas e notas ligadas a clientes, pets e atendimentos. Eventos históricos continuam legíveis enquanto o fluxo é absorvido pelo PetFlow.'
+    ? 'Acompanhe a trilha de tarefas e notas ligadas a clientes, pets e atendimentos. Eventos históricos continuam legíveis enquanto o fluxo é absorvido pela Gestão Pet.'
     : 'Feed auditável com contexto canônico da entidade CRM e do vínculo relacionado quando houver referência cross-module.';
   const permissionFallback = isPetSurface
-    ? 'Você não possui permissão para visualizar a atividade de follow-up do PetFlow.'
+    ? 'Você não possui permissão para visualizar a atividade de follow-up da Gestão Pet.'
     : 'Você não possui permissão para visualizar a atividade do CRM.';
 
   useEffect(() => {
@@ -233,7 +233,7 @@ export function CrmActivityPage({ surface = 'crm' }: CrmActivityPageProps) {
       fallback={<div className="ui-notice-warning">{permissionFallback}</div>}
     >
       <div className="space-y-5">
-        <PageTitle title={pageTitle} description={pageDescription} eyebrow={isPetSurface ? 'PetFlow' : undefined} />
+        <PageTitle title={pageTitle} description={pageDescription} eyebrow={isPetSurface ? 'Gestão Pet' : undefined} />
 
         <div className="grid gap-3 ui-surface-panel p-4 xl:grid-cols-[180px_220px_auto]">
           <FormSelect

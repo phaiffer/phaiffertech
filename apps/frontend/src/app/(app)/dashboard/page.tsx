@@ -148,9 +148,9 @@ export default function DashboardPage() {
   return (
     <div className="space-y-6">
       <PageTitle
-        title={hasPetVisible ? 'PetFlow overview' : variant === 'platform' ? 'Platform overview' : 'Workspace overview'}
+        title={hasPetVisible ? 'Operations overview' : variant === 'platform' ? 'Platform overview' : 'Workspace overview'}
         description={hasPetVisible
-          ? 'Commercial launchpad for the PetFlow demo: daily schedule, recurring plans, stock alerts, and billing attention in one place.'
+          ? 'Commercial launchpad for the pet operation demo: daily schedule, recurring plans, stock alerts, and billing attention in one place.'
           : experience.description}
       />
 
@@ -183,7 +183,7 @@ export default function DashboardPage() {
           </h2>
           <p className="mt-1 text-sm text-[color:var(--app-shell-muted)]">
             {hasPetVisible
-              ? 'Keep the visible surface centered on PetFlow while the rest of the platform stays preserved internally.'
+              ? 'Keep the visible surface centered on pet operations while the rest of the platform stays preserved internally.'
               : variant === 'platform'
                 ? 'Keep the commercial product surface clear and expose only what is ready to be shown.'
                 : 'Open the contracted module surfaces that matter right now.'}

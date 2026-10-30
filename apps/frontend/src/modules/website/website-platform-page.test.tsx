@@ -15,7 +15,7 @@ describe('WebsitePlatformPage', () => {
     );
 
     expect(
-      await screen.findByRole('heading', { name: /The technical foundation behind PetFlow/i })
+      await screen.findByRole('heading', { name: /The technical foundation behind Pet Management/i })
     ).toBeInTheDocument();
     expect(screen.getAllByText('Shared foundation').length).toBeGreaterThan(0);
     expect(screen.getByText('Modules')).toBeInTheDocument();

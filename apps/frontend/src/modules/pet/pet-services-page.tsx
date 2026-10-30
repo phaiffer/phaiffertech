@@ -163,7 +163,7 @@ export function PetServicesPage() {
       });
       setPageData(result);
     } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : 'Nao foi possivel carregar o catalogo PetFlow.');
+      setError(err instanceof ApiClientError ? err.message : 'Nao foi possivel carregar o catalogo de servicos.');
     } finally {
       setLoading(false);
     }
@@ -567,11 +567,11 @@ export function PetServicesPage() {
   return (
     <PermissionGuard
       permission="pet.service.read"
-      fallback={<div className="ui-notice-warning">Voce nao tem permissao para visualizar o catalogo de servicos do PetFlow.</div>}
+      fallback={<div className="ui-notice-warning">Voce nao tem permissao para visualizar o catalogo de servicos.</div>}
     >
       <div className={sharedPageStackClass}>
         <PageTitle
-          eyebrow="PetFlow workspace"
+          eyebrow="Gestão Pet"
           title="Catalogo de Banho e Tosa"
           description="Estruture banho, tosa e servicos combinados com preco, duracao, plano, comissao, insumos e base operacional para evoluir preco por porte, peso e pelagem."
           actions={(

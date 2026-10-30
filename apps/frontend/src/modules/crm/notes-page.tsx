@@ -86,15 +86,15 @@ export function CrmNotesPage({ surface = 'crm' }: CrmNotesPageProps) {
     [canReadPetAppointments, canReadPetClients, canReadPetProfiles, isPetSurface]
   );
   const relationFilterTypeOptions = [{ value: '', label: 'Todos' }, ...relationTypeOptions];
-  const pageTitle = isPetSurface ? 'Notas de follow-up do PetFlow' : 'CRM Notes';
+  const pageTitle = isPetSurface ? 'Notas de follow-up da Gestão Pet' : 'CRM Notes';
   const pageDescription = isPetSurface
-    ? 'Registre observações operacionais ligadas a clientes, pets e atendimentos. Novas notas passam a nascer no contexto PetFlow, com leitura preservada para vínculos históricos.'
-    : 'Notas rápidas com vínculo legível entre CRM e, quando permitido, entidades do PetFlow.';
+    ? 'Registre observações operacionais ligadas a clientes, pets e atendimentos. Novas notas passam a nascer no contexto da Gestão Pet, com leitura preservada para vínculos históricos.'
+    : 'Notas rápidas com vínculo legível entre CRM e, quando permitido, entidades da Gestão Pet.';
   const permissionFallback = isPetSurface
-    ? 'Você não possui permissão para visualizar notas de follow-up do PetFlow.'
+    ? 'Você não possui permissão para visualizar notas de follow-up da Gestão Pet.'
     : 'Você não possui permissão para visualizar notas.';
   const relationHint = isPetSurface
-    ? 'Novas notas desta superfície usam referências do PetFlow. Registros legados continuam visíveis até a absorção completa do histórico.'
+    ? 'Novas notas desta superfície usam referências da Gestão Pet. Registros legados continuam visíveis até a absorção completa do histórico.'
     : 'Os vínculos CRM legados continuam compatíveis. Referências Pet aparecem quando o usuário possui leitura do recurso correspondente e são enviadas pelo tipo canônico.';
 
   useEffect(() => {
@@ -332,7 +332,7 @@ export function CrmNotesPage({ surface = 'crm' }: CrmNotesPageProps) {
       fallback={<div className="ui-notice-warning">{permissionFallback}</div>}
     >
       <div className="space-y-5">
-        <PageTitle title={pageTitle} description={pageDescription} eyebrow={isPetSurface ? 'PetFlow' : undefined} />
+        <PageTitle title={pageTitle} description={pageDescription} eyebrow={isPetSurface ? 'Gestão Pet' : undefined} />
 
         <div className="grid gap-3 ui-surface-panel p-4 xl:grid-cols-[1fr_180px_220px_auto_auto]">
           <SearchBar value={searchInput} onChange={setSearchInput} placeholder="Buscar por conteúdo da nota" />

@@ -227,7 +227,7 @@ describe('PetAppointmentsPage', () => {
       fireEvent.click(switchToListButton);
     }
 
-    expect(screen.getByText('Some PetFlow references are not yet available.')).toBeInTheDocument();
+    expect(screen.getByText('Some pet operation references are not yet available.')).toBeInTheDocument();
     expect(screen.getByText(/pet\.client\.read/)).toBeInTheDocument();
     await waitFor(() => {
       expect(screen.getByText('Owner Example')).toBeInTheDocument();

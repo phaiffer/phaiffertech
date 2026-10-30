@@ -107,15 +107,15 @@ export function CrmTasksPage({ surface = 'crm' }: CrmTasksPageProps) {
     [canReadPetAppointments, canReadPetClients, canReadPetProfiles, isPetSurface]
   );
   const relationFilterTypeOptions = [{ value: '', label: 'Todos' }, ...relationTypeOptions];
-  const pageTitle = isPetSurface ? 'Tarefas de follow-up do PetFlow' : 'CRM Tasks';
+  const pageTitle = isPetSurface ? 'Tarefas de follow-up da Gestão Pet' : 'CRM Tasks';
   const pageDescription = isPetSurface
-    ? 'Centralize tarefas operacionais ligadas a clientes, pets e atendimentos. Novos registros entram pelo contexto PetFlow enquanto vínculos históricos continuam legíveis para compatibilidade.'
-    : 'Tarefas vinculadas a registros do CRM e, quando permitido, a referências canônicas do PetFlow.';
+    ? 'Centralize tarefas operacionais ligadas a clientes, pets e atendimentos. Novos registros entram pelo contexto da Gestão Pet enquanto vínculos históricos continuam legíveis para compatibilidade.'
+    : 'Tarefas vinculadas a registros do CRM e, quando permitido, a referências canônicas da Gestão Pet.';
   const permissionFallback = isPetSurface
-    ? 'Você não possui permissão para visualizar tarefas de follow-up do PetFlow.'
+    ? 'Você não possui permissão para visualizar tarefas de follow-up da Gestão Pet.'
     : 'Você não possui permissão para visualizar tarefas.';
   const relationHint = isPetSurface
-    ? 'Novas tarefas desta superfície usam referências do PetFlow. Vínculos legados continuam visíveis em modo compatível até a absorção completa.'
+    ? 'Novas tarefas desta superfície usam referências da Gestão Pet. Vínculos legados continuam visíveis em modo compatível até a absorção completa.'
     : 'Os vínculos CRM legados continuam compatíveis. Referências Pet aparecem quando o usuário possui leitura do recurso correspondente e são enviadas pelo tipo canônico.';
 
   useEffect(() => {
@@ -372,7 +372,7 @@ export function CrmTasksPage({ surface = 'crm' }: CrmTasksPageProps) {
       fallback={<div className="ui-notice-warning">{permissionFallback}</div>}
     >
       <div className="space-y-5">
-        <PageTitle title={pageTitle} description={pageDescription} eyebrow={isPetSurface ? 'PetFlow' : undefined} />
+        <PageTitle title={pageTitle} description={pageDescription} eyebrow={isPetSurface ? 'Gestão Pet' : undefined} />
 
         <div className="grid gap-3 ui-surface-panel p-4 xl:grid-cols-[1fr_160px_160px_180px_220px_auto_auto]">
           <SearchBar value={searchInput} onChange={setSearchInput} placeholder="Título, descrição, prioridade" />

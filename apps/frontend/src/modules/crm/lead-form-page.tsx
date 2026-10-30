@@ -262,17 +262,17 @@ export function LeadFormPage({ leadId, surface = 'crm' }: LeadFormPageProps) {
       fallback={(
         <div className="ui-notice-warning">
           {isPetSurface
-            ? 'Você não possui permissão para esta ação comercial do PetFlow.'
+            ? 'Você não possui permissão para esta ação comercial da Gestão Pet.'
             : 'Você não possui permissão para esta ação.'}
         </div>
       )}
     >
       <div className={sharedPageStackClass}>
         <PageTitle
-          eyebrow={isPetSurface ? 'PetFlow commercial' : 'CRM workspace'}
+          eyebrow={isPetSurface ? 'Gestão Pet · Comercial' : 'CRM workspace'}
           title={title}
           description={isPetSurface
-            ? 'Cadastre e qualifique leads no contexto comercial do PetFlow. Os vínculos de conta e contato permanecem como camada temporária de compatibilidade.'
+            ? 'Cadastre e qualifique leads no contexto comercial da Gestão Pet. Os vínculos de conta e contato permanecem como camada temporária de compatibilidade.'
             : 'Formulário de cadastro/edição de lead comercial.'}
           actions={(
             <Link href={listPath} className="ui-secondary-button">
@@ -308,7 +308,7 @@ export function LeadFormPage({ leadId, surface = 'crm' }: LeadFormPageProps) {
                   </p>
                   <p className={`mt-2 ${sharedCompactTextClass}`}>
                     {isPetSurface
-                      ? 'Mantenha qualificação, contexto de relacionamento e notas alinhados para que o lead siga coerente dentro do comercial do PetFlow.'
+                      ? 'Mantenha qualificação, contexto de relacionamento e notas alinhados para que o lead siga coerente dentro do comercial da Gestão Pet.'
                       : 'Keep qualification, relationship context, and notes aligned so list and detail pages read the same way across the CRM workspace.'}
                   </p>
                 </div>
@@ -353,7 +353,7 @@ export function LeadFormPage({ leadId, surface = 'crm' }: LeadFormPageProps) {
                     onChange={handleCompanyChange}
                     disabled={loadingCompanies}
                     description={isPetSurface
-                      ? 'A conta comercial continua disponível apenas como compatibilidade enquanto o modelo do PetFlow absorve a conversão.'
+                      ? 'A conta comercial continua disponível apenas como compatibilidade enquanto o modelo da Gestão Pet absorve a conversão.'
                       : 'A seleção da company mantém o vínculo comercial e redefine a lista de contatos disponíveis.'}
                   />
                   <FormSelect

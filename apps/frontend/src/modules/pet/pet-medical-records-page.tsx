@@ -770,7 +770,7 @@ export function PetMedicalRecordsPage() {
     <PermissionGuard anyOf={petMedicalRoutePermissions} fallback={<PetMedicalPageFallback />}>
       <div className={sharedPageStackClass}>
         <PageTitle
-          eyebrow="PetFlow workspace"
+          eyebrow="Gestão Pet"
           title="Clinical records"
           description="Prontuários, vacinações e prescrições do módulo PET organizados como um único workspace clínico, sem alterar regras, permissões ou contratos já existentes."
           actions={appointmentContext ? (

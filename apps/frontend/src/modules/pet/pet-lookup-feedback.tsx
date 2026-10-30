@@ -19,7 +19,7 @@ export function PetLookupFeedback({ issues }: PetLookupFeedbackProps) {
 
   return (
     <div className="ui-notice-warning">
-      <p className="font-medium">Some PetFlow references are not yet available.</p>
+      <p className="font-medium">Some pet operation references are not yet available.</p>
       <p className="mt-1 text-current/90">
         The list remains usable, but filters and forms depend on clients, pets, services, and professionals being loaded.
       </p>

@@ -63,9 +63,9 @@ export function WebsiteProductsPage() {
       ? {
           platform: 'Solicitar cotacao',
           contact: 'Agendar demo',
-          portfolio: 'Oferta PetFlow',
+          portfolio: 'Oferta Gestão Pet',
           nextStep: 'Próximo passo',
-          ctaTitle: 'Pronto para montar sua oferta PetFlow?',
+          ctaTitle: 'Pronto para montar sua oferta de Gestão Pet?',
           ctaDescription:
             'Fale com a PhaifferTech sobre PetShop, Banho e Tosa, Clínica Veterinária e pacotes combinados no mesmo sistema.',
           ctaPrimary: 'Pedir proposta',
@@ -74,9 +74,9 @@ export function WebsiteProductsPage() {
       : {
           platform: 'Request a quote',
           contact: 'Book a demo',
-          portfolio: 'PetFlow offer',
+          portfolio: 'Pet Management offer',
           nextStep: 'Next step',
-          ctaTitle: 'Ready to shape your PetFlow offer?',
+          ctaTitle: 'Ready to shape your Pet Management offer?',
           ctaDescription:
             'Talk to PhaifferTech about PetShop, grooming, veterinary clinic, and combined packages in the same system.',
           ctaPrimary: 'Request proposal',

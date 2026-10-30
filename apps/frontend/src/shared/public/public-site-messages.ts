@@ -4,7 +4,7 @@ export const publicSiteMessages = {
   'pt-BR': {
     shell: {
       brandEyebrow: 'PhaifferTech',
-      brandTitle: 'PetFlow para operacoes pet reais',
+      brandTitle: 'Gestão para operacoes pet reais',
       brandSubtitle:
         'Software para PetShop, Banho e Tosa, Clinica Veterinaria e pacotes combinados com base tecnica solida.',
       navHome: 'Início',
@@ -15,22 +15,22 @@ export const publicSiteMessages = {
       navResearch: 'Pesquisa',
       navArticles: 'Insights',
       navContact: 'Contato',
-      navLogin: 'Acesso PetFlow',
+      navLogin: 'Acessar sistema',
       themeLight: 'Light',
       themeDark: 'Dark',
       localeLabel: 'Idioma',
       footerNarrativeTitle: 'PhaifferTech',
       footerNarrativeText:
-        'A PhaifferTech apresenta o PetFlow para PetShop, Banho e Tosa, Clinica Veterinaria e pacotes combinados em uma unica operacao.',
+        'A PhaifferTech apresenta sua plataforma para PetShop, Banho e Tosa, Clinica Veterinaria e pacotes combinados em uma unica operacao.',
       footerExploreTitle: 'Explorar',
       footerProductsTitle: 'Produtos',
       footerAccessTitle: 'Acesso',
       footerCopyright:
-        'PhaifferTech · PetFlow para PetShop, Banho e Tosa, Clinica Veterinaria e pacotes combinados, sustentado por fundacao SaaS multi-tenant.'
+        'PhaifferTech · Gestão para PetShop, Banho e Tosa, Clinica Veterinaria e pacotes combinados, sustentado por fundacao SaaS multi-tenant.'
     },
     login: {
       title: 'Acessar workspace',
-      description: 'Entre com o workspace e suas credenciais para abrir o PetFlow.',
+      description: 'Entre com o workspace e suas credenciais para abrir a operação.',
       tenantCodeLabel: 'Empresa ou workspace',
       emailLabel: 'E-mail',
       passwordLabel: 'Senha',
@@ -74,7 +74,7 @@ export const publicSiteMessages = {
   'en-US': {
     shell: {
       brandEyebrow: 'PhaifferTech',
-      brandTitle: 'PetFlow for real pet operations',
+      brandTitle: 'Pet Management for real pet operations',
       brandSubtitle:
         'Software for PetShop, grooming, veterinary clinics, and combined packages on a solid technical foundation.',
       navHome: 'Home',
@@ -85,22 +85,22 @@ export const publicSiteMessages = {
       navResearch: 'Research',
       navArticles: 'Insights',
       navContact: 'Contact',
-      navLogin: 'PetFlow access',
+      navLogin: 'System access',
       themeLight: 'Light',
       themeDark: 'Dark',
       localeLabel: 'Language',
       footerNarrativeTitle: 'PhaifferTech',
       footerNarrativeText:
-        'PhaifferTech now presents PetFlow for PetShop, grooming, veterinary clinics, and combined packages in one operational system.',
+        'PhaifferTech presents its platform for PetShop, grooming, veterinary clinics, and combined packages in one operational system.',
       footerExploreTitle: 'Explore',
       footerProductsTitle: 'Products',
       footerAccessTitle: 'Access',
       footerCopyright:
-        'PhaifferTech · PetFlow for PetShop, grooming, veterinary clinics, and combined packages, powered by a multi-tenant SaaS foundation.'
+        'PhaifferTech · Pet Management for PetShop, grooming, veterinary clinics, and combined packages, powered by a multi-tenant SaaS foundation.'
     },
     login: {
       title: 'Access workspace',
-      description: 'Sign in with your workspace and credentials to enter PetFlow.',
+      description: 'Sign in with your workspace and credentials to enter the operation.',
       tenantCodeLabel: 'Company or workspace',
       emailLabel: 'Email',
       passwordLabel: 'Password',

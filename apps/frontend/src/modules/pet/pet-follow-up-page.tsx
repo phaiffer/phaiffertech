@@ -41,7 +41,7 @@ export function PetFollowUpPage() {
               </p>
               <p className="max-w-3xl text-sm text-[color:var(--app-shell-muted)]">
                 Tarefas, notas e atividade ajudam a recepcao a lembrar retirada, retorno, renovacao de plano e pendencias
-                do atendimento sem sair da leitura operacional do PetFlow.
+                do atendimento sem sair da leitura operacional.
               </p>
             </div>
 
@@ -72,7 +72,7 @@ export function PetFollowUpPage() {
           {activeTab.key === 'activity' ? <CrmActivityPage surface="pet" /> : null}
         </>
       ) : (
-        <div className="ui-notice-warning">Voce nao possui permissao para visualizar o follow-up do PetFlow.</div>
+        <div className="ui-notice-warning">Voce nao possui permissao para visualizar o follow-up operacional.</div>
       )}
     </div>
   );

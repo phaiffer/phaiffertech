@@ -56,7 +56,7 @@ export const enUSMessages: AppMessages = {
   },
   publicShell: {
     brandEyebrow: 'PhaifferTech',
-    brandTitle: 'PetFlow for real pet operations',
+    brandTitle: 'Pet Management for real pet operations',
     brandSubtitle:
       'Software for grooming, recurring plans, and pet shop operations on a solid technical foundation.',
     localeLabel: 'Switch site language',
@@ -64,16 +64,16 @@ export const enUSMessages: AppMessages = {
     navPlatform: 'Platform',
     navProducts: 'Products',
     navContact: 'Contact',
-    navLogin: 'PetFlow access',
+    navLogin: 'System access',
     navLabel: 'Navigation',
     footerNarrativeText:
-      'PhaifferTech now presents PetFlow as the main product surface for scheduling, recurring plans, stock control, and billing in pet operations.',
+      'PhaifferTech presents its main platform surface for scheduling, recurring plans, stock control, and billing in pet operations.',
     footerProductsTitle: 'Products',
     footerAccessTitle: 'Access',
     footerPlatformLabel: 'Platform foundation',
     footerDemoLabel: 'Request a demo',
     footerCopyright:
-      'PhaifferTech · PetFlow for grooming, pet shops, and recurring service operations, powered by a multi-tenant SaaS foundation.'
+      'PhaifferTech · Pet Management for grooming, pet shops, and recurring service operations, powered by a multi-tenant SaaS foundation.'
   },
   publicHome: {
     framework: 'Solutions',
@@ -81,16 +81,16 @@ export const enUSMessages: AppMessages = {
     expertiseEyebrow: 'Why the demo lands'
   },
   publicHero: {
-    panelEyebrow: 'PetFlow demo',
+    panelEyebrow: 'Operational demo',
     panelTitle: 'Operational focus',
     panelBadge: 'Demo-ready',
     storyEyebrow: 'Demo story',
     storyText:
-      'Show the full cycle with PetFlow at the center: appointment, recurring plan, stock pressure, billing, and automated follow-through.'
+      'Show the full cycle with pet operations at the center: appointment, recurring plan, stock pressure, billing, and automated follow-through.'
   },
   login: {
     title: 'Access workspace',
-    description: 'Sign in with your workspace and credentials to enter PetFlow.',
+    description: 'Sign in with your workspace and credentials to enter the operation.',
     tenantCodeLabel: 'Company or workspace',
     emailLabel: 'Email',
     passwordLabel: 'Password',
@@ -111,7 +111,7 @@ export const enUSMessages: AppMessages = {
         'Use the workspace code and your credentials to open the operation without leaving the product visual language.',
       backLabel: 'Back to site',
       contactLabel: 'Request a demo',
-      heroTitle: 'PetFlow ready to open the day.',
+      heroTitle: 'Pet operations ready to open the day.',
       heroDescription:
         'Scheduling, plans, billing, and follow-through stay in the same product language without distraction and without turning login into a heavy landing page.',
       laneQueueTitle: 'Queue',
@@ -120,22 +120,22 @@ export const enUSMessages: AppMessages = {
       lanePlansDescription: 'Monthly recurrence, penultimate bath, and renewal in view.',
       laneBillingTitle: 'Billing',
       laneBillingDescription: 'Extras, stock, and commission without leaving the commercial flow.',
-      accessCardTitle: 'PetFlow access',
+      accessCardTitle: 'System access',
       accessCardDescription:
         'Login keeps the focus on access while preserving the premium atmosphere of the product and the demo.'
     }
   },
   appShell: {
     mobileOverview: 'Overview',
-    mobilePetFlow: 'PetFlow',
+    mobilePetFlow: 'Pet Management',
     mobileSettings: 'Settings',
     quickSearchWorkspace: 'Search the workspace',
     quickSearchPet: 'Search appointments, clients, or billing',
     localeButtonLabel: 'Switch language',
     header: {
       crmLabel: 'Relationship ops',
-      crmDescription: 'Continuity lane for follow-up, commercial context, and inherited history while PetFlow absorbs the workflow.',
-      petLabel: 'PetFlow',
+      crmDescription: 'Continuity lane for follow-up, commercial context, and inherited history integrated into pet operations.',
+      petLabel: 'Pet Management',
       petDescription: 'Daily queue, plans, stock, billing, and team accountability in one product lane.',
       workspacesLabel: 'Workspaces',
       workspacesDescription: 'Manage the workspace layer without expanding the visible product surface.',
@@ -144,18 +144,18 @@ export const enUSMessages: AppMessages = {
       settingsLabel: 'Settings',
       settingsDescription: 'Branding, access, and workspace setup for the current environment.',
       platformLabel: 'Platform',
-      petOverviewLabel: 'PetFlow overview',
+      petOverviewLabel: 'Operations overview',
       overviewLabel: 'Overview',
       petOverviewDescription:
-        'Commercial launchpad for the PetFlow demo with operational context front and center.',
+        'Commercial launchpad for pet operations with operational context front and center.',
       overviewDescription: 'Shared workspace summary with the current visible product surface.'
     }
   },
   sidebar: {
     overview: 'Overview',
     settings: 'Settings',
-    petFlow: 'PetFlow',
-    focusLabel: 'PetFlow focus',
+    petFlow: 'Pet Management',
+    focusLabel: 'Operational focus',
     workspaceLabel: 'Workspace',
     signOut: 'Sign out'
   },
@@ -178,23 +178,23 @@ export const enUSMessages: AppMessages = {
     commissions: 'Commission closing'
   },
   dashboardRoutes: {
-    mainEyebrow: 'PetFlow',
-    mainTitle: 'PetFlow overview',
+    mainEyebrow: 'Pet Management',
+    mainTitle: 'Operations overview',
     mainDescription:
       'Main demo view with today appointments, plans near the end, low stock, next-cycle billing, and team commission.',
     surfaceLabel: 'Official demo surface',
-    petDashboardEyebrow: 'PetFlow dashboard',
+    petDashboardEyebrow: 'Operations dashboard',
     petDashboardTitle: 'Operations dashboard',
     petDashboardDescription:
       'Follow the daily queue, ready pets, recurrence, low stock, next-cycle billing, and commission in one operational read.'
   },
   petDashboard: {
-    noPermission: 'You do not have permission to view the PetFlow dashboard.',
+    noPermission: 'You do not have permission to view the operations dashboard.',
     actions: {
       appointments: 'Operational schedule',
       billing: 'Billing and next cycle'
     },
-    loading: 'Loading the PetFlow operating overview...',
+    loading: 'Loading the operating overview...',
     errors: {
       appointments: 'Unable to load today appointments.',
       plans: 'Unable to load workspace plans.',
@@ -481,7 +481,7 @@ export const enUSMessages: AppMessages = {
   },
   petPlans: {
     noPermission: 'You do not have permission to view client plans.',
-    eyebrow: 'PetFlow · Grooming',
+    eyebrow: 'Pet Management · Grooming',
     title: 'Monthly plans',
     description:
       'Manage recurring clients, remaining visits, penultimate bath alerts, and plan usage across grooming appointments.',
@@ -581,8 +581,8 @@ export const enUSMessages: AppMessages = {
     }
   },
   petInventory: {
-    noPermission: 'You do not have permission to view PetFlow inventory.',
-    eyebrow: 'PetFlow operations',
+    noPermission: 'You do not have permission to view inventory.',
+    eyebrow: 'Pet operations',
     title: 'Stock and replenishment',
     description:
       'Keep bath, grooming, and retail stock visible with below-minimum alerts, replenishment context, and movement history the team can trust.',
@@ -677,7 +677,7 @@ export const enUSMessages: AppMessages = {
       title: 'Inventory ledger',
       description: 'Review what changed, why it changed, and how it affected the visible on-hand balance for the selected product set.',
       loadingTitle: 'Loading inventory operations',
-      loadingDescription: 'Preparing the most recent shared inventory movement history for this PetFlow workspace.',
+      loadingDescription: 'Preparing the most recent shared inventory movement history for this workspace.',
       emptyTitle: 'No inventory movement recorded yet',
       emptyDescription: 'Record the first sale, grooming consumption, manual count correction, or replenishment so stock availability becomes operationally real in the demo.',
       firstMovement: 'Record first movement'
@@ -706,7 +706,7 @@ export const enUSMessages: AppMessages = {
   },
   petProfessionals: {
     noPermission: 'You do not have permission to view team members.',
-    eyebrow: 'PetFlow workspace',
+    eyebrow: 'Pet Management',
     title: 'Professionals and commission',
     description:
       'Keep groomers and attendants visible with operational ownership, commission rules, and current-month payout context.',
@@ -1043,15 +1043,15 @@ export const enUSMessages: AppMessages = {
     }
   },
   petInvoices: {
-    noPermission: 'You do not have permission to view PetFlow invoices.',
+    noPermission: 'You do not have permission to view invoices.',
     title: 'Billing and next cycle',
     description:
-      'Show how PetFlow services become invoices, payments, and a clear preview of the next monthly cycle.',
+      'Show how services become invoices, payments, and a clear preview of the next monthly cycle.',
     filtersTitle: 'Invoice filters',
     filtersDescription:
       'Refine the finance list by client or lifecycle without losing the commercial story behind each document.',
     nextCycleTitle: 'Next cycle billing preview',
     pipelineTitle: 'Billing pipeline',
-    pipelineDescription: 'Review invoice status, open balance, and the finance record behind each PetFlow charge.'
+    pipelineDescription: 'Review invoice status, open balance, and the finance record behind each charge.'
   }
 };

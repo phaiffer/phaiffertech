@@ -4,7 +4,7 @@ import { WebsiteProductsPage } from '@/modules/website/website-products-page';
 export const metadata: Metadata = {
   title: 'Products',
   description:
-    'Review PetFlow as the current visible PhaifferTech product for grooming, pet shops, and recurring pet operations.'
+    'Review Pet Management as the current visible PhaifferTech product for grooming, pet shops, and recurring pet operations.'
 };
 
 export default function ProductsPage() {

@@ -16,7 +16,7 @@ describe('WebsiteContactPage', () => {
 
     expect(
       await screen.findByRole('heading', {
-        name: /Request a quote, hiring plan, or demo for PetFlow/i
+        name: /Request a quote, hiring plan, or demo for Pet Management/i
       })
     ).toBeInTheDocument();
     expect(screen.getByText('Quotation')).toBeInTheDocument();

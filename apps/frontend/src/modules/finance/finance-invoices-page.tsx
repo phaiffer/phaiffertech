@@ -32,7 +32,7 @@ const statusOptions = [
 
 const sourceModuleOptions = [
   { value: '', label: 'All modules' },
-  { value: 'PET', label: 'PetFlow' },
+  { value: 'PET', label: 'Gestão Pet' },
   { value: 'CRM', label: 'CRM' },
   { value: 'MANUAL', label: 'Manual' }
 ];

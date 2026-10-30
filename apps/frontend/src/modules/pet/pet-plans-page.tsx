@@ -881,7 +881,7 @@ export function PetPlansPage() {
               label={messages.messageSetup.billingDisplayName}
               value={billingDisplayName}
               onChange={setBillingDisplayName}
-              placeholder="PetFlow Reception"
+              placeholder="Recepção Banho e Tosa"
               disabled={billingSettingsLoading}
             />
             <FormTextarea

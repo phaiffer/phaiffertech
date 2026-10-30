@@ -16,7 +16,7 @@ describe('WebsiteHomePage', () => {
 
     expect(
       await screen.findByRole('heading', {
-        name: /PetFlow for PetShop, grooming, veterinary clinic, and combined packages/i
+        name: /Pet Management for PetShop, grooming, veterinary clinic, and combined packages/i
       })
     ).toBeInTheDocument();
     expect(screen.getByText('Solutions')).toBeInTheDocument();

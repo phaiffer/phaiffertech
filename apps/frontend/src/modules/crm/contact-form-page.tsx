@@ -202,7 +202,7 @@ export function ContactFormPage({ contactId, surface = 'crm' }: ContactFormPageP
         <PageTitle
           title={title}
           description={isPetSurface
-            ? 'Cadastre contatos adicionais, financeiros ou operacionais usados no relacionamento com clientes do PetFlow. Campos de company ficam apenas como compatibilidade legada.'
+            ? 'Cadastre contatos adicionais, financeiros ou operacionais usados no relacionamento com clientes da Gestão Pet. Campos de company ficam apenas como compatibilidade legada.'
             : 'Formulário de cadastro/edição de contato CRM.'}
         />
 

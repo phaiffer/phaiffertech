@@ -4,11 +4,11 @@ import { Providers } from '@/shared/components/providers';
 
 export const metadata: Metadata = {
   title: {
-    default: 'PetFlow',
-    template: '%s | PetFlow',
+    default: 'Gestão Pet',
+    template: '%s | Gestão Pet',
   },
   description:
-    'PetFlow by PhaifferTech for pet operations, scheduling, recurring plans, inventory, and billing.',
+    'Gestão Pet by PhaifferTech for pet operations, scheduling, recurring plans, inventory, and billing.',
   icons: {
     icon: [
       { url: '/favicon.ico', sizes: 'any' },

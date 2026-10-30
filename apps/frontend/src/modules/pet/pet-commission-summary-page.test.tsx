@@ -156,7 +156,7 @@ describe('PetCommissionSummaryPage', () => {
           paidAmount: 0,
           outstandingAmount: 220,
           status: 'ISSUED',
-          description: 'Renovacao de plano PetFlow',
+          description: 'Renovacao de plano',
           businessContextType: 'PET.CLIENT_PLAN',
           businessContextId: 'plan-1',
           businessContextLabel: 'Banho 4x/mes',

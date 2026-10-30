@@ -42,8 +42,8 @@ export function WebsiteArticlesPage() {
         title={content.featuredTitle}
         description={
           locale === 'pt-BR'
-            ? 'Estas notas apoiam a narrativa técnica da plataforma, mas o produto visível oficial hoje continua sendo o PetFlow.'
-            : 'These notes support the technical platform story, but PetFlow remains the official visible product surface today.'
+            ? 'Estas notas apoiam a narrativa técnica da plataforma, mas o produto visível oficial hoje continua sendo a Gestão Pet.'
+            : 'These notes support the technical platform story, but Pet Management remains the official visible product surface today.'
         }
       >
         <WebsiteArticleGrid items={content.items.slice(0, 2)} ctaLabel={labels.readInsight} />

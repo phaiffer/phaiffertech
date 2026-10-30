@@ -29,16 +29,16 @@ describe('PublicSiteShell', () => {
     );
 
     const productLinks = await screen.findAllByRole('link', { name: 'Products' });
-    const accessLinks = screen.getAllByRole('link', { name: 'PetFlow access' });
+    const accessLinks = screen.getAllByRole('link', { name: 'System access' });
     const header = screen.getByRole('banner');
-    const headerAccessLink = within(header).getByRole('link', { name: 'PetFlow access' });
+    const headerAccessLink = within(header).getByRole('link', { name: 'System access' });
     const headerActions = headerAccessLink.parentElement;
 
     expect(productLinks[0]).toHaveAttribute('href', '/products');
     expect(accessLinks[0]).toHaveAttribute('href', '/login');
     expect(headerActions).not.toBeNull();
     expect(within(headerActions as HTMLElement).queryByRole('link', { name: 'Contact' })).not.toBeInTheDocument();
-    expect(screen.getAllByText('PetFlow').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('Gestão Pet').length).toBeGreaterThan(0);
     expect(screen.queryByRole('link', { name: 'About' })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Light' })).not.toBeInTheDocument();
   });
@@ -56,6 +56,6 @@ describe('PublicSiteShell', () => {
 
     expect(screen.getByText('login-content')).toBeInTheDocument();
     expect(screen.queryByRole('link', { name: 'Products' })).not.toBeInTheDocument();
-    expect(screen.queryByText('PetFlow')).not.toBeInTheDocument();
+    expect(screen.queryByText('Gestão Pet')).not.toBeInTheDocument();
   });
 });

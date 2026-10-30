@@ -218,7 +218,7 @@ describe('DashboardPage workspace context', () => {
       expect(moduleService.getDashboardSummary).toHaveBeenCalledTimes(1);
     });
 
-    expect(screen.getByRole('heading', { name: 'PetFlow overview' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Operations overview' })).toBeInTheDocument();
     expect(screen.getByText('Official demo surface')).toBeInTheDocument();
     expect(screen.getAllByText('PetFlow').length).toBeGreaterThan(0);
     expect(screen.queryByText('Visible products')).not.toBeInTheDocument();
@@ -416,8 +416,8 @@ describe('DashboardPage workspace context', () => {
       expect(moduleService.getDashboardSummary).toHaveBeenCalledTimes(1);
     });
 
-    expect(screen.getByRole('heading', { name: 'PetFlow overview' })).toBeInTheDocument();
-    expect(screen.getByText('Loading the PetFlow operating overview...')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Operations overview' })).toBeInTheDocument();
+    expect(screen.getByText('Loading the operating overview...')).toBeInTheDocument();
     expect(screen.getByText('Official demo surface')).toBeInTheDocument();
     expect(screen.queryByText('Create first company')).not.toBeInTheDocument();
     expect(screen.queryByText('Getting started')).not.toBeInTheDocument();

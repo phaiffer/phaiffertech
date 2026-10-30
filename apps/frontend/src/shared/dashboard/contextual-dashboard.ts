@@ -47,7 +47,7 @@ const moduleWorkspaceMeta: Record<string, ModuleWorkspaceMeta> = {
   },
   PET: {
     href: '/pet',
-    actionTitle: 'Open PetFlow workspace',
+    actionTitle: 'Open Pet Management workspace',
     actionDescription: 'Access the clinical and operational workflows contracted for this tenant.'
   }
 };
@@ -125,7 +125,7 @@ export function buildDashboardExperienceCopy(platform: FrontendPlatformState): D
 
 function buildModuleSetupDescription(moduleCode: string) {
   if (!isVisibleProductModuleCode(moduleCode)) {
-    return 'This workspace no longer exposes that standalone module on the visible PetFlow surface.';
+    return 'This workspace no longer exposes that standalone module on the visible Pet Management surface.';
   }
 
   if (moduleCode === 'CRM') {
@@ -133,7 +133,7 @@ function buildModuleSetupDescription(moduleCode: string) {
   }
 
   if (moduleCode === 'PET') {
-    return 'Open PetFlow and establish the first clients, pet profiles, and appointments so clinical context can start building.';
+    return 'Open Pet Management and establish the first clients, pet profiles, and appointments so clinical context can start building.';
   }
 
   return 'Open the contracted module workspace and establish the first operational records for this tenant.';

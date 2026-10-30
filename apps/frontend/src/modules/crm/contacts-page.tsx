@@ -174,7 +174,7 @@ export function CrmContactsPage({ surface = 'crm' }: CrmContactsPageProps) {
         value: totalItems,
         trend: activeFilterCount > 0
           ? 'Os resultados refletem os filtros ativos deste diretorio.'
-          : 'Base de contatos adicionais disponivel para a operacao PetFlow.'
+          : 'Base de contatos adicionais disponivel para a operacao da Gestão Pet.'
       },
       {
         key: 'support-contacts-active-on-page',
@@ -300,14 +300,14 @@ export function CrmContactsPage({ surface = 'crm' }: CrmContactsPageProps) {
   return (
     <PermissionGuard
       permission="crm.contact.read"
-      fallback={<div className="ui-notice-warning">{isPetSurface ? 'Voce nao possui permissao para visualizar contatos de apoio do PetFlow.' : 'You do not have permission to view CRM contacts.'}</div>}
+      fallback={<div className="ui-notice-warning">{isPetSurface ? 'Voce nao possui permissao para visualizar contatos de apoio da Gestão Pet.' : 'You do not have permission to view CRM contacts.'}</div>}
     >
       <div className={sharedPageStackClass}>
         <PageTitle
-          eyebrow={isPetSurface ? 'PetFlow clients' : 'CRM workspace'}
+          eyebrow={isPetSurface ? 'Gestão Pet · Clientes' : 'CRM workspace'}
           title={isPetSurface ? 'Contatos de apoio' : 'CRM Contacts'}
           description={isPetSurface
-            ? 'Cadastre responsaveis adicionais, contatos financeiros ou apoios operacionais usados pela base de clientes do PetFlow. O contexto de company legado permanece apenas para compatibilidade.'
+            ? 'Cadastre responsaveis adicionais, contatos financeiros ou apoios operacionais usados pela base de clientes da Gestão Pet. O contexto de company legado permanece apenas para compatibilidade.'
             : 'Commercial contact management with stronger filtering, clearer account context, and a more demo-ready first-use surface.'}
           actions={(
             <PermissionGuard permission="crm.contact.create">
@@ -401,7 +401,7 @@ export function CrmContactsPage({ surface = 'crm' }: CrmContactsPageProps) {
         <PageSection
           title={isPetSurface ? 'Diretorio de contatos de apoio' : 'Contact directory'}
           description={isPetSurface
-            ? 'Esta lista concentra contatos adicionais que apoiam recepcao, cobranca e continuidade do relacionamento no PetFlow.'
+            ? 'Esta lista concentra contatos adicionais que apoiam recepcao, cobranca e continuidade do relacionamento na Gestão Pet.'
             : 'The table keeps people, account context, and action controls readable during demos, onboarding, and day-to-day CRM follow-up.'}
           actions={<p className="text-sm text-[color:var(--app-shell-muted)]">{isPetSurface ? `Total de ${totalItems} contato(s)` : `Total ${totalItems} contact(s)`}</p>}
         >

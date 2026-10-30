@@ -114,7 +114,7 @@ export function PublicHeroSection({
                 <div className="flex items-center gap-3">
                   <PetFlowMark className="h-11 w-11 shrink-0 rounded-2xl" iconClassName="scale-95" />
                   <div>
-                    <p className="text-sm font-semibold tracking-[-0.02em] text-slate-900">PetFlow</p>
+                    <p className="text-sm font-semibold tracking-[-0.02em] text-slate-900">Gestão Pet</p>
                     <p className="text-[10px] font-medium uppercase tracking-[0.18em] text-slate-700">banho, tosa e recorrência</p>
                     <p className="mt-1 flex items-center gap-1 text-[10px] font-medium uppercase tracking-[0.16em] text-slate-600">
                       by
@@ -124,7 +124,7 @@ export function PublicHeroSection({
                   </div>
                 </div>
                 <span className="inline-flex rounded-full bg-[color:var(--accent)]/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-[color:var(--accent)]">
-                  PetFlow
+                  Operação Pet
                 </span>
               </div>
 
@@ -136,7 +136,7 @@ export function PublicHeroSection({
                   </div>
                 )) : (
                   <div className="rounded-[1.35rem] border border-slate-200/90 bg-[linear-gradient(180deg,rgba(16,185,129,0.05),rgba(248,250,252,0.96)_120px)] px-4 py-3.5 sm:col-span-3">
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[color:var(--accent)]">PetFlow</p>
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[color:var(--accent)]">Gestão Pet</p>
                     <p className={`mt-2 ${sharedCompactTextClass}`}>
                       Daily queue, recurring plans, billing, and inventory in one product surface.
                     </p>
@@ -166,14 +166,14 @@ export function PublicHeroSection({
                 <div className="relative min-h-[320px] overflow-hidden rounded-[1.5rem] border border-slate-200">
                   <Image
                     src={heroImage}
-                    alt="PetFlow workspace preview"
+                    alt="Pet workspace preview"
                     fill
                     priority
                     className="object-cover"
                   />
                   <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(15,23,42,0.02),rgba(15,23,42,0.18))]" />
                   <div className="absolute inset-x-4 bottom-4 rounded-[1.35rem] border border-white/70 bg-white/88 px-4 py-4 text-slate-900 shadow-[0_18px_40px_-28px_rgba(15,23,42,0.28)] backdrop-blur-[2px]">
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[color:var(--accent)]">PetFlow no centro</p>
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[color:var(--accent)]">Operação no centro</p>
                     <p className="mt-2 text-sm leading-6 text-slate-700">
                       Fila de banho e tosa, pet taxi, estoque, cobrança e comissão seguem visíveis sem sair da mesma superfície.
                     </p>

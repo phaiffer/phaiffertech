@@ -68,7 +68,7 @@ export function PetProductsPage() {
       const result = await petService.listProducts(page, pageSize, currentSearch);
       setPageData(result);
     } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : 'Unable to load PetFlow products.');
+      setError(err instanceof ApiClientError ? err.message : 'Unable to load pet products.');
     } finally {
       setLoading(false);
     }
@@ -282,11 +282,11 @@ export function PetProductsPage() {
   return (
     <PermissionGuard
       permission="pet.product.read"
-      fallback={<div className="ui-notice-warning">You do not have permission to view PetFlow products.</div>}
+      fallback={<div className="ui-notice-warning">You do not have permission to view pet products.</div>}
     >
       <div className={sharedPageStackClass}>
         <PageTitle
-          eyebrow="PetFlow workspace"
+          eyebrow="Gestão Pet"
           title="Pet Products"
           description="A more complete product and stock surface for demos, onboarding, and day-to-day replenishment conversations."
           actions={(

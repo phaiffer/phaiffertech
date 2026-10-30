@@ -327,7 +327,7 @@ export function PetCommissionSummaryPage() {
     >
       <div className={sharedPageStackClass}>
         <PageTitle
-          eyebrow="PetFlow workspace"
+          eyebrow="Gestão Pet"
           title="Fechamento operacional"
           description="Leia atendimentos concluidos, comissoes por profissional, cobrancas pendentes e planos perto de terminar no mesmo recorte operacional de Banho e Tosa."
         />

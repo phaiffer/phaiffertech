@@ -187,8 +187,8 @@ describe('CrmTasksPage', () => {
       expect(crmServiceMock.listTasks).toHaveBeenCalledTimes(1);
     });
 
-    expect(screen.getByText('Tarefas de follow-up do PetFlow')).toBeInTheDocument();
-    expect(screen.getByText(/Novas tarefas desta superfície usam referências do PetFlow/i)).toBeInTheDocument();
+    expect(screen.getByText('Tarefas de follow-up da Gestão Pet')).toBeInTheDocument();
+    expect(screen.getByText(/Novas tarefas desta superfície usam referências da Gestão Pet/i)).toBeInTheDocument();
     expect(screen.queryByRole('option', { name: 'Empresa CRM' })).not.toBeInTheDocument();
     expect(screen.getAllByRole('option', { name: 'Cliente Pet' }).length).toBeGreaterThan(0);
   });
