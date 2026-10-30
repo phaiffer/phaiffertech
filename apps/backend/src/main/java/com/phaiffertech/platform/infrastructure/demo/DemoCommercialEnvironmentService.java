@@ -179,7 +179,8 @@ public class DemoCommercialEnvironmentService {
                 tenantEntitlementService.syncManualEntitlements(
                                 tenant.getId(),
                                 tenant.getPlanCode(),
-                                List.of(TenantEntitlementKeys.CRM_FULL, TenantEntitlementKeys.PET_FULL));
+                                // CRM_FULL backs the follow-up tasks/notes; PET_FULL would re-grant clinic and retail features.
+                                List.of(TenantEntitlementKeys.CRM_FULL));
                 flushPersistenceState();
 
                 Tenant persistedTenant = tenant;
@@ -215,7 +216,8 @@ public class DemoCommercialEnvironmentService {
                 tenant.setDefaultThemeMode(TenantThemeMode.DARK);
                 tenant.setAllowUserThemeOverride(true);
                 tenant.setPlatformOwner(false);
-                tenant.setPlanCode("BANHO_TOSA_CLINICA");
+                // The commercial demo presents the grooming-only product, so it uses the same plan a real customer would.
+                tenant.setPlanCode("BANHO_TOSA");
                 tenant.setDeletedAt(null);
                 return tenantRepository.saveAndFlush(tenant);
         }
