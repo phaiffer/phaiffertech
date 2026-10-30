@@ -140,13 +140,81 @@ WHERE t.code = 'default'
         AND p.name = 'Luna'
   );
 
+INSERT INTO pet_professionals (
+    id,
+    tenant_id,
+    name,
+    specialty,
+    commission_rate,
+    created_by,
+    updated_by
+)
+SELECT
+    '99999999-0000-0000-0000-000000000011',
+    t.id,
+    'Carla Mendes',
+    'Banho e Tosa',
+    0.1500,
+    'seed',
+    'seed'
+FROM tenants t
+WHERE t.code = 'default'
+  AND NOT EXISTS (
+      SELECT 1
+      FROM pet_professionals p
+      WHERE p.tenant_id = t.id
+        AND p.name = 'Carla Mendes'
+  );
+
+INSERT INTO pet_services (
+    id,
+    tenant_id,
+    name,
+    description,
+    category,
+    price,
+    duration_minutes,
+    allow_in_plans,
+    allow_standalone_booking,
+    commission_eligible,
+    active,
+    created_by,
+    updated_by
+)
+SELECT
+    '99999999-0000-0000-0000-000000000012',
+    t.id,
+    'Banho e Tosa Completo',
+    'Pacote completo de banho, secagem e tosa higienica.',
+    'GROOMING',
+    85.00,
+    90,
+    TRUE,
+    TRUE,
+    TRUE,
+    TRUE,
+    'seed',
+    'seed'
+FROM tenants t
+WHERE t.code = 'default'
+  AND NOT EXISTS (
+      SELECT 1
+      FROM pet_services s
+      WHERE s.tenant_id = t.id
+        AND s.name = 'Banho e Tosa Completo'
+  );
+
 INSERT INTO pet_appointments (
     id,
     tenant_id,
     client_id,
     pet_id,
+    service_id,
+    professional_id,
     scheduled_at,
     service_name,
+    service_price,
+    commission_amount,
     status,
     notes,
     assigned_user_id,
@@ -158,10 +226,14 @@ SELECT
     t.id,
     c.id,
     p.id,
+    s.id,
+    prof.id,
     NOW() + INTERVAL '1 day',
-    'Vaccination',
+    'Banho e Tosa Completo',
+    85.00,
+    12.75,
     'SCHEDULED',
-    'First dose reminder',
+    'Atendimento de banho e tosa agendado pela recepcao',
     u.id,
     'seed',
     'seed'
@@ -169,11 +241,13 @@ FROM tenants t
 JOIN users u ON u.email = 'admin@local.test'
 JOIN pet_clients c ON c.tenant_id = t.id AND c.email = 'ana.martins@pet.seed.local'
 JOIN pet_profiles p ON p.tenant_id = t.id AND p.client_id = c.id AND p.name = 'Thor'
+JOIN pet_services s ON s.tenant_id = t.id AND s.name = 'Banho e Tosa Completo'
+JOIN pet_professionals prof ON prof.tenant_id = t.id AND prof.name = 'Carla Mendes'
 WHERE t.code = 'default'
   AND NOT EXISTS (
       SELECT 1
       FROM pet_appointments a
       WHERE a.tenant_id = t.id
         AND a.pet_id = p.id
-        AND a.service_name = 'Vaccination'
+        AND a.service_name = 'Banho e Tosa Completo'
   );
