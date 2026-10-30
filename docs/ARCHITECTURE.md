@@ -4,7 +4,7 @@
 
 The platform is implemented as a **modular monolith** with multi-tenancy from the beginning.
 
-Active repository direction after the PetFlow-only transition:
+Active repository direction after the Pet Management-only transition:
 - active business modules are CRM and Pet
 - historical IoT references below are retained only as archived architecture notes or migration compatibility context
 
@@ -49,11 +49,15 @@ com.phaiffertech.platform
 │   ├── audit
 │   ├── notification
 │   ├── attachment
+│   ├── finance
+│   ├── inventory
+│   ├── messaging
 │   ├── subscription
 │   └── module
 ├── modules
 │   ├── crm
 │   │   ├── activity
+│   │   ├── campaign
 │   │   ├── capability
 │   │   ├── company
 │   │   ├── contact
@@ -71,8 +75,13 @@ com.phaiffertech.platform
 │   │   ├── appointment
 │   │   ├── servicecatalog
 │   │   ├── professional
+│   │   ├── commission
+│   │   ├── plan
+│   │   ├── billing
+│   │   ├── dashboard
 │   │   ├── medical
 │   │   │   ├── record
+│   │   │   ├── timeline
 │   │   │   ├── vaccination
 │   │   │   └── prescription
 │   │   ├── product
@@ -81,7 +90,10 @@ com.phaiffertech.platform
 │   │   ├── subscription
 │   │   └── portal
 └── infrastructure
+    ├── bootstrap
+    ├── demo
     ├── docs
+    ├── notification
     ├── persistence
     └── web
 ```
@@ -89,15 +101,16 @@ com.phaiffertech.platform
 ## Core And Vertical Boundaries
 
 Core owns platform concerns only:
-- `core.auth`, `core.tenant`, `core.user`, `core.iam`
+- `core.auth`, `core.tenant`, `core.user`, `core.iam`, `core.subscription`
 - `core.settings`
 - `core.audit`, `core.notification`, `core.attachment`
+- `core.finance` (shared billing/invoices, payments, cash movements, fiscal readiness), `core.inventory` (shared inventory items/movements) and `core.messaging` (WhatsApp Cloud API foundation)
 - `core.module` for registry, feature flags, tenant module bindings and aggregated dashboard entrypoints
 - `shared.*` for technical infrastructure, shared CRUD primitives and cross-module contracts
 
 Vertical modules own business rules:
 - `modules.crm`: companies, contacts, leads, deals, pipeline, tasks, notes, activity and CRM dashboard
-- `modules.pet`: clients, pets, appointments, services, professionals, medical records, vaccinations, prescriptions, products, inventory and invoices
+- `modules.pet`: clients, pets, appointments (multi-service lines), services, professionals, commissions, plans/templates, products, inventory, billing/prepared messages, invoices, and adjacent clinical records (medical records, vaccinations, prescriptions, clinical timeline)
 
 Explicit rule:
 - core cannot contain CRM or Pet business logic
@@ -757,6 +770,49 @@ Current migration chain:
 - `V25__pet_appointments_services.sql`
 - `V26__pet_medical_records.sql`
 - `V27__pet_products_inventory_invoices.sql`
+- `V28__pet_dashboard_permission.sql`
+- `V29__align_core_user_permissions.sql`
+- `V30__iot_modbus_explicit_model.sql`
+- `V31__iot_maintenance_operational_links.sql`
+- `V32__pet_appointments_integrity_hardening.sql`
+- `V33__pet_clinical_appointment_context.sql`
+- `V34__crm_relation_reference_normalization.sql`
+- `V35__tenant_productization_foundation.sql`
+- `V36__setup_prod_admin.sql`
+- `V37__setup_master_tenant_phaiffer.sql`
+- `V38__seed_demo_assisted_feature_flag.sql`
+- `V39__saas_operational_foundations.sql`
+- `V40__plan_contract_resolution_and_dashboard_indexes.sql`
+- `V41__support_impersonation_sessions.sql`
+- `V42__shared_inventory_foundation.sql`
+- `V43__tenant_finance_foundation.sql`
+- `V44__brazil_fiscal_readiness.sql`
+- `V45__password_reset_tokens.sql`
+- `V46__demo_enrichment_seed.sql`
+- `V47__pet_appointment_professional_and_pricing.sql`
+- `V48__pet_client_plans_and_permissions.sql`
+- `V49__pet_appointment_client_plan_link.sql`
+- `V50__pet_appointment_payment_summary.sql`
+- `V51__pet_professional_commission_rate.sql`
+- `V52__pet_demo_enrichment_seed.sql`
+- `V53__petflow_package_catalog.sql`
+- `V54__tenant_admin_bootstrap_access.sql`
+- `V55__tenant_commercial_status_enforcement.sql`
+- `V56__pet_client_document_type.sql`
+- `V57__pet_service_catalog_categories_and_flags.sql`
+- `V58__pet_appointment_multi_service_lines.sql`
+- `V59__pet_appointment_service_line_commission_snapshot.sql`
+- `V60__pet_appointment_service_line_professional_assignment.sql`
+- `V61__pet_commission_summary_permission.sql`
+- `V62__pet_service_inventory_linkage.sql`
+- `V63__pet_appointment_actual_inventory_consumption.sql`
+- `V64__pet_appointment_inventory_stock_application.sql`
+- `V65__pet_billing_message_settings.sql`
+- `V66__petflow_grooming_profile_fields.sql`
+- `V67__pet_plan_templates_and_sales_flow.sql`
+- `V68__pet_client_plan_notes.sql`
+- `V69__petflow_grooming_and_plan_template_repair.sql`
+- `V70__messaging_whatsapp_foundation.sql`
 
 Previous migrations were preserved; new changes are strictly incremental.
 

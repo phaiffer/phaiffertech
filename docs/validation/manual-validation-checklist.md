@@ -1,15 +1,15 @@
-# PetFlow Banho e Tosa - Checklist de Validacao Manual
+# Gestão Pet Banho e Tosa - Checklist de Validacao Manual
 
 Data de referencia: 2026-05-11.
 
-Este checklist ajuda a validar a demo e o fluxo operacional sem depender de integracoes externas. Ele assume ambiente local/dev com usuario que possua permissoes PetFlow.
+Este checklist ajuda a validar a demo e o fluxo operacional sem depender de integracoes externas. Ele assume ambiente local/dev com usuario que possua permissoes Gestão Pet.
 
 ## Preparacao
 
 - [ ] Backend iniciado sem erro.
 - [ ] Frontend iniciado sem erro.
 - [ ] Login realizado no tenant de demo.
-- [ ] Modulo PetFlow visivel na navegacao.
+- [ ] Modulo Gestão Pet visivel na navegacao.
 - [ ] Navegacao principal aponta para a experiencia de Banho e Tosa.
 
 ## Dashboard Operacional
@@ -103,7 +103,7 @@ Este checklist ajuda a validar a demo e o fluxo operacional sem depender de inte
 
 ## Follow-up
 
-- [ ] Abrir follow-up do PetFlow.
+- [ ] Abrir follow-up do Gestão Pet.
 - [ ] Confirmar linguagem de Banho e Tosa.
 - [ ] Validar tarefas, notas e atividade como apoio a retirada, retorno, renovacao ou pendencia operacional.
 - [ ] Confirmar que a tela nao vira narrativa de CRM generico.

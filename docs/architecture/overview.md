@@ -1,12 +1,12 @@
-# PetFlow Banho e Tosa - Visao Geral da Arquitetura
+# Gestão Pet Banho e Tosa - Visao Geral da Arquitetura
 
 Data de referencia: 2026-05-11.
 
-Este documento descreve a arquitetura real do PetFlow no monorepo PhaifferTech, com foco no produto de Banho e Tosa. Ele nao abre escopo para clinica veterinaria e nao considera integracoes externas como concluidas quando elas ainda dependem de fatores fora do repositorio.
+Este documento descreve a arquitetura real do Gestão Pet no monorepo PhaifferTech, com foco no produto de Banho e Tosa. Ele nao abre escopo para clinica veterinaria e nao considera integracoes externas como concluidas quando elas ainda dependem de fatores fora do repositorio.
 
 ## Contexto
 
-O PetFlow roda dentro de uma plataforma SaaS multi-tenant implementada como modular monolith:
+O Gestão Pet roda dentro de uma plataforma SaaS multi-tenant implementada como modular monolith:
 
 - Backend: Java 21, Spring Boot, Spring Security, JPA, Flyway e PostgreSQL.
 - Frontend: Next.js App Router, TypeScript e Tailwind CSS.
@@ -28,7 +28,7 @@ Camadas principais:
 
 - `shared`: infraestrutura tecnica compartilhada, tenant context, seguranca, paginacao, respostas e utilitarios.
 - `core`: autenticacao, tenant, usuarios, IAM, auditoria, modulos, dashboard agregado, inventario compartilhado, financeiro e fundacao de mensageria.
-- `modules.pet`: dominios de PetFlow.
+- `modules.pet`: dominios de Gestão Pet.
 - `modules.crm`: usado como faixa de apoio para tarefas, notas e atividade no follow-up, sem se tornar a narrativa principal do produto.
 
 Dominios relevantes para Banho e Tosa:
@@ -68,7 +68,7 @@ Superficies relevantes para a demo:
 - Equipe e comissao: `pet-professionals-page.tsx`, `pet-commission-summary-page.tsx`
 - Follow-up operacional: `pet-follow-up-page.tsx`
 
-O dashboard geral da plataforma tambem prioriza a superficie PetFlow quando o modulo esta visivel para o tenant.
+O dashboard geral da plataforma tambem prioriza a superficie Gestão Pet quando o modulo esta visivel para o tenant.
 
 ## Modelo de Dados em Alto Nivel
 
@@ -110,7 +110,7 @@ Servicos podem ser elegiveis ou nao para comissao. Profissionais podem ter taxa 
 
 ### Cobranca
 
-O PetFlow possui faturas e pagamentos no dominio pet/financeiro. A renovacao de plano pode gerar ou reutilizar fatura de renovacao via fluxo de mensagem preparada, mas isso nao significa que exista gateway de pagamento integrado.
+O Gestão Pet possui faturas e pagamentos no dominio pet/financeiro. A renovacao de plano pode gerar ou reutilizar fatura de renovacao via fluxo de mensagem preparada, mas isso nao significa que exista gateway de pagamento integrado.
 
 ### Mensageria e mensagens preparadas
 
@@ -136,8 +136,8 @@ O envio real oficial via WhatsApp nao faz parte do estado validado da sprint, po
 - Modular monolith em vez de microservicos para acelerar TCC/demo sem perder separacao por dominio.
 - Multi-tenancy e permissoes desde o inicio, evitando reescrita futura de seguranca.
 - Flyway incremental, preservando historico e compatibilidade de bancos existentes.
-- Estoque compartilhado em `core.inventory`, com PetFlow consumindo essa fundacao por meio de vinculos especificos.
-- Mensageria em `core.messaging`, separada do dominio PetFlow, para permitir extensao futura sem acoplar WhatsApp ao atendimento.
+- Estoque compartilhado em `core.inventory`, com Gestão Pet consumindo essa fundacao por meio de vinculos especificos.
+- Mensageria em `core.messaging`, separada do dominio Gestão Pet, para permitir extensao futura sem acoplar WhatsApp ao atendimento.
 - Mensagens preparadas mantidas em `modules.pet.billing`, porque a regra de texto depende de plano, cliente, pet, fatura e atendimento.
 - Fluxo manual assistido documentado como etapa segura enquanto a integracao oficial nao esta liberada.
 

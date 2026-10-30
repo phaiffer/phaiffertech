@@ -1,6 +1,6 @@
 # Phaiffer Platform Monorepo
 
-Unified multi-tenant SaaS platform focused on PetFlow, with CRM support capabilities and historical IoT compatibility preserved where required.
+Unified multi-tenant SaaS platform focused on Pet Management, with CRM support capabilities and historical IoT compatibility preserved where required.
 
 ## Stack
 
@@ -31,9 +31,9 @@ Operational hardening notes:
 
 - `docs/platform/demo-sysadmin-secrets-hardening.pt-BR.md`
 
-## PetFlow Banho e Tosa Documentation
+## Pet Management Banho e Tosa Documentation
 
-Technical documentation focused on the current PetFlow grooming scope:
+Technical documentation focused on the current Pet Management grooming scope:
 
 - [Architecture overview](docs/architecture/overview.md)
 - [Grooming domain model](docs/domain/petflow-grooming-domain.md)
@@ -76,7 +76,7 @@ Backend package root is fixed:
 - Automatic auditing for auth and CRUD flows.
 - Soft delete with `deleted_at` on business entities.
 - Standard pagination contract (`page`, `size`, `sort`, `direction`, `search`).
-- PetFlow-first product surface with CRM support lanes behind the same SaaS foundation.
+- Pet Management-first product surface with CRM support lanes behind the same SaaS foundation.
 - Structured JSON logs with tenant/user/trace correlation.
 - Actuator metrics + Prometheus endpoint.
 - API rate limiting (auth and default API).
@@ -86,15 +86,16 @@ Backend package root is fixed:
 
 Core ownership:
 
-- `core.auth`, `core.tenant`, `core.user`, `core.iam`
+- `core.auth`, `core.tenant`, `core.user`, `core.iam`, `core.subscription`
 - `core.settings`, `core.audit`, `core.notification`, `core.attachment`
+- `core.finance` (shared invoices, payments, cash movements and Brazil fiscal readiness), `core.inventory` (shared inventory foundation) and `core.messaging` (WhatsApp Cloud API foundation)
 - `core.module` for module registry, feature flags and tenant module enablement
 - `shared.*` only for technical infrastructure, CRUD primitives and cross-module contracts
 
 Vertical ownership:
 
 - `modules.crm`: companies, contacts, leads, deals, pipeline, tasks, notes, CRM dashboard/activity
-- `modules.pet`: clients, pets, appointments, services, professionals, medical records, vaccinations, prescriptions, products, inventory and invoices
+- `modules.pet`: clients, pets, appointments (multi-service lines), services, professionals, commissions, client plans/templates, products, inventory, billing/prepared messages, invoices, and adjacent clinical domains (medical records, vaccinations, prescriptions, clinical timeline)
 
 Enforced rules:
 
@@ -232,10 +233,52 @@ Phase 2B keeps historical IoT compatibility only where it still protects upgrade
 - `V26__pet_medical_records.sql`
 - `V27__pet_products_inventory_invoices.sql`
 - `V28__pet_dashboard_permission.sql`
+- `V29__align_core_user_permissions.sql`
+- `V30__iot_modbus_explicit_model.sql`
+- `V31__iot_maintenance_operational_links.sql`
+- `V32__pet_appointments_integrity_hardening.sql`
+- `V33__pet_clinical_appointment_context.sql`
+- `V34__crm_relation_reference_normalization.sql`
+- `V35__tenant_productization_foundation.sql`
+- `V36__setup_prod_admin.sql`
+- `V37__setup_master_tenant_phaiffer.sql`
+- `V38__seed_demo_assisted_feature_flag.sql`
+- `V39__saas_operational_foundations.sql`
+- `V40__plan_contract_resolution_and_dashboard_indexes.sql`
+- `V41__support_impersonation_sessions.sql`
+- `V42__shared_inventory_foundation.sql`
+- `V43__tenant_finance_foundation.sql`
+- `V44__brazil_fiscal_readiness.sql`
+- `V45__password_reset_tokens.sql`
+- `V46__demo_enrichment_seed.sql`
+- `V47__pet_appointment_professional_and_pricing.sql`
+- `V48__pet_client_plans_and_permissions.sql`
+- `V49__pet_appointment_client_plan_link.sql`
+- `V50__pet_appointment_payment_summary.sql`
+- `V51__pet_professional_commission_rate.sql`
+- `V52__pet_demo_enrichment_seed.sql`
+- `V53__petflow_package_catalog.sql`
+- `V54__tenant_admin_bootstrap_access.sql`
+- `V55__tenant_commercial_status_enforcement.sql`
+- `V56__pet_client_document_type.sql`
+- `V57__pet_service_catalog_categories_and_flags.sql`
+- `V58__pet_appointment_multi_service_lines.sql`
+- `V59__pet_appointment_service_line_commission_snapshot.sql`
+- `V60__pet_appointment_service_line_professional_assignment.sql`
+- `V61__pet_commission_summary_permission.sql`
+- `V62__pet_service_inventory_linkage.sql`
+- `V63__pet_appointment_actual_inventory_consumption.sql`
+- `V64__pet_appointment_inventory_stock_application.sql`
+- `V65__pet_billing_message_settings.sql`
+- `V66__petflow_grooming_profile_fields.sql`
+- `V67__pet_plan_templates_and_sales_flow.sql`
+- `V68__pet_client_plan_notes.sql`
+- `V69__petflow_grooming_and_plan_template_repair.sql`
+- `V70__messaging_whatsapp_foundation.sql`
 
 Note:
 - Pet V1 expansion requested originally as `V17..V20` was created as `V24..V27`, because `V17..V23` were already allocated in the existing Flyway chain and could not be reused safely.
-- Historical IoT migrations remain in place for compatibility with existing databases and are not removed as part of the PetFlow-only transition.
+- Historical IoT migrations remain in place for compatibility with existing databases and are not removed as part of the Pet Management-only transition.
 
 ## Main Endpoints (`/api/v1`)
 
@@ -243,6 +286,8 @@ Note:
 - `POST /auth/login`
 - `POST /auth/refresh`
 - `POST /auth/logout`
+- `POST /auth/forgot-password`
+- `POST /auth/reset-password`
 - `GET /auth/me`
 
 ### Core
@@ -252,6 +297,14 @@ Note:
 - `GET /modules`
 - `GET /dashboard/summary`
 - `GET /feature-flags`
+- `GET|POST /finance/invoices`
+- `GET|POST /finance/payments`
+- `GET|POST /finance/cash-movements`
+- `GET|PUT /finance/fiscal-profile`
+- `GET /finance/fiscal-readiness`
+- `GET|PUT /messaging/whatsapp/channel`
+- `GET|POST /messaging/whatsapp/dispatches`
+- `GET|POST /messaging/whatsapp/webhook`
 - `GET /actuator/metrics`
 - `GET /actuator/prometheus`
 - `GET /actuator/health`
@@ -331,6 +384,17 @@ Note:
   - `GET|POST /pet/invoices`
   - `GET|PUT|DELETE /pet/invoices/{id}`
   - `PATCH /pet/invoices/{id}/restore`
+- Pet plans & templates:
+  - `GET|POST /pet/plans`
+  - `GET|PUT|DELETE /pet/plans/{id}`
+  - `GET|POST /pet/plan-templates`
+- Pet commissions:
+  - `GET /pet/commissions/summary`
+- Pet billing & prepared messages:
+  - `GET|PUT /pet/billing-message-settings`
+  - `POST /pet/messages/appointments/{appointmentId}/pickup`
+  - `POST /pet/messages/plans/{planId}/renewal-reminder`
+  - `POST /pet/whatsapp/dispatches/**`
 
 Swagger UI:
 - `http://localhost:8080/swagger-ui.html`
@@ -339,31 +403,34 @@ Swagger UI:
 
 Implemented pages:
 
-- Public/Auth: `/login`
-- Core: `/dashboard`, `/tenants`, `/users`, `/settings`
-- CRM:
-  - `/crm`
-  - `/crm/dashboard`
-  - `/crm/activity`
-  - `/crm/companies`
-  - `/crm/contacts`, `/crm/contacts/new`, `/crm/contacts/[id]`
-  - `/crm/leads`, `/crm/leads/new`, `/crm/leads/[id]`
-  - `/crm/deals`
-  - `/crm/pipeline`
-  - `/crm/tasks`
-  - `/crm/notes`
-- PET:
+- Public / Institutional & Auth (`(public)`):
+  - `/`, `/about`, `/platform`, `/products`, `/engineering`, `/research`, `/articles`, `/articles/[slug]`, `/contact`
+  - `/login`, `/forgot-password`, `/reset-password`
+- Core & Shared Foundations (`(app)`):
+  - `/dashboard`, `/tenants`, `/users`, `/settings`
+  - `/finance/invoices`, `/finance/payments`, `/finance/cash`
+  - `/inventory`
+- PET (`(app)/pet`):
   - `/pet`
   - `/pet/dashboard`
+  - `/pet/insights`
+  - `/pet/follow-up`
   - `/pet/clients`
   - `/pet/pets`
   - `/pet/appointments`
   - `/pet/services`
   - `/pet/professionals`
-  - `/pet/medical-records`
+  - `/pet/commissions`
+  - `/pet/plans`
+  - `/pet/pos`
+  - `/pet/commercial`
   - `/pet/products`
   - `/pet/inventory`
   - `/pet/invoices`
+  - `/pet/finance`
+  - `/pet/clinic`, `/pet/medical-records` (clinical entitlement scope)
+- CRM (`src/modules/crm`):
+  - Retained in frontend modules/services as support lane for tasks, notes, activity and relationship workflows.
 
 Guards:
 - Route protection via authenticated layout (`ProtectedRoute`).
@@ -515,7 +582,7 @@ Current deploy base is available at `infra/gcp/terraform`:
 Legacy Terraform remains in `infra/terraform` only as historical reference and should not be used as the target production architecture.
 
 Detailed runbook:
-- [docs/platform/gcp-minimal-infra.pt-BR.md](/home/willian/IdeaProjects/phaiffertech/docs/platform/gcp-minimal-infra.pt-BR.md)
+- [docs/platform/gcp-minimal-infra.pt-BR.md](docs/platform/gcp-minimal-infra.pt-BR.md)
 
 ## Dev Credentials
 
@@ -534,4 +601,4 @@ Detailed runbook:
 ## PostgreSQL Runbook
 
 Operational runbook:
-- [docs/platform/postgresql-migration-runbook.pt-BR.md](/home/willian/IdeaProjects/phaiffertech/docs/platform/postgresql-migration-runbook.pt-BR.md)
+- [docs/platform/postgresql-migration-runbook.pt-BR.md](docs/platform/postgresql-migration-runbook.pt-BR.md)

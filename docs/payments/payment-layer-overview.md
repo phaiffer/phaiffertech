@@ -1,12 +1,12 @@
-# PetFlow Payments - Visao da Camada de Cobranca
+# Gestão Pet Payments - Visao da Camada de Cobranca
 
 Data de referencia: 2026-05-12.
 
-Este documento planeja a camada de pagamentos/cobranca do PetFlow para a proxima fase do produto. Ele reflete o estado real do monorepo PhaifferTech: hoje existe cobranca manual assistida, faturas e pagamentos em `core.finance`, especializacao PetFlow em `modules.pet.invoice` e renovacao com dados PIX textuais em fluxo manual. Nao ha gateway PIX/cartao integrado, nao ha PIX dinamico e a validacao oficial via WhatsApp ainda depende do desbloqueio de billing externo da Meta.
+Este documento planeja a camada de pagamentos/cobranca do Gestão Pet para a proxima fase do produto. Ele reflete o estado real do monorepo PhaifferTech: hoje existe cobranca manual assistida, faturas e pagamentos em `core.finance`, especializacao Gestão Pet em `modules.pet.invoice` e renovacao com dados PIX textuais em fluxo manual. Nao ha gateway PIX/cartao integrado, nao ha PIX dinamico e a validacao oficial via WhatsApp ainda depende do desbloqueio de billing externo da Meta.
 
 ## Objetivo
 
-A camada deve tratar pagamento como uma capacidade generica de cobranca, nao como um modulo PIX. O PetFlow precisa conseguir emitir ou reutilizar uma cobranca, registrar uma ou mais tentativas de pagamento, confirmar manualmente recebimentos e, no futuro, conectar provedores externos sem mudar o fluxo operacional de Banho e Tosa.
+A camada deve tratar pagamento como uma capacidade generica de cobranca, nao como um modulo PIX. O Gestão Pet precisa conseguir emitir ou reutilizar uma cobranca, registrar uma ou mais tentativas de pagamento, confirmar manualmente recebimentos e, no futuro, conectar provedores externos sem mudar o fluxo operacional de Banho e Tosa.
 
 Escopo desta trilha:
 
@@ -31,12 +31,12 @@ O produto ja possui fundacao financeira compartilhada:
 - `finance_invoices`: faturas tenant-scoped com modulo de origem, contraparte, contexto de negocio, valor, status e dados fiscais basicos.
 - `finance_payments`: registros de pagamento ligados a fatura, com metodo, status, valor, referencia e observacoes.
 - `finance_cash_movements`: movimentacoes de caixa relacionadas a pagamentos confirmados.
-- `pet_invoices`: especializacao PetFlow que liga a cobranca ao cliente/pet e usa `finance_invoice_id`.
+- `pet_invoices`: especializacao Gestão Pet que liga a cobranca ao cliente/pet e usa `finance_invoice_id`.
 - `pet_billing_message_settings`: configuracao textual de cobranca para mensagens preparadas, incluindo chave PIX textual e nome de exibicao.
 
 O fluxo validado hoje e manual assistido:
 
-1. O operador cria ou reutiliza uma fatura PetFlow.
+1. O operador cria ou reutiliza uma fatura Gestão Pet.
 2. A renovacao de plano pode preparar mensagem com valor, contexto e dados PIX textuais.
 3. O frontend exibe/copia a mensagem para revisao e envio manual.
 4. Quando o cliente paga por fora do sistema, o operador registra o pagamento.
@@ -49,7 +49,7 @@ Essa base deve continuar funcionando mesmo depois da chegada de provedores exter
 A camada proposta fica como extensao do `core.finance`, com adaptadores especificos em modulos verticais apenas quando houver contexto de negocio. A regra principal e:
 
 - `core.finance`: dono de invoice, metodo, tentativa, provider config, evento e contratos de provider.
-- `modules.pet.invoice`: dono da leitura/acao PetFlow, ligando cobranca a cliente, pet, plano, atendimento e mensagens.
+- `modules.pet.invoice`: dono da leitura/acao Gestão Pet, ligando cobranca a cliente, pet, plano, atendimento e mensagens.
 - `modules.pet.billing`: dono dos templates e textos operacionais para envio manual assistido.
 - `core.messaging`: continua separado, usado para envio/notificacao quando disponivel, sem virar dependencia para pagamento.
 
@@ -139,8 +139,8 @@ Implementacao incremental recomendada:
 1. Manter `finance_invoices` e `finance_payments` como base operacional atual.
 2. Criar novas tabelas de tentativa/evento/configuracao quando houver necessidade real.
 3. Evitar renomear `finance_invoices` para `billing_invoice` nesta fase; usar o nome conceitual nos docs e preservar a compatibilidade fisica.
-4. Adicionar services/interfaces em `core.finance.payment` ou pacote equivalente, sem alterar controllers PetFlow antes de haver caso de uso.
-5. Expor no PetFlow apenas leituras e acoes coerentes com a operacao de Banho e Tosa: emitir cobranca, preparar mensagem, registrar pagamento manual, visualizar tentativas e eventos.
+4. Adicionar services/interfaces em `core.finance.payment` ou pacote equivalente, sem alterar controllers Gestão Pet antes de haver caso de uso.
+5. Expor no Gestão Pet apenas leituras e acoes coerentes com a operacao de Banho e Tosa: emitir cobranca, preparar mensagem, registrar pagamento manual, visualizar tentativas e eventos.
 
 ## Compatibilidade Manual
 

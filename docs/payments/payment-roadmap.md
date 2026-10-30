@@ -1,4 +1,4 @@
-# PetFlow Payments - Roadmap Incremental
+# Gestão Pet Payments - Roadmap Incremental
 
 Data de referencia: 2026-05-12.
 
@@ -29,7 +29,7 @@ Resultado esperado:
 - demo/TCC honesta e demonstravel;
 - cobrancas pendentes e pagas rastreaveis;
 - renovacao de plano continua copiavel/editavel;
-- base pronta para trocar o meio sem reescrever PetFlow.
+- base pronta para trocar o meio sem reescrever Gestão Pet.
 
 ## Fase 2 - PIX Real
 
@@ -81,7 +81,7 @@ Escopo:
 Nao fazer:
 
 - persistir numero completo, CVV ou dados sensiveis de cartao;
-- acoplar PetFlow a SDK especifico de PSP;
+- acoplar Gestão Pet a SDK especifico de PSP;
 - misturar regra de parcelamento no dominio de atendimento.
 
 ## Fase 4 - Conciliacao e Webhook
@@ -109,7 +109,7 @@ Resultado esperado:
 2. Se necessario, adicionar `payment_event` primeiro, porque ele melhora auditoria sem mudar UX.
 3. Adicionar `payment_attempt` somente quando existir caso de uso de tentativa pendente/expirada.
 4. Criar provider `MANUAL`/`NOOP` antes de qualquer PSP real.
-5. Evoluir telas PetFlow para mostrar tentativas/eventos sem exigir conhecimento financeiro avancado.
+5. Evoluir telas Gestão Pet para mostrar tentativas/eventos sem exigir conhecimento financeiro avancado.
 6. Integrar PIX real apenas depois de sandbox, webhook e credenciais estarem prontos.
 7. Integrar cartao depois de tokenizacao e desenho de estorno/captura.
 

@@ -1,4 +1,4 @@
-# PetFlow Banho e Tosa - Roadmap Tecnico
+# Gestão Pet Banho e Tosa - Roadmap Tecnico
 
 Data de referencia: 2026-05-11.
 
@@ -94,7 +94,7 @@ Evitar itens que:
 
 ## Marco de Pronto para Apresentacao
 
-O PetFlow pode ser apresentado tecnicamente quando:
+O Gestão Pet pode ser apresentado tecnicamente quando:
 
 - dashboard mostra a operacao do dia;
 - agenda possui atendimento recorrente e avulso;

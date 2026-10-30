@@ -8,7 +8,7 @@ This demo environment creates a single official tenant for commercial walkthroug
 - Default demo user: `demo@phaiffertech.local`
 - Default demo password in local `dev`: `Demo@123`
 
-The dataset is isolated to the demo tenant and keeps CRM support flows and PetFlow aligned around one commercial showcase.
+The dataset is isolated to the demo tenant and keeps CRM support flows and Pet Management aligned around one commercial showcase.
 
 ## How It Is Seeded
 
@@ -19,7 +19,7 @@ When the backend runs with the local `dev` profile, `application-dev.yml` enable
 The bootstrap seeds:
 
 - CRM companies, contacts, leads, pipeline stages, deals, tasks, notes, and recent activity.
-- PetFlow clients, pets, appointments, medical records, vaccinations, products, inventory movements, and invoices.
+- Pet Management clients, pets, appointments, medical records, vaccinations, products, inventory movements, and invoices.
 - Historical IoT rows are only cleared if they already exist from older local datasets; new IoT demo data is not seeded anymore.
 
 ## How To Create The Demo Tenant
