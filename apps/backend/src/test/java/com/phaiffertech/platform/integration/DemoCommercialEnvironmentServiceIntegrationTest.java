@@ -92,8 +92,16 @@ class DemoCommercialEnvironmentServiceIntegrationTest extends AbstractIntegratio
 
         demoCommercialEnvironmentService.seed();
 
-        assertEquals(0, countRows(
+        assertEquals(3, countRows(
                 "SELECT COUNT(*) FROM pet_appointment_services WHERE tenant_id = ?",
+                tenantId.toString()
+        ));
+        assertEquals(0, countRows(
+                "SELECT COUNT(*) FROM pet_appointment_services WHERE tenant_id = ? AND service_name = 'Vacinacao'",
+                tenantId.toString()
+        ));
+        assertEquals(3, countRows(
+                "SELECT COUNT(*) FROM pet_appointment_services WHERE tenant_id = ? AND commission_rate IS NOT NULL",
                 tenantId.toString()
         ));
     }
