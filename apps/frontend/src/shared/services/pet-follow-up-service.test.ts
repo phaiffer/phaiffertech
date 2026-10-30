@@ -36,4 +36,10 @@ describe('petFollowUpService', () => {
 
     expect(crmService.listNotes).toHaveBeenCalledWith(0, 20, '', { relatedModule: 'PET' });
   });
+
+  it('pins activity listing to PET relations', async () => {
+    await petFollowUpService.listActivity(2, 15, { relatedId: 'client-1' });
+
+    expect(crmService.listActivity).toHaveBeenCalledWith(2, 15, { relatedId: 'client-1', relatedModule: 'PET' });
+  });
 });

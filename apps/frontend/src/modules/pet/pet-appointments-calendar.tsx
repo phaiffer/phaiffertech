@@ -1,5 +1,10 @@
 import { useMemo } from 'react';
+import { useAppI18n, useAppMessages } from '@/shared/i18n/app-i18n-provider';
 import { PetAppointment } from '@/shared/types/pet';
+
+// 2024-01-07 is a Sunday, so the next seven days give localized weekday names in calendar order.
+const FIRST_SUNDAY = new Date(2024, 0, 7);
+const DAYS_IN_WEEK = 7;
 
 type CalendarProps = {
   appointments: PetAppointment[];
@@ -16,6 +21,14 @@ export function PetAppointmentsCalendar({
   onDateClick,
   onEventClick
 }: CalendarProps) {
+  const { locale } = useAppI18n();
+  const t = useAppMessages().petAppointments.calendar;
+  const weekdays = useMemo(() => {
+    const formatter = new Intl.DateTimeFormat(locale, { weekday: 'short' });
+    return Array.from({ length: DAYS_IN_WEEK }, (_, offset) => formatter.format(
+      new Date(FIRST_SUNDAY.getFullYear(), FIRST_SUNDAY.getMonth(), FIRST_SUNDAY.getDate() + offset)
+    ));
+  }, [locale]);
   const { days, blanksBefore } = useMemo(() => {
     const year = currentMonth.getFullYear();
     const month = currentMonth.getMonth();
@@ -68,23 +81,21 @@ export function PetAppointmentsCalendar({
     return 'border-border bg-surface-inset text-muted';
   }
 
-  const weekdays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-
   return (
     <div className="ui-surface-panel p-4 flex flex-col h-full min-h-[600px]">
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-xl font-bold text-slate-900">
-          {currentMonth.toLocaleDateString('default', { month: 'long', year: 'numeric' })}
+          {currentMonth.toLocaleDateString(locale, { month: 'long', year: 'numeric' })}
         </h2>
         <div className="flex gap-2">
-          <button onClick={prevMonth} className="ui-secondary-button px-3 py-1 text-sm">&larr; Prev</button>
+          <button onClick={prevMonth} className="ui-secondary-button px-3 py-1 text-sm">&larr; {t.previous}</button>
           <button
             onClick={() => onMonthChange(new Date())}
             className="ui-secondary-button px-3 py-1 text-sm font-semibold"
           >
-            Today
+            {t.today}
           </button>
-          <button onClick={nextMonth} className="ui-secondary-button px-3 py-1 text-sm">Next &rarr;</button>
+          <button onClick={nextMonth} className="ui-secondary-button px-3 py-1 text-sm">{t.next} &rarr;</button>
         </div>
       </div>
 

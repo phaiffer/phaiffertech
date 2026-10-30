@@ -383,7 +383,7 @@ export function PetProfessionalsPage() {
               icon={DollarSign}
               label={messages.metrics.projected}
               value={summaryLoading ? messages.metrics.loading : formatCurrencyForLocale(locale, projectedCommissionTotal)}
-              detail={messages.columns.noCompletedServices}
+              detail={projectedCommissionTotal > 0 ? messages.metrics.projectedDetail : messages.columns.noCompletedServices}
               tone="accent"
             />
             <TeamSnapshotCard

@@ -594,7 +594,11 @@ export function PetPlansPage() {
   }
 
   const rows = resolvePageItems(pageData);
-  const activePlans = rows.filter((plan) => resolvePlanStatusKey(plan) === 'active').length;
+  // A plan in its final sessions still covers the client, so "active" means sessions left and not expired.
+  const activePlans = rows.filter((plan) => {
+    const statusKey = resolvePlanStatusKey(plan);
+    return statusKey === 'active' || statusKey === 'warn';
+  }).length;
   const lowSessionPlans = rows.filter((plan) => plan.remainingSessions > 0 && plan.remainingSessions <= 2).length;
   const exhaustedPlans = rows.filter((plan) => plan.remainingSessions <= 0).length;
   const penultimatePlans = rows.filter((plan) => plan.remainingSessions === 2).length;
