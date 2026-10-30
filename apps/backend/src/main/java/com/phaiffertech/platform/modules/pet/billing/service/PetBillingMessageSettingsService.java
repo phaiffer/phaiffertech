@@ -105,7 +105,7 @@ public class PetBillingMessageSettingsService {
                 ? null
                 : petProfileRepository.findByIdAndTenantId(plan.getPetId(), tenantId).orElse(null);
         String petName = pet == null ? "your pet" : pet.getName();
-        String invoiceDescription = "Renovacao de plano PetFlow - " + plan.getPlanName();
+        String invoiceDescription = "Renovacao de plano - " + plan.getPlanName();
         PetInvoiceResponse renewalInvoice = petInvoiceService.ensurePlanRenewalInvoice(plan.getId(), invoiceDescription);
         BigDecimal renewalAmount = renewalInvoice.outstandingAmount() == null
                 ? renewalInvoice.totalAmount()
@@ -242,7 +242,7 @@ public class PetBillingMessageSettingsService {
     }
 
     private String resolveBillingDisplayName(PetBillingMessageSettings settings) {
-        return hasText(settings.getBillingDisplayName()) ? settings.getBillingDisplayName().trim() : "Equipe PetFlow";
+        return hasText(settings.getBillingDisplayName()) ? settings.getBillingDisplayName().trim() : "Equipe de atendimento";
     }
 
     private String formatCurrency(BigDecimal amount) {

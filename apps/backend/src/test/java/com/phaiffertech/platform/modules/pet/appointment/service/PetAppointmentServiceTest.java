@@ -97,4 +97,28 @@ class PetAppointmentServiceTest {
         verify(clientPlanRepository, never()).save(org.mockito.ArgumentMatchers.any());
         assertEquals(false, appointment.isPlanSessionConsumed());
     }
+
+    @Test
+    void resolveStockApplicationQuantityValidatesReadyToApplyAndPositiveWholeNumbers() {
+        com.phaiffertech.platform.modules.pet.appointment.domain.PetAppointmentServiceLineInventoryPlan row =
+                new com.phaiffertech.platform.modules.pet.appointment.domain.PetAppointmentServiceLineInventoryPlan();
+        row.setConsumptionStatus(com.phaiffertech.platform.modules.pet.appointment.domain.PetAppointmentInventoryConsumptionStatus.PLANNED);
+        row.setActualQuantity(java.math.BigDecimal.valueOf(2));
+
+        org.junit.jupiter.api.Assertions.assertThrows(
+                com.phaiffertech.platform.shared.exception.ConflictOperationException.class,
+                () -> ReflectionTestUtils.invokeMethod(service, "resolveStockApplicationQuantity", row)
+        );
+
+        row.setConsumptionStatus(com.phaiffertech.platform.modules.pet.appointment.domain.PetAppointmentInventoryConsumptionStatus.READY_TO_APPLY);
+        row.setActualQuantity(new java.math.BigDecimal("2.00"));
+        Integer resolved = ReflectionTestUtils.invokeMethod(service, "resolveStockApplicationQuantity", row);
+        assertEquals(2, resolved);
+
+        row.setActualQuantity(new java.math.BigDecimal("1.5"));
+        org.junit.jupiter.api.Assertions.assertThrows(
+                com.phaiffertech.platform.shared.exception.ConflictOperationException.class,
+                () -> ReflectionTestUtils.invokeMethod(service, "resolveStockApplicationQuantity", row)
+        );
+    }
 }

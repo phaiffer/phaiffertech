@@ -9,6 +9,15 @@ import com.phaiffertech.platform.core.finance.domain.FinancePayment;
 import com.phaiffertech.platform.core.finance.domain.FinancePaymentMethod;
 import com.phaiffertech.platform.core.finance.domain.FinancePaymentStatus;
 import com.phaiffertech.platform.core.finance.dto.FinancePaymentResponse;
+import com.phaiffertech.platform.core.finance.payment.domain.PaymentEventStatus;
+import com.phaiffertech.platform.core.finance.payment.domain.PaymentEventType;
+import com.phaiffertech.platform.core.finance.payment.domain.PaymentProviderType;
+import com.phaiffertech.platform.core.finance.payment.provider.PaymentProvider;
+import com.phaiffertech.platform.core.finance.payment.provider.PaymentProviderChargeResult;
+import com.phaiffertech.platform.core.finance.payment.provider.PaymentProviderContext;
+import com.phaiffertech.platform.core.finance.payment.provider.PaymentProviderRegistry;
+import com.phaiffertech.platform.core.finance.payment.service.FinancePaymentEventRecordCommand;
+import com.phaiffertech.platform.core.finance.payment.service.FinancePaymentEventService;
 import com.phaiffertech.platform.core.finance.repository.FinancePaymentRepository;
 import com.phaiffertech.platform.shared.crud.BasePageQuery;
 import com.phaiffertech.platform.shared.domain.enums.AuditActionType;
@@ -34,15 +43,21 @@ public class FinancePaymentService {
     private final FinancePaymentRepository repository;
     private final FinanceInvoiceService invoiceService;
     private final FinanceCashMovementService cashMovementService;
+    private final FinancePaymentEventService paymentEventService;
+    private final PaymentProviderRegistry paymentProviderRegistry;
 
     public FinancePaymentService(
             FinancePaymentRepository repository,
             FinanceInvoiceService invoiceService,
-            FinanceCashMovementService cashMovementService
+            FinanceCashMovementService cashMovementService,
+            FinancePaymentEventService paymentEventService,
+            PaymentProviderRegistry paymentProviderRegistry
     ) {
         this.repository = repository;
         this.invoiceService = invoiceService;
         this.cashMovementService = cashMovementService;
+        this.paymentEventService = paymentEventService;
+        this.paymentProviderRegistry = paymentProviderRegistry;
     }
 
     @Transactional
@@ -80,6 +95,14 @@ public class FinancePaymentService {
                     )
             );
         }
+        recordManualPaymentEvent(
+                tenantId,
+                invoice,
+                saved,
+                FinancePaymentStatus.CONFIRMED.equals(saved.getStatus())
+                        ? PaymentEventType.PAYMENT_CONFIRMED
+                        : PaymentEventType.PAYMENT_RECORDED
+        );
         invoiceService.reconcileInvoiceState(tenantId, invoice.getId());
         return getOrThrow(saved.getId(), tenantId);
     }
@@ -115,6 +138,7 @@ public class FinancePaymentService {
                             "Confirmed payment canceled and reversed."
                     )
             );
+            recordManualPaymentEvent(tenantId, invoice, payment, PaymentEventType.PAYMENT_CANCELED);
             invoiceService.reconcileInvoiceState(tenantId, invoice.getId());
             return getOrThrow(paymentId, tenantId);
         }
@@ -154,6 +178,16 @@ public class FinancePaymentService {
                     )
             );
         }
+        recordManualPaymentEvent(
+                tenantId,
+                invoice,
+                saved,
+                FinancePaymentStatus.CONFIRMED.equals(saved.getStatus())
+                        ? PaymentEventType.PAYMENT_CONFIRMED
+                        : (FinancePaymentStatus.CANCELED.equals(saved.getStatus())
+                                ? PaymentEventType.PAYMENT_CANCELED
+                                : PaymentEventType.PAYMENT_RECORDED)
+        );
         invoiceService.reconcileInvoiceState(tenantId, invoice.getId());
         return getOrThrow(saved.getId(), tenantId);
     }
@@ -258,5 +292,39 @@ public class FinancePaymentService {
             return null;
         }
         return value.trim();
+    }
+
+    private void recordManualPaymentEvent(
+            UUID tenantId,
+            FinanceInvoice invoice,
+            FinancePayment payment,
+            PaymentEventType eventType
+    ) {
+        PaymentProvider provider = paymentProviderRegistry.resolve(PaymentProviderType.MANUAL);
+        PaymentProviderChargeResult result = provider.registerManualSettlement(
+                new PaymentProviderContext(
+                        tenantId,
+                        invoice.getId(),
+                        payment.getId(),
+                        payment.getMethod().name(),
+                        payment.getAmount(),
+                        invoice.getCurrency(),
+                        payment.getReferenceCode(),
+                        payment.getNotes()
+                )
+        );
+        paymentEventService.recordEvent(
+                tenantId,
+                new FinancePaymentEventRecordCommand(
+                        invoice.getId(),
+                        payment.getId(),
+                        result.provider(),
+                        eventType,
+                        PaymentEventStatus.PROCESSED,
+                        "payment:" + payment.getId() + ":" + eventType.name(),
+                        payment.getReceivedAt(),
+                        result.summary()
+                )
+        );
     }
 }

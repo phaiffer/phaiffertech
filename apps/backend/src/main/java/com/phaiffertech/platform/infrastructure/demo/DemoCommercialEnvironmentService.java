@@ -88,6 +88,10 @@ public class DemoCommercialEnvironmentService {
         private static final UUID PET_APPOINTMENT_THOR_ID = uuid("20000000-0000-0000-0000-000000000042");
         private static final UUID PET_APPOINTMENT_LUNA_ID = uuid("20000000-0000-0000-0000-000000000043");
         private static final UUID PET_PLAN_MARIA_ID = uuid("20000000-0000-0000-0000-000000000044");
+        private static final UUID PET_PLAN_TEMPLATE_MONTHLY_ID = uuid("20000000-0000-0000-0000-000000000045");
+        private static final UUID PET_PLAN_TEMPLATE_SERVICE_ID = uuid("20000000-0000-0000-0000-000000000046");
+        private static final UUID PET_SERVICE_INVENTORY_LINK_ID = uuid("20000000-0000-0000-0000-000000000047");
+        private static final UUID PET_BILLING_SETTINGS_ID = uuid("20000000-0000-0000-0000-000000000048");
 
         private static final UUID PET_RECORD_REX_ID = uuid("20000000-0000-0000-0000-000000000051");
         private static final UUID PET_RECORD_THOR_ID = uuid("20000000-0000-0000-0000-000000000052");
@@ -308,18 +312,24 @@ public class DemoCommercialEnvironmentService {
                 deleteByTenant("pet_vaccinations", tenantId);
                 deleteByTenant("pet_prescriptions", tenantId);
                 deleteByTenant("pet_medical_records", tenantId);
+                deleteByTenant("pet_appointment_service_inventory", tenantId);
                 deleteByTenant("pet_appointment_services", tenantId);
                 deleteByTenant("pet_appointments", tenantId);
+                deleteByTenant("pet_service_inventory_links", tenantId);
+                deleteByTenant("pet_plan_template_services", tenantId);
                 deleteByTenant("pet_inventory_movements", tenantId);
                 deleteByTenant("pet_invoices", tenantId);
+                deleteByTenant("finance_payment_events", tenantId);
                 deleteByTenant("finance_cash_movements", tenantId);
                 deleteByTenant("finance_payments", tenantId);
                 deleteByTenant("finance_invoices", tenantId);
+                deleteByTenant("pet_billing_message_settings", tenantId);
                 deleteByTenant("pet_products", tenantId);
+                deleteByTenant("pet_client_plans", tenantId);
+                deleteByTenant("pet_plan_templates", tenantId);
                 deleteByTenant("pet_services", tenantId);
                 deleteByTenant("pet_professionals", tenantId);
                 deleteByTenant("pet_profiles", tenantId);
-                deleteByTenant("pet_client_plans", tenantId);
                 deleteByTenant("pet_clients", tenantId);
 
                 // Older local databases may still carry archived IoT rows for the demo tenant.
@@ -583,7 +593,7 @@ public class DemoCommercialEnvironmentService {
                 insertCrmNote(
                                 seedId(tenantId, CRM_PETCARE_NOTE_ID),
                                 tenantId,
-                                "Clinic director wants the PetFlow pilot to start with vaccination, checkup and billing flows already configured.",
+                                "Clinic director wants the pilot to start with vaccination, checkup and billing flows already configured.",
                                 seedId(tenantId, CRM_PETCARE_COMPANY_ID),
                                 seedId(tenantId, CRM_ANA_CONTACT_ID),
                                 seedId(tenantId, CRM_PETCARE_LEAD_ID),
@@ -667,13 +677,32 @@ public class DemoCommercialEnvironmentService {
                                 new BigDecimal("0.1200"),
                                 now.minus(Duration.ofDays(10)));
 
+                insertPetPlanTemplate(
+                                seedId(tenantId, PET_PLAN_TEMPLATE_MONTHLY_ID),
+                                tenantId,
+                                "Plano mensal banho e tosa",
+                                "Pacote recorrente de 6 sessoes de banho e tosa com renovacao assistida.",
+                                new BigDecimal("540.00"),
+                                30,
+                                6,
+                                now.minus(Duration.ofDays(9)));
+                insertPetPlanTemplateService(
+                                seedId(tenantId, PET_PLAN_TEMPLATE_SERVICE_ID),
+                                tenantId,
+                                seedId(tenantId, PET_PLAN_TEMPLATE_MONTHLY_ID),
+                                seedId(tenantId, PET_SERVICE_VACCINATION_ID),
+                                now.minus(Duration.ofDays(9)));
+
                 insertPetClientPlan(
                                 seedId(tenantId, PET_PLAN_MARIA_ID),
                                 tenantId,
                                 seedId(tenantId, PET_MARIA_CLIENT_ID),
+                                seedId(tenantId, PET_REX_ID),
+                                seedId(tenantId, PET_PLAN_TEMPLATE_MONTHLY_ID),
                                 "Plano mensal banho e tosa",
                                 6,
-                                4,
+                                5,
+                                new BigDecimal("540.00"),
                                 mariaPlanExpiresAt,
                                 now.minus(Duration.ofDays(7)));
 
@@ -751,6 +780,20 @@ public class DemoCommercialEnvironmentService {
                                 new BigDecimal("36.00"), 6, 2, 4, now.minus(Duration.ofDays(6)));
                 insertPetProduct(seedId(tenantId, PET_PRODUCT_PARASITE_ID), tenantId, "Lacos sortidos", "PET-ACC-020",
                                 new BigDecimal("18.00"), 2, 1, 3, now.minus(Duration.ofDays(6)));
+
+                insertPetServiceInventoryLink(
+                                seedId(tenantId, PET_SERVICE_INVENTORY_LINK_ID),
+                                tenantId,
+                                seedId(tenantId, PET_SERVICE_VACCINATION_ID),
+                                seedId(tenantId, PET_PRODUCT_RABIES_ID),
+                                1,
+                                now.minus(Duration.ofDays(6)));
+                insertPetBillingMessageSettings(
+                                seedId(tenantId, PET_BILLING_SETTINGS_ID),
+                                tenantId,
+                                "pix@misterdog.demo",
+                                "Mister Dog Banho e Tosa",
+                                now.minus(Duration.ofDays(6)));
 
                 insertPetInventoryMovement(seedId(tenantId, PET_INVENTORY_RABIES_ID), tenantId, seedId(tenantId, PET_PRODUCT_RABIES_ID), "OUTBOUND", 2,
                                 "Busy grooming days consumed more shampoo than expected before the next purchase window.",
@@ -1080,23 +1123,104 @@ public class DemoCommercialEnvironmentService {
                                 ts(createdAt), ts(createdAt), SEED_ACTOR, SEED_ACTOR);
         }
 
+        private void insertPetPlanTemplate(
+                        UUID id,
+                        UUID tenantId,
+                        String commercialName,
+                        String description,
+                        BigDecimal price,
+                        int validityDays,
+                        int totalSessions,
+                        Instant createdAt) {
+                insert(
+                                """
+                                                INSERT INTO pet_plan_templates (
+                                                    id, tenant_id, commercial_name, description, price, validity_days, total_sessions, active,
+                                                    created_at, updated_at, created_by, updated_by
+                                                ) VALUES (?, ?, ?, ?, ?, ?, ?, TRUE, ?, ?, ?, ?)
+                                                """,
+                                id, tenantId, commercialName, description, price, validityDays, totalSessions,
+                                ts(createdAt), ts(createdAt), SEED_ACTOR, SEED_ACTOR);
+        }
+
+        private void insertPetPlanTemplateService(
+                        UUID id,
+                        UUID tenantId,
+                        UUID planTemplateId,
+                        UUID serviceId,
+                        Instant createdAt) {
+                insert(
+                                """
+                                                INSERT INTO pet_plan_template_services (
+                                                    id, tenant_id, plan_template_id, service_id,
+                                                    created_at, updated_at, created_by, updated_by
+                                                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                                                """,
+                                id, tenantId, planTemplateId, serviceId,
+                                ts(createdAt), ts(createdAt), SEED_ACTOR, SEED_ACTOR);
+        }
+
         private void insertPetClientPlan(
                         UUID id,
                         UUID tenantId,
                         UUID clientId,
+                        UUID petId,
+                        UUID planTemplateId,
                         String planName,
                         int totalSessions,
                         int usedSessions,
+                        BigDecimal finalPrice,
                         Instant expiresAt,
                         Instant createdAt) {
                 insert(
                                 """
                                                 INSERT INTO pet_client_plans (
-                                                    id, tenant_id, client_id, plan_name, total_sessions, used_sessions, expires_at,
+                                                    id, tenant_id, client_id, pet_id, plan_template_id, plan_name, total_sessions, used_sessions,
+                                                    final_price, status, started_at, expires_at,
                                                     created_at, updated_at, created_by, updated_by
-                                                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                                                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'ACTIVE', ?, ?, ?, ?, ?, ?)
                                                 """,
-                                id, tenantId, clientId, planName, totalSessions, usedSessions, ts(expiresAt),
+                                id, tenantId, clientId, petId, planTemplateId, planName, totalSessions, usedSessions,
+                                finalPrice, ts(createdAt), ts(expiresAt),
+                                ts(createdAt), ts(createdAt), SEED_ACTOR, SEED_ACTOR);
+        }
+
+        private void insertPetServiceInventoryLink(
+                        UUID id,
+                        UUID tenantId,
+                        UUID serviceId,
+                        UUID productId,
+                        int expectedQuantity,
+                        Instant createdAt) {
+                UUID inventoryItemId = jdbcTemplate.queryForObject(
+                                "SELECT inventory_item_id FROM pet_products WHERE id = ?",
+                                UUID.class,
+                                productId);
+                insert(
+                                """
+                                                INSERT INTO pet_service_inventory_links (
+                                                    id, tenant_id, service_id, inventory_item_id, expected_quantity, consumption_rule,
+                                                    created_at, updated_at, created_by, updated_by
+                                                ) VALUES (?, ?, ?, ?, ?, 'FIXED_PER_SERVICE', ?, ?, ?, ?)
+                                                """,
+                                id, tenantId, serviceId, inventoryItemId, expectedQuantity,
+                                ts(createdAt), ts(createdAt), SEED_ACTOR, SEED_ACTOR);
+        }
+
+        private void insertPetBillingMessageSettings(
+                        UUID id,
+                        UUID tenantId,
+                        String pixKey,
+                        String billingDisplayName,
+                        Instant createdAt) {
+                insert(
+                                """
+                                                INSERT INTO pet_billing_message_settings (
+                                                    id, tenant_id, pix_key, billing_display_name,
+                                                    created_at, updated_at, created_by, updated_by
+                                                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                                                """,
+                                id, tenantId, pixKey, billingDisplayName,
                                 ts(createdAt), ts(createdAt), SEED_ACTOR, SEED_ACTOR);
         }
 

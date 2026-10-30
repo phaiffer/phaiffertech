@@ -7,6 +7,11 @@ import com.phaiffertech.platform.core.finance.domain.FinanceSourceModule;
 import com.phaiffertech.platform.core.finance.dto.FinanceInvoiceResponse;
 import com.phaiffertech.platform.core.finance.fiscal.domain.TenantFiscalProfile;
 import com.phaiffertech.platform.core.finance.fiscal.service.TenantFiscalProfileService;
+import com.phaiffertech.platform.core.finance.payment.domain.PaymentEventStatus;
+import com.phaiffertech.platform.core.finance.payment.domain.PaymentEventType;
+import com.phaiffertech.platform.core.finance.payment.domain.PaymentProviderType;
+import com.phaiffertech.platform.core.finance.payment.service.FinancePaymentEventRecordCommand;
+import com.phaiffertech.platform.core.finance.payment.service.FinancePaymentEventService;
 import com.phaiffertech.platform.core.finance.repository.FinanceInvoiceRepository;
 import com.phaiffertech.platform.core.finance.repository.FinancePaymentRepository;
 import com.phaiffertech.platform.shared.contracts.finance.FinanceReferenceCapability;
@@ -38,17 +43,20 @@ public class FinanceInvoiceService {
     private final FinancePaymentRepository paymentRepository;
     private final FinanceReferenceResolverService referenceResolverService;
     private final TenantFiscalProfileService tenantFiscalProfileService;
+    private final FinancePaymentEventService paymentEventService;
 
     public FinanceInvoiceService(
             FinanceInvoiceRepository repository,
             FinancePaymentRepository paymentRepository,
             FinanceReferenceResolverService referenceResolverService,
-            TenantFiscalProfileService tenantFiscalProfileService
+            TenantFiscalProfileService tenantFiscalProfileService,
+            FinancePaymentEventService paymentEventService
     ) {
         this.repository = repository;
         this.paymentRepository = paymentRepository;
         this.referenceResolverService = referenceResolverService;
         this.tenantFiscalProfileService = tenantFiscalProfileService;
+        this.paymentEventService = paymentEventService;
     }
 
     @Transactional
@@ -59,16 +67,54 @@ public class FinanceInvoiceService {
         invoice.setPaidAmount(BigDecimal.ZERO);
         applyUpsert(invoice, tenantId, command, true);
         FinanceInvoice saved = repository.save(invoice);
-        return reconcileInvoiceState(tenantId, saved.getId());
+        FinanceInvoice reconciled = reconcileInvoiceState(tenantId, saved.getId());
+        recordInvoiceLifecycleEvent(
+                tenantId,
+                reconciled,
+                PaymentEventType.INVOICE_CREATED,
+                "invoice-created:" + reconciled.getId(),
+                "Invoice created for " + reconciled.getCounterpartyName() + "."
+        );
+        if (FinanceInvoiceStatus.ISSUED.equals(reconciled.getStatus())) {
+            recordInvoiceLifecycleEvent(
+                    tenantId,
+                    reconciled,
+                    PaymentEventType.INVOICE_ISSUED,
+                    "invoice-issued:" + reconciled.getId(),
+                    "Invoice issued for collection."
+            );
+        }
+        return reconciled;
     }
 
     @Transactional
     @AuditableAction(action = AuditActionType.UPDATE, entity = "finance_invoice")
     public FinanceInvoice update(UUID tenantId, UUID invoiceId, FinanceInvoiceUpsertCommand command) {
         FinanceInvoice invoice = getLockedOrThrow(invoiceId, tenantId);
+        FinanceInvoiceStatus previousStatus = invoice.getStatus();
         applyUpsert(invoice, tenantId, command, false);
         repository.save(invoice);
-        return reconcileInvoiceState(tenantId, invoiceId);
+        FinanceInvoice reconciled = reconcileInvoiceState(tenantId, invoiceId);
+        if (!FinanceInvoiceStatus.ISSUED.equals(previousStatus)
+                && FinanceInvoiceStatus.ISSUED.equals(reconciled.getStatus())) {
+            recordInvoiceLifecycleEvent(
+                    tenantId,
+                    reconciled,
+                    PaymentEventType.INVOICE_ISSUED,
+                    "invoice-issued:" + reconciled.getId(),
+                    "Invoice issued for collection."
+            );
+        } else if (!FinanceInvoiceStatus.CANCELED.equals(previousStatus)
+                && FinanceInvoiceStatus.CANCELED.equals(reconciled.getStatus())) {
+            recordInvoiceLifecycleEvent(
+                    tenantId,
+                    reconciled,
+                    PaymentEventType.INVOICE_CANCELED,
+                    "invoice-canceled:" + reconciled.getId(),
+                    "Invoice canceled."
+            );
+        }
+        return reconciled;
     }
 
     @Transactional
@@ -376,5 +422,30 @@ public class FinanceInvoiceService {
 
     private boolean isBlank(String value) {
         return value == null || value.isBlank();
+    }
+
+    private void recordInvoiceLifecycleEvent(
+            UUID tenantId,
+            FinanceInvoice invoice,
+            PaymentEventType eventType,
+            String idempotencyKey,
+            String summary
+    ) {
+        if (paymentEventService == null) {
+            return;
+        }
+        paymentEventService.recordEvent(
+                tenantId,
+                new FinancePaymentEventRecordCommand(
+                        invoice.getId(),
+                        null,
+                        PaymentProviderType.MANUAL,
+                        eventType,
+                        PaymentEventStatus.RECORDED,
+                        idempotencyKey,
+                        Instant.now(),
+                        summary
+                )
+        );
     }
 }

@@ -51,6 +51,10 @@ class DemoCommercialEnvironmentServiceIntegrationTest extends AbstractIntegratio
         assertEquals(3, countRows("SELECT COUNT(*) FROM crm_contacts WHERE tenant_id = ? AND deleted_at IS NULL", tenantId.toString()));
         assertEquals(3, countRows("SELECT COUNT(*) FROM crm_leads WHERE tenant_id = ? AND deleted_at IS NULL", tenantId.toString()));
         assertEquals(3, countRows("SELECT COUNT(*) FROM pet_profiles WHERE tenant_id = ? AND deleted_at IS NULL", tenantId.toString()));
+        assertEquals(1, countRows("SELECT COUNT(*) FROM pet_plan_templates WHERE tenant_id = ? AND deleted_at IS NULL", tenantId.toString()));
+        assertEquals(1, countRows("SELECT COUNT(*) FROM pet_plan_template_services WHERE tenant_id = ? AND deleted_at IS NULL", tenantId.toString()));
+        assertEquals(2, countRows("SELECT COUNT(*) FROM pet_service_inventory_links WHERE tenant_id = ? AND deleted_at IS NULL", tenantId.toString()));
+        assertEquals(1, countRows("SELECT COUNT(*) FROM pet_billing_message_settings WHERE tenant_id = ? AND deleted_at IS NULL", tenantId.toString()));
     }
 
     @Test
