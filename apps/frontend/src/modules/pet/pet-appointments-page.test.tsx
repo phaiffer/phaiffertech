@@ -83,6 +83,7 @@ const { currentPlatformState, hasPermissionMock, hasAnyPermissionMock, petServic
     applyAppointmentServiceLineInventoryConsumption: vi.fn(),
     preparePetReadyMessage: vi.fn(),
     dispatchPetReadyWhatsApp: vi.fn(),
+    generateInvoiceFromAppointment: vi.fn(),
     deleteAppointment: vi.fn()
   }
 }));
@@ -270,6 +271,57 @@ describe('PetAppointmentsPage', () => {
     expect(
       screen.getByText((text) => text.includes('Before booking, add at least one client, pet, grooming service, and professional'))
     ).toBeInTheDocument();
+    // Plan-covered visit without extras has nothing to charge, so no invoice action is offered.
+    expect(screen.queryByRole('button', { name: 'Generate invoice' })).not.toBeInTheDocument();
+  });
+
+  it('generates the checkout invoice for a completed visit with an amount due', async () => {
+    setGrantedPermissions(['pet.appointment.read', 'pet.invoice.create']);
+    petServiceMock.listAppointments.mockResolvedValue(createPageResponse([
+      {
+        id: 'appointment-2',
+        clientId: 'client-1',
+        clientName: 'Owner Example',
+        petId: 'pet-1',
+        petName: 'Pet Example',
+        serviceId: 'service-1',
+        serviceName: 'Bath',
+        professionalId: 'professional-1',
+        professionalName: 'Dr Example',
+        scheduledAt: '2026-03-10T10:00:00Z',
+        status: 'COMPLETED',
+        finalAmountDue: 70,
+        servicePrice: 70,
+        medicalRecordCount: 0,
+        vaccinationCount: 0,
+        prescriptionCount: 0,
+        createdAt: '2026-03-10T10:00:00Z',
+        updatedAt: '2026-03-10T10:00:00Z'
+      }
+    ]));
+    petServiceMock.generateInvoiceFromAppointment.mockResolvedValue({
+      id: 'invoice-9',
+      clientId: 'client-1',
+      clientName: 'Owner Example',
+      totalAmount: 70,
+      status: 'ISSUED',
+      payments: []
+    });
+
+    render(<PetAppointmentsPage />);
+
+    const switchToListButton = await screen.findByRole('button', { name: 'Switch to list' }).catch(() => null);
+    if (switchToListButton) {
+      fireEvent.click(switchToListButton);
+    }
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Generate invoice' }));
+
+    await waitFor(() => {
+      expect(petServiceMock.generateInvoiceFromAppointment).toHaveBeenCalledWith('appointment-2');
+    });
+    expect(await screen.findByText(/Invoice of .*70.* generated for Owner Example/)).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Open invoice' })).toHaveAttribute('href', '/pet/invoices');
   });
 
   it('shows structured service context and warns when the selected service requires a plan', async () => {

@@ -12,6 +12,7 @@ import com.phaiffertech.platform.core.finance.service.FinanceInvoiceUpsertComman
 import com.phaiffertech.platform.core.finance.service.FinancePaymentService;
 import com.phaiffertech.platform.core.finance.service.FinancePaymentUpsertCommand;
 import com.phaiffertech.platform.modules.pet.appointment.domain.PetAppointment;
+import com.phaiffertech.platform.modules.pet.appointment.mapper.PetAppointmentMapper;
 import com.phaiffertech.platform.modules.pet.appointment.repository.PetAppointmentRepository;
 import com.phaiffertech.platform.modules.pet.client.domain.PetClient;
 import com.phaiffertech.platform.modules.pet.client.repository.PetClientRepository;
@@ -53,6 +54,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class PetInvoiceService {
+
+    // Matches the finance_invoices.description column length.
+    private static final int INVOICE_DESCRIPTION_MAX_LENGTH = 255;
 
     private final PetInvoiceRepository repository;
     private final PetClientRepository petClientRepository;
@@ -162,6 +166,77 @@ public class PetInvoiceService {
                 resolveClientName(requireClient(tenantId, invoice.getClientId())),
                 financePaymentService.getByInvoiceIds(tenantId, List.of(financeInvoice.getId()))
         );
+    }
+
+    /**
+     * Issues the checkout invoice for a completed visit, linked to the appointment.
+     * Idempotent: an existing non-canceled invoice for the appointment is returned as is.
+     */
+    @Transactional
+    @AuditableAction(action = AuditActionType.CREATE, entity = "pet_invoice")
+    public PetInvoiceResponse ensureAppointmentInvoice(UUID appointmentId) {
+        UUID tenantId = currentTenantId();
+        PetAppointment appointment = appointmentRepository.findByIdAndTenantId(appointmentId, tenantId)
+                .orElseThrow(() -> new ResourceNotFoundException("Pet appointment not found for tenant."));
+        if (!"COMPLETED".equalsIgnoreCase(appointment.getStatus())) {
+            throw new ConflictOperationException("Only completed appointments can be invoiced.");
+        }
+
+        List<PetInvoice> existing = repository.findAllByBusinessContextExcludingStatus(
+                tenantId,
+                "PET.APPOINTMENT",
+                appointment.getId(),
+                FinanceInvoiceStatus.CANCELED
+        );
+        if (!existing.isEmpty()) {
+            return getById(existing.get(0).getId());
+        }
+
+        BigDecimal amount = PetAppointmentMapper.resolveFinalAmountDue(appointment);
+        if (amount.signum() <= 0) {
+            throw new ConflictOperationException("This appointment has no amount due to invoice.");
+        }
+
+        PetClient client = requireClient(tenantId, appointment.getClientId());
+        Instant now = Instant.now();
+        FinanceInvoice financeInvoice = financeInvoiceService.create(
+                tenantId,
+                new FinanceInvoiceUpsertCommand(
+                        FinanceSourceModule.PET,
+                        "PET.CLIENT",
+                        client.getId(),
+                        clientName(client),
+                        "PET.APPOINTMENT",
+                        appointment.getId(),
+                        buildAppointmentInvoiceDescription(appointment),
+                        FinanceInvoiceStatus.ISSUED,
+                        null,
+                        amount,
+                        now,
+                        now,
+                        null,
+                        null,
+                        null
+                )
+        );
+
+        PetInvoice invoice = new PetInvoice();
+        invoice.setTenantId(tenantId);
+        invoice.setClientId(client.getId());
+        invoice.setFinanceInvoiceId(financeInvoice.getId());
+        repository.save(invoice);
+        return getById(invoice.getId());
+    }
+
+    private String buildAppointmentInvoiceDescription(PetAppointment appointment) {
+        String description = appointment.getServiceName();
+        String extras = appointment.getExtrasDescription();
+        if (extras != null && !extras.isBlank()) {
+            description = description + " + " + extras.trim();
+        }
+        return description.length() <= INVOICE_DESCRIPTION_MAX_LENGTH
+                ? description
+                : description.substring(0, INVOICE_DESCRIPTION_MAX_LENGTH);
     }
 
     @Transactional

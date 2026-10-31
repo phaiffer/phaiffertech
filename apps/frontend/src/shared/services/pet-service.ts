@@ -638,6 +638,9 @@ export const petService = {
 
   createInvoice: (input: CreatePetInvoiceInput) => apiClient.post<PetInvoice>('/pet/invoices', input),
 
+  generateInvoiceFromAppointment: (appointmentId: string) =>
+    apiClient.post<PetInvoice>(`/pet/invoices/from-appointment/${appointmentId}`),
+
   updateInvoice: (id: string, input: UpdatePetInvoiceInput) =>
     apiClient.put<PetInvoice>(`/pet/invoices/${id}`, input),
 
