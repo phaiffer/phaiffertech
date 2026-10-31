@@ -938,7 +938,7 @@ export function createPetAppointmentColumns({
                 className="rounded-lg border border-sky-300 px-2 py-1 text-xs font-medium text-sky-700"
                 disabled={preparingPickupAppointmentId === appointment.id}
               >
-                {preparingPickupAppointmentId === appointment.id ? 'Preparando...' : 'Pronto para retirada'}
+                {preparingPickupAppointmentId === appointment.id ? messages.preparedPickup.preparing : messages.preparedPickup.title}
               </button>
             </PermissionGuard>
           ) : null}
@@ -978,7 +978,7 @@ export function createPetAppointmentColumns({
             </PermissionGuard>
           ) : null}
           {preparedPickupAppointmentId === appointment.id ? (
-            <AppointmentSignalPill label="Mensagem preparada" tone="success" />
+            <AppointmentSignalPill label={messages.preparedPickup.preparedPill} tone="success" />
           ) : null}
           {dispatchedPickupAppointmentId === appointment.id ? (
             <AppointmentSignalPill label={messages.preparedPickup.officialSent} tone="success" />

@@ -251,13 +251,14 @@ describe('PetAppointmentsPage', () => {
       );
     });
 
-    fireEvent.click(screen.getByRole('button', { name: 'Pronto para retirada' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Ready for pickup' }));
 
     await waitFor(() => {
       expect(petServiceMock.preparePetReadyMessage).toHaveBeenCalledWith('appointment-1');
     });
-    expect((await screen.findAllByText('Pronto para retirada')).length).toBeGreaterThan(0);
+    expect((await screen.findAllByText('Ready for pickup')).length).toBeGreaterThan(0);
     expect(screen.getByLabelText('Prepared pickup message')).toHaveValue('Pet Example is ready for pickup.');
+    expect(screen.getByText('Message prepared')).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: 'Send WhatsApp' }));
 
