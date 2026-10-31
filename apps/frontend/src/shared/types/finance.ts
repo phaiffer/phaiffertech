@@ -54,6 +54,19 @@ export type FinancePayment = {
   updatedAt: string;
 };
 
+export type FinancePaymentEvent = {
+  id: string;
+  invoiceId: string;
+  financePaymentId?: string | null;
+  provider: string;
+  eventType: string;
+  eventStatus: string;
+  occurredAt: string;
+  summary: string;
+  createdAt: string;
+  recordedByName?: string | null;
+};
+
 export type FinanceCashMovement = {
   id: string;
   invoiceId?: string | null;

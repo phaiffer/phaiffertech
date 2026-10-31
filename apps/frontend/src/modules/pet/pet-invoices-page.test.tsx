@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { PetInvoicesPage } from '@/modules/pet/pet-invoices-page';
 
@@ -17,7 +17,8 @@ const { hasPermissionMock, hasAnyPermissionMock, petServiceMock, financeServiceM
   },
   financeServiceMock: {
     getInvoice: vi.fn(),
-    listCashMovements: vi.fn()
+    listCashMovements: vi.fn(),
+    listInvoiceEvents: vi.fn()
   }
 }));
 
@@ -185,6 +186,32 @@ describe('PetInvoicesPage', () => {
         updatedAt: '2026-03-18T12:00:00Z'
       }
     ]));
+    financeServiceMock.listInvoiceEvents.mockResolvedValue([
+      {
+        id: 'event-2',
+        invoiceId: 'finance-1',
+        financePaymentId: 'payment-1',
+        provider: 'MANUAL',
+        eventType: 'PAYMENT_CONFIRMED',
+        eventStatus: 'PROCESSED',
+        occurredAt: '2026-03-18T12:00:00Z',
+        summary: 'Invoice payment confirmed.',
+        createdAt: '2026-03-18T12:00:00Z',
+        recordedByName: 'Recepcao Demo'
+      },
+      {
+        id: 'event-1',
+        invoiceId: 'finance-1',
+        financePaymentId: null,
+        provider: 'MANUAL',
+        eventType: 'INVOICE_ISSUED',
+        eventStatus: 'RECORDED',
+        occurredAt: '2026-03-18T10:00:00Z',
+        summary: 'Invoice issued for collection.',
+        createdAt: '2026-03-18T10:00:00Z',
+        recordedByName: null
+      }
+    ]);
   });
 
   it('shows linked finance context and cash movement visibility for the reviewed invoice', async () => {
@@ -205,11 +232,18 @@ describe('PetInvoicesPage', () => {
     await waitFor(() => {
       expect(financeServiceMock.getInvoice).toHaveBeenCalledWith('finance-1');
       expect(financeServiceMock.listCashMovements).toHaveBeenCalledWith(0, 8, { invoiceId: 'finance-1' });
+      expect(financeServiceMock.listInvoiceEvents).toHaveBeenCalledWith('finance-1');
     });
 
     expect(screen.getByText('Visao financeira vinculada')).toBeInTheDocument();
     expect(screen.getByText('Documento financeiro vinculado')).toBeInTheDocument();
     expect(screen.getByText('Visibilidade dos movimentos')).toBeInTheDocument();
     expect(screen.getByText('Pagamento PIX recebido')).toBeInTheDocument();
+
+    const history = await screen.findByRole('list', { name: 'Historico da cobranca' });
+    expect(within(history).getByText('Pagamento confirmado')).toBeInTheDocument();
+    expect(within(history).getByText(/Registro manual por Recepcao Demo/)).toBeInTheDocument();
+    expect(within(history).getByText('Fatura emitida para cobranca')).toBeInTheDocument();
+    expect(within(history).getByText(/Registro manual pelo sistema/)).toBeInTheDocument();
   });
 });

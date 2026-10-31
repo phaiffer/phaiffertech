@@ -14,10 +14,15 @@ public record FinancePaymentEventResponse(
         String idempotencyKey,
         Instant occurredAt,
         String summary,
-        Instant createdAt
+        Instant createdAt,
+        String recordedByName
 ) {
 
     public static FinancePaymentEventResponse fromEntity(FinancePaymentEvent event) {
+        return fromEntity(event, null);
+    }
+
+    public static FinancePaymentEventResponse fromEntity(FinancePaymentEvent event, String recordedByName) {
         return new FinancePaymentEventResponse(
                 event.getId(),
                 event.getInvoiceId(),
@@ -28,7 +33,8 @@ public record FinancePaymentEventResponse(
                 event.getIdempotencyKey(),
                 event.getOccurredAt(),
                 event.getSummary(),
-                event.getCreatedAt()
+                event.getCreatedAt(),
+                recordedByName
         );
     }
 }
