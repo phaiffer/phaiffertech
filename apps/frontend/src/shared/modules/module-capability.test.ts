@@ -104,16 +104,16 @@ describe('module-capability', () => {
   });
 
   it('keeps Portuguese capability copy as the default without changing access state', () => {
-    expect(permissionCapability({ title: 'Permissao necessaria', description: 'Acesso restrito.' })).toMatchObject({
+    expect(permissionCapability({ title: 'Permissão necessária', description: 'Acesso restrito.' })).toMatchObject({
       kind: 'no-permission',
       interactive: false,
-      status: 'sem permissao',
-      actionLabel: 'Indisponivel para este perfil'
+      status: 'sem permissão',
+      actionLabel: 'Indisponível para este perfil'
     });
     expect(resolveModuleBoundaryCapability('CRM', null)).toMatchObject({
       kind: 'not-contracted',
       interactive: false,
-      title: 'CRM nao esta contratado neste ambiente'
+      title: 'CRM não está contratado neste ambiente'
     });
   });
 });

@@ -24,47 +24,47 @@ const ptBRMessages = {
   },
   moduleCapability: {
     openWorkspaceFlow: 'Abrir fluxo do ambiente',
-    unavailableInWorkspace: 'Indisponivel neste ambiente',
-    unavailableForRole: 'Indisponivel para este perfil',
-    unavailableGenericTitle: 'Indisponivel no ambiente atual',
-    openSetupFlow: 'Abrir fluxo de configuracao',
-    openNextStep: 'Abrir proximo passo',
+    unavailableInWorkspace: 'Indisponível neste ambiente',
+    unavailableForRole: 'Indisponível para este perfil',
+    unavailableGenericTitle: 'Indisponível no ambiente atual',
+    openSetupFlow: 'Abrir fluxo de configuração',
+    openNextStep: 'Abrir próximo passo',
     guidedWorkspaceStep: 'Etapa guiada do ambiente',
     featureDisabledAction: 'Recurso desativado neste ambiente',
     status: {
-      noPermission: 'sem permissao',
+      noPermission: 'sem permissão',
       featureDisabled: 'recurso desativado',
-      setupRequired: 'configuracao necessaria',
+      setupRequired: 'configuração necessária',
       noData: 'sem dados',
-      unavailable: 'indisponivel'
+      unavailable: 'indisponível'
     },
     badge: {
-      noPermission: 'Sem permissao',
+      noPermission: 'Sem permissão',
       featureDisabled: 'Recurso desativado',
-      setupRequired: 'Configuracao necessaria',
+      setupRequired: 'Configuração necessária',
       noData: 'Sem dados',
-      unavailable: 'Indisponivel'
+      unavailable: 'Indisponível'
     },
-    notContractedTitle: '{moduleCode} nao esta contratado neste ambiente',
-    notContractedDescription: 'Este ambiente nao expoe o modulo {moduleCode} no momento. Peca ao administrador para incluir o modulo no contrato do ambiente antes de tentar novamente.',
-    featureDisabledTitle: '{moduleCode} esta desativado no ambiente atual',
-    featureDisabledDescription: 'O modulo esta contratado, mas sua exposicao esta desativada neste ambiente. A navegacao continua bloqueada ate a feature ser reativada.',
-    unavailableTitle: '{moduleCode} esta indisponivel no ambiente atual',
-    unavailableDescription: 'O modulo esta contratado, mas o contexto atual ainda nao esta pronto para abri-lo. O acesso segue bloqueado ate a disponibilidade do ambiente ser restaurada.'
+    notContractedTitle: '{moduleCode} não está contratado neste ambiente',
+    notContractedDescription: 'Este ambiente não expõe o módulo {moduleCode} no momento. Peça ao administrador para incluir o módulo no contrato do ambiente antes de tentar novamente.',
+    featureDisabledTitle: '{moduleCode} está desativado no ambiente atual',
+    featureDisabledDescription: 'O módulo está contratado, mas sua exposição está desativada neste ambiente. A navegação continua bloqueada até a feature ser reativada.',
+    unavailableTitle: '{moduleCode} está indisponível no ambiente atual',
+    unavailableDescription: 'O módulo está contratado, mas o contexto atual ainda não está pronto para abri-lo. O acesso segue bloqueado até a disponibilidade do ambiente ser restaurada.'
   },
   moduleGuard: {
     checkingTitle: 'Verificando o acesso ao ambiente {moduleCode}',
-    checkingDescription: 'A aplicacao esta validando o contrato do ambiente e a exposicao atual do modulo antes de abrir este espaco.',
-    errorTitle: 'Nao foi possivel verificar a disponibilidade de {moduleCode}',
-    errorDescription: 'Este ambiente nao conseguiu confirmar o contrato do modulo. Tente novamente apos a sincronizacao do catalogo.',
-    unavailableTitle: '{moduleCode} esta indisponivel no ambiente atual',
-    unavailableDescription: 'O modulo nao pode ser aberto no contexto atual do ambiente.'
+    checkingDescription: 'A aplicação está validando o contrato do ambiente e a exposição atual do módulo antes de abrir este espaço.',
+    errorTitle: 'Não foi possível verificar a disponibilidade de {moduleCode}',
+    errorDescription: 'Este ambiente não conseguiu confirmar o contrato do módulo. Tente novamente após a sincronização do catálogo.',
+    unavailableTitle: '{moduleCode} está indisponível no ambiente atual',
+    unavailableDescription: 'O módulo não pode ser aberto no contexto atual do ambiente.'
   },
   publicShell: {
     brandEyebrow: 'PhaifferTech',
     brandTitle: 'Gestão para operações pet reais',
     brandSubtitle:
-      'Software para banho e tosa, recorrencia mensal e operacao de pet shop com base tecnica solida.',
+      'Software para banho e tosa, recorrência mensal e operação de pet shop com base técnica sólida.',
     localeLabel: 'Alternar idioma do site',
     navHome: 'Início',
     navPlatform: 'Plataforma',
@@ -73,13 +73,13 @@ const ptBRMessages = {
     navLogin: 'Acessar sistema',
     navLabel: 'Navegação',
     footerNarrativeText:
-      'PhaifferTech apresenta sua plataforma principal para agenda, planos mensais, estoque e cobranca de operacoes pet.',
+      'PhaifferTech apresenta sua plataforma principal para agenda, planos mensais, estoque e cobrança de operações pet.',
     footerProductsTitle: 'Produtos',
     footerAccessTitle: 'Acesso',
     footerPlatformLabel: 'Fundação da plataforma',
     footerDemoLabel: 'Solicitar demo',
     footerCopyright:
-      'PhaifferTech · Gestão para banho e tosa, pet shop e operacao recorrente, sustentado por fundacao SaaS multi-tenant.'
+      'PhaifferTech · Gestão para banho e tosa, pet shop e operação recorrente, sustentado por fundação SaaS multi-tenant.'
   },
   publicHome: {
     framework: 'Soluções',
@@ -117,15 +117,15 @@ const ptBRMessages = {
         'Use o código do workspace e suas credenciais para abrir a operação sem sair da linguagem visual do produto.',
       backLabel: 'Voltar ao site',
       contactLabel: 'Solicitar demo',
-      heroTitle: 'Operacao pet pronta para abrir o dia.',
+      heroTitle: 'Operação pet pronta para abrir o dia.',
       heroDescription:
-        'Agenda, planos, cobranca e follow-up continuam na mesma linguagem visual do produto, sem distracao e sem uma landing pesada no meio do acesso.',
+        'Agenda, planos, cobrança e follow-up continuam na mesma linguagem visual do produto, sem distração e sem uma landing pesada no meio do acesso.',
       laneQueueTitle: 'Fila',
-      laneQueueDescription: 'Atendimentos e pets prontos com profissional responsavel.',
+      laneQueueDescription: 'Atendimentos e pets prontos com profissional responsável.',
       lanePlansTitle: 'Planos',
-      lanePlansDescription: 'Recorrencia mensal, penultimo banho e renovacao no radar.',
-      laneBillingTitle: 'Cobranca',
-      laneBillingDescription: 'Extras, estoque e comissao sem sair do fluxo comercial.',
+      lanePlansDescription: 'Recorrência mensal, penúltimo banho e renovação no radar.',
+      laneBillingTitle: 'Cobrança',
+      laneBillingDescription: 'Extras, estoque e comissão sem sair do fluxo comercial.',
       accessCardTitle: 'Acesso ao sistema',
       accessCardDescription:
         'O login mantém o foco no acesso enquanto preserva a atmosfera premium do produto e da demo.'
@@ -171,7 +171,7 @@ const ptBRMessages = {
     clients: 'Clientes',
     pets: 'Pets',
     appointments: 'Atendimentos',
-    services: 'Catalogo Banho e Tosa',
+    services: 'Catálogo Banho e Tosa',
     followUp: 'Follow-up',
     commercial: 'Comercial',
     clinic: 'Clínica',
@@ -179,7 +179,7 @@ const ptBRMessages = {
     finance: 'Financeiro',
     plans: 'Planos',
     inventory: 'Estoque',
-    invoices: 'Cobranca',
+    invoices: 'Cobrança',
     professionals: 'Equipe',
     commissions: 'Fechamento'
   },
@@ -192,161 +192,161 @@ const ptBRMessages = {
     petDashboardEyebrow: 'Dashboard Operacional',
     petDashboardTitle: 'Dashboard operacional',
     petDashboardDescription:
-      'Acompanhe fila do dia, pets prontos, recorrencia, estoque baixo, cobranca do proximo ciclo e comissao em uma unica leitura operacional.'
+      'Acompanhe fila do dia, pets prontos, recorrência, estoque baixo, cobrança do próximo ciclo e comissão em uma única leitura operacional.'
   },
   petDashboard: {
     noPermission: 'Você não possui permissão para visualizar o dashboard operacional.',
     actions: {
       appointments: 'Agenda operacional',
-      billing: 'Cobranca e proximo ciclo'
+      billing: 'Cobrança e próximo ciclo'
     },
     loading: 'Carregando o panorama operacional...',
     errors: {
-      appointments: 'Nao foi possivel carregar os atendimentos do dia.',
-      plans: 'Nao foi possivel carregar os planos do workspace.',
-      inventory: 'Nao foi possivel carregar o estoque do workspace.',
-      billing: 'Nao foi possivel carregar a cobranca do workspace.'
+      appointments: 'Não foi possível carregar os atendimentos do dia.',
+      plans: 'Não foi possível carregar os planos do workspace.',
+      inventory: 'Não foi possível carregar o estoque do workspace.',
+      billing: 'Não foi possível carregar a cobrança do workspace.'
     },
     stats: {
       appointmentsDay: 'Atendimentos do dia',
       appointmentsDayDetail: 'em andamento e {ready} pets prontos para liberar.',
       recurringVsOneTime: 'Recorrentes vs avulsos',
-      recurringVsOneTimeDetail: 'Separacao visivel entre clientes de plano e atendimentos pontuais.',
+      recurringVsOneTimeDetail: 'Separação visível entre clientes de plano e atendimentos pontuais.',
       pickupMessage: 'Mensagem de retirada',
       pickupMessageMissing: 'pets prontos ainda sem email do cliente para a mensagem de retirada.',
-      pickupMessageReady: 'Todos os pets prontos desta lista ja tem mensagem de retirada pronta para envio.',
+      pickupMessageReady: 'Todos os pets prontos desta lista já têm mensagem de retirada pronta para envio.',
       expiringPlans: 'Planos vencendo',
-      expiringPlansDetail: 'planos expiram nas proximas duas semanas.',
+      expiringPlansDetail: 'planos expiram nas próximas duas semanas.',
       petTaxi: 'Pet taxi',
-      petTaxiEmpty: 'Nenhum extra de pet taxi visivel na agenda de hoje.',
+      petTaxiEmpty: 'Nenhum extra de pet taxi visível na agenda de hoje.',
       lowStock: 'Estoque baixo',
-      lowStockDetail: 'Itens abaixo do ponto de reposicao antes de comprometer a operacao.',
-      nextCycle: 'Proximo ciclo',
-      nextCycleDetail: 'atendimentos do proximo ciclo ja estao conectados a planos recorrentes.',
-      commission: 'Comissao / producao',
-      commissionDetail: 'atendimentos concluidos ja geraram comissao neste mes.'
+      lowStockDetail: 'Itens abaixo do ponto de reposição antes de comprometer a operação.',
+      nextCycle: 'Próximo ciclo',
+      nextCycleDetail: 'atendimentos do próximo ciclo já estão conectados a planos recorrentes.',
+      commission: 'Comissão / produção',
+      commissionDetail: 'atendimentos concluídos já geraram comissão neste mês.'
     },
     queue: {
       title: 'Fila operacional de hoje',
       description:
-        'Use esta fila para contar a historia do dia: cliente recorrente ou avulso, profissional responsavel, pet taxi, plano ativo e valor previsto.',
+        'Use esta fila para contar a história do dia: cliente recorrente ou avulso, profissional responsável, pet taxi, plano ativo e valor previsto.',
       empty:
-        'Nenhum atendimento esta agendado para hoje neste workspace. Para a demo, vale montar pelo menos um recorrente, um avulso e um caso com pet taxi.',
-      pendingProfessional: 'Responsavel pendente',
-      missingProfessional: 'Profissional nao informado',
+        'Nenhum atendimento está agendado para hoje neste workspace. Para a demo, vale montar pelo menos um recorrente, um avulso e um caso com pet taxi.',
+      pendingProfessional: 'Responsável pendente',
+      missingProfessional: 'Profissional não informado',
       extrasLabel: 'Extras',
-      commissionLabel: 'Comissao'
+      commissionLabel: 'Comissão'
     },
     billing: {
-      title: 'Renovacao e cobranca',
-      description: 'Planos perto do fim, cobrancas em aberto e o valor projetado para o proximo ciclo.',
-      nextCycleLabel: 'Proximo ciclo',
-      nextCycleDetail: 'atendimentos ja entram como recorrentes no proximo ciclo.',
-      remainingSessions: 'sessoes restantes',
+      title: 'Renovação e cobrança',
+      description: 'Planos perto do fim, cobranças em aberto e o valor projetado para o próximo ciclo.',
+      nextCycleLabel: 'Próximo ciclo',
+      nextCycleDetail: 'atendimentos já entram como recorrentes no próximo ciclo.',
+      remainingSessions: 'sessões restantes',
       expiresAt: 'expira em',
       dueAt: 'Vence em',
       balance: 'saldo',
-      noAlerts: 'Sem alertas de plano ou cobranca neste momento.'
+      noAlerts: 'Sem alertas de plano ou cobrança neste momento.'
     },
     closing: {
       title: 'Fechamento operacional',
-      description: 'Leitura compacta para a demo comercial: o que concluiu, o que gera comissao, o que precisa renovar e o que segue em aberto.',
+      description: 'Leitura compacta para a demo comercial: o que concluiu, o que gera comissão, o que precisa renovar e o que segue em aberto.',
       badge: 'Fechamento banho e tosa',
-      completed: 'Atendimentos concluidos',
-      completedDetail: 'Banhos e tosas finalizados no mes atual.',
-      commission: 'Comissao para conferir',
-      commissionDetail: 'Valor projetado a partir dos atendimentos concluidos.',
+      completed: 'Atendimentos concluídos',
+      completedDetail: 'Banhos e tosas finalizados no mês atual.',
+      commission: 'Comissão para conferir',
+      commissionDetail: 'Valor projetado a partir dos atendimentos concluídos.',
       plansNearEnd: 'Planos perto do fim',
-      plansNearEndDetail: 'Clientes com uma ou duas sessoes restantes para acao de renovacao.',
-      pendingCharges: 'Cobrancas pendentes',
-      pendingChargesDetail: 'Saldo de faturas em aberto que ainda precisa de follow-up da recepcao.'
+      plansNearEndDetail: 'Clientes com uma ou duas sessões restantes para ação de renovação.',
+      pendingCharges: 'Cobranças pendentes',
+      pendingChargesDetail: 'Saldo de faturas em aberto que ainda precisa de follow-up da recepção.'
     },
     inventory: {
       title: 'Estoque abaixo do ponto',
-      description: 'Mantenha shampoo, loja e consumo operacional visiveis antes de perder venda ou atrasar atendimento.',
-      empty: 'Nenhum item esta abaixo do ponto de reposicao agora.',
+      description: 'Mantenha shampoo, loja e consumo operacional visíveis antes de perder venda ou atrasar atendimento.',
+      empty: 'Nenhum item está abaixo do ponto de reposição agora.',
       sku: 'SKU',
-      minimum: 'Minimo',
-      reorder: 'reposicao em'
+      minimum: 'Mínimo',
+      reorder: 'reposição em'
     },
     production: {
-      title: 'Producao por profissional',
-      description: 'Mostre a producao do mes junto com a comissao prevista para reforcar a historia operacional.',
-      empty: 'Ainda nao ha atendimentos concluidos suficientes para resumir a producao deste mes.',
-      completed: 'atendimentos concluidos neste mes'
+      title: 'Produção por profissional',
+      description: 'Mostre a produção do mês junto com a comissão prevista para reforçar a história operacional.',
+      empty: 'Ainda não há atendimentos concluídos suficientes para resumir a produção deste mês.',
+      completed: 'atendimentos concluídos neste mês'
     },
     pills: {
       recurring: 'Recorrente',
       oneTime: 'Avulso',
       activePlan: 'Plano ativo',
-      penultimateBath: 'Penultimo banho',
+      penultimateBath: 'Penúltimo banho',
       petTaxi: 'Pet taxi',
       pickupSent: 'Mensagem pronta',
       pickupPending: 'Mensagem pendente',
-      responsible: 'Responsavel',
-      commission: 'Comissao',
-      cycleCharge: 'Cobranca do ciclo',
+      responsible: 'Responsável',
+      commission: 'Comissão',
+      cycleCharge: 'Cobrança do ciclo',
       overdue: 'Em atraso',
-      belowMinimum: 'Abaixo do minimo'
+      belowMinimum: 'Abaixo do mínimo'
     }
   },
   petAppointments: {
     noPermission: 'Você não tem permissão para visualizar atendimentos.',
     title: 'Agenda de Banho e Tosa',
     description:
-      'Organize a fila de banho e tosa com recorrentes e avulsos, pacotes de servicos, pet taxi, profissional responsavel, consumo de estoque e follow-up de retirada.',
+      'Organize a fila de banho e tosa com recorrentes e avulsos, pacotes de serviços, pet taxi, profissional responsável, consumo de estoque e follow-up de retirada.',
     actions: {
       switchToList: 'Ver lista',
-      switchToCalendar: 'Ver calendario',
+      switchToCalendar: 'Ver calendário',
       book: 'Agendar atendimento'
     },
     filters: {
       title: 'Filtros',
-      description: 'Refine a agenda de banho e tosa por status, cliente, pacote de servicos e profissional.',
-      searchPlaceholder: 'Banho, tosa, status ou observacoes',
+      description: 'Refine a agenda de banho e tosa por status, cliente, pacote de serviços e profissional.',
+      searchPlaceholder: 'Banho, tosa, status ou observações',
       status: 'Status',
       client: 'Cliente',
       pet: 'Pet',
-      service: 'Pacote de servicos',
+      service: 'Pacote de serviços',
       professional: 'Profissional',
-      activeCountSuffix: 'filtro(s) moldando a visao da agenda.',
-      noActive: 'Nenhum filtro ativo na visao de atendimentos.'
+      activeCountSuffix: 'filtro(s) moldando a visão da agenda.',
+      noActive: 'Nenhum filtro ativo na visão de atendimentos.'
     },
     focus: {
       title: 'Foco operacional',
-      description: 'Mantenha a historia da demo clara antes de abrir a fila completa: recorrencia, pet taxi, penultimo banho, retirada e comissao.',
+      description: 'Mantenha a história da demo clara antes de abrir a fila completa: recorrência, pet taxi, penúltimo banho, retirada e comissão.',
       recurring: 'Recorrentes',
-      recurringDetail: 'Visitas ja vinculadas a um plano ativo.',
+      recurringDetail: 'Visitas já vinculadas a um plano ativo.',
       oneTime: 'Avulsos',
       oneTimeDetail: 'Checkouts fora da base recorrente.',
       ready: 'Prontos',
       readyDetailSuffix: 'com cobertura de mensagem de retirada.',
       planAlerts: 'Alertas de plano',
-      planAlertsDetail: 'Penultimo banho ou sessoes finais visiveis neste recorte.',
+      planAlertsDetail: 'Penúltimo banho ou sessões finais visíveis neste recorte.',
       petTaxi: 'Pet taxi',
       petTaxiDetail: 'Atendimentos com extra de coleta ou entrega.',
-      commission: 'Comissao',
-      commissionDetail: 'Projetada sobre os atendimentos visiveis agora.',
+      commission: 'Comissão',
+      commissionDetail: 'Projetada sobre os atendimentos visíveis agora.',
       pickupRule:
-        'Atendimentos concluidos preparam a mensagem de retirada quando o cliente tem e-mail cadastrado. A recepcao revisa e envia, o que deixa a regra de "pet pronto / mensagem pronta" explicita na demo.'
+        'Atendimentos concluídos preparam a mensagem de retirada quando o cliente tem e-mail cadastrado. A recepção revisa e envia, o que deixa a regra de "pet pronto / mensagem pronta" explicita na demo.'
     },
     table: {
       loadingTitle: 'Carregando atendimentos',
       loadingDescription: 'Preparando a agenda com contexto de cliente, pet e profissional.',
       emptyTitle: 'Nenhum atendimento ainda',
       emptyDescription:
-        'Cadastre um recorrente, um avulso, um profissional responsavel e um extra opcional de pet taxi para deixar a fila comercialmente convincente.',
+        'Cadastre um recorrente, um avulso, um profissional responsável e um extra opcional de pet taxi para deixar a fila comercialmente convincente.',
       firstAppointment: 'Agendar primeiro atendimento'
     },
     drawer: {
       createTitle: 'Agendar atendimento',
       editTitle: 'Editar atendimento',
       description:
-        'Selecione cliente e pet, monte o pacote de servicos, atribua o profissional responsavel e confirme pagamento avulso ou por plano com extras e execucao conectada ao estoque.'
+        'Selecione cliente e pet, monte o pacote de serviços, atribua o profissional responsável e confirme pagamento avulso ou por plano com extras e execução conectada ao estoque.'
     },
     dialog: {
       deleteTitle: 'Remover atendimento?',
-      deleteDescription: 'O atendimento de "{service}" sera removido.',
+      deleteDescription: 'O atendimento de "{service}" será removido.',
       confirmDelete: 'Remover'
     },
     formOptions: {
@@ -355,25 +355,25 @@ const ptBRMessages = {
       selectPet: 'Selecione um pet',
       selectService: 'Selecione banho ou tosa',
       selectProfessional: 'Selecione um profissional',
-      unassignedProfessional: 'Deixar sem atribuicao por enquanto',
+      unassignedProfessional: 'Deixar sem atribuição por enquanto',
       selectClientFirst: 'Selecione um cliente primeiro',
       loadingPlans: 'Carregando planos...',
       oneTime: 'Sem plano — pagamento avulso',
       noActivePlan: 'Nenhum plano ativo para este cliente',
-      sessionsLeftSuffix: 'sessoes restantes'
+      sessionsLeftSuffix: 'sessões restantes'
     },
     notices: {
       clients: 'Clientes',
       pets: 'Pets',
-      services: 'Servicos',
+      services: 'Serviços',
       professionals: 'Profissionais'
     },
     errors: {
-      load: 'Nao foi possivel carregar os atendimentos.',
-      missingReferences: 'Selecione cliente, pet, servico e profissional para agendar o atendimento.',
+      load: 'Não foi possível carregar os atendimentos.',
+      missingReferences: 'Selecione cliente, pet, serviço e profissional para agendar o atendimento.',
       missingDate: 'Informe a data e a hora do atendimento.',
-      save: 'Nao foi possivel salvar o atendimento.',
-      delete: 'Nao foi possivel excluir o atendimento.'
+      save: 'Não foi possível salvar o atendimento.',
+      delete: 'Não foi possível excluir o atendimento.'
     },
     success: {
       updated: 'Atendimento atualizado.',
@@ -383,70 +383,70 @@ const ptBRMessages = {
     calendar: {
       previous: 'Anterior',
       today: 'Hoje',
-      next: 'Proximo'
+      next: 'Próximo'
     },
     preparedPickup: {
       title: 'Pronto para retirada',
-      description: 'Mensagem de envio manual preparada para o canal que a recepcao ja usa.',
+      description: 'Mensagem de envio manual preparada para o canal que a recepção já usa.',
       label: 'Mensagem de retirada preparada',
       preparedPill: 'Mensagem preparada',
       preparing: 'Preparando...',
       reviewTitle: 'Revise antes de enviar',
-      reviewDescription: 'Use este texto como fallback manual quando o canal oficial de WhatsApp estiver indisponivel ou o envio falhar.',
+      reviewDescription: 'Use este texto como fallback manual quando o canal oficial de WhatsApp estiver indisponível ou o envio falhar.',
       success: 'Mensagem de retirada preparada e copiada para envio manual.',
-      needsReview: 'Mensagem de retirada preparada; confirme se o atendimento foi concluido antes de enviar.',
-      error: 'Nao foi possivel preparar a mensagem de retirada.',
+      needsReview: 'Mensagem de retirada preparada; confirme se o atendimento foi concluído antes de enviar.',
+      error: 'Não foi possível preparar a mensagem de retirada.',
       officialSend: 'Enviar WhatsApp',
       officialSending: 'Enviando...',
       officialSent: 'WhatsApp enviado',
       officialSuccess: 'Envio oficial por WhatsApp realizado. Dispatch: {id}.',
-      officialFailure: 'Nao foi possivel enviar o WhatsApp oficial. Use o fallback manual preparado.'
+      officialFailure: 'Não foi possível enviar o WhatsApp oficial. Use o fallback manual preparado.'
     },
     appointmentInvoice: {
-      generate: 'Gerar cobranca',
+      generate: 'Gerar cobrança',
       generating: 'Gerando...',
-      open: 'Abrir cobranca',
-      success: 'Cobranca de {amount} gerada para {client}. Registre o pagamento em Cobranca.',
-      error: 'Nao foi possivel gerar a cobranca deste atendimento.'
+      open: 'Abrir cobrança',
+      success: 'Cobrança de {amount} gerada para {client}. Registre o pagamento em Cobrança.',
+      error: 'Não foi possível gerar a cobrança deste atendimento.'
     },
     statuses: {
       all: 'Todos os status',
       scheduled: 'Agendado',
       confirmed: 'Confirmado',
       inProgress: 'Em andamento',
-      completed: 'Concluido',
+      completed: 'Concluído',
       canceled: 'Cancelado',
-      noShow: 'Nao compareceu'
+      noShow: 'Não compareceu'
     },
     form: {
       bookingTitle: 'Agendamento de banho e tosa',
-      bookingDescription: 'Cliente, pet, pacote de servicos, profissional responsavel e horario em uma etapa operacional.',
+      bookingDescription: 'Cliente, pet, pacote de serviços, profissional responsável e horário em uma etapa operacional.',
       packageTitle: 'Plano e checkout',
       packageDescription:
-        'Vincule um plano recorrente para cobrir o servico base ou deixe vazio para pagamento avulso. Adicione pet taxi, adicionais ou extras do dia.',
-      notes: 'Observacoes',
-      notesPlaceholder: 'Observacoes da visita, como pele sensivel ou primeiro atendimento',
+        'Vincule um plano recorrente para cobrir o serviço base ou deixe vazio para pagamento avulso. Adicione pet taxi, adicionais ou extras do dia.',
+      notes: 'Observações',
+      notesPlaceholder: 'Observações da visita, como pele sensível ou primeiro atendimento',
       dateTime: 'Data e hora',
-      defaultProfessionalHint: 'Usado como ancora de compatibilidade e como profissional padrao para novas linhas de servico.',
-      serviceLineProfessional: 'Profissional responsavel',
-      serviceLineProfessionalHint: 'Sobrescreva o profissional padrao nesta linha quando outra pessoa assumir a execucao.',
-      serviceLineProfessionalPending: 'Nenhum profissional atribuido a esta linha ainda.',
+      defaultProfessionalHint: 'Usado como âncora de compatibilidade e como profissional padrão para novas linhas de serviço.',
+      serviceLineProfessional: 'Profissional responsável',
+      serviceLineProfessionalHint: 'Sobrescreva o profissional padrão nesta linha quando outra pessoa assumir a execução.',
+      serviceLineProfessionalPending: 'Nenhum profissional atribuído a esta linha ainda.',
       packageLabel: 'Plano (opcional)',
-      packageServiceRequiredTitle: 'Selecione o servico base coberto pelo plano.',
+      packageServiceRequiredTitle: 'Selecione o serviço base coberto pelo plano.',
       packageServiceRequiredDescription:
-        'O plano nao substitui o servico do atendimento; ele cobre o checkout do servico elegivel.',
+        'O plano não substitui o serviço do atendimento; ele cobre o checkout do serviço elegível.',
       packageSelectedTitle: 'Plano selecionado',
-      packageRemainingSessions: '{count} sessoes restantes.',
-      packageSelectClient: 'Selecione um cliente primeiro para ver os planos disponiveis.',
-      packageUnavailable: 'Nenhum plano ativo para este cliente. O atendimento sera cobrado de forma avulsa.',
+      packageRemainingSessions: '{count} sessões restantes.',
+      packageSelectClient: 'Selecione um cliente primeiro para ver os planos disponíveis.',
+      packageUnavailable: 'Nenhum plano ativo para este cliente. O atendimento será cobrado de forma avulsa.',
       extrasAmount: 'Extras (R$)',
-      extrasDescription: 'Descricao dos extras',
+      extrasDescription: 'Descrição dos extras',
       extrasPlaceholder: 'Ex.: Pet taxi, corte de unhas, perfume',
-      packageCoverageIntro: '1 sessao sera consumida quando o atendimento for concluido.',
-      packageCoverageExtras: 'Extras de R$ {amount} serao cobrados separadamente.',
-      packageCoverageFull: 'O servico base ficara totalmente coberto pelo plano.',
+      packageCoverageIntro: '1 sessão será consumida quando o atendimento for concluído.',
+      packageCoverageExtras: 'Extras de R$ {amount} serão cobrados separadamente.',
+      packageCoverageFull: 'O serviço base ficará totalmente coberto pelo plano.',
       referencesRequired:
-        'Antes de agendar, cadastre pelo menos um cliente, um pet, um servico de banho e tosa e um profissional. Depois volte aqui.',
+        'Antes de agendar, cadastre pelo menos um cliente, um pet, um serviço de banho e tosa e um profissional. Depois volte aqui.',
       save: 'Salvando...',
       update: 'Atualizar atendimento',
       create: 'Agendar atendimento',
@@ -458,27 +458,27 @@ const ptBRMessages = {
       status: 'Status',
       plan: 'Plano',
       payment: 'Pagamento',
-      care: 'Clinico',
+      care: 'Clínico',
       client: 'Cliente',
       professional: 'Profissional',
-      actions: 'Acoes',
-      responsible: 'Responsavel',
+      actions: 'Ações',
+      responsible: 'Responsável',
       petTaxi: 'Pet taxi',
       petReady: 'Pet pronto para retirada.',
-      checkoutAfterSlot: 'Checkout e consumo de plano acompanham este horario.',
+      checkoutAfterSlot: 'Checkout e consumo de plano acompanham este horário.',
       pickupSent: 'Mensagem de retirada pronta para envio',
       pickupSkipped: 'Mensagem de retirada ignorada: cliente sem e-mail',
-      inProgressDetail: 'O profissional responsavel esta atuando neste atendimento.',
+      inProgressDetail: 'O profissional responsável está atuando neste atendimento.',
       oneTime: 'Avulso',
-      chargeCheckout: 'Cobre o servico completo e os extras no checkout.',
+      chargeCheckout: 'Cobre o serviço completo e os extras no checkout.',
       activePlan: 'Plano ativo',
-      linkedPlan: 'Este atendimento ja esta vinculado a um plano ativo.',
+      linkedPlan: 'Este atendimento já está vinculado a um plano ativo.',
       allUsed: 'Todas usadas',
       leftSuffix: 'restantes',
-      coveredByPlan: 'Servico base coberto pelo plano',
-      sessionUsed: 'Sessao consumida do plano',
-      renewalTriggered: 'Alerta de renovacao disparado',
-      serviceAmount: 'Servico',
+      coveredByPlan: 'Serviço base coberto pelo plano',
+      sessionUsed: 'Sessão consumida do plano',
+      renewalTriggered: 'Alerta de renovação disparado',
+      serviceAmount: 'Serviço',
       petTaxiAmount: 'Pet taxi',
       extras: 'Extras',
       totalDue: 'Total previsto',
@@ -488,13 +488,13 @@ const ptBRMessages = {
       prescriptions: 'rx',
       recurring: 'Recorrente',
       serviceLines: 'linhas estruturadas',
-      commissionLines: 'elegiveis para comissao',
+      commissionLines: 'elegíveis para comissão',
       lineAssignments: 'Responsabilidade por linha',
       pendingProfessional: 'Profissional pendente',
-      professionalDetail: 'Responsavel pelo atendimento e pelo resultado da comissao.',
-      commission: 'Comissao',
-      commissionExcluded: 'excluida pela regra do servico',
-      pendingSetup: 'configuracao pendente',
+      professionalDetail: 'Responsável pelo atendimento e pelo resultado da comissão.',
+      commission: 'Comissão',
+      commissionExcluded: 'excluída pela regra do serviço',
+      pendingSetup: 'configuração pendente',
       careNotes: 'Notas do atendimento',
       continueCare: 'Continuar atendimento'
     }
@@ -504,24 +504,24 @@ const ptBRMessages = {
     eyebrow: 'Gestão Pet · Banho e tosa',
     title: 'Planos mensais',
     description:
-      'Gerencie clientes recorrentes, visitas restantes, alertas de penultimo banho e uso dos planos ao longo dos atendimentos.',
+      'Gerencie clientes recorrentes, visitas restantes, alertas de penúltimo banho e uso dos planos ao longo dos atendimentos.',
     createPlan: 'Criar plano',
-    watchTitle: 'Radar de renovacao',
-    watchDescription: 'Mantenha a base recorrente visivel antes de o plano acabar ou o cliente perder o proximo ciclo.',
+    watchTitle: 'Radar de renovação',
+    watchDescription: 'Mantenha a base recorrente visível antes de o plano acabar ou o cliente perder o próximo ciclo.',
     activePlans: 'Planos ativos',
-    activePlansDetail: 'Clientes recorrentes ainda cobertos para os proximos atendimentos.',
+    activePlansDetail: 'Clientes recorrentes ainda cobertos para os próximos atendimentos.',
     renewSoon: 'Renovar em breve',
-    renewSoonDetail: 'Planos com duas ou menos sessoes restantes.',
-    penultimateBath: 'Penultimo banho',
-    penultimateBathDetail: 'Este e o principal momento de renovacao na demo.',
-    renewalEmailMissing: 'E-mail de renovacao faltando',
-    renewalEmailMissingDetail: 'Planos em penultimo banho sem e-mail cadastrado.',
-    exhaustedWarning: 'plano(s) esgotado(s) ja precisa(m) de nova venda ou renovacao antes do proximo banho.',
+    renewSoonDetail: 'Planos com duas ou menos sessões restantes.',
+    penultimateBath: 'Penúltimo banho',
+    penultimateBathDetail: 'Este é o principal momento de renovação na demo.',
+    renewalEmailMissing: 'E-mail de renovação faltando',
+    renewalEmailMissingDetail: 'Planos em penúltimo banho sem e-mail cadastrado.',
+    exhaustedWarning: 'plano(s) esgotado(s) já precisa(m) de nova venda ou renovação antes do próximo banho.',
     loadingTitle: 'Carregando planos de clientes',
-    loadingDescription: 'Buscando pacotes de sessoes deste workspace.',
+    loadingDescription: 'Buscando pacotes de sessões deste workspace.',
     emptyTitle: 'Nenhum plano de cliente ainda',
     emptyDescription:
-      'Crie um pacote recorrente depois da venda do plano. A melhor demo mostra um cliente ativo no penultimo banho com caminho claro de renovacao.',
+      'Crie um pacote recorrente depois da venda do plano. A melhor demo mostra um cliente ativo no penúltimo banho com caminho claro de renovação.',
     firstPlan: 'Criar primeiro plano',
     filters: {
       allClients: 'Todos os clientes',
@@ -530,74 +530,74 @@ const ptBRMessages = {
     },
     validation: {
       selectClient: 'Selecione um cliente para criar o plano.',
-      positiveSessions: 'O total de sessoes deve ser maior que zero.'
+      positiveSessions: 'O total de sessões deve ser maior que zero.'
     },
     feedback: {
-      saveError: 'Nao foi possivel salvar o plano.',
-      removeError: 'Nao foi possivel remover o plano.'
+      saveError: 'Não foi possível salvar o plano.',
+      removeError: 'Não foi possível remover o plano.'
     },
     messageSetup: {
-      title: 'Cobranca e mensagens preparadas',
-      description: 'Configure mensagens de renovacao e retirada para envio manual na operacao de banho e tosa. Isto nao conecta gateway de pagamento nem chatbot.',
+      title: 'Cobrança e mensagens preparadas',
+      description: 'Configure mensagens de renovação e retirada para envio manual na operação de banho e tosa. Isto não conecta gateway de pagamento nem chatbot.',
       pixKey: 'Chave PIX',
-      billingDisplayName: 'Nome de cobranca',
-      renewalTemplate: 'Modelo de lembrete de renovacao',
+      billingDisplayName: 'Nome de cobrança',
+      renewalTemplate: 'Modelo de lembrete de renovação',
       pickupTemplate: 'Modelo de pet pronto para retirada',
       saving: 'Salvando...',
       save: 'Salvar mensagens',
-      manualNotice: 'As mensagens geradas sao revisadas e enviadas manualmente nesta primeira etapa segura.',
-      pendingTitle: 'Cobranca de renovacao pendente',
-      pendingDescription: 'Fluxo manual assistido: copie a mensagem, revise os dados de cobranca e envie pelo canal combinado com o cliente.',
-      preparedRenewalLabel: 'Mensagem de renovacao preparada',
+      manualNotice: 'As mensagens geradas são revisadas e enviadas manualmente nesta primeira etapa segura.',
+      pendingTitle: 'Cobrança de renovação pendente',
+      pendingDescription: 'Fluxo manual assistido: copie a mensagem, revise os dados de cobrança e envie pelo canal combinado com o cliente.',
+      preparedRenewalLabel: 'Mensagem de renovação preparada',
       copyMessage: 'Copiar mensagem',
       copyPix: 'Copiar chave PIX',
-      messageCopied: 'Mensagem de renovacao copiada.',
+      messageCopied: 'Mensagem de renovação copiada.',
       pixCopied: 'Chave PIX copiada.',
-      settingsUpdated: 'Configuracao de mensagens preparadas atualizada.',
-      settingsError: 'Nao foi possivel salvar a configuracao de mensagens preparadas.',
-      renewalPrepared: 'Mensagem de renovacao preparada, cobrada e copiada para envio manual.',
-      renewalNeedsBilling: 'Mensagem de renovacao preparada com dados de cobranca pendentes; revise os campos do tenant antes de enviar.',
-      prepareError: 'Nao foi possivel preparar o lembrete de renovacao.',
+      settingsUpdated: 'Configuração de mensagens preparadas atualizada.',
+      settingsError: 'Não foi possível salvar a configuração de mensagens preparadas.',
+      renewalPrepared: 'Mensagem de renovação preparada, cobrada e copiada para envio manual.',
+      renewalNeedsBilling: 'Mensagem de renovação preparada com dados de cobrança pendentes; revise os campos do tenant antes de enviar.',
+      prepareError: 'Não foi possível preparar o lembrete de renovação.',
       prepareRenewal: 'Preparar lembrete PIX',
       preparingRenewal: 'Preparando...',
-      officialRenewalSend: 'Enviar renovacao WhatsApp',
+      officialRenewalSend: 'Enviar renovação WhatsApp',
       officialRenewalSending: 'Enviando...',
-      officialRenewalSent: 'Renovacao WhatsApp enviada',
-      officialRenewalSuccess: 'Envio oficial de renovacao por WhatsApp realizado. Dispatch: {id}.',
-      officialRenewalFailure: 'Nao foi possivel enviar a renovacao por WhatsApp oficial. Use o fallback manual preparado.'
+      officialRenewalSent: 'Renovação WhatsApp enviada',
+      officialRenewalSuccess: 'Envio oficial de renovação por WhatsApp realizado. Dispatch: {id}.',
+      officialRenewalFailure: 'Não foi possível enviar a renovação por WhatsApp oficial. Use o fallback manual preparado.'
     },
     columns: {
-      noRenewalEmail: 'Sem e-mail para a mensagem de renovacao',
+      noRenewalEmail: 'Sem e-mail para a mensagem de renovação',
       activeLinked: 'Plano ativo vinculado a visitas recorrentes.',
-      noSessionsLeft: 'Plano sem sessoes restantes.',
+      noSessionsLeft: 'Plano sem sessões restantes.',
       used: 'utilizadas',
-      penultimateAlert: 'Alerta de penultimo banho',
-      finalSession: 'Ultima sessao antes da renovacao',
-      renewBeforeNextVisit: 'Renove ou crie um novo plano antes da proxima visita.',
+      penultimateAlert: 'Alerta de penúltimo banho',
+      finalSession: 'Última sessão antes da renovação',
+      renewBeforeNextVisit: 'Renove ou crie um novo plano antes da próxima visita.',
       status: 'Status',
-      renewalSent: 'Mensagem de renovacao pronta para envio',
-      renewalNeedsEmail: 'Renovacao depende de e-mail do cliente',
-      lastVisitHint: 'O proximo atendimento concluido encerra o plano atual.',
+      renewalSent: 'Mensagem de renovação pronta para envio',
+      renewalNeedsEmail: 'Renovação depende de e-mail do cliente',
+      lastVisitHint: 'O próximo atendimento concluído encerra o plano atual.',
       activeCycleHint: 'Plano ativo e ainda cobre o ciclo recorrente.',
       renewalStates: {
         HEALTHY: 'Em dia',
-        PENULTIMATE_USE: 'Penultimo uso',
-        LAST_USE: 'Ultimo uso',
-        EXHAUSTED: 'Sessoes esgotadas'
+        PENULTIMATE_USE: 'Penúltimo uso',
+        LAST_USE: 'Último uso',
+        EXHAUSTED: 'Sessões esgotadas'
       },
-      expiryAlign: 'Alinhe esta data com o proximo ciclo de cobranca.',
-      sessionTrigger: 'O volume de sessoes segue como gatilho principal de renovacao.',
-      actions: 'Acoes',
+      expiryAlign: 'Alinhe esta data com o próximo ciclo de cobrança.',
+      sessionTrigger: 'O volume de sessões segue como gatilho principal de renovação.',
+      actions: 'Ações',
       planNamePlaceholder: 'ex: 10 banhos e tosa'
     },
     form: {
       editTitle: 'Editar plano',
       createTitle: 'Criar novo plano',
-      editDescription: 'Atualize nome, quantidade de sessoes ou data de vencimento.',
-      createDescription: 'Vincule um pacote recorrente a um cliente. Exemplo: "10 banho e tosa" valido por 6 meses.',
+      editDescription: 'Atualize nome, quantidade de sessões ou data de vencimento.',
+      createDescription: 'Vincule um pacote recorrente a um cliente. Exemplo: "10 banho e tosa" válido por 6 meses.',
       client: 'Cliente',
       planName: 'Nome do plano',
-      totalSessions: 'Total de sessoes',
+      totalSessions: 'Total de sessões',
       expiresOn: 'Vence em (opcional)',
       save: 'Salvando...',
       update: 'Atualizar plano',
@@ -606,111 +606,111 @@ const ptBRMessages = {
     },
     dialog: {
       title: 'Remover este plano?',
-      description: '"{name}" sera removido. Esta acao nao pode ser desfeita.',
+      description: '"{name}" será removido. Esta ação não pode ser desfeita.',
       confirm: 'Remover'
     }
   },
   petInventory: {
     noPermission: 'Você não tem permissão para visualizar o estoque.',
-    eyebrow: 'Operacao Pet',
-    title: 'Estoque e reposicao',
+    eyebrow: 'Operação Pet',
+    title: 'Estoque e reposição',
     description:
-      'Mantenha banho, tosa e varejo visiveis com alertas abaixo do minimo, contexto de reposicao e historico de movimentacao confiavel.',
+      'Mantenha banho, tosa e varejo visíveis com alertas abaixo do mínimo, contexto de reposição e histórico de movimentação confiável.',
     openProducts: 'Abrir produtos',
     recordMovement: 'Registrar movimento',
-    watchTitle: 'Radar de saude do estoque',
+    watchTitle: 'Radar de saúde do estoque',
     watchDescription:
-      'Mantenha os riscos mais importantes de reposicao visiveis antes de virar atraso de atendimento, perda de add-on ou compra emergencial.',
+      'Mantenha os riscos mais importantes de reposição visíveis antes de virar atraso de atendimento, perda de add-on ou compra emergencial.',
     movementTypes: {
       all: 'Todos os tipos',
       inbound: 'Entrada',
-      outbound: 'Saida'
+      outbound: 'Saída'
     },
     sourceTypes: {
       manual: 'Ajuste manual',
       retailSale: 'Venda no varejo',
       clinicalConsumption: 'Consumo de banho e tosa',
-      productSync: 'Sincronizacao de catalogo',
+      productSync: 'Sincronização de catálogo',
       maintenanceConsumption: 'Consumo interno',
-      stockReplacement: 'Reposicao de estoque',
-      catalogSync: 'Sincronizacao de catalogo',
-      unknown: 'Origem nao identificada'
+      stockReplacement: 'Reposição de estoque',
+      catalogSync: 'Sincronização de catálogo',
+      unknown: 'Origem não identificada'
     },
     health: {
-      belowMinimum: 'Abaixo do minimo',
+      belowMinimum: 'Abaixo do mínimo',
       reorderNow: 'Repor agora',
-      healthy: 'Estoque saudavel',
-      belowMinimumDetail: 'Abaixo do minimo de {value} {unit}.',
-      reorderNowDetail: 'No ponto de reposicao de {value} {unit} ou abaixo dele.',
-      healthyDetail: 'O estoque esta acima do limite de reposicao.'
+      healthy: 'Estoque saudável',
+      belowMinimumDetail: 'Abaixo do mínimo de {value} {unit}.',
+      reorderNowDetail: 'No ponto de reposição de {value} {unit} ou abaixo dele.',
+      healthyDetail: 'O estoque está acima do limite de reposição.'
     },
     summary: {
       trackedLabel: 'Produtos monitorados',
-      trackedDetail: 'Catalogo visivel para consumo de banho e tosa, recepcao e apoio ao varejo.',
-      belowMinimumLabel: 'Abaixo do minimo',
-      belowMinimumDetail: 'Esses itens ja podem pressionar o proximo ciclo de banho e tosa ou a venda no balcao.',
-      belowMinimumSafe: 'Nenhum item esta abaixo da quantidade minima agora.',
-      reorderLabel: 'Reposicao imediata',
-      reorderDetail: 'Esses produtos estao no ponto de reposicao e nao devem esperar a proxima contagem.',
-      reorderSafe: 'Nenhum item esta no ponto de reposicao neste momento.',
-      outboundLabel: 'Saidas visiveis',
+      trackedDetail: 'Catálogo visível para consumo de banho e tosa, recepção e apoio ao varejo.',
+      belowMinimumLabel: 'Abaixo do mínimo',
+      belowMinimumDetail: 'Esses itens já podem pressionar o próximo ciclo de banho e tosa ou a venda no balcão.',
+      belowMinimumSafe: 'Nenhum item está abaixo da quantidade mínima agora.',
+      reorderLabel: 'Reposição imediata',
+      reorderDetail: 'Esses produtos estão no ponto de reposição e não devem esperar a próxima contagem.',
+      reorderSafe: 'Nenhum item está no ponto de reposição neste momento.',
+      outboundLabel: 'Saídas visíveis',
       filteredDetail: 'A contagem reflete o recorte operacional filtrado.',
-      visibleQuantityDetail: 'Quantidade movimentada nesta pagina: {value} unidade(s).'
+      visibleQuantityDetail: 'Quantidade movimentada nesta página: {value} unidade(s).'
     },
     lookup: {
       productsLabel: 'Produtos',
-      healthWarning: 'A leitura da saude do estoque depende do acesso ao catalogo de produtos.',
-      movementWarning: 'E necessario acessar o catalogo de produtos antes de registrar uma movimentacao com seguranca.'
+      healthWarning: 'A leitura da saúde do estoque depende do acesso ao catálogo de produtos.',
+      movementWarning: 'E necessário acessar o catálogo de produtos antes de registrar uma movimentação com segurança.'
     },
     validation: {
-      selectProduct: 'Selecione um produto e informe uma quantidade valida.'
+      selectProduct: 'Selecione um produto e informe uma quantidade válida.'
     },
     feedback: {
-      loadError: 'Nao foi possivel carregar as movimentacoes de estoque.',
-      saveError: 'Nao foi possivel salvar a movimentacao de estoque.',
-      deleteError: 'Nao foi possivel excluir a movimentacao selecionada.',
-      created: 'Movimentacao de estoque registrada com sucesso.',
-      updated: 'Movimentacao de estoque atualizada com sucesso.',
-      removed: 'Movimentacao de estoque removida com sucesso.',
-      healthy: 'Nenhum produto esta abaixo do ponto de reposicao agora. O catalogo compartilhado parece saudavel neste momento.',
-      criticalWarning: '{count} produto(s) ja cairam abaixo da quantidade minima e devem ser repostos antes do proximo dia forte.'
+      loadError: 'Não foi possível carregar as movimentações de estoque.',
+      saveError: 'Não foi possível salvar a movimentação de estoque.',
+      deleteError: 'Não foi possível excluir a movimentação selecionada.',
+      created: 'Movimentação de estoque registrada com sucesso.',
+      updated: 'Movimentação de estoque atualizada com sucesso.',
+      removed: 'Movimentação de estoque removida com sucesso.',
+      healthy: 'Nenhum produto está abaixo do ponto de reposição agora. O catálogo compartilhado parece saudável neste momento.',
+      criticalWarning: '{count} produto(s) já caíram abaixo da quantidade mínima e devem ser repostos antes do próximo dia forte.'
     },
     filters: {
       title: 'Filtros de estoque',
-      description: 'Recorte o historico por produto ou direcao sem perder o contexto operacional de cada ajuste.',
+      description: 'Recorte o histórico por produto ou direção sem perder o contexto operacional de cada ajuste.',
       searchLabel: 'Busca',
       searchPlaceholder: 'Motivo, nota, origem ou produto',
       productLabel: 'Produto',
-      directionLabel: 'Direcao',
+      directionLabel: 'Direção',
       apply: 'Aplicar filtros',
       clear: 'Limpar filtros',
       allProducts: 'Todos os produtos',
       selectProduct: 'Selecione um produto'
     },
     form: {
-      createTitle: 'Registrar movimentacao de estoque',
-      editTitle: 'Ajustar movimentacao de estoque',
-      description: 'Registre o motivo operacional de cada variacao para que estoque, recepcao e cobranca contem a mesma historia.',
+      createTitle: 'Registrar movimentação de estoque',
+      editTitle: 'Ajustar movimentação de estoque',
+      description: 'Registre o motivo operacional de cada variação para que estoque, recepção e cobrança contem a mesma história.',
       productLabel: 'Produto',
-      directionLabel: 'Direcao',
+      directionLabel: 'Direção',
       quantityLabel: 'Quantidade',
       noteLabel: 'Nota operacional',
       notePlaceholder: 'Shampoo usado no banho, venda no varejo, ajuste manual de contagem...',
       reminderTitle: 'Lembrete do operador',
-      reminderDescription: 'Deixe o motivo explicito para alinhar recepcao, execucao do banho, estoque e cobranca durante a demo.',
-      saving: 'Salvando movimentacao...',
-      update: 'Atualizar movimentacao',
-      create: 'Criar movimentacao',
-      cancel: 'Cancelar edicao'
+      reminderDescription: 'Deixe o motivo explicito para alinhar recepção, execução do banho, estoque e cobrança durante a demo.',
+      saving: 'Salvando movimentação...',
+      update: 'Atualizar movimentação',
+      create: 'Criar movimentação',
+      cancel: 'Cancelar edição'
     },
     ledger: {
-      title: 'Razao de estoque',
-      description: 'Revise o que mudou, por que mudou e qual foi o efeito no saldo visivel do produto.',
-      loadingTitle: 'Carregando operacoes de estoque',
-      loadingDescription: 'Preparando o historico mais recente de movimentacao deste workspace.',
-      emptyTitle: 'Nenhuma movimentacao registrada',
-      emptyDescription: 'Registre a primeira venda, consumo de banho e tosa, ajuste manual ou reposicao para tornar o estoque operacional na demo.',
-      firstMovement: 'Registrar primeira movimentacao'
+      title: 'Razão de estoque',
+      description: 'Revise o que mudou, por que mudou e qual foi o efeito no saldo visível do produto.',
+      loadingTitle: 'Carregando operações de estoque',
+      loadingDescription: 'Preparando o histórico mais recente de movimentação deste workspace.',
+      emptyTitle: 'Nenhuma movimentação registrada',
+      emptyDescription: 'Registre a primeira venda, consumo de banho e tosa, ajuste manual ou reposição para tornar o estoque operacional na demo.',
+      firstMovement: 'Registrar primeira movimentação'
     },
     columns: {
       recorded: 'Registrado em',
@@ -719,49 +719,49 @@ const ptBRMessages = {
       movement: 'Movimento',
       source: 'Origem',
       balanceImpact: 'Impacto no saldo',
-      actions: 'Acoes',
+      actions: 'Ações',
       stockLine: 'Estoque {quantity} {unit} · Repor em {reorder}',
       returnedLine: 'O estoque voltou para a prateleira ou foi reabastecido.',
       outboundLine: 'O estoque saiu da prateleira por venda, uso ou ajuste.',
       noOperationalNote: 'Nenhuma nota operacional registrada.',
-      reasonDetail: 'Mantenha o motivo explicito para que estoque, cobranca e operacao leiam a mesma historia.',
-      balanceChanged: 'O saldo visivel mudou {quantity} unidade(s).',
+      reasonDetail: 'Mantenha o motivo explicito para que estoque, cobrança e operação leiam a mesma história.',
+      balanceChanged: 'O saldo visível mudou {quantity} unidade(s).',
       unit: 'unidade',
       units: 'unidades'
     },
     dialog: {
-      title: 'Excluir movimentacao?',
-      description: 'O saldo do produto sera recalculado automaticamente depois que esta movimentacao for removida.'
+      title: 'Excluir movimentação?',
+      description: 'O saldo do produto será recalculado automaticamente depois que esta movimentação for removida.'
     }
   },
   petProfessionals: {
     noPermission: 'Você não tem permissão para visualizar a equipe.',
     eyebrow: 'Gestão Pet',
-    title: 'Profissionais e comissao',
+    title: 'Profissionais e comissão',
     description:
-      'Mantenha groomers e atendentes visiveis com responsabilidade operacional, regra de comissao e contexto de fechamento do mes.',
-    openSummary: 'Abrir resumo de comissao',
-    snapshotTitle: 'Panorama de comissao',
+      'Mantenha groomers e atendentes visíveis com responsabilidade operacional, regra de comissão e contexto de fechamento do mês.',
+    openSummary: 'Abrir resumo de comissão',
+    snapshotTitle: 'Panorama de comissão',
     snapshotDescription:
-      'Use este resumo para explicar quem esta configurado, quem ja gerou comissao e o que esta projetado para o mes.',
+      'Use este resumo para explicar quem está configurado, quem já gerou comissão e o que está projetado para o mês.',
     feedback: {
-      loadError: 'Nao foi possivel carregar os profissionais.',
-      saveError: 'Nao foi possivel salvar o profissional.',
-      deleteError: 'Nao foi possivel excluir o profissional.',
+      loadError: 'Não foi possível carregar os profissionais.',
+      saveError: 'Não foi possível salvar o profissional.',
+      deleteError: 'Não foi possível excluir o profissional.',
       created: 'Profissional adicionado.',
       updated: 'Profissional atualizado.',
       removed: 'Profissional removido.'
     },
     metrics: {
       professionals: 'Profissionais',
-      configured: 'Comissao configurada',
-      projected: 'Projetado no mes',
-      projectedDetail: 'Comissao dos atendimentos concluidos neste mes.',
+      configured: 'Comissão configurada',
+      projected: 'Projetado no mês',
+      projectedDetail: 'Comissão dos atendimentos concluídos neste mês.',
       needSetup: 'Pendente de setup',
       loading: 'Carregando...'
     },
     warnings: {
-      pendingSetup: '{count} profissional(is) ainda precisa(m) de regra de comissao antes da demo contar a historia completa de producao.'
+      pendingSetup: '{count} profissional(is) ainda precisa(m) de regra de comissão antes da demo contar a história completa de produção.'
     },
     search: {
       placeholder: 'Nome, especialidade, telefone ou e-mail',
@@ -771,18 +771,18 @@ const ptBRMessages = {
     columns: {
       professional: 'Profissional',
       contact: 'Contato',
-      commission: 'Comissao',
+      commission: 'Comissão',
       status: 'Status operacional',
-      actions: 'Acoes',
-      defaultSpecialty: 'Banho, tosa e suporte de recepcao',
+      actions: 'Ações',
+      defaultSpecialty: 'Banho, tosa e suporte de recepção',
       noEmail: 'Sem e-mail cadastrado',
       noPhone: 'Sem telefone cadastrado',
-      noCompletedServices: 'Nenhum atendimento concluido neste mes',
-      ruleVisible: 'Regra de comissao ja visivel para a demo.',
-      defineRate: 'Defina a taxa antes do proximo atendimento concluido.',
-      needsSetup: 'Precisa configurar comissao',
-      alreadyGenerating: 'Ja esta gerando comissao neste mes',
-      readyForNextVisit: 'Pronto para o proximo atendimento concluido'
+      noCompletedServices: 'Nenhum atendimento concluído neste mês',
+      ruleVisible: 'Regra de comissão já visível para a demo.',
+      defineRate: 'Defina a taxa antes do próximo atendimento concluído.',
+      needsSetup: 'Precisa configurar comissão',
+      alreadyGenerating: 'Já está gerando comissão neste mês',
+      readyForNextVisit: 'Pronto para o próximo atendimento concluído'
     },
     form: {
       name: 'Nome',
@@ -790,10 +790,10 @@ const ptBRMessages = {
       licenseNumber: 'Registro',
       phone: 'Telefone',
       email: 'E-mail',
-      commissionRate: 'Taxa de comissao (%)',
+      commissionRate: 'Taxa de comissão (%)',
       commissionRatePlaceholder: 'ex: 15',
-      reminderTitle: 'Lembrete de comissao',
-      reminderDescription: 'Use a taxa para mostrar quem executou o servico, quem responde pelo resultado e como a comissao aparece apos a conclusao.',
+      reminderTitle: 'Lembrete de comissão',
+      reminderDescription: 'Use a taxa para mostrar quem executou o serviço, quem responde pelo resultado e como a comissão aparece após a conclusão.',
       saving: 'Salvando...',
       update: 'Atualizar profissional',
       create: 'Adicionar profissional',
@@ -801,44 +801,44 @@ const ptBRMessages = {
     },
     table: {
       emptyTitle: 'Nenhum profissional encontrado',
-      emptyDescription: 'Cadastre o primeiro groomer ou atendente para mostrar responsavel e comissao projetada na agenda.',
+      emptyDescription: 'Cadastre o primeiro groomer ou atendente para mostrar responsável e comissão projetada na agenda.',
       addFirst: 'Adicionar primeiro profissional'
     },
     dialog: {
       title: 'Remover profissional?',
-      description: '"{name}" sera removido deste workspace.'
+      description: '"{name}" será removido deste workspace.'
     }
   },
   petFinance: {
-    eyebrow: 'Gestao Financeira',
+    eyebrow: 'Gestão Financeira',
     title: 'Caixa e Financeiro',
-    description: 'Acompanhe entradas, saidas, pagamentos e o fluxo de caixa do seu petshop.',
-    noPermission: 'Voce nao possui permissao para acessar o modulo financeiro.',
+    description: 'Acompanhe entradas, saídas, pagamentos e o fluxo de caixa do seu petshop.',
+    noPermission: 'Você não possui permissão para acessar o módulo financeiro.',
     loading: 'Carregando dados financeiros...',
     actions: {
-      newMovement: 'Nova movimentacao',
+      newMovement: 'Nova movimentação',
       newInvoice: 'Nova fatura',
-      viewReport: 'Ver relatorio',
+      viewReport: 'Ver relatório',
       exportData: 'Exportar'
     },
     stats: {
       todayBalance: 'Saldo do dia',
       todayIncome: 'Entradas hoje',
-      todayExpenses: 'Saidas hoje',
+      todayExpenses: 'Saídas hoje',
       pendingPayments: 'Pagamentos pendentes',
-      monthRevenue: 'Receita do mes',
+      monthRevenue: 'Receita do mês',
       openInvoices: 'Faturas em aberto'
     },
     cashMovements: {
-      title: 'Movimentacoes de caixa',
-      description: 'Historico de entradas e saidas do caixa.',
-      empty: 'Nenhuma movimentacao registrada hoje.',
-      emptyDescription: 'Registre a primeira entrada ou saida para iniciar o controle.',
+      title: 'Movimentações de caixa',
+      description: 'Histórico de entradas e saídas do caixa.',
+      empty: 'Nenhuma movimentação registrada hoje.',
+      emptyDescription: 'Registre a primeira entrada ou saída para iniciar o controle.',
       inbound: 'Entrada',
-      outbound: 'Saida',
+      outbound: 'Saída',
       categories: {
         sale: 'Venda',
-        service: 'Servico',
+        service: 'Serviço',
         refund: 'Reembolso',
         expense: 'Despesa',
         withdrawal: 'Retirada',
@@ -862,86 +862,86 @@ const ptBRMessages = {
     },
     payments: {
       title: 'Pagamentos recentes',
-      description: 'Ultimos pagamentos recebidos.',
+      description: 'Últimos pagamentos recebidos.',
       empty: 'Nenhum pagamento registrado.',
       methods: {
         cash: 'Dinheiro',
-        credit: 'Credito',
-        debit: 'Debito',
+        credit: 'Crédito',
+        debit: 'Débito',
         pix: 'PIX',
-        transfer: 'Transferencia',
+        transfer: 'Transferência',
         check: 'Cheque',
         other: 'Outros'
       }
     },
     form: {
-      direction: 'Direcao',
+      direction: 'Direção',
       category: 'Categoria',
       amount: 'Valor',
-      description: 'Descricao',
-      descriptionPlaceholder: 'Descreva a movimentacao...',
+      description: 'Descrição',
+      descriptionPlaceholder: 'Descreva a movimentação...',
       date: 'Data',
       save: 'Salvar',
       cancel: 'Cancelar'
     },
     filters: {
       title: 'Filtros',
-      period: 'Periodo',
-      direction: 'Direcao',
+      period: 'Período',
+      direction: 'Direção',
       category: 'Categoria',
       today: 'Hoje',
       thisWeek: 'Esta semana',
-      thisMonth: 'Este mes',
-      lastMonth: 'Mes passado',
-      allDirections: 'Todas as direcoes',
+      thisMonth: 'Este mês',
+      lastMonth: 'Mês passado',
+      allDirections: 'Todas as direções',
       allCategories: 'Todas as categorias'
     }
   },
   petTimeline: {
-    eyebrow: 'Historico Clinico',
+    eyebrow: 'Histórico Clínico',
     title: 'Timeline do Pet',
-    description: 'Historico completo de atendimentos, vacinas, prontuarios e prescricoes.',
-    noPermission: 'Voce nao possui permissao para visualizar o historico clinico.',
-    loading: 'Carregando historico clinico...',
-    petNotFound: 'Pet nao encontrado.',
+    description: 'Histórico completo de atendimentos, vacinas, prontuários e prescrições.',
+    noPermission: 'Você não possui permissão para visualizar o histórico clínico.',
+    loading: 'Carregando histórico clínico...',
+    petNotFound: 'Pet não encontrado.',
     backToPets: 'Voltar para pets',
     filters: {
       title: 'Filtros',
       allTypes: 'Todos os tipos',
-      period: 'Periodo',
-      allTime: 'Todo o periodo',
-      lastWeek: 'Ultima semana',
-      lastMonth: 'Ultimo mes',
-      last3Months: 'Ultimos 3 meses',
-      lastYear: 'Ultimo ano'
+      period: 'Período',
+      allTime: 'Todo o período',
+      lastWeek: 'Última semana',
+      lastMonth: 'Último mês',
+      last3Months: 'Últimos 3 meses',
+      lastYear: 'Último ano'
     },
     events: {
-      empty: 'Nenhum evento clinico registrado para este pet.',
-      emptyDescription: 'Registre prontuarios, vacinas ou prescricoes para construir o historico clinico.',
-      medicalRecord: 'Prontuario Medico',
-      vaccination: 'Vacinacao',
-      prescription: 'Prescricao',
+      empty: 'Nenhum evento clínico registrado para este pet.',
+      emptyDescription: 'Registre prontuários, vacinas ou prescrições para construir o histórico clínico.',
+      medicalRecord: 'Prontuário Médico',
+      vaccination: 'Vacinação',
+      prescription: 'Prescrição',
       appointment: 'Atendimento'
     },
     sections: {
-      summary: 'Resumo clinico',
-      vaccinations: 'Carteira de vacinacao',
-      prescriptions: 'Prescricoes recentes',
-      records: 'Prontuarios'
+      summary: 'Resumo clínico',
+      vaccinations: 'Carteira de vacinação',
+      prescriptions: 'Prescrições recentes',
+      records: 'Prontuários'
     },
     stats: {
       totalEvents: 'Total de eventos',
       vaccinations: 'Vacinas aplicadas',
-      records: 'Prontuarios',
-      prescriptions: 'Prescricoes',
-      lastVisit: 'Ultima visita'
+      records: 'Prontuários',
+      prescriptions: 'Prescrições',
+      lastVisit: 'Última visita'
     },
     actions: {
-      addRecord: 'Novo prontuario',
+      addRecord: 'Novo prontuário',
       addVaccine: 'Registrar vacina',
-      addPrescription: 'Nova prescricao',
+      addPrescription: 'Nova prescrição',
       viewDetails: 'Ver detalhes',
-      printHistory: 'Imprimir historico'
+      printHistory: 'Imprimir histórico'
     }
   },
   petPOS: {
@@ -1074,16 +1074,16 @@ const ptBRMessages = {
     }
   },
   petInvoices: {
-    noPermission: 'Você não tem permissão para visualizar as cobrancas.',
-    title: 'Cobranca e proximo ciclo',
+    noPermission: 'Você não tem permissão para visualizar as cobranças.',
+    title: 'Cobrança e próximo ciclo',
     description:
-      'Mostre como os servicos viram faturas, pagamentos e uma previsao clara do proximo ciclo mensal.',
-    filtersTitle: 'Filtros de cobranca',
+      'Mostre como os serviços viram faturas, pagamentos e uma previsão clara do próximo ciclo mensal.',
+    filtersTitle: 'Filtros de cobrança',
     filtersDescription:
-      'Refine a lista financeira por cliente ou ciclo sem perder a historia comercial por tras de cada documento.',
-    nextCycleTitle: 'Previsao de cobranca do proximo ciclo',
-    pipelineTitle: 'Pipeline de cobranca',
-    pipelineDescription: 'Revise status, saldo em aberto e o registro financeiro por tras de cada cobranca.'
+      'Refine a lista financeira por cliente ou ciclo sem perder a história comercial por trás de cada documento.',
+    nextCycleTitle: 'Previsão de cobrança do próximo ciclo',
+    pipelineTitle: 'Pipeline de cobrança',
+    pipelineDescription: 'Revise status, saldo em aberto e o registro financeiro por trás de cada cobrança.'
   },
   workspaceSettings: {
     eyebrow: 'Configurações',

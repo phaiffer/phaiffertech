@@ -126,7 +126,7 @@ describe('ModuleGuard', () => {
     );
 
     expect(screen.queryByText('CRM workspace')).not.toBeInTheDocument();
-    expect(screen.getByText('CRM nao esta contratado neste ambiente')).toBeInTheDocument();
-    expect(screen.getByText(/Peca ao administrador para incluir o modulo no contrato do ambiente/)).toBeInTheDocument();
+    expect(screen.getByText('CRM não está contratado neste ambiente')).toBeInTheDocument();
+    expect(screen.getByText(/Peça ao administrador para incluir o módulo no contrato do ambiente/)).toBeInTheDocument();
   });
 });
