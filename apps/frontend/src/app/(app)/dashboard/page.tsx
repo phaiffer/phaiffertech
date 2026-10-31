@@ -60,14 +60,14 @@ export default function DashboardPage() {
           return;
         }
 
-        setSummaryError(err instanceof ApiClientError ? err.message : 'Unable to load dashboard summary.');
+        setSummaryError(err instanceof ApiClientError ? err.message : copy.summaryLoadError);
         setSummaryLoading(false);
       });
 
     return () => {
       active = false;
     };
-  }, []);
+  }, [copy]);
 
   const variant = useMemo(() => resolveDashboardWorkspaceVariant(platform), [platform]);
   const experience = useMemo(() => buildDashboardExperienceCopy(platform), [platform]);

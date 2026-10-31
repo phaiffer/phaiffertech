@@ -73,9 +73,9 @@ function resolveSizeLabel(copy: PetProfilesCopy, size?: string | null): string |
   return buildSizeOptions(copy).find((option) => option.value === size)?.label ?? size;
 }
 
-function formatDate(value?: string) {
+function formatDate(copy: AppMessages['screens']['petProfiles'], value?: string) {
   if (!value) {
-    return 'Nao informado';
+    return copy.notProvided;
   }
 
   return new Intl.DateTimeFormat('pt-BR', { dateStyle: 'short' }).format(new Date(value));
@@ -151,12 +151,12 @@ export function PetProfilesPage({ initialView = 'list' }: PetProfilesPageProps) 
       });
       setPageData(result);
     } catch (err) {
-      const message = err instanceof ApiClientError ? err.message : 'Nao foi possivel carregar os pets.';
+      const message = err instanceof ApiClientError ? err.message : copy.loadErrorPets;
       setError(message);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [copy]);
 
   useEffect(() => {
     loadClients();
@@ -284,7 +284,7 @@ export function PetProfilesPage({ initialView = 'list' }: PetProfilesPageProps) 
       resetForm();
       await load(pageData.page, search, clientFilterId);
     } catch (err) {
-      const message = err instanceof ApiClientError ? err.message : 'Nao foi possivel salvar o pet.';
+      const message = err instanceof ApiClientError ? err.message : copy.saveErrorPet;
       setError(message);
     } finally {
       setSubmitting(false);
@@ -302,7 +302,7 @@ export function PetProfilesPage({ initialView = 'list' }: PetProfilesPageProps) 
       setSuccess(copy.petDeleted);
       await load(pageData.page, search, clientFilterId);
     } catch (err) {
-      const message = err instanceof ApiClientError ? err.message : 'Nao foi possivel remover o pet.';
+      const message = err instanceof ApiClientError ? err.message : copy.deleteErrorPet;
       setError(message);
     }
   }
@@ -332,21 +332,21 @@ export function PetProfilesPage({ initialView = 'list' }: PetProfilesPageProps) 
     },
     {
       key: 'client',
-      header: 'Cliente',
+      header: copy.client,
       render: (profile) => {
         const client = clients.find((entry) => entry.id === profile.clientId);
 
         return (
           <div>
             <p className="font-medium text-slate-900">{client?.name ?? client?.fullName ?? profile.clientId}</p>
-            <p className={`mt-1 ${sharedCompactTextClass}`}>{copy.birthLabel} {formatDate(profile.birthDate)}</p>
+            <p className={`mt-1 ${sharedCompactTextClass}`}>{copy.birthLabel} {formatDate(copy, profile.birthDate)}</p>
           </div>
         );
       }
     },
     {
       key: 'details',
-      header: 'Banho e tosa',
+      header: copy.columnGrooming,
       render: (profile) => (
         <div>
           <p className="font-medium text-slate-900">{profile.color ?? copy.colorMissing}</p>
@@ -361,7 +361,7 @@ export function PetProfilesPage({ initialView = 'list' }: PetProfilesPageProps) 
     },
     {
       key: 'actions',
-      header: 'Acoes',
+      header: copy.actions,
       render: (profile) => (
         <div className={sharedInlineActionsClass}>
           <PermissionGuard permission="pet.profile.update">
@@ -454,7 +454,7 @@ export function PetProfilesPage({ initialView = 'list' }: PetProfilesPageProps) 
                 </button>
                 <p className="text-sm text-slate-700">
                   {activeFilterCount > 0
-                    ? `${activeFilterCount} filtro(s) ativos na lista de pets.`
+                    ? copy.activeFiltersCountPets.replace('{count}', String(activeFilterCount))
                     : copy.noActiveFiltersPets}
                 </p>
               </div>
@@ -520,8 +520,8 @@ export function PetProfilesPage({ initialView = 'list' }: PetProfilesPageProps) 
                 rows={rows}
                 getRowKey={(row) => row.id}
                 loading={loading}
-                loadingTitle="Carregando pets"
-                loadingDescription="Preparando os pets vinculados aos clientes deste workspace."
+                loadingTitle={copy.loadingTitlePets}
+                loadingDescription={copy.loadingDescriptionPets}
                 emptyState={{
                   title: copy.emptyTitlePets,
                   description: copy.emptyDescriptionPets,
@@ -548,7 +548,7 @@ export function PetProfilesPage({ initialView = 'list' }: PetProfilesPageProps) 
         <ConfirmDialog
           open={Boolean(deleteCandidate)}
           title={copy.removePetConfirmTitle}
-          description={deleteCandidate ? `"${deleteCandidate.name}" sera removido deste workspace.` : undefined}
+          description={deleteCandidate ? copy.removePetConfirmDescription.replace('{name}', deleteCandidate.name) : undefined}
           confirmLabel={copy.remove}
           onCancel={() => setDeleteCandidate(null)}
           onConfirm={handleConfirmDelete}

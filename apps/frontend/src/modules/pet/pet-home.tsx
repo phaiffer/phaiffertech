@@ -80,21 +80,20 @@ type PetWorkspaceCopy = {
   moduleSurfaceDescription: string;
 };
 
-const localizedEnvironmentLabelMap: Record<string, string> = {
-  'tenant workspace': 'Ambiente do cliente',
-  'contracted saas workspace': 'Ambiente SaaS contratado'
-};
-
 function resolvePetWorkspaceMode(key: VisualProfileKey): PetWorkspaceMode {
   return key === 'pet-grooming' ? 'grooming' : 'clinic';
 }
 
-function localizePetEnvironmentLabel(label?: string | null, fallback = 'Ambiente ativo') {
+function localizePetEnvironmentLabel(copy: AppMessages['screens']['petHome'], label?: string | null, fallback = copy.environmentActive) {
   if (!label) {
     return fallback;
   }
 
-  return localizedEnvironmentLabelMap[label.trim().toLowerCase()] ?? label;
+  const labels: Record<string, string> = {
+    'tenant workspace': copy.environmentCustomer,
+    'contracted saas workspace': copy.environmentContracted
+  };
+  return labels[label.trim().toLowerCase()] ?? label;
 }
 
 function getPetWorkspaceActions(copy: AppMessages['screens']['petHome'], mode: PetWorkspaceMode): ModuleWorkspaceAction[] {
@@ -239,7 +238,7 @@ function getPetWorkspaceActions(copy: AppMessages['screens']['petHome'], mode: P
 }
 
 function resolvePetWorkspaceDescription(
-  scopeName: string,
+  copy: AppMessages['screens']['petHome'], scopeName: string,
   workspaceLabel: string,
   isPlatformOwnerTenant: boolean,
   hasSystemAdminRole: boolean,
@@ -247,21 +246,20 @@ function resolvePetWorkspaceDescription(
 ) {
   if (isPlatformOwnerTenant) {
     return mode === 'grooming'
-      ? 'Use este ambiente de Gestão Pet para revisar a superficie de servicos e operacao a partir do ambiente principal da plataforma.'
-      : 'Use este ambiente de Gestão Pet para revisar a superficie clinica e operacional a partir do ambiente principal da plataforma.';
+      ? copy.platformScopeGrooming
+      : copy.platformScopeClinic;
   }
 
   if (hasSystemAdminRole) {
-    return `Este ambiente de Gestão Pet esta limitado a ${scopeName} enquanto um perfil interno de suporte permanece ativo nesta sessao.`;
+    return copy.supportScopeDescription.replace('{scope}', scopeName);
   }
 
-  return mode === 'grooming'
-    ? `Agendamentos de servico, rotinas de cuidado e acompanhamento do cliente seguem limitados a ${scopeName} dentro do ${workspaceLabel.toLowerCase()} atual.`
-    : `Operacao clinica, atendimentos e acompanhamento do cliente seguem limitados a ${scopeName} dentro do ${workspaceLabel.toLowerCase()} atual.`;
+  const template = mode === 'grooming' ? copy.groomingScopeDescription : copy.clinicScopeDescription;
+  return template.replace('{scope}', scopeName).replace('{workspace}', workspaceLabel.toLowerCase());
 }
 
-function resolveOverviewValue(value?: number) {
-  return value === undefined ? 'Carregando...' : value.toString();
+function resolveOverviewValue(copy: AppMessages['screens']['petHome'], value?: number) {
+  return value === undefined ? copy.loadingShort : value.toString();
 }
 
 function isPetFirstUse(summary: PetDashboardSummary) {
@@ -295,67 +293,67 @@ function buildPetGuidanceSteps(actions: ModuleWorkspaceAction[], keys: string[])
     });
 }
 
-function getPetWorkspaceCopy(mode: PetWorkspaceMode): PetWorkspaceCopy {
+function getPetWorkspaceCopy(copy: AppMessages['screens']['petHome'], mode: PetWorkspaceMode): PetWorkspaceCopy {
   if (mode === 'grooming') {
     return {
-      heroEyebrow: 'Ambiente Banho & Tosa',
-      overviewAppointmentsLabel: 'Servicos hoje',
-      overviewAppointmentsDescription: 'Servicos agendados para o dia operacional atual.',
-      overviewUpcomingLabel: 'Proximos atendimentos',
-      overviewUpcomingDescription: 'Servicos de curto prazo ja posicionados na fila do ambiente.',
-      attentionLabel: 'Fila de atencao',
-      attentionDescription: 'Sinais de estoque e cobranca que ainda pedem acao neste ambiente.',
-      contextTitle: 'Resumo do negocio',
-      contextDescription: 'Veja a situacao atual da base de clientes, da agenda e da atencao operacional antes de entrar em cada area.',
-      snapshotTitle: 'Panorama vivo de servicos',
-      snapshotDescription: 'Leia o momento atual da operacao aqui e siga para cobranca e insights.',
-      restrictedTitle: 'Resumo de servicos restrito',
-      restrictedDescription: 'Este ambiente de Gestão Pet esta disponivel, mas o panorama de servicos exige `pet.dashboard.read`. Continue pelos fluxos liberados de clientes, agenda e cuidado abaixo.',
-      loadingTitle: 'Carregando resumo operacional',
-      loadingDescription: 'Coletando a visao mais recente de servicos e operacao para este ambiente.',
-      errorGuidanceTitle: 'Siga com a operacao',
-      errorGuidanceDescription: 'Use os fluxos abaixo enquanto o resumo se recupera.',
-      onboardingEyebrow: 'Configuracao Gestão Pet',
-      onboardingTitle: 'Configure o seu ambiente de Gestão Pet',
-      onboardingDescription: 'Comece com clientes e pets, depois adicione servicos e equipe, agende atendimentos e acompanhe a cobranca.',
-      emptyActivityTitle: 'Ainda nao ha atividade recente de servicos',
-      emptyActivityDescription: 'Os registros da Gestão Pet ja existem, mas ainda nao ha um bloco compacto de atividade para mostrar aqui.',
-      emptyGuidanceTitle: 'Continue com a Gestão Pet',
-      emptyGuidanceDescription: 'Use os fluxos abaixo enquanto a atividade cresce dentro do ambiente.',
-      emptySummaryTitle: 'Ainda nao ha panorama operacional',
-      emptySummaryDescription: 'A Gestão Pet ainda nao devolveu um panorama vivo da operacao deste ambiente.',
-      moduleSurfaceDescription: 'Agenda, cuidado, comercial e estoque seguem limitados ao contrato ativo do ambiente.'
+      heroEyebrow: copy.groomingWorkspaceTitle,
+      overviewAppointmentsLabel: copy.groomingTodayLabel,
+      overviewAppointmentsDescription: copy.groomingTodayDescription,
+      overviewUpcomingLabel: copy.groomingUpcomingLabel,
+      overviewUpcomingDescription: copy.groomingUpcomingDescription,
+      attentionLabel: copy.attentionLabel,
+      attentionDescription: copy.groomingAttentionDescription,
+      contextTitle: copy.businessSummaryTitle,
+      contextDescription: copy.businessSummaryDescription,
+      snapshotTitle: copy.groomingSnapshotTitle,
+      snapshotDescription: copy.snapshotDescription,
+      restrictedTitle: copy.groomingRestrictedTitle,
+      restrictedDescription: copy.groomingRestrictedDescription,
+      loadingTitle: copy.summaryLoadingTitle,
+      loadingDescription: copy.groomingSummaryLoadingDescription,
+      errorGuidanceTitle: copy.continueOperationsTitle,
+      errorGuidanceDescription: copy.continueOperationsDescription,
+      onboardingEyebrow: copy.onboardingEyebrow,
+      onboardingTitle: copy.onboardingTitle,
+      onboardingDescription: copy.onboardingDescription,
+      emptyActivityTitle: copy.groomingEmptyActivityTitle,
+      emptyActivityDescription: copy.groomingEmptyActivityDescription,
+      emptyGuidanceTitle: copy.continueWorkspaceTitle,
+      emptyGuidanceDescription: copy.continueWorkspaceDescription,
+      emptySummaryTitle: copy.emptySummaryTitle,
+      emptySummaryDescription: copy.emptySummaryDescription,
+      moduleSurfaceDescription: copy.groomingScopeNote
     };
   }
 
   return {
-    heroEyebrow: 'Ambiente Gestão Pet',
-    overviewAppointmentsLabel: 'Atendimentos hoje',
-    overviewAppointmentsDescription: 'Atendimentos previstos para o dia operacional atual.',
-    overviewUpcomingLabel: 'Proximas agendas',
-    overviewUpcomingDescription: 'Atendimentos de curto prazo ja posicionados na operacao do negocio pet.',
-    attentionLabel: 'Fila de atencao',
-    attentionDescription: 'Sinais comerciais e de estoque que ainda pedem acao neste ambiente.',
-    contextTitle: 'Resumo do negocio',
-    contextDescription: 'Veja a situacao atual da base de clientes, da agenda e da atencao operacional antes de entrar em cada area.',
-    snapshotTitle: 'Operacao ao vivo',
-    snapshotDescription: 'Leia o momento atual da operacao aqui e siga para cobranca e insights.',
-    restrictedTitle: 'Resumo operacional restrito',
-    restrictedDescription: 'Este ambiente de Gestão Pet esta disponivel, mas o panorama operacional exige `pet.dashboard.read`. Continue pelos fluxos liberados de clientes, atendimentos e cuidado abaixo.',
-    loadingTitle: 'Carregando resumo operacional',
-    loadingDescription: 'Coletando a visao mais recente da operacao e da frente comercial deste ambiente pet.',
-    errorGuidanceTitle: 'Siga com a operacao',
-    errorGuidanceDescription: 'Use os fluxos abaixo enquanto o resumo se recupera.',
-    onboardingEyebrow: 'Configuracao Gestão Pet',
-    onboardingTitle: 'Configure o seu ambiente de Gestão Pet',
-    onboardingDescription: 'Comece com clientes e pets, depois adicione servicos e equipe, agende atendimentos e acompanhe a cobranca.',
-    emptyActivityTitle: 'Ainda nao ha atividade operacional recente',
-    emptyActivityDescription: 'Os registros da Gestão Pet ja existem, mas ainda nao ha um bloco compacto de atividade ao vivo para mostrar aqui.',
-    emptyGuidanceTitle: 'Continue com a Gestão Pet',
-    emptyGuidanceDescription: 'Use os fluxos abaixo enquanto a atividade cresce dentro do ambiente.',
-    emptySummaryTitle: 'Ainda nao ha panorama operacional',
-    emptySummaryDescription: 'A Gestão Pet ainda nao devolveu um panorama vivo da operacao deste ambiente.',
-    moduleSurfaceDescription: 'Servicos, produtos, cuidado e cobranca seguem limitados ao contrato ativo do ambiente.'
+    heroEyebrow: copy.clinicWorkspaceTitle,
+    overviewAppointmentsLabel: copy.clinicTodayLabel,
+    overviewAppointmentsDescription: copy.clinicTodayDescription,
+    overviewUpcomingLabel: copy.clinicUpcomingLabel,
+    overviewUpcomingDescription: copy.clinicUpcomingDescription,
+    attentionLabel: copy.attentionLabel,
+    attentionDescription: copy.clinicAttentionDescription,
+    contextTitle: copy.businessSummaryTitle,
+    contextDescription: copy.businessSummaryDescription,
+    snapshotTitle: copy.clinicSnapshotTitle,
+    snapshotDescription: copy.snapshotDescription,
+    restrictedTitle: copy.clinicRestrictedTitle,
+    restrictedDescription: copy.clinicRestrictedDescription,
+    loadingTitle: copy.summaryLoadingTitle,
+    loadingDescription: copy.clinicSummaryLoadingDescription,
+    errorGuidanceTitle: copy.continueOperationsTitle,
+    errorGuidanceDescription: copy.continueOperationsDescription,
+    onboardingEyebrow: copy.onboardingEyebrow,
+    onboardingTitle: copy.onboardingTitle,
+    onboardingDescription: copy.onboardingDescription,
+    emptyActivityTitle: copy.clinicEmptyActivityTitle,
+    emptyActivityDescription: copy.clinicEmptyActivityDescription,
+    emptyGuidanceTitle: copy.continueWorkspaceTitle,
+    emptyGuidanceDescription: copy.continueWorkspaceDescription,
+    emptySummaryTitle: copy.emptySummaryTitle,
+    emptySummaryDescription: copy.emptySummaryDescription,
+    moduleSurfaceDescription: copy.clinicScopeNote
   };
 }
 
@@ -403,7 +401,7 @@ function resolvePetPrimaryAction(copy: AppMessages['screens']['petHome'], action
   if ((summary?.appointmentsToday ?? 0) > 0) {
     return {
       title: mode === 'grooming' ? copy.reviewTodayServices : copy.reviewTodayAppointments,
-      description: `${summary?.appointmentsToday ?? 0} item(ns) ja estao agendados para o dia operacional atual.`,
+      description: copy.appointmentsTodayCount.replace('{count}', String(summary?.appointmentsToday ?? 0)),
       href: resolvePetActionHref(actions, '/pet/appointments', fallbackAction.href)
     } satisfies PetPrimaryAction;
   }
@@ -411,7 +409,7 @@ function resolvePetPrimaryAction(copy: AppMessages['screens']['petHome'], action
   if ((summary?.pendingInvoices ?? 0) > 0) {
     return {
       title: copy.reviewPendingBilling,
-      description: `${summary?.pendingInvoices ?? 0} fatura(s) ainda pedem acompanhamento de cobranca na Gestão Pet.`,
+      description: copy.pendingInvoicesCount.replace('{count}', String(summary?.pendingInvoices ?? 0)),
       href: resolvePetActionHref(actions, '/pet/invoices', fallbackAction.href)
     } satisfies PetPrimaryAction;
   }
@@ -419,7 +417,7 @@ function resolvePetPrimaryAction(copy: AppMessages['screens']['petHome'], action
   if ((summary?.lowStockProducts ?? 0) > 0) {
     return {
       title: copy.checkLowStock,
-      description: `${summary?.lowStockProducts ?? 0} SKU(s) de produto estao se aproximando da pressao de estoque.`,
+      description: copy.lowStockCount.replace('{count}', String(summary?.lowStockProducts ?? 0)),
       href: resolvePetActionHref(actions, '/pet/products', fallbackAction.href)
     } satisfies PetPrimaryAction;
   }
@@ -433,48 +431,54 @@ function resolvePetPrimaryAction(copy: AppMessages['screens']['petHome'], action
   } satisfies PetPrimaryAction;
 }
 
-const petSummaryLabelMap: Record<string, string> = {
-  clients: 'Clientes',
-  pets: 'Pets',
-  appointments: 'Atendimentos',
-  'appointments-today': 'Atendimentos hoje',
-  invoices: 'Faturas',
-  'pending-invoices': 'Faturas pendentes',
-  'low-stock-products': 'Estoque baixo'
-};
+type PetHomeCopy = AppMessages['screens']['petHome'];
 
-const petSectionTitleMap: Record<string, string> = {
-  'clinical-feed': 'Fluxo clinico',
-  'service-feed': 'Fluxo de servicos'
-};
+function petSectionTitle(copy: PetHomeCopy, key: string): string | undefined {
+  const titles: Record<string, string> = {
+    'clinical-feed': copy.clinicFlow,
+    'service-feed': copy.groomingFlow
+  };
+  return titles[key];
+}
 
-const petSectionDescriptionMap: Record<string, string> = {
-  'clinical-feed': 'Movimentacao recente de pacientes',
-  'service-feed': 'Movimentacao recente de servicos'
-};
+function petSectionDescription(copy: PetHomeCopy, key: string): string | undefined {
+  const descriptions: Record<string, string> = {
+    'clinical-feed': copy.clinicRecentActivity,
+    'service-feed': copy.groomingRecentActivity
+  };
+  return descriptions[key];
+}
 
-const petStatusMap: Record<string, string> = {
-  active: 'ativo',
-  pending: 'pendente',
-  scheduled: 'agendada',
-  'no permission': 'sem permissao',
-  'setup required': 'configuracao necessaria',
-  'no data': 'sem dados'
-};
-
-function localizePetStatus(status?: string | null) {
+function localizePetStatus(copy: PetHomeCopy, status?: string | null) {
   if (!status) {
     return status;
   }
 
-  return petStatusMap[status.toLowerCase()] ?? status;
+  const statuses: Record<string, string> = {
+    active: copy.statusActive,
+    pending: copy.statusPending,
+    scheduled: copy.statusScheduled,
+    'no permission': copy.noPermission,
+    'setup required': copy.setupRequired,
+    'no data': copy.noData
+  };
+  return statuses[status.toLowerCase()] ?? status;
 }
 
-function localizePetSummaryCard<T extends { key: string; label: string; status?: string | null }>(card: T): T {
+function localizePetSummaryCard<T extends { key: string; label: string; status?: string | null }>(copy: PetHomeCopy, card: T): T {
+  const labels: Record<string, string> = {
+    clients: copy.summaryClients,
+    pets: 'Pets',
+    appointments: copy.summaryAppointments,
+    'appointments-today': copy.clinicTodayLabel,
+    invoices: copy.summaryInvoices,
+    'pending-invoices': copy.pendingInvoices,
+    'low-stock-products': copy.lowStock
+  };
   return {
     ...card,
-    label: petSummaryLabelMap[card.key] ?? card.label,
-    status: localizePetStatus(card.status)
+    label: labels[card.key] ?? card.label,
+    status: localizePetStatus(copy, card.status)
   };
 }
 
@@ -497,14 +501,14 @@ export function PetHome() {
     [platform]
   );
   const petMode = resolvePetWorkspaceMode(petVisual.visualProfile.key);
-  const petCopy = useMemo(() => getPetWorkspaceCopy(petMode), [petMode]);
+  const petCopy = useMemo(() => getPetWorkspaceCopy(copy, petMode), [petMode, copy]);
   const localizedWorkspaceLabel = useMemo(
-    () => localizePetEnvironmentLabel(platform.workspace.workspaceLabel),
-    [platform.workspace.workspaceLabel]
+    () => localizePetEnvironmentLabel(copy, platform.workspace.workspaceLabel),
+    [platform.workspace.workspaceLabel, copy]
   );
   const localizedAccessLabel = useMemo(
-    () => localizePetEnvironmentLabel(platform.workspace.accessLabel),
-    [platform.workspace.accessLabel]
+    () => localizePetEnvironmentLabel(copy, platform.workspace.accessLabel),
+    [platform.workspace.accessLabel, copy]
   );
   const petWorkspaceActions = useMemo(
     () => getPetWorkspaceActions(copy, petMode).filter((action) => (
@@ -529,7 +533,7 @@ export function PetHome() {
       const capability = allowed
         ? readyCapability(action.status, locale)
         : permissionCapability({
-            title: action.restrictionTitle ?? 'Permissao necessaria',
+            title: action.restrictionTitle ?? copy.permissionRequired,
             description: action.restrictionDescription ?? action.description
           }, locale);
 
@@ -625,8 +629,8 @@ export function PetHome() {
     return ['appointments-today', 'pets', 'pending-invoices', 'low-stock-products']
       .map((key) => findPetPulseCard(summary, key))
       .filter((card): card is NonNullable<ReturnType<typeof findPetPulseCard>> => Boolean(card))
-      .map((card) => localizePetSummaryCard(card));
-  }, [summary]);
+      .map((card) => localizePetSummaryCard(copy, card));
+  }, [summary, copy]);
 
   const localizedFeaturedSection = useMemo(() => {
     if (!featuredSection) {
@@ -635,16 +639,16 @@ export function PetHome() {
 
     return {
       ...featuredSection,
-      title: petSectionTitleMap[featuredSection.key] ?? featuredSection.title,
-      description: petSectionDescriptionMap[featuredSection.key] ?? featuredSection.description,
-      cards: featuredSection.cards.map((card) => localizePetSummaryCard(card)),
+      title: petSectionTitle(copy, featuredSection.key) ?? featuredSection.title,
+      description: petSectionDescription(copy, featuredSection.key) ?? featuredSection.description,
+      cards: featuredSection.cards.map((card) => localizePetSummaryCard(copy, card)),
       items: featuredSection.items.map((item) => ({
         ...item,
         sublabel: item.sublabel?.replace(/^Scheduled with /, 'Agendado com '),
-        status: localizePetStatus(item.status)
+        status: localizePetStatus(copy, item.status)
       }))
     };
-  }, [featuredSection]);
+  }, [featuredSection, copy]);
 
   useEffect(() => {
     let active = true;
@@ -698,7 +702,7 @@ export function PetHome() {
         eyebrow={petCopy.heroEyebrow}
         title={`${platform.branding.scopeName} · Gestão Pet`}
         description={resolvePetWorkspaceDescription(
-          platform.branding.scopeName,
+          copy, platform.branding.scopeName,
           localizedWorkspaceLabel,
           platform.workspace.isPlatformOwnerTenant,
           platform.workspace.hasSystemAdminRole,
@@ -744,7 +748,7 @@ export function PetHome() {
           },
           {
             label: petCopy.overviewAppointmentsLabel,
-            value: canReadDashboard ? resolveOverviewValue(summary?.appointmentsToday) : '--',
+            value: canReadDashboard ? resolveOverviewValue(copy, summary?.appointmentsToday) : '--',
             description: petCopy.overviewAppointmentsDescription,
             status: !canReadDashboard ? copy.noPermission : summary && firstUse ? copy.setupRequired : null,
             capability: !canReadDashboard
@@ -763,7 +767,7 @@ export function PetHome() {
           },
           {
             label: petCopy.overviewUpcomingLabel,
-            value: canReadDashboard ? resolveOverviewValue(summary?.upcomingAppointments) : '--',
+            value: canReadDashboard ? resolveOverviewValue(copy, summary?.upcomingAppointments) : '--',
             description: petCopy.overviewUpcomingDescription,
             status: !canReadDashboard ? copy.noPermission : summary && firstUse ? copy.setupRequired : null,
             capability: !canReadDashboard
@@ -784,7 +788,9 @@ export function PetHome() {
             label: petCopy.attentionLabel,
             value: canReadDashboard
               ? summary
-                ? `${summary.lowStockProducts} em baixa / ${summary.pendingInvoices} faturas`
+                ? copy.attentionValue
+                  .replace('{lowStock}', String(summary.lowStockProducts))
+                  .replace('{invoices}', String(summary.pendingInvoices))
                 : copy.loadingShort
               : '--',
             description: petCopy.attentionDescription,

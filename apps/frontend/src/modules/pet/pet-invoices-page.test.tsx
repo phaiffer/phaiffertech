@@ -221,13 +221,13 @@ describe('PetInvoicesPage', () => {
       expect(petServiceMock.listInvoices).toHaveBeenCalledTimes(1);
     });
 
-    expect(screen.getByText('Projecao do proximo ciclo')).toBeInTheDocument();
-    expect(screen.getByText('Banho e tosa 4x · 2 sessoes restantes')).toBeInTheDocument();
-    expect(screen.getByText('A mensagem de renovacao fica pronta para envio quando o plano chega a visita penultima.')).toBeInTheDocument();
-    expect(screen.getByText('Saldo em aberto')).toBeInTheDocument();
+    expect(screen.getByText('Next cycle projection')).toBeInTheDocument();
+    expect(screen.getByText('Banho e tosa 4x · 2 sessions left')).toBeInTheDocument();
+    expect(screen.getByText('The renewal message is ready to send when the plan reaches its second-to-last visit.')).toBeInTheDocument();
+    expect(screen.getByText('Open balance')).toBeInTheDocument();
     expect(screen.getAllByText('Ana Costa').length).toBeGreaterThan(0);
 
-    fireEvent.click(screen.getByRole('button', { name: 'Ver registro financeiro' }));
+    fireEvent.click(screen.getByRole('button', { name: 'View financial record' }));
 
     await waitFor(() => {
       expect(financeServiceMock.getInvoice).toHaveBeenCalledWith('finance-1');
@@ -235,15 +235,15 @@ describe('PetInvoicesPage', () => {
       expect(financeServiceMock.listInvoiceEvents).toHaveBeenCalledWith('finance-1');
     });
 
-    expect(screen.getByText('Visao financeira vinculada')).toBeInTheDocument();
-    expect(screen.getByText('Documento financeiro vinculado')).toBeInTheDocument();
-    expect(screen.getByText('Visibilidade dos movimentos')).toBeInTheDocument();
+    expect(screen.getByText('Linked financial view')).toBeInTheDocument();
+    expect(screen.getByText('Linked financial document')).toBeInTheDocument();
+    expect(screen.getByText('Cash movements')).toBeInTheDocument();
     expect(screen.getByText('Pagamento PIX recebido')).toBeInTheDocument();
 
-    const history = await screen.findByRole('list', { name: 'Historico da cobranca' });
-    expect(within(history).getByText('Pagamento confirmado')).toBeInTheDocument();
-    expect(within(history).getByText(/Registro manual por Recepcao Demo/)).toBeInTheDocument();
-    expect(within(history).getByText('Fatura emitida para cobranca')).toBeInTheDocument();
-    expect(within(history).getByText(/Registro manual pelo sistema/)).toBeInTheDocument();
+    const history = await screen.findByRole('list', { name: 'Billing history' });
+    expect(within(history).getByText('Payment confirmed')).toBeInTheDocument();
+    expect(within(history).getByText(/Manual entry by Recepcao Demo/)).toBeInTheDocument();
+    expect(within(history).getByText('Invoice issued for billing')).toBeInTheDocument();
+    expect(within(history).getByText(/Manual entry by the system/)).toBeInTheDocument();
   });
 });

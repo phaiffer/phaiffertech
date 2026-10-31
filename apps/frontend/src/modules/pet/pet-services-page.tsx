@@ -30,7 +30,8 @@ import {
   resolveAllowedPetServiceCategories,
   resolvePetServiceBookingMode
 } from '@/modules/pet/pet-service-catalog-policy';
-import { useAppMessages } from '@/shared/i18n/app-i18n-provider';
+import { useAppI18n, useAppMessages } from '@/shared/i18n/app-i18n-provider';
+import type { AppMessages } from '@/shared/i18n/messages/pt-br';
 
 const pageSize = 10;
 
@@ -58,10 +59,10 @@ function formatExpectedQuantity(quantity: number) {
   return Number.isInteger(quantity) ? String(quantity) : quantity.toFixed(2).replace(/\.?0+$/, '');
 }
 
-function formatInventoryLinkSummary(service: Pick<PetServiceCatalog, 'inventoryLinks'>) {
+function formatInventoryLinkSummary(copy: AppMessages['screens']['petServices'], service: Pick<PetServiceCatalog, 'inventoryLinks'>) {
   const activeLinks = service.inventoryLinks.filter((link) => link.active);
   if (activeLinks.length === 0) {
-    return 'Sem insumo planejado';
+    return copy.noPlannedSupply;
   }
 
   const preview = activeLinks
@@ -70,7 +71,7 @@ function formatInventoryLinkSummary(service: Pick<PetServiceCatalog, 'inventoryL
     .join(' • ');
 
   return activeLinks.length > 2
-    ? `${preview} • +${activeLinks.length - 2} adicionais`
+    ? copy.moreSupplies.replace('{preview}', preview).replace('{count}', String(activeLinks.length - 2))
     : preview;
 }
 
@@ -101,21 +102,22 @@ function ServiceFlagToggle({
   );
 }
 
-function buildServiceAvailabilityLabel(service: Pick<PetServiceCatalog, 'allowInPlans' | 'allowStandaloneBooking'>) {
+function buildServiceAvailabilityLabel(copy: AppMessages['screens']['petServices'], service: Pick<PetServiceCatalog, 'allowInPlans' | 'allowStandaloneBooking'>) {
   switch (resolvePetServiceBookingMode(service)) {
     case 'PLAN_ONLY':
-      return 'Somente sessoes de plano';
+      return copy.planSessionsOnly;
     case 'STANDALONE_ONLY':
-      return 'Somente atendimento avulso';
+      return copy.standaloneOnly;
     case 'UNAVAILABLE':
-      return 'Indisponivel para novos atendimentos';
+      return copy.unavailableForBooking;
     default:
-      return 'Avulso e plano habilitados';
+      return copy.standaloneAndPlan;
   }
 }
 
 export function PetServicesPage() {
   const copy = useAppMessages().screens.petServices;
+  const { locale } = useAppI18n();
   const platform = useFrontendPlatform();
   const allowedCategories = useMemo(
     () => resolveAllowedPetServiceCategories(platform.user),
@@ -182,9 +184,9 @@ export function PetServicesPage() {
       setProductsLookupError(null);
     } catch (err) {
       setProducts([]);
-      setProductsLookupError(err instanceof ApiClientError ? err.message : 'Unable to load products for inventory linking.');
+      setProductsLookupError(err instanceof ApiClientError ? err.message : copy.suppliesLoadError);
     }
-  }, []);
+  }, [copy]);
 
   useEffect(() => {
     void loadProducts();
@@ -395,7 +397,7 @@ export function PetServicesPage() {
         value: link.inventoryItemId,
         label: link.inventoryItemName
           ? (link.inventoryItemSku ? `${link.inventoryItemName} (${link.inventoryItemSku})` : link.inventoryItemName)
-          : `Linked item ${link.inventoryItemId}`
+          : copy.linkedItemFallback.replace('{id}', link.inventoryItemId)
       }));
 
     return [
@@ -410,17 +412,17 @@ export function PetServicesPage() {
       .map((link) => {
         const itemLabel = link.inventoryItemName
           ?? products.find((product) => product.inventoryItemId === link.inventoryItemId)?.name
-          ?? 'Linked inventory item';
+          ?? copy.linkedSupplyFallback;
         const unit = link.unitOfMeasure
           ?? products.find((product) => product.inventoryItemId === link.inventoryItemId)?.unitOfMeasure
           ?? 'UNIT';
         return `${itemLabel} x${link.expectedQuantity || '0'} ${unit}`;
       })
       .join(' • ')
-    : 'Sem consumo planejado de insumos.';
+    : copy.noPlannedUsage;
   const draftServicePreview = describePetServiceCatalogItem({
     id: editingId ?? 'draft-service',
-    name: name.trim() || 'Servico em preparo',
+    name: name.trim() || copy.draftService,
     description: description.trim() || undefined,
     category,
     active,
@@ -433,7 +435,7 @@ export function PetServicesPage() {
     createdAt: '',
     updatedAt: ''
   }, 'pt-BR');
-  const draftAvailabilityLabel = buildServiceAvailabilityLabel({ allowInPlans, allowStandaloneBooking });
+  const draftAvailabilityLabel = buildServiceAvailabilityLabel(copy, { allowInPlans, allowStandaloneBooking });
 
   const summaryCards: DashboardSummaryCard[] = [
     {
@@ -441,26 +443,26 @@ export function PetServicesPage() {
       label: copy.metricVisible,
       value: totalItems,
       trend: activeFilterCount > 0
-        ? 'Recorte atual do catalogo usado na agenda.'
-        : 'Servicos disponiveis para demonstrar banho e tosa.'
+        ? copy.metricVisibleFiltered
+        : copy.metricVisibleAll
     },
     {
       key: 'active-services',
       label: copy.metricActive,
       value: activeServices,
-      trend: 'Somente servicos ativos entram em novos atendimentos.'
+      trend: copy.metricActiveDetail
     },
     {
       key: 'plan-ready-services',
       label: copy.metricPlanEligible,
       value: planReadyServices,
-      trend: 'Base para pacotes recorrentes de banho e tosa.'
+      trend: copy.metricPlanEligibleDetail
     },
     {
       key: 'average-service-duration',
       label: copy.metricAverageDuration,
       value: averageDuration,
-      trend: `Ticket base medio visivel: R$ ${averageBasePrice}.`
+      trend: copy.averageBasePrice.replace('{amount}', String(averageBasePrice))
     }
   ];
 
@@ -483,7 +485,7 @@ export function PetServicesPage() {
   const columns: DataTableColumn<PetServiceCatalog>[] = [
     {
       key: 'service',
-      header: 'Servico',
+      header: copy.columnService,
       render: (item) => (
         <div>
           <p className="font-medium text-slate-900">{item.name}</p>
@@ -495,7 +497,7 @@ export function PetServicesPage() {
     },
     {
       key: 'category',
-      header: 'Categoria',
+      header: copy.category,
       render: (item) => (
         <div className="space-y-1">
           <p className="text-sm font-medium text-slate-900">{formatPetServiceCategory(item.category)}</p>
@@ -507,17 +509,17 @@ export function PetServicesPage() {
     },
     {
       key: 'basePrice',
-      header: 'Preco base',
+      header: copy.basePrice,
       render: (item) => item.basePrice.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
     },
     {
       key: 'durationMinutes',
-      header: 'Duracao',
+      header: copy.columnDuration,
       render: (item) => `${item.durationMinutes} min`
     },
     {
       key: 'bookingRules',
-      header: 'Uso na agenda',
+      header: copy.columnScheduleUsage,
       render: (item) => (
         <div className="space-y-1 text-xs text-[color:var(--app-shell-muted)]">
           <p>{item.allowStandaloneBooking ? copy.standaloneAllowed : copy.planRequired}</p>
@@ -528,19 +530,19 @@ export function PetServicesPage() {
     },
     {
       key: 'inventoryRecipe',
-      header: 'Insumos',
+      header: copy.columnSupplies,
       render: (item) => (
         <div className="space-y-1 text-xs text-[color:var(--app-shell-muted)]">
           <p className="font-medium text-slate-900">
             {item.inventoryLinks.filter((link) => link.active).length} {copy.linkedSupplies}
           </p>
-          <p>{formatInventoryLinkSummary(item)}</p>
+          <p>{formatInventoryLinkSummary(copy, item)}</p>
         </div>
       )
     },
     {
       key: 'actions',
-      header: 'Acoes',
+      header: copy.actions,
       render: (item) => (
         <div className={sharedInlineActionsClass}>
           <PermissionGuard permission="pet.service.update">
@@ -756,7 +758,7 @@ export function PetServicesPage() {
                             {link.inventoryItemName
                               ? `${link.inventoryItemName}${link.inventoryItemSku ? ` (${link.inventoryItemSku})` : ''}`
                               : copy.supplyHint}
-                            {link.unitOfMeasure ? ` • Unit ${link.unitOfMeasure}` : ''}
+                            {link.unitOfMeasure ? copy.unitSuffix.replace('{unit}', link.unitOfMeasure) : ''}
                             {link.active ? copy.supplyVisibleHint : copy.supplyHiddenHint}
                           </p>
                         </div>
@@ -835,8 +837,8 @@ export function PetServicesPage() {
               rows={rows}
               getRowKey={(row) => row.id}
               loading={loading}
-              loadingTitle="Carregando catalogo"
-              loadingDescription="Preparando servicos com categoria, regra de agendamento e preco."
+              loadingTitle={copy.loadingTitle}
+              loadingDescription={copy.loadingDescription}
               emptyState={{
                 title: copy.emptyTitle,
                 description: activeFilterCount > 0
@@ -864,7 +866,7 @@ export function PetServicesPage() {
         <ConfirmDialog
           open={deleteCandidate !== null}
           title={copy.deleteConfirmTitle}
-          description={deleteCandidate ? `O servico "${describePetServiceCatalogItem(deleteCandidate, 'pt-BR')}" sera removido do catalogo.` : undefined}
+          description={deleteCandidate ? copy.deleteConfirmDescription.replace('{name}', describePetServiceCatalogItem(deleteCandidate, locale)) : undefined}
           onConfirm={handleConfirmDelete}
           onCancel={() => setDeleteCandidate(null)}
         />

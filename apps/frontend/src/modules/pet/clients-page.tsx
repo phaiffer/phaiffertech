@@ -126,12 +126,12 @@ export function PetClientsPage({ initialView = 'list' }: PetClientsPageProps) {
       });
       setPageData(result);
     } catch (err) {
-      const message = err instanceof ApiClientError ? err.message : 'Nao foi possivel carregar os clientes.';
+      const message = err instanceof ApiClientError ? err.message : copy.loadError;
       setError(message);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [copy]);
 
   useEffect(() => {
     load(0, search, statusFilter);
@@ -272,7 +272,7 @@ export function PetClientsPage({ initialView = 'list' }: PetClientsPageProps) {
       resetForm();
       await load(pageData.page, search, statusFilter);
     } catch (err) {
-      const message = err instanceof ApiClientError ? err.message : 'Nao foi possivel salvar o cliente.';
+      const message = err instanceof ApiClientError ? err.message : copy.saveError;
       setError(message);
     } finally {
       setSubmitting(false);
@@ -290,7 +290,7 @@ export function PetClientsPage({ initialView = 'list' }: PetClientsPageProps) {
       setSuccess(copy.deleted);
       await load(pageData.page, search, statusFilter);
     } catch (err) {
-      const message = err instanceof ApiClientError ? err.message : 'Nao foi possivel remover o cliente.';
+      const message = err instanceof ApiClientError ? err.message : copy.deleteError;
       setError(message);
     }
   }
@@ -305,7 +305,7 @@ export function PetClientsPage({ initialView = 'list' }: PetClientsPageProps) {
   const columns: DataTableColumn<PetClient>[] = [
     {
       key: 'profile',
-      header: 'Cliente',
+      header: copy.client,
       render: (client) => {
         const resolvedDocumentType = inferPetClientDocumentType(client.documentType, client.document);
         const formattedDocument = formatPetClientDocumentDisplay(client.documentType, client.document);
@@ -324,7 +324,7 @@ export function PetClientsPage({ initialView = 'list' }: PetClientsPageProps) {
     },
     {
       key: 'contact',
-      header: 'Responsavel principal',
+      header: copy.columnPrimaryResponsible,
       render: (client) => {
         const primaryResponsible = resolvePetClientPrimaryResponsible(client);
 
@@ -343,24 +343,26 @@ export function PetClientsPage({ initialView = 'list' }: PetClientsPageProps) {
     },
     {
       key: 'address',
-      header: 'Endereco e atualizacao',
+      header: copy.columnAddressUpdated,
       render: (client) => (
         <div>
           <p className="font-medium text-slate-900">{client.address ?? copy.noAddress}</p>
           <p className={`mt-1 ${sharedCompactTextClass}`}>
-            {client.notes ? `Observacoes: ${client.notes}` : `Atualizado em ${formatDateTime(client.updatedAt)}`}
+            {client.notes
+              ? copy.notesValue.replace('{notes}', client.notes)
+              : copy.updatedOn.replace('{date}', formatDateTime(client.updatedAt))}
           </p>
         </div>
       )
     },
     {
       key: 'status',
-      header: 'Status',
+      header: copy.status,
       render: (client) => <StatusBadge status={client.status} />
     },
     {
       key: 'actions',
-      header: 'Acoes',
+      header: copy.actions,
       render: (client) => (
         <div className={sharedInlineActionsClass}>
           <PermissionGuard permission="pet.client.update">
@@ -460,7 +462,7 @@ export function PetClientsPage({ initialView = 'list' }: PetClientsPageProps) {
                 </button>
                 <p className="text-sm text-slate-700">
                   {activeFilterCount > 0
-                    ? `${activeFilterCount} filtro(s) ativos na visao de clientes.`
+                    ? copy.activeFiltersCount.replace('{count}', String(activeFilterCount))
                     : copy.noActiveFilters}
                 </p>
               </div>
@@ -595,8 +597,8 @@ export function PetClientsPage({ initialView = 'list' }: PetClientsPageProps) {
                 rows={rows}
                 getRowKey={(row) => row.id}
                 loading={loading}
-                loadingTitle="Carregando clientes"
-                loadingDescription="Preparando a base de clientes deste workspace."
+                loadingTitle={copy.loadingTitle}
+                loadingDescription={copy.loadingDescription}
                 emptyState={{
                   title: copy.emptyTitle,
                   description: copy.emptyDescription,
@@ -623,7 +625,7 @@ export function PetClientsPage({ initialView = 'list' }: PetClientsPageProps) {
         <ConfirmDialog
           open={Boolean(deleteCandidate)}
           title={copy.removeConfirmTitle}
-          description={deleteCandidate ? `"${deleteCandidate.name ?? deleteCandidate.fullName ?? copy.thisClient}" sera removido deste workspace.` : undefined}
+          description={deleteCandidate ? copy.removeConfirmDescription.replace('{name}', deleteCandidate.name ?? deleteCandidate.fullName ?? copy.thisClient) : undefined}
           confirmLabel={copy.remove}
           onCancel={() => setDeleteCandidate(null)}
           onConfirm={handleConfirmDelete}

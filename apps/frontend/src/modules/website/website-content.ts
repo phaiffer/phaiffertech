@@ -868,116 +868,116 @@ const websiteContent: Record<PublicLocale, WebsiteContent> = {
   'pt-BR': {
     home: {
       hero: {
-        eyebrow: 'Gestão Pet · PetShop · Banho e Tosa · Clinica Veterinaria',
-        title: 'Gestão Pet para PetShop, Banho e Tosa, Clinica Veterinaria e pacotes combinados.',
+        eyebrow: 'Gestão Pet · PetShop · Banho e Tosa · Clínica Veterinária',
+        title: 'Gestão Pet para PetShop, Banho e Tosa, Clínica Veterinária e pacotes combinados.',
         titleHighlight: 'PetShop',
         description:
-          'Organize PetShop, Banho e Tosa, Clinica Veterinaria e pacotes combinados em um unico fluxo operacional com agenda, estoque, contexto clinico e cobranca conectados.',
+          'Organize PetShop, Banho e Tosa, Clínica Veterinária e pacotes combinados em um único fluxo operacional com agenda, estoque, contexto clínico e cobrança conectados.',
         highlights: [
-          'PetShop, grooming e clinica no mesmo workspace',
-          'Pacotes combinados e recorrencia sem planilha paralela',
-          'Estoque, cobranca e responsabilidade por profissional'
+          'PetShop, grooming e clínica no mesmo workspace',
+          'Pacotes combinados e recorrência sem planilha paralela',
+          'Estoque, cobrança e responsabilidade por profissional'
         ],
         stats: [
           {
-            value: 'Operacao',
-            label: 'Balcao do PetShop, fila do Banho e Tosa e agenda clinica'
+            value: 'Operação',
+            label: 'Balcão do PetShop, fila do Banho e Tosa e agenda clínica'
           },
           {
             value: 'Pacotes',
-            label: 'Pacotes combinados, recorrentes e renovacao'
+            label: 'Pacotes combinados, recorrentes e renovação'
           },
           {
-            value: 'Cobranca',
-            label: 'Produtos, servicos, clinica e extras no mesmo fluxo'
+            value: 'Cobrança',
+            label: 'Produtos, serviços, clínica e extras no mesmo fluxo'
           }
         ],
         primaryCta: { label: 'Solicitar demo', href: '/contact' },
         secondaryCta: { label: 'Acesso ao sistema', href: '/login' }
       },
-      signalTitle: 'Uma operacao mais clara para o pet business real.',
+      signalTitle: 'Uma operação mais clara para o pet business real.',
       signalDescription:
-        'A Gestão Pet conecta varejo, execucao de servicos, rotina clinica, pacotes combinados, estoque e cobranca no mesmo fluxo para evitar operacao fragmentada.',
+        'A Gestão Pet conecta varejo, execução de serviços, rotina clínica, pacotes combinados, estoque e cobrança no mesmo fluxo para evitar operação fragmentada.',
       signals: [
         {
-          value: 'Operacao',
-          label: 'Balcao, agenda e atendimento clinico no mesmo fluxo',
+          value: 'Operação',
+          label: 'Balcão, agenda e atendimento clínico no mesmo fluxo',
           description:
-            'Clientes, pets, varejo, Banho e Tosa, atendimentos clinicos e profissionais no mesmo fluxo. Sem caderno, sem planilha.'
+            'Clientes, pets, varejo, Banho e Tosa, atendimentos clínicos e profissionais no mesmo fluxo. Sem caderno, sem planilha.'
         },
         {
           value: 'Pacotes',
           label: 'Recorrentes e combinados sem confusao operacional',
           description:
-            'Separe recorrentes, pacotes combinados e avulsos, acompanhe sessoes restantes e prepare a renovacao do jeito certo.'
+            'Separe recorrentes, pacotes combinados e avulsos, acompanhe sessões restantes e prepare a renovação do jeito certo.'
         },
         {
-          value: 'Cobranca',
-          label: 'Estoque, servicos e faturamento no mesmo ritmo da operacao',
+          value: 'Cobrança',
+          label: 'Estoque, serviços e faturamento no mesmo ritmo da operação',
           description:
-            'Gerencie produtos, alertas de estoque minimo, cobranca de servicos e contexto clinico com mais clareza comercial.'
+            'Gerencie produtos, alertas de estoque mínimo, cobrança de serviços e contexto clínico com mais clareza comercial.'
         }
       ],
-      productsTitle: 'Um sistema. Quatro frentes comerciais para a operacao pet real.',
+      productsTitle: 'Um sistema. Quatro frentes comerciais para a operação pet real.',
       productsDescription:
-        'A Gestão Pet apresenta PetShop, Banho e Tosa, Clinica Veterinaria e pacotes combinados na mesma oferta comercial e no mesmo sistema operacional.',
+        'A Gestão Pet apresenta PetShop, Banho e Tosa, Clínica Veterinária e pacotes combinados na mesma oferta comercial e no mesmo sistema operacional.',
       products: [
         {
           eyebrow: 'PetShop',
-          title: 'Varejo, estoque e operacao de balcao',
+          title: 'Varejo, estoque e operação de balcão',
           description:
-            'Organize catalogo, alertas de estoque, adicionais e atendimento de balcao com cliente e pet no mesmo workspace.',
-          bullets: ['Catalogo de produtos com visibilidade de estoque', 'Varejo conectado ao historico do cliente e do pet', 'Operacao de balcao dentro da Gestão Pet']
+            'Organize catálogo, alertas de estoque, adicionais e atendimento de balcão com cliente e pet no mesmo workspace.',
+          bullets: ['Catálogo de produtos com visibilidade de estoque', 'Varejo conectado ao histórico do cliente e do pet', 'Operação de balcão dentro da Gestão Pet']
         },
         {
           eyebrow: 'Banho e Tosa',
-          title: 'Agenda, fila e profissionais responsaveis',
+          title: 'Agenda, fila e profissionais responsáveis',
           description:
-            'Visualize Banho e Tosa, adicionais e profissional responsavel no mesmo fluxo operacional, do agendamento ao fechamento.',
-          bullets: ['Agenda do dia com responsavel visivel', 'Pet e cliente conectados em cada visita', 'Fila pronta para apresentacao comercial']
+            'Visualize Banho e Tosa, adicionais e profissional responsável no mesmo fluxo operacional, do agendamento ao fechamento.',
+          bullets: ['Agenda do dia com responsável visível', 'Pet e cliente conectados em cada visita', 'Fila pronta para apresentacao comercial']
         },
         {
-          eyebrow: 'Clinica Veterinaria',
-          title: 'Atendimentos, prontuarios e faturamento',
+          eyebrow: 'Clínica Veterinária',
+          title: 'Atendimentos, prontuários e faturamento',
           description:
-            'Mantenha consultas, prontuarios, prescricoes e cobranca no mesmo workspace usado pela rotina comercial e operacional.',
-          bullets: ['Agenda clinica com historico do pet', 'Contexto de cuidado conectado ao cadastro do cliente', 'Faturamento dentro do mesmo sistema']
+            'Mantenha consultas, prontuários, prescrições e cobrança no mesmo workspace usado pela rotina comercial e operacional.',
+          bullets: ['Agenda clínica com histórico do pet', 'Contexto de cuidado conectado ao cadastro do cliente', 'Faturamento dentro do mesmo sistema']
         },
         {
           eyebrow: 'Pacotes combinados',
-          title: 'Uma oferta unica para negocios pet hibridos',
+          title: 'Uma oferta única para negócios pet hibridos',
           description:
-            'Venda pacotes que combinam PetShop, Banho e Tosa e Clinica Veterinaria com follow-up e cobranca unificados.',
-          bullets: ['Pacotes combinados para operacoes hibridas', 'Historico compartilhado de pet e cliente', 'Uma cobranca para produtos e servicos']
+            'Venda pacotes que combinam PetShop, Banho e Tosa e Clínica Veterinária com follow-up e cobrança unificados.',
+          bullets: ['Pacotes combinados para operações hibridas', 'Histórico compartilhado de pet e cliente', 'Uma cobrança para produtos e serviços']
         }
       ],
       expertiseTitle: 'Detalhes operacionais que deixam a demo crivel.',
       expertiseDescription:
-        'A Gestão Pet vende melhor quando a historia parece operacao real: ritmo de PetShop, execucao de Banho e Tosa, rotina clinica, pacotes combinados, cobranca e uma base tecnica firme por tras.',
+        'A Gestão Pet vende melhor quando a história parece operação real: ritmo de PetShop, execução de Banho e Tosa, rotina clínica, pacotes combinados, cobrança e uma base técnica firme por trás.',
       expertise: [
         {
-          eyebrow: 'Balcao, fila e agenda clinica',
+          eyebrow: 'Balcão, fila e agenda clínica',
           title: 'Uma rotina mais clara para agenda, pets, produtos e profissionais',
           description:
-            'Cliente, pet, servico, varejo, profissional e horario ficam no mesmo fluxo para que a operacao nao dependa de caderno, WhatsApp e planilhas soltas.'
+            'Cliente, pet, serviço, varejo, profissional e horário ficam no mesmo fluxo para que a operação não dependa de caderno, WhatsApp e planilhas soltas.'
         },
         {
-          eyebrow: 'Recorrencia e pacotes combinados',
-          title: 'Controle de pacotes com sessoes restantes e renovacao visivel',
+          eyebrow: 'Recorrência e pacotes combinados',
+          title: 'Controle de pacotes com sessões restantes e renovação visível',
           description:
-            'Recorrentes, combinados e avulsos ficam visiveis, sessoes restantes ficam legiveis e a equipe consegue agir antes do fim do pacote.'
+            'Recorrentes, combinados e avulsos ficam visíveis, sessões restantes ficam legiveis e a equipe consegue agir antes do fim do pacote.'
         },
         {
-          eyebrow: 'Estoque, servicos e clinica',
-          title: 'Cobranca operacional sem sair do fluxo da Gestão Pet',
+          eyebrow: 'Estoque, serviços e clínica',
+          title: 'Cobrança operacional sem sair do fluxo da Gestão Pet',
           description:
-            'Produtos, adicionais, cobranca clinica, invoices e comissao por profissional entram na mesma narrativa comercial.'
+            'Produtos, adicionais, cobrança clínica, invoices e comissão por profissional entram na mesma narrativa comercial.'
         },
         {
-          eyebrow: 'Base tecnica preservada',
-          title: 'Acabamento premium sem fingir uma segunda aplicacao',
+          eyebrow: 'Base técnica preservada',
+          title: 'Acabamento premium sem fingir uma segunda aplicação',
           description:
-            'Arquitetura, permissoes e fundacoes modulares continuam reais enquanto a experiencia visivel fica mais coerente e vendavel.'
+            'Arquitetura, permissões e fundacoes modulares continuam reais enquanto a experiência visível fica mais coerente e vendavel.'
         }
       ],
       architectureTitle: 'Uma narrativa pública legível para negócio e defensável para pares técnicos',
@@ -1004,10 +1004,10 @@ const websiteContent: Record<PublicLocale, WebsiteContent> = {
         }
       ],
       cta: {
-        eyebrow: 'Gestão Pet disponivel agora',
-        title: 'Pronto para operar PetShop, Banho e Tosa e Clinica com mais controle?',
+        eyebrow: 'Gestão Pet disponível agora',
+        title: 'Pronto para operar PetShop, Banho e Tosa e Clínica com mais controle?',
         description:
-          'Mostre desde a primeira conversa uma oferta mais clara: PetShop, Banho e Tosa, Clinica Veterinaria e pacotes combinados no mesmo sistema.',
+          'Mostre desde a primeira conversa uma oferta mais clara: PetShop, Banho e Tosa, Clínica Veterinária e pacotes combinados no mesmo sistema.',
         primaryCta: { label: 'Solicitar demo', href: '/contact' },
         secondaryCta: { label: 'Acesso ao sistema', href: '/login' }
       }
@@ -1095,9 +1095,9 @@ const websiteContent: Record<PublicLocale, WebsiteContent> = {
     },
     platform: {
       eyebrow: 'Plataforma',
-      title: 'A fundacao tecnica por tras da Gestão Pet.',
+      title: 'A fundação técnica por trás da Gestão Pet.',
       description:
-        'A PhaifferTech Platform e o nucleo compartilhado de autenticacao, multi-tenancy, permissoes e modulos que sustenta a Gestão Pet hoje. A meta e manter o produto visivel simples sem descartar a base tecnica.',
+        'A PhaifferTech Platform e o núcleo compartilhado de autenticação, multi-tenancy, permissões e módulos que sustenta a Gestão Pet hoje. A meta e manter o produto visível simples sem descartar a base técnica.',
       foundationTitle: 'Fundação compartilhada',
       foundationDescription:
         'A plataforma já expõe preocupações transversais que importam em SaaS real e em integração futura.',
@@ -1135,67 +1135,67 @@ const websiteContent: Record<PublicLocale, WebsiteContent> = {
           eyebrow: 'Core e shared',
           title: 'Fundação técnica sem regra de negócio vertical',
           description:
-            'Auth, tenancy, IAM, module access, feature flags e contratos tecnicos reutilizaveis ficam fora das regras da Gestão Pet.'
+            'Auth, tenancy, IAM, module access, feature flags e contratos tecnicos reutilizáveis ficam fora das regras da Gestão Pet.'
         },
         {
-          eyebrow: 'Produto visivel',
-          title: 'Gestão Pet conduz a historia comercial',
+          eyebrow: 'Produto visível',
+          title: 'Gestão Pet conduz a história comercial',
           description:
-            'A plataforma fica nos bastidores enquanto a Gestão Pet carrega a historia visivel de PetShop, Banho e Tosa, Clinica Veterinaria, pacotes combinados, estoque e cobranca.'
+            'A plataforma fica nos bastidores enquanto a Gestão Pet carrega a história visível de PetShop, Banho e Tosa, Clínica Veterinária, pacotes combinados, estoque e cobrança.'
         }
       ],
-      modulesTitle: 'O que fica visivel nesta fundacao agora',
+      modulesTitle: 'O que fica visível nesta fundação agora',
       modulesDescription:
-        'O valor da plataforma nao esta em mostrar todos os modulos ao mesmo tempo. Esta em manter a Gestão Pet forte enquanto o restante da base fica preservado para decisoes futuras.',
+        'O valor da plataforma não está em mostrar todos os módulos ao mesmo tempo. Está em manter a Gestão Pet forte enquanto o restante da base fica preservado para decisoes futuras.',
       modules: [
         {
           eyebrow: 'Gestão Pet · produto principal',
-          title: 'Operacao para PetShop, Banho e Tosa, Clinica Veterinaria e pacotes combinados',
+          title: 'Operação para PetShop, Banho e Tosa, Clínica Veterinária e pacotes combinados',
           description:
-            'A Gestão Pet conecta appointments, pacotes combinados, profissionais, alertas de estoque, cobranca e follow-up com clientes — foco comercial atual da plataforma.'
+            'A Gestão Pet conecta appointments, pacotes combinados, profissionais, alertas de estoque, cobrança e follow-up com clientes — foco comercial atual da plataforma.'
         },
         {
-          eyebrow: 'Fundacao compartilhada',
-          title: 'Servicos reutilizaveis por tras do produto visivel',
+          eyebrow: 'Fundação compartilhada',
+          title: 'Serviços reutilizáveis por trás do produto visível',
           description:
-            'Permissoes, tenant scope, auditoria, notificacoes e contratos de dashboard continuam reutilizaveis sem inflar a superficie comercial.'
+            'Permissões, tenant scope, auditoria, notificações e contratos de dashboard continuam reutilizáveis sem inflar a superfície comercial.'
         }
       ]
     },
     products: {
       eyebrow: 'Produtos',
-      title: 'Gestão Pet empacota a operacao pet real em uma unica oferta.',
+      title: 'Gestão Pet empacota a operação pet real em uma única oferta.',
       description:
-        'A PhaifferTech concentra sua execucao comercial na Gestão Pet para PetShop, Banho e Tosa, Clinica Veterinaria e pacotes combinados.',
+        'A PhaifferTech concentra sua execução comercial na Gestão Pet para PetShop, Banho e Tosa, Clínica Veterinária e pacotes combinados.',
       products: [
         {
           eyebrow: 'PetShop',
-          title: 'Varejo, estoque e rotina de balcao',
+          title: 'Varejo, estoque e rotina de balcão',
           description:
-            'Organize produtos, sinais de estoque, atendimento de balcao e contexto do cliente no mesmo workspace usado pelo restante da operacao.'
+            'Organize produtos, sinais de estoque, atendimento de balcão e contexto do cliente no mesmo workspace usado pelo restante da operação.'
         },
         {
           eyebrow: 'Banho e Tosa',
-          title: 'Agenda, fila e profissionais responsaveis',
+          title: 'Agenda, fila e profissionais responsáveis',
           description:
-            'Mantenha Banho e Tosa, profissionais responsaveis e fluxo de servico visiveis do agendamento ao faturamento.'
+            'Mantenha Banho e Tosa, profissionais responsáveis e fluxo de serviço visíveis do agendamento ao faturamento.'
         },
         {
-          eyebrow: 'Clinica Veterinaria',
-          title: 'Atendimentos, historico de cuidado e faturamento',
+          eyebrow: 'Clínica Veterinária',
+          title: 'Atendimentos, histórico de cuidado e faturamento',
           description:
-            'Execute consultas, prontuarios, prescricoes e follow-up financeiro sem jogar a rotina clinica para outro sistema.'
+            'Execute consultas, prontuários, prescrições e follow-up financeiro sem jogar a rotina clínica para outro sistema.'
         },
         {
           eyebrow: 'Pacotes combinados',
-          title: 'Uma oferta comercial para negocios pet hibridos',
+          title: 'Uma oferta comercial para negócios pet hibridos',
           description:
-            'Combine PetShop, Banho e Tosa e clinica em pacotes combinados com recorrencia, follow-up e cobranca na mesma narrativa.'
+            'Combine PetShop, Banho e Tosa e clínica em pacotes combinados com recorrência, follow-up e cobrança na mesma narrativa.'
         }
       ],
-      fitTitle: 'Feito para o jeito que negocios pet realmente funcionam',
+      fitTitle: 'Feito para o jeito que negócios pet realmente funcionam',
       fitDescription:
-        'Seja um PetShop, uma operacao de Banho e Tosa, uma Clinica Veterinaria ou um negocio com pacotes combinados, a Gestão Pet se adapta ao ritmo diario sem impor fluxo generico.',
+        'Seja um PetShop, uma operação de Banho e Tosa, uma Clínica Veterinária ou um negócio com pacotes combinados, a Gestão Pet se adapta ao ritmo diário sem impor fluxo generico.',
       fit: [
         {
           eyebrow: 'Clínica veterinária',
@@ -1433,36 +1433,36 @@ const websiteContent: Record<PublicLocale, WebsiteContent> = {
           slug: 'operational-data-for-recurring-pet-services',
           category: 'Data Engineering',
           readTime: '7 min read',
-          title: 'Data thinking para operacao pet recorrente',
+          title: 'Data thinking para operação pet recorrente',
           description:
-            'Como operacoes de banho e tosa ficam mais confiaveis quando agenda, planos, estoque e cobranca sao tratados como dados operacionais conectados.',
+            'Como operações de banho e tosa ficam mais confiaveis quando agenda, planos, estoque e cobrança são tratados como dados operacionais conectados.',
           highlight:
-            'Uma operacao de banho e tosa gera mais do que servicos agendados. Ela produz cadencia de atendimento, recorrencia, pressao de estoque e eventos de cobranca que devem ser tratados como um so sistema operacional.',
+            'Uma operação de banho e tosa gera mais do que serviços agendados. Ela produz cadencia de atendimento, recorrência, pressao de estoque e eventos de cobrança que devem ser tratados como um só sistema operacional.',
           sections: [
             {
               title: 'De visitas agendadas a fluxo operacional de dados',
               paragraphs: [
-                'Uma operacao pet recorrente fica estrategicamente mais forte quando appointments, sessoes de plano, extras de pet taxi e avisos de retirada sao tratados como fluxos conectados em vez de telas isoladas.',
-                'Esse enquadramento influencia como contratos sao escritos, como previews de cobranca aparecem e como a demo comercial pode ser explicada.'
+                'Uma operação pet recorrente fica estrategicamente mais forte quando appointments, sessões de plano, extras de pet taxi e avisos de retirada são tratados como fluxos conectados em vez de telas isoladas.',
+                'Esse enquadramento influencia como contratos são escritos, como previews de cobrança aparecem e como a demo comercial pode ser explicada.'
               ]
             },
             {
               title: 'Por que a postura de plataforma importa',
               paragraphs: [
-                'A fundacao de plataforma importa porque casos de uso de banho e tosa ainda pressionam identity, module access, separacao por tenant, auditing e visibilidade de cobranca ao mesmo tempo.',
-                'Ter essas concerns ja construidas nas camadas compartilhadas torna a Gestão Pet mais facil de expandir sem reescrever sua base.'
+                'A fundação de plataforma importa porque casos de uso de banho e tosa ainda pressionam identity, module access, separação por tenant, auditing e visibilidade de cobrança ao mesmo tempo.',
+                'Ter essas concerns já construidas nas camadas compartilhadas torna a Gestão Pet mais fácil de expandir sem reescrever sua base.'
               ]
             },
             {
               title: 'Valor para pesquisa aplicada',
               paragraphs: [
-                'Operacoes recorrentes de servico sao terreno fertil para trabalho futuro em data engineering, platform design e analytics operacional.',
-                'Essa e uma das razoes pelas quais o posicionamento publico da PhaifferTech deve conectar entrega de produto, clareza operacional e direcao de pesquisa.'
+                'Operações recorrentes de serviço são terreno fertil para trabalho futuro em data engineering, platform design e analytics operacional.',
+                'Essa é uma das razoes pelas quais o posicionamento público da PhaifferTech deve conectar entrega de produto, clareza operacional e direção de pesquisa.'
               ]
             }
           ],
           closing:
-            'A narrativa da Gestão Pet fica mais forte quando e explicada como sistema operacional de dados para servicos pet recorrentes.'
+            'A narrativa da Gestão Pet fica mais forte quando e explicada como sistema operacional de dados para serviços pet recorrentes.'
         },
         {
           slug: 'shared-foundations-for-service-and-billing-operations',
@@ -1470,93 +1470,93 @@ const websiteContent: Record<PublicLocale, WebsiteContent> = {
           readTime: '9 min read',
           title: 'Shared foundations for service and billing operations',
           description:
-            'O que a Gestão Pet revela sobre construir execucao de servicos, planos recorrentes e cobranca sobre a mesma base arquitetural.',
+            'O que a Gestão Pet revela sobre construir execução de serviços, planos recorrentes e cobrança sobre a mesma base arquitetural.',
           highlight:
-            'Recepcao, execucao de servico, estoque e cobranca parecem diferentes na superficie, mas todos se beneficiam de contratos explicitos, governanca compartilhada e integracao progressiva.',
+            'Recepção, execução de serviço, estoque e cobrança parecem diferentes na superfície, mas todos se beneficiam de contratos explicitos, governanca compartilhada e integração progressiva.',
           sections: [
             {
-              title: 'Por que operacao de servico e cobranca nao devem ser achatadas',
+              title: 'Por que operação de serviço e cobrança não devem ser achatadas',
               paragraphs: [
-                'Uma plataforma transversal nao significa achatar todas as preocupacoes num unico workflow abstrato. Recepcao, execucao do servico, planos recorrentes e faturamento precisam de linguagem, entidades e semantica operacional diferentes.',
-                'O valor da plataforma vem da governanca compartilhada e dos pontos de integracao explicitos, e nao de fingir que cada etapa operacional e igual.'
+                'Uma plataforma transversal não significa achatar todas as preocupacoes num único workflow abstrato. Recepção, execução do serviço, planos recorrentes e faturamento precisam de linguagem, entidades e semantica operacional diferentes.',
+                'O valor da plataforma vem da governanca compartilhada e dos pontos de integração explicitos, e não de fingir que cada etapa operacional e igual.'
               ]
             },
             {
               title: 'Onde a fundação compartilhada realmente ajuda',
               paragraphs: [
-                'Referencias canonicas, tenancy, permissions, dashboards, notificacoes e concerns do shell autenticado sao o tipo de capability que acumula valor dentro da mesma superficie visivel.',
-                'Isso permite expandir a Gestão Pet de forma incremental sem violar ownership nem inflar a historia comercial.'
+                'Referências canonicas, tenancy, permissions, dashboards, notificações e concerns do shell autenticado são o tipo de capability que acumula valor dentro da mesma superfície visível.',
+                'Isso permite expandir a Gestão Pet de forma incremental sem violar ownership nem inflar a história comercial.'
               ]
             },
             {
               title: 'Por que isso importa para produto e pesquisa',
               paragraphs: [
-                'As mesmas escolhas de integracao que ajudam a evolucao do produto tambem criam uma base limpa para discussao arquitetural e analise academica futura.',
-                'E por isso que a marca publica da PhaifferTech precisa explicar tanto o produto em funcionamento quanto o raciocinio por tras da fundacao.'
+                'As mesmas escolhas de integração que ajudam a evolucao do produto também criam uma base limpa para discussao arquitetural e análise academica futura.',
+                'E por isso que a marca pública da PhaifferTech precisa explicar tanto o produto em funcionamento quanto o raciocinio por trás da fundação.'
               ]
             }
           ],
           closing:
-            'A historia mais forte do portfolio nao e ter mais modulos visiveis. E ter uma fundacao disciplinada sustentando um produto que ja pode ser vendido agora.'
+            'A história mais forte do portfolio não e ter mais módulos visíveis. E ter uma fundação disciplinada sustentando um produto que já pode ser vendido agora.'
         }
       ]
     },
     contact: {
       eyebrow: 'Contato',
-      title: 'Solicite cotacao, contratacao ou demo da Gestão Pet.',
+      title: 'Solicite cotacao, contratação ou demo da Gestão Pet.',
       description:
-        'Fale com a PhaifferTech sobre PetShop, Banho e Tosa, Clinica Veterinaria ou pacotes combinados. Escreva para willian.phaiffer@phaiffertech.com.br ou ligue para +55 41 9629-4533.',
-      lanesTitle: 'O que voce pode solicitar aqui',
+        'Fale com a PhaifferTech sobre PetShop, Banho e Tosa, Clínica Veterinária ou pacotes combinados. Escreva para willian.phaiffer@phaiffertech.com.br ou ligue para +55 41 9629-4533.',
+      lanesTitle: 'O que você pode solicitar aqui',
       lanesDescription:
-        'A pagina de contato cobre os tres pedidos comerciais que importam agora para a oferta real da Gestão Pet.',
+        'A página de contato cobre os tres pedidos comerciais que importam agora para a oferta real da Gestão Pet.',
       lanes: [
         {
           eyebrow: 'Cotacao',
-          title: 'Solicite uma proposta para a sua operacao',
+          title: 'Solicite uma proposta para a sua operação',
           description:
-            'Peça precificacao e escopo para PetShop, Banho e Tosa, Clinica Veterinaria ou pacotes combinados.'
+            'Peça precificacao e escopo para PetShop, Banho e Tosa, Clínica Veterinária ou pacotes combinados.'
         },
         {
-          eyebrow: 'Contratacao',
-          title: 'Planeje a entrada da Gestão Pet no negocio',
+          eyebrow: 'Contratação',
+          title: 'Planeje a entrada da Gestão Pet no negócio',
           description:
-            'Use esta trilha para entender onboarding, prazo de rollout, combinacao de pacotes e como a Gestão Pet entra na sua operacao.'
+            'Use esta trilha para entender onboarding, prazo de rollout, combinação de pacotes e como a Gestão Pet entra na sua operação.'
         },
         {
           eyebrow: 'Demo',
           title: 'Agende uma demonstracao comercial guiada',
           description:
-            'Marque uma demo guiada focada no fluxo operacional que mais importa para o seu PetShop, Banho e Tosa, clinica ou rotina hibrida.'
+            'Marque uma demo guiada focada no fluxo operacional que mais importa para o seu PetShop, Banho e Tosa, clínica ou rotina hibrida.'
         }
       ],
       readinessTitle: 'Canais diretos de contato',
       readinessDescription:
-        'Use o canal que combina com o seu ritmo e informe qual tipo de operacao deseja cobrir para acelerar a primeira resposta.',
+        'Use o canal que combina com o seu ritmo e informe qual tipo de operação deseja cobrir para acelerar a primeira resposta.',
       readiness: [
         {
           eyebrow: 'E-mail',
           title: 'willian.phaiffer@phaiffertech.com.br',
           description:
-            'Melhor canal para cotacoes, conversas de contratacao e pedidos de pacotes combinados que pedem retorno por escrito.'
+            'Melhor canal para cotacoes, conversas de contratação e pedidos de pacotes combinados que pedem retorno por escrito.'
         },
         {
           eyebrow: 'Telefone',
           title: '+55 41 9629-4533',
           description:
-            'Melhor canal para contato mais rapido, alinhamento comercial e agendamento de demonstracao com a equipe da PhaifferTech.'
+            'Melhor canal para contato mais rápido, alinhamento comercial e agendamento de demonstracao com a equipe da PhaifferTech.'
         },
         {
           eyebrow: 'Informe sua mistura',
-          title: 'Mencione PetShop, Banho e Tosa, clinica ou pacotes combinados',
+          title: 'Mencione PetShop, Banho e Tosa, clínica ou pacotes combinados',
           description:
-            'Isso ajuda a preparar a cotacao, a contratacao ou a narrativa da demo antes da primeira interacao.'
+            'Isso ajuda a preparar a cotacao, a contratação ou a narrativa da demo antes da primeira interacao.'
         }
       ],
       cta: {
         eyebrow: 'Contato',
         title: 'Fale com a PhaifferTech sobre a oferta real da Gestão Pet.',
         description:
-          'Use o e-mail para cotacao e contratacao, ou ligue para acelerar o agendamento de demo e o follow-up comercial.',
+          'Use o e-mail para cotacao e contratação, ou ligue para acelerar o agendamento de demo e o follow-up comercial.',
         primaryCta: { label: 'Enviar e-mail', href: 'mailto:willian.phaiffer@phaiffertech.com.br' },
         secondaryCta: { label: 'Ligar agora', href: 'tel:+554196294533' }
       }
