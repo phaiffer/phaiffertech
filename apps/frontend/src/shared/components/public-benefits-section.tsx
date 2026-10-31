@@ -28,7 +28,7 @@ export function PublicBenefitsSection() {
       <div className={publicSiteContainerClass}>
         {/* Section Header */}
         <div className="mb-16 text-center">
-          <span className="inline-flex items-center rounded-full border border-petflow/20 bg-petflow/5 px-4 py-1.5 text-sm font-medium text-petflow">
+          <span className="inline-flex items-center rounded-full border border-pet/20 bg-pet/5 px-4 py-1.5 text-sm font-medium text-pet">
             Tecnologia veterinaria
           </span>
           <h2 className="mx-auto mt-6 max-w-2xl text-3xl font-semibold tracking-[-0.03em] text-foreground sm:text-4xl">
@@ -62,8 +62,8 @@ export function PublicBenefitsSection() {
                 const IconComponent = benefit.icon;
                 return (
                   <div key={index} className="flex items-start gap-4">
-                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-petflow/10">
-                      <IconComponent className="h-6 w-6 text-petflow" />
+                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-pet/10">
+                      <IconComponent className="h-6 w-6 text-pet" />
                     </div>
                     <div>
                       <h3 className="text-lg font-semibold text-foreground">

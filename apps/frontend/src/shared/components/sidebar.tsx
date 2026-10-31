@@ -26,7 +26,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/shared/auth/use-auth';
 import { petCommercialNavigationPermissions } from '@/shared/auth/pet-commercial-permissions';
-import { BrandMark, PetFlowMark } from '@/shared/components/brand-assets';
+import { BrandMark, PetMark } from '@/shared/components/brand-assets';
 import {
   petClinicalEntitlements,
   petRetailEntitlements,
@@ -301,14 +301,14 @@ export function Sidebar() {
       <div className="flex h-16 items-center justify-between border-b border-slate-200/80 bg-white/50 px-3">
         {collapsed ? (
           <div className="flex w-full items-center justify-center">
-            <PetFlowMark className="h-9 w-9 shrink-0 rounded-[1rem]" />
+            <PetMark className="h-9 w-9 shrink-0 rounded-[1rem]" />
           </div>
         ) : (
           <div className="flex min-w-0 items-center gap-2.5">
-            <PetFlowMark className="h-9 w-9 shrink-0 rounded-[1rem]" />
+            <PetMark className="h-9 w-9 shrink-0 rounded-[1rem]" />
             <div className="min-w-0">
               <p className="truncate text-sm font-bold tracking-[-0.02em] text-[var(--sidebar-foreground)]">
-                {shellMessages.petFlow}
+                {shellMessages.petWorkspace}
               </p>
               <span className="mt-0.5 inline-flex items-center gap-1 truncate text-[9px] font-medium uppercase tracking-[0.18em] text-[var(--muted-foreground)]">
                 by

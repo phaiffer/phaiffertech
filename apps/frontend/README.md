@@ -1,6 +1,6 @@
 # Frontend - Platform Console
 
-Next.js admin console for the PetFlow-first platform experience.
+Next.js admin console for the pet-first platform experience.
 
 ## Stack
 

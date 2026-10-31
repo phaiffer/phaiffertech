@@ -257,7 +257,7 @@ function normalizeUpdateDealInput(input: UpdatePetCommercialDealInput) {
   };
 }
 
-// PetFlow owns the frontend commercial contract now. Legacy CRM endpoints
+// Pet owns the frontend commercial contract now. Legacy CRM endpoints
 // remain underneath only as the temporary API/storage compatibility layer.
 export const petCommercialService = {
   async listAccounts(page = 0, size = 20, search = '', filters: PetCommercialAccountFilters = {}) {

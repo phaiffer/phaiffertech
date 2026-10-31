@@ -137,14 +137,14 @@ describe('LeadFormPage', () => {
     });
   });
 
-  it('returns to the PetFlow commercial surface after creating a lead on the absorbed route', async () => {
+  it('returns to the Pet commercial surface after creating a lead on the absorbed route', async () => {
     render(<LeadFormPage surface="pet" />);
 
     await waitFor(() => {
       expect(crmServiceMock.listCompanies).toHaveBeenCalledTimes(1);
     });
 
-    fireEvent.change(screen.getByLabelText('Nome do lead'), { target: { value: 'Lead PetFlow' } });
+    fireEvent.change(screen.getByLabelText('Nome do lead'), { target: { value: 'Lead Pet' } });
     fireEvent.change(screen.getByLabelText('Conta comercial (legado)'), { target: { value: 'company-1' } });
 
     await waitFor(() => {
@@ -157,7 +157,7 @@ describe('LeadFormPage', () => {
 
     await waitFor(() => {
       expect(crmServiceMock.createLead).toHaveBeenCalledWith({
-        name: 'Lead PetFlow',
+        name: 'Lead Pet',
         companyId: 'company-1',
         status: 'NEW'
       });

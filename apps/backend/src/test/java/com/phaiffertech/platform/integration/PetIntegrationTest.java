@@ -1841,7 +1841,7 @@ class PetIntegrationTest extends AbstractIntegrationTest {
     }
 
     @Test
-    void shouldCompletePetFlowGroomingGoldenPath() {
+    void shouldCompletePetGroomingGoldenPath() {
         String marker = randomSearchMarker();
         AuthSession session = createTenantAdminSession(
                 "pet-golden-" + marker,

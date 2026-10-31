@@ -5,7 +5,7 @@ import { useMemo, useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Search, X, Globe, Bell, Settings, LogOut, ChevronDown } from 'lucide-react';
-import { BrandMark, PetFlowMark } from '@/shared/components/brand-assets';
+import { BrandMark, PetMark } from '@/shared/components/brand-assets';
 import { ImpersonationBanner } from '@/shared/components/impersonation-banner';
 import { Sidebar } from '@/shared/components/sidebar';
 import { useAuth } from '@/shared/auth/use-auth';
@@ -95,10 +95,10 @@ export function AppShell({ children }: { children: ReactNode }) {
     () =>
       ({
         ...branding.style,
-        '--tenant-accent': 'var(--petflow-primary)',
-        '--tenant-accent-soft': 'color-mix(in srgb, var(--petflow-primary) 18%, transparent)',
-        '--tenant-primary': 'var(--petflow-gradient-start)',
-        '--tenant-primary-soft': 'color-mix(in srgb, var(--petflow-gradient-end) 14%, transparent)'
+        '--tenant-accent': 'var(--pet-primary)',
+        '--tenant-accent-soft': 'color-mix(in srgb, var(--pet-primary) 18%, transparent)',
+        '--tenant-primary': 'var(--pet-gradient-start)',
+        '--tenant-primary-soft': 'color-mix(in srgb, var(--pet-gradient-end) 14%, transparent)'
       }) as CSSProperties,
     [branding.style]
   );
@@ -130,10 +130,10 @@ export function AppShell({ children }: { children: ReactNode }) {
         {/* Topbar */}
         <header className="sticky top-0 z-30 flex h-[4.25rem] shrink-0 items-center gap-3 border-b border-slate-200/80 bg-[linear-gradient(180deg,rgba(255,255,255,0.98),rgba(247,250,248,0.95))] px-5 shadow-[0_10px_28px_-24px_rgba(15,23,42,0.12)] backdrop-blur-sm">
           <div className="flex min-w-0 items-center gap-3">
-            <PetFlowMark className="h-9 w-9 shrink-0 rounded-[1rem]" />
+            <PetMark className="h-9 w-9 shrink-0 rounded-[1rem]" />
             <div className="min-w-0">
               <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[color:var(--accent)]">
-                {messages.mobilePetFlow}
+                {messages.mobilePetWorkspace}
               </p>
               <p className="truncate text-sm font-semibold text-slate-900">
                 {headerMeta.label}
@@ -271,7 +271,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           <div className="border-b border-slate-200/80 bg-[linear-gradient(90deg,rgba(16,185,129,0.05),rgba(255,255,255,0.98),rgba(15,118,110,0.04))]">
             <div className="mx-auto flex w-full max-w-[1600px] flex-col gap-3 px-6 py-2.5 lg:px-8 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex items-center gap-3">
-                <PetFlowMark className="h-8 w-8 shrink-0 rounded-[0.95rem]" />
+                <PetMark className="h-8 w-8 shrink-0 rounded-[0.95rem]" />
                 <div className="min-w-0">
                   <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[color:var(--accent)]">
                     Administração da operação
@@ -301,7 +301,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             <footer className="mt-8 border-t border-slate-200/80 pt-4">
               <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                 <div>
-                  <p className="text-sm font-semibold text-slate-900">{messages.mobilePetFlow}</p>
+                  <p className="text-sm font-semibold text-slate-900">{messages.mobilePetWorkspace}</p>
                   <p className="text-xs text-slate-600">
                     Continuação direta da experiência operacional.
                   </p>

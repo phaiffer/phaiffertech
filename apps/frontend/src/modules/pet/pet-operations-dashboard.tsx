@@ -111,7 +111,7 @@ function OperationsStatCard({
   icon?: ReactNode;
 }) {
   const toneClass = tone === 'accent'
-    ? 'border-transparent bg-[linear-gradient(135deg,var(--accent),var(--petflow-teal))] text-white shadow-[0_24px_48px_-34px_rgba(16,185,129,0.52)]'
+    ? 'border-transparent bg-[linear-gradient(135deg,var(--accent),var(--pet-teal))] text-white shadow-[0_24px_48px_-34px_rgba(16,185,129,0.52)]'
     : tone === 'warning'
       ? 'border-warning/20 bg-[linear-gradient(180deg,rgba(202,138,4,0.08),rgba(255,255,255,0.98))]'
       : 'border-slate-200/80 bg-white/95 shadow-[0_18px_38px_-32px_rgba(15,23,42,0.12)]';
@@ -558,7 +558,7 @@ export function PetOperationsDashboard({
             </Link>
             <Link
               href="/pet/invoices"
-              className="inline-flex items-center rounded-xl bg-[linear-gradient(135deg,var(--accent),var(--petflow-teal))] px-4 py-3 text-sm font-semibold text-white shadow-[0_18px_38px_-26px_rgba(16,185,129,0.52)]"
+              className="inline-flex items-center rounded-xl bg-[linear-gradient(135deg,var(--accent),var(--pet-teal))] px-4 py-3 text-sm font-semibold text-white shadow-[0_18px_38px_-26px_rgba(16,185,129,0.52)]"
             >
               {t.actions.billing}
             </Link>

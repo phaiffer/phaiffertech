@@ -3,7 +3,7 @@
 import { FormEvent, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { BrandMark, PetFlowMark } from '@/shared/components/brand-assets';
+import { BrandMark, PetMark } from '@/shared/components/brand-assets';
 import {
   clearImpersonationBackupSession,
   clearSession,
@@ -93,7 +93,7 @@ export default function ResetPasswordPageClient({ token }: ResetPasswordPageClie
       <main className="mx-auto flex min-h-screen w-full max-w-5xl items-center justify-center px-6 py-12">
         <div className="w-full max-w-[420px]">
           <Link href="/" className="mb-8 inline-flex items-center gap-3 text-foreground">
-            <PetFlowMark className="h-14 w-14" />
+            <PetMark className="h-14 w-14" />
             <div>
               <span className="block text-lg font-semibold tracking-tight">Gestão Pet</span>
               <span className="mt-1 inline-flex items-center gap-1.5 text-[10px] font-medium uppercase tracking-[0.16em] text-slate-500">
@@ -120,7 +120,7 @@ export default function ResetPasswordPageClient({ token }: ResetPasswordPageClie
                   <Link
                     href="/forgot-password"
                     className={publicPrimaryButtonClass}
-                    style={{ backgroundImage: 'linear-gradient(135deg, var(--tenant-accent), var(--petflow-teal))' }}
+                    style={{ backgroundImage: 'linear-gradient(135deg, var(--tenant-accent), var(--pet-teal))' }}
                   >
                     {t.requestNewLinkLabel}
                   </Link>
@@ -183,7 +183,7 @@ export default function ResetPasswordPageClient({ token }: ResetPasswordPageClie
                     type="submit"
                     disabled={submitting}
                     className={`${publicPrimaryButtonClass} w-full disabled:cursor-not-allowed disabled:opacity-50`}
-                    style={{ backgroundImage: 'linear-gradient(135deg, var(--tenant-accent), var(--petflow-teal))' }}
+                    style={{ backgroundImage: 'linear-gradient(135deg, var(--tenant-accent), var(--pet-teal))' }}
                   >
                     {submitting ? t.loadingLabel : t.submitLabel}
                   </button>

@@ -133,7 +133,7 @@ const ptBRMessages = {
   },
   appShell: {
     mobileOverview: 'Visão geral',
-    mobilePetFlow: 'Gestão Pet',
+    mobilePetWorkspace: 'Gestão Pet',
     mobileSettings: 'Configurações',
     quickSearchWorkspace: 'Buscar no workspace',
     quickSearchPet: 'Buscar atendimentos, clientes ou cobrança',
@@ -160,7 +160,7 @@ const ptBRMessages = {
   sidebar: {
     overview: 'Visão geral',
     settings: 'Configurações',
-    petFlow: 'Gestão Pet',
+    petWorkspace: 'Gestão Pet',
     focusLabel: 'Foco operacional',
     workspaceLabel: 'Workspace',
     signOut: 'Sair'

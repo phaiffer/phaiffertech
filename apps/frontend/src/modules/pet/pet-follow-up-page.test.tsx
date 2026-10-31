@@ -45,7 +45,7 @@ describe('PetFollowUpPage', () => {
     navigationState.searchParams = new URLSearchParams();
   });
 
-  it('defaults to the first visible PetFlow follow-up tab', () => {
+  it('defaults to the first visible Pet follow-up tab', () => {
     render(<PetFollowUpPage />);
 
     expect(screen.getByTestId('pet-subnav')).toBeInTheDocument();

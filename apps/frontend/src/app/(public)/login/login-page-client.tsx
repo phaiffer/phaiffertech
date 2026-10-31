@@ -5,7 +5,7 @@ import { useEffect, useMemo, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { BrandMark, PetFlowMark } from '@/shared/components/brand-assets';
+import { BrandMark, PetMark } from '@/shared/components/brand-assets';
 import {
   buildLoginVisualContext,
   publicPrimaryButtonClass,
@@ -139,7 +139,7 @@ export default function LoginPageClient({ nextPath }: LoginPageClientProps) {
           <div className="mx-auto w-full max-w-md">
             <div className="mb-10 flex items-center justify-between gap-4">
               <Link href="/" className="inline-flex items-center gap-2.5 text-foreground">
-                <PetFlowMark className="h-11 w-11 shrink-0 rounded-[1.15rem]" />
+                <PetMark className="h-11 w-11 shrink-0 rounded-[1.15rem]" />
                 <div>
                   <span className="block text-lg font-semibold tracking-tight text-slate-900">Gestão Pet</span>
                   <span className="mt-1 inline-flex items-center gap-1.5 text-[10px] font-medium uppercase tracking-[0.16em] text-slate-600">
@@ -178,7 +178,7 @@ export default function LoginPageClient({ nextPath }: LoginPageClientProps) {
                   value={tenantCode}
                   onChange={(event) => handleTenantCodeChange(event.target.value)}
                   onBlur={(event) => commitTenantCodeVisual(event.target.value)}
-                  autoComplete="section-petflow organization"
+                  autoComplete="section-pet organization"
                   autoCapitalize="none"
                   autoCorrect="off"
                   spellCheck={false}
@@ -259,7 +259,7 @@ export default function LoginPageClient({ nextPath }: LoginPageClientProps) {
                   type="submit"
                   disabled={submitting}
                   className={`${publicPrimaryButtonClass} w-full disabled:cursor-not-allowed disabled:opacity-50`}
-                  style={{ backgroundImage: 'linear-gradient(135deg, var(--tenant-accent), var(--petflow-teal))' }}
+                  style={{ backgroundImage: 'linear-gradient(135deg, var(--tenant-accent), var(--pet-teal))' }}
                 >
                   {submitting ? t.loadingLabel : t.submitLabel}
                 </button>

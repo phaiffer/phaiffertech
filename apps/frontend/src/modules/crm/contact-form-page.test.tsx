@@ -155,7 +155,7 @@ describe('ContactFormPage', () => {
     expect(screen.getByLabelText('Empresa manual (compatibilidade)')).toBeInTheDocument();
   });
 
-  it('uses the PetFlow support-contact surface without loading companies', async () => {
+  it('uses the Pet support-contact surface without loading companies', async () => {
     render(<ContactFormPage surface="pet" />);
 
     await waitFor(() => {

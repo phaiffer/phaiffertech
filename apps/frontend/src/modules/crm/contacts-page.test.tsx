@@ -79,7 +79,7 @@ describe('CrmContactsPage', () => {
     expect(screen.getAllByText('Acme Vet').length).toBeGreaterThan(0);
   });
 
-  it('renders the PetFlow support-contact surface without exposing the CRM company filter', async () => {
+  it('renders the Pet support-contact surface without exposing the CRM company filter', async () => {
     render(<CrmContactsPage surface="pet" />);
 
     await waitFor(() => {

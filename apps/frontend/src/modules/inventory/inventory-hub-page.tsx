@@ -8,7 +8,7 @@ import { notificationService } from '@/shared/services/notification-service';
 import { PageTitle } from '@/shared/ui/page-title';
 
 /* ─── Inventory Hub ──────────────────────────────────────────────────────────
- * The visible inventory surface is intentionally focused on PetFlow for the
+ * The visible inventory surface is intentionally focused on Pet for the
  * current demo cycle. Shared foundations remain intact under the hood.
  * ─────────────────────────────────────────────────────────────────────────── */
 

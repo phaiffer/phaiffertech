@@ -169,7 +169,7 @@ describe('CrmTasksPage', () => {
     expect(screen.getAllByLabelText('Registro vinculado')[0]).toHaveValue('client-99');
   });
 
-  it('switches to the PetFlow follow-up surface while keeping legacy compatibility readable', async () => {
+  it('switches to the Pet follow-up surface while keeping legacy compatibility readable', async () => {
     petServiceMock.listClients.mockResolvedValue(createPageResponse([
       {
         id: 'client-1',
