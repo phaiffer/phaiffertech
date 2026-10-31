@@ -53,7 +53,16 @@ class DemoCommercialEnvironmentServiceIntegrationTest extends AbstractIntegratio
         assertEquals(3, countRows("SELECT COUNT(*) FROM pet_profiles WHERE tenant_id = ? AND deleted_at IS NULL", tenantId.toString()));
         assertEquals(1, countRows("SELECT COUNT(*) FROM pet_plan_templates WHERE tenant_id = ? AND deleted_at IS NULL", tenantId.toString()));
         assertEquals(1, countRows("SELECT COUNT(*) FROM pet_plan_template_services WHERE tenant_id = ? AND deleted_at IS NULL", tenantId.toString()));
-        assertEquals(1, countRows("SELECT COUNT(*) FROM pet_service_inventory_links WHERE tenant_id = ? AND deleted_at IS NULL", tenantId.toString()));
+        assertEquals(4, countRows("SELECT COUNT(*) FROM pet_service_inventory_links WHERE tenant_id = ? AND deleted_at IS NULL", tenantId.toString()));
+        assertEquals(3, countRows(
+                "SELECT COUNT(DISTINCT service_id) FROM pet_service_inventory_links WHERE tenant_id = ? AND deleted_at IS NULL",
+                tenantId.toString()
+        ));
+        // Open visits (in progress and scheduled) carry the recipe snapshot used to apply stock.
+        assertEquals(3, countRows(
+                "SELECT COUNT(*) FROM pet_appointment_service_inventory WHERE tenant_id = ? AND deleted_at IS NULL",
+                tenantId.toString()
+        ));
         assertEquals(1, countRows("SELECT COUNT(*) FROM pet_billing_message_settings WHERE tenant_id = ? AND deleted_at IS NULL", tenantId.toString()));
     }
 
