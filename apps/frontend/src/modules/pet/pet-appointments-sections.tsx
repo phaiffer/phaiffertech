@@ -22,14 +22,17 @@ export type PetSelectOption = {
   label: string;
 };
 
-export type PetAppointmentServiceSummary = {
-  title: string;
-  description: string;
-  headline: string;
+export type PetAppointmentServiceLineLabels = {
   selectedServicesLabel: string;
   emptySelectionLabel: string;
   addServiceLabel: string;
   removeServiceLabel: string;
+};
+
+export type PetAppointmentServiceSummary = {
+  title: string;
+  description: string;
+  headline: string;
   details: Array<{
     label: string;
     value: string;
@@ -256,6 +259,7 @@ type PetAppointmentFormProps = {
   onExtrasDescriptionChange: (value: string) => void;
   serviceSummaryTitle: string;
   serviceSummaryEmpty: string;
+  serviceLineLabels: PetAppointmentServiceLineLabels;
   selectedServiceSummary: PetAppointmentServiceSummary | null;
   submitting: boolean;
   appointmentReferencesReady: boolean;
@@ -303,6 +307,7 @@ export function PetAppointmentForm({
   onExtrasDescriptionChange,
   serviceSummaryTitle,
   serviceSummaryEmpty,
+  serviceLineLabels,
   selectedServiceSummary,
   submitting,
   appointmentReferencesReady,
@@ -343,12 +348,12 @@ export function PetAppointmentForm({
                   disabled={!canAddSelectedService || servicesLookupUnavailable}
                   className="ui-secondary-button whitespace-nowrap"
                 >
-                  {selectedServiceSummary?.addServiceLabel ?? 'Add service'}
+                  {serviceLineLabels.addServiceLabel}
                 </button>
               </div>
               <div className="rounded-xl border border-[color:var(--app-shell-border)] bg-white/80 px-4 py-3">
                 <p className="text-xs font-semibold uppercase tracking-wide text-[color:var(--app-shell-muted)]">
-                  {selectedServiceSummary?.selectedServicesLabel ?? 'Selected services'}
+                  {serviceLineLabels.selectedServicesLabel}
                 </p>
                 {selectedServices.length > 0 ? (
                   <div className="mt-3 space-y-2">
@@ -404,7 +409,7 @@ export function PetAppointmentForm({
                             onClick={() => onRemoveService(service.serviceId)}
                             className="ui-inline-button whitespace-nowrap"
                           >
-                            {selectedServiceSummary?.removeServiceLabel ?? 'Remove'}
+                            {serviceLineLabels.removeServiceLabel}
                           </button>
                         ) : null}
                       </div>
@@ -412,7 +417,7 @@ export function PetAppointmentForm({
                   </div>
                 ) : (
                   <p className="mt-2 text-xs text-[color:var(--app-shell-muted)]">
-                    {selectedServiceSummary?.emptySelectionLabel ?? 'Add at least one structured service before saving.'}
+                    {serviceLineLabels.emptySelectionLabel}
                   </p>
                 )}
               </div>

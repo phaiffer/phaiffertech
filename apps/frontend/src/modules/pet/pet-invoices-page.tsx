@@ -151,6 +151,17 @@ function formatPaymentEventLabel(eventType: string) {
   return paymentEventLabels[eventType] ?? eventType;
 }
 
+const businessContextLabels: Record<string, string> = {
+  'PET.APPOINTMENT': 'Atendimento de banho e tosa',
+  'PET.CLIENT_PLAN': 'Plano do cliente',
+  'PET.CLIENT': 'Cliente',
+  'PET.SERVICE': 'Servico do catalogo'
+};
+
+function formatBusinessContextLabel(contextType: string) {
+  return businessContextLabels[contextType.toUpperCase()] ?? formatCategoryLabel(contextType);
+}
+
 function formatPaymentEventSource(event: FinancePaymentEvent) {
   const channel = event.provider === 'MANUAL' ? 'Registro manual' : `Provedor ${event.provider}`;
   return event.recordedByName ? `${channel} por ${event.recordedByName}` : `${channel} pelo sistema`;
@@ -590,7 +601,14 @@ export function PetInvoicesPage() {
     return () => {
       active = false;
     };
-  }, [canReadFinanceCash, canReadFinanceInvoices, reviewedInvoice?.financeInvoiceId]);
+    // paidAmount/status refresh the panel after a payment is recorded on the reviewed invoice.
+  }, [
+    canReadFinanceCash,
+    canReadFinanceInvoices,
+    reviewedInvoice?.financeInvoiceId,
+    reviewedInvoice?.paidAmount,
+    reviewedInvoice?.status
+  ]);
 
   const totalItems = resolveTotalItems(pageData);
   const clientsLookupUnavailable = lookupIssues.some((issue) => issue.key === 'clients');
@@ -639,7 +657,7 @@ export function PetInvoicesPage() {
 
       if (activePlan && activePlan.remainingSessions <= 2) {
         note = client?.email
-          ? 'O email de renovacao entra na demo quando o plano chega a visita penultima.'
+          ? 'A mensagem de renovacao fica pronta para envio quando o plano chega a visita penultima.'
           : 'O alerta de renovacao esta pronto, mas este cliente ainda precisa de um email cadastrado.';
       } else if (petTaxiTotal > 0) {
         note = 'O pet taxi ja esta refletido como cobranca extra na previsao do proximo ciclo.';
@@ -893,7 +911,8 @@ export function PetInvoicesPage() {
             {item.businessContextLabel ?? item.description ?? 'Fatura manual'}
           </p>
           <p className={`mt-1 ${sharedCompactTextClass}`}>
-            {item.businessContextType ? `${formatCategoryLabel(item.businessContextType)} operacional` : 'Fluxo financeiro manual'} • Documento financeiro vinculado {item.financeInvoiceId}
+            {item.businessContextType ? formatBusinessContextLabel(item.businessContextType) : 'Fluxo financeiro manual'}
+            {item.financeInvoiceId ? ' • Registro financeiro vinculado' : ''}
           </p>
         </div>
       )

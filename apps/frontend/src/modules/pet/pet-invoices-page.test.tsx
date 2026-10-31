@@ -223,7 +223,7 @@ describe('PetInvoicesPage', () => {
 
     expect(screen.getByText('Projecao do proximo ciclo')).toBeInTheDocument();
     expect(screen.getByText('Banho e tosa 4x · 2 sessoes restantes')).toBeInTheDocument();
-    expect(screen.getByText('O email de renovacao entra na demo quando o plano chega a visita penultima.')).toBeInTheDocument();
+    expect(screen.getByText('A mensagem de renovacao fica pronta para envio quando o plano chega a visita penultima.')).toBeInTheDocument();
     expect(screen.getByText('Saldo em aberto')).toBeInTheDocument();
     expect(screen.getAllByText('Ana Costa').length).toBeGreaterThan(0);
 
