@@ -53,14 +53,15 @@ public class PetInventoryMovementController {
         return ApiResponse.success(service.getById(id));
     }
 
+    // Writes follow the class-level entitlements: grooming restocks its own supplies too.
     @PostMapping
-    @RequirePermission(value = "pet.inventory.create", entitlement = TenantEntitlementKeys.PET_RETAIL)
+    @RequirePermission("pet.inventory.create")
     public ApiResponse<PetInventoryMovementResponse> create(@Valid @RequestBody PetInventoryMovementCreateRequest request) {
         return ApiResponse.success(service.create(request));
     }
 
     @PutMapping("/{id}")
-    @RequirePermission(value = "pet.inventory.update", entitlement = TenantEntitlementKeys.PET_RETAIL)
+    @RequirePermission("pet.inventory.update")
     public ApiResponse<PetInventoryMovementResponse> update(
             @PathVariable UUID id,
             @Valid @RequestBody PetInventoryMovementUpdateRequest request
@@ -69,14 +70,14 @@ public class PetInventoryMovementController {
     }
 
     @DeleteMapping("/{id}")
-    @RequirePermission(value = "pet.inventory.delete", entitlement = TenantEntitlementKeys.PET_RETAIL)
+    @RequirePermission("pet.inventory.delete")
     public ApiResponse<Void> delete(@PathVariable UUID id) {
         service.delete(id);
         return ApiResponse.success(null);
     }
 
     @PatchMapping("/{id}/restore")
-    @RequirePermission(value = "pet.inventory.delete", entitlement = TenantEntitlementKeys.PET_RETAIL)
+    @RequirePermission("pet.inventory.delete")
     public ApiResponse<PetInventoryMovementResponse> restore(@PathVariable UUID id) {
         return ApiResponse.success(service.restore(id));
     }

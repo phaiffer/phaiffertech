@@ -41,9 +41,9 @@ class TenantManagementIntegrationTest extends AbstractIntegrationTest {
         assertEquals(403, productWrite.getStatusCode().value());
         assertTrue(requireBody(productWrite).path("message").asText().contains("pet.retail"));
 
+        // Grooming restocks its own supplies: the write passes authorization and fails only on the empty body.
         ResponseEntity<JsonNode> inventoryWrite = post("/pet/inventory", Map.of(), grooming);
-        assertEquals(403, inventoryWrite.getStatusCode().value());
-        assertTrue(requireBody(inventoryWrite).path("message").asText().contains("pet.retail"));
+        assertEquals(400, inventoryWrite.getStatusCode().value());
 
         ResponseEntity<JsonNode> medicalRecords = get("/pet/medical-records?page=0&size=20", grooming);
         assertEquals(403, medicalRecords.getStatusCode().value());
