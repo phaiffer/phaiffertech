@@ -104,9 +104,9 @@ describe('PetServicesPage', () => {
       expect(petServiceMock.listServices).toHaveBeenCalledTimes(1);
     });
 
-    expect(screen.getByText('Catalogo de Banho e Tosa')).toBeInTheDocument();
+    expect(screen.getByText('Grooming catalog')).toBeInTheDocument();
     expect(screen.getByText('Banho Premium Porte Médio')).toBeInTheDocument();
     expect(screen.getByText('Shampoo Neutro x50 ML')).toBeInTheDocument();
-    expect(screen.getByText('Pode consumir sessoes de plano')).toBeInTheDocument();
+    expect(screen.getByText('Can use plan sessions')).toBeInTheDocument();
   });
 });

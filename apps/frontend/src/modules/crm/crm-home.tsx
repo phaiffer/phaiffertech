@@ -5,7 +5,6 @@ import { useEffect, useMemo, useState } from 'react';
 import { DashboardSection } from '@/shared/dashboard/dashboard-section';
 import { EmptyStateCard } from '@/shared/dashboard/empty-state-card';
 import { MetricGrid } from '@/shared/dashboard/metric-grid';
-import { ApiClientError } from '@/shared/lib/http';
 import {
   ModuleWorkspaceAction,
   ModuleWorkspaceFactList,
@@ -30,6 +29,7 @@ import { crmService } from '@/shared/services/crm-service';
 import { usePermissions } from '@/shared/auth/usePermissions';
 import { useAppI18n } from '@/shared/i18n/app-i18n-provider';
 import { CrmDashboardSummary } from '@/shared/types/crm';
+import { resolveApiErrorMessage } from '@/shared/lib/api-error-message';
 
 type CrmPrimaryAction = {
   title: string;
@@ -361,7 +361,7 @@ export function CrmHome() {
         }
 
         setSummary(null);
-        setError(err instanceof ApiClientError ? err.message : 'Unable to load the CRM workspace summary.');
+        setError(resolveApiErrorMessage(err, 'Unable to load the CRM workspace summary.'));
         setLoadingSummary(false);
       });
 

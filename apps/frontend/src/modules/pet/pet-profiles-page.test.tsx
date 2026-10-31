@@ -78,13 +78,13 @@ describe('PetProfilesPage', () => {
       expect(petServiceMock.listProfiles).toHaveBeenCalledTimes(1);
     });
 
-    fireEvent.click(screen.getByRole('button', { name: 'Editar' }));
-    fireEvent.change(screen.getByLabelText('Porte'), { target: { value: 'MEDIUM' } });
-    fireEvent.change(screen.getByLabelText('Tipo de pelagem'), { target: { value: 'Longa' } });
-    fireEvent.change(screen.getByLabelText('Comportamento'), { target: { value: 'Calma' } });
-    fireEvent.change(screen.getByLabelText('Restricoes'), { target: { value: 'Evitar perfume' } });
-    fireEvent.change(screen.getByLabelText('Observacoes de banho/tosa'), { target: { value: 'Secagem morna' } });
-    fireEvent.click(screen.getByRole('button', { name: 'Atualizar pet' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Edit' }));
+    fireEvent.change(screen.getByLabelText('Size'), { target: { value: 'MEDIUM' } });
+    fireEvent.change(screen.getByLabelText('Coat type'), { target: { value: 'Longa' } });
+    fireEvent.change(screen.getByLabelText('Behavior'), { target: { value: 'Calma' } });
+    fireEvent.change(screen.getByLabelText('Restrictions'), { target: { value: 'Evitar perfume' } });
+    fireEvent.change(screen.getByLabelText('Grooming notes'), { target: { value: 'Secagem morna' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Update pet' }));
 
     await waitFor(() => {
       expect(petServiceMock.updateProfile).toHaveBeenCalledWith('pet-1', expect.objectContaining({

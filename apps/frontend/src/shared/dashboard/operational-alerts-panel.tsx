@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 import { ApiClientError } from '@/shared/lib/http';
 import { notificationService } from '@/shared/services/notification-service';
 import type { NotificationAlertItem, NotificationSummary } from '@/shared/types/notification';
+import { useAppMessages } from '@/shared/i18n/app-i18n-provider';
 
 function alertTypeClasses(type: NotificationAlertItem['type']) {
   if (type === 'ALERT') return 'border-destructive/30 bg-destructive/5 text-destructive';
@@ -43,6 +44,7 @@ type OperationalAlertsPanelProps = {
 };
 
 export function OperationalAlertsPanel({ className = '' }: OperationalAlertsPanelProps) {
+  const copy = useAppMessages().screens.shell;
   const [summary, setSummary] = useState<NotificationSummary | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -73,7 +75,7 @@ export function OperationalAlertsPanel({ className = '' }: OperationalAlertsPane
       <div className="mb-4 flex items-center justify-between gap-3">
         <div>
           <h2 className="text-base font-semibold text-[color:var(--app-shell-heading)]">
-            Operational Alerts
+            {copy.operationalAlerts}
           </h2>
           <p className="mt-1 text-sm text-[color:var(--app-shell-muted)]">
             {summary.criticalCount > 0

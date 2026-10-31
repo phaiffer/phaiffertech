@@ -10,6 +10,7 @@ import {
   setAuthNotice
 } from '@/shared/lib/session';
 import { ApiClientError } from '@/shared/lib/http';
+import { resolveApiErrorMessage } from '@/shared/lib/api-error-message';
 import { authService } from '@/shared/services/auth-service';
 import {
   buildLoginVisualContext,
@@ -78,10 +79,8 @@ export default function ResetPasswordPageClient({ token }: ResetPasswordPageClie
       if (err instanceof ApiClientError && err.status === 403) {
         setInvalidLink(true);
         setError(null);
-      } else if (err instanceof ApiClientError) {
-        setError(err.message);
       } else {
-        setError(t.errorFallback);
+        setError(resolveApiErrorMessage(err, t.errorFallback));
       }
     } finally {
       setSubmitting(false);

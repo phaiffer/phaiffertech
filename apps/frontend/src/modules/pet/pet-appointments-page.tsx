@@ -50,6 +50,7 @@ import { PageSection } from '@/shared/ui/page-section';
 import { PageTitle } from '@/shared/ui/page-title';
 import { Pagination } from '@/shared/ui/pagination';
 import { sharedPageStackClass } from '@/shared/components/public-visual-system';
+import { resolveApiErrorMessage } from '@/shared/lib/api-error-message';
 
 const pageSize = 10;
 
@@ -166,7 +167,7 @@ function formatActualInventoryPreview(
   const actualConsumptions = consumptions.filter((consumption) => consumption.actualQuantity != null);
   if (actualConsumptions.length === 0) {
     return locale === 'pt-BR'
-      ? 'Consumo real: ainda nao registrado.'
+      ? 'Consumo real: ainda não registrado.'
       : 'Actual usage: not recorded yet.';
   }
 
@@ -223,29 +224,29 @@ function resolveActualConsumptionCopy(locale: string): ActualConsumptionCopy {
       planned: 'Planejado',
       actual: 'Real',
       applied: 'Aplicado',
-      notRecorded: 'nao registrado',
-      notApplied: 'nao aplicado',
+      notRecorded: 'não registrado',
+      notApplied: 'não aplicado',
       variance: 'Variancia',
       status: 'Status',
-      snapshotOnly: 'Somente leitura. Esta linha usa apenas o preview atual da receita porque o snapshot estruturado nao existe neste historico.',
+      snapshotOnly: 'Somente leitura. Esta linha usa apenas o preview atual da receita porque o snapshot estruturado não existe neste histórico.',
       noInventory: 'Nenhum item planejado nesta linha.',
-      saveFirst: 'Salve a composicao de servicos primeiro para registrar o consumo real com seguranca.',
+      saveFirst: 'Salve a composição de serviços primeiro para registrar o consumo real com segurança.',
       bookFirst: 'Agende o atendimento primeiro para registrar consumo real por linha.',
-      rowUnavailable: 'Consumo real indisponivel para esta linha historica sem snapshot estruturado.',
+      rowUnavailable: 'Consumo real indisponível para esta linha histórica sem snapshot estruturado.',
       updated: 'Consumo real atualizado.',
       applySuccess: 'Consumo aplicado ao estoque.',
       stockAppliedBadge: 'Estoque aplicado',
-      stockPendingBadge: 'Aplicacao pendente',
-      stockApplied: 'Consumo ja aplicado ao estoque.',
+      stockPendingBadge: 'Aplicação pendente',
+      stockApplied: 'Consumo já aplicado ao estoque.',
       stockAppliedOn: 'Aplicado ao estoque em {value}.',
-      stockPending: 'Pronto para uma aplicacao explicita de estoque.',
+      stockPending: 'Pronto para uma aplicação explícita de estoque.',
       stockNotReady: 'Registre uma quantidade real positiva e marque como pronto para aplicar antes de baixar estoque.',
-      stockNoAction: 'Nenhuma baixa de estoque necessaria para esta linha.',
+      stockNoAction: 'Nenhuma baixa de estoque necessária para esta linha.',
       wholeQuantityOnly: 'Esta primeira etapa aceita apenas quantidades inteiras de estoque.',
       varianceLabels: {
         PREVIEW_ONLY: 'Somente preview',
-        PLANNED_ONLY: 'So planejado',
-        ADJUSTED_NOT_APPLIED: 'Real nao aplicado',
+        PLANNED_ONLY: 'Só planejado',
+        ADJUSTED_NOT_APPLIED: 'Real não aplicado',
         APPLIED_MATCHED: 'Aplicado igual ao planejado',
         APPLIED_DIFFERENT: 'Aplicado diferente do planejado'
       }
@@ -405,21 +406,21 @@ function aggregateInventoryConsumptions(
 function resolveServiceSummaryCopy(locale: string) {
   if (locale === 'pt-BR') {
     return {
-      title: 'Servicos estruturados',
-      empty: 'Adicione um ou mais servicos para confirmar composicao, duracao total, preco base e regra de agendamento.',
-      description: 'Este atendimento usa definicoes estruturadas do catalogo do tenant, nao nomes soltos.',
-      selectedServicesLabel: 'Servicos selecionados',
-      emptySelectionLabel: 'Adicione pelo menos um servico estruturado antes de salvar.',
-      addServiceLabel: 'Adicionar servico',
+      title: 'Serviços estruturados',
+      empty: 'Adicione um ou mais serviços para confirmar composição, duração total, preço base e regra de agendamento.',
+      description: 'Este atendimento usa definições estruturadas do catálogo do tenant, não nomes soltos.',
+      selectedServicesLabel: 'Serviços selecionados',
+      emptySelectionLabel: 'Adicione pelo menos um serviço estruturado antes de salvar.',
+      addServiceLabel: 'Adicionar serviço',
       removeServiceLabel: 'Remover',
       category: 'Categoria',
-      servicesCount: 'Servicos',
+      servicesCount: 'Serviços',
       status: 'Status',
       scheduling: 'Regra de agendamento',
-      duration: 'Duracao total',
-      basePrice: 'Preco base total',
-      commissionLines: 'Linhas com comissao',
-      projectedCommission: 'Comissao projetada',
+      duration: 'Duração total',
+      basePrice: 'Preço base total',
+      commissionLines: 'Linhas com comissão',
+      projectedCommission: 'Comissão projetada',
       checkout: 'Checkout previsto',
       inventoryUsage: 'Consumo previsto',
       inventoryNone: 'Sem consumo previsto',
@@ -428,30 +429,30 @@ function resolveServiceSummaryCopy(locale: string) {
       flexible: 'Avulso e plano habilitados',
       planOnly: 'Somente por plano',
       standaloneOnly: 'Somente avulso',
-      unavailable: 'Indisponivel para novos agendamentos',
-      planReady: 'Todos os servicos selecionados podem ser consumidos pelo plano vinculado.',
-      planBlocked: 'Algum servico selecionado nao pode ser consumido por plano.',
-      standaloneReady: 'Todos os servicos selecionados podem ser agendados como atendimento avulso.',
-      standaloneBlocked: 'Algum servico selecionado exige plano vinculado antes do agendamento.',
-      inactiveLegacy: 'Servico inativo mantido apenas para preservar a edicao segura de um agendamento historico.',
-      missingLegacy: 'A definicao original do servico nao esta mais no catalogo ativo. Mantenha o vinculo apenas para edicao historica segura.',
-      commissionReady: 'Comissao pronta',
-      commissionExcluded: 'Comissao excluida pela regra do servico',
-      commissionPending: 'Servico elegivel, mas o profissional ainda precisa de taxa de comissao.',
-      commissionUnavailable: 'Regra de comissao indisponivel para esta linha legada.',
-      commissionExcludedNotice: 'Nenhum servico selecionado gera comissao.',
-      commissionProjectedNotice: 'A projecao considera apenas as linhas que permitem comissao.',
+      unavailable: 'Indisponível para novos agendamentos',
+      planReady: 'Todos os serviços selecionados podem ser consumidos pelo plano vinculado.',
+      planBlocked: 'Algum serviço selecionado não pode ser consumido por plano.',
+      standaloneReady: 'Todos os serviços selecionados podem ser agendados como atendimento avulso.',
+      standaloneBlocked: 'Algum serviço selecionado exige plano vinculado antes do agendamento.',
+      inactiveLegacy: 'Serviço inativo mantido apenas para preservar a edição segura de um agendamento histórico.',
+      missingLegacy: 'A definição original do serviço não está mais no catálogo ativo. Mantenha o vínculo apenas para edição histórica segura.',
+      commissionReady: 'Comissão pronta',
+      commissionExcluded: 'Comissão excluída pela regra do serviço',
+      commissionPending: 'Serviço elegível, mas o profissional ainda precisa de taxa de comissão.',
+      commissionUnavailable: 'Regra de comissão indisponível para esta linha legada.',
+      commissionExcludedNotice: 'Nenhum serviço selecionado gera comissão.',
+      commissionProjectedNotice: 'A projeção considera apenas as linhas que permitem comissão.',
       commissionPendingNotice: (count: number) => count === 1
-        ? '1 linha elegivel ainda precisa de taxa de comissao no profissional.'
-        : `${count} linhas elegiveis ainda precisam de taxa de comissao no profissional.`,
+        ? '1 linha elegível ainda precisa de taxa de comissão no profissional.'
+        : `${count} linhas elegíveis ainda precisam de taxa de comissão no profissional.`,
       commissionUnavailableNotice: (count: number) => count === 1
-        ? '1 linha legada ainda nao possui snapshot estruturado de comissao.'
-        : `${count} linhas legadas ainda nao possuem snapshot estruturado de comissao.`,
+        ? '1 linha legada ainda não possui snapshot estruturado de comissão.'
+        : `${count} linhas legadas ainda não possuem snapshot estruturado de comissão.`,
       professionalPendingNotice: (count: number) => count === 1
-        ? '1 linha ainda esta sem profissional responsavel.'
-        : `${count} linhas ainda estao sem profissional responsavel.`,
+        ? '1 linha ainda está sem profissional responsável.'
+        : `${count} linhas ainda estão sem profissional responsável.`,
       legacyHeadlineSuffix: 'reserva legada',
-      bundleHeadlineSuffix: 'servicos selecionados'
+      bundleHeadlineSuffix: 'serviços selecionados'
     };
   }
 
@@ -507,6 +508,7 @@ function resolveServiceSummaryCopy(locale: string) {
 }
 
 export function PetAppointmentsPage() {
+  const screenCopy = useAppMessages().screens.petAppointments;
   const { locale } = useAppI18n();
   const messages = useAppMessages().petAppointments;
   const commonButtons = useAppMessages().common.buttons;
@@ -1038,7 +1040,7 @@ export function PetAppointmentsPage() {
       setSuccess(actualConsumptionCopy.updated);
       await loadData(pageData.page, search, statusFilter, clientFilterId, petFilterId, serviceFilterId, professionalFilterId, viewMode, currentMonth);
     } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : messages.errors.save);
+      setError(resolveApiErrorMessage(err, messages.errors.save));
     } finally {
       setSavingActualServiceLineId(null);
     }
@@ -1068,7 +1070,7 @@ export function PetAppointmentsPage() {
       setSuccess(actualConsumptionCopy.applySuccess);
       await loadData(pageData.page, search, statusFilter, clientFilterId, petFilterId, serviceFilterId, professionalFilterId, viewMode, currentMonth);
     } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : messages.errors.save);
+      setError(resolveApiErrorMessage(err, messages.errors.save));
     } finally {
       setApplyingInventoryRowId(null);
     }
@@ -1171,7 +1173,7 @@ export function PetAppointmentsPage() {
         setPageData(result);
       }
     } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : messages.errors.load);
+      setError(resolveApiErrorMessage(err, messages.errors.load));
     } finally {
       setLoading(false);
     }
@@ -1347,25 +1349,25 @@ export function PetAppointmentsPage() {
     const parsedExtrasAmount = extrasAmount ? parseFloat(extrasAmount) : undefined;
     if (!editingId && selectedServiceEntries.some((entry) => entry.catalogService && !entry.catalogService.active)) {
       setSubmitting(false);
-      setError('Selected service is inactive for new bookings.');
+      setError(screenCopy.inactiveService);
       return;
     }
 
     if (!editingId && selectedServiceEntries.some((entry) => !entry.catalogService)) {
       setSubmitting(false);
-      setError('Legacy appointment services cannot be used for new bookings.');
+      setError(screenCopy.legacyService);
       return;
     }
 
     if (clientPlanId && selectedServiceEntries.some((entry) => !(entry.catalogService?.allowInPlans ?? entry.existingServiceLine?.allowInPlans))) {
       setSubmitting(false);
-      setError('At least one selected service is not available for plan-based appointments.');
+      setError(screenCopy.serviceNotInPlans);
       return;
     }
 
     if (!clientPlanId && selectedServiceEntries.some((entry) => !(entry.catalogService?.allowStandaloneBooking ?? entry.existingServiceLine?.allowStandaloneBooking))) {
       setSubmitting(false);
-      setError('At least one selected service requires a linked plan before booking.');
+      setError(screenCopy.serviceRequiresPlan);
       return;
     }
 
@@ -1407,7 +1409,7 @@ export function PetAppointmentsPage() {
       setIsEditorOpen(false);
       await loadData(pageData.page, search, statusFilter, clientFilterId, petFilterId, serviceFilterId, professionalFilterId, viewMode, currentMonth);
     } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : messages.errors.save);
+      setError(resolveApiErrorMessage(err, messages.errors.save));
     } finally {
       setSubmitting(false);
     }
@@ -1423,7 +1425,7 @@ export function PetAppointmentsPage() {
       setSuccess(messages.success.deleted);
       await loadData(pageData.page, search, statusFilter, clientFilterId, petFilterId, serviceFilterId, professionalFilterId, viewMode, currentMonth);
     } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : messages.errors.delete);
+      setError(resolveApiErrorMessage(err, messages.errors.delete));
     }
   }
 
@@ -1446,7 +1448,7 @@ export function PetAppointmentsPage() {
         ? messages.preparedPickup.success
         : messages.preparedPickup.needsReview);
     } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : messages.preparedPickup.error);
+      setError(resolveApiErrorMessage(err, messages.preparedPickup.error));
     } finally {
       setPreparingPickupAppointmentId(null);
     }
@@ -1468,7 +1470,7 @@ export function PetAppointmentsPage() {
         .replace('{amount}', formatCurrencyForLocale(locale, invoice.totalAmount))
         .replace('{client}', invoice.clientName ?? appointment.clientName ?? ''));
     } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : messages.appointmentInvoice.error);
+      setError(resolveApiErrorMessage(err, messages.appointmentInvoice.error));
     } finally {
       setGeneratingInvoiceAppointmentId(null);
     }
@@ -1488,7 +1490,7 @@ export function PetAppointmentsPage() {
       }
       setError(dispatch.failureReason ?? messages.preparedPickup.officialFailure);
     } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : messages.preparedPickup.officialFailure);
+      setError(resolveApiErrorMessage(err, messages.preparedPickup.officialFailure));
     } finally {
       setDispatchingPickupAppointmentId(null);
     }
@@ -1854,7 +1856,7 @@ export function PetAppointmentsPage() {
                                 </div>
                                 {line.lineOrder === 0 ? (
                                   <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-700">
-                                    {locale === 'pt-BR' ? 'Linha principal' : 'Primary line'}
+                                    {screenCopy.primaryLine}
                                   </span>
                                 ) : null}
                               </div>

@@ -24,6 +24,7 @@ import { Pagination } from '@/shared/ui/pagination';
 import { SearchBar } from '@/shared/ui/search-bar';
 import { ConfirmDialog } from '@/shared/ui/confirm-dialog';
 import { PermissionGuard } from '@/shared/auth/PermissionGuard';
+import { resolveApiErrorMessage } from '@/shared/lib/api-error-message';
 
 const pageSize = 10;
 const statusOptions = [
@@ -111,11 +112,9 @@ export function CrmLeadsPage({ surface = 'crm' }: CrmLeadsPageProps) {
         if (!active) {
           return;
         }
-        const message = err instanceof ApiClientError
-          ? err.message
-          : isPetSurface
+        const message = resolveApiErrorMessage(err, isPetSurface
             ? 'Erro ao carregar contas comerciais para filtro.'
-            : 'Erro ao carregar companies para filtro.';
+            : 'Erro ao carregar companies para filtro.');
         setError((current) => current ?? message);
       })
       .finally(() => {
@@ -146,11 +145,9 @@ export function CrmLeadsPage({ surface = 'crm' }: CrmLeadsPageProps) {
         if (!active) {
           return;
         }
-        const message = err instanceof ApiClientError
-          ? err.message
-          : isPetSurface
+        const message = resolveApiErrorMessage(err, isPetSurface
             ? 'Erro ao carregar contatos de apoio para filtro.'
-            : 'Erro ao carregar contatos para filtro.';
+            : 'Erro ao carregar contatos para filtro.');
         setError((current) => current ?? message);
       })
       .finally(() => {
@@ -183,11 +180,9 @@ export function CrmLeadsPage({ surface = 'crm' }: CrmLeadsPageProps) {
       });
       setPageData(result);
     } catch (err) {
-      const message = err instanceof ApiClientError
-        ? err.message
-        : isPetSurface
+      const message = resolveApiErrorMessage(err, isPetSurface
           ? 'Erro ao carregar leads comerciais.'
-          : 'Erro ao carregar leads.';
+          : 'Erro ao carregar leads.');
       setError(message);
     } finally {
       setLoading(false);
@@ -208,11 +203,9 @@ export function CrmLeadsPage({ surface = 'crm' }: CrmLeadsPageProps) {
       setDeleteCandidate(null);
       await load(pageData.page, search, statusFilter, sourceFilter, companyFilterId, contactFilterId);
     } catch (err) {
-      const message = err instanceof ApiClientError
-        ? err.message
-        : isPetSurface
+      const message = resolveApiErrorMessage(err, isPetSurface
           ? 'Erro ao remover lead comercial.'
-          : 'Erro ao excluir lead.';
+          : 'Erro ao excluir lead.');
       setError(message);
     }
   }

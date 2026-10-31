@@ -64,9 +64,9 @@ describe('PetProductsPage', () => {
       expect(petServiceMock.listProducts).toHaveBeenCalledTimes(1);
     });
 
-    expect(screen.getByText('Low stock on page')).toBeInTheDocument();
+    expect(screen.getByText('Low stock on this page')).toBeInTheDocument();
     expect(screen.getByText('Recovery Food Pack')).toBeInTheDocument();
-    expect(screen.getByText('Retail product')).toBeInTheDocument();
-    expect(screen.getByText('Min 2 • Reorder at 4')).toBeInTheDocument();
+    expect(screen.getAllByText('Retail product').length).toBeGreaterThan(0);
+    expect(screen.getByText('Min 2 • Restock at 4')).toBeInTheDocument();
   });
 });

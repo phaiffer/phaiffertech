@@ -23,6 +23,9 @@ import { PageSection } from '@/shared/ui/page-section';
 import { PageTitle } from '@/shared/ui/page-title';
 import { Pagination } from '@/shared/ui/pagination';
 import { SearchBar } from '@/shared/ui/search-bar';
+import { useAppMessages } from '@/shared/i18n/app-i18n-provider';
+import type { AppMessages } from '@/shared/i18n/messages/pt-br';
+import { resolveApiErrorMessage } from '@/shared/lib/api-error-message';
 
 const pageSize = 10;
 
@@ -34,12 +37,15 @@ const initialPage: PageResponse<PetProduct> = {
   size: pageSize
 };
 
-const categoryOptions = [
-  { value: 'PET_RETAIL_GOOD', label: 'Pet retail product' },
-  { value: 'PET_VETERINARY_SUPPLY', label: 'Veterinary supply' }
-];
+function buildCategoryOptions(copy: AppMessages['screens']['petProducts']) {
+  return [
+    { value: 'PET_RETAIL_GOOD', label: copy.categoryRetail },
+    { value: 'PET_VETERINARY_SUPPLY', label: copy.categoryVeterinary }
+  ];
+}
 
 export function PetProductsPage() {
+  const copy = useAppMessages().screens.petProducts;
   const [pageData, setPageData] = useState<PageResponse<PetProduct>>(initialPage);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -68,11 +74,11 @@ export function PetProductsPage() {
       const result = await petService.listProducts(page, pageSize, currentSearch);
       setPageData(result);
     } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : 'Unable to load pet products.');
+      setError(resolveApiErrorMessage(err, copy.loadError));
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [copy]);
 
   useEffect(() => {
     void load(0, search);
@@ -130,7 +136,7 @@ export function PetProductsPage() {
       parsedMinimum < 0 ||
       parsedReorderPoint < parsedMinimum
     ) {
-      setError('Enter valid price, stock, and replenishment parameters.');
+      setError(copy.invalidValues);
       return;
     }
 
@@ -151,15 +157,15 @@ export function PetProductsPage() {
       };
       if (editingId) {
         await petService.updateProduct(editingId, payload);
-        setSuccess('Product updated successfully.');
+        setSuccess(copy.updated);
       } else {
         await petService.createProduct(payload);
-        setSuccess('Product created successfully.');
+        setSuccess(copy.created);
       }
       resetForm();
       await load(pageData.page, search);
     } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : 'Unable to save the product.');
+      setError(resolveApiErrorMessage(err, copy.saveError));
     } finally {
       setSubmitting(false);
     }
@@ -173,10 +179,10 @@ export function PetProductsPage() {
     try {
       await petService.deleteProduct(deleteCandidate.id);
       setDeleteCandidate(null);
-      setSuccess('Product removed successfully.');
+      setSuccess(copy.deleted);
       await load(pageData.page, search);
     } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : 'Unable to delete the selected product.');
+      setError(resolveApiErrorMessage(err, copy.deleteError));
     }
   }
 
@@ -188,38 +194,38 @@ export function PetProductsPage() {
   const summaryCards: DashboardSummaryCard[] = [
     {
       key: 'products-in-scope',
-      label: 'Products in scope',
+      label: copy.metricProducts,
       value: totalItems,
       trend: activeFilterCount > 0
-        ? 'Results reflect the current catalog search.'
-        : 'Full product catalog for this workspace.'
+        ? copy.metricProductsFiltered
+        : copy.metricProductsAll
     },
     {
       key: 'visible-stock-units',
-      label: 'Visible stock',
+      label: copy.metricStock,
       value: totalVisibleUnits,
-      trend: 'Units currently visible in the product view.'
+      trend: copy.metricStockDetail
     },
     {
       key: 'low-stock-products',
-      label: 'Low stock on page',
+      label: copy.metricLowStock,
       value: lowStockCount,
-      trend: 'Products already at or below the replenishment point.'
+      trend: copy.metricLowStockDetail
     },
     {
       key: 'product-filters',
-      label: 'Active filters',
+      label: copy.metricFilters,
       value: activeFilterCount,
       trend: activeFilterCount > 0
-        ? 'The catalog is narrowed to a specific search slice.'
-        : 'No filters are limiting the current view.'
+        ? copy.metricFiltersActive
+        : copy.metricFiltersNone
     }
   ];
 
   const columns: DataTableColumn<PetProduct>[] = [
     {
       key: 'product',
-      header: 'Product',
+      header: copy.columnProduct,
       render: (item) => (
         <div>
           <p className="font-medium text-slate-900">{item.name}</p>
@@ -229,31 +235,31 @@ export function PetProductsPage() {
     },
     {
       key: 'category',
-      header: 'Category',
-      render: (item) => item.category === 'PET_VETERINARY_SUPPLY' ? 'Veterinary supply' : 'Retail product'
+      header: copy.category,
+      render: (item) => item.category === 'PET_VETERINARY_SUPPLY' ? copy.categoryVeterinary : copy.categoryRetail
     },
     {
       key: 'price',
-      header: 'Price',
+      header: copy.price,
       render: (item) => item.price.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
     },
     {
       key: 'inventory',
-      header: 'Inventory',
+      header: copy.columnInventory,
       render: (item) => (
         <div>
           <p className="font-medium text-slate-900">
             {item.currentQuantity} {item.unitOfMeasure}
           </p>
           <p className="mt-1 text-sm text-[color:var(--app-shell-muted)]">
-            Min {item.minimumQuantity} • Reorder at {item.reorderPoint}
+            {copy.minimumShort} {item.minimumQuantity} {copy.reorderAt} {item.reorderPoint}
           </p>
         </div>
       )
     },
     {
       key: 'actions',
-      header: 'Actions',
+      header: copy.actions,
       render: (item) => (
         <div className={sharedInlineActionsClass}>
           <PermissionGuard permission="pet.product.update">
@@ -262,7 +268,7 @@ export function PetProductsPage() {
               onClick={() => beginEdit(item)}
               className="ui-inline-button"
             >
-              Edit
+              {copy.edit}
             </button>
           </PermissionGuard>
           <PermissionGuard permission="pet.product.delete">
@@ -271,7 +277,7 @@ export function PetProductsPage() {
               onClick={() => setDeleteCandidate(item)}
               className="ui-inline-danger-button"
             >
-              Delete
+              {copy.delete}
             </button>
           </PermissionGuard>
         </div>
@@ -282,17 +288,17 @@ export function PetProductsPage() {
   return (
     <PermissionGuard
       permission="pet.product.read"
-      fallback={<div className="ui-notice-warning">You do not have permission to view pet products.</div>}
+      fallback={<div className="ui-notice-warning">{copy.noPermission}</div>}
     >
       <div className={sharedPageStackClass}>
         <PageTitle
           eyebrow="Gestão Pet"
-          title="Pet Products"
-          description="A more complete product and stock surface for demos, onboarding, and day-to-day replenishment conversations."
+          title={copy.title}
+          description={copy.description}
           actions={(
             <PermissionGuard permission="pet.product.create">
               <button type="button" onClick={beginCreateProduct} className="ui-primary-button">
-                Add product
+                {copy.addProduct}
               </button>
             </PermissionGuard>
           )}
@@ -302,16 +308,16 @@ export function PetProductsPage() {
 
         <PageSection
           tone="muted"
-          title="Product filters"
-          description="Refine the catalog by name or SKU while keeping the entry surface balanced for first-time and demo users."
+          title={copy.filtersTitle}
+          description={copy.filtersDescription}
         >
           <div className={sharedFilterToolbarClass}>
             <div className="grid gap-3 xl:grid-cols-[minmax(0,1.45fr)] xl:items-end">
               <SearchBar
-                label="Search"
+                label={copy.search}
                 value={searchInput}
                 onChange={setSearchInput}
-                placeholder="Product name or SKU"
+                placeholder={copy.searchPlaceholder}
               />
             </div>
             <div className={sharedFormActionsClass}>
@@ -320,7 +326,7 @@ export function PetProductsPage() {
                 onClick={() => setSearch(searchInput)}
                 className="ui-primary-button"
               >
-                Search
+                {copy.search}
               </button>
               <button
                 type="button"
@@ -330,12 +336,12 @@ export function PetProductsPage() {
                 }}
                 className="ui-inline-button"
               >
-                Clear
+                {copy.clear}
               </button>
               <p className="text-sm text-[color:var(--app-shell-muted)]">
                 {activeFilterCount > 0
-                  ? 'Search is focusing the inventory conversation.'
-                  : 'No filters are active. Showing the broader catalog.'}
+                  ? copy.filteredHint
+                  : copy.noFiltersHint}
               </p>
             </div>
           </div>
@@ -344,19 +350,19 @@ export function PetProductsPage() {
         <PermissionGuard permission={editingId ? 'pet.product.update' : 'pet.product.create'}>
           <div id="pet-product-form-section">
             <PageSection
-              title={editingId ? 'Edit product' : 'Create product'}
-              description="Group commercial and replenishment inputs so the catalog feels operational instead of schema-driven."
+              title={editingId ? copy.editProduct : copy.createProduct}
+              description={copy.formDescription}
             >
               <form onSubmit={handleSubmit} className="space-y-5">
                 <div className="grid gap-4 xl:grid-cols-2 2xl:grid-cols-3">
-                  <FormInput label="Name" value={name} onChange={setName} required />
+                  <FormInput label={copy.name} value={name} onChange={setName} required />
                   <FormInput label="SKU" value={sku} onChange={setSku} required />
-                  <FormSelect label="Category" value={category} options={categoryOptions} onChange={setCategory} />
-                  <FormInput label="Price" value={price} onChange={setPrice} type="number" required />
-                  <FormInput label="Current quantity" value={stockQuantity} onChange={setStockQuantity} type="number" required />
-                  <FormInput label="Unit of measure" value={unitOfMeasure} onChange={setUnitOfMeasure} required />
-                  <FormInput label="Minimum quantity" value={minimumQuantity} onChange={setMinimumQuantity} type="number" required />
-                  <FormInput label="Reorder point" value={reorderPoint} onChange={setReorderPoint} type="number" required />
+                  <FormSelect label={copy.category} value={category} options={buildCategoryOptions(copy)} onChange={setCategory} />
+                  <FormInput label={copy.price} value={price} onChange={setPrice} type="number" required />
+                  <FormInput label={copy.currentQuantity} value={stockQuantity} onChange={setStockQuantity} type="number" required />
+                  <FormInput label={copy.unit} value={unitOfMeasure} onChange={setUnitOfMeasure} required />
+                  <FormInput label={copy.minimumQuantity} value={minimumQuantity} onChange={setMinimumQuantity} type="number" required />
+                  <FormInput label={copy.reorderPoint} value={reorderPoint} onChange={setReorderPoint} type="number" required />
                 </div>
 
                 <div className={sharedFormActionsClass}>
@@ -365,14 +371,14 @@ export function PetProductsPage() {
                     disabled={submitting}
                     className="ui-primary-button"
                   >
-                    {submitting ? 'Saving...' : editingId ? 'Update product' : 'Create product'}
+                    {submitting ? copy.saving : editingId ? copy.updateProduct : copy.createProduct}
                   </button>
                   <button
                     type="button"
                     onClick={resetForm}
                     className="ui-secondary-button"
                   >
-                    {editingId ? 'Cancel edit' : 'Reset form'}
+                    {editingId ? copy.cancelEdit : copy.resetForm}
                   </button>
                 </div>
               </form>
@@ -384,9 +390,9 @@ export function PetProductsPage() {
         {success ? <div className="ui-notice-success">{success}</div> : null}
 
         <PageSection
-          title="Product catalog"
-          description="The listing keeps category, pricing, and replenishment signals easier to scan during demos and operational reviews."
-          actions={<p className="text-sm text-[color:var(--app-shell-muted)]">Total {totalItems} product(s)</p>}
+          title={copy.listTitle}
+          description={copy.listDescription}
+          actions={<p className="text-sm text-[color:var(--app-shell-muted)]">{copy.total} {totalItems} {copy.productsCount}</p>}
         >
           <div className="space-y-5">
             <DataTable
@@ -394,17 +400,17 @@ export function PetProductsPage() {
               rows={rows}
               getRowKey={(row) => row.id}
               loading={loading}
-              loadingTitle="Loading products"
-              loadingDescription="Preparing the product catalog with inventory and replenishment context."
+              loadingTitle={copy.loadingTitle}
+              loadingDescription={copy.loadingDescription}
               emptyState={{
-                title: 'No products found',
+                title: copy.emptyTitle,
                 description: activeFilterCount > 0
-                  ? 'Adjust the search or add a product to complete the catalog for demos and operations.'
-                  : 'Create the first product to make stock, services, and invoicing flows feel more complete.',
+                  ? copy.emptyFiltered
+                  : copy.emptyDescription,
                 action: (
                   <PermissionGuard permission="pet.product.create">
                     <button type="button" onClick={beginCreateProduct} className="ui-primary-button">
-                      Create first product
+                      {copy.createFirst}
                     </button>
                   </PermissionGuard>
                 )
@@ -417,8 +423,8 @@ export function PetProductsPage() {
 
         <ConfirmDialog
           open={deleteCandidate !== null}
-          title="Delete product?"
-          description={deleteCandidate ? `The product "${deleteCandidate.name}" will be removed from the catalog.` : undefined}
+          title={copy.deleteConfirmTitle}
+          description={deleteCandidate ? copy.deleteConfirmDescription.replace('{name}', deleteCandidate.name) : undefined}
           onConfirm={handleConfirmDelete}
           onCancel={() => setDeleteCandidate(null)}
         />

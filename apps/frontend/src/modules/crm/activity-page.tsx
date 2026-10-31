@@ -26,6 +26,7 @@ import { DataTable, DataTableColumn } from '@/shared/ui/data-table';
 import { FormSelect } from '@/shared/ui/form-select';
 import { PageTitle } from '@/shared/ui/page-title';
 import { Pagination } from '@/shared/ui/pagination';
+import { resolveApiErrorMessage } from '@/shared/lib/api-error-message';
 
 const pageSize = 10;
 const initialPage: PageResponse<CrmActivityItem> = { items: [], totalItems: 0, totalPages: 0, page: 0, size: pageSize };
@@ -116,7 +117,7 @@ export function CrmActivityPage({ surface = 'crm' }: CrmActivityPageProps) {
         setPetProfiles(resolvePageItems(petProfilesPage));
         setPetAppointments(resolvePageItems(petAppointmentsPage));
       } catch (err) {
-        setError(err instanceof ApiClientError ? err.message : 'Erro ao carregar referências de atividade.');
+        setError(resolveApiErrorMessage(err, 'Erro ao carregar referências de atividade.'));
       }
     }
 
@@ -151,7 +152,7 @@ export function CrmActivityPage({ surface = 'crm' }: CrmActivityPageProps) {
       });
       setPageData(result);
     } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : 'Erro ao carregar atividade.');
+      setError(resolveApiErrorMessage(err, 'Erro ao carregar atividade.'));
     } finally {
       setLoading(false);
     }

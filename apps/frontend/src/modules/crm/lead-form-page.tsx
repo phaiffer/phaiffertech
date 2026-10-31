@@ -23,6 +23,7 @@ import { FormTextarea } from '@/shared/ui/form-textarea';
 import { PageSection } from '@/shared/ui/page-section';
 import { PageTitle } from '@/shared/ui/page-title';
 import { PermissionGuard } from '@/shared/auth/PermissionGuard';
+import { resolveApiErrorMessage } from '@/shared/lib/api-error-message';
 
 const statusOptions = [
   { value: 'NEW', label: 'NEW' },
@@ -78,11 +79,9 @@ export function LeadFormPage({ leadId, surface = 'crm' }: LeadFormPageProps) {
         if (!active) {
           return;
         }
-        const message = err instanceof ApiClientError
-          ? err.message
-          : isPetSurface
+        const message = resolveApiErrorMessage(err, isPetSurface
             ? 'Erro ao carregar contas comerciais para o lead.'
-            : 'Erro ao carregar companies para o lead.';
+            : 'Erro ao carregar companies para o lead.');
         setError((current) => current ?? message);
       })
       .finally(() => {
@@ -113,11 +112,9 @@ export function LeadFormPage({ leadId, surface = 'crm' }: LeadFormPageProps) {
         if (!active) {
           return;
         }
-        const message = err instanceof ApiClientError
-          ? err.message
-          : isPetSurface
+        const message = resolveApiErrorMessage(err, isPetSurface
             ? 'Erro ao carregar contatos de apoio para o lead.'
-            : 'Erro ao carregar contatos para vínculo.';
+            : 'Erro ao carregar contatos para vínculo.');
         setError((current) => current ?? message);
       })
       .finally(() => {
@@ -156,11 +153,9 @@ export function LeadFormPage({ leadId, surface = 'crm' }: LeadFormPageProps) {
         if (!active) {
           return;
         }
-        const message = err instanceof ApiClientError
-          ? err.message
-          : isPetSurface
+        const message = resolveApiErrorMessage(err, isPetSurface
             ? 'Erro ao carregar lead comercial.'
-            : 'Erro ao carregar lead.';
+            : 'Erro ao carregar lead.');
         setError(message);
       })
       .finally(() => {
@@ -245,11 +240,9 @@ export function LeadFormPage({ leadId, surface = 'crm' }: LeadFormPageProps) {
 
       setTimeout(() => router.push(listPath), 600);
     } catch (err) {
-      const message = err instanceof ApiClientError
-        ? err.message
-        : isPetSurface
+      const message = resolveApiErrorMessage(err, isPetSurface
           ? 'Erro ao salvar lead comercial.'
-          : 'Erro ao salvar lead.';
+          : 'Erro ao salvar lead.');
       setError(message);
     } finally {
       setSubmitting(false);

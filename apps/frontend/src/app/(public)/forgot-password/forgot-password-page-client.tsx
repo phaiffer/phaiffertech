@@ -3,7 +3,7 @@
 import { FormEvent, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { BrandMark, PetMark } from '@/shared/components/brand-assets';
-import { ApiClientError } from '@/shared/lib/http';
+import { resolveApiErrorMessage } from '@/shared/lib/api-error-message';
 import { authService } from '@/shared/services/auth-service';
 import {
   buildLoginVisualContext,
@@ -15,8 +15,10 @@ import {
 } from '@/shared/components/public-visual-system';
 import { usePublicSite } from '@/shared/public/public-site-provider';
 import { getPublicSiteMessages } from '@/shared/public/public-site-messages';
+import { useAppMessages } from '@/shared/i18n/app-i18n-provider';
 
 export default function ForgotPasswordPageClient() {
+  const copy = useAppMessages().screens.shell;
   const { locale } = usePublicSite();
   const t = getPublicSiteMessages(locale).forgotPassword;
   const [tenantCode, setTenantCode] = useState('');
@@ -55,11 +57,7 @@ export default function ForgotPasswordPageClient() {
       });
       setSuccess(true);
     } catch (err) {
-      if (err instanceof ApiClientError) {
-        setError(err.message);
-      } else {
-        setError(t.errorFallback);
-      }
+      setError(resolveApiErrorMessage(err, t.errorFallback));
     } finally {
       setSubmitting(false);
     }
@@ -128,7 +126,7 @@ export default function ForgotPasswordPageClient() {
                   value={email}
                   onChange={(event) => handleEmailChange(event.target.value)}
                   className={sharedInputClass}
-                  placeholder="name@company.com"
+                  placeholder={copy.emailPlaceholder}
                   autoComplete="email"
                   inputMode="email"
                   autoCapitalize="none"

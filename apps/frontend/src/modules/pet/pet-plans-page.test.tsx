@@ -179,11 +179,11 @@ describe('PetPlansPage', () => {
       expect(petServiceMock.listPlanTemplates).toHaveBeenCalledTimes(1);
     });
 
-    expect(screen.getByText('Catalogo de planos')).toBeInTheDocument();
+    expect(screen.getByText('Plan catalog')).toBeInTheDocument();
     expect(screen.getAllByText('Banho 4x/mes').length).toBeGreaterThan(0);
     expect(screen.getByText('Pacote mensal de banhos recorrentes.')).toBeInTheDocument();
     expect(screen.getByText('Pet: Luna')).toBeInTheDocument();
-    expect(screen.getByText('Obs: Cliente prefere banho aos sabados.')).toBeInTheDocument();
+    expect(screen.getByText('Notes: Cliente prefere banho aos sabados.')).toBeInTheDocument();
     expect(screen.getByText('1 left')).toBeInTheDocument();
     expect(screen.getByText('Last use')).toBeInTheDocument();
 
@@ -206,7 +206,7 @@ describe('PetPlansPage', () => {
     expect(screen.getAllByText((text) => text.includes('220,00')).length).toBeGreaterThan(0);
     expect(screen.getAllByText('pix@petshop.com.br').length).toBeGreaterThan(0);
     expect(screen.getAllByText('Pet Shop Teste').length).toBeGreaterThan(0);
-    expect(screen.getByText(/Fatura vinculada: invoice-1/)).toBeInTheDocument();
+    expect(screen.getByText(/Linked invoice: invoice-1/)).toBeInTheDocument();
     expect((screen.getByLabelText('Prepared renewal message') as HTMLTextAreaElement).value)
       .toContain('Assim que pagar, nos envie o comprovante.');
 
@@ -243,9 +243,9 @@ describe('PetPlansPage', () => {
 
     fireEvent.change(screen.getByLabelText('Client'), { target: { value: 'client-1' } });
     fireEvent.change(screen.getByLabelText('Pet'), { target: { value: 'pet-1' } });
-    fireEvent.change(screen.getByLabelText('Plano do catalogo'), { target: { value: 'template-1' } });
-    fireEvent.change(screen.getByLabelText('Preco final'), { target: { value: '210' } });
-    fireEvent.change(screen.getByLabelText('Observacoes'), { target: { value: 'Aplicar desconto de fidelidade.' } });
+    fireEvent.change(screen.getByLabelText('Catalog plan'), { target: { value: 'template-1' } });
+    fireEvent.change(screen.getByLabelText('Final price'), { target: { value: '210' } });
+    fireEvent.change(screen.getByLabelText('Notes'), { target: { value: 'Aplicar desconto de fidelidade.' } });
     fireEvent.click(screen.getAllByRole('button', { name: 'Create plan' }).at(-1)!);
 
     await waitFor(() => {

@@ -33,6 +33,7 @@ import { FormSelect } from '@/shared/ui/form-select';
 import { PageTitle } from '@/shared/ui/page-title';
 import { Pagination } from '@/shared/ui/pagination';
 import { SearchBar } from '@/shared/ui/search-bar';
+import { resolveApiErrorMessage } from '@/shared/lib/api-error-message';
 
 const pageSize = 10;
 const statusOptions = [
@@ -153,7 +154,7 @@ export function CrmTasksPage({ surface = 'crm' }: CrmTasksPageProps) {
         setPetProfiles(resolvePageItems(petProfilesPage));
         setPetAppointments(resolvePageItems(petAppointmentsPage));
       } catch (err) {
-        setError(err instanceof ApiClientError ? err.message : 'Erro ao carregar referências de tarefa.');
+        setError(resolveApiErrorMessage(err, 'Erro ao carregar referências de tarefa.'));
       }
     }
 
@@ -202,7 +203,7 @@ export function CrmTasksPage({ surface = 'crm' }: CrmTasksPageProps) {
       });
       setPageData(result);
     } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : 'Erro ao carregar tarefas.');
+      setError(resolveApiErrorMessage(err, 'Erro ao carregar tarefas.'));
     } finally {
       setLoading(false);
     }
@@ -268,7 +269,7 @@ export function CrmTasksPage({ surface = 'crm' }: CrmTasksPageProps) {
       resetForm();
       await load(pageData.page, search, statusFilter, priorityFilter, relationTypeFilter, relationIdFilter);
     } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : 'Erro ao salvar tarefa.');
+      setError(resolveApiErrorMessage(err, 'Erro ao salvar tarefa.'));
     } finally {
       setSaving(false);
     }
@@ -281,7 +282,7 @@ export function CrmTasksPage({ surface = 'crm' }: CrmTasksPageProps) {
       setDeleteCandidate(null);
       await load(pageData.page, search, statusFilter, priorityFilter, relationTypeFilter, relationIdFilter);
     } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : 'Erro ao excluir tarefa.');
+      setError(resolveApiErrorMessage(err, 'Erro ao excluir tarefa.'));
     }
   }
 

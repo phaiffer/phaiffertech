@@ -11,6 +11,7 @@ import {
 } from '@/shared/components/public-visual-system';
 import { StatusBadge } from '@/shared/dashboard/status-badge';
 import { useAppI18n, useAppMessages } from '@/shared/i18n/app-i18n-provider';
+import type { AppMessages } from '@/shared/i18n/messages/pt-br';
 import { formatDateForLocale } from '@/shared/i18n/formatters';
 import { ApiClientError } from '@/shared/lib/http';
 import { resolvePageItems, resolveTotalItems } from '@/shared/lib/pagination';
@@ -26,6 +27,7 @@ import { FormTextarea } from '@/shared/ui/form-textarea';
 import { PageSection } from '@/shared/ui/page-section';
 import { PageTitle } from '@/shared/ui/page-title';
 import { Pagination } from '@/shared/ui/pagination';
+import { resolveApiErrorMessage } from '@/shared/lib/api-error-message';
 
 const pageSize = 20;
 
@@ -45,11 +47,13 @@ const initialTemplatePage: PageResponse<PlanTemplate> = {
   size: pageSize
 };
 
-const soldPlanStatusOptions = [
-  { value: 'ACTIVE', label: 'Ativo' },
-  { value: 'PAUSED', label: 'Pausado' },
-  { value: 'CANCELED', label: 'Cancelado' }
-];
+function buildSoldPlanStatusOptions(copy: AppMessages['screens']['petPlans']) {
+  return [
+    { value: 'ACTIVE', label: copy.statusActive },
+    { value: 'PAUSED', label: copy.statusPaused },
+    { value: 'CANCELED', label: copy.statusCanceled }
+  ];
+}
 
 type PlanSignalCardProps = {
   icon: LucideIcon;
@@ -122,6 +126,7 @@ function formatExpiryLabel(locale: string, value: string | null | undefined, noE
 }
 
 export function PetPlansPage() {
+  const screenCopy = useAppMessages().screens.petPlans;
   const { locale } = useAppI18n();
   const appMessages = useAppMessages();
   const messages = appMessages.petPlans;
@@ -157,7 +162,7 @@ export function PetPlansPage() {
   const [templateValidityDays, setTemplateValidityDays] = useState('30');
   const [templateTotalSessions, setTemplateTotalSessions] = useState('4');
   const [templateServiceIds, setTemplateServiceIds] = useState<string[]>([]);
-  const [templateRenewalRules, setTemplateRenewalRules] = useState('Avisar no penultimo uso e renovar antes do ultimo banho.');
+  const [templateRenewalRules, setTemplateRenewalRules] = useState(screenCopy.renewalRulesDefault);
   const [templateActive, setTemplateActive] = useState(true);
   const [templateSubmitting, setTemplateSubmitting] = useState(false);
 
@@ -199,20 +204,22 @@ export function PetPlansPage() {
   const formPetOptions = useMemo(() => {
     const visiblePets = clientId ? pets.filter((pet) => pet.clientId === clientId) : pets;
     return [
-      { value: '', label: 'Selecione um pet' },
+      { value: '', label: screenCopy.selectPet },
       ...visiblePets.map((pet) => ({ value: pet.id, label: pet.name }))
     ];
-  }, [clientId, pets]);
+  }, [clientId, pets, screenCopy]);
 
   const templates = resolvePageItems(templatePageData);
   const activeTemplates = templates.filter((template) => template.active);
   const templateOptions = useMemo(() => [
-    { value: '', label: 'Selecione um plano do catalogo' },
+    { value: '', label: screenCopy.selectCatalogPlan },
     ...activeTemplates.map((template) => ({
       value: template.id,
-      label: `${template.commercialName} - ${template.totalSessions} sessoes`
+      label: screenCopy.templateOptionLabel
+        .replace('{name}', template.commercialName)
+        .replace('{sessions}', String(template.totalSessions))
     }))
-  ], [activeTemplates]);
+  ], [activeTemplates, screenCopy]);
 
   const selectedTemplate = activeTemplates.find((template) => template.id === planTemplateId);
   const serviceOptions = useMemo(() => services.map((service) => ({
@@ -227,7 +234,7 @@ export function PetPlansPage() {
       const result = await petService.listClientPlans(undefined, page, pageSize);
       setPageData(result);
     } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : messages.loadingDescription);
+      setError(resolveApiErrorMessage(err, messages.loadingDescription));
     } finally {
       setLoading(false);
     }
@@ -238,9 +245,9 @@ export function PetPlansPage() {
       const result = await petService.listPlanTemplates(0, pageSize, '');
       setTemplatePageData(result);
     } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : 'Nao foi possivel carregar o catalogo de planos.');
+      setError(resolveApiErrorMessage(err, screenCopy.catalogLoadError));
     }
-  }, []);
+  }, [screenCopy]);
 
   useEffect(() => {
     void load(0);
@@ -285,11 +292,11 @@ export function PetPlansPage() {
       setPlanRenewalTemplate(settings.planRenewalMessageTemplate ?? '');
       setPetReadyTemplate(settings.petReadyMessageTemplate ?? '');
     }).catch((err) => {
-      setError(err instanceof ApiClientError ? err.message : 'Unable to load billing message settings.');
+      setError(resolveApiErrorMessage(err, screenCopy.billingSettingsLoadError));
     }).finally(() => {
       setBillingSettingsLoading(false);
     });
-  }, []);
+  }, [screenCopy]);
 
   function resetForm() {
     setEditingId(null);
@@ -330,7 +337,7 @@ export function PetPlansPage() {
     setTemplateValidityDays('30');
     setTemplateTotalSessions('4');
     setTemplateServiceIds([]);
-    setTemplateRenewalRules('Avisar no penultimo uso e renovar antes do ultimo banho.');
+    setTemplateRenewalRules(screenCopy.renewalRulesDefault);
     setTemplateActive(true);
   }
 
@@ -373,7 +380,7 @@ export function PetPlansPage() {
     }
 
     if (!editingId && (!petId || !planTemplateId)) {
-      setError('Selecione o pet e o plano do catalogo para ativar a venda.');
+      setError(screenCopy.saleNeedsPetAndPlan);
       return;
     }
 
@@ -385,7 +392,7 @@ export function PetPlansPage() {
 
     const parsedFinalPrice = finalPrice.trim() ? Number(finalPrice) : undefined;
     if (finalPrice.trim() && (parsedFinalPrice === undefined || Number.isNaN(parsedFinalPrice) || parsedFinalPrice < 0)) {
-      setError('Informe um preco final valido.');
+      setError(screenCopy.invalidFinalPrice);
       return;
     }
 
@@ -423,7 +430,7 @@ export function PetPlansPage() {
       resetForm();
       await load(0);
     } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : messages.feedback.saveError);
+      setError(resolveApiErrorMessage(err, messages.feedback.saveError));
     } finally {
       setSubmitting(false);
     }
@@ -437,7 +444,7 @@ export function PetPlansPage() {
     const parsedSessions = parseInt(templateTotalSessions, 10);
 
     if (Number.isNaN(parsedPrice) || parsedPrice < 0 || Number.isNaN(parsedValidity) || parsedValidity < 1 || Number.isNaN(parsedSessions) || parsedSessions < 1) {
-      setError('Informe preco, validade e sessoes validos para o catalogo.');
+      setError(screenCopy.invalidCatalogValues);
       return;
     }
 
@@ -459,15 +466,15 @@ export function PetPlansPage() {
     try {
       if (editingTemplateId) {
         await petService.updatePlanTemplate(editingTemplateId, payload);
-        setSuccess('Modelo de plano atualizado.');
+        setSuccess(screenCopy.templateUpdated);
       } else {
         await petService.createPlanTemplate(payload);
-        setSuccess('Modelo de plano criado.');
+        setSuccess(screenCopy.templateCreated);
       }
       resetTemplateForm();
       await loadTemplates();
     } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : 'Nao foi possivel salvar o modelo de plano.');
+      setError(resolveApiErrorMessage(err, screenCopy.templateSaveError));
     } finally {
       setTemplateSubmitting(false);
     }
@@ -481,7 +488,7 @@ export function PetPlansPage() {
       setSuccess(messages.dialog.confirm);
       await load(0);
     } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : messages.feedback.removeError);
+      setError(resolveApiErrorMessage(err, messages.feedback.removeError));
     }
   }
 
@@ -503,7 +510,7 @@ export function PetPlansPage() {
       setPetReadyTemplate(settings.petReadyMessageTemplate ?? '');
       setSuccess(messages.messageSetup.settingsUpdated);
     } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : messages.messageSetup.settingsError);
+      setError(resolveApiErrorMessage(err, messages.messageSetup.settingsError));
     } finally {
       setBillingSettingsSaving(false);
     }
@@ -538,7 +545,7 @@ export function PetPlansPage() {
         ? messages.messageSetup.renewalPrepared
         : messages.messageSetup.renewalNeedsBilling);
     } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : messages.messageSetup.prepareError);
+      setError(resolveApiErrorMessage(err, messages.messageSetup.prepareError));
     } finally {
       setPreparingRenewalPlanId(null);
     }
@@ -558,7 +565,7 @@ export function PetPlansPage() {
       }
       setError(dispatch.failureReason ?? messages.messageSetup.officialRenewalFailure);
     } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : messages.messageSetup.officialRenewalFailure);
+      setError(resolveApiErrorMessage(err, messages.messageSetup.officialRenewalFailure));
     } finally {
       setDispatchingRenewalPlanId(null);
     }
@@ -586,7 +593,7 @@ export function PetPlansPage() {
 
   function resolvePetName(plan: ClientPlan) {
     const pet = pets.find((entry) => entry.id === plan.petId);
-    return pet?.name ?? plan.petId ?? 'Pet nao vinculado';
+    return pet?.name ?? plan.petId ?? screenCopy.petNotLinked;
   }
 
   function formatCurrency(value?: number | null) {
@@ -611,7 +618,7 @@ export function PetPlansPage() {
       render: (plan) => (
         <div className="space-y-1">
           <p className="font-medium text-slate-900">{resolveClientName(plan)}</p>
-          <p className="text-xs text-[color:var(--app-shell-muted)]">Pet: {resolvePetName(plan)}</p>
+          <p className="text-xs text-[color:var(--app-shell-muted)]">{screenCopy.petLabel} {resolvePetName(plan)}</p>
           <p className="text-xs text-[color:var(--app-shell-muted)]">
             {resolveClientEmail(plan) ?? messages.columns.noRenewalEmail}
           </p>
@@ -631,10 +638,10 @@ export function PetPlansPage() {
             {plan.remainingSessions > 0 ? messages.columns.activeLinked : messages.columns.noSessionsLeft}
           </p>
           <p className="text-xs text-[color:var(--app-shell-muted)]">
-            Contratado por {formatCurrency(plan.finalPrice)}
+            {screenCopy.contractedBy} {formatCurrency(plan.finalPrice)}
           </p>
           {plan.notes ? (
-            <p className="text-xs text-[color:var(--app-shell-muted)]">Obs: {plan.notes}</p>
+            <p className="text-xs text-[color:var(--app-shell-muted)]">{screenCopy.notesLabel} {plan.notes}</p>
           ) : null}
         </div>
       )
@@ -786,8 +793,8 @@ export function PetPlansPage() {
         {success ? <div className="ui-notice-success">{success}</div> : null}
 
         <PageSection
-          title="Catalogo de planos"
-          description="Modelos comerciais reutilizaveis. Eles definem preco, validade, sessoes e servicos incluidos antes da venda para cliente e pet."
+          title={screenCopy.catalogTitle}
+          description={screenCopy.catalogDescription}
         >
           <div className="grid gap-3 lg:grid-cols-3">
             {templates.map((template) => (
@@ -796,20 +803,20 @@ export function PetPlansPage() {
                   <div>
                     <p className="font-semibold text-slate-900">{template.commercialName}</p>
                     <p className="mt-1 text-xs text-[color:var(--app-shell-muted)]">
-                      {template.description ?? 'Sem descricao comercial.'}
+                      {template.description ?? screenCopy.noDescription}
                     </p>
                   </div>
                   <StatusBadge status={template.active ? 'active' : 'inactive'} />
                 </div>
                 <div className="mt-3 grid gap-2 text-xs text-[color:var(--app-shell-muted)]">
                   <p>{formatCurrency(template.price)} - {template.totalSessions} sessoes</p>
-                  <p>Validade: {template.validityDays} dias</p>
-                  <p>Servicos incluidos: {template.serviceIds.length || 'todos os servicos permitidos em plano'}</p>
-                  <p>Renovacao: {template.renewalRules ?? 'Avisar no penultimo e ultimo uso.'}</p>
+                  <p>{screenCopy.validityLabel} {template.validityDays} dias</p>
+                  <p>{screenCopy.includedServicesLabel} {template.serviceIds.length || screenCopy.allPlanServices}</p>
+                  <p>{screenCopy.renewalLabel} {template.renewalRules ?? screenCopy.renewalDefault}</p>
                 </div>
                 <PermissionGuard permission="pet.plan.create">
                   <button type="button" onClick={() => beginEditTemplate(template)} className="ui-inline-button mt-3">
-                    Editar modelo
+                    {screenCopy.editTemplate}
                   </button>
                 </PermissionGuard>
               </div>
@@ -822,23 +829,23 @@ export function PetPlansPage() {
             <form onSubmit={handleTemplateSubmit} className="ui-surface-panel p-4 space-y-4">
               <div>
                 <h3 className="text-sm font-semibold text-foreground">
-                  {editingTemplateId ? 'Editar modelo comercial' : 'Novo modelo comercial'}
+                  {editingTemplateId ? screenCopy.editTemplateTitle : screenCopy.newTemplateTitle}
                 </h3>
                 <p className="text-xs text-[color:var(--app-shell-muted)] mt-0.5">
-                  Este catalogo nao vende o plano ainda; ele prepara a oferta que sera ativada para cliente e pet.
+                  {screenCopy.templateFormHint}
                 </p>
               </div>
               <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
-                <FormInput label="Nome comercial" value={templateName} onChange={setTemplateName} required />
-                <FormInput label="Preco" value={templatePrice} onChange={setTemplatePrice} type="number" required />
-                <FormInput label="Validade em dias" value={templateValidityDays} onChange={setTemplateValidityDays} type="number" required />
-                <FormInput label="Total de sessoes" value={templateTotalSessions} onChange={setTemplateTotalSessions} type="number" required />
-                <FormInput label="Descricao" value={templateDescription} onChange={setTemplateDescription} wrapperClassName="lg:col-span-2" />
-                <FormInput label="Regras de renovacao" value={templateRenewalRules} onChange={setTemplateRenewalRules} wrapperClassName="lg:col-span-2" />
+                <FormInput label={screenCopy.templateName} value={templateName} onChange={setTemplateName} required />
+                <FormInput label={screenCopy.price} value={templatePrice} onChange={setTemplatePrice} type="number" required />
+                <FormInput label={screenCopy.validityDays} value={templateValidityDays} onChange={setTemplateValidityDays} type="number" required />
+                <FormInput label={screenCopy.totalSessions} value={templateTotalSessions} onChange={setTemplateTotalSessions} type="number" required />
+                <FormInput label={screenCopy.description} value={templateDescription} onChange={setTemplateDescription} wrapperClassName="lg:col-span-2" />
+                <FormInput label={screenCopy.renewalRules} value={templateRenewalRules} onChange={setTemplateRenewalRules} wrapperClassName="lg:col-span-2" />
               </div>
               <div className="rounded-2xl border border-slate-200 bg-white/80 p-3">
                 <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--app-shell-muted)]">
-                  Servicos incluidos
+                  {screenCopy.includedServices}
                 </p>
                 <div className="mt-3 grid gap-2 md:grid-cols-2 xl:grid-cols-3">
                   {serviceOptions.map((option) => (
@@ -857,20 +864,20 @@ export function PetPlansPage() {
                   ))}
                 </div>
                 {serviceOptions.length === 0 ? (
-                  <p className="mt-2 text-xs text-[color:var(--app-shell-muted)]">Nenhum servico ativo carregado para vinculo.</p>
+                  <p className="mt-2 text-xs text-[color:var(--app-shell-muted)]">{screenCopy.noActiveServices}</p>
                 ) : null}
               </div>
               <label className="flex items-center gap-2 text-sm text-slate-700">
                 <input type="checkbox" checked={templateActive} onChange={(event) => setTemplateActive(event.target.checked)} />
-                Modelo ativo para novas vendas
+                {screenCopy.templateActive}
               </label>
               <div className="flex gap-2">
                 <button type="submit" disabled={templateSubmitting} className="ui-primary-button">
-                  {templateSubmitting ? 'Salvando...' : editingTemplateId ? 'Atualizar modelo' : 'Criar modelo'}
+                  {templateSubmitting ? screenCopy.saving : editingTemplateId ? screenCopy.updateTemplate : screenCopy.createTemplate}
                 </button>
                 {editingTemplateId ? (
                   <button type="button" onClick={resetTemplateForm} className="ui-secondary-button">
-                    Cancelar edicao
+                    {screenCopy.cancelEdit}
                   </button>
                 ) : null}
               </div>
@@ -895,14 +902,14 @@ export function PetPlansPage() {
               label={messages.messageSetup.billingDisplayName}
               value={billingDisplayName}
               onChange={setBillingDisplayName}
-              placeholder="Recepção Banho e Tosa"
+              placeholder={screenCopy.billingNamePlaceholder}
               disabled={billingSettingsLoading}
             />
             <FormTextarea
               label={messages.messageSetup.renewalTemplate}
               value={planRenewalTemplate}
               onChange={setPlanRenewalTemplate}
-              placeholder="Use placeholders like {clientName}, {petName}, {planName}, {renewalAmount}, {pixKey}, {billingDisplayName}."
+              placeholder={screenCopy.renewalTemplateHint}
               rows={4}
               disabled={billingSettingsLoading}
             />
@@ -910,7 +917,7 @@ export function PetPlansPage() {
               label={messages.messageSetup.pickupTemplate}
               value={petReadyTemplate}
               onChange={setPetReadyTemplate}
-              placeholder="Use placeholders like {clientName}, {petName}, {billingDisplayName}."
+              placeholder={screenCopy.pickupTemplateHint}
               rows={4}
               disabled={billingSettingsLoading}
             />
@@ -962,39 +969,39 @@ export function PetPlansPage() {
                   </div>
                   <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
                     <div>
-                      <p className="text-xs font-semibold uppercase tracking-[0.14em] text-amber-700">Plano</p>
-                      <p className="mt-1 font-medium">{preparedRenewalCharge.planName || 'Plano nao informado'}</p>
+                      <p className="text-xs font-semibold uppercase tracking-[0.14em] text-amber-700">{screenCopy.plan}</p>
+                      <p className="mt-1 font-medium">{preparedRenewalCharge.planName || screenCopy.planMissing}</p>
                     </div>
                     <div>
-                      <p className="text-xs font-semibold uppercase tracking-[0.14em] text-amber-700">Cliente</p>
-                      <p className="mt-1 font-medium">{preparedRenewalCharge.clientName || 'Cliente nao informado'}</p>
+                      <p className="text-xs font-semibold uppercase tracking-[0.14em] text-amber-700">{screenCopy.client}</p>
+                      <p className="mt-1 font-medium">{preparedRenewalCharge.clientName || screenCopy.clientMissing}</p>
                     </div>
                     <div>
                       <p className="text-xs font-semibold uppercase tracking-[0.14em] text-amber-700">Pet</p>
-                      <p className="mt-1 font-medium">{preparedRenewalCharge.petName || 'Pet nao informado'}</p>
+                      <p className="mt-1 font-medium">{preparedRenewalCharge.petName || screenCopy.petMissing}</p>
                     </div>
                     <div>
-                      <p className="text-xs font-semibold uppercase tracking-[0.14em] text-amber-700">Valor</p>
+                      <p className="text-xs font-semibold uppercase tracking-[0.14em] text-amber-700">{screenCopy.amount}</p>
                       <p className="mt-1 font-medium">{formatCurrency(preparedRenewalCharge.outstandingAmount ?? preparedRenewalCharge.amount ?? 0)}</p>
                     </div>
                     <div>
-                      <p className="text-xs font-semibold uppercase tracking-[0.14em] text-amber-700">Chave PIX</p>
-                      <p className="mt-1 break-all font-medium">{preparedRenewalCharge.pixKey || 'chave PIX nao configurada'}</p>
+                      <p className="text-xs font-semibold uppercase tracking-[0.14em] text-amber-700">{screenCopy.pixKey}</p>
+                      <p className="mt-1 break-all font-medium">{preparedRenewalCharge.pixKey || screenCopy.pixKeyMissing}</p>
                     </div>
                     <div>
-                      <p className="text-xs font-semibold uppercase tracking-[0.14em] text-amber-700">Nome de cobranca</p>
-                      <p className="mt-1 font-medium">{preparedRenewalCharge.billingDisplayName || 'nome de cobranca nao configurado'}</p>
+                      <p className="text-xs font-semibold uppercase tracking-[0.14em] text-amber-700">{screenCopy.billingName}</p>
+                      <p className="mt-1 font-medium">{preparedRenewalCharge.billingDisplayName || screenCopy.billingNameMissing}</p>
                     </div>
                   </div>
                   <p className="mt-1">
-                    Valor {formatCurrency(preparedRenewalCharge.outstandingAmount ?? preparedRenewalCharge.amount ?? 0)}
-                    {' '}· Status {preparedRenewalCharge.status ?? 'ISSUED'}
+                    {screenCopy.amount} {formatCurrency(preparedRenewalCharge.outstandingAmount ?? preparedRenewalCharge.amount ?? 0)}
+                    {' '}{screenCopy.statusSeparator} {preparedRenewalCharge.status ?? 'ISSUED'}
                   </p>
                   <p className="mt-1">
-                    PIX: {preparedRenewalCharge.pixKey || 'chave PIX nao configurada'} · Recebedor: {preparedRenewalCharge.billingDisplayName || 'nome de cobranca nao configurado'}
+                    PIX: {preparedRenewalCharge.pixKey || screenCopy.pixKeyMissing} {screenCopy.receiverSeparator} {preparedRenewalCharge.billingDisplayName || screenCopy.billingNameMissing}
                   </p>
                   {preparedRenewalCharge.invoiceId ? (
-                    <p className="mt-1 text-xs">Fatura vinculada: {preparedRenewalCharge.invoiceId}</p>
+                    <p className="mt-1 text-xs">{screenCopy.linkedInvoice} {preparedRenewalCharge.invoiceId}</p>
                   ) : null}
                 </div>
               ) : null}
@@ -1113,7 +1120,7 @@ export function PetPlansPage() {
                   disabled={!!editingId || !canReadPets}
                 />
                 <FormSelect
-                  label="Plano do catalogo"
+                  label={screenCopy.catalogPlan}
                   value={planTemplateId}
                   options={templateOptions}
                   onChange={handlePlanTemplateChange}
@@ -1135,7 +1142,7 @@ export function PetPlansPage() {
                   required
                 />
                 <FormInput
-                  label="Inicio"
+                  label={screenCopy.startDate}
                   value={startedAt}
                   onChange={setStartedAt}
                   type="date"
@@ -1147,19 +1154,19 @@ export function PetPlansPage() {
                   type="date"
                 />
                 <FormInput
-                  label="Preco final"
+                  label={screenCopy.finalPrice}
                   value={finalPrice}
                   onChange={setFinalPrice}
                   type="number"
                 />
                 <FormSelect
-                  label="Status"
+                  label={screenCopy.status}
                   value={soldPlanStatus}
-                  options={soldPlanStatusOptions}
+                  options={buildSoldPlanStatusOptions(screenCopy)}
                   onChange={setSoldPlanStatus}
                 />
                 <FormTextarea
-                  label="Observacoes"
+                  label={screenCopy.notes}
                   value={soldPlanNotes}
                   onChange={setSoldPlanNotes}
                   rows={3}
@@ -1169,8 +1176,7 @@ export function PetPlansPage() {
 
               {selectedTemplate ? (
                 <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
-                  Venda baseada em {selectedTemplate.commercialName}: {selectedTemplate.totalSessions} sessoes,
-                  validade de {selectedTemplate.validityDays} dias e preco catalogado de {formatCurrency(selectedTemplate.price)}.
+                  {screenCopy.saleBasedOn} {selectedTemplate.commercialName}: {selectedTemplate.totalSessions} {screenCopy.saleSessionsValidity} {selectedTemplate.validityDays} {screenCopy.saleDaysPrice} {formatCurrency(selectedTemplate.price)}.
                 </div>
               ) : null}
 

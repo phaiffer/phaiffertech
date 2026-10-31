@@ -16,7 +16,7 @@ import {
 } from '@/shared/components/public-visual-system';
 import { useAuth } from '@/shared/hooks/use-auth';
 import { useAppMessages } from '@/shared/i18n/app-i18n-provider';
-import { ApiClientError } from '@/shared/lib/http';
+import { resolveApiErrorMessage } from '@/shared/lib/api-error-message';
 import { AuthNoticeReason, consumeAuthNotice } from '@/shared/lib/session';
 import { authService } from '@/shared/services/auth-service';
 
@@ -49,6 +49,7 @@ function resolveNoticeMessage(reason: AuthNoticeReason | null, t: ReturnType<typ
 }
 
 export default function LoginPageClient({ nextPath }: LoginPageClientProps) {
+  const copy = useAppMessages().screens.shell;
   const router = useRouter();
   const t = useAppMessages().login;
   const supportCopy = t.support;
@@ -108,11 +109,7 @@ export default function LoginPageClient({ nextPath }: LoginPageClientProps) {
 
       await handleLoginSuccess();
     } catch (err) {
-      if (err instanceof ApiClientError) {
-        setError(err.message);
-      } else {
-        setError(t.errorFallback);
-      }
+      setError(resolveApiErrorMessage(err, t.errorFallback));
     } finally {
       setSubmitting(false);
     }
@@ -210,7 +207,7 @@ export default function LoginPageClient({ nextPath }: LoginPageClientProps) {
                   autoCorrect="off"
                   spellCheck={false}
                   className={sharedInputClass}
-                  placeholder="name@company.com"
+                  placeholder={copy.emailPlaceholder}
                   disabled={submitting}
                   required
                 />
@@ -290,7 +287,7 @@ export default function LoginPageClient({ nextPath }: LoginPageClientProps) {
         <section className="relative hidden overflow-hidden bg-slate-950 lg:flex">
           <Image
             src="/images/login-dog.jpg"
-            alt="Pet management login visual"
+            alt={copy.loginVisualAlt}
             fill
             priority
             className="object-cover"

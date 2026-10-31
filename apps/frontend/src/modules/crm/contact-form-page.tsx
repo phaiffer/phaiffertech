@@ -12,6 +12,7 @@ import { FormInput } from '@/shared/ui/form-input';
 import { FormSelect } from '@/shared/ui/form-select';
 import { PageTitle } from '@/shared/ui/page-title';
 import { PermissionGuard } from '@/shared/auth/PermissionGuard';
+import { resolveApiErrorMessage } from '@/shared/lib/api-error-message';
 
 const statusOptions = [
   { value: 'ACTIVE', label: 'ACTIVE' },
@@ -67,7 +68,7 @@ export function ContactFormPage({ contactId, surface = 'crm' }: ContactFormPageP
         if (!active) {
           return;
         }
-        const message = err instanceof ApiClientError ? err.message : 'Erro ao carregar companies para vínculo.';
+        const message = resolveApiErrorMessage(err, 'Erro ao carregar companies para vínculo.');
         setError((current) => current ?? message);
       })
       .finally(() => {
@@ -105,11 +106,9 @@ export function ContactFormPage({ contactId, surface = 'crm' }: ContactFormPageP
         if (!active) {
           return;
         }
-        const message = err instanceof ApiClientError
-          ? err.message
-          : isPetSurface
+        const message = resolveApiErrorMessage(err, isPetSurface
             ? 'Erro ao carregar contato de apoio.'
-            : 'Erro ao carregar contato.';
+            : 'Erro ao carregar contato.');
         setError(message);
       })
       .finally(() => {
@@ -176,11 +175,9 @@ export function ContactFormPage({ contactId, surface = 'crm' }: ContactFormPageP
 
       setTimeout(() => router.push(basePath), 600);
     } catch (err) {
-      const message = err instanceof ApiClientError
-        ? err.message
-        : isPetSurface
+      const message = resolveApiErrorMessage(err, isPetSurface
           ? 'Erro ao salvar contato de apoio.'
-          : 'Erro ao salvar contato.';
+          : 'Erro ao salvar contato.');
       setError(message);
     } finally {
       setSubmitting(false);

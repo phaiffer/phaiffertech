@@ -28,6 +28,9 @@ import { PageSection } from '@/shared/ui/page-section';
 import { PageTitle } from '@/shared/ui/page-title';
 import { Pagination } from '@/shared/ui/pagination';
 import { SearchBar } from '@/shared/ui/search-bar';
+import { useAppMessages } from '@/shared/i18n/app-i18n-provider';
+import type { AppMessages } from '@/shared/i18n/messages/pt-br';
+import { resolveApiErrorMessage } from '@/shared/lib/api-error-message';
 
 type PetProfilesPageProps = {
   initialView?: 'list' | 'create';
@@ -43,37 +46,44 @@ const initialPage: PageResponse<PetProfile> = {
   size: pageSize
 };
 
-const genderOptions = [
-  { value: '', label: 'Nao informado' },
-  { value: 'MALE', label: 'Macho' },
-  { value: 'FEMALE', label: 'Femea' }
-];
+type PetProfilesCopy = AppMessages['screens']['petProfiles'];
 
-const sizeOptions = [
-  { value: '', label: 'Nao informado' },
-  { value: 'TOY', label: 'Toy' },
-  { value: 'SMALL', label: 'Pequeno' },
-  { value: 'MEDIUM', label: 'Medio' },
-  { value: 'LARGE', label: 'Grande' },
-  { value: 'GIANT', label: 'Gigante' }
-];
+function buildGenderOptions(copy: PetProfilesCopy) {
+  return [
+    { value: '', label: copy.notProvided },
+    { value: 'MALE', label: copy.sexMale },
+    { value: 'FEMALE', label: copy.sexFemale }
+  ];
+}
 
-function resolveSizeLabel(size?: string | null): string | undefined {
+function buildSizeOptions(copy: PetProfilesCopy) {
+  return [
+    { value: '', label: copy.notProvided },
+    { value: 'TOY', label: copy.sizeToy },
+    { value: 'SMALL', label: copy.sizeSmall },
+    { value: 'MEDIUM', label: copy.sizeMedium },
+    { value: 'LARGE', label: copy.sizeLarge },
+    { value: 'GIANT', label: copy.sizeGiant }
+  ];
+}
+
+function resolveSizeLabel(copy: PetProfilesCopy, size?: string | null): string | undefined {
   if (!size) {
     return undefined;
   }
-  return sizeOptions.find((option) => option.value === size)?.label ?? size;
+  return buildSizeOptions(copy).find((option) => option.value === size)?.label ?? size;
 }
 
-function formatDate(value?: string) {
+function formatDate(copy: AppMessages['screens']['petProfiles'], value?: string) {
   if (!value) {
-    return 'Nao informado';
+    return copy.notProvided;
   }
 
   return new Intl.DateTimeFormat('pt-BR', { dateStyle: 'short' }).format(new Date(value));
 }
 
 export function PetProfilesPage({ initialView = 'list' }: PetProfilesPageProps) {
+  const copy = useAppMessages().screens.petProfiles;
   const router = useRouter();
   const isCreateRoute = initialView === 'create';
 
@@ -108,20 +118,20 @@ export function PetProfilesPage({ initialView = 'list' }: PetProfilesPageProps) 
   const [deleteCandidate, setDeleteCandidate] = useState<PetProfile | null>(null);
 
   const clientOptions = useMemo(() => [
-    { value: '', label: 'Todos os clientes' },
+    { value: '', label: copy.allClients },
     ...clients.map((client) => ({
       value: client.id,
       label: client.name ?? client.fullName ?? client.id
     }))
-  ], [clients]);
+  ], [clients, copy]);
 
   const formClientOptions = useMemo(() => [
-    { value: '', label: 'Selecione um cliente' },
+    { value: '', label: copy.selectClient },
     ...clients.map((client) => ({
       value: client.id,
       label: client.name ?? client.fullName ?? client.id
     }))
-  ], [clients]);
+  ], [clients, copy]);
 
   const loadClients = useCallback(async () => {
     try {
@@ -142,12 +152,12 @@ export function PetProfilesPage({ initialView = 'list' }: PetProfilesPageProps) 
       });
       setPageData(result);
     } catch (err) {
-      const message = err instanceof ApiClientError ? err.message : 'Nao foi possivel carregar os pets.';
+      const message = resolveApiErrorMessage(err, copy.loadErrorPets);
       setError(message);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [copy]);
 
   useEffect(() => {
     loadClients();
@@ -222,7 +232,7 @@ export function PetProfilesPage({ initialView = 'list' }: PetProfilesPageProps) 
     event.preventDefault();
 
     if (!clientId) {
-      setError('Selecione um cliente para o pet.');
+      setError(copy.clientRequired);
       return;
     }
 
@@ -234,7 +244,7 @@ export function PetProfilesPage({ initialView = 'list' }: PetProfilesPageProps) 
 
     if (weight.trim() && Number.isNaN(parsedWeight)) {
       setSubmitting(false);
-      setError('Peso inválido. Informe um número válido.');
+      setError(copy.invalidWeight);
       return;
     }
 
@@ -258,7 +268,7 @@ export function PetProfilesPage({ initialView = 'list' }: PetProfilesPageProps) 
     try {
       if (editingId) {
         await petService.updateProfile(editingId, payload);
-        setSuccess('Pet atualizado.');
+        setSuccess(copy.petUpdated);
         setIsEditorOpen(false);
       } else {
         await petService.createProfile(payload);
@@ -268,14 +278,14 @@ export function PetProfilesPage({ initialView = 'list' }: PetProfilesPageProps) 
           return;
         }
 
-        setSuccess('Pet adicionado.');
+        setSuccess(copy.petCreated);
         setIsEditorOpen(false);
       }
 
       resetForm();
       await load(pageData.page, search, clientFilterId);
     } catch (err) {
-      const message = err instanceof ApiClientError ? err.message : 'Nao foi possivel salvar o pet.';
+      const message = resolveApiErrorMessage(err, copy.saveErrorPet);
       setError(message);
     } finally {
       setSubmitting(false);
@@ -290,10 +300,10 @@ export function PetProfilesPage({ initialView = 'list' }: PetProfilesPageProps) 
     try {
       await petService.deleteProfile(deleteCandidate.id);
       setDeleteCandidate(null);
-      setSuccess('Pet removido.');
+      setSuccess(copy.petDeleted);
       await load(pageData.page, search, clientFilterId);
     } catch (err) {
-      const message = err instanceof ApiClientError ? err.message : 'Nao foi possivel remover o pet.';
+      const message = resolveApiErrorMessage(err, copy.deleteErrorPet);
       setError(message);
     }
   }
@@ -316,54 +326,54 @@ export function PetProfilesPage({ initialView = 'list' }: PetProfilesPageProps) 
             {[profile.species, profile.breed].filter(Boolean).join(' - ')}
           </p>
           <p className={sharedCompactTextClass}>
-            {[resolveSizeLabel(profile.size), profile.coatType].filter(Boolean).join(' - ') || 'Porte e pelagem nao informados'}
+            {[resolveSizeLabel(copy, profile.size), profile.coatType].filter(Boolean).join(' - ') || copy.sizeCoatMissing}
           </p>
         </div>
       )
     },
     {
       key: 'client',
-      header: 'Cliente',
+      header: copy.client,
       render: (profile) => {
         const client = clients.find((entry) => entry.id === profile.clientId);
 
         return (
           <div>
             <p className="font-medium text-slate-900">{client?.name ?? client?.fullName ?? profile.clientId}</p>
-            <p className={`mt-1 ${sharedCompactTextClass}`}>Nascimento: {formatDate(profile.birthDate)}</p>
+            <p className={`mt-1 ${sharedCompactTextClass}`}>{copy.birthLabel} {formatDate(copy, profile.birthDate)}</p>
           </div>
         );
       }
     },
     {
       key: 'details',
-      header: 'Banho e tosa',
+      header: copy.columnGrooming,
       render: (profile) => (
         <div>
-          <p className="font-medium text-slate-900">{profile.color ?? 'Cor nao informada'}</p>
+          <p className="font-medium text-slate-900">{profile.color ?? copy.colorMissing}</p>
           <p className={`mt-1 ${sharedCompactTextClass}`}>
-            {profile.weight === undefined ? 'Peso nao informado' : `${profile.weight} kg`}
+            {profile.weight === undefined ? copy.weightMissing : `${profile.weight} kg`}
           </p>
           <p className={sharedCompactTextClass}>
-            {profile.behavior ?? profile.restrictions ?? 'Sem alerta de comportamento ou restricao'}
+            {profile.behavior ?? profile.restrictions ?? copy.noBehaviorAlert}
           </p>
         </div>
       )
     },
     {
       key: 'actions',
-      header: 'Acoes',
+      header: copy.actions,
       render: (profile) => (
         <div className={sharedInlineActionsClass}>
           <PermissionGuard permission="pet.profile.update">
             <button type="button" onClick={() => beginEdit(profile)} className="ui-inline-button">
-              Editar
+              {copy.edit}
             </button>
           </PermissionGuard>
 
           <PermissionGuard permission="pet.profile.delete">
             <button type="button" onClick={() => setDeleteCandidate(profile)} className="ui-inline-danger-button">
-              Remover
+              {copy.remove}
             </button>
           </PermissionGuard>
         </div>
@@ -374,25 +384,25 @@ export function PetProfilesPage({ initialView = 'list' }: PetProfilesPageProps) 
   return (
     <PermissionGuard
       permission="pet.profile.read"
-      fallback={<div className="ui-notice-warning">Voce nao tem permissao para visualizar pets.</div>}
+      fallback={<div className="ui-notice-warning">{copy.noPermissionPets}</div>}
     >
       <div className={sharedPageStackClass}>
         <PageTitle
           eyebrow="Gestão Pet"
-          title={isCreateRoute ? 'Novo pet' : 'Pets'}
+          title={isCreateRoute ? copy.newPet : copy.titlePets}
           description={
             isCreateRoute
-              ? 'Cadastre o pet dentro de um cliente para que atendimentos, planos e cobranca fiquem ligados ao registro certo.'
-              : 'Cadastre cada pet dentro de um cliente para que atendimentos e cobranca mantenham o contexto correto.'
+              ? copy.descriptionCreatePet
+              : copy.descriptionListPet
           }
           actions={isCreateRoute ? (
             <Link href="/pet/pets" className="ui-secondary-button">
-              Voltar para pets
+              {copy.backToPets}
             </Link>
           ) : (
             <PermissionGuard permission="pet.profile.create">
               <Link href="/pet/pets/new" className="ui-primary-button">
-                Novo pet
+                {copy.newPet}
               </Link>
             </PermissionGuard>
           )}
@@ -401,10 +411,10 @@ export function PetProfilesPage({ initialView = 'list' }: PetProfilesPageProps) 
         {!isCreateRoute ? (
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
             {[
-              { label: 'Total de pets', value: totalItems, icon: PawPrint },
-              { label: 'Clientes vinculados', value: linkedClientsCount, icon: Users },
-              { label: 'Com nascimento', value: withBirthDateCount, icon: CalendarDays },
-              { label: 'Espécies ativas', value: speciesCount, icon: PawPrint }
+              { label: copy.metricTotalPets, value: totalItems, icon: PawPrint },
+              { label: copy.metricLinkedClients, value: linkedClientsCount, icon: Users },
+              { label: copy.metricWithBirthDate, value: withBirthDateCount, icon: CalendarDays },
+              { label: copy.metricSpecies, value: speciesCount, icon: PawPrint }
             ].map((item) => (
               <div key={item.label} className={sharedSummaryCardClass}>
                 <div className="flex items-start justify-between gap-3">
@@ -422,15 +432,15 @@ export function PetProfilesPage({ initialView = 'list' }: PetProfilesPageProps) 
         ) : null}
 
         {!isCreateRoute ? (
-          <PageSection tone="muted" title="Filtros" description="Busque por pet, especie ou cliente vinculado.">
+          <PageSection tone="muted" title={copy.filters} description={copy.filtersDescriptionPets}>
             <div className={sharedFilterToolbarClass}>
               <div className="grid gap-3 xl:grid-cols-[minmax(0,1.45fr)_260px] xl:items-end">
-                <SearchBar value={searchInput} onChange={setSearchInput} placeholder="Pet, especie ou raca" />
-                <FormSelect label="Cliente" value={clientFilterId} options={clientOptions} onChange={setClientFilterId} />
+                <SearchBar value={searchInput} onChange={setSearchInput} placeholder={copy.searchPlaceholderPets} />
+                <FormSelect label={copy.client} value={clientFilterId} options={clientOptions} onChange={setClientFilterId} />
               </div>
               <div className={sharedFormActionsClass}>
                 <button type="button" onClick={() => setSearch(searchInput)} className="ui-primary-button">
-                  Buscar
+                  {copy.search}
                 </button>
                 <button
                   type="button"
@@ -441,12 +451,12 @@ export function PetProfilesPage({ initialView = 'list' }: PetProfilesPageProps) 
                   }}
                   className="ui-inline-button"
                 >
-                  Limpar
+                  {copy.clear}
                 </button>
                 <p className="text-sm text-slate-700">
                   {activeFilterCount > 0
-                    ? `${activeFilterCount} filtro(s) ativos na lista de pets.`
-                    : 'Sem filtros ativos na base de pets.'}
+                    ? copy.activeFiltersCountPets.replace('{count}', String(activeFilterCount))
+                    : copy.noActiveFiltersPets}
                 </p>
               </div>
             </div>
@@ -455,7 +465,7 @@ export function PetProfilesPage({ initialView = 'list' }: PetProfilesPageProps) 
 
         {clients.length === 0 ? (
           <div className="ui-notice-warning">
-            Crie um cliente antes de cadastrar o primeiro pet.
+            {copy.createClientFirst}
           </div>
         ) : null}
 
@@ -465,33 +475,33 @@ export function PetProfilesPage({ initialView = 'list' }: PetProfilesPageProps) 
         {isEditorOpen ? (
           <PermissionGuard permission={editingId ? 'pet.profile.update' : 'pet.profile.create'}>
             <PageSection
-              title={editingId ? 'Editar pet' : 'Novo pet'}
-              description="Mantenha os dados que a recepcao e a equipe de banho e tosa precisam para agendar, executar e cobrar com seguranca."
+              title={editingId ? copy.editPet : copy.newPet}
+              description={copy.formDescriptionPet}
             >
               <form onSubmit={handleSubmit} className="space-y-5">
                 <div className="grid gap-4 xl:grid-cols-2">
-                  <FormSelect label="Cliente" value={clientId} options={formClientOptions} onChange={setClientId} />
-                  <FormInput label="Nome" value={name} onChange={setName} required />
-                  <FormInput label="Especie" value={species} onChange={setSpecies} required />
-                  <FormInput label="Raca" value={breed} onChange={setBreed} />
-                  <FormInput label="Nascimento" value={birthDate} onChange={setBirthDate} type="date" />
-                  <FormSelect label="Sexo" value={gender} options={genderOptions} onChange={setGender} />
-                  <FormSelect label="Porte" value={size} options={sizeOptions} onChange={setSize} />
-                  <FormInput label="Peso (kg)" value={weight} onChange={setWeight} type="number" />
-                  <FormInput label="Tipo de pelagem" value={coatType} onChange={setCoatType} placeholder="Curta, longa, dupla, cacheada..." />
-                  <FormInput label="Comportamento" value={behavior} onChange={setBehavior} placeholder="Calmo, ansioso, reativo, filhote..." />
-                  <FormInput label="Cor" value={color} onChange={setColor} />
-                  <FormInput label="Restricoes" value={restrictions} onChange={setRestrictions} placeholder="Alergias, sensibilidade, medicacao ou areas que exigem cuidado" wrapperClassName="xl:col-span-2" />
-                  <FormInput label="Observacoes de banho/tosa" value={groomingNotes} onChange={setGroomingNotes} placeholder="Preferencia de lamina, secagem, perfume, focinheira ou rotina do banho" wrapperClassName="xl:col-span-2" />
-                  <FormInput label="Observacoes gerais" value={notes} onChange={setNotes} wrapperClassName="xl:col-span-2" />
+                  <FormSelect label={copy.client} value={clientId} options={formClientOptions} onChange={setClientId} />
+                  <FormInput label={copy.name} value={name} onChange={setName} required />
+                  <FormInput label={copy.species} value={species} onChange={setSpecies} required />
+                  <FormInput label={copy.breed} value={breed} onChange={setBreed} />
+                  <FormInput label={copy.birthDate} value={birthDate} onChange={setBirthDate} type="date" />
+                  <FormSelect label={copy.sex} value={gender} options={buildGenderOptions(copy)} onChange={setGender} />
+                  <FormSelect label={copy.size} value={size} options={buildSizeOptions(copy)} onChange={setSize} />
+                  <FormInput label={copy.weight} value={weight} onChange={setWeight} type="number" />
+                  <FormInput label={copy.coatType} value={coatType} onChange={setCoatType} placeholder={copy.coatTypePlaceholder} />
+                  <FormInput label={copy.behavior} value={behavior} onChange={setBehavior} placeholder={copy.behaviorPlaceholder} />
+                  <FormInput label={copy.color} value={color} onChange={setColor} />
+                  <FormInput label={copy.restrictions} value={restrictions} onChange={setRestrictions} placeholder={copy.restrictionsPlaceholder} wrapperClassName="xl:col-span-2" />
+                  <FormInput label={copy.groomingNotes} value={groomingNotes} onChange={setGroomingNotes} placeholder={copy.groomingNotesPlaceholder} wrapperClassName="xl:col-span-2" />
+                  <FormInput label={copy.generalNotes} value={notes} onChange={setNotes} wrapperClassName="xl:col-span-2" />
                 </div>
 
                 <div className={sharedFormActionsClass}>
                   <button type="submit" disabled={submitting || clients.length === 0} className="ui-primary-button">
-                    {submitting ? 'Salvando...' : editingId ? 'Atualizar pet' : 'Adicionar pet'}
+                    {submitting ? copy.saving : editingId ? copy.updatePet : copy.addPet}
                   </button>
                   <button type="button" onClick={closeEditor} className="ui-secondary-button">
-                    Cancelar
+                    {copy.cancel}
                   </button>
                 </div>
               </form>
@@ -501,9 +511,9 @@ export function PetProfilesPage({ initialView = 'list' }: PetProfilesPageProps) 
 
         {!isCreateRoute ? (
           <PageSection
-            title="Base de pets"
-            description="Lista conectada a clientes, atendimentos e cobranca."
-            actions={<p className="text-sm text-slate-700">Total de {totalItems} pet(s)</p>}
+            title={copy.listTitlePets}
+            description={copy.listDescriptionPets}
+            actions={<p className="text-sm text-slate-700">{copy.totalOf} {totalItems} {copy.petsCount}</p>}
           >
             <div className="space-y-5">
               <DataTable
@@ -511,15 +521,15 @@ export function PetProfilesPage({ initialView = 'list' }: PetProfilesPageProps) 
                 rows={rows}
                 getRowKey={(row) => row.id}
                 loading={loading}
-                loadingTitle="Carregando pets"
-                loadingDescription="Preparando os pets vinculados aos clientes deste workspace."
+                loadingTitle={copy.loadingTitlePets}
+                loadingDescription={copy.loadingDescriptionPets}
                 emptyState={{
-                  title: 'Nenhum pet ainda',
-                  description: 'Cadastre o primeiro pet depois de criar um cliente para deixar agenda e cobranca com o contexto certo.',
+                  title: copy.emptyTitlePets,
+                  description: copy.emptyDescriptionPets,
                   action: (
                     <PermissionGuard permission="pet.profile.create">
                       <Link href="/pet/pets/new" className="ui-primary-button">
-                        Criar primeiro pet
+                        {copy.createFirstPet}
                       </Link>
                     </PermissionGuard>
                   )
@@ -538,9 +548,9 @@ export function PetProfilesPage({ initialView = 'list' }: PetProfilesPageProps) 
 
         <ConfirmDialog
           open={Boolean(deleteCandidate)}
-          title="Remover pet?"
-          description={deleteCandidate ? `"${deleteCandidate.name}" sera removido deste workspace.` : undefined}
-          confirmLabel="Remover"
+          title={copy.removePetConfirmTitle}
+          description={deleteCandidate ? copy.removePetConfirmDescription.replace('{name}', deleteCandidate.name) : undefined}
+          confirmLabel={copy.remove}
           onCancel={() => setDeleteCandidate(null)}
           onConfirm={handleConfirmDelete}
         />

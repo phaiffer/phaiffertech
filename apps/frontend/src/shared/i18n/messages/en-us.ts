@@ -1,4 +1,5 @@
 import type { AppMessages } from '@/shared/i18n/messages/pt-br';
+import { enUSScreens } from '@/shared/i18n/messages/screens-en-us';
 
 export const enUSMessages: AppMessages = {
   common: {
@@ -1311,5 +1312,6 @@ export const enUSMessages: AppMessages = {
       sameAsCurrent: 'The new password must be different from the current one.',
       genericError: 'Unable to update the password right now.'
     }
-  }
+  },
+  screens: enUSScreens
 };

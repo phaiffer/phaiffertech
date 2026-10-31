@@ -201,18 +201,18 @@ describe('PetCommissionSummaryPage', () => {
       expect(petServiceMock.getCommissionSummary).toHaveBeenCalledTimes(1);
     });
 
-    expect(screen.getByText('Fechamento operacional')).toBeInTheDocument();
+    expect(screen.getByText('Closing summary')).toBeInTheDocument();
     expect(screen.getAllByText('Ana Groomer').length).toBeGreaterThan(0);
     expect(screen.getAllByText('Beto Groomer').length).toBeGreaterThan(0);
-    expect(screen.getAllByText('Gerou comissao').length).toBeGreaterThan(0);
-    expect(screen.getByText('Excluida')).toBeInTheDocument();
-    expect(screen.getByText('Elegivel sem valor')).toBeInTheDocument();
-    expect(screen.getAllByText('Compatibilidade historica').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('Commission generated').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('Excluded').length).toBeGreaterThan(0);
+    expect(screen.getByText('Eligible, no amount')).toBeInTheDocument();
+    expect(screen.getAllByText('Legacy data').length).toBeGreaterThan(0);
     expect(screen.getByText('Legacy Bath')).toBeInTheDocument();
-    expect(screen.getByText('Linhas excluidas')).toBeInTheDocument();
-    expect(screen.getByText('Linhas com comissao')).toBeInTheDocument();
-    expect(screen.getByText('Cobrancas pendentes')).toBeInTheDocument();
-    expect(screen.getByText('Planos perto do fim')).toBeInTheDocument();
+    expect(screen.getByText('Excluded lines')).toBeInTheDocument();
+    expect(screen.getByText('Lines with commission')).toBeInTheDocument();
+    expect(screen.getByText('Pending charges')).toBeInTheDocument();
+    expect(screen.getByText('Plans near their end')).toBeInTheDocument();
     expect(screen.getByText(/R\$\s?220,00/)).toBeInTheDocument();
   });
 });

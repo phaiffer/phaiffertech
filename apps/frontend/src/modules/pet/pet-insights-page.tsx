@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { sharedPageStackClass } from '@/shared/components/public-visual-system';
 import { SimpleBarChart } from '@/shared/dashboard/simple-bar-chart';
 import { EmptyStateCard } from '@/shared/dashboard/empty-state-card';
@@ -16,20 +16,23 @@ import {
   sharedSectionHeadingClass
 } from '@/shared/components/public-visual-system';
 import { workspacePanelSurfaceStyle } from '@/shared/modules/module-workspace-visual';
+import { useAppMessages } from '@/shared/i18n/app-i18n-provider';
+import { resolveApiErrorMessage } from '@/shared/lib/api-error-message';
 
 function ClientGrowthPanel({ thisMonth, lastMonth }: { thisMonth: number; lastMonth: number }) {
+  const copy = useAppMessages().screens.petInsights;
   const delta = thisMonth - lastMonth;
   const deltaSign = delta > 0 ? '+' : '';
   const trendLabel = lastMonth === 0
     ? null
-    : `${deltaSign}${delta} vs last month`;
+    : copy.deltaVsLastMonth.replace('{delta}', `${deltaSign}${delta}`);
 
   return (
     <div className={`${sharedPanelSurfaceClass} p-5`} style={workspacePanelSurfaceStyle}>
-      <h3 className={sharedSectionHeadingClass}>Client Growth</h3>
+      <h3 className={sharedSectionHeadingClass}>{copy.clientGrowthChart}</h3>
       <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div>
-          <p className={`${sharedCompactTextClass} mb-1`}>This month</p>
+          <p className={`${sharedCompactTextClass} mb-1`}>{copy.thisMonth}</p>
           <p className="text-2xl font-bold text-foreground">{thisMonth}</p>
           {trendLabel ? (
             <p className={`mt-1 ${sharedCompactTextClass} ${delta >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-500 dark:text-red-400'}`}>
@@ -38,7 +41,7 @@ function ClientGrowthPanel({ thisMonth, lastMonth }: { thisMonth: number; lastMo
           ) : null}
         </div>
         <div>
-          <p className={`${sharedCompactTextClass} mb-1`}>Last month</p>
+          <p className={`${sharedCompactTextClass} mb-1`}>{copy.lastMonth}</p>
           <p className="text-2xl font-bold text-foreground">{lastMonth}</p>
         </div>
       </div>
@@ -47,15 +50,13 @@ function ClientGrowthPanel({ thisMonth, lastMonth }: { thisMonth: number; lastMo
 }
 
 export function PetInsightsPage() {
+  const copy = useAppMessages().screens.petInsights;
   const [insights, setInsights] = useState<PetInsightsSummary | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    void load();
-  }, []);
-
-  async function load() {
+  const loadErrorMessage = copy.insightsLoadError;
+  const load = useCallback(async () => {
     setLoading(true);
     setError(null);
 
@@ -63,11 +64,15 @@ export function PetInsightsPage() {
       const result = await petService.getInsightsSummary();
       setInsights(result);
     } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : 'Unable to load business insights.');
+      setError(resolveApiErrorMessage(err, loadErrorMessage));
     } finally {
       setLoading(false);
     }
-  }
+  }, [loadErrorMessage]);
+
+  useEffect(() => {
+    void load();
+  }, [load]);
 
   const hasData = insights && (
     insights.newClientsThisMonth > 0
@@ -80,23 +85,23 @@ export function PetInsightsPage() {
   return (
     <PermissionGuard
       permission="pet.dashboard.read"
-      fallback={<div className="ui-notice-warning">Dashboard access is required to view business insights.</div>}
+      fallback={<div className="ui-notice-warning">{copy.insightsNoPermission}</div>}
     >
       <div className={sharedPageStackClass}>
         <PageTitle
           eyebrow="Gestão Pet"
-          title="Business Insights"
-          description="Client growth, top services, pet mix, and appointment patterns — built from your real business activity."
+          title={copy.insightsTitle}
+          description={copy.insightsDescription}
         />
 
-        {loading ? <div className="ui-notice-neutral">Loading insights...</div> : null}
+        {loading ? <div className="ui-notice-neutral">{copy.insightsLoading}</div> : null}
         {error ? <div className="ui-notice-error">{error}</div> : null}
 
         {insights && hasData ? (
           <>
             <PageSection
-              title="Client growth"
-              description="New clients registered in the current and previous calendar month."
+              title={copy.clientGrowth}
+              description={copy.clientGrowthDescription}
             >
               <ClientGrowthPanel
                 thisMonth={insights.newClientsThisMonth}
@@ -105,39 +110,39 @@ export function PetInsightsPage() {
             </PageSection>
 
             <PageSection
-              title="Top services"
-              description="Top services by total appointment volume across all time."
+              title={copy.topServices}
+              description={copy.topServicesDescription}
             >
               <SimpleBarChart
-                title="Top Services by Appointment Volume"
+                title={copy.topServicesChart}
                 metrics={insights.topServices}
-                emptyMessage="No appointment data available yet. Schedule appointments to see service performance."
+                emptyMessage={copy.topServicesEmpty}
               />
             </PageSection>
 
             <div className="grid gap-5 xl:grid-cols-2">
               {insights.speciesMix.length > 0 ? (
                 <PageSection
-                  title="Pet mix"
-                  description="Distribution of pet profiles by species."
+                  title={copy.petMix}
+                  description={copy.petMixDescription}
                 >
                   <SimpleBarChart
-                    title="Pets by Species"
+                    title={copy.petMixChart}
                     metrics={insights.speciesMix}
-                    emptyMessage="No pet profiles registered yet."
+                    emptyMessage={copy.petMixEmpty}
                   />
                 </PageSection>
               ) : null}
 
               {insights.appointmentsByStatus.length > 0 ? (
                 <PageSection
-                  title="Appointment status"
-                  description="Breakdown of all appointments by their current status."
+                  title={copy.appointmentStatus}
+                  description={copy.appointmentStatusDescription}
                 >
                   <SimpleBarChart
-                    title="Appointments by Status"
+                    title={copy.appointmentStatusChart}
                     metrics={insights.appointmentsByStatus}
-                    emptyMessage="No appointments registered yet."
+                    emptyMessage={copy.appointmentStatusEmpty}
                   />
                 </PageSection>
               ) : null}
@@ -145,9 +150,9 @@ export function PetInsightsPage() {
           </>
         ) : !loading && !error ? (
           <EmptyStateCard
-            title="Insights appear after the first operating cycle"
-            description="Add a client, register a pet, book an appointment, and issue an invoice. This page will turn that activity into growth and service signals."
-            actionLabel="Start your first cycle"
+            title={copy.insightsSetupTitle}
+            description={copy.insightsSetupDescription}
+            actionLabel={copy.insightsSetupAction}
             href="/pet"
           />
         ) : null}

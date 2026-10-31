@@ -39,6 +39,9 @@ import { PageSection } from '@/shared/ui/page-section';
 import { PageTitle } from '@/shared/ui/page-title';
 import { Pagination } from '@/shared/ui/pagination';
 import { SearchBar } from '@/shared/ui/search-bar';
+import { useAppMessages } from '@/shared/i18n/app-i18n-provider';
+import type { AppMessages } from '@/shared/i18n/messages/pt-br';
+import { resolveApiErrorMessage } from '@/shared/lib/api-error-message';
 
 type PetClientsPageProps = {
   initialView?: 'list' | 'create';
@@ -46,22 +49,30 @@ type PetClientsPageProps = {
 
 const pageSize = 10;
 
-const statusOptions = [
-  { value: '', label: 'Todos' },
-  { value: 'ACTIVE', label: 'Ativo' },
-  { value: 'INACTIVE', label: 'Inativo' }
-];
+type PetClientsCopy = AppMessages['screens']['petClients'];
 
-const formStatusOptions = [
-  { value: 'ACTIVE', label: 'Ativo' },
-  { value: 'INACTIVE', label: 'Inativo' }
-];
+function buildStatusOptions(copy: PetClientsCopy) {
+  return [
+    { value: '', label: copy.filterAll },
+    { value: 'ACTIVE', label: copy.statusActive },
+    { value: 'INACTIVE', label: copy.statusInactive }
+  ];
+}
 
-const documentTypeOptions = [
-  { value: '', label: 'Selecione o tipo' },
-  { value: 'CPF', label: 'CPF' },
-  { value: 'RG', label: 'RG' }
-];
+function buildFormStatusOptions(copy: PetClientsCopy) {
+  return [
+    { value: 'ACTIVE', label: copy.statusActive },
+    { value: 'INACTIVE', label: copy.statusInactive }
+  ];
+}
+
+function buildDocumentTypeOptions(copy: PetClientsCopy) {
+  return [
+    { value: '', label: copy.documentTypePlaceholder },
+    { value: 'CPF', label: 'CPF' },
+    { value: 'RG', label: 'RG' }
+  ];
+}
 
 const initialPage: PageResponse<PetClient> = {
   items: [],
@@ -79,6 +90,7 @@ function formatDateTime(value: string) {
 }
 
 export function PetClientsPage({ initialView = 'list' }: PetClientsPageProps) {
+  const copy = useAppMessages().screens.petClients;
   const router = useRouter();
   const isCreateRoute = initialView === 'create';
 
@@ -115,12 +127,12 @@ export function PetClientsPage({ initialView = 'list' }: PetClientsPageProps) {
       });
       setPageData(result);
     } catch (err) {
-      const message = err instanceof ApiClientError ? err.message : 'Nao foi possivel carregar os clientes.';
+      const message = resolveApiErrorMessage(err, copy.loadError);
       setError(message);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [copy]);
 
   useEffect(() => {
     load(0, search, statusFilter);
@@ -195,13 +207,13 @@ export function PetClientsPage({ initialView = 'list' }: PetClientsPageProps) {
 
     if (!normalizedDocumentType) {
       setSubmitting(false);
-      setError('Selecione o tipo de documento.');
+      setError(copy.documentTypeRequired);
       return;
     }
 
     if (!normalizedDocument) {
       setSubmitting(false);
-      setError('Informe o numero do documento.');
+      setError(copy.documentNumberRequired);
       return;
     }
 
@@ -209,8 +221,8 @@ export function PetClientsPage({ initialView = 'list' }: PetClientsPageProps) {
       setSubmitting(false);
       setError(
         normalizedDocumentType === 'CPF'
-          ? 'Informe um CPF valido.'
-          : 'Informe um RG valido.'
+          ? copy.invalidCpf
+          : copy.invalidRg
       );
       return;
     }
@@ -232,7 +244,7 @@ export function PetClientsPage({ initialView = 'list' }: PetClientsPageProps) {
           notes: notes || undefined,
           status
         });
-        setSuccess('Cliente atualizado.');
+        setSuccess(copy.updated);
         setIsEditorOpen(false);
       } else {
         await petService.createClient({
@@ -254,14 +266,14 @@ export function PetClientsPage({ initialView = 'list' }: PetClientsPageProps) {
           return;
         }
 
-        setSuccess('Cliente adicionado.');
+        setSuccess(copy.created);
         setIsEditorOpen(false);
       }
 
       resetForm();
       await load(pageData.page, search, statusFilter);
     } catch (err) {
-      const message = err instanceof ApiClientError ? err.message : 'Nao foi possivel salvar o cliente.';
+      const message = resolveApiErrorMessage(err, copy.saveError);
       setError(message);
     } finally {
       setSubmitting(false);
@@ -276,10 +288,10 @@ export function PetClientsPage({ initialView = 'list' }: PetClientsPageProps) {
     try {
       await petService.deleteClient(deleteCandidate.id);
       setDeleteCandidate(null);
-      setSuccess('Cliente removido.');
+      setSuccess(copy.deleted);
       await load(pageData.page, search, statusFilter);
     } catch (err) {
-      const message = err instanceof ApiClientError ? err.message : 'Nao foi possivel remover o cliente.';
+      const message = resolveApiErrorMessage(err, copy.deleteError);
       setError(message);
     }
   }
@@ -294,7 +306,7 @@ export function PetClientsPage({ initialView = 'list' }: PetClientsPageProps) {
   const columns: DataTableColumn<PetClient>[] = [
     {
       key: 'profile',
-      header: 'Cliente',
+      header: copy.client,
       render: (client) => {
         const resolvedDocumentType = inferPetClientDocumentType(client.documentType, client.document);
         const formattedDocument = formatPetClientDocumentDisplay(client.documentType, client.document);
@@ -303,9 +315,9 @@ export function PetClientsPage({ initialView = 'list' }: PetClientsPageProps) {
           <div>
             <p className="font-medium text-slate-900">{client.name ?? client.fullName ?? '-'}</p>
             <p className={`mt-1 ${sharedCompactTextClass}`}>
-              Documento: {client.document
+              {copy.documentLabel} {client.document
                 ? [resolvedDocumentType, formattedDocument].filter(Boolean).join(' ')
-                : 'Nao informado'}
+                : copy.notProvided}
             </p>
           </div>
         );
@@ -313,18 +325,18 @@ export function PetClientsPage({ initialView = 'list' }: PetClientsPageProps) {
     },
     {
       key: 'contact',
-      header: 'Responsavel principal',
+      header: copy.columnPrimaryResponsible,
       render: (client) => {
         const primaryResponsible = resolvePetClientPrimaryResponsible(client);
 
         return (
           <div>
-            <p className="font-medium text-slate-900">{primaryResponsible.name ?? 'Sem responsavel principal'}</p>
+            <p className="font-medium text-slate-900">{primaryResponsible.name ?? copy.noPrimaryResponsible}</p>
             <p className={`mt-1 ${sharedCompactTextClass}`}>
-              {primaryResponsible.email ?? 'Sem e-mail'}
+              {primaryResponsible.email ?? copy.noEmail}
             </p>
             <p className={sharedCompactTextClass}>
-              {primaryResponsible.phone ? formatPhoneDisplay(primaryResponsible.phone) : 'Sem telefone'}
+              {primaryResponsible.phone ? formatPhoneDisplay(primaryResponsible.phone) : copy.noPhone}
             </p>
           </div>
         );
@@ -332,35 +344,37 @@ export function PetClientsPage({ initialView = 'list' }: PetClientsPageProps) {
     },
     {
       key: 'address',
-      header: 'Endereco e atualizacao',
+      header: copy.columnAddressUpdated,
       render: (client) => (
         <div>
-          <p className="font-medium text-slate-900">{client.address ?? 'Sem endereco'}</p>
+          <p className="font-medium text-slate-900">{client.address ?? copy.noAddress}</p>
           <p className={`mt-1 ${sharedCompactTextClass}`}>
-            {client.notes ? `Observacoes: ${client.notes}` : `Atualizado em ${formatDateTime(client.updatedAt)}`}
+            {client.notes
+              ? copy.notesValue.replace('{notes}', client.notes)
+              : copy.updatedOn.replace('{date}', formatDateTime(client.updatedAt))}
           </p>
         </div>
       )
     },
     {
       key: 'status',
-      header: 'Status',
+      header: copy.status,
       render: (client) => <StatusBadge status={client.status} />
     },
     {
       key: 'actions',
-      header: 'Acoes',
+      header: copy.actions,
       render: (client) => (
         <div className={sharedInlineActionsClass}>
           <PermissionGuard permission="pet.client.update">
             <button type="button" onClick={() => beginEdit(client)} className="ui-inline-button">
-              Editar
+              {copy.edit}
             </button>
           </PermissionGuard>
 
           <PermissionGuard permission="pet.client.delete">
             <button type="button" onClick={() => setDeleteCandidate(client)} className="ui-inline-danger-button">
-              Remover
+              {copy.remove}
             </button>
           </PermissionGuard>
         </div>
@@ -371,31 +385,31 @@ export function PetClientsPage({ initialView = 'list' }: PetClientsPageProps) {
   return (
     <PermissionGuard
       permission="pet.client.read"
-      fallback={<div className="ui-notice-warning">Voce nao tem permissao para visualizar clientes.</div>}
+      fallback={<div className="ui-notice-warning">{copy.noPermission}</div>}
     > 
       <div className={sharedPageStackClass}>
         <PageTitle
           eyebrow="Gestão Pet"
-          title={isCreateRoute ? 'Novo cliente' : 'Clientes'}
+          title={isCreateRoute ? copy.newClient : copy.title}
           description={
             isCreateRoute
-              ? 'Cadastre o cliente e o seu responsavel principal antes de ligar pets, atendimentos, planos e cobranca.'
-              : 'Mantenha a base de clientes e dos responsaveis principais pronta antes de avancar para pets, atendimentos e cobranca.'
+              ? copy.descriptionCreate
+              : copy.descriptionList
           }
           actions={isCreateRoute ? (
             <Link href="/pet/clients" className="ui-secondary-button">
-              Voltar para clientes
+              {copy.backToClients}
             </Link>
           ) : (
             <div className="flex flex-wrap justify-end gap-2">
               <PermissionGuard permission="crm.contact.read">
                 <Link href="/pet/clients/contacts" className="ui-secondary-button">
-                  Contatos de apoio
+                  {copy.supportContacts}
                 </Link>
               </PermissionGuard>
               <PermissionGuard permission="pet.client.create">
                 <Link href="/pet/clients/new" className="ui-primary-button">
-                  Novo cliente
+                  {copy.newClient}
                 </Link>
               </PermissionGuard>
             </div>
@@ -405,10 +419,10 @@ export function PetClientsPage({ initialView = 'list' }: PetClientsPageProps) {
         {!isCreateRoute ? (
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
             {[
-              { label: 'Total de clientes', value: totalItems, icon: Users },
-              { label: 'Cadastros ativos', value: activeClients, icon: Users },
-              { label: 'Responsaveis com e-mail', value: clientsWithEmail, icon: Mail },
-              { label: 'Responsaveis com telefone', value: clientsWithPhone, icon: Phone }
+              { label: copy.metricTotal, value: totalItems, icon: Users },
+              { label: copy.metricActive, value: activeClients, icon: Users },
+              { label: copy.metricWithEmail, value: clientsWithEmail, icon: Mail },
+              { label: copy.metricWithPhone, value: clientsWithPhone, icon: Phone }
             ].map((item) => (
               <div key={item.label} className={sharedSummaryCardClass}>
                 <div className="flex items-start justify-between gap-3">
@@ -426,15 +440,15 @@ export function PetClientsPage({ initialView = 'list' }: PetClientsPageProps) {
         ) : null}
 
         {!isCreateRoute ? (
-          <PageSection tone="muted" title="Filtros" description="Busque por cliente, responsavel principal ou status do cadastro.">
+          <PageSection tone="muted" title={copy.filters} description={copy.filtersDescription}>
             <div className={sharedFilterToolbarClass}>
               <div className="grid gap-3 xl:grid-cols-[minmax(0,1.45fr)_220px] xl:items-end">
-                <SearchBar value={searchInput} onChange={setSearchInput} placeholder="Cliente, responsavel, e-mail, telefone, endereco" />
-                <FormSelect label="Status" value={statusFilter} options={statusOptions} onChange={setStatusFilter} />
+                <SearchBar value={searchInput} onChange={setSearchInput} placeholder={copy.searchPlaceholder} />
+                <FormSelect label={copy.status} value={statusFilter} options={buildStatusOptions(copy)} onChange={setStatusFilter} />
               </div>
               <div className={sharedFormActionsClass}>
                 <button type="button" onClick={() => setSearch(searchInput)} className="ui-primary-button">
-                  Buscar
+                  {copy.search}
                 </button>
                 <button
                   type="button"
@@ -445,12 +459,12 @@ export function PetClientsPage({ initialView = 'list' }: PetClientsPageProps) {
                   }}
                   className="ui-inline-button"
                 >
-                  Limpar
+                  {copy.clear}
                 </button>
                 <p className="text-sm text-slate-700">
                   {activeFilterCount > 0
-                    ? `${activeFilterCount} filtro(s) ativos na visao de clientes.`
-                    : 'Sem filtros ativos na base de clientes.'}
+                    ? copy.activeFiltersCount.replace('{count}', String(activeFilterCount))
+                    : copy.noActiveFilters}
                 </p>
               </div>
             </div>
@@ -463,25 +477,25 @@ export function PetClientsPage({ initialView = 'list' }: PetClientsPageProps) {
         {isEditorOpen ? (
           <PermissionGuard permission={editingId ? 'pet.client.update' : 'pet.client.create'}>
             <PageSection
-              title={editingId ? 'Editar cliente' : 'Novo cliente'}
-              description="Capture os dados do cliente e do responsavel principal. Contatos adicionais, financeiros ou de contingencia podem ficar em contatos de apoio."
+              title={editingId ? copy.editClient : copy.newClient}
+              description={copy.formDescription}
             >
               <form onSubmit={handleSubmit} className="space-y-5">
                 <div className="grid gap-4 xl:grid-cols-2">
                   <FormInput
                     id="client-name"
                     name="name"
-                    label="Nome do responsavel"
+                    label={copy.responsibleName}
                     value={name}
                     onChange={setName}
                     autoComplete="name"
                     required
                   />
-                  <FormSelect label="Status" value={status} options={formStatusOptions} onChange={setStatus} />
+                  <FormSelect label={copy.status} value={status} options={buildFormStatusOptions(copy)} onChange={setStatus} />
                   <FormInput
                     id="client-email"
                     name="clientEmail"
-                    label="E-mail do responsavel"
+                    label={copy.responsibleEmail}
                     value={email}
                     onChange={setEmail}
                     type="email"
@@ -496,7 +510,7 @@ export function PetClientsPage({ initialView = 'list' }: PetClientsPageProps) {
                   <FormInput
                     id="client-phone"
                     name="clientPhone"
-                    label="Telefone do responsavel"
+                    label={copy.responsiblePhone}
                     value={phone}
                     onChange={(v) => setPhone(maskPhoneInput(v))}
                     type="tel"
@@ -509,15 +523,15 @@ export function PetClientsPage({ initialView = 'list' }: PetClientsPageProps) {
                     data-1p-ignore="true"
                   />
                   <FormSelect
-                    label="Tipo de documento"
+                    label={copy.documentType}
                     value={documentType}
-                    options={documentTypeOptions}
+                    options={buildDocumentTypeOptions(copy)}
                     onChange={handleDocumentTypeChange}
                   />
                   <FormInput
                     id="client-document"
                     name="document"
-                    label="Documento"
+                    label={copy.document}
                     value={document}
                     onChange={(value) => setDocument(formatPetClientDocumentInput(documentType, value))}
                     placeholder={
@@ -525,14 +539,14 @@ export function PetClientsPage({ initialView = 'list' }: PetClientsPageProps) {
                         ? '000.000.000-00'
                         : documentType === 'RG'
                           ? 'MG 12.345.678'
-                          : 'Selecione o tipo antes de informar o numero'
+                          : copy.documentNumberPlaceholder
                     }
                     description={
                       documentType === 'CPF'
-                        ? 'Use um CPF valido. O campo aplica mascara automaticamente.'
+                        ? copy.cpfHint
                         : documentType === 'RG'
                           ? 'RG aceita formato mais flexivel.'
-                          : 'Selecione CPF ou RG antes de informar o documento.'
+                          : copy.documentTypeHint
                     }
                     autoComplete="off"
                     data-lpignore="true"
@@ -542,7 +556,7 @@ export function PetClientsPage({ initialView = 'list' }: PetClientsPageProps) {
                   <FormInput
                     id="client-address"
                     name="address"
-                    label="Endereco"
+                    label={copy.address}
                     value={address}
                     onChange={setAddress}
                     autoComplete="street-address"
@@ -551,20 +565,20 @@ export function PetClientsPage({ initialView = 'list' }: PetClientsPageProps) {
                   <FormInput
                     id="client-notes"
                     name="notes"
-                    label="Observacoes"
+                    label={copy.notes}
                     value={notes}
                     onChange={setNotes}
-                    placeholder="Preferencias de contato, autorizacoes de retirada ou combinados do cliente"
+                    placeholder={copy.notesPlaceholder}
                     wrapperClassName="xl:col-span-2"
                   />
                 </div>
 
                 <div className={sharedFormActionsClass}>
                   <button type="submit" disabled={submitting} className="ui-primary-button">
-                    {submitting ? 'Salvando...' : editingId ? 'Atualizar cliente' : 'Adicionar cliente'}
+                    {submitting ? copy.saving : editingId ? copy.updateClient : copy.addClient}
                   </button>
                   <button type="button" onClick={closeEditor} className="ui-secondary-button">
-                    Cancelar
+                    {copy.cancel}
                   </button>
                 </div>
               </form>
@@ -574,9 +588,9 @@ export function PetClientsPage({ initialView = 'list' }: PetClientsPageProps) {
 
         {!isCreateRoute ? (
           <PageSection
-            title="Base de clientes"
-            description="Lista principal para pets, visitas e cobranca."
-            actions={<p className="text-sm text-slate-700">Total de {totalItems} cliente(s)</p>}
+            title={copy.listTitle}
+            description={copy.listDescription}
+            actions={<p className="text-sm text-slate-700">{copy.totalOf} {totalItems} {copy.clientsCount}</p>}
           >
             <div className="space-y-5">
               <DataTable
@@ -584,15 +598,15 @@ export function PetClientsPage({ initialView = 'list' }: PetClientsPageProps) {
                 rows={rows}
                 getRowKey={(row) => row.id}
                 loading={loading}
-                loadingTitle="Carregando clientes"
-                loadingDescription="Preparando a base de clientes deste workspace."
+                loadingTitle={copy.loadingTitle}
+                loadingDescription={copy.loadingDescription}
                 emptyState={{
-                  title: 'Nenhum cliente ainda',
-                  description: 'Crie o primeiro cliente para liberar pets, atendimentos e o restante do fluxo operacional.',
+                  title: copy.emptyTitle,
+                  description: copy.emptyDescription,
                   action: (
                     <PermissionGuard permission="pet.client.create">
                       <Link href="/pet/clients/new" className="ui-primary-button">
-                        Criar primeiro cliente
+                        {copy.createFirst}
                       </Link>
                     </PermissionGuard>
                   )
@@ -611,9 +625,9 @@ export function PetClientsPage({ initialView = 'list' }: PetClientsPageProps) {
 
         <ConfirmDialog
           open={Boolean(deleteCandidate)}
-          title="Remover cliente?"
-          description={deleteCandidate ? `"${deleteCandidate.name ?? deleteCandidate.fullName ?? 'Este cliente'}" sera removido deste workspace.` : undefined}
-          confirmLabel="Remover"
+          title={copy.removeConfirmTitle}
+          description={deleteCandidate ? copy.removeConfirmDescription.replace('{name}', deleteCandidate.name ?? deleteCandidate.fullName ?? copy.thisClient) : undefined}
+          confirmLabel={copy.remove}
           onCancel={() => setDeleteCandidate(null)}
           onConfirm={handleConfirmDelete}
         />

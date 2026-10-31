@@ -19,6 +19,7 @@ import { usePublicSite } from '@/shared/public/public-site-provider';
 import { getWebsiteContent } from './website-content';
 
 export function WebsiteHomePage() {
+  const copy = useAppMessages().screens.website;
   const { locale } = usePublicSite();
   const content = getWebsiteContent(locale).home;
   const featureIcons = [ShoppingBag, Scissors, Stethoscope, Package];
@@ -61,7 +62,7 @@ export function WebsiteHomePage() {
       <section className="py-20 md:py-24">
         <div className={publicSiteContainerClass}>
           <div className="text-center">
-            <p className="text-sm font-medium uppercase tracking-[0.18em] text-[color:var(--accent)]">Solutions</p>
+            <p className="text-sm font-medium uppercase tracking-[0.18em] text-[color:var(--accent)]">{copy.solutions}</p>
             <h2 className="text-3xl font-bold tracking-[-0.035em] text-slate-900 md:text-4xl">{content.productsTitle}</h2>
             <p className="mx-auto mt-4 max-w-3xl text-lg leading-8 text-slate-700">{content.productsDescription}</p>
           </div>

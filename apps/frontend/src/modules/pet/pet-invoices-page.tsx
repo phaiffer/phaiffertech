@@ -17,6 +17,7 @@ import {
 } from '@/shared/components/public-visual-system';
 import { StatusBadge } from '@/shared/dashboard/status-badge';
 import { useAppMessages } from '@/shared/i18n/app-i18n-provider';
+import type { AppMessages } from '@/shared/i18n/messages/pt-br';
 import { ApiClientError } from '@/shared/lib/http';
 import { resolvePageItems, resolveTotalItems } from '@/shared/lib/pagination';
 import {
@@ -39,30 +40,39 @@ import { PageSection } from '@/shared/ui/page-section';
 import { PageTitle } from '@/shared/ui/page-title';
 import { Pagination } from '@/shared/ui/pagination';
 import { SearchBar } from '@/shared/ui/search-bar';
+import { resolveApiErrorMessage } from '@/shared/lib/api-error-message';
 
 const pageSize = 10;
 const financePreviewSize = 8;
 
-const statusOptions = [
-  { value: '', label: 'Todos os ciclos' },
-  { value: 'DRAFT', label: 'Rascunho' },
-  { value: 'ISSUED', label: 'Emitida' },
-  { value: 'PAID', label: 'Paga' },
-  { value: 'CANCELED', label: 'Cancelada' }
-];
+type InvoicesCopy = AppMessages['screens']['petInvoices'];
 
-const formStatusOptions = statusOptions.filter((option) => option.value);
+function buildStatusOptions(copy: InvoicesCopy) {
+  return [
+    { value: '', label: copy.allCycles },
+    { value: 'DRAFT', label: copy.statusDraft },
+    { value: 'ISSUED', label: copy.statusIssued },
+    { value: 'PAID', label: copy.statusPaid },
+    { value: 'CANCELED', label: copy.statusCanceled }
+  ];
+}
 
-const paymentMethodOptions = [
-  { value: 'PIX', label: 'PIX' },
-  { value: 'CASH', label: 'Dinheiro' },
-  { value: 'CREDIT_CARD', label: 'Cartao de credito' },
-  { value: 'DEBIT_CARD', label: 'Cartao de debito' },
-  { value: 'BANK_TRANSFER', label: 'Transferencia bancaria' },
-  { value: 'BOLETO', label: 'Boleto' },
-  { value: 'MANUAL', label: 'Ajuste manual' },
-  { value: 'OTHER', label: 'Outro' }
-];
+function buildFormStatusOptions(copy: InvoicesCopy) {
+  return buildStatusOptions(copy).filter((option) => option.value);
+}
+
+function buildPaymentMethodOptions(copy: InvoicesCopy) {
+  return [
+    { value: 'PIX', label: 'PIX' },
+    { value: 'CASH', label: copy.methodCash },
+    { value: 'CREDIT_CARD', label: copy.methodCreditCard },
+    { value: 'DEBIT_CARD', label: copy.methodDebitCard },
+    { value: 'BANK_TRANSFER', label: copy.methodBankTransfer },
+    { value: 'BOLETO', label: copy.methodBoleto },
+    { value: 'MANUAL', label: copy.methodManualAdjustment },
+    { value: 'OTHER', label: copy.methodOther }
+  ];
+}
 
 const initialPage: PageResponse<PetInvoice> = {
   items: [],
@@ -105,7 +115,7 @@ function toIsoDate(value: string) {
   return new Date(value).toISOString();
 }
 
-function formatDateTime(value?: string | null, fallback = 'Nao registrado') {
+function formatDateTime(copy: AppMessages['screens']['petInvoices'], value?: string | null, fallback = copy.notRecorded) {
   if (!value) {
     return fallback;
   }
@@ -133,38 +143,40 @@ function getNextCycleDateRange() {
   return { start, end };
 }
 
-const paymentEventLabels: Record<string, string> = {
-  INVOICE_CREATED: 'Fatura criada',
-  INVOICE_ISSUED: 'Fatura emitida para cobranca',
-  INVOICE_CANCELED: 'Fatura cancelada',
-  CHARGE_REQUESTED: 'Cobranca solicitada',
-  CHARGE_CREATED: 'Cobranca gerada',
-  CHARGE_FAILED: 'Falha ao gerar cobranca',
-  WEBHOOK_RECEIVED: 'Aviso do provedor recebido',
-  PAYMENT_RECORDED: 'Pagamento registrado',
-  PAYMENT_CONFIRMED: 'Pagamento confirmado',
-  PAYMENT_CANCELED: 'Pagamento cancelado',
-  REFUND_RECORDED: 'Estorno registrado'
-};
-
-function formatPaymentEventLabel(eventType: string) {
-  return paymentEventLabels[eventType] ?? eventType;
+function formatPaymentEventLabel(copy: InvoicesCopy, eventType: string) {
+  const labels: Record<string, string> = {
+    INVOICE_CREATED: copy.eventInvoiceCreated,
+    INVOICE_ISSUED: copy.eventInvoiceIssued,
+    INVOICE_CANCELED: copy.eventInvoiceCanceled,
+    CHARGE_REQUESTED: copy.eventChargeRequested,
+    CHARGE_CREATED: copy.eventChargeCreated,
+    CHARGE_FAILED: copy.eventChargeFailed,
+    WEBHOOK_RECEIVED: copy.eventWebhookReceived,
+    PAYMENT_RECORDED: copy.eventPaymentRecorded,
+    PAYMENT_CONFIRMED: copy.eventPaymentConfirmed,
+    PAYMENT_CANCELED: copy.eventPaymentCanceled,
+    REFUND_RECORDED: copy.eventRefundRecorded
+  };
+  return labels[eventType] ?? eventType;
 }
 
-const businessContextLabels: Record<string, string> = {
-  'PET.APPOINTMENT': 'Atendimento de banho e tosa',
-  'PET.CLIENT_PLAN': 'Plano do cliente',
-  'PET.CLIENT': 'Cliente',
-  'PET.SERVICE': 'Servico do catalogo'
-};
-
-function formatBusinessContextLabel(contextType: string) {
-  return businessContextLabels[contextType.toUpperCase()] ?? formatCategoryLabel(contextType);
+function formatBusinessContextLabel(copy: InvoicesCopy, contextType: string) {
+  const labels: Record<string, string> = {
+    'PET.APPOINTMENT': copy.contextAppointment,
+    'PET.CLIENT_PLAN': copy.contextClientPlan,
+    'PET.CLIENT': copy.contextClient,
+    'PET.SERVICE': copy.contextService
+  };
+  return labels[contextType.toUpperCase()] ?? formatCategoryLabel(copy, contextType);
 }
 
-function formatPaymentEventSource(event: FinancePaymentEvent) {
-  const channel = event.provider === 'MANUAL' ? 'Registro manual' : `Provedor ${event.provider}`;
-  return event.recordedByName ? `${channel} por ${event.recordedByName}` : `${channel} pelo sistema`;
+function formatPaymentEventSource(copy: InvoicesCopy, event: FinancePaymentEvent) {
+  const channel = event.provider === 'MANUAL'
+    ? copy.eventSourceManual
+    : copy.eventSourceProvider.replace('{provider}', event.provider);
+  return event.recordedByName
+    ? copy.eventSourceBy.replace('{channel}', channel).replace('{name}', event.recordedByName)
+    : copy.eventSourceSystem.replace('{channel}', channel);
 }
 
 function formatCycleLabel(date: Date) {
@@ -188,27 +200,27 @@ function resolveProjectedDue(appointment: PetAppointment) {
   return (appointment.servicePrice ?? 0) + (appointment.extrasAmount ?? 0);
 }
 
-function formatMethodLabel(value?: string | null) {
-  return paymentMethodOptions.find((option) => option.value === value)?.label ?? value ?? 'Desconhecido';
+function formatMethodLabel(copy: InvoicesCopy, value?: string | null) {
+  return buildPaymentMethodOptions(copy).find((option) => option.value === value)?.label ?? value ?? copy.unknown;
 }
 
-function formatCategoryLabel(value?: string | null) {
+function formatCategoryLabel(copy: InvoicesCopy, value?: string | null) {
   if (!value) {
-    return 'Sem categoria';
+    return copy.noCategory;
   }
 
   const normalized = value.toUpperCase();
   const knownLabels: Record<string, string> = {
-    APPOINTMENT: 'Atendimento',
-    CLIENT: 'Cliente',
-    INVOICE_PAYMENT: 'Pagamento de fatura',
-    INVOICE: 'Fatura',
-    MANUAL: 'Ajuste manual',
-    OTHER: 'Outro',
+    APPOINTMENT: copy.categoryAppointment,
+    CLIENT: copy.client,
+    INVOICE_PAYMENT: copy.categoryInvoicePayment,
+    INVOICE: copy.categoryInvoice,
+    MANUAL: copy.methodManualAdjustment,
+    OTHER: copy.methodOther,
     PET: 'Gestão Pet',
-    PLAN: 'Plano',
-    PRODUCT: 'Produto',
-    SERVICE: 'Servico'
+    PLAN: copy.categoryPlan,
+    PRODUCT: copy.categoryProduct,
+    SERVICE: copy.categoryService
   };
 
   if (knownLabels[normalized]) {
@@ -222,45 +234,45 @@ function formatCategoryLabel(value?: string | null) {
     .join(' ');
 }
 
-function formatStatusLabel(value?: string | null) {
+function formatStatusLabel(copy: InvoicesCopy, value?: string | null) {
   if (!value) {
-    return 'Nao informado';
+    return copy.notProvided;
   }
 
   const normalized = value.toUpperCase();
   const knownLabels: Record<string, string> = {
-    ACTIVE: 'Ativa',
-    CANCELED: 'Cancelada',
-    CANCELLED: 'Cancelada',
-    COMPLETED: 'Concluida',
-    CONFIRMED: 'Confirmada',
-    DRAFT: 'Rascunho',
-    INACTIVE: 'Inativa',
-    ISSUED: 'Emitida',
-    OPEN: 'Em aberto',
-    OVERDUE: 'Vencida',
-    PAID: 'Paga',
-    PENDING: 'Pendente',
-    SCHEDULED: 'Agendada'
+    ACTIVE: copy.statusActiveFeminine,
+    CANCELED: copy.statusCanceled,
+    CANCELLED: copy.statusCanceled,
+    COMPLETED: copy.statusCompleted,
+    CONFIRMED: copy.statusConfirmed,
+    DRAFT: copy.statusDraft,
+    INACTIVE: copy.statusInactiveFeminine,
+    ISSUED: copy.statusIssued,
+    OPEN: copy.openAmount,
+    OVERDUE: copy.statusOverdue,
+    PAID: copy.statusPaid,
+    PENDING: copy.statusPending,
+    SCHEDULED: copy.statusScheduled
   };
 
-  return knownLabels[normalized] ?? formatCategoryLabel(value);
+  return knownLabels[normalized] ?? formatCategoryLabel(copy, value);
 }
 
-function formatDirectionLabel(value?: string | null) {
+function formatDirectionLabel(copy: InvoicesCopy, value?: string | null) {
   if (!value) {
-    return 'Nao informado';
+    return copy.notProvided;
   }
 
   if (value.toUpperCase() === 'IN') {
-    return 'Entrada';
+    return copy.directionIn;
   }
 
   if (value.toUpperCase() === 'OUT') {
-    return 'Saida';
+    return copy.directionOut;
   }
 
-  return formatCategoryLabel(value);
+  return formatCategoryLabel(copy, value);
 }
 
 function isOverdueInvoice(invoice: PetInvoice) {
@@ -329,6 +341,7 @@ function SnapshotCard({ icon: Icon, label, value, detail, tone = 'default' }: Sn
 }
 
 export function PetInvoicesPage() {
+  const copy = useAppMessages().screens.petInvoices;
   const messages = useAppMessages().petInvoices;
   const { hasPermission } = usePermissions();
   const [pageData, setPageData] = useState<PageResponse<PetInvoice>>(initialPage);
@@ -380,21 +393,21 @@ export function PetInvoicesPage() {
   const canReadAppointments = hasPermission('pet.appointment.read');
 
   const clientOptions = useMemo(() => ([
-    { value: '', label: 'Todos os clientes' },
+    { value: '', label: copy.allClients },
     ...clients.map((client) => ({ value: client.id, label: client.name ?? client.fullName ?? client.id }))
-  ]), [clients]);
+  ]), [clients, copy]);
 
   const formClientOptions = useMemo(() => ([
-    { value: '', label: 'Selecione um cliente' },
+    { value: '', label: copy.selectClient },
     ...clients.map((client) => ({ value: client.id, label: client.name ?? client.fullName ?? client.id }))
-  ]), [clients]);
+  ]), [clients, copy]);
 
   const loadClients = useCallback(async () => {
     if (!canReadClients) {
       setClients([]);
       setLookupIssues([{
         key: 'clients',
-        label: 'Clientes',
+        label: copy.clients,
         message: resolvePetLookupIssue(null, 'pet.client.read')
       }]);
       return;
@@ -408,11 +421,11 @@ export function PetInvoicesPage() {
       setClients([]);
       setLookupIssues([{
         key: 'clients',
-        label: 'Clientes',
+        label: copy.clients,
         message: resolvePetLookupIssue(err)
       }]);
     }
-  }, [canReadClients]);
+  }, [canReadClients, copy]);
 
   const load = useCallback(async (
     page: number,
@@ -429,11 +442,11 @@ export function PetInvoicesPage() {
       });
       setPageData(result);
     } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : 'Nao foi possivel carregar as faturas.');
+      setError(resolveApiErrorMessage(err, copy.loadError));
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [copy]);
 
   useEffect(() => {
     void loadClients();
@@ -480,14 +493,14 @@ export function PetInvoicesPage() {
           setPreviewPlans(resolvePageItems(plansResult.value));
         } else {
           setPreviewPlans([]);
-          nextErrors.push(plansResult.reason instanceof Error ? plansResult.reason.message : 'Nao foi possivel carregar os planos mensais para a previsao do proximo ciclo.');
+          nextErrors.push(resolveApiErrorMessage(plansResult.reason, copy.nextCyclePlansError));
         }
 
         if (appointmentsResult.status === 'fulfilled') {
           setPreviewAppointments(resolvePageItems(appointmentsResult.value));
         } else {
           setPreviewAppointments([]);
-          nextErrors.push(appointmentsResult.reason instanceof Error ? appointmentsResult.reason.message : 'Nao foi possivel carregar os atendimentos do proximo ciclo.');
+          nextErrors.push(resolveApiErrorMessage(appointmentsResult.reason, copy.nextCycleAppointmentsError));
         }
 
         setPreviewError(nextErrors.length > 0 ? nextErrors.join(' ') : null);
@@ -501,7 +514,7 @@ export function PetInvoicesPage() {
     return () => {
       active = false;
     };
-  }, [canReadAppointments, canReadPlans]);
+  }, [canReadAppointments, canReadPlans, copy]);
 
   const rows = resolvePageItems(pageData);
   const reviewedInvoice = useMemo(
@@ -562,9 +575,7 @@ export function PetInvoicesPage() {
         } else {
           setFinanceInvoice(null);
           nextErrors.push(
-            invoiceResult.reason instanceof Error
-              ? invoiceResult.reason.message
-              : 'Nao foi possivel carregar a fatura financeira vinculada.'
+            resolveApiErrorMessage(invoiceResult.reason, copy.financeInvoiceError)
           );
         }
 
@@ -573,9 +584,7 @@ export function PetInvoicesPage() {
         } else {
           setCashMovements([]);
           nextErrors.push(
-            cashResult.reason instanceof Error
-              ? cashResult.reason.message
-              : 'Nao foi possivel carregar os movimentos de caixa da fatura vinculada.'
+            resolveApiErrorMessage(cashResult.reason, copy.cashMovementsError)
           );
         }
 
@@ -584,9 +593,7 @@ export function PetInvoicesPage() {
         } else {
           setPaymentEvents([]);
           nextErrors.push(
-            eventsResult.reason instanceof Error
-              ? eventsResult.reason.message
-              : 'Nao foi possivel carregar o historico da cobranca.'
+            resolveApiErrorMessage(eventsResult.reason, copy.billingHistoryError)
           );
         }
 
@@ -607,7 +614,7 @@ export function PetInvoicesPage() {
     canReadFinanceInvoices,
     reviewedInvoice?.financeInvoiceId,
     reviewedInvoice?.paidAmount,
-    reviewedInvoice?.status
+    reviewedInvoice?.status, copy
   ]);
 
   const totalItems = resolveTotalItems(pageData);
@@ -652,15 +659,15 @@ export function PetInvoicesPage() {
       const billingType: NextCyclePreviewRow['billingType'] = activePlan ? 'Recurring' : 'One-time';
 
       let note = activePlan
-        ? 'O plano mensal base segue ativo para o proximo ciclo.'
-        : 'Este cliente sera cobrado apenas pelos servicos agendados e extras.';
+        ? copy.noteBasePlanActive
+        : copy.noteOneOffOnly;
 
       if (activePlan && activePlan.remainingSessions <= 2) {
         note = client?.email
-          ? 'A mensagem de renovacao fica pronta para envio quando o plano chega a visita penultima.'
-          : 'O alerta de renovacao esta pronto, mas este cliente ainda precisa de um email cadastrado.';
+          ? copy.noteRenewalReady
+          : copy.noteRenewalNeedsEmail;
       } else if (petTaxiTotal > 0) {
-        note = 'O pet taxi ja esta refletido como cobranca extra na previsao do proximo ciclo.';
+        note = copy.notePetTaxi;
       }
 
       return {
@@ -678,7 +685,7 @@ export function PetInvoicesPage() {
         reference: buildCollectionReference(clientIdValue, getNextCycleDateRange().start)
       };
     }).sort((left, right) => right.projectedDue - left.projectedDue);
-  }, [clients, previewAppointments, previewPlans]);
+  }, [clients, previewAppointments, previewPlans, copy]);
   const nextCycleProjectedTotal = nextCyclePreviewRows.reduce((total, row) => total + row.projectedDue, 0);
   const nextCycleRecurringClients = nextCyclePreviewRows.filter((row) => row.billingType === 'Recurring').length;
   const nextCyclePetTaxiClients = nextCyclePreviewRows.filter((row) => row.petTaxiTotal > 0).length;
@@ -718,7 +725,7 @@ export function PetInvoicesPage() {
 
   function beginEdit(item: PetInvoice) {
     if (item.status === 'PAID') {
-      setError('Faturas pagas devem ser ajustadas por um novo documento ou por uma correcao financeira controlada.');
+      setError(copy.paidInvoiceLocked);
       return;
     }
 
@@ -764,12 +771,12 @@ export function PetInvoicesPage() {
     const isoDueAt = toIsoDate(dueAt);
 
     if (!clientId || Number.isNaN(parsedTotal) || parsedTotal < 0) {
-      setError('Selecione um cliente e informe um valor total valido.');
+      setError(copy.clientAndTotalRequired);
       return;
     }
 
     if (status !== 'DRAFT' && !isoIssuedAt) {
-      setError('Faturas emitidas ou canceladas exigem uma data de emissao.');
+      setError(copy.issueDateRequired);
       return;
     }
 
@@ -787,7 +794,7 @@ export function PetInvoicesPage() {
           dueAt: isoDueAt,
           description: description || undefined
         });
-        setSuccess('Fatura atualizada com sucesso.');
+        setSuccess(copy.updated);
       } else {
         await petService.createInvoice({
           clientId,
@@ -797,13 +804,13 @@ export function PetInvoicesPage() {
           dueAt: isoDueAt,
           description: description || undefined
         });
-        setSuccess('Fatura criada com sucesso.');
+        setSuccess(copy.created);
       }
 
       resetForm();
       await load(pageData.page, search, clientFilterId, statusFilter);
     } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : 'Nao foi possivel salvar a fatura.');
+      setError(resolveApiErrorMessage(err, copy.saveError));
     } finally {
       setSubmitting(false);
     }
@@ -820,7 +827,7 @@ export function PetInvoicesPage() {
     const isoReceivedAt = toIsoDate(paymentReceivedAt);
 
     if (Number.isNaN(parsedAmount) || parsedAmount <= 0 || !isoReceivedAt) {
-      setError('Informe um valor e uma data de recebimento validos para o pagamento.');
+      setError(copy.paymentInvalid);
       return;
     }
 
@@ -838,11 +845,11 @@ export function PetInvoicesPage() {
 
     try {
       await petService.createInvoicePayment(paymentInvoice.id, input);
-      setSuccess('Pagamento registrado com sucesso.');
+      setSuccess(copy.paymentRecorded);
       resetPaymentForm();
       await load(pageData.page, search, clientFilterId, statusFilter);
     } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : 'Nao foi possivel registrar o pagamento.');
+      setError(resolveApiErrorMessage(err, copy.paymentError));
     } finally {
       setPaymentSubmitting(false);
     }
@@ -856,35 +863,35 @@ export function PetInvoicesPage() {
     try {
       await petService.deleteInvoice(deleteCandidate.id);
       setDeleteCandidate(null);
-      setSuccess('Fatura removida com sucesso.');
+      setSuccess(copy.deleted);
       if (reviewInvoiceId === deleteCandidate.id) {
         setReviewInvoiceId(null);
         resetPaymentForm();
       }
       await load(pageData.page, search, clientFilterId, statusFilter);
     } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : 'Nao foi possivel remover a fatura selecionada.');
+      setError(resolveApiErrorMessage(err, copy.deleteError));
     }
   }
 
   const columns: DataTableColumn<PetInvoice>[] = [
     {
       key: 'issuedAt',
-      header: 'Documento',
+      header: copy.columnDocument,
       render: (item) => (
         <div>
           <p className="font-medium text-slate-900">
-            {formatDateTime(item.issuedAt, 'Rascunho ainda nao emitido')}
+            {formatDateTime(copy, item.issuedAt, copy.draftNotIssued)}
           </p>
           <p className={`mt-1 ${sharedCompactTextClass}`}>
-            Vence em {formatDateTime(item.dueAt, 'Sem vencimento definido')}
+            {copy.dueOn} {formatDateTime(copy, item.dueAt, copy.noDueDate)}
           </p>
         </div>
       )
     },
     {
       key: 'client',
-      header: 'Cliente',
+      header: copy.client,
       render: (item) => (
         <div>
           <p className="font-medium text-slate-900">
@@ -904,58 +911,58 @@ export function PetInvoicesPage() {
     },
     {
       key: 'context',
-      header: 'Contexto do negocio',
+      header: copy.businessContext,
       render: (item) => (
         <div>
           <p className="font-medium text-slate-900">
-            {item.businessContextLabel ?? item.description ?? 'Fatura manual'}
+            {item.businessContextLabel ?? item.description ?? copy.manualInvoice}
           </p>
           <p className={`mt-1 ${sharedCompactTextClass}`}>
-            {item.businessContextType ? formatBusinessContextLabel(item.businessContextType) : 'Fluxo financeiro manual'}
-            {item.financeInvoiceId ? ' • Registro financeiro vinculado' : ''}
+            {item.businessContextType ? formatBusinessContextLabel(copy, item.businessContextType) : copy.manualFlow}
+            {item.financeInvoiceId ? copy.linkedFinancialRecord : ''}
           </p>
         </div>
       )
     },
     {
       key: 'finance',
-      header: 'Posicao financeira',
+      header: copy.columnFinancialPosition,
       render: (item) => (
         <div>
           <p className="font-medium text-slate-900">
             {formatCurrency(item.totalAmount)}
           </p>
           <p className={`mt-1 ${sharedCompactTextClass}`}>
-            Pago {formatCurrency(item.paidAmount)} • Em aberto {formatCurrency(item.outstandingAmount)}
+            {copy.paidLabel} {formatCurrency(item.paidAmount)} {copy.openSeparator} {formatCurrency(item.outstandingAmount)}
           </p>
           <p className={`mt-1 ${sharedCompactTextClass}`}>
-            {item.outstandingAmount > 0 ? 'A cobranca ainda esta aberta neste ciclo.' : 'Liquidada financeiramente.'}
+            {item.outstandingAmount > 0 ? copy.stillOpen : copy.settled}
           </p>
         </div>
       )
     },
     {
       key: 'lifecycle',
-      header: 'Ciclo',
+      header: copy.cycle,
       render: (item) => (
         <div className="space-y-2">
           <StatusBadge status={item.status} />
           <p className={sharedCompactTextClass}>
             {item.paidAt
-              ? `Pago em ${formatDateTime(item.paidAt)}`
+              ? copy.paidOnDate.replace('{date}', formatDateTime(copy, item.paidAt))
               : item.canceledAt
-                ? `Cancelada em ${formatDateTime(item.canceledAt)}`
-                : `${item.payments.length} registro(s) de pagamento`}
+                ? copy.canceledOnDate.replace('{date}', formatDateTime(copy, item.canceledAt))
+                : copy.paymentRecordsCount.replace('{count}', String(item.payments.length))}
           </p>
           {isOverdueInvoice(item) ? (
-            <p className="text-xs text-red-700">Cobranca vencida para esta fatura.</p>
+            <p className="text-xs text-red-700">{copy.overdue}</p>
           ) : null}
         </div>
       )
     },
     {
       key: 'actions',
-      header: 'Acoes',
+      header: copy.actions,
           render: (item) => (
         <div className={sharedInlineActionsClass}>
           <button
@@ -963,7 +970,7 @@ export function PetInvoicesPage() {
             onClick={() => reviewInvoice(item)}
             className="ui-inline-button"
           >
-            Ver registro financeiro
+            {copy.viewFinancialRecord}
           </button>
           <PermissionGuard permission="pet.invoice.update">
             {item.status !== 'PAID' ? (
@@ -972,7 +979,7 @@ export function PetInvoicesPage() {
                 onClick={() => beginEdit(item)}
                 className="ui-inline-button"
               >
-                Editar
+                {copy.edit}
               </button>
             ) : null}
           </PermissionGuard>
@@ -983,7 +990,7 @@ export function PetInvoicesPage() {
                 onClick={() => beginPayment(item)}
                 className="ui-inline-button"
               >
-                Registrar pagamento
+                {copy.recordPayment}
               </button>
             ) : null}
           </PermissionGuard>
@@ -993,7 +1000,7 @@ export function PetInvoicesPage() {
               onClick={() => setDeleteCandidate(item)}
               className="ui-inline-danger-button"
             >
-              Excluir
+              {copy.delete}
             </button>
           </PermissionGuard>
         </div>
@@ -1010,19 +1017,19 @@ export function PetInvoicesPage() {
         <PetModuleSubnav />
 
         <PageTitle
-          eyebrow="Financeiro Operacional"
+          eyebrow={copy.eyebrow}
           title={messages.title}
           description={messages.description}
           actions={(
             <div className="flex flex-wrap gap-2">
               <PermissionGuard permission="pet.invoice.create">
                 <button type="button" onClick={beginCreateInvoice} className="ui-primary-button">
-                  Emitir fatura
+                  {copy.issueInvoice}
                 </button>
               </PermissionGuard>
               <PermissionGuard permission="pet.dashboard.read">
                 <Link href="/pet/insights" className="ui-secondary-button">
-                  Abrir insights do negocio
+                  {copy.openInsights}
                 </Link>
               </PermissionGuard>
             </div>
@@ -1035,30 +1042,30 @@ export function PetInvoicesPage() {
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
           <SnapshotCard
             icon={Receipt}
-            label="Faturas no recorte"
+            label={copy.metricInvoices}
             value={new Intl.NumberFormat('pt-BR').format(totalItems)}
             detail={activeFilterCount > 0
-              ? 'Os resultados refletem os filtros financeiros atuais.'
-              : 'Lista completa de faturas neste ambiente.'}
+              ? copy.metricInvoicesFiltered
+              : copy.metricInvoicesAll}
           />
           <SnapshotCard
             icon={ArrowUpRight}
-            label="Valor faturado visivel"
+            label={copy.metricBilled}
             value={formatCurrency(visibleTotalInvoiced)}
-            detail="Montante bruto representado na visualizacao atual."
+            detail={copy.metricBilledDetail}
           />
           <SnapshotCard
             icon={WalletCards}
-            label="Saldo em aberto"
+            label={copy.metricOpenBalance}
             value={formatCurrency(visibleOpenBalance)}
-            detail="Valor ainda esperado dentro do recorte visivel de faturas."
+            detail={copy.metricOpenBalanceDetail}
             tone={visibleOpenBalance > 0 ? 'warning' : 'default'}
           />
           <SnapshotCard
             icon={AlertTriangle}
-            label="Atencao operacional"
+            label={copy.metricAttention}
             value={String(overdueCount)}
-            detail={`${paymentCount} registro(s) de pagamento visiveis neste recorte financeiro.`}
+            detail={copy.paymentRecordsVisible.replace('{count}', String(paymentCount))}
             tone={overdueCount > 0 ? 'danger' : 'default'}
           />
         </div>
@@ -1071,22 +1078,22 @@ export function PetInvoicesPage() {
           <div className={sharedFilterToolbarClass}>
             <div className="grid gap-3 xl:grid-cols-[minmax(0,1.35fr)_minmax(0,0.9fr)_minmax(0,0.7fr)] xl:items-end">
               <SearchBar
-                label="Buscar"
+                label={copy.search}
                 value={searchInput}
                 onChange={setSearchInput}
-                placeholder="Nome do cliente, contexto ou referencia interna"
+                placeholder={copy.searchPlaceholder}
               />
               <FormSelect
-                label="Cliente"
+                label={copy.client}
                 value={clientFilterId}
                 options={clientOptions}
                 onChange={setClientFilterId}
                 disabled={clientsLookupUnavailable}
               />
               <FormSelect
-                label="Ciclo"
+                label={copy.cycle}
                 value={statusFilter}
-                options={statusOptions}
+                options={buildStatusOptions(copy)}
                 onChange={setStatusFilter}
               />
             </div>
@@ -1097,7 +1104,7 @@ export function PetInvoicesPage() {
                 onClick={() => setSearch(searchInput)}
                 className="ui-primary-button"
               >
-                Aplicar filtros
+                {copy.applyFilters}
               </button>
               <button
                 type="button"
@@ -1109,7 +1116,7 @@ export function PetInvoicesPage() {
                 }}
                 className="ui-inline-button"
               >
-                Limpar filtros
+                {copy.clearFilters}
               </button>
             </div>
           </div>
@@ -1118,42 +1125,42 @@ export function PetInvoicesPage() {
         <PageSection
           tone="muted"
           title={messages.nextCycleTitle}
-          description={`Use esta previa de ${nextCycleLabel} para explicar clientes recorrentes, servicos cobertos, extras de pet taxi e o que ja esta pronto para cobranca.`}
+          description={copy.nextCyclePreviewDescription.replace('{cycle}', nextCycleLabel)}
         >
           {previewError ? <div className="ui-notice-warning">{previewError}</div> : null}
           {previewLoading ? (
-            <div className="ui-notice-neutral">Carregando a previa do proximo ciclo...</div>
+            <div className="ui-notice-neutral">{copy.nextCycleLoading}</div>
           ) : nextCyclePreviewRows.length === 0 ? (
             <div className="ui-notice-neutral">
-              Nenhum plano recorrente ou atendimento agendado esta formando o proximo ciclo neste momento.
+              {copy.nextCycleEmpty}
             </div>
           ) : (
             <div className="space-y-4">
               <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
                 <SnapshotCard
                   icon={WalletCards}
-                  label="Projecao do proximo ciclo"
+                  label={copy.nextCycleProjection}
                   value={formatCurrency(nextCycleProjectedTotal)}
-                  detail="Cobranca projetada somando visitas cobertas pelo plano e extras."
+                  detail={copy.nextCycleProjectionDetail}
                 />
                 <SnapshotCard
                   icon={Receipt}
-                  label="Clientes recorrentes"
+                  label={copy.recurringClients}
                   value={String(nextCycleRecurringClients)}
-                  detail="Clientes ja ancorados na esteira recorrente de cobranca."
+                  detail={copy.recurringClientsDetail}
                 />
                 <SnapshotCard
                   icon={Clock3}
-                  label="Alertas de penultimo ciclo"
+                  label={copy.penultimateAlerts}
                   value={String(nextCyclePenultimateClients)}
-                  detail="Clientes que estao entrando agora na conversa de renovacao."
+                  detail={copy.penultimateAlertsDetail}
                   tone={nextCyclePenultimateClients > 0 ? 'warning' : 'default'}
                 />
                 <SnapshotCard
                   icon={ArrowUpRight}
-                  label="Clientes com pet taxi"
+                  label={copy.petTaxiClients}
                   value={String(nextCyclePetTaxiClients)}
-                  detail="Clientes que levam extras de coleta ou entrega para o proximo ciclo."
+                  detail={copy.petTaxiClientsDetail}
                 />
               </div>
 
@@ -1162,7 +1169,7 @@ export function PetInvoicesPage() {
                   <div key={row.reference} className={billingPanelClass}>
                     <div className="flex flex-wrap items-start justify-between gap-3">
                       <div>
-                        <p className={billingPanelEyebrowClass}>Detalhe de cobranca</p>
+                        <p className={billingPanelEyebrowClass}>{copy.billingDetail}</p>
                         <p className={billingPanelTitleClass}>{row.clientName}</p>
                         <p className={billingPanelTextClass}>{row.reference}</p>
                       </div>
@@ -1171,33 +1178,35 @@ export function PetInvoicesPage() {
                           ? 'bg-emerald-100 text-emerald-800'
                           : 'bg-slate-100 text-slate-800'
                       }`}>
-                        {row.billingType === 'Recurring' ? 'Recorrente' : 'Avulsa'}
+                        {row.billingType === 'Recurring' ? copy.recurring : copy.oneOff}
                       </span>
                     </div>
 
                     <dl className="mt-4 grid gap-4 sm:grid-cols-2">
                       <div>
-                        <dt className={billingDetailLabelClass}>Valor projetado</dt>
+                        <dt className={billingDetailLabelClass}>{copy.projectedAmount}</dt>
                         <dd className={billingPrimaryValueClass}>{formatCurrency(row.projectedDue)}</dd>
                       </div>
                       <div>
-                        <dt className={billingDetailLabelClass}>Atendimentos</dt>
+                        <dt className={billingDetailLabelClass}>{copy.appointments}</dt>
                         <dd className={billingDetailValueClass}>
-                          {row.appointmentCount} agendado(s) / {row.coveredAppointments} coberto(s) pelo plano
+                          {row.appointmentCount} {copy.scheduledOf} {row.coveredAppointments} {copy.coveredByPlan}
                         </dd>
                       </div>
                       <div>
-                        <dt className={billingDetailLabelClass}>Status do plano</dt>
+                        <dt className={billingDetailLabelClass}>{copy.planStatus}</dt>
                         <dd className={billingDetailValueClass}>
                           {row.planName
-                            ? `${row.planName} · ${row.remainingSessions ?? 0} sessoes restantes`
-                            : 'Cobranca avulsa apenas'}
+                            ? copy.planRemainingSessions
+                              .replace('{plan}', row.planName)
+                              .replace('{count}', String(row.remainingSessions ?? 0))
+                            : copy.oneOffOnly}
                         </dd>
                       </div>
                       <div>
-                        <dt className={billingDetailLabelClass}>Extras</dt>
+                        <dt className={billingDetailLabelClass}>{copy.extras}</dt>
                         <dd className={billingDetailValueClass}>
-                          {formatCurrency(row.extrasTotal)}{row.petTaxiTotal > 0 ? ` · ${formatCurrency(row.petTaxiTotal)} de pet taxi` : ''}
+                          {formatCurrency(row.extrasTotal)}{row.petTaxiTotal > 0 ? copy.petTaxiAmount.replace('{amount}', formatCurrency(row.petTaxiTotal)) : ''}
                         </dd>
                       </div>
                     </dl>
@@ -1214,61 +1223,61 @@ export function PetInvoicesPage() {
 
         <div id="pet-invoice-form-section">
           <PageSection
-            title={editingId ? 'Atualizar fatura' : 'Emitir fatura'}
-            description="Conecte o servico entregue, a cobranca do cliente e o registro financeiro em um unico passo."
+            title={editingId ? copy.updateInvoice : copy.issueInvoice}
+            description={copy.formDescription}
           >
             <PermissionGuard permission={editingId ? 'pet.invoice.update' : 'pet.invoice.create'}>
               <form onSubmit={handleSubmit} className="space-y-5">
                 <div className="grid gap-4 xl:grid-cols-2">
                   <FormSelect
-                    label="Cliente"
+                    label={copy.client}
                     value={clientId}
                     options={formClientOptions}
                     onChange={setClientId}
                     disabled={clientsLookupUnavailable}
                   />
                   <FormInput
-                    label="Valor total"
+                    label={copy.totalAmount}
                     value={totalAmount}
                     onChange={setTotalAmount}
                     type="number"
                     required
                   />
                   <FormSelect
-                    label="Ciclo"
+                    label={copy.cycle}
                     value={status}
-                    options={formStatusOptions}
+                    options={buildFormStatusOptions(copy)}
                     onChange={setStatus}
                   />
                   <DateTimeInput
-                    label="Emitida em"
+                    label={copy.issuedOn}
                     value={issuedAt}
                     onChange={setIssuedAt}
                     required={status !== 'DRAFT'}
                   />
                   <DateTimeInput
-                    label="Vence em"
+                    label={copy.dueOn}
                     value={dueAt}
                     onChange={setDueAt}
                   />
                   <FormInput
-                    label="Descricao operacional"
+                    label={copy.operationalDescription}
                     value={description}
                     onChange={setDescription}
-                    placeholder="Banho e tosa, pacote mensal, hidratacao extra..."
+                    placeholder={copy.descriptionPlaceholder}
                   />
                 </div>
 
                 <div className={sharedReminderSurfaceClass}>
-                  <p className="text-sm font-medium text-[color:var(--app-shell-heading)]">Lembrete do ciclo</p>
+                  <p className="text-sm font-medium text-[color:var(--app-shell-heading)]">{copy.cycleReminder}</p>
                   <p className={`mt-1 ${sharedCompactTextClass}`}>
-                    Rascunho mantem a fatura apenas no ambito interno. Documentos emitidos ou cancelados devem ter data de emissao para que financeiro e suporte consigam reconstruir a linha do tempo completa.
+                    {copy.cycleReminderDescription}
                   </p>
                 </div>
 
                 {clientsLookupUnavailable ? (
                   <div className="ui-notice-warning">
-                    O acesso ao cadastro de clientes e necessario antes de emitir ou editar faturas com seguranca.
+                    {copy.clientAccessRequired}
                   </div>
                 ) : null}
 
@@ -1278,7 +1287,7 @@ export function PetInvoicesPage() {
                     disabled={submitting || clientsLookupUnavailable}
                     className="ui-primary-button"
                   >
-                    {submitting ? 'Salvando fatura...' : editingId ? 'Atualizar fatura' : 'Emitir fatura'}
+                    {submitting ? copy.savingInvoice : editingId ? copy.updateInvoice : copy.issueInvoice}
                   </button>
                   {editingId ? (
                     <button
@@ -1286,7 +1295,7 @@ export function PetInvoicesPage() {
                       onClick={resetForm}
                       className="ui-secondary-button"
                     >
-                      Cancelar edicao
+                      {copy.cancelEdit}
                     </button>
                   ) : null}
                 </div>
@@ -1304,14 +1313,14 @@ export function PetInvoicesPage() {
             rows={rows}
             getRowKey={(row) => row.id}
             loading={loading}
-            loadingTitle="Carregando a operacao de cobranca"
-            loadingDescription="Preparando o ciclo mais recente das faturas e a posicao de pagamento deste ambiente."
+            loadingTitle={copy.loadingTitle}
+            loadingDescription={copy.loadingDescription}
             emptyState={{
-              title: 'Ainda nao ha faturas',
-              description: 'Emita a primeira fatura depois de um atendimento ou servico e registre um pagamento para tornar visiveis saldo em aberto, proximo ciclo e acompanhamento financeiro.',
+              title: copy.emptyTitle,
+              description: copy.emptyDescription,
               action: hasPermission('pet.invoice.create') ? (
                 <button type="button" onClick={beginCreateInvoice} className="ui-primary-button">
-                  Emitir primeira fatura
+                  {copy.issueFirst}
                 </button>
               ) : undefined
             }}
@@ -1329,8 +1338,8 @@ export function PetInvoicesPage() {
         {reviewedInvoice ? (
           <div id="pet-invoice-finance-section">
             <PageSection
-              title="Visao financeira vinculada"
-              description="Use este painel para explicar status da fatura, pagamentos e movimentos de caixa sem sair da operação."
+              title={copy.financialViewTitle}
+              description={copy.financialViewDescription}
               actions={(
                 <button
                   type="button"
@@ -1340,7 +1349,7 @@ export function PetInvoicesPage() {
                   }}
                   className="ui-secondary-button"
                 >
-                  Fechar visao financeira
+                  {copy.closeFinancialView}
                 </button>
               )}
             >
@@ -1348,10 +1357,10 @@ export function PetInvoicesPage() {
                 <div className={billingPanelClass}>
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div>
-                      <p className={billingPanelEyebrowClass}>Resumo</p>
+                      <p className={billingPanelEyebrowClass}>{copy.summary}</p>
                       <p className={billingPanelTitleClass}>{reviewedInvoice.clientName ?? reviewedInvoice.clientId}</p>
                       <p className={billingPanelTextClass}>
-                        {reviewedInvoice.businessContextLabel ?? reviewedInvoice.description ?? 'Fatura manual ainda sem rotulo de negocio'}
+                        {reviewedInvoice.businessContextLabel ?? reviewedInvoice.description ?? copy.manualInvoiceNoLabel}
                       </p>
                     </div>
                     <StatusBadge status={reviewedInvoice.status} />
@@ -1359,23 +1368,23 @@ export function PetInvoicesPage() {
 
                   <dl className="mt-5 grid gap-4 sm:grid-cols-2">
                     <div>
-                      <dt className={billingDetailLabelClass}>Valor total</dt>
+                      <dt className={billingDetailLabelClass}>{copy.totalAmount}</dt>
                       <dd className={billingPrimaryValueClass}>{formatCurrency(reviewedInvoice.totalAmount)}</dd>
                     </div>
                     <div>
-                      <dt className={billingDetailLabelClass}>Em aberto</dt>
+                      <dt className={billingDetailLabelClass}>{copy.openAmount}</dt>
                       <dd className={billingPrimaryValueClass}>{formatCurrency(reviewedInvoice.outstandingAmount)}</dd>
                     </div>
                     <div>
-                      <dt className={billingDetailLabelClass}>Valor pago</dt>
+                      <dt className={billingDetailLabelClass}>{copy.paidAmount}</dt>
                       <dd className={billingDetailValueClass}>{formatCurrency(reviewedInvoice.paidAmount)}</dd>
                     </div>
                     <div>
-                      <dt className={billingDetailLabelClass}>Fatura financeira vinculada</dt>
+                      <dt className={billingDetailLabelClass}>{copy.linkedFinancialInvoice}</dt>
                       <dd className={billingDetailValueClass}>{reviewedInvoice.financeInvoiceId}</dd>
                     </div>
                     <div>
-                      <dt className={billingDetailLabelClass}>Referencia de cobranca</dt>
+                      <dt className={billingDetailLabelClass}>{copy.billingReference}</dt>
                       <dd className={billingDetailValueClass}>
                         {buildCollectionReference(reviewedInvoice.clientId, reviewedInvoice.dueAt ? new Date(reviewedInvoice.dueAt) : new Date())}
                       </dd>
@@ -1384,32 +1393,32 @@ export function PetInvoicesPage() {
                 </div>
 
                 <div className={billingPanelClass}>
-                  <p className={billingPanelEyebrowClass}>Status</p>
-                  <p className={billingPanelTitleClass}>Marcos do ciclo</p>
-                  <p className={billingPanelTextClass}>Use estes carimbos de tempo para explicar se a fatura ainda esta em rascunho, emitida, vencida, liquidada ou cancelada.</p>
+                  <p className={billingPanelEyebrowClass}>{copy.status}</p>
+                  <p className={billingPanelTitleClass}>{copy.cycleMilestones}</p>
+                  <p className={billingPanelTextClass}>{copy.cycleMilestonesDescription}</p>
                   <div className="mt-4 space-y-3">
                     <div>
-                      <p className={billingDetailLabelClass}>Emitida em</p>
+                      <p className={billingDetailLabelClass}>{copy.issuedOn}</p>
                       <p className={billingDetailValueClass}>
-                        {formatDateTime(reviewedInvoice.issuedAt, 'Ainda em modo de rascunho')}
+                        {formatDateTime(copy, reviewedInvoice.issuedAt, copy.stillDraft)}
                       </p>
                     </div>
                     <div>
-                      <p className={billingDetailLabelClass}>Vence em</p>
+                      <p className={billingDetailLabelClass}>{copy.dueOn}</p>
                       <p className={billingDetailValueClass}>
-                        {formatDateTime(reviewedInvoice.dueAt, 'Sem data de vencimento definida')}
+                        {formatDateTime(copy, reviewedInvoice.dueAt, copy.noDueDateSet)}
                       </p>
                     </div>
                     <div>
-                      <p className={billingDetailLabelClass}>Pago em</p>
+                      <p className={billingDetailLabelClass}>{copy.paidOn}</p>
                       <p className={billingDetailValueClass}>
-                        {formatDateTime(reviewedInvoice.paidAt, 'Aguardando liquidacao')}
+                        {formatDateTime(copy, reviewedInvoice.paidAt, copy.awaitingSettlement)}
                       </p>
                     </div>
                     <div>
-                      <p className={billingDetailLabelClass}>Cancelada em</p>
+                      <p className={billingDetailLabelClass}>{copy.canceledOn}</p>
                       <p className={billingDetailValueClass}>
-                        {formatDateTime(reviewedInvoice.canceledAt, 'Fatura ainda ativa')}
+                        {formatDateTime(copy, reviewedInvoice.canceledAt, copy.invoiceStillActive)}
                       </p>
                     </div>
                   </div>
@@ -1417,7 +1426,7 @@ export function PetInvoicesPage() {
               </div>
 
               {financeLoading ? (
-                <div className="ui-notice-neutral">Carregando o contexto financeiro vinculado...</div>
+                <div className="ui-notice-neutral">{copy.financialContextLoading}</div>
               ) : null}
 
               {financeError ? (
@@ -1427,33 +1436,33 @@ export function PetInvoicesPage() {
               {financeInvoice ? (
                 <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
                   <div className={billingPanelClass}>
-                    <p className={billingPanelEyebrowClass}>Registro financeiro</p>
-                    <p className={billingPanelTitleClass}>Documento financeiro vinculado</p>
+                    <p className={billingPanelEyebrowClass}>{copy.financialRecord}</p>
+                    <p className={billingPanelTitleClass}>{copy.linkedFinancialDocument}</p>
                     <p className={billingPanelTextClass}>
-                      Origem {formatCategoryLabel(financeInvoice.sourceModule)} • Moeda {financeInvoice.currency}
+                      {copy.source} {formatCategoryLabel(copy, financeInvoice.sourceModule)} {copy.currencySeparator} {financeInvoice.currency}
                     </p>
 
                     <dl className="mt-4 grid gap-4 sm:grid-cols-2">
                       <div>
-                        <dt className={billingDetailLabelClass}>Contraparte</dt>
+                        <dt className={billingDetailLabelClass}>{copy.counterparty}</dt>
                         <dd className={billingDetailValueClass}>
-                          {financeInvoice.counterpartyName ?? 'Cliente do ambiente ainda sem identificacao'}
+                          {financeInvoice.counterpartyName ?? copy.counterpartyMissing}
                         </dd>
                       </div>
                       <div>
-                        <dt className={billingDetailLabelClass}>Numero do documento</dt>
+                        <dt className={billingDetailLabelClass}>{copy.documentNumber}</dt>
                         <dd className={billingDetailValueClass}>
-                          {financeInvoice.documentNumber ?? 'Nao atribuido'}
+                          {financeInvoice.documentNumber ?? copy.notAssigned}
                         </dd>
                       </div>
                       <div>
-                        <dt className={billingDetailLabelClass}>Status financeiro</dt>
+                        <dt className={billingDetailLabelClass}>{copy.financialStatus}</dt>
                         <dd className={billingDetailValueClass}>
-                          {formatStatusLabel(financeInvoice.status)}
+                          {formatStatusLabel(copy, financeInvoice.status)}
                         </dd>
                       </div>
                       <div>
-                        <dt className={billingDetailLabelClass}>Valor em aberto</dt>
+                        <dt className={billingDetailLabelClass}>{copy.openValue}</dt>
                         <dd className={billingDetailValueClass}>
                           {formatCurrency(financeInvoice.outstandingAmount, financeInvoice.currency)}
                         </dd>
@@ -1462,30 +1471,30 @@ export function PetInvoicesPage() {
                   </div>
 
                   <div className={billingPanelClass}>
-                    <p className={billingPanelEyebrowClass}>Fonte de verdade</p>
-                    <p className={billingPanelTitleClass}>Base financeira</p>
+                    <p className={billingPanelEyebrowClass}>{copy.sourceOfTruth}</p>
+                    <p className={billingPanelTitleClass}>{copy.financialBase}</p>
                     <p className={billingPanelTextClass}>
-                      Esta e a fonte financeira de verdade no backend vinculada a esta fatura.
+                      {copy.sourceOfTruthDescription}
                     </p>
 
                     <div className="mt-4 space-y-3">
                       <div>
-                        <p className={billingDetailLabelClass}>Contexto do negocio</p>
+                        <p className={billingDetailLabelClass}>{copy.businessContext}</p>
                         <p className={billingDetailValueClass}>
-                          {financeInvoice.businessContextLabel ?? financeInvoice.description ?? 'Nenhum rotulo de negocio registrado'}
+                          {financeInvoice.businessContextLabel ?? financeInvoice.description ?? copy.noBusinessContext}
                         </p>
                       </div>
                       <div>
-                        <p className={billingDetailLabelClass}>Destinatario</p>
+                        <p className={billingDetailLabelClass}>{copy.recipient}</p>
                         <p className={billingDetailValueClass}>
-                          {financeInvoice.recipientLegalName ?? financeInvoice.recipientEmail ?? 'Os dados do destinatario ainda nao foram capturados'}
+                          {financeInvoice.recipientLegalName ?? financeInvoice.recipientEmail ?? copy.recipientMissing}
                         </p>
                       </div>
                       <div>
-                        <p className={billingDetailLabelClass}>Referencia fiscal</p>
+                        <p className={billingDetailLabelClass}>{copy.fiscalReference}</p>
                         <p className={billingDetailValueClass}>
                           {financeInvoice.fiscalReference
-                            ?? (financeInvoice.fiscalStatus ? formatStatusLabel(financeInvoice.fiscalStatus) : 'Nenhuma referencia fiscal vinculada')}
+                            ?? (financeInvoice.fiscalStatus ? formatStatusLabel(copy, financeInvoice.fiscalStatus) : copy.noFiscalReference)}
                         </p>
                       </div>
                     </div>
@@ -1498,10 +1507,10 @@ export function PetInvoicesPage() {
                   <form onSubmit={handlePaymentSubmit} className={billingPanelClass}>
                     <div className="flex flex-wrap items-start justify-between gap-3">
                       <div>
-                        <p className={billingPanelEyebrowClass}>Acao</p>
-                        <p className={billingPanelTitleClass}>Registrar pagamento</p>
+                        <p className={billingPanelEyebrowClass}>{copy.action}</p>
+                        <p className={billingPanelTitleClass}>{copy.recordPayment}</p>
                         <p className={billingPanelTextClass}>
-                          Use o valor realmente recebido e o carimbo correto para manter o ledger financeiro confiavel.
+                          {copy.paymentFormHint}
                         </p>
                       </div>
                       <button
@@ -1509,46 +1518,46 @@ export function PetInvoicesPage() {
                         onClick={resetPaymentForm}
                         className="ui-secondary-button"
                       >
-                        Fechar formulario
+                        {copy.closeForm}
                       </button>
                     </div>
 
                     <div className="mt-5 grid gap-4">
                       <FormInput
-                        label="Valor recebido"
+                        label={copy.receivedAmount}
                         value={paymentAmount}
                         onChange={setPaymentAmount}
                         type="number"
                         required
                       />
                       <FormSelect
-                        label="Metodo"
+                        label={copy.method}
                         value={paymentMethod}
-                        options={paymentMethodOptions}
+                        options={buildPaymentMethodOptions(copy)}
                         onChange={setPaymentMethod}
                       />
                       <DateTimeInput
-                        label="Recebido em"
+                        label={copy.receivedOn}
                         value={paymentReceivedAt}
                         onChange={setPaymentReceivedAt}
                         required
                       />
                       <FormInput
-                        label="Codigo de referencia"
+                        label={copy.referenceCode}
                         value={paymentReferenceCode}
                         onChange={setPaymentReferenceCode}
-                        placeholder="Codigo PIX, numero do recibo, autorizacao do cartao..."
+                        placeholder={copy.referenceCodePlaceholder}
                       />
                       <FormInput
-                        label="Observacoes do operador"
+                        label={copy.operatorNotes}
                         value={paymentNotes}
                         onChange={setPaymentNotes}
-                        placeholder="Qualquer contexto que suporte ou financeiro possam precisar explicar depois"
+                        placeholder={copy.operatorNotesPlaceholder}
                       />
                     </div>
 
                     <p className={`mt-4 ${sharedFieldHintClass}`}>
-                      Saldo em aberto antes deste pagamento: {formatCurrency(reviewedInvoice.outstandingAmount)}
+                      {copy.openBeforePayment} {formatCurrency(reviewedInvoice.outstandingAmount)}
                     </p>
 
                     <div className={sharedFormActionsClass}>
@@ -1557,16 +1566,16 @@ export function PetInvoicesPage() {
                         disabled={paymentSubmitting}
                         className="ui-primary-button"
                       >
-                        {paymentSubmitting ? 'Registrando pagamento...' : 'Confirmar pagamento'}
+                        {paymentSubmitting ? copy.recordingPayment : copy.confirmPayment}
                       </button>
                     </div>
                   </form>
                 ) : (
                   <div className={billingPanelClass}>
-                    <p className={billingPanelEyebrowClass}>Acao</p>
-                    <p className={billingPanelTitleClass}>Proxima acao de cobranca</p>
+                    <p className={billingPanelEyebrowClass}>{copy.action}</p>
+                    <p className={billingPanelTitleClass}>{copy.nextBillingAction}</p>
                     <p className={billingPanelTextClass}>
-                      Use o formulario de pagamento quando o valor realmente entrar. Isso mantem status da fatura, historico de pagamento e ledger do ambiente alinhados.
+                      {copy.nextBillingActionDescription}
                     </p>
                     <div className="mt-5 flex flex-wrap gap-3">
                       <PermissionGuard permission="pet.invoice.update">
@@ -1576,7 +1585,7 @@ export function PetInvoicesPage() {
                             onClick={() => beginPayment(reviewedInvoice)}
                             className="ui-primary-button"
                           >
-                            Registrar pagamento
+                            {copy.recordPayment}
                           </button>
                         ) : null}
                       </PermissionGuard>
@@ -1586,7 +1595,7 @@ export function PetInvoicesPage() {
                           onClick={() => beginEdit(reviewedInvoice)}
                           className="ui-secondary-button"
                         >
-                          Revisar dados da fatura
+                          {copy.reviewInvoice}
                         </button>
                       </PermissionGuard>
                     </div>
@@ -1594,16 +1603,16 @@ export function PetInvoicesPage() {
                 )}
 
                 <div className={billingPanelClass}>
-                  <p className={billingPanelEyebrowClass}>Pagamentos</p>
-                  <p className={billingPanelTitleClass}>Historico de pagamentos</p>
+                  <p className={billingPanelEyebrowClass}>{copy.payments}</p>
+                  <p className={billingPanelTitleClass}>{copy.paymentHistory}</p>
                   <p className={billingPanelTextClass}>
-                    Estes registros refletem os eventos de liquidacao ja vinculados a fatura selecionada.
+                    {copy.paymentHistoryDescription}
                   </p>
 
                   <div className="mt-4 space-y-3">
                     {reviewedInvoice.payments.length === 0 ? (
                       <div className="ui-notice-warning">
-                        Ainda nao ha pagamento registrado para esta fatura.
+                        {copy.noPayments}
                       </div>
                     ) : (
                       reviewedInvoice.payments.map((payment) => (
@@ -1614,17 +1623,17 @@ export function PetInvoicesPage() {
                           <div className="flex flex-wrap items-start justify-between gap-3">
                             <div>
                               <p className="text-sm font-semibold text-[color:var(--app-shell-heading)]">
-                                {formatCurrency(payment.amount)} via {formatMethodLabel(payment.method)}
+                                {formatCurrency(payment.amount)} via {formatMethodLabel(copy, payment.method)}
                               </p>
                               <p className={`mt-1 ${sharedCompactTextClass}`}>
-                                Recebido em {formatDateTime(payment.receivedAt)}
+                                {copy.receivedOn} {formatDateTime(copy, payment.receivedAt)}
                               </p>
                             </div>
                             <StatusBadge status={payment.status} />
                           </div>
                           {payment.referenceCode ? (
                             <p className={`mt-3 ${sharedCompactTextClass}`}>
-                              Referencia {payment.referenceCode}
+                              {copy.reference} {payment.referenceCode}
                             </p>
                           ) : null}
                           {payment.notes ? (
@@ -1640,10 +1649,10 @@ export function PetInvoicesPage() {
               <div className={billingPanelClass}>
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>
-                    <p className={billingPanelEyebrowClass}>Caixa</p>
-                    <p className={billingPanelTitleClass}>Visibilidade dos movimentos</p>
+                    <p className={billingPanelEyebrowClass}>{copy.cash}</p>
+                    <p className={billingPanelTitleClass}>{copy.cashMovements}</p>
                     <p className={billingPanelTextClass}>
-                      Revise como esta fatura afetou o caixa do ambiente sem sair do fluxo operacional.
+                      {copy.cashMovementsDescription}
                     </p>
                   </div>
                   {canReadFinanceCash ? <StatusBadge status="info" /> : <StatusBadge status="restricted" />}
@@ -1651,11 +1660,11 @@ export function PetInvoicesPage() {
 
                 {!canReadFinanceCash ? (
                   <div className="ui-notice-neutral mt-4">
-                    A visibilidade de caixa exige a permissao <strong>finance.cash.read</strong>.
+                    {copy.cashPermissionRequired} <strong>finance.cash.read</strong>.
                   </div>
                 ) : cashMovements.length === 0 ? (
                   <div className="ui-notice-warning mt-4">
-                    Nenhum movimento de caixa foi gerado para esta fatura ate agora.
+                    {copy.noCashMovements}
                   </div>
                 ) : (
                   <div className="mt-4 grid gap-3">
@@ -1667,16 +1676,18 @@ export function PetInvoicesPage() {
                         <div className="flex flex-wrap items-start justify-between gap-3">
                           <div>
                             <p className="text-sm font-semibold text-[color:var(--app-shell-heading)]">
-                              {formatDirectionLabel(movement.direction)} • {formatCurrency(movement.amount, movement.currency)}
+                              {formatDirectionLabel(copy, movement.direction)} • {formatCurrency(movement.amount, movement.currency)}
                             </p>
                             <p className={`mt-1 ${sharedCompactTextClass}`}>
-                              {formatCategoryLabel(movement.category)} em {formatDateTime(movement.occurredAt)}
+                              {copy.movementOn
+                                .replace('{category}', formatCategoryLabel(copy, movement.category))
+                                .replace('{date}', formatDateTime(copy, movement.occurredAt))}
                             </p>
                           </div>
                           <StatusBadge status={movement.direction === 'IN' ? 'paid' : 'canceled'} />
                         </div>
                         <p className={`mt-3 ${sharedCompactTextClass}`}>
-                          {movement.description ?? 'Nenhuma descricao operacional foi registrada para este movimento de caixa.'}
+                          {movement.description ?? copy.noCashDescription}
                         </p>
                       </div>
                     ))}
@@ -1686,30 +1697,30 @@ export function PetInvoicesPage() {
 
               <div className={billingPanelClass}>
                 <div>
-                  <p className={billingPanelEyebrowClass}>Rastreabilidade</p>
-                  <p className={billingPanelTitleClass}>Historico da cobranca</p>
+                  <p className={billingPanelEyebrowClass}>{copy.traceability}</p>
+                  <p className={billingPanelTitleClass}>{copy.billingHistory}</p>
                   <p className={billingPanelTextClass}>
-                    Linha do tempo de emissao, pagamentos e cancelamentos desta fatura, com quem registrou cada etapa.
+                    {copy.billingHistoryDescription}
                   </p>
                 </div>
 
                 {!canReadFinanceInvoices ? (
                   <div className="ui-notice-neutral mt-4">
-                    O historico exige a permissao <strong>finance.invoice.read</strong>.
+                    {copy.historyPermissionRequired} <strong>finance.invoice.read</strong>.
                   </div>
                 ) : paymentEvents.length === 0 ? (
                   <div className="ui-notice-warning mt-4">
-                    Nenhum evento de cobranca foi registrado para esta fatura ate agora.
+                    {copy.noBillingEvents}
                   </div>
                 ) : (
-                  <ol className="mt-4 grid gap-3" aria-label="Historico da cobranca">
+                  <ol className="mt-4 grid gap-3" aria-label={copy.billingHistory}>
                     {paymentEvents.map((event) => (
                       <li key={event.id} className={billingPanelMutedClass}>
                         <p className="text-sm font-semibold text-[color:var(--app-shell-heading)]">
-                          {formatPaymentEventLabel(event.eventType)}
+                          {formatPaymentEventLabel(copy, event.eventType)}
                         </p>
                         <p className={`mt-1 ${sharedCompactTextClass}`}>
-                          {formatDateTime(event.occurredAt)} • {formatPaymentEventSource(event)}
+                          {formatDateTime(copy, event.occurredAt)} • {formatPaymentEventSource(copy, event)}
                         </p>
                       </li>
                     ))}
@@ -1722,8 +1733,8 @@ export function PetInvoicesPage() {
 
         <ConfirmDialog
           open={deleteCandidate !== null}
-          title="Excluir fatura?"
-          description="O registro financeiro vinculado permanece na trilha de auditoria. Use esta acao apenas quando a fatura do ambiente realmente precisar sair da operacao ativa."
+          title={copy.deleteConfirmTitle}
+          description={copy.deleteConfirmDescription}
           onConfirm={handleConfirmDelete}
           onCancel={() => setDeleteCandidate(null)}
         />

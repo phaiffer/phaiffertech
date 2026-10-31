@@ -7,6 +7,7 @@ import {
   workspacePanelSurfaceStyle
 } from '@/shared/modules/module-workspace-visual';
 import { StatusBadge } from '@/shared/dashboard/status-badge';
+import { useAppMessages } from '@/shared/i18n/app-i18n-provider';
 
 export type GettingStartedStep = {
   key: string;
@@ -97,6 +98,7 @@ export function GettingStartedChecklist({
   steps,
   variant = 'default'
 }: GettingStartedChecklistProps) {
+  const copy = useAppMessages().screens.shell;
   const actionableSteps = steps.filter((step) => Boolean(step.href)).length;
   const guidedSteps = steps.length;
   const blockedSteps = guidedSteps - actionableSteps;
@@ -116,14 +118,14 @@ export function GettingStartedChecklist({
         </div>
         <div className="flex flex-wrap gap-2">
           <span className={`inline-flex items-center rounded-full border px-3 py-2 text-xs font-semibold uppercase tracking-[0.16em] ${accentChipClasses(variant)}`}>
-            Disponiveis agora {actionableSteps}
+            {copy.onboardingAvailableNow} {actionableSteps}
           </span>
           <span className={`inline-flex items-center rounded-full border px-3 py-2 text-xs font-semibold uppercase tracking-[0.16em] ${neutralChipClasses(variant)}`}>
-            Etapas guiadas {guidedSteps}
+            {copy.onboardingGuidedSteps} {guidedSteps}
           </span>
           {blockedSteps > 0 ? (
             <span className={`inline-flex items-center rounded-full border px-3 py-2 text-xs font-semibold uppercase tracking-[0.16em] ${neutralChipClasses(variant)}`}>
-              Exige acesso {blockedSteps}
+              {copy.onboardingRequiresAccess} {blockedSteps}
             </span>
           ) : null}
         </div>
@@ -150,7 +152,7 @@ export function GettingStartedChecklist({
               </div>
               <p className={`mt-4 text-sm leading-6 ${stepDescriptionClasses(variant)}`}>{step.description}</p>
               <span className={`mt-5 inline-flex text-sm font-semibold ${actionLabelClasses(variant)}`}>
-                {step.href ? step.actionLabel ?? 'Abrir proximo passo' : step.actionLabel ?? 'Etapa guiada'}
+                {step.href ? step.actionLabel ?? copy.onboardingOpenNextStep : step.actionLabel ?? copy.onboardingGuidedStep}
               </span>
             </>
           );

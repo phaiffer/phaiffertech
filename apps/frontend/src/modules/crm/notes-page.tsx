@@ -31,6 +31,7 @@ import { FormSelect } from '@/shared/ui/form-select';
 import { PageTitle } from '@/shared/ui/page-title';
 import { Pagination } from '@/shared/ui/pagination';
 import { SearchBar } from '@/shared/ui/search-bar';
+import { resolveApiErrorMessage } from '@/shared/lib/api-error-message';
 
 const pageSize = 10;
 const initialPage: PageResponse<CrmNote> = { items: [], totalItems: 0, totalPages: 0, page: 0, size: pageSize };
@@ -131,7 +132,7 @@ export function CrmNotesPage({ surface = 'crm' }: CrmNotesPageProps) {
         setPetProfiles(resolvePageItems(petProfilesPage));
         setPetAppointments(resolvePageItems(petAppointmentsPage));
       } catch (err) {
-        setError(err instanceof ApiClientError ? err.message : 'Erro ao carregar referências de nota.');
+        setError(resolveApiErrorMessage(err, 'Erro ao carregar referências de nota.'));
       }
     }
 
@@ -174,7 +175,7 @@ export function CrmNotesPage({ surface = 'crm' }: CrmNotesPageProps) {
       });
       setPageData(result);
     } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : 'Erro ao carregar notas.');
+      setError(resolveApiErrorMessage(err, 'Erro ao carregar notas.'));
     } finally {
       setLoading(false);
     }
@@ -232,7 +233,7 @@ export function CrmNotesPage({ surface = 'crm' }: CrmNotesPageProps) {
       resetForm();
       await load(pageData.page, search, relationTypeFilter, relationIdFilter);
     } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : 'Erro ao salvar nota.');
+      setError(resolveApiErrorMessage(err, 'Erro ao salvar nota.'));
     } finally {
       setSaving(false);
     }
@@ -245,7 +246,7 @@ export function CrmNotesPage({ surface = 'crm' }: CrmNotesPageProps) {
       setDeleteCandidate(null);
       await load(pageData.page, search, relationTypeFilter, relationIdFilter);
     } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : 'Erro ao excluir nota.');
+      setError(resolveApiErrorMessage(err, 'Erro ao excluir nota.'));
     }
   }
 

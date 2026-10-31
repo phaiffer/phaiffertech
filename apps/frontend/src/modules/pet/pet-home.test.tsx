@@ -139,13 +139,13 @@ describe('PetHome', () => {
     });
 
     expect(screen.getByRole('heading', { name: 'Clinic North · Gestão Pet' })).toBeInTheDocument();
-    expect(screen.getByText('Fluxos centrais de Gestão Pet')).toBeInTheDocument();
-    expect(screen.getByText('Revisar clientes')).toBeInTheDocument();
-    expect(screen.getByText('Agendar atendimentos')).toBeInTheDocument();
-    expect(screen.getByText('Gerir cobranca')).toBeInTheDocument();
-    expect(screen.getAllByText('Abrir dashboard operacional').length).toBeGreaterThan(0);
-    expect(screen.getByText('Operacao ao vivo')).toBeInTheDocument();
-    expect(screen.getByText('Fluxo clinico')).toBeInTheDocument();
+    expect(screen.getByText('Core Pet Management flows')).toBeInTheDocument();
+    expect(screen.getByText('Review clients')).toBeInTheDocument();
+    expect(screen.getByText('Book appointments')).toBeInTheDocument();
+    expect(screen.getByText('Manage billing')).toBeInTheDocument();
+    expect(screen.getAllByText('Open the operations dashboard').length).toBeGreaterThan(0);
+    expect(screen.getByText('Live operations')).toBeInTheDocument();
+    expect(screen.getByText('Clinical flow')).toBeInTheDocument();
   }, 10000);
 
   it('shows guided first-use messaging when the Pet workspace has no records yet', async () => {
@@ -167,11 +167,11 @@ describe('PetHome', () => {
       expect(petService.getDashboardSummary).toHaveBeenCalledTimes(1);
     });
 
-    expect(screen.getByText('Configuracao Gestão Pet')).toBeInTheDocument();
-    expect(screen.getByText('Configure o seu ambiente de Gestão Pet')).toBeInTheDocument();
-    expect(screen.getByText(/comece com clientes e pets/i)).toBeInTheDocument();
-    expect(screen.getAllByText('Comece por clientes').length).toBeGreaterThan(0);
-    expect(screen.getAllByText('Agendar atendimentos').length).toBeGreaterThan(0);
+    expect(screen.getByText('Workspace setup')).toBeInTheDocument();
+    expect(screen.getByText('Set up your workspace')).toBeInTheDocument();
+    expect(screen.getByText(/start with clients and pets/i)).toBeInTheDocument();
+    expect(screen.getAllByText('Start with clients').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('Book appointments').length).toBeGreaterThan(0);
   });
 
   it('keeps Pet metrics capability-aware when dashboard permission is missing', () => {
@@ -180,9 +180,9 @@ describe('PetHome', () => {
     render(<PetHome />);
 
     expect(petService.getDashboardSummary).not.toHaveBeenCalled();
-    expect(screen.getByText('Resumo operacional restrito')).toBeInTheDocument();
+    expect(screen.getByText('Operating summary restricted')).toBeInTheDocument();
     expect(screen.getAllByText('No Permission').length).toBeGreaterThan(0);
-    expect(screen.getByText(/panorama operacional exige `pet.dashboard.read`/i)).toBeInTheDocument();
+    expect(screen.getByText(/operating overview requires `pet.dashboard.read`/i)).toBeInTheDocument();
   });
 
   it('adapts the workspace copy when the resolved profile is pet grooming', async () => {
@@ -223,9 +223,9 @@ describe('PetHome', () => {
       expect(petService.getDashboardSummary).toHaveBeenCalledTimes(1);
     });
 
-    expect(screen.getByText('Ambiente Banho & Tosa')).toBeInTheDocument();
-    expect(screen.getByText('Fluxos centrais de Gestão Pet')).toBeInTheDocument();
-    expect(screen.getByText('Panorama vivo de servicos')).toBeInTheDocument();
+    expect(screen.getByText('Grooming workspace')).toBeInTheDocument();
+    expect(screen.getByText('Core Pet Management flows')).toBeInTheDocument();
+    expect(screen.getByText('Live service overview')).toBeInTheDocument();
 
     currentPlatformState.visualProfile = {
       key: 'pet-clinic',
@@ -274,8 +274,8 @@ describe('PetHome', () => {
       expect(petService.getDashboardSummary).toHaveBeenCalledTimes(1);
     });
 
-    expect(screen.getAllByText('Agendar atendimentos').length).toBeGreaterThan(0);
-    expect(screen.queryByText('Abrir prontuarios')).not.toBeInTheDocument();
-    expect(screen.queryByText('Revisar produtos')).not.toBeInTheDocument();
+    expect(screen.getAllByText('Book appointments').length).toBeGreaterThan(0);
+    expect(screen.queryByText('Open medical records')).not.toBeInTheDocument();
+    expect(screen.queryByText('Review products')).not.toBeInTheDocument();
   });
 });

@@ -45,6 +45,7 @@ import {
 } from '@/shared/types/pet';
 import { ConfirmDialog } from '@/shared/ui/confirm-dialog';
 import { PageTitle } from '@/shared/ui/page-title';
+import { resolveApiErrorMessage } from '@/shared/lib/api-error-message';
 
 const pageSize = 5;
 
@@ -223,9 +224,7 @@ export function PetMedicalRecordsPage() {
     } catch (err) {
       setAppointmentContext(null);
       setAppointmentContextError(
-        err instanceof ApiClientError
-          ? err.message
-          : 'Erro ao carregar o atendimento selecionado para o fluxo clínico.'
+        resolveApiErrorMessage(err, 'Erro ao carregar o atendimento selecionado para o fluxo clínico.')
       );
     } finally {
       setAppointmentContextLoading(false);
@@ -307,9 +306,7 @@ export function PetMedicalRecordsPage() {
     } catch (err) {
       setClinicalTimeline(null);
       setClinicalTimelineError(
-        err instanceof ApiClientError
-          ? err.message
-          : 'Erro ao carregar a timeline clinica consolidada.'
+        resolveApiErrorMessage(err, 'Erro ao carregar a timeline clinica consolidada.')
       );
     } finally {
       setClinicalTimelineLoading(false);
@@ -338,7 +335,7 @@ export function PetMedicalRecordsPage() {
       });
       setRecordsPageData(result);
     } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : 'Erro ao carregar prontuários.');
+      setError(resolveApiErrorMessage(err, 'Erro ao carregar prontuários.'));
     } finally {
       setRecordsLoading(false);
     }
@@ -364,7 +361,7 @@ export function PetMedicalRecordsPage() {
       });
       setVaccinationsPageData(result);
     } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : 'Erro ao carregar vacinações.');
+      setError(resolveApiErrorMessage(err, 'Erro ao carregar vacinações.'));
     } finally {
       setVaccinationsLoading(false);
     }
@@ -392,7 +389,7 @@ export function PetMedicalRecordsPage() {
       });
       setPrescriptionsPageData(result);
     } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : 'Erro ao carregar prescrições.');
+      setError(resolveApiErrorMessage(err, 'Erro ao carregar prescrições.'));
     } finally {
       setPrescriptionsLoading(false);
     }
@@ -551,7 +548,7 @@ export function PetMedicalRecordsPage() {
       await loadRecords(recordsPage, search, petFilterId, professionalFilterId, activeAppointmentContextId);
       await loadClinicalTimeline(activeAppointmentContextId ? '' : petFilterId, activeAppointmentContextId);
     } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : 'Erro ao salvar prontuário.');
+      setError(resolveApiErrorMessage(err, 'Erro ao salvar prontuário.'));
     } finally {
       setRecordSubmitting(false);
     }
@@ -592,7 +589,7 @@ export function PetMedicalRecordsPage() {
       await loadVaccinations(vaccinationsPage, search, petFilterId, activeAppointmentContextId);
       await loadClinicalTimeline(activeAppointmentContextId ? '' : petFilterId, activeAppointmentContextId);
     } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : 'Erro ao salvar vacinação.');
+      setError(resolveApiErrorMessage(err, 'Erro ao salvar vacinação.'));
     } finally {
       setVaccinationSubmitting(false);
     }
@@ -637,7 +634,7 @@ export function PetMedicalRecordsPage() {
       );
       await loadClinicalTimeline(activeAppointmentContextId ? '' : petFilterId, activeAppointmentContextId);
     } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : 'Erro ao salvar prescrição.');
+      setError(resolveApiErrorMessage(err, 'Erro ao salvar prescrição.'));
     } finally {
       setPrescriptionSubmitting(false);
     }
@@ -655,7 +652,7 @@ export function PetMedicalRecordsPage() {
       await loadRecords(recordsPage, search, petFilterId, professionalFilterId, activeAppointmentContextId);
       await loadClinicalTimeline(activeAppointmentContextId ? '' : petFilterId, activeAppointmentContextId);
     } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : 'Erro ao excluir prontuário.');
+      setError(resolveApiErrorMessage(err, 'Erro ao excluir prontuário.'));
     }
   }
 
@@ -671,7 +668,7 @@ export function PetMedicalRecordsPage() {
       await loadVaccinations(vaccinationsPage, search, petFilterId, activeAppointmentContextId);
       await loadClinicalTimeline(activeAppointmentContextId ? '' : petFilterId, activeAppointmentContextId);
     } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : 'Erro ao excluir vacinação.');
+      setError(resolveApiErrorMessage(err, 'Erro ao excluir vacinação.'));
     }
   }
 
@@ -693,7 +690,7 @@ export function PetMedicalRecordsPage() {
       );
       await loadClinicalTimeline(activeAppointmentContextId ? '' : petFilterId, activeAppointmentContextId);
     } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : 'Erro ao excluir prescrição.');
+      setError(resolveApiErrorMessage(err, 'Erro ao excluir prescrição.'));
     }
   }
 

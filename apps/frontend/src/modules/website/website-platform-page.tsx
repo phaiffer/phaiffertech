@@ -5,8 +5,10 @@ import { ArrowRight, Cloud, Globe, Lock, Monitor, RefreshCw, Server, Shield, Sma
 import { usePublicSite } from '@/shared/public/public-site-provider';
 import { publicSiteContainerClass } from '@/shared/components/public-visual-system';
 import { getWebsiteContent } from './website-content';
+import { useAppMessages } from '@/shared/i18n/app-i18n-provider';
 
 export function WebsitePlatformPage() {
+  const copy = useAppMessages().screens.website;
   const { locale } = usePublicSite();
   const content = getWebsiteContent(locale).platform;
   const foundationIcons = [Cloud, Shield, Zap];
@@ -43,8 +45,8 @@ export function WebsitePlatformPage() {
             <ArrowRight className="ml-2 h-4 w-4" />
           </Link>
           <div className="mt-5 flex flex-wrap items-center justify-center gap-4 text-sm font-medium text-slate-700">
-            <Link href="/products" className="transition-colors hover:text-slate-900">Products</Link>
-            <Link href="/contact" className="transition-colors hover:text-slate-900">Contact</Link>
+            <Link href="/products" className="transition-colors hover:text-slate-900">{copy.products}</Link>
+            <Link href="/contact" className="transition-colors hover:text-slate-900">{copy.contact}</Link>
           </div>
         </div>
       </section>
@@ -77,7 +79,7 @@ export function WebsitePlatformPage() {
       <section className="bg-[linear-gradient(180deg,rgba(16,185,129,0.04),rgba(248,250,252,0.84))] py-20 md:py-24">
         <div className={publicSiteContainerClass}>
           <div className="text-center">
-            <p className="text-sm font-medium uppercase tracking-[0.18em] text-[color:var(--accent)]">Modules</p>
+            <p className="text-sm font-medium uppercase tracking-[0.18em] text-[color:var(--accent)]">{copy.modules}</p>
             <h2 className="text-3xl font-bold tracking-[-0.035em] text-slate-900 md:text-4xl">{labels.devicesTitle}</h2>
             <p className="mx-auto mt-4 max-w-3xl text-lg leading-8 text-slate-700">{labels.devicesDescription}</p>
           </div>
@@ -99,9 +101,9 @@ export function WebsitePlatformPage() {
           <div className="mt-12 grid grid-cols-2 gap-8 text-center md:grid-cols-4">
             {[
               { value: '99.9%', label: 'Uptime' },
-              { value: '< 50ms', label: 'Tempo de resposta' },
-              { value: 'LGPD', label: locale === 'pt-BR' ? 'Governança' : 'Governance' },
-              { value: '24/7', label: locale === 'pt-BR' ? 'Monitoramento' : 'Monitoring' }
+              { value: '< 50ms', label: copy.responseTime },
+              { value: 'LGPD', label: copy.governance },
+              { value: '24/7', label: copy.monitoring }
             ].map((item) => (
               <div key={item.label}>
                 <p className="text-4xl font-bold text-[color:var(--accent)]">{item.value}</p>

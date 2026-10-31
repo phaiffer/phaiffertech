@@ -1,6 +1,7 @@
 'use client';
 
-import { ApiClientError } from '@/shared/lib/http';
+import { useAppMessages } from '@/shared/i18n/app-i18n-provider';
+import { resolveApiErrorMessage } from '@/shared/lib/api-error-message';
 
 export type PetLookupIssue = {
   key: string;
@@ -13,15 +14,16 @@ type PetLookupFeedbackProps = {
 };
 
 export function PetLookupFeedback({ issues }: PetLookupFeedbackProps) {
+  const copy = useAppMessages().screens.shell;
   if (!issues.length) {
     return null;
   }
 
   return (
     <div className="ui-notice-warning">
-      <p className="font-medium">Some pet operation references are not yet available.</p>
+      <p className="font-medium">{copy.lookupUnavailableTitle}</p>
       <p className="mt-1 text-current/90">
-        The list remains usable, but filters and forms depend on clients, pets, services, and professionals being loaded.
+        {copy.lookupUnavailableDescription}
       </p>
       <ul className="mt-2 list-disc space-y-1 pl-5 text-current/90">
         {issues.map((issue) => (
@@ -39,7 +41,7 @@ export function resolvePetLookupIssue(error: unknown, requiredPermission?: strin
     return `This reference requires the ${requiredPermission} permission.`;
   }
 
-  return error instanceof ApiClientError ? error.message : 'Unable to load this reference right now.';
+  return resolveApiErrorMessage(error, 'Unable to load this reference right now.');
 }
 
 export function resolvePetLookupLabel<T extends { id: string }>(

@@ -2,6 +2,7 @@
 
 import { logClientError } from '@/shared/observability/client-logger';
 import { useEffect } from 'react';
+import { useAppMessages } from '@/shared/i18n/app-i18n-provider';
 
 export default function GlobalError({
   error,
@@ -10,6 +11,7 @@ export default function GlobalError({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
+  const copy = useAppMessages().screens.shell;
   useEffect(() => {
     logClientError('global-error-boundary', error.message, {
       digest: error.digest
@@ -20,16 +22,16 @@ export default function GlobalError({
     <html lang="pt-BR">
       <body className="flex min-h-screen items-center justify-center bg-background p-6 text-foreground">
         <div className="ui-surface-panel w-full max-w-lg p-6">
-          <h2 className="text-xl font-semibold text-destructive">Ocorreu um erro inesperado</h2>
+          <h2 className="text-xl font-semibold text-destructive">{copy.globalErrorTitle}</h2>
           <p className="mt-2 text-sm text-[color:var(--app-shell-muted)]">
-            O erro foi registrado. Tente novamente ou retorne para o dashboard.
+            {copy.globalErrorDescription}
           </p>
           <button
             type="button"
             onClick={reset}
             className="ui-primary-button mt-5"
           >
-            Tentar novamente
+            {copy.tryAgain}
           </button>
         </div>
       </body>

@@ -1,7 +1,7 @@
 import { FormEvent, useState } from 'react';
 import { useAppI18n } from '@/shared/i18n/app-i18n-provider';
 import { clearImpersonationBackupSession, clearSession, setAuthNotice } from '@/shared/lib/session';
-import { ApiClientError } from '@/shared/lib/http';
+import { resolveApiErrorMessage } from '@/shared/lib/api-error-message';
 import { authService } from '@/shared/services/auth-service';
 import type { AuthenticatedUser } from '@/shared/types/auth';
 import { FormInput } from '@/shared/ui/form-input';
@@ -50,11 +50,7 @@ export function AccountSecurityPanel({ user }: AccountSecurityPanelProps) {
       clearImpersonationBackupSession();
       clearSession();
     } catch (err) {
-      if (err instanceof ApiClientError) {
-        setError(err.message);
-      } else {
-        setError(copy.genericError);
-      }
+      setError(resolveApiErrorMessage(err, copy.genericError));
     } finally {
       setSubmitting(false);
     }

@@ -27,6 +27,7 @@ import { PageSection } from '@/shared/ui/page-section';
 import { PageTitle } from '@/shared/ui/page-title';
 import { Pagination } from '@/shared/ui/pagination';
 import { SearchBar } from '@/shared/ui/search-bar';
+import { resolveApiErrorMessage } from '@/shared/lib/api-error-message';
 
 const pageSize = 10;
 
@@ -120,7 +121,7 @@ export function PetProfessionalsPage() {
       const result = await petService.listProfessionals(page, pageSize, currentSearch);
       setPageData(result);
     } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : messages.feedback.loadError);
+      setError(resolveApiErrorMessage(err, messages.feedback.loadError));
     } finally {
       setLoading(false);
     }
@@ -220,7 +221,7 @@ export function PetProfessionalsPage() {
       resetForm();
       await load(pageData.page, search);
     } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : messages.feedback.saveError);
+      setError(resolveApiErrorMessage(err, messages.feedback.saveError));
     } finally {
       setSubmitting(false);
     }
@@ -237,7 +238,7 @@ export function PetProfessionalsPage() {
       setSuccess(messages.feedback.removed);
       await load(pageData.page, search);
     } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : messages.feedback.deleteError);
+      setError(resolveApiErrorMessage(err, messages.feedback.deleteError));
     }
   }
 
