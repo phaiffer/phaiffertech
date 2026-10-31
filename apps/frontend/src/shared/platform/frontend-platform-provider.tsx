@@ -10,6 +10,7 @@ import { useAuth } from '@/shared/auth/use-auth';
 import {
   APP_THEME_STORAGE_KEY,
   AppThemeMode,
+  DARK_THEME_SUPPORTED,
   resolveTenantBranding,
   getTenantWorkspaceLabel,
   toAppThemeMode
@@ -43,6 +44,10 @@ function hasRole(user: AuthenticatedUser | null | undefined, role: string) {
 }
 
 function resolveDocumentTheme(mode: AppThemeMode, prefersDark: boolean) {
+  if (!DARK_THEME_SUPPORTED) {
+    return 'light';
+  }
+
   return mode === 'system' ? (prefersDark ? 'dark' : 'light') : mode;
 }
 
