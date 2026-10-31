@@ -99,6 +99,9 @@ public class DemoCommercialEnvironmentService {
         private static final UUID PET_FOLLOW_UP_PICKUP_TASK_ID = uuid("20000000-0000-0000-0000-000000000055");
         private static final UUID PET_FOLLOW_UP_REX_NOTE_ID = uuid("20000000-0000-0000-0000-000000000056");
         private static final UUID PET_FOLLOW_UP_THOR_NOTE_ID = uuid("20000000-0000-0000-0000-000000000057");
+        private static final UUID PET_SERVICE_INVENTORY_LINK_PREMIUM_MASK_ID = uuid("20000000-0000-0000-0000-000000000058");
+        private static final UUID PET_SERVICE_INVENTORY_LINK_ESSENTIAL_ID = uuid("20000000-0000-0000-0000-000000000059");
+        private static final UUID PET_SERVICE_INVENTORY_LINK_HYGIENIC_ID = uuid("20000000-0000-0000-0000-000000000060");
 
         private static final UUID PET_RECORD_REX_ID = uuid("20000000-0000-0000-0000-000000000051");
         private static final UUID PET_RECORD_THOR_ID = uuid("20000000-0000-0000-0000-000000000052");
@@ -109,6 +112,7 @@ public class DemoCommercialEnvironmentService {
         private static final UUID PET_PRODUCT_RABIES_ID = uuid("20000000-0000-0000-0000-000000000071");
         private static final UUID PET_PRODUCT_SUPPLEMENT_ID = uuid("20000000-0000-0000-0000-000000000072");
         private static final UUID PET_PRODUCT_PARASITE_ID = uuid("20000000-0000-0000-0000-000000000073");
+        private static final UUID PET_PRODUCT_CONDITIONER_ID = uuid("20000000-0000-0000-0000-000000000074");
 
         private static final UUID PET_INVENTORY_RABIES_ID = uuid("20000000-0000-0000-0000-000000000081");
         private static final UUID PET_INVENTORY_SUPPLEMENT_ID = uuid("20000000-0000-0000-0000-000000000082");
@@ -808,7 +812,10 @@ public class DemoCommercialEnvironmentService {
                                 new BigDecimal("36.00"), 6, 2, 4, now.minus(Duration.ofDays(6)));
                 insertPetProduct(seedId(tenantId, PET_PRODUCT_PARASITE_ID), tenantId, "Lacos sortidos", "PET-ACC-020",
                                 new BigDecimal("18.00"), 2, 1, 3, now.minus(Duration.ofDays(6)));
+                insertPetProduct(seedId(tenantId, PET_PRODUCT_CONDITIONER_ID), tenantId, "Condicionador neutro", "PET-COND-008",
+                                new BigDecimal("32.00"), 12, 3, 6, now.minus(Duration.ofDays(6)));
 
+                // Every grooming service consumes a supply so completing any visit shows the stock deduction.
                 insertPetServiceInventoryLink(
                                 seedId(tenantId, PET_SERVICE_INVENTORY_LINK_ID),
                                 tenantId,
@@ -816,6 +823,35 @@ public class DemoCommercialEnvironmentService {
                                 seedId(tenantId, PET_PRODUCT_RABIES_ID),
                                 1,
                                 now.minus(Duration.ofDays(6)));
+                insertPetServiceInventoryLink(
+                                seedId(tenantId, PET_SERVICE_INVENTORY_LINK_PREMIUM_MASK_ID),
+                                tenantId,
+                                seedId(tenantId, PET_SERVICE_VACCINATION_ID),
+                                seedId(tenantId, PET_PRODUCT_SUPPLEMENT_ID),
+                                1,
+                                now.minus(Duration.ofDays(6)));
+                insertPetServiceInventoryLink(
+                                seedId(tenantId, PET_SERVICE_INVENTORY_LINK_ESSENTIAL_ID),
+                                tenantId,
+                                seedId(tenantId, PET_SERVICE_CHECKUP_ID),
+                                seedId(tenantId, PET_PRODUCT_CONDITIONER_ID),
+                                1,
+                                now.minus(Duration.ofDays(6)));
+                insertPetServiceInventoryLink(
+                                seedId(tenantId, PET_SERVICE_INVENTORY_LINK_HYGIENIC_ID),
+                                tenantId,
+                                seedId(tenantId, PET_SERVICE_CONSULTATION_ID),
+                                seedId(tenantId, PET_PRODUCT_PARASITE_ID),
+                                1,
+                                now.minus(Duration.ofDays(6)));
+
+                // Open visits carry the recipe snapshot so the demo can record usage and apply stock on them.
+                insertAppointmentServiceInventorySnapshot(tenantId, seedId(tenantId, PET_APPOINTMENT_LINE_THOR_ID),
+                                seedId(tenantId, PET_PRODUCT_CONDITIONER_ID), now.minus(Duration.ofHours(2)));
+                insertAppointmentServiceInventorySnapshot(tenantId, seedId(tenantId, PET_APPOINTMENT_LINE_LUNA_ID),
+                                seedId(tenantId, PET_PRODUCT_RABIES_ID), now.minus(Duration.ofHours(1)));
+                insertAppointmentServiceInventorySnapshot(tenantId, seedId(tenantId, PET_APPOINTMENT_LINE_LUNA_ID),
+                                seedId(tenantId, PET_PRODUCT_SUPPLEMENT_ID), now.minus(Duration.ofHours(1)));
                 insertPetBillingMessageSettings(
                                 seedId(tenantId, PET_BILLING_SETTINGS_ID),
                                 tenantId,
@@ -1295,6 +1331,30 @@ public class DemoCommercialEnvironmentService {
                                                 """,
                                 id, tenantId, serviceId, inventoryItemId, expectedQuantity,
                                 ts(createdAt), ts(createdAt), SEED_ACTOR, SEED_ACTOR);
+        }
+
+        private void insertAppointmentServiceInventorySnapshot(
+                        UUID tenantId,
+                        UUID appointmentServiceLineId,
+                        UUID productId,
+                        Instant createdAt) {
+                UUID id = UUID.nameUUIDFromBytes(("appointment-inventory:" + appointmentServiceLineId + ":" + productId)
+                                .getBytes(StandardCharsets.UTF_8));
+                insert(
+                                """
+                                                INSERT INTO pet_appointment_service_inventory (
+                                                    id, tenant_id, appointment_service_id, inventory_item_id, inventory_item_name,
+                                                    inventory_item_sku, inventory_category, unit_of_measure, expected_quantity,
+                                                    consumption_rule, created_at, updated_at, created_by, updated_by
+                                                )
+                                                SELECT ?, ?, ?, i.id, i.name, i.sku, i.category, i.unit_of_measure, 1,
+                                                       'FIXED_PER_SERVICE', ?, ?, ?, ?
+                                                FROM pet_products p
+                                                JOIN inventory_items i ON i.id = p.inventory_item_id
+                                                WHERE p.id = ?
+                                                """,
+                                id, tenantId, appointmentServiceLineId,
+                                ts(createdAt), ts(createdAt), SEED_ACTOR, SEED_ACTOR, productId);
         }
 
         private void insertPetBillingMessageSettings(
