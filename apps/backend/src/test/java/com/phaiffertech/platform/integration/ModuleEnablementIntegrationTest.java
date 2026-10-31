@@ -247,7 +247,7 @@ class ModuleEnablementIntegrationTest extends AbstractIntegrationTest {
     }
 
     @Test
-    void shouldAllowAestheticsToReadInventoryMovementsWithoutRetailManagementAccess() {
+    void shouldAllowAestheticsToManageSupplyStockWithoutRetailProductAccess() {
         String tenantCode = "tenant-grooming-inventory";
         String email = "tenant-grooming-inventory@example.test";
         AuthSession grooming = createTenantSessionWithPermissions(
@@ -315,18 +315,19 @@ class ModuleEnablementIntegrationTest extends AbstractIntegrationTest {
                 "stockQuantity", 5
         ), authorized).getStatusCode().value());
         assertEquals(403, get("/pet/medical-records?page=0&size=20", authorized).getStatusCode().value());
-        assertEquals(403, post("/pet/inventory", Map.of(
+        // Grooming restocks its own supplies: movement writes only need pet.aesthetics plus the permissions.
+        assertEquals(200, post("/pet/inventory", Map.of(
                 "productId", productId,
                 "movementType", "IN",
                 "quantity", 1
         ), authorized).getStatusCode().value());
-        assertEquals(403, put("/pet/inventory/" + movementId, Map.of(
+        assertEquals(200, put("/pet/inventory/" + movementId, Map.of(
                 "productId", productId,
                 "movementType", "OUT",
                 "quantity", 1
         ), authorized).getStatusCode().value());
-        assertEquals(403, delete("/pet/inventory/" + movementId, authorized).getStatusCode().value());
-        assertEquals(403, patch("/pet/inventory/" + movementId + "/restore", null, authorized)
+        assertEquals(200, delete("/pet/inventory/" + movementId, authorized).getStatusCode().value());
+        assertEquals(200, patch("/pet/inventory/" + movementId + "/restore", null, authorized)
                 .getStatusCode().value());
 
         AuthSession otherTenant = createTenantSessionWithPermissions(
