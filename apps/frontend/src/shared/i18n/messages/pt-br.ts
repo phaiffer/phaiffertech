@@ -389,6 +389,8 @@ const ptBRMessages = {
       title: 'Pronto para retirada',
       description: 'Mensagem de envio manual preparada para o canal que a recepcao ja usa.',
       label: 'Mensagem de retirada preparada',
+      preparedPill: 'Mensagem preparada',
+      preparing: 'Preparando...',
       reviewTitle: 'Revise antes de enviar',
       reviewDescription: 'Use este texto como fallback manual quando o canal oficial de WhatsApp estiver indisponivel ou o envio falhar.',
       success: 'Mensagem de retirada preparada e copiada para envio manual.',

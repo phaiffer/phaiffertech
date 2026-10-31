@@ -383,6 +383,8 @@ export const enUSMessages: AppMessages = {
       title: 'Ready for pickup',
       description: 'Manual-send message prepared for the channel already used by reception.',
       label: 'Prepared pickup message',
+      preparedPill: 'Message prepared',
+      preparing: 'Preparing...',
       reviewTitle: 'Review before sending',
       reviewDescription: 'Use this as the manual fallback when the official WhatsApp channel is unavailable or the dispatch fails.',
       success: 'Pickup message prepared and copied for manual sending.',
