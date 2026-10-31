@@ -12,6 +12,7 @@ import {
   sharedCompactTextClass
 } from '@/shared/components/public-visual-system';
 import type { WebsiteHeroStat } from '@/modules/website/website-content';
+import { useAppMessages } from '@/shared/i18n/app-i18n-provider';
 
 type PublicHeroSectionProps = {
   id?: string;
@@ -51,6 +52,7 @@ export function PublicHeroSection({
   secondaryCtaHref,
   heroImage = '/images/dog-raincoat.jpg'
 }: PublicHeroSectionProps) {
+  const copy = useAppMessages().screens.website;
   const [titleBefore, highlightedTitle, titleAfter] = splitTitle(title, titleHighlight);
   const heroHighlights = highlights.slice(0, 3);
   const heroStats = stats.slice(0, 3);
@@ -115,7 +117,7 @@ export function PublicHeroSection({
                   <PetMark className="h-11 w-11 shrink-0 rounded-2xl" iconClassName="scale-95" />
                   <div>
                     <p className="text-sm font-semibold tracking-[-0.02em] text-slate-900">Gestão Pet</p>
-                    <p className="text-[10px] font-medium uppercase tracking-[0.18em] text-slate-700">banho, tosa e recorrência</p>
+                    <p className="text-[10px] font-medium uppercase tracking-[0.18em] text-slate-700">{copy.heroTagline}</p>
                     <p className="mt-1 flex items-center gap-1 text-[10px] font-medium uppercase tracking-[0.16em] text-slate-600">
                       by
                       <BrandMark className="h-3.5 w-3.5 rounded-[0.65rem]" imageClassName="scale-[1.08]" />
@@ -124,7 +126,7 @@ export function PublicHeroSection({
                   </div>
                 </div>
                 <span className="inline-flex rounded-full bg-[color:var(--accent)]/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-[color:var(--accent)]">
-                  Operação Pet
+                  {copy.heroEyebrow}
                 </span>
               </div>
 
@@ -138,7 +140,7 @@ export function PublicHeroSection({
                   <div className="rounded-[1.35rem] border border-slate-200/90 bg-[linear-gradient(180deg,rgba(16,185,129,0.05),rgba(248,250,252,0.96)_120px)] px-4 py-3.5 sm:col-span-3">
                     <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[color:var(--accent)]">Gestão Pet</p>
                     <p className={`mt-2 ${sharedCompactTextClass}`}>
-                      Daily queue, recurring plans, billing, and inventory in one product surface.
+                      {copy.heroSubtitle}
                     </p>
                   </div>
                 )}
@@ -146,7 +148,7 @@ export function PublicHeroSection({
 
               <div className="mt-5 grid gap-4 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)]">
                 <div className="rounded-[1.5rem] border border-slate-200/90 bg-[linear-gradient(180deg,rgba(16,185,129,0.05),rgba(248,250,252,0.95)_120px)] p-4">
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-700">Operação visível</p>
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-700">{copy.heroVisibleOps}</p>
                   <div className="mt-4 space-y-3">
                     {heroHighlights.slice(0, 3).map((item, index) => (
                       <div key={item} className="flex items-start gap-3 rounded-2xl bg-white px-3 py-3 shadow-[0_10px_24px_-24px_rgba(15,23,42,0.16)]">
@@ -166,16 +168,16 @@ export function PublicHeroSection({
                 <div className="relative min-h-[320px] overflow-hidden rounded-[1.5rem] border border-slate-200">
                   <Image
                     src={heroImage}
-                    alt="Pet workspace preview"
+                    alt={copy.heroPreviewAlt}
                     fill
                     priority
                     className="object-cover"
                   />
                   <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(15,23,42,0.02),rgba(15,23,42,0.18))]" />
                   <div className="absolute inset-x-4 bottom-4 rounded-[1.35rem] border border-white/70 bg-white/88 px-4 py-4 text-slate-900 shadow-[0_18px_40px_-28px_rgba(15,23,42,0.28)] backdrop-blur-[2px]">
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[color:var(--accent)]">Operação no centro</p>
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[color:var(--accent)]">{copy.heroOpsCenter}</p>
                     <p className="mt-2 text-sm leading-6 text-slate-700">
-                      Fila de banho e tosa, pet taxi, estoque, cobrança e comissão seguem visíveis sem sair da mesma superfície.
+                      {copy.heroOpsCenterDescription}
                     </p>
                   </div>
                 </div>

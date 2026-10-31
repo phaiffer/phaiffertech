@@ -79,6 +79,7 @@ function getInitials(name?: string) {
 }
 
 export function Sidebar() {
+  const copy = useAppMessages().screens.shell;
   const pathname = usePathname();
   const { signOut } = useAuth();
   const shellMessages = useAppMessages().sidebar;
@@ -324,7 +325,7 @@ export function Sidebar() {
           className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-slate-500 transition-colors hover:bg-emerald-50 hover:text-slate-900 ${
             collapsed ? 'mx-auto' : ''
           }`}
-          aria-label={collapsed ? 'Expandir sidebar' : 'Colapsar sidebar'}
+          aria-label={collapsed ? copy.expandSidebar : copy.collapseSidebar}
         >
           {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
         </button>
@@ -333,13 +334,13 @@ export function Sidebar() {
       {/* Navigation */}
       <nav className="flex-1 overflow-y-auto py-3">
         <SidebarGroup
-          label="Principal"
+          label={copy.groupMain}
           items={principalItems}
           pathname={pathname}
           collapsed={collapsed}
         />
         <SidebarGroup
-          label="Gestão"
+          label={copy.groupManagement}
           items={gestaoItems}
           pathname={pathname}
           collapsed={collapsed}
@@ -347,7 +348,7 @@ export function Sidebar() {
         />
         {suporteItems.length > 0 && (
           <SidebarGroup
-            label="Suporte"
+            label={copy.groupSupport}
             items={suporteItems}
             pathname={pathname}
             collapsed={collapsed}
@@ -393,7 +394,7 @@ export function Sidebar() {
             <DropdownMenuItem asChild>
               <Link href="/settings" className="cursor-pointer">
                 <Settings className="h-4 w-4" />
-                Configurações
+                {copy.settings}
               </Link>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
@@ -402,7 +403,7 @@ export function Sidebar() {
               className="cursor-pointer text-[var(--destructive)] focus:text-[var(--destructive)]"
             >
               <LogOut className="h-4 w-4" />
-              Sair
+              {copy.signOut}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

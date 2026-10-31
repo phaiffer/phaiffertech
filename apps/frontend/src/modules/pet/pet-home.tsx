@@ -35,11 +35,12 @@ import {
   readyCapability
 } from '@/shared/modules/module-capability';
 import { resolveModuleWorkspaceVisualState } from '@/shared/modules/module-workspace-visual';
-import { useAppI18n } from '@/shared/i18n/app-i18n-provider';
+import { useAppI18n, useAppMessages } from '@/shared/i18n/app-i18n-provider';
 import { GettingStartedChecklist } from '@/shared/onboarding/getting-started';
 import { useFrontendPlatform } from '@/shared/platform/use-frontend-platform';
 import { petService } from '@/shared/services/pet-service';
 import { PetDashboardSummary } from '@/shared/types/pet';
+import type { AppMessages } from '@/shared/i18n/messages/pt-br';
 
 type PetWorkspaceMode = 'clinic' | 'grooming';
 
@@ -96,143 +97,143 @@ function localizePetEnvironmentLabel(label?: string | null, fallback = 'Ambiente
   return localizedEnvironmentLabelMap[label.trim().toLowerCase()] ?? label;
 }
 
-function getPetWorkspaceActions(mode: PetWorkspaceMode): ModuleWorkspaceAction[] {
+function getPetWorkspaceActions(copy: AppMessages['screens']['petHome'], mode: PetWorkspaceMode): ModuleWorkspaceAction[] {
   const grooming = mode === 'grooming';
 
   return [
     {
       href: '/pet/dashboard',
-      eyebrow: 'Visao geral',
-      title: 'Ver visao operacional',
+      eyebrow: copy.actionOverviewEyebrow,
+      title: copy.actionOverviewTitle,
       description: grooming
-        ? 'Abra o panorama vivo dos servicos antes de seguir para cobranca e insights.'
-        : 'Abra o panorama vivo da operacao antes de seguir para cobranca e insights.',
+        ? copy.actionOverviewDescriptionGrooming
+        : copy.actionOverviewDescriptionClinic,
       permission: 'pet.dashboard.read',
       anyEntitlements: petSubmoduleEntitlements,
-      restrictionTitle: 'Acesso ao dashboard necessario',
-      restrictionDescription: 'Esse pulso do ambiente aparece quando o seu perfil inclui acesso ao dashboard de Gestão Pet.'
+      restrictionTitle: copy.restrictionDashboardTitle,
+      restrictionDescription: copy.restrictionDashboardDescription
     },
     {
       href: '/pet/clients',
-      eyebrow: 'Recepcao',
-      title: 'Revisar clientes',
-      description: 'Comece a operacao com cadastros de clientes e um contexto de contato confiavel.',
+      eyebrow: copy.actionClientsEyebrow,
+      title: copy.actionClientsTitle,
+      description: copy.actionClientsDescription,
       permission: 'pet.client.read',
       anyEntitlements: petSubmoduleEntitlements,
-      restrictionTitle: 'Acesso a clientes necessario',
-      restrictionDescription: 'A gestao de clientes aparece aqui quando o seu perfil pode ler clientes da Gestão Pet.'
+      restrictionTitle: copy.restrictionClientsTitle,
+      restrictionDescription: copy.restrictionClientsDescription
     },
     {
       href: '/pet/pets',
-      eyebrow: grooming ? 'Cuidado' : 'Clinico',
-      title: grooming ? 'Revisar pets' : 'Revisar perfis dos pets',
+      eyebrow: grooming ? copy.actionPetsEyebrowGrooming : copy.clinicalEyebrow,
+      title: grooming ? copy.actionPetsTitleGrooming : copy.actionPetsTitleClinic,
       description: grooming
-        ? 'Cadastre cada pet depois do cliente para manter atendimentos e observacoes ligados a pessoa certa.'
-        : 'Cadastre cada pet depois do cliente para manter atendimentos e historico de cuidado ligados ao paciente certo.',
+        ? copy.actionPetsDescriptionGrooming
+        : copy.actionPetsDescriptionClinic,
       permission: 'pet.profile.read',
       anyEntitlements: petSubmoduleEntitlements,
-      restrictionTitle: 'Acesso a perfis de pets necessario',
-      restrictionDescription: 'Os perfis dos pets ficam indisponiveis ate o seu perfil poder ler os registros da Gestão Pet.'
+      restrictionTitle: copy.restrictionPetsTitle,
+      restrictionDescription: copy.restrictionPetsDescription
     },
     {
       href: '/pet/appointments',
-      eyebrow: grooming ? 'Agenda' : 'Clinico',
-      title: 'Agendar atendimentos',
+      eyebrow: grooming ? copy.actionAppointmentsEyebrow : copy.clinicalEyebrow,
+      title: copy.actionAppointmentsTitle,
       description: grooming
-        ? 'Transforme clientes e pets em servicos agendaveis e uma fila diaria visivel.'
-        : 'Transforme clientes e pets em cuidados agendados e uma fila diaria visivel.',
+        ? copy.actionAppointmentsDescriptionGrooming
+        : copy.actionAppointmentsDescriptionClinic,
       permission: 'pet.appointment.read',
       anyEntitlements: petOperationalEntitlements,
-      restrictionTitle: 'Acesso a atendimentos necessario',
-      restrictionDescription: 'O fluxo de atendimentos aparece quando o seu perfil pode ler atendimentos da Gestão Pet.'
+      restrictionTitle: copy.restrictionAppointmentsTitle,
+      restrictionDescription: copy.restrictionAppointmentsDescription
     },
     {
       href: '/pet/plans',
-      eyebrow: grooming ? 'Pacotes de sessoes' : 'Planos',
-      title: grooming ? 'Gerir pacotes de sessoes' : 'Gerir planos de clientes',
+      eyebrow: grooming ? copy.actionPlansEyebrowGrooming : copy.actionPlansEyebrowClinic,
+      title: grooming ? copy.actionPlansTitleGrooming : copy.actionPlansTitleClinic,
       description: grooming
-        ? 'Crie e acompanhe pacotes de sessoes, como "10 banhos e tosas", e ligue-os aos atendimentos do cliente.'
-        : 'Acompanhe pacotes de multiplas sessoes ligados aos atendimentos do cliente.',
+        ? copy.actionPlansDescriptionGrooming
+        : copy.actionPlansDescriptionClinic,
       permission: 'pet.plan.read',
       anyEntitlements: petOperationalEntitlements,
-      restrictionTitle: 'Acesso a planos necessario',
-      restrictionDescription: 'Os planos de clientes aparecem aqui quando o seu perfil pode ler planos da Gestão Pet.'
+      restrictionTitle: copy.restrictionPlansTitle,
+      restrictionDescription: copy.restrictionPlansDescription
     },
     {
       href: '/pet/services',
-      eyebrow: grooming ? 'Menu de servicos' : 'Comercial',
-      title: 'Revisar servicos',
-      description: 'Mantenha o menu de servicos pronto antes de abrir a agenda.',
+      eyebrow: grooming ? copy.actionServicesEyebrowGrooming : copy.commercialEyebrow,
+      title: copy.actionServicesTitle,
+      description: copy.actionServicesDescription,
       permission: 'pet.service.read',
       anyEntitlements: petOperationalEntitlements,
-      restrictionTitle: 'Acesso a servicos necessario',
-      restrictionDescription: 'O catalogo de servicos aparece aqui quando o seu perfil pode ler servicos da Gestão Pet.'
+      restrictionTitle: copy.restrictionServicesTitle,
+      restrictionDescription: copy.restrictionServicesDescription
     },
     {
       href: '/pet/professionals',
-      eyebrow: grooming ? 'Operacao' : 'Clinico',
-      title: 'Revisar equipe',
+      eyebrow: grooming ? copy.actionTeamEyebrowGrooming : copy.clinicalEyebrow,
+      title: copy.actionTeamTitle,
       description: grooming
-        ? 'Mantenha groomers, atendentes e equipe operacional visiveis no ambiente atual.'
-        : 'Mantenha a equipe clinica e operacional visivel no ambiente atual.',
+        ? copy.actionTeamDescriptionGrooming
+        : copy.actionTeamDescriptionClinic,
       permission: 'pet.professional.read',
       anyEntitlements: petOperationalEntitlements,
-      restrictionTitle: 'Acesso a profissionais necessario',
-      restrictionDescription: 'A gestao da equipe fica oculta ate o seu perfil poder ler profissionais da Gestão Pet.'
+      restrictionTitle: copy.restrictionTeamTitle,
+      restrictionDescription: copy.restrictionTeamDescription
     },
     {
       href: '/pet/medical-records',
-      eyebrow: grooming ? 'Historico de cuidado' : 'Prontuarios',
-      title: 'Abrir prontuarios',
+      eyebrow: grooming ? copy.actionRecordsEyebrowGrooming : copy.actionRecordsEyebrowClinic,
+      title: copy.actionRecordsTitle,
       description: grooming
-        ? 'Acesse historico de cuidado, prescricoes, vacinas e contexto longitudinal quando as permissoes clinicas estiverem liberadas.'
-        : 'Acesse prontuarios, vacinas, prescricoes e contexto clinico longitudinal.',
+        ? copy.actionRecordsDescriptionGrooming
+        : copy.actionRecordsDescriptionClinic,
       anyOf: petMedicalRoutePermissions,
       anyEntitlements: petClinicalEntitlements,
-      restrictionTitle: 'Acesso clinico necessario',
-      restrictionDescription: 'Prontuarios, vacinas e prescricoes aparecem aqui quando o seu perfil inclui pelo menos uma permissao clinica de leitura.'
+      restrictionTitle: copy.restrictionRecordsTitle,
+      restrictionDescription: copy.restrictionRecordsDescription
     },
     {
       href: '/pet/products',
-      eyebrow: 'Comercial',
-      title: 'Revisar produtos',
-      description: 'Revise SKUs, precos e itens ligados ao ambiente comercial da Gestão Pet.',
+      eyebrow: copy.commercialEyebrow,
+      title: copy.actionProductsTitle,
+      description: copy.actionProductsDescription,
       permission: 'pet.product.read',
       anyEntitlements: petRetailEntitlements,
-      restrictionTitle: 'Acesso a produtos necessario',
-      restrictionDescription: 'A gestao de produtos aparece aqui quando o seu perfil pode ler produtos da Gestão Pet.'
+      restrictionTitle: copy.restrictionProductsTitle,
+      restrictionDescription: copy.restrictionProductsDescription
     },
     {
       href: '/pet/inventory',
-      eyebrow: 'Estoque',
-      title: 'Revisar estoque',
-      description: 'Acompanhe movimentacao de estoque e rastreabilidade operacional do ambiente.',
+      eyebrow: copy.actionInventoryEyebrow,
+      title: copy.actionInventoryTitle,
+      description: copy.actionInventoryDescription,
       permission: 'pet.inventory.read',
       anyEntitlements: petRetailEntitlements,
-      restrictionTitle: 'Acesso a estoque necessario',
-      restrictionDescription: 'O fluxo de estoque aparece quando o seu perfil pode ler estoque da Gestão Pet.'
+      restrictionTitle: copy.restrictionInventoryTitle,
+      restrictionDescription: copy.restrictionInventoryDescription
     },
     {
       href: '/pet/invoices',
-      eyebrow: 'Cobranca',
-      title: 'Gerir cobranca',
-      description: 'Mostre como o servico concluido vira fatura, recebimento e visibilidade financeira.',
+      eyebrow: copy.actionBillingEyebrow,
+      title: copy.actionBillingTitle,
+      description: copy.actionBillingDescription,
       permission: 'pet.invoice.read',
       anyEntitlements: petRetailEntitlements,
-      restrictionTitle: 'Acesso a cobranca necessario',
-      restrictionDescription: 'Os sinais de cobranca aparecem aqui quando o seu perfil pode ler faturas da Gestão Pet.'
+      restrictionTitle: copy.restrictionBillingTitle,
+      restrictionDescription: copy.restrictionBillingDescription
     },
     {
       href: '/pet/insights',
-      eyebrow: 'Insights do negocio',
-      title: 'Ver insights do negocio',
+      eyebrow: copy.actionInsightsEyebrow,
+      title: copy.actionInsightsTitle,
       description: grooming
-        ? 'Revise crescimento de clientes, mix de servicos e tendencias dos pets a partir dos dados do negocio.'
-        : 'Revise crescimento de clientes, mix de servicos e padroes de atendimento a partir dos dados do negocio.',
+        ? copy.actionInsightsDescriptionGrooming
+        : copy.actionInsightsDescriptionClinic,
       permission: 'pet.dashboard.read',
       anyEntitlements: petSubmoduleEntitlements,
-      restrictionTitle: 'Acesso ao dashboard necessario',
-      restrictionDescription: 'Os insights do negocio aparecem quando o seu perfil inclui acesso ao dashboard de Gestão Pet.'
+      restrictionTitle: copy.restrictionDashboardTitle,
+      restrictionDescription: copy.restrictionInsightsDescription
     }
   ];
 }
@@ -382,7 +383,7 @@ function findPetPulseCard(summary: PetDashboardSummary | null, key: string) {
   return summary?.summaryCards.find((card) => card.key === key) ?? null;
 }
 
-function resolvePetPrimaryAction(actions: ModuleWorkspaceAction[], summary: PetDashboardSummary | null, firstUse: boolean, mode: PetWorkspaceMode) {
+function resolvePetPrimaryAction(copy: AppMessages['screens']['petHome'], actions: ModuleWorkspaceAction[], summary: PetDashboardSummary | null, firstUse: boolean, mode: PetWorkspaceMode) {
   const fallbackAction = resolveFallbackPetAction(actions);
 
   if (!fallbackAction) {
@@ -391,17 +392,17 @@ function resolvePetPrimaryAction(actions: ModuleWorkspaceAction[], summary: PetD
 
   if (firstUse) {
     return {
-      title: 'Comece por clientes',
+      title: copy.startWithClients,
       description: mode === 'grooming'
-        ? 'Cadastre o primeiro cliente e depois adicione um pet para iniciar o setup da Gestão Pet.'
-        : 'Cadastre o primeiro cliente e depois adicione um pet para iniciar o setup da Gestão Pet.',
+        ? copy.startWithClientsDescription
+        : copy.startWithClientsDescription,
       href: resolvePetActionHref(actions, '/pet/clients', fallbackAction.href)
     } satisfies PetPrimaryAction;
   }
 
   if ((summary?.appointmentsToday ?? 0) > 0) {
     return {
-      title: mode === 'grooming' ? 'Revisar os servicos de hoje' : 'Revisar os atendimentos de hoje',
+      title: mode === 'grooming' ? copy.reviewTodayServices : copy.reviewTodayAppointments,
       description: `${summary?.appointmentsToday ?? 0} item(ns) ja estao agendados para o dia operacional atual.`,
       href: resolvePetActionHref(actions, '/pet/appointments', fallbackAction.href)
     } satisfies PetPrimaryAction;
@@ -409,7 +410,7 @@ function resolvePetPrimaryAction(actions: ModuleWorkspaceAction[], summary: PetD
 
   if ((summary?.pendingInvoices ?? 0) > 0) {
     return {
-      title: 'Revisar cobrancas pendentes',
+      title: copy.reviewPendingBilling,
       description: `${summary?.pendingInvoices ?? 0} fatura(s) ainda pedem acompanhamento de cobranca na Gestão Pet.`,
       href: resolvePetActionHref(actions, '/pet/invoices', fallbackAction.href)
     } satisfies PetPrimaryAction;
@@ -417,17 +418,17 @@ function resolvePetPrimaryAction(actions: ModuleWorkspaceAction[], summary: PetD
 
   if ((summary?.lowStockProducts ?? 0) > 0) {
     return {
-      title: 'Checar itens com estoque baixo',
+      title: copy.checkLowStock,
       description: `${summary?.lowStockProducts ?? 0} SKU(s) de produto estao se aproximando da pressao de estoque.`,
       href: resolvePetActionHref(actions, '/pet/products', fallbackAction.href)
     } satisfies PetPrimaryAction;
   }
 
   return {
-    title: 'Ver visao operacional',
+    title: copy.actionOverviewTitle,
     description: mode === 'grooming'
-      ? 'Revise o ritmo vivo da operacao, a fila de atencao e a proxima historia para mostrar nos insights.'
-      : 'Revise o ritmo vivo da operacao, a fila de atencao e a proxima historia para mostrar nos insights.',
+      ? copy.reviewOperationsPulse
+      : copy.reviewOperationsPulse,
     href: resolvePetActionHref(actions, '/pet/dashboard', fallbackAction.href)
   } satisfies PetPrimaryAction;
 }
@@ -478,6 +479,7 @@ function localizePetSummaryCard<T extends { key: string; label: string; status?:
 }
 
 export function PetHome() {
+  const copy = useAppMessages().screens.petHome;
   const { locale } = useAppI18n();
   const platform = useFrontendPlatform();
   const { hasPermission, hasAnyPermission } = usePermissions();
@@ -505,10 +507,10 @@ export function PetHome() {
     [platform.workspace.accessLabel]
   );
   const petWorkspaceActions = useMemo(
-    () => getPetWorkspaceActions(petMode).filter((action) => (
+    () => getPetWorkspaceActions(copy, petMode).filter((action) => (
       !action.anyEntitlements || hasAnyTenantEntitlement(platform.user, action.anyEntitlements)
     )),
-    [petMode, platform.user]
+    [petMode, platform.user, copy]
   );
   const featuredSection = summary?.sections.find((section) => (
     section.cards.length > 0
@@ -545,8 +547,8 @@ export function PetHome() {
 
       if (firstUse && action.href === '/pet/appointments') {
         const capability = notConfiguredCapability({
-          title: 'O fluxo de atendimentos precisa de um pouco de setup primeiro',
-          description: 'Crie clientes e perfis de pets, depois confirme servicos e profissionais antes de agendar a primeira visita.'
+          title: copy.appointmentsSetupTitle,
+          description: copy.appointmentsSetupDescription
         }, locale);
 
         return { ...action, capability, status: capability.status };
@@ -554,8 +556,8 @@ export function PetHome() {
 
       if (firstUse && action.href === '/pet/invoices') {
         const capability = notConfiguredCapability({
-          title: 'A cobranca comeca depois da primeira visita agendada',
-          description: 'Emita a primeira fatura depois que um atendimento ou servico estiver pronto para que o recebimento pareca real na demo.'
+          title: copy.billingSetupTitle,
+          description: copy.billingSetupDescription
         }, locale);
 
         return { ...action, capability, status: capability.status };
@@ -563,8 +565,8 @@ export function PetHome() {
 
       if (firstUse && action.href === '/pet/insights') {
         const capability = notConfiguredCapability({
-          title: 'Os insights ganham forca depois do primeiro ciclo operacional',
-          description: 'Clientes, pets, atendimentos e dados de cobranca transformam esta pagina em um momento mais forte de fechamento.'
+          title: copy.insightsSetupTitle,
+          description: copy.insightsSetupDescription
         }, locale);
 
         return { ...action, capability, status: capability.status };
@@ -572,8 +574,8 @@ export function PetHome() {
 
       if (firstUse && action.href === '/pet/medical-records') {
         const capability = notConfiguredCapability({
-          title: 'Os prontuarios ainda nao foram configurados',
-          description: 'Os registros clinicos comecam quando os primeiros pacientes e atendimentos passam a existir neste ambiente de Gestão Pet.'
+          title: copy.recordsSetupTitle,
+          description: copy.recordsSetupDescription
         }, locale);
 
         return { ...action, capability, status: capability.status };
@@ -581,8 +583,8 @@ export function PetHome() {
 
       if (firstUse && action.href === '/pet/plans') {
         const capability = notConfiguredCapability({
-          title: 'Os planos de clientes comecam depois do primeiro cadastro',
-          description: 'Adicione um cliente, registre o pet e agende o primeiro atendimento; depois crie um pacote de sessoes para acompanhar o retorno.'
+          title: copy.plansSetupTitle,
+          description: copy.plansSetupDescription
         }, locale);
 
         return { ...action, capability, status: capability.status };
@@ -590,10 +592,10 @@ export function PetHome() {
 
       if (!firstUse && !featuredSection && action.href === '/pet/appointments') {
         const capability = noDataCapability({
-          title: 'Ainda nao ha atividade recente de atendimentos',
+          title: copy.noRecentAppointments,
           description: petMode === 'grooming'
-            ? 'O ambiente ja tem registros da Gestão Pet, mas ainda nao existe um bloco compacto de atividade recente de servicos.'
-            : 'O ambiente ja tem registros da Gestão Pet, mas ainda nao existe um bloco compacto de atividade recente de atendimentos.'
+            ? copy.recentActivityEmptyGrooming
+            : copy.recentActivityEmptyClinic
         }, locale);
 
         return { ...action, capability, status: capability.status };
@@ -608,8 +610,8 @@ export function PetHome() {
   const setupGuidance = buildPetGuidanceSteps(actionStates, ['/pet/clients', '/pet/appointments', '/pet/plans', '/pet/invoices']);
   const restrictedGuidance = buildPetGuidanceSteps(actionStates, ['/pet/clients', '/pet/appointments', '/pet/plans', '/pet/invoices']);
   const primaryAction = useMemo(
-    () => resolvePetPrimaryAction(actionStates, summary, firstUse, petMode),
-    [actionStates, firstUse, petMode, summary]
+    () => resolvePetPrimaryAction(copy, actionStates, summary, firstUse, petMode),
+    [actionStates, firstUse, petMode, summary, copy]
   );
   const dashboardHref = useMemo(
     () => resolvePetActionHref(actionStates, '/pet/dashboard', primaryAction?.href ?? '/pet/dashboard'),
@@ -675,14 +677,14 @@ export function PetHome() {
         }
 
         setSummary(null);
-        setError(err instanceof ApiClientError ? err.message : 'Nao foi possivel carregar o resumo do ambiente de Gestão Pet.');
+        setError(err instanceof ApiClientError ? err.message : copy.summaryLoadError);
         setLoadingSummary(false);
       });
 
     return () => {
       active = false;
     };
-  }, [canReadDashboard]);
+  }, [canReadDashboard, copy]);
 
   return (
     <div
@@ -711,22 +713,22 @@ export function PetHome() {
           </Link>
         ) : null}
         chips={[
-          { label: 'Ambiente', value: localizedWorkspaceLabel },
-          { label: 'Acesso', value: localizedAccessLabel, tone: 'neutral' }
+          { label: copy.workspace, value: localizedWorkspaceLabel },
+          { label: copy.access, value: localizedAccessLabel, tone: 'neutral' }
         ]}
         aside={(
           <ModuleWorkspaceFactList
             facts={[
               {
-                label: 'Codigo do ambiente',
-                value: platform.branding.tenantCode ?? 'Nao informado',
-                description: 'Identificador estavel do ambiente de Gestão Pet.'
+                label: copy.workspaceCode,
+                value: platform.branding.tenantCode ?? copy.notProvided,
+                description: copy.workspaceCodeDescription
               },
               {
-                label: 'Proxima acao',
-                value: primaryAction?.title ?? 'Abrir ambiente de Gestão Pet',
-                description: primaryAction?.description ?? 'Use os fluxos do ambiente abaixo para continuar.',
-                status: firstUse ? 'configuracao necessaria' : summary && (summary.pendingInvoices > 0 || summary.lowStockProducts > 0) ? 'pendente' : 'ativo'
+                label: copy.nextAction,
+                value: primaryAction?.title ?? copy.openWorkspace,
+                description: primaryAction?.description ?? copy.continueBelow,
+                status: firstUse ? copy.setupRequired : summary && (summary.pendingInvoices > 0 || summary.lowStockProducts > 0) ? 'pendente' : 'ativo'
               }
             ]}
           />
@@ -736,26 +738,26 @@ export function PetHome() {
       <ModuleWorkspaceOverviewGrid
         cards={[
           {
-            label: 'Escopo do ambiente',
+            label: copy.workspaceScope,
             value: platform.branding.scopeName,
-            description: 'A operacao de Gestão Pet permanece ancorada no ambiente ativo.'
+            description: copy.workspaceScopeDescription
           },
           {
             label: petCopy.overviewAppointmentsLabel,
             value: canReadDashboard ? resolveOverviewValue(summary?.appointmentsToday) : '--',
             description: petCopy.overviewAppointmentsDescription,
-            status: !canReadDashboard ? 'sem permissao' : summary && firstUse ? 'configuracao necessaria' : null,
+            status: !canReadDashboard ? copy.noPermission : summary && firstUse ? copy.setupRequired : null,
             capability: !canReadDashboard
               ? permissionCapability({
-                  title: 'Visibilidade do dashboard necessaria',
-                  description: 'Conceda `pet.dashboard.read` para mostrar a contagem de atendimentos nesta abertura de ambiente.'
+                  title: copy.dashboardAccessRequired,
+                  description: copy.grantDashboardAppointments
                 }, locale)
               : summary && firstUse
                 ? notConfiguredCapability({
-                    title: 'Os atendimentos ainda nao foram configurados',
+                    title: copy.appointmentsNotSetUp,
                     description: petMode === 'grooming'
-                      ? 'Crie os primeiros clientes e perfis de pets antes que este ambiente consiga agendar e mostrar o ritmo dos servicos.'
-                      : 'Crie os primeiros clientes e perfis de pets antes que este ambiente consiga agendar e mostrar o ritmo clinico.'
+                      ? copy.appointmentsNotSetUpGrooming
+                      : copy.appointmentsNotSetUpClinic
                   }, locale)
                 : undefined
           },
@@ -763,18 +765,18 @@ export function PetHome() {
             label: petCopy.overviewUpcomingLabel,
             value: canReadDashboard ? resolveOverviewValue(summary?.upcomingAppointments) : '--',
             description: petCopy.overviewUpcomingDescription,
-            status: !canReadDashboard ? 'sem permissao' : summary && firstUse ? 'configuracao necessaria' : null,
+            status: !canReadDashboard ? copy.noPermission : summary && firstUse ? copy.setupRequired : null,
             capability: !canReadDashboard
               ? permissionCapability({
-                  title: 'A previsao depende do acesso ao dashboard',
-                  description: 'Conceda `pet.dashboard.read` para mostrar a carga dos proximos atendimentos a partir da visao geral do ambiente.'
+                  title: copy.forecastNeedsDashboard,
+                  description: copy.grantDashboardForecast
                 }, locale)
               : summary && firstUse
                 ? notConfiguredCapability({
-                    title: petMode === 'grooming' ? 'Os proximos servicos ainda nao foram configurados' : 'Os proximos cuidados ainda nao foram configurados',
+                    title: petMode === 'grooming' ? copy.upcomingServicesNotSetUp : copy.upcomingCareNotSetUp,
                     description: petMode === 'grooming'
-                      ? 'Os servicos de curto prazo aparecem depois que os primeiros agendamentos sao criados dentro deste ambiente.'
-                      : 'Os cuidados de curto prazo aparecem depois que os primeiros atendimentos sao agendados dentro deste ambiente.'
+                      ? copy.upcomingServicesDescription
+                      : copy.upcomingCareDescription
                   }, locale)
                 : undefined
           },
@@ -783,13 +785,13 @@ export function PetHome() {
             value: canReadDashboard
               ? summary
                 ? `${summary.lowStockProducts} em baixa / ${summary.pendingInvoices} faturas`
-                : 'Carregando...'
+                : copy.loadingShort
               : '--',
             description: petCopy.attentionDescription,
             status: !canReadDashboard
-              ? 'sem permissao'
+              ? copy.noPermission
               : summary && firstUse
-                ? 'configuracao necessaria'
+                ? copy.setupRequired
                 : summary && (summary.lowStockProducts > 0 || summary.pendingInvoices > 0)
                   ? 'pendente'
                   : summary
@@ -797,13 +799,13 @@ export function PetHome() {
                     : null,
             capability: !canReadDashboard
               ? permissionCapability({
-                  title: 'A fila operacional depende do acesso ao dashboard',
-                  description: 'Conceda `pet.dashboard.read` para mostrar sinais de estoque baixo e cobranca a partir desta tela inicial.'
+                  title: copy.queueNeedsDashboard,
+                  description: copy.grantDashboardQueue
                 }, locale)
               : summary && firstUse
                 ? notConfiguredCapability({
-                    title: 'A fila operacional ainda nao foi configurada',
-                    description: 'Os sinais de estoque e cobranca aparecem depois que servicos, produtos e faturas comecam a circular no ambiente.'
+                    title: copy.queueNotSetUp,
+                    description: copy.queueNotSetUpDescription
                   }, locale)
                 : undefined
           }
@@ -811,11 +813,11 @@ export function PetHome() {
       />
 
       <ModuleWorkspaceQuickActionGrid
-        title="Fluxos centrais de Gestão Pet"
-        description="Mantenha a operacao integrada: recepcao, servicos, planos recorrentes, equipe, estoque e cobranca."
+        title={copy.coreFlowsTitle}
+        description={copy.coreFlowsDescription}
         actions={landingActions}
-        emptyTitle="Nenhum fluxo de Gestão Pet disponivel"
-        emptyDescription="Este ambiente tem o modulo de Gestão Pet ativo, mas o usuario atual ainda nao possui permissoes de leitura."
+        emptyTitle={copy.noFlowsTitle}
+        emptyDescription={copy.noFlowsDescription}
       />
 
       <ModuleWorkspaceSection
@@ -826,7 +828,7 @@ export function PetHome() {
             href={dashboardHref}
             className="inline-flex text-sm font-semibold text-[color:var(--tenant-accent)]"
           >
-            Abrir dashboard operacional
+            {copy.openOperationsDashboard}
           </Link>
         ) : primaryAction ? (
           <Link
@@ -845,8 +847,8 @@ export function PetHome() {
               description={petCopy.restrictedDescription}
             />
             <ModuleWorkspaceGuidance
-              title="Continue com o ambiente de Gestão Pet"
-              description="Estes proximos passos seguem disponiveis mesmo com a visibilidade do dashboard restrita."
+              title={copy.continueTitle}
+              description={copy.continueDescription}
               steps={restrictedGuidance}
             />
           </div>
@@ -858,7 +860,7 @@ export function PetHome() {
           />
         ) : error ? (
           <div className="space-y-4">
-            <ModuleWorkspaceState tone="error" title="Resumo operacional indisponivel" description={error} />
+            <ModuleWorkspaceState tone="error" title={copy.summaryUnavailable} description={error} />
             <ModuleWorkspaceGuidance
               title={petCopy.errorGuidanceTitle}
               description={petCopy.errorGuidanceDescription}

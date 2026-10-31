@@ -90,10 +90,10 @@ describe('ImpersonationBanner', () => {
 
     render(<ImpersonationBanner tenantName="Clinic North" tenantCode="clinic-north" />);
 
-    expect(screen.getByText('Support impersonation active')).toBeInTheDocument();
+    expect(screen.getByText('Support mode active')).toBeInTheDocument();
     expect(screen.getByText(/Operating inside Clinic North/)).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole('button', { name: 'Exit impersonation' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Exit support mode' }));
 
     await waitFor(() => {
       expect(supportImpersonationService.stop).toHaveBeenCalledTimes(1);

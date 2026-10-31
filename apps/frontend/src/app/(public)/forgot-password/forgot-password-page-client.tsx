@@ -15,8 +15,10 @@ import {
 } from '@/shared/components/public-visual-system';
 import { usePublicSite } from '@/shared/public/public-site-provider';
 import { getPublicSiteMessages } from '@/shared/public/public-site-messages';
+import { useAppMessages } from '@/shared/i18n/app-i18n-provider';
 
 export default function ForgotPasswordPageClient() {
+  const copy = useAppMessages().screens.shell;
   const { locale } = usePublicSite();
   const t = getPublicSiteMessages(locale).forgotPassword;
   const [tenantCode, setTenantCode] = useState('');
@@ -128,7 +130,7 @@ export default function ForgotPasswordPageClient() {
                   value={email}
                   onChange={(event) => handleEmailChange(event.target.value)}
                   className={sharedInputClass}
-                  placeholder="name@company.com"
+                  placeholder={copy.emailPlaceholder}
                   autoComplete="email"
                   inputMode="email"
                   autoCapitalize="none"

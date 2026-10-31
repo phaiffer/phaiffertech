@@ -1,3 +1,5 @@
+'use client';
+
 import { DashboardSection as DashboardSectionType } from '@/shared/types/dashboard';
 import {
   sharedPanelSurfaceClass,
@@ -9,12 +11,14 @@ import { RecentItemsList } from '@/shared/dashboard/recent-items-list';
 import { SimpleBarChart } from '@/shared/dashboard/simple-bar-chart';
 import { SimpleLineChart } from '@/shared/dashboard/simple-line-chart';
 import { workspacePanelSurfaceStyle } from '@/shared/modules/module-workspace-visual';
+import { useAppMessages } from '@/shared/i18n/app-i18n-provider';
 
 type DashboardSectionProps = {
   section: DashboardSectionType;
 };
 
 export function DashboardSection({ section }: DashboardSectionProps) {
+  const copy = useAppMessages().screens.shell;
   const hasContent =
     section.cards.length > 0 ||
     section.metrics.length > 0 ||
@@ -33,7 +37,7 @@ export function DashboardSection({ section }: DashboardSectionProps) {
       {!hasContent ? (
         <EmptyStateCard
           title={section.title}
-          description="Nenhum dado disponivel para esta secao no ambiente atual."
+          description={copy.sectionEmpty}
         />
       ) : (
         <div className="space-y-4">
@@ -44,7 +48,7 @@ export function DashboardSection({ section }: DashboardSectionProps) {
               <SimpleBarChart
                 title={`${section.title} · Metricas`}
                 metrics={section.metrics}
-                emptyMessage="Nenhuma métrica disponível."
+                emptyMessage={copy.noMetrics}
               />
             )}
 
@@ -52,7 +56,7 @@ export function DashboardSection({ section }: DashboardSectionProps) {
               <RecentItemsList
                 title={`${section.title} · Itens recentes`}
                 items={section.items}
-                emptyMessage="Nenhum item recente disponível."
+                emptyMessage={copy.noRecentItems}
               />
             )}
 
@@ -60,7 +64,7 @@ export function DashboardSection({ section }: DashboardSectionProps) {
               <SimpleLineChart
                 title={`${section.title} · Tendencia`}
                 points={section.timeSeries}
-                emptyMessage="Nenhum ponto temporal disponível."
+                emptyMessage={copy.noTimeSeries}
               />
             )}
           </div>

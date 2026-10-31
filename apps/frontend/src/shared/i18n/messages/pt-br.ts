@@ -1,3 +1,5 @@
+import { ptBRScreens } from '@/shared/i18n/messages/screens-pt-br';
+
 type DeepWiden<T> = T extends string
   ? string
   : T extends readonly (infer U)[]
@@ -1319,7 +1321,8 @@ const ptBRMessages = {
       sameAsCurrent: 'A nova senha precisa ser diferente da atual.',
       genericError: 'Não foi possível atualizar a senha agora.'
     }
-  }
+  },
+  screens: ptBRScreens
 } as const;
 
 export type AppMessages = DeepWiden<typeof ptBRMessages>;

@@ -32,6 +32,7 @@ function DashboardNotice({ message }: { message: string }) {
 }
 
 export default function DashboardPage() {
+  const copy = useAppMessages().screens.dashboard;
   const platform = useFrontendPlatform();
   const messages = useAppMessages().dashboardRoutes;
   const [summary, setSummary] = useState<PlatformDashboardSummary | null>(null);
@@ -148,16 +149,16 @@ export default function DashboardPage() {
   return (
     <div className="space-y-6">
       <PageTitle
-        title={hasPetVisible ? 'Operations overview' : variant === 'platform' ? 'Platform overview' : 'Workspace overview'}
+        title={hasPetVisible ? copy.titleOperations : variant === 'platform' ? copy.titlePlatform : copy.titleWorkspace}
         description={hasPetVisible
-          ? 'Commercial launchpad for the pet operation demo: daily schedule, recurring plans, stock alerts, and billing attention in one place.'
+          ? copy.descriptionPet
           : experience.description}
       />
 
       {summaryError ? <DashboardNotice message={summaryError} /> : null}
       {summaryLoading ? (
         <div className="rounded-lg border border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-panel)] px-4 py-3 text-sm text-[color:var(--app-shell-muted)]">
-          Loading workspace overview...
+          {copy.loading}
         </div>
       ) : null}
 
@@ -165,12 +166,12 @@ export default function DashboardPage() {
 
       {!summaryLoading && !summaryError && onboardingSteps.length > 0 && visibleModuleSummaries.length === 0 ? (
         <GettingStartedChecklist
-          eyebrow={variant === 'platform' ? 'Workspace setup' : 'Getting started'}
-          title={variant === 'platform' ? 'Prepare the next customer workspace' : `Get ${platform.branding.scopeName} moving`}
+          eyebrow={variant === 'platform' ? copy.setupEyebrow : copy.gettingStarted}
+          title={variant === 'platform' ? copy.setupTitle : `Get ${platform.branding.scopeName} moving`}
           description={
             variant === 'platform'
-              ? 'Some contracted products still need their first records. Use this checklist to expose the smallest viable operating surface.'
-              : 'Some contracted products still need their first records. Start with the essentials so the workspace becomes easier to sell and operate.'
+              ? copy.setupDescriptionPlatform
+              : copy.setupDescriptionCustomer
           }
           steps={onboardingSteps}
         />
@@ -179,14 +180,14 @@ export default function DashboardPage() {
       <section className="rounded-3xl border border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-panel)] p-5 shadow-card">
         <div className="mb-5">
           <h2 className="text-base font-semibold text-[color:var(--app-shell-heading)]">
-            {hasPetVisible ? 'Official demo surface' : variant === 'platform' ? 'Visible products' : 'Products in this workspace'}
+            {hasPetVisible ? copy.productsEyebrowDemo : variant === 'platform' ? copy.productsEyebrow : copy.productsTitle}
           </h2>
           <p className="mt-1 text-sm text-[color:var(--app-shell-muted)]">
             {hasPetVisible
-              ? 'Keep the visible surface centered on pet operations while the rest of the platform stays preserved internally.'
+              ? copy.productsDescriptionDemo
               : variant === 'platform'
-                ? 'Keep the commercial product surface clear and expose only what is ready to be shown.'
-                : 'Open the contracted module surfaces that matter right now.'}
+                ? copy.productsDescriptionPlatform
+                : copy.productsDescriptionCustomer}
           </p>
         </div>
 
@@ -194,13 +195,13 @@ export default function DashboardPage() {
           <DashboardNotice message={platform.modules.error} />
         ) : platform.modules.loading ? (
           <div className="rounded-lg border border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-panel-muted)] px-4 py-3 text-sm text-[color:var(--app-shell-muted)]">
-            Loading product visibility...
+            {copy.productsLoading}
           </div>
         ) : visibleModules.length === 0 ? (
           <EmptyStateCard
-            title="No visible products"
-            description="No contracted product surface is currently being exposed for this workspace."
-            actionLabel="Open settings"
+            title={copy.productsEmptyTitle}
+            description={copy.productsEmptyDescription}
+            actionLabel={copy.openSettings}
             href="/settings"
           />
         ) : (
@@ -230,14 +231,14 @@ export default function DashboardPage() {
 
                   <p className="mt-4 text-sm text-[color:var(--app-shell-muted)]">
                     {moduleItem.available
-                      ? 'Visible in the current workspace.'
-                      : 'Kept out of the main surface until the workspace is fully ready.'}
+                      ? copy.productVisible
+                      : copy.productHidden}
                   </p>
 
                   {moduleItem.available ? (
                     <p className="mt-2 text-sm text-[color:var(--app-shell-muted)]">
                       {priorityActions.find((action) => action.eyebrow === moduleItem.code)?.title
-                        ?? 'Open the module home to continue with the current workspace scope.'}
+                        ?? copy.productOpenHint}
                     </p>
                   ) : null}
 
@@ -246,11 +247,11 @@ export default function DashboardPage() {
                       href={href}
                       className="mt-4 inline-flex text-sm font-medium text-[color:var(--tenant-accent)]"
                     >
-                      Open module
+                      {copy.openModule}
                     </Link>
                   ) : (
                     <p className="mt-4 text-sm font-medium text-[color:var(--app-shell-muted)]">
-                      This module stays paused in the main navigation for now.
+                      {copy.productPaused}
                     </p>
                   )}
                 </article>

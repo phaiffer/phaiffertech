@@ -1,3 +1,5 @@
+'use client';
+
 import Link from 'next/link';
 import {
   sharedCompactTextClass,
@@ -11,6 +13,7 @@ import {
   workspacePanelSurfaceStyle
 } from '@/shared/modules/module-workspace-visual';
 import type { DashboardQuickAction } from '@/shared/dashboard/contextual-dashboard';
+import { useAppMessages } from '@/shared/i18n/app-i18n-provider';
 
 type DashboardQuickActionsProps = {
   title: string;
@@ -23,6 +26,7 @@ export function DashboardQuickActions({
   description,
   actions
 }: DashboardQuickActionsProps) {
+  const copy = useAppMessages().screens.shell;
   return (
     <section className={`${sharedPanelSurfaceClass} p-5`} style={workspacePanelSurfaceStyle}>
       <div className="mb-5">
@@ -32,8 +36,8 @@ export function DashboardQuickActions({
 
       {actions.length === 0 ? (
         <EmptyStateCard
-          title="No quick actions available"
-          description="No contextual action is currently exposed for this workspace."
+          title={copy.noQuickActions}
+          description={copy.noQuickActionsDescription}
         />
       ) : (
         <div className="grid gap-4 xl:grid-cols-3">

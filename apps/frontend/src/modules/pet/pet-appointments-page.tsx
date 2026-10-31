@@ -507,6 +507,7 @@ function resolveServiceSummaryCopy(locale: string) {
 }
 
 export function PetAppointmentsPage() {
+  const screenCopy = useAppMessages().screens.petAppointments;
   const { locale } = useAppI18n();
   const messages = useAppMessages().petAppointments;
   const commonButtons = useAppMessages().common.buttons;
@@ -1347,25 +1348,25 @@ export function PetAppointmentsPage() {
     const parsedExtrasAmount = extrasAmount ? parseFloat(extrasAmount) : undefined;
     if (!editingId && selectedServiceEntries.some((entry) => entry.catalogService && !entry.catalogService.active)) {
       setSubmitting(false);
-      setError('Selected service is inactive for new bookings.');
+      setError(screenCopy.inactiveService);
       return;
     }
 
     if (!editingId && selectedServiceEntries.some((entry) => !entry.catalogService)) {
       setSubmitting(false);
-      setError('Legacy appointment services cannot be used for new bookings.');
+      setError(screenCopy.legacyService);
       return;
     }
 
     if (clientPlanId && selectedServiceEntries.some((entry) => !(entry.catalogService?.allowInPlans ?? entry.existingServiceLine?.allowInPlans))) {
       setSubmitting(false);
-      setError('At least one selected service is not available for plan-based appointments.');
+      setError(screenCopy.serviceNotInPlans);
       return;
     }
 
     if (!clientPlanId && selectedServiceEntries.some((entry) => !(entry.catalogService?.allowStandaloneBooking ?? entry.existingServiceLine?.allowStandaloneBooking))) {
       setSubmitting(false);
-      setError('At least one selected service requires a linked plan before booking.');
+      setError(screenCopy.serviceRequiresPlan);
       return;
     }
 
@@ -1854,7 +1855,7 @@ export function PetAppointmentsPage() {
                                 </div>
                                 {line.lineOrder === 0 ? (
                                   <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-700">
-                                    {locale === 'pt-BR' ? 'Linha principal' : 'Primary line'}
+                                    {screenCopy.primaryLine}
                                   </span>
                                 ) : null}
                               </div>

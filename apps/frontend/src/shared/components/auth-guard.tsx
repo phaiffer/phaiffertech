@@ -7,8 +7,10 @@ import {
   sharedPanelSurfaceClass
 } from '@/shared/components/public-visual-system';
 import { usePathname, useRouter } from 'next/navigation';
+import { useAppMessages } from '@/shared/i18n/app-i18n-provider';
 
 export function AuthGuard({ children }: { children: ReactNode }) {
+  const copy = useAppMessages().screens.shell;
   const { isLoading, isAuthenticated } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
@@ -23,8 +25,8 @@ export function AuthGuard({ children }: { children: ReactNode }) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background px-6">
         <div className={`${sharedPanelSurfaceClass} px-6 py-5`}>
-          <p className={`font-medium text-foreground`}>Carregando sessão...</p>
-          <p className={`mt-2 ${sharedCompactTextClass}`}>Sincronizando o workspace autenticado.</p>
+          <p className={`font-medium text-foreground`}>{copy.loadingSession}</p>
+          <p className={`mt-2 ${sharedCompactTextClass}`}>{copy.syncingWorkspace}</p>
         </div>
       </div>
     );

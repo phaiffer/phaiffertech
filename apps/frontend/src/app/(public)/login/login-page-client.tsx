@@ -49,6 +49,7 @@ function resolveNoticeMessage(reason: AuthNoticeReason | null, t: ReturnType<typ
 }
 
 export default function LoginPageClient({ nextPath }: LoginPageClientProps) {
+  const copy = useAppMessages().screens.shell;
   const router = useRouter();
   const t = useAppMessages().login;
   const supportCopy = t.support;
@@ -210,7 +211,7 @@ export default function LoginPageClient({ nextPath }: LoginPageClientProps) {
                   autoCorrect="off"
                   spellCheck={false}
                   className={sharedInputClass}
-                  placeholder="name@company.com"
+                  placeholder={copy.emailPlaceholder}
                   disabled={submitting}
                   required
                 />
@@ -290,7 +291,7 @@ export default function LoginPageClient({ nextPath }: LoginPageClientProps) {
         <section className="relative hidden overflow-hidden bg-slate-950 lg:flex">
           <Image
             src="/images/login-dog.jpg"
-            alt="Pet management login visual"
+            alt={copy.loginVisualAlt}
             fill
             priority
             className="object-cover"

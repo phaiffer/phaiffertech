@@ -74,6 +74,7 @@ function getInitials(name?: string) {
 }
 
 export function AppShell({ children }: { children: ReactNode }) {
+  const copy = useAppMessages().screens.shell;
   const pathname = usePathname();
   const { locale, setLocale } = useAppI18n();
   const { signOut } = useAuth();
@@ -154,7 +155,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                 <input
                   ref={searchInputRef}
                   type="text"
-                  placeholder="Buscar clientes, pets, agendamentos..."
+                  placeholder={copy.searchPlaceholder}
                   className="w-52 bg-transparent text-sm text-slate-900 outline-none placeholder:text-slate-500"
                   onKeyDown={(e) => {
                     if (e.key === 'Escape') setSearchOpen(false);
@@ -172,7 +173,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               <button
                 type="button"
                 onClick={() => setSearchOpen(true)}
-                aria-label="Buscar"
+                aria-label={copy.search}
                 className="flex h-9 w-9 items-center justify-center rounded-xl text-slate-500 transition-colors hover:bg-emerald-50 hover:text-slate-900"
               >
                 <Search className="h-4 w-4" />
@@ -213,17 +214,17 @@ export function AppShell({ children }: { children: ReactNode }) {
             <DropdownMenuTrigger asChild>
               <button
                 type="button"
-                aria-label="Notificações"
+                aria-label={copy.notifications}
                 className="relative flex h-9 w-9 items-center justify-center rounded-xl text-slate-500 transition-colors hover:bg-emerald-50 hover:text-slate-900"
               >
                 <Bell className="h-4 w-4" />
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-72">
-              <DropdownMenuLabel>Notificações</DropdownMenuLabel>
+              <DropdownMenuLabel>{copy.notifications}</DropdownMenuLabel>
               <DropdownMenuSeparator />
               <div className="px-2 py-4 text-center text-sm text-[var(--muted-foreground)]">
-                Nenhuma notificação no momento.
+                {copy.noNotifications}
               </div>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -252,7 +253,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               <DropdownMenuItem asChild>
                 <Link href="/settings" className="cursor-pointer">
                   <Settings className="h-4 w-4" />
-                  Configurações
+                  {copy.settings}
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
@@ -261,7 +262,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                 className="cursor-pointer text-[var(--destructive)] focus:text-[var(--destructive)]"
               >
                 <LogOut className="h-4 w-4" />
-                Sair
+                {copy.signOut}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -274,10 +275,10 @@ export function AppShell({ children }: { children: ReactNode }) {
                 <PetMark className="h-8 w-8 shrink-0 rounded-[0.95rem]" />
                 <div className="min-w-0">
                   <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[color:var(--accent)]">
-                    Administração da operação
+                    {copy.adminTitle}
                   </p>
                   <p className="text-sm text-slate-700">
-                    Superfície administrativa com assinatura discreta da
+                    {copy.adminSignature}
                     {' '}
                     <span className="font-medium text-slate-900">PhaifferTech</span>.
                   </p>
@@ -303,7 +304,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                 <div>
                   <p className="text-sm font-semibold text-slate-900">{messages.mobilePetWorkspace}</p>
                   <p className="text-xs text-slate-600">
-                    Continuação direta da experiência operacional.
+                    {copy.adminContinuation}
                   </p>
                 </div>
 

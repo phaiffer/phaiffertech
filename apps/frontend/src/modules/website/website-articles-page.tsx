@@ -7,8 +7,10 @@ import {
   WebsiteArticleGrid,
   WebsiteSplitSection
 } from './website-sections';
+import { useAppMessages } from '@/shared/i18n/app-i18n-provider';
 
 export function WebsiteArticlesPage() {
+  const copy = useAppMessages().screens.website;
   const { locale } = usePublicSite();
   const content = getWebsiteContent(locale).articles;
   const labels =
@@ -41,9 +43,7 @@ export function WebsiteArticlesPage() {
         eyebrow={labels.publishing}
         title={content.featuredTitle}
         description={
-          locale === 'pt-BR'
-            ? 'Estas notas apoiam a narrativa técnica da plataforma, mas o produto visível oficial hoje continua sendo a Gestão Pet.'
-            : 'These notes support the technical platform story, but Pet Management remains the official visible product surface today.'
+          copy.articlesNote
         }
       >
         <WebsiteArticleGrid items={content.items.slice(0, 2)} ctaLabel={labels.readInsight} />
