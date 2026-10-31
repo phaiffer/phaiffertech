@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { sharedPageStackClass } from '@/shared/components/public-visual-system';
 import { StatusBadge } from '@/shared/dashboard/status-badge';
+import { DARK_THEME_SUPPORTED } from '@/shared/lib/tenant-branding';
 import { useFrontendPlatform } from '@/shared/platform/use-frontend-platform';
 import { AccountSecurityPanel } from '@/shared/settings/account-security-panel';
 import { buildWorkspaceConfigurationOverview, type WorkspaceConfigurationField } from '@/shared/settings/workspace-configuration';
@@ -307,17 +308,19 @@ export function WorkspaceConfigurationOverview() {
                     />
                   </div>
                   
-                  <FormSelect
-                    label="Default Theme"
-                    value={formThemeMode}
-                    options={[
-                      {value: 'SYSTEM', label: 'System Default'},
-                      {value: 'LIGHT', label: 'Force Light Mode'},
-                      {value: 'DARK', label: 'Force Dark Mode'}
-                    ]}
-                    onChange={(val) => setFormThemeMode(val as 'LIGHT' | 'DARK' | 'SYSTEM')}
-                    disabled={submitting}
-                  />
+                  {DARK_THEME_SUPPORTED ? (
+                    <FormSelect
+                      label="Default Theme"
+                      value={formThemeMode}
+                      options={[
+                        {value: 'SYSTEM', label: 'System Default'},
+                        {value: 'LIGHT', label: 'Force Light Mode'},
+                        {value: 'DARK', label: 'Force Dark Mode'}
+                      ]}
+                      onChange={(val) => setFormThemeMode(val as 'LIGHT' | 'DARK' | 'SYSTEM')}
+                      disabled={submitting}
+                    />
+                  ) : null}
 
                   {error && (
                     <div className="ui-notice-error mt-4">{error}</div>

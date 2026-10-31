@@ -92,7 +92,7 @@ describe('FrontendPlatformProvider', () => {
     currentUser.roles = ['TENANT_ADMIN'];
   });
 
-  it('applies stored theme overrides and exposes contracted platform metadata', async () => {
+  it('keeps stored theme overrides while the document stays light and exposes contracted platform metadata', async () => {
     window.localStorage.setItem('app-shell-theme', 'dark');
 
     render(
@@ -102,7 +102,7 @@ describe('FrontendPlatformProvider', () => {
     );
 
     await waitFor(() => {
-      expect(document.documentElement.dataset.theme).toBe('dark');
+      expect(document.documentElement.dataset.theme).toBe('light');
     });
 
     expect(screen.getByTestId('theme-mode').textContent).toBe('dark');
@@ -126,10 +126,11 @@ describe('FrontendPlatformProvider', () => {
     );
 
     await waitFor(() => {
-      expect(document.documentElement.dataset.theme).toBe('dark');
+      expect(screen.getByTestId('theme-mode').textContent).toBe('dark');
     });
 
-    expect(screen.getByTestId('theme-mode').textContent).toBe('dark');
+    // Dark mode is not supported yet, so the tenant default never darkens the document.
+    expect(document.documentElement.dataset.theme).toBe('light');
     expect(window.localStorage.getItem('app-shell-theme')).toBeNull();
 
     fireEvent.click(screen.getByRole('button', { name: 'set-dark' }));

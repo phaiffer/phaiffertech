@@ -11,6 +11,9 @@ import {
 export type AppThemeMode = 'light' | 'dark' | 'system';
 
 export const APP_THEME_STORAGE_KEY = 'app-shell-theme';
+// Most surfaces still hard-code light palettes, so the document stays light until
+// dark mode is complete. Stored/tenant theme preferences are kept for that switch.
+export const DARK_THEME_SUPPORTED = false;
 export const APP_THEME_OPTIONS: AppThemeMode[] = ['dark', 'light', 'system'];
 
 export function toAppThemeMode(themeMode?: TenantThemeMode | AppThemeMode | null): AppThemeMode {
