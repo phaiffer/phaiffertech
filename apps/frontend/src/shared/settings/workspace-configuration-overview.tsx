@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { sharedPageStackClass } from '@/shared/components/public-visual-system';
 import { StatusBadge } from '@/shared/dashboard/status-badge';
+import { useAppI18n } from '@/shared/i18n/app-i18n-provider';
 import { DARK_THEME_SUPPORTED } from '@/shared/lib/tenant-branding';
 import { useFrontendPlatform } from '@/shared/platform/use-frontend-platform';
 import { AccountSecurityPanel } from '@/shared/settings/account-security-panel';
@@ -12,6 +13,8 @@ import { PageTitle } from '@/shared/ui/page-title';
 import { FormInput } from '@/shared/ui/form-input';
 import { FormSelect } from '@/shared/ui/form-select';
 import { tenantService } from '@/shared/services/tenant-service';
+
+type ThemeModeOption = 'LIGHT' | 'DARK' | 'SYSTEM';
 
 function FieldCard({ field }: { field: WorkspaceConfigurationField }) {
   return (
@@ -35,8 +38,10 @@ function monogram(scopeName: string) {
 
 export function WorkspaceConfigurationOverview() {
   const platform = useFrontendPlatform();
-  const overview = buildWorkspaceConfigurationOverview(platform);
-  
+  const { messages } = useAppI18n();
+  const copy = messages.workspaceSettings;
+  const overview = buildWorkspaceConfigurationOverview(platform, copy.overview);
+
   const [isEditorOpen, setIsEditorOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -45,7 +50,7 @@ export function WorkspaceConfigurationOverview() {
   const [formLogoUrl, setFormLogoUrl] = useState(platform.branding.logoUrl || '');
   const [formPrimary, setFormPrimary] = useState(platform.user?.tenantPrimaryColor || '#000000');
   const [formAccent, setFormAccent] = useState(platform.user?.tenantAccentColor || '#2563eb');
-  const [formThemeMode, setFormThemeMode] = useState(platform.user?.tenantDefaultThemeMode || 'SYSTEM');
+  const [formThemeMode, setFormThemeMode] = useState<ThemeModeOption>(platform.user?.tenantDefaultThemeMode || 'SYSTEM');
 
   function openEditor() {
     setFormName(platform.branding.scopeName);
@@ -60,7 +65,7 @@ export function WorkspaceConfigurationOverview() {
   async function handleSave(e: React.FormEvent) {
     e.preventDefault();
     if (!platform.user?.tenantId) return;
-    
+
     setSubmitting(true);
     setError(null);
 
@@ -71,7 +76,7 @@ export function WorkspaceConfigurationOverview() {
         logoUrl: formLogoUrl || null,
         primaryColor: formPrimary,
         accentColor: formAccent,
-        defaultThemeMode: formThemeMode as any,
+        defaultThemeMode: formThemeMode,
         allowUserThemeOverride: platform.user?.tenantAllowUserThemeOverride ?? true,
         contractedModules: platform.modules.contractedProducts.map(m => m.code),
         featureEntitlements: platform.user?.featureEntitlements ?? []
@@ -79,7 +84,7 @@ export function WorkspaceConfigurationOverview() {
       setIsEditorOpen(false);
       window.location.reload();
     } catch (err) {
-      setError((err as Error).message);
+      setError(err instanceof Error && err.message ? err.message : copy.editor.saveError);
     } finally {
       setSubmitting(false);
     }
@@ -87,14 +92,14 @@ export function WorkspaceConfigurationOverview() {
 
   return (
     <div className={sharedPageStackClass}>
-      <PageTitle 
-        eyebrow="Workspace settings" 
-        title="Workspace Configuration" 
+      <PageTitle
+        eyebrow={copy.eyebrow}
+        title={copy.title}
         description={overview.pageDescription}
         actions={
           platform.workspace.isPlatformOwnerTenant || platform.workspace.hasFullPlatformVisibility ? (
             <button onClick={openEditor} className="ui-primary-button">
-              Edit Workspace
+              {copy.editAction}
             </button>
           ) : undefined
         }
@@ -124,8 +129,8 @@ export function WorkspaceConfigurationOverview() {
         </PageSection>
 
         <PageSection
-          title="Plan and Status"
-          description="Keep the current workspace contract, readiness, and visibility model explicit before exposing future editing flows."
+          title={copy.planSectionTitle}
+          description={copy.planSectionDescription}
         >
           <div className="space-y-3">
             {overview.planFields.map((field) => (
@@ -135,22 +140,26 @@ export function WorkspaceConfigurationOverview() {
         </PageSection>
       </div>
 
-      <div className="grid gap-5 xl:grid-cols-[minmax(0,1.12fr)_minmax(0,0.88fr)]">
-        <PageSection title="Workspace Branding Preview" description={overview.brandingDescription}>
+      <div className={DARK_THEME_SUPPORTED ? 'grid gap-5 xl:grid-cols-[minmax(0,1.12fr)_minmax(0,0.88fr)]' : 'grid gap-5'}>
+        <PageSection title={copy.brandingSectionTitle} description={overview.brandingDescription}>
           <div className="grid gap-4 xl:grid-cols-[1.2fr,0.8fr]" style={platform.branding.style}>
             <div className="ui-surface-muted p-5 overflow-hidden">
               <div className="flex items-center gap-4">
                 <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-[color:var(--tenant-accent)] bg-[color:var(--tenant-accent-soft)] text-lg font-semibold text-[color:var(--tenant-accent)]">
                   {platform.branding.logoUrl ? (
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img src={platform.branding.logoUrl} alt={`${platform.branding.scopeName} logo`} className="h-full w-full object-contain" />
+                    <img
+                      src={platform.branding.logoUrl}
+                      alt={copy.logoAlt.replace('{name}', platform.branding.scopeName)}
+                      className="h-full w-full object-contain"
+                    />
                   ) : (
                     monogram(platform.branding.scopeName)
                   )}
                 </div>
                 <div className="min-w-0">
                   <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[color:var(--tenant-accent)] truncate">
-                    Controlled Accent Preview
+                    {copy.brandingPreviewEyebrow}
                   </p>
                   <h3 className="mt-2 text-lg font-semibold text-[color:var(--app-shell-heading)] truncate">
                     {platform.branding.scopeName}
@@ -163,16 +172,16 @@ export function WorkspaceConfigurationOverview() {
 
               <div className="mt-5 flex flex-wrap gap-3">
                 <span className="rounded-full border border-[color:var(--tenant-accent)] bg-[color:var(--tenant-accent-soft)] px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--tenant-accent)]">
-                  Accent chip
+                  {copy.accentChip}
                 </span>
                 <span className="rounded-full border border-[color:var(--app-shell-border)] bg-[color:var(--tenant-primary-soft)] px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--app-shell-heading)]">
-                  Primary support
+                  {copy.primaryChip}
                 </span>
                 <button
                   type="button"
                   className="ui-primary-button"
                 >
-                  Sample action
+                  {copy.sampleAction}
                 </button>
               </div>
             </div>
@@ -185,21 +194,23 @@ export function WorkspaceConfigurationOverview() {
           </div>
         </PageSection>
 
-        <PageSection title="Theme Policy" description={overview.themeDescription}>
-          <div className="grid gap-3">
-            {overview.themeFields.map((field) => (
-              <FieldCard key={field.label} field={field} />
-            ))}
-          </div>
-        </PageSection>
+        {DARK_THEME_SUPPORTED ? (
+          <PageSection title={copy.themeSectionTitle} description={overview.themeDescription}>
+            <div className="grid gap-3">
+              {overview.themeFields.map((field) => (
+                <FieldCard key={field.label} field={field} />
+              ))}
+            </div>
+          </PageSection>
+        ) : null}
       </div>
 
-      <PageSection title="Contracted Modules" description={overview.modulesDescription}>
+      <PageSection title={copy.modulesSectionTitle} description={overview.modulesDescription}>
         {platform.modules.error ? (
           <div className="ui-notice-error">{platform.modules.error}</div>
         ) : platform.modules.loading ? (
           <div className="ui-notice-neutral">
-            Loading workspace contract data...
+            {copy.modulesLoading}
           </div>
         ) : overview.contractedModules.length === 0 ? (
           <div className="ui-notice-neutral px-4 py-5">
@@ -257,14 +268,15 @@ export function WorkspaceConfigurationOverview() {
             <div className="mb-8 flex items-center justify-between">
                <div>
                  <h2 className="text-xl font-bold tracking-tight text-[color:var(--app-shell-heading)]">
-                   Edit Workspace
+                   {copy.editor.title}
                  </h2>
                  <p className="text-sm mt-1 text-[color:var(--app-shell-muted)]">
-                   Update branding, colors, and workspace name.
+                   {copy.editor.description}
                  </p>
                </div>
-               <button 
-                 onClick={() => setIsEditorOpen(false)} 
+               <button
+                 onClick={() => setIsEditorOpen(false)}
+                 aria-label={copy.editor.close}
                  className="rounded-full p-2 text-[color:var(--app-shell-muted)] hover:bg-[color:var(--app-shell-panel-muted)] hover:text-[color:var(--app-shell-heading)]"
                >
                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
@@ -274,24 +286,24 @@ export function WorkspaceConfigurationOverview() {
             <div className="space-y-6">
                <form onSubmit={handleSave} className="space-y-5 flex flex-col h-full">
                   <FormInput
-                    label="Workspace Name"
+                    label={copy.editor.nameLabel}
                     value={formName}
                     onChange={setFormName}
-                    placeholder="E.g. Acme Corp"
+                    placeholder={copy.editor.namePlaceholder}
                     disabled={submitting}
                     required
                   />
                   <FormInput
-                    label="Logo URL"
+                    label={copy.editor.logoLabel}
                     value={formLogoUrl}
                     onChange={setFormLogoUrl}
-                    placeholder="https://example.com/logo.png"
+                    placeholder={copy.editor.logoPlaceholder}
                     disabled={submitting}
                   />
 
                   <div className="grid gap-3 grid-cols-1 sm:grid-cols-2">
                     <FormInput
-                      label="Primary Color"
+                      label={copy.editor.primaryLabel}
                       value={formPrimary}
                       onChange={setFormPrimary}
                       type="color"
@@ -299,7 +311,7 @@ export function WorkspaceConfigurationOverview() {
                       className="h-10 cursor-pointer p-1"
                     />
                     <FormInput
-                      label="Accent Color"
+                      label={copy.editor.accentLabel}
                       value={formAccent}
                       onChange={setFormAccent}
                       type="color"
@@ -307,17 +319,17 @@ export function WorkspaceConfigurationOverview() {
                       className="h-10 cursor-pointer p-1"
                     />
                   </div>
-                  
+
                   {DARK_THEME_SUPPORTED ? (
                     <FormSelect
-                      label="Default Theme"
+                      label={copy.editor.themeLabel}
                       value={formThemeMode}
                       options={[
-                        {value: 'SYSTEM', label: 'System Default'},
-                        {value: 'LIGHT', label: 'Force Light Mode'},
-                        {value: 'DARK', label: 'Force Dark Mode'}
+                        {value: 'SYSTEM', label: copy.editor.themeSystem},
+                        {value: 'LIGHT', label: copy.editor.themeLight},
+                        {value: 'DARK', label: copy.editor.themeDark}
                       ]}
-                      onChange={(val) => setFormThemeMode(val as 'LIGHT' | 'DARK' | 'SYSTEM')}
+                      onChange={(val) => setFormThemeMode(val as ThemeModeOption)}
                       disabled={submitting}
                     />
                   ) : null}
@@ -332,10 +344,10 @@ export function WorkspaceConfigurationOverview() {
                       disabled={submitting || !formName}
                       className="ui-primary-button"
                     >
-                      {submitting ? 'Saving...' : 'Save Changes'}
+                      {submitting ? copy.editor.saving : copy.editor.save}
                     </button>
                     <button type="button" onClick={() => setIsEditorOpen(false)} className="ui-secondary-button">
-                      Cancel
+                      {copy.editor.cancel}
                     </button>
                   </div>
               </form>

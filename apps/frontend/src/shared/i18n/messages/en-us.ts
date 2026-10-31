@@ -1076,5 +1076,238 @@ export const enUSMessages: AppMessages = {
     nextCycleTitle: 'Next cycle billing preview',
     pipelineTitle: 'Billing pipeline',
     pipelineDescription: 'Review invoice status, open balance, and the finance record behind each charge.'
+  },
+  workspaceSettings: {
+    eyebrow: 'Settings',
+    title: 'Workspace settings',
+    editAction: 'Edit workspace',
+    planSectionTitle: 'Plan and status',
+    planSectionDescription: 'See the contracted plan, the workspace status, and what stays visible to the team.',
+    brandingSectionTitle: 'Brand preview',
+    brandingPreviewEyebrow: 'Color preview',
+    accentChip: 'Accent',
+    primaryChip: 'Primary color',
+    sampleAction: 'Sample action',
+    logoAlt: '{name} logo',
+    themeSectionTitle: 'Theme',
+    modulesSectionTitle: 'Contracted modules',
+    modulesLoading: 'Loading contracted modules...',
+    editor: {
+      title: 'Edit workspace',
+      description: 'Update the workspace name, logo, and colors.',
+      close: 'Close',
+      nameLabel: 'Workspace name',
+      namePlaceholder: 'E.g. Happy Paws Pet Shop',
+      logoLabel: 'Logo URL',
+      logoPlaceholder: 'https://example.com/logo.png',
+      primaryLabel: 'Primary color',
+      accentLabel: 'Accent color',
+      themeLabel: 'Default theme',
+      themeSystem: 'Follow the system',
+      themeLight: 'Always light',
+      themeDark: 'Always dark',
+      save: 'Save changes',
+      saving: 'Saving...',
+      cancel: 'Cancel',
+      saveError: 'Unable to save the changes right now.'
+    },
+    overview: {
+      pageDescription: {
+        platformOwner: 'Review the platform workspace identity, colors, theme, contracted modules, and status.',
+        internalSupport:
+          'Review the customer workspace configuration in support mode, without platform administration access.',
+        customer: 'Review the identity, colors, theme, contracted modules, and status of {name}.'
+      },
+      identityEyebrow: {
+        platformOwner: 'Platform administration',
+        internalSupport: 'Support mode',
+        customer: 'Your workspace'
+      },
+      identityDescription: {
+        platformOwner:
+          'This session is in the platform-owner workspace, where shared administration and customer management live.',
+        internalSupport:
+          'This session belongs to an internal support user inside a customer workspace. Access stays limited to that customer.',
+        customer: 'This session shows only the contract, colors, and modules of your workspace.'
+      },
+      fields: {
+        workspaceLabel: 'Workspace type',
+        workspaceLabelDescription: 'How this workspace is presented in the navigation.',
+        accessScope: 'Access scope',
+        accessScopeDescription: 'What this session can reach after the workspace and role are applied.',
+        tenantCode: 'Workspace code',
+        tenantCodeDescription: 'Fixed identifier used to sign in to this workspace.',
+        notAssigned: 'Not assigned',
+        sessionRole: 'Session role',
+        sessionUser: 'Signed-in user: {name}.',
+        sessionUserUnknown: 'User details are not available in this session.',
+        unknownRole: 'Unknown role'
+      },
+      workspaceLabels: {
+        support: 'Support session',
+        controlPlane: 'Platform control plane',
+        workspace: 'Customer workspace'
+      },
+      accessLabels: {
+        impersonation: 'Support access',
+        platformOwner: 'Platform owner workspace',
+        internalSupport: 'Internal support on customer contract',
+        contracted: 'Contracted workspace'
+      },
+      roles: {
+        PLATFORM_ADMIN: 'Platform admin',
+        SYS_ADMIN: 'System admin',
+        TENANT_OWNER: 'Workspace owner',
+        TENANT_ADMIN: 'Workspace admin',
+        MANAGER: 'Manager',
+        OPERATOR: 'Operator',
+        VIEWER: 'Viewer',
+        CUSTOMER_PORTAL_USER: 'Portal user'
+      },
+      plan: {
+        label: 'Plan',
+        platformOwner: {
+          value: 'Platform workspace',
+          description: 'This workspace belongs to PhaifferTech and hosts the platform administration.'
+        },
+        internalSupport: {
+          value: 'Internal support session',
+          description: 'Support is active, but access stays limited to this customer workspace.'
+        },
+        multiProduct: {
+          value: 'Multiple products',
+          description: '{count} contracted products are active in this workspace.'
+        },
+        singleProduct: {
+          value: 'Single product',
+          description: 'One contracted product is active in this workspace, alongside the core services.'
+        },
+        core: {
+          value: 'Core services only',
+          description: 'No product has been contracted yet; only the core services are active.'
+        }
+      },
+      status: {
+        label: 'Status',
+        error: {
+          value: 'Attention required',
+          description: 'The contracted modules of this workspace could not be confirmed.'
+        },
+        loading: {
+          value: 'Syncing',
+          description: 'The contracted modules are still loading.'
+        },
+        coreOnly: {
+          value: 'Core only',
+          description: 'No contracted modules; the workspace runs on the core services only.'
+        },
+        provisioning: {
+          value: 'Provisioning',
+          description: 'At least one contracted module is not yet available to the team.'
+        },
+        active: {
+          value: 'Active',
+          description: 'All contracted modules are available.'
+        }
+      },
+      visibility: {
+        label: 'Visibility',
+        platformOwner: {
+          value: 'Full platform visibility',
+          description: 'Only the platform-owner workspace can see the shared administration.'
+        },
+        internalSupport: {
+          value: 'Customer boundary',
+          description: 'Support mode does not turn this customer into a platform workspace.'
+        },
+        customer: {
+          value: 'Your workspace only',
+          description: 'The team sees only the contract, permissions, and modules of this workspace.'
+        }
+      },
+      branding: {
+        description: {
+          platformOwner: '{name} is the platform workspace. Its own colors appear only on accent surfaces.',
+          internalSupport: '{name} is being viewed in support mode, keeping the customer identity intact.',
+          customer: '{name} uses its colors on the accent surfaces of the system.'
+        },
+        policy:
+          'Workspace colors appear on accents. The layout, neutral panels, and the rest of the look follow the system design.',
+        primaryLabel: 'Primary color',
+        primaryDescription: 'Used for highlights and soft branded backgrounds.',
+        accentLabel: 'Accent color',
+        accentDescription: 'Used for main buttons, emphasis, and light callouts.',
+        logoLabel: 'Logo',
+        logoCustom: 'Custom logo active',
+        logoMonogram: 'Using initials',
+        logoCustomDescription: 'The uploaded logo appears in the header and accent areas.',
+        logoMonogramDescription: 'Without a logo, the system shows the workspace initials.'
+      },
+      theme: {
+        description: {
+          platformOwner: 'Theme default of the platform workspace and the rule applied to its users.',
+          internalSupport: 'The theme comes from the customer workspace being supported.',
+          customer: 'The theme follows the workspace default and the personalization rule available to the team.'
+        },
+        modes: {
+          light: 'Light',
+          dark: 'Dark',
+          system: 'System'
+        },
+        currentLabel: 'Current theme',
+        currentDescription: 'Theme in use in this browser.',
+        tenantDefaultLabel: 'Workspace default theme',
+        tenantDefaultOverridable: 'Applied when the user has not picked a theme.',
+        tenantDefaultEnforced: 'Applied to everyone because personalization is disabled.',
+        overrideLabel: 'Personalization',
+        overrideEnabled: 'Allowed for users',
+        overrideManaged: 'Set by the workspace',
+        overrideEnabledDescription: 'Each user may pick a theme without changing the workspace default.',
+        overrideManagedDescription: 'The theme is set centrally by the workspace.'
+      },
+      modules: {
+        description: {
+          platformOwner: 'Shows the contract, feature release, and final availability of each module separately.',
+          other: 'Only modules in this workspace contract appear here, with the availability of each one.'
+        },
+        catalog: {
+          PET: {
+            name: 'Pet Management',
+            description: 'Grooming schedule, clients, pets, plans, inventory, and billing.'
+          }
+        },
+        empty: 'No contracted module is available in this workspace. The core services remain active.',
+        available: 'Available in workspace',
+        availableDescription: 'The contracted module is already available to the team.',
+        pending: 'Pending release',
+        pendingDescription: 'The contract is active, but the module has not been released to the team yet.',
+        exposureEnabled: 'Features released',
+        exposureEnabledDescription: 'The screens of this module already appear in the menu.',
+        exposurePending: 'Features pending',
+        exposurePendingDescription: 'Some screens of this module are still locked.',
+        coreAccessNote:
+          'Core services (sign-in, users, and settings) are part of every workspace and are not contracted separately.'
+      }
+    },
+    security: {
+      title: 'Account security',
+      description: 'Change your password without leaving the system.',
+      activeAccount: 'Signed-in account',
+      tenant: 'Workspace',
+      signOutWarning:
+        'Changing the password signs out this browser, clears any saved support session, and ends the other sessions of this user.',
+      forgotPasswordHint:
+        'If you no longer have access to this session, use "Forgot password" on the sign-in screen to receive a reset link.',
+      currentPassword: 'Current password',
+      currentPasswordDescription: 'Confirm the current password before changing it.',
+      newPassword: 'New password',
+      newPasswordDescription: 'Use a password different from the current one.',
+      confirmNewPassword: 'Confirm new password',
+      submit: 'Update password',
+      submitting: 'Updating password...',
+      mismatch: 'The confirmation must match the new password.',
+      sameAsCurrent: 'The new password must be different from the current one.',
+      genericError: 'Unable to update the password right now.'
+    }
   }
 };
