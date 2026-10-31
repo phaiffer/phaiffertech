@@ -79,7 +79,7 @@ describe('AccountSecurityPanel', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Update password' }));
 
     expect(authService.changePassword).not.toHaveBeenCalled();
-    expect(screen.getByText('New password confirmation must match.')).toBeInTheDocument();
+    expect(screen.getByText('The confirmation must match the new password.')).toBeInTheDocument();
     expect(getSession()).toEqual(sessionFixture);
   });
 });

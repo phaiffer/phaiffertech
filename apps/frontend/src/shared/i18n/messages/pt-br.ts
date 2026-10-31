@@ -1082,6 +1082,241 @@ const ptBRMessages = {
     nextCycleTitle: 'Previsao de cobranca do proximo ciclo',
     pipelineTitle: 'Pipeline de cobranca',
     pipelineDescription: 'Revise status, saldo em aberto e o registro financeiro por tras de cada cobranca.'
+  },
+  workspaceSettings: {
+    eyebrow: 'Configurações',
+    title: 'Configurações do ambiente',
+    editAction: 'Editar ambiente',
+    planSectionTitle: 'Plano e situação',
+    planSectionDescription: 'Veja o plano contratado, a situação do ambiente e o que fica visível para a equipe.',
+    brandingSectionTitle: 'Prévia da identidade visual',
+    brandingPreviewEyebrow: 'Prévia das cores',
+    accentChip: 'Destaque',
+    primaryChip: 'Cor principal',
+    sampleAction: 'Ação de exemplo',
+    logoAlt: 'Logo de {name}',
+    themeSectionTitle: 'Tema',
+    modulesSectionTitle: 'Módulos contratados',
+    modulesLoading: 'Carregando os módulos contratados...',
+    editor: {
+      title: 'Editar ambiente',
+      description: 'Atualize o nome, o logo e as cores do ambiente.',
+      close: 'Fechar',
+      nameLabel: 'Nome do ambiente',
+      namePlaceholder: 'Ex.: Pet Shop Patas Felizes',
+      logoLabel: 'URL do logo',
+      logoPlaceholder: 'https://exemplo.com.br/logo.png',
+      primaryLabel: 'Cor principal',
+      accentLabel: 'Cor de destaque',
+      themeLabel: 'Tema padrão',
+      themeSystem: 'Seguir o sistema',
+      themeLight: 'Sempre claro',
+      themeDark: 'Sempre escuro',
+      save: 'Salvar alterações',
+      saving: 'Salvando...',
+      cancel: 'Cancelar',
+      saveError: 'Não foi possível salvar as alterações agora.'
+    },
+    overview: {
+      pageDescription: {
+        platformOwner:
+          'Revise a identidade, as cores, o tema, os módulos contratados e a situação do ambiente da plataforma.',
+        internalSupport:
+          'Revise a configuração do ambiente do cliente em modo de suporte, sem acesso à administração da plataforma.',
+        customer: 'Revise a identidade, as cores, o tema, os módulos contratados e a situação de {name}.'
+      },
+      identityEyebrow: {
+        platformOwner: 'Administração da plataforma',
+        internalSupport: 'Modo de suporte',
+        customer: 'Seu ambiente'
+      },
+      identityDescription: {
+        platformOwner:
+          'Esta sessão está no ambiente dono da plataforma, onde ficam a administração compartilhada e a gestão dos clientes.',
+        internalSupport:
+          'Esta sessão é de um usuário interno de suporte dentro do ambiente de um cliente. O acesso continua restrito a esse cliente.',
+        customer: 'Esta sessão mostra apenas o contrato, as cores e os módulos do seu ambiente.'
+      },
+      fields: {
+        workspaceLabel: 'Tipo de ambiente',
+        workspaceLabelDescription: 'Como este ambiente é apresentado na navegação.',
+        accessScope: 'Escopo de acesso',
+        accessScopeDescription: 'O que esta sessão alcança depois de aplicados o ambiente e o perfil.',
+        tenantCode: 'Código do ambiente',
+        tenantCodeDescription: 'Identificador fixo usado para entrar neste ambiente.',
+        notAssigned: 'Não definido',
+        sessionRole: 'Perfil da sessão',
+        sessionUser: 'Usuário conectado: {name}.',
+        sessionUserUnknown: 'Os dados do usuário não estão disponíveis nesta sessão.',
+        unknownRole: 'Perfil desconhecido'
+      },
+      workspaceLabels: {
+        support: 'Sessão de suporte',
+        controlPlane: 'Painel da plataforma',
+        workspace: 'Ambiente do cliente'
+      },
+      accessLabels: {
+        impersonation: 'Acesso como suporte',
+        platformOwner: 'Ambiente dono da plataforma',
+        internalSupport: 'Suporte interno no contrato do cliente',
+        contracted: 'Ambiente contratado'
+      },
+      roles: {
+        PLATFORM_ADMIN: 'Admin da plataforma',
+        SYS_ADMIN: 'Admin do sistema',
+        TENANT_OWNER: 'Dono do ambiente',
+        TENANT_ADMIN: 'Admin do ambiente',
+        MANAGER: 'Gestor',
+        OPERATOR: 'Operador',
+        VIEWER: 'Leitura',
+        CUSTOMER_PORTAL_USER: 'Usuário do portal'
+      },
+      plan: {
+        label: 'Plano',
+        platformOwner: {
+          value: 'Ambiente da plataforma',
+          description: 'Este ambiente pertence à PhaifferTech e concentra a administração da plataforma.'
+        },
+        internalSupport: {
+          value: 'Sessão de suporte interno',
+          description: 'O suporte está ativo, mas o acesso continua limitado ao ambiente deste cliente.'
+        },
+        multiProduct: {
+          value: 'Vários produtos',
+          description: '{count} produtos contratados estão ativos neste ambiente.'
+        },
+        singleProduct: {
+          value: 'Um produto',
+          description: 'Um produto contratado está ativo neste ambiente, junto com os serviços básicos.'
+        },
+        core: {
+          value: 'Somente serviços básicos',
+          description: 'Nenhum produto foi contratado ainda; só os serviços básicos estão ativos.'
+        }
+      },
+      status: {
+        label: 'Situação',
+        error: {
+          value: 'Requer atenção',
+          description: 'Não foi possível confirmar os módulos contratados deste ambiente.'
+        },
+        loading: {
+          value: 'Sincronizando',
+          description: 'Os módulos contratados ainda estão carregando.'
+        },
+        coreOnly: {
+          value: 'Somente básico',
+          description: 'Nenhum módulo contratado; o ambiente usa apenas os serviços básicos.'
+        },
+        provisioning: {
+          value: 'Em liberação',
+          description: 'Pelo menos um módulo contratado ainda não foi liberado para a equipe.'
+        },
+        active: {
+          value: 'Ativo',
+          description: 'Todos os módulos contratados estão disponíveis.'
+        }
+      },
+      visibility: {
+        label: 'Visibilidade',
+        platformOwner: {
+          value: 'Visão completa da plataforma',
+          description: 'Só o ambiente dono da plataforma pode ver a administração compartilhada.'
+        },
+        internalSupport: {
+          value: 'Limitado ao cliente',
+          description: 'O modo de suporte não transforma este cliente em ambiente da plataforma.'
+        },
+        customer: {
+          value: 'Limitado ao seu ambiente',
+          description: 'A equipe vê apenas o contrato, as permissões e os módulos deste ambiente.'
+        }
+      },
+      branding: {
+        description: {
+          platformOwner: '{name} é o ambiente da plataforma. As cores próprias aparecem só nos pontos de destaque.',
+          internalSupport: '{name} está sendo visto em modo de suporte, mantendo a identidade do cliente.',
+          customer: '{name} usa suas cores nos pontos de destaque do sistema.'
+        },
+        policy:
+          'As cores do ambiente aparecem nos destaques. O layout, os painéis neutros e o restante do visual seguem o padrão do sistema.',
+        primaryLabel: 'Cor principal',
+        primaryDescription: 'Usada em realces e fundos suaves com a marca.',
+        accentLabel: 'Cor de destaque',
+        accentDescription: 'Usada em botões principais, ênfases e avisos leves.',
+        logoLabel: 'Logo',
+        logoCustom: 'Logo próprio ativo',
+        logoMonogram: 'Usando as iniciais',
+        logoCustomDescription: 'O logo enviado aparece no cabeçalho e nos destaques.',
+        logoMonogramDescription: 'Sem logo cadastrado, o sistema mostra as iniciais do ambiente.'
+      },
+      theme: {
+        description: {
+          platformOwner: 'Padrão de tema do ambiente da plataforma e a regra aplicada aos usuários.',
+          internalSupport: 'O tema vem do ambiente do cliente que está sendo atendido.',
+          customer: 'O tema segue o padrão do ambiente e a regra de personalização liberada para a equipe.'
+        },
+        modes: {
+          light: 'Claro',
+          dark: 'Escuro',
+          system: 'Sistema'
+        },
+        currentLabel: 'Tema atual',
+        currentDescription: 'Tema em uso neste navegador.',
+        tenantDefaultLabel: 'Tema padrão do ambiente',
+        tenantDefaultOverridable: 'Aplicado quando o usuário não escolheu um tema próprio.',
+        tenantDefaultEnforced: 'Aplicado a todos, porque a personalização está desativada.',
+        overrideLabel: 'Personalização',
+        overrideEnabled: 'Liberada para o usuário',
+        overrideManaged: 'Definida pelo ambiente',
+        overrideEnabledDescription: 'Cada usuário pode escolher o próprio tema sem mudar o padrão do ambiente.',
+        overrideManagedDescription: 'O tema é definido de forma central pelo ambiente.'
+      },
+      modules: {
+        description: {
+          platformOwner:
+            'Mostra separadamente o contrato, a liberação de recursos e a disponibilidade final de cada módulo.',
+          other: 'Aparecem aqui apenas os módulos do contrato deste ambiente, com a disponibilidade de cada um.'
+        },
+        catalog: {
+          PET: {
+            name: 'Gestão Pet',
+            description: 'Agenda de banho e tosa, clientes, pets, planos, estoque e cobrança.'
+          }
+        },
+        empty: 'Nenhum módulo contratado está disponível neste ambiente. Os serviços básicos continuam ativos.',
+        available: 'Disponível no ambiente',
+        availableDescription: 'O módulo contratado já está liberado para a equipe.',
+        pending: 'Aguardando liberação',
+        pendingDescription: 'O contrato está ativo, mas o módulo ainda não foi liberado para a equipe.',
+        exposureEnabled: 'Recursos liberados',
+        exposureEnabledDescription: 'As telas deste módulo já aparecem no menu.',
+        exposurePending: 'Recursos pendentes',
+        exposurePendingDescription: 'Algumas telas deste módulo ainda estão bloqueadas.',
+        coreAccessNote:
+          'Os serviços básicos (login, usuários e configurações) fazem parte de todo ambiente e não são contratados à parte.'
+      }
+    },
+    security: {
+      title: 'Segurança da conta',
+      description: 'Troque sua senha sem sair do sistema.',
+      activeAccount: 'Conta conectada',
+      tenant: 'Ambiente',
+      signOutWarning:
+        'Ao trocar a senha, este navegador é desconectado, qualquer sessão de suporte salva é apagada e as demais sessões do usuário são encerradas.',
+      forgotPasswordHint:
+        'Se você não tiver mais acesso a esta sessão, use "Esqueci minha senha" na tela de login para receber um link de redefinição.',
+      currentPassword: 'Senha atual',
+      currentPasswordDescription: 'Confirme a senha atual antes de trocá-la.',
+      newPassword: 'Nova senha',
+      newPasswordDescription: 'Use uma senha diferente da atual.',
+      confirmNewPassword: 'Confirme a nova senha',
+      submit: 'Atualizar senha',
+      submitting: 'Atualizando senha...',
+      mismatch: 'A confirmação precisa ser igual à nova senha.',
+      sameAsCurrent: 'A nova senha precisa ser diferente da atual.',
+      genericError: 'Não foi possível atualizar a senha agora.'
+    }
   }
 } as const;
 
