@@ -8,6 +8,7 @@ import com.phaiffertech.platform.modules.pet.appointment.dto.PetAppointmentUpdat
 import com.phaiffertech.platform.shared.crud.BaseCrudMapper;
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.UUID;
 
 public final class PetAppointmentMapper implements BaseCrudMapper<
         PetAppointment,
@@ -76,7 +77,7 @@ public final class PetAppointmentMapper implements BaseCrudMapper<
 
     @Override
     public PetAppointmentResponse toResponse(PetAppointment appointment) {
-        return toResponse(appointment, null, null, null, List.of(), 0, null, null, 0, 0, 0, null);
+        return toResponse(appointment, null, null, null, List.of(), 0, null, null, 0, 0, 0, null, null);
     }
 
     public PetAppointmentResponse toResponse(
@@ -91,7 +92,8 @@ public final class PetAppointmentMapper implements BaseCrudMapper<
             int medicalRecordCount,
             int vaccinationCount,
             int prescriptionCount,
-            Integer planRemainingSessions
+            Integer planRemainingSessions,
+            UUID invoiceId
     ) {
         boolean planCovered = isPlanCovered(appointment);
         BigDecimal finalAmountDue = resolveFinalAmountDue(appointment);
@@ -126,7 +128,8 @@ public final class PetAppointmentMapper implements BaseCrudMapper<
                 appointment.getExtrasAmount(),
                 appointment.getExtrasDescription(),
                 planCovered,
-                finalAmountDue
+                finalAmountDue,
+                invoiceId
         );
     }
 

@@ -165,6 +165,8 @@ class PetIntegrationTest extends AbstractIntegrationTest {
         ResponseEntity<JsonNode> createAppointment = post("/pet/appointments", appointmentPayload, session);
         assertEquals(200, createAppointment.getStatusCode().value());
         String appointmentId = requireBody(createAppointment).path("data").path("id").asText();
+        // Jackson omits nulls (non_null inclusion), so an unbilled appointment has no invoiceId field.
+        assertFalse(requireBody(createAppointment).path("data").hasNonNull("invoiceId"));
 
         ResponseEntity<JsonNode> notCompleted = post("/pet/invoices/from-appointment/" + appointmentId, Map.of(), session);
         assertEquals(409, notCompleted.getStatusCode().value());
@@ -185,6 +187,17 @@ class PetIntegrationTest extends AbstractIntegrationTest {
         ResponseEntity<JsonNode> again = post("/pet/invoices/from-appointment/" + appointmentId, Map.of(), session);
         assertEquals(200, again.getStatusCode().value());
         assertEquals(invoice.path("id").asText(), requireBody(again).path("data").path("id").asText());
+
+        // The appointment exposes its invoice so the agenda keeps showing "open invoice" after a reload.
+        ResponseEntity<JsonNode> reloaded = get("/pet/appointments/" + appointmentId, session);
+        assertEquals(200, reloaded.getStatusCode().value());
+        assertEquals(invoice.path("id").asText(), requireBody(reloaded).path("data").path("invoiceId").asText());
+
+        ResponseEntity<JsonNode> listed = get("/pet/appointments?page=0&size=20&clientId=" + clientId, session);
+        assertEquals(200, listed.getStatusCode().value());
+        JsonNode listedAppointment = requireBody(listed).path("data").path("items").get(0);
+        assertEquals(appointmentId, listedAppointment.path("id").asText());
+        assertEquals(invoice.path("id").asText(), listedAppointment.path("invoiceId").asText());
     }
 
     @Test

@@ -77,6 +77,8 @@ export type PetAppointment = {
   planCovered?: boolean;
   // finalAmountDue: computed checkout total. planCovered -> extrasAmount only, else servicePrice + extrasAmount.
   finalAmountDue?: number;
+  // Active invoice generated from this appointment; null until the checkout is billed.
+  invoiceId?: string | null;
 };
 
 export type PetServiceInventoryConsumptionRule = 'FIXED_PER_SERVICE';

@@ -44,6 +44,8 @@ public record PetAppointmentResponse(
         // planCovered: true when the base service is covered by the associated plan session.
         boolean planCovered,
         // finalAmountDue: computed checkout total. planCovered -> extrasAmount only, else servicePrice + extrasAmount.
-        BigDecimal finalAmountDue
+        BigDecimal finalAmountDue,
+        // Active (non-canceled) invoice generated from this appointment, null when not billed yet.
+        UUID invoiceId
 ) {
 }

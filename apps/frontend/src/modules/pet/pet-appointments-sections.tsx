@@ -956,7 +956,7 @@ export function createPetAppointmentColumns({
           ) : null}
           {appointment.status.toUpperCase() === 'COMPLETED' && (appointment.finalAmountDue ?? 0) > 0 ? (
             <PermissionGuard permission="pet.invoice.create">
-              {invoicedAppointmentIds.has(appointment.id) ? (
+              {appointment.invoiceId || invoicedAppointmentIds.has(appointment.id) ? (
                 <Link
                   href="/pet/invoices"
                   className="rounded-lg border border-emerald-300 px-2 py-1 text-xs font-medium text-emerald-700"

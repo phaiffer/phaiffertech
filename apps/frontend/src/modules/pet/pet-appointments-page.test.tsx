@@ -324,6 +324,44 @@ describe('PetAppointmentsPage', () => {
     expect(screen.getByRole('link', { name: 'Open invoice' })).toHaveAttribute('href', '/pet/invoices');
   });
 
+  it('keeps showing the open invoice link for an appointment billed before the page loaded', async () => {
+    setGrantedPermissions(['pet.appointment.read', 'pet.invoice.create']);
+    petServiceMock.listAppointments.mockResolvedValue(createPageResponse([
+      {
+        id: 'appointment-3',
+        clientId: 'client-1',
+        clientName: 'Owner Example',
+        petId: 'pet-1',
+        petName: 'Pet Example',
+        serviceId: 'service-1',
+        serviceName: 'Bath',
+        professionalId: 'professional-1',
+        professionalName: 'Dr Example',
+        scheduledAt: '2026-03-10T10:00:00Z',
+        status: 'COMPLETED',
+        finalAmountDue: 70,
+        servicePrice: 70,
+        invoiceId: 'invoice-9',
+        medicalRecordCount: 0,
+        vaccinationCount: 0,
+        prescriptionCount: 0,
+        createdAt: '2026-03-10T10:00:00Z',
+        updatedAt: '2026-03-10T10:00:00Z'
+      }
+    ]));
+
+    render(<PetAppointmentsPage />);
+
+    const switchToListButton = await screen.findByRole('button', { name: 'Switch to list' }).catch(() => null);
+    if (switchToListButton) {
+      fireEvent.click(switchToListButton);
+    }
+
+    expect(await screen.findByRole('link', { name: 'Open invoice' })).toHaveAttribute('href', '/pet/invoices');
+    expect(screen.queryByRole('button', { name: 'Generate invoice' })).not.toBeInTheDocument();
+    expect(petServiceMock.generateInvoiceFromAppointment).not.toHaveBeenCalled();
+  });
+
   it('shows structured service context and warns when the selected service requires a plan', async () => {
     setGrantedPermissions([
       'pet.appointment.read',
