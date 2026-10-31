@@ -7,6 +7,7 @@ import com.phaiffertech.platform.modules.pet.appointment.repository.PetAppointme
 import com.phaiffertech.platform.modules.pet.appointment.repository.PetAppointmentServiceLineInventoryPlanRepository;
 import com.phaiffertech.platform.modules.pet.appointment.repository.PetAppointmentServiceLineRepository;
 import com.phaiffertech.platform.modules.pet.client.repository.PetClientRepository;
+import com.phaiffertech.platform.modules.pet.invoice.repository.PetInvoiceRepository;
 import com.phaiffertech.platform.modules.pet.medical.prescription.repository.PetPrescriptionRepository;
 import com.phaiffertech.platform.modules.pet.medical.record.repository.PetMedicalRecordRepository;
 import com.phaiffertech.platform.modules.pet.medical.vaccination.repository.PetVaccinationRepository;
@@ -55,7 +56,8 @@ class PetAppointmentServiceTest {
             mock(PlanTemplateServiceRepository.class),
             operationalTriggerService,
             mock(PetServiceCatalogCategoryPolicyService.class),
-            mock(CurrentUserService.class)
+            mock(CurrentUserService.class),
+            mock(PetInvoiceRepository.class)
     );
 
     @Test

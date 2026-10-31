@@ -59,6 +59,32 @@ public interface PetInvoiceRepository extends JpaRepository<PetInvoice, UUID>, B
             @Param("excludedStatus") FinanceInvoiceStatus excludedStatus
     );
 
+    /**
+     * Links each appointment to its active (non-excluded) invoice, newest first, in one query
+     * so appointment listings can tell which checkouts were already billed.
+     */
+    @Query("""
+            SELECT f.businessContextId AS appointmentId, i.id AS invoiceId
+            FROM PetInvoice i
+            JOIN i.financeInvoice f
+            WHERE i.tenantId = :tenantId
+              AND f.businessContextType = 'PET.APPOINTMENT'
+              AND f.businessContextId IN :appointmentIds
+              AND f.status <> :excludedStatus
+            ORDER BY COALESCE(f.issuedAt, f.createdAt) DESC
+            """)
+    java.util.List<AppointmentInvoiceLink> findAppointmentInvoiceLinks(
+            @Param("tenantId") UUID tenantId,
+            @Param("appointmentIds") Collection<UUID> appointmentIds,
+            @Param("excludedStatus") FinanceInvoiceStatus excludedStatus
+    );
+
+    interface AppointmentInvoiceLink {
+        UUID getAppointmentId();
+
+        UUID getInvoiceId();
+    }
+
     @Query("""
             SELECT COUNT(i)
             FROM PetInvoice i

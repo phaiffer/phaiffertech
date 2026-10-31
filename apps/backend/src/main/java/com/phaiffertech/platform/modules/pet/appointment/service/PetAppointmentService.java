@@ -25,7 +25,9 @@ import com.phaiffertech.platform.modules.pet.appointment.mapper.PetAppointmentMa
 import com.phaiffertech.platform.modules.pet.appointment.repository.PetAppointmentRepository;
 import com.phaiffertech.platform.modules.pet.appointment.repository.PetAppointmentServiceLineInventoryPlanRepository;
 import com.phaiffertech.platform.modules.pet.appointment.repository.PetAppointmentServiceLineRepository;
+import com.phaiffertech.platform.core.finance.domain.FinanceInvoiceStatus;
 import com.phaiffertech.platform.modules.pet.client.domain.PetClient;
+import com.phaiffertech.platform.modules.pet.invoice.repository.PetInvoiceRepository;
 import com.phaiffertech.platform.modules.pet.client.repository.PetClientRepository;
 import com.phaiffertech.platform.modules.pet.medical.prescription.domain.PetPrescription;
 import com.phaiffertech.platform.modules.pet.medical.prescription.repository.PetPrescriptionRepository;
@@ -105,6 +107,7 @@ public class PetAppointmentService extends BaseTenantCrudService<
     private final PetOperationalTriggerService operationalTriggerService;
     private final PetServiceCatalogCategoryPolicyService serviceCatalogCategoryPolicyService;
     private final CurrentUserService currentUserService;
+    private final PetInvoiceRepository petInvoiceRepository;
 
     public PetAppointmentService(
             PetAppointmentRepository repository,
@@ -125,7 +128,8 @@ public class PetAppointmentService extends BaseTenantCrudService<
             PlanTemplateServiceRepository planTemplateServiceRepository,
             PetOperationalTriggerService operationalTriggerService,
             PetServiceCatalogCategoryPolicyService serviceCatalogCategoryPolicyService,
-            CurrentUserService currentUserService
+            CurrentUserService currentUserService,
+            PetInvoiceRepository petInvoiceRepository
     ) {
         super(repository, repository, PetAppointmentMapper.INSTANCE, "Pet appointment not found.");
         this.repository = repository;
@@ -147,6 +151,7 @@ public class PetAppointmentService extends BaseTenantCrudService<
         this.operationalTriggerService = operationalTriggerService;
         this.serviceCatalogCategoryPolicyService = serviceCatalogCategoryPolicyService;
         this.currentUserService = currentUserService;
+        this.petInvoiceRepository = petInvoiceRepository;
     }
 
     @Transactional
@@ -218,6 +223,9 @@ public class PetAppointmentService extends BaseTenantCrudService<
                 tenantId,
                 appointments.getContent()
         );
+        Map<UUID, UUID> invoiceIds = loadAppointmentInvoiceIds(tenantId, appointments.getContent().stream()
+                .map(PetAppointment::getId)
+                .collect(Collectors.toSet()));
         Page<PetAppointmentResponse> mapped = appointments.map(appointment ->
                 toValidatedResponse(
                         appointment,
@@ -227,7 +235,8 @@ public class PetAppointmentService extends BaseTenantCrudService<
                         appointmentServices,
                         medicalRecordCounts,
                         vaccinationCounts,
-                        prescriptionCounts
+                        prescriptionCounts,
+                        invoiceIds
                 ));
 
         return PaginationUtils.fromPage(mapped);
@@ -563,8 +572,28 @@ public class PetAppointmentService extends BaseTenantCrudService<
                 Math.toIntExact(petMedicalRecordRepository.countByTenantIdAndAppointmentId(tenantId, appointment.getId())),
                 Math.toIntExact(petVaccinationRepository.countByTenantIdAndAppointmentId(tenantId, appointment.getId())),
                 Math.toIntExact(petPrescriptionRepository.countByTenantIdAndAppointmentId(tenantId, appointment.getId())),
-                planRemaining
+                planRemaining,
+                loadAppointmentInvoiceIds(tenantId, List.of(appointment.getId())).get(appointment.getId())
         );
+    }
+
+    /**
+     * Maps appointment id to its active invoice id. Canceled invoices are ignored so a
+     * re-billed checkout points at the replacement; the newest invoice wins on ties,
+     * matching PetInvoiceService.ensureAppointmentInvoice.
+     */
+    private Map<UUID, UUID> loadAppointmentInvoiceIds(UUID tenantId, Collection<UUID> appointmentIds) {
+        List<UUID> ids = appointmentIds.stream().filter(Objects::nonNull).distinct().toList();
+        if (ids.isEmpty()) {
+            return Map.of();
+        }
+        return petInvoiceRepository.findAppointmentInvoiceLinks(tenantId, ids, FinanceInvoiceStatus.CANCELED)
+                .stream()
+                .collect(Collectors.toMap(
+                        PetInvoiceRepository.AppointmentInvoiceLink::getAppointmentId,
+                        PetInvoiceRepository.AppointmentInvoiceLink::getInvoiceId,
+                        (newest, older) -> newest
+                ));
     }
 
     private Integer resolvePlanRemainingSessions(UUID tenantId, UUID clientPlanId) {
@@ -584,7 +613,8 @@ public class PetAppointmentService extends BaseTenantCrudService<
             Map<UUID, List<PetAppointmentServiceLineResponse>> appointmentServices,
             Map<UUID, Integer> medicalRecordCounts,
             Map<UUID, Integer> vaccinationCounts,
-            Map<UUID, Integer> prescriptionCounts
+            Map<UUID, Integer> prescriptionCounts,
+            Map<UUID, UUID> invoiceIds
     ) {
         validateContractIntegrity(appointment);
         UUID tenantId = currentTenantId();
@@ -604,7 +634,8 @@ public class PetAppointmentService extends BaseTenantCrudService<
                 medicalRecordCounts.getOrDefault(appointment.getId(), 0),
                 vaccinationCounts.getOrDefault(appointment.getId(), 0),
                 prescriptionCounts.getOrDefault(appointment.getId(), 0),
-                planRemaining
+                planRemaining,
+                invoiceIds.get(appointment.getId())
         );
     }
 
