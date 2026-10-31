@@ -40,6 +40,7 @@ import { PageSection } from '@/shared/ui/page-section';
 import { PageTitle } from '@/shared/ui/page-title';
 import { Pagination } from '@/shared/ui/pagination';
 import { SearchBar } from '@/shared/ui/search-bar';
+import { resolveApiErrorMessage } from '@/shared/lib/api-error-message';
 
 const pageSize = 10;
 const financePreviewSize = 8;
@@ -441,7 +442,7 @@ export function PetInvoicesPage() {
       });
       setPageData(result);
     } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : copy.loadError);
+      setError(resolveApiErrorMessage(err, copy.loadError));
     } finally {
       setLoading(false);
     }
@@ -492,14 +493,14 @@ export function PetInvoicesPage() {
           setPreviewPlans(resolvePageItems(plansResult.value));
         } else {
           setPreviewPlans([]);
-          nextErrors.push(plansResult.reason instanceof Error ? plansResult.reason.message : copy.nextCyclePlansError);
+          nextErrors.push(resolveApiErrorMessage(plansResult.reason, copy.nextCyclePlansError));
         }
 
         if (appointmentsResult.status === 'fulfilled') {
           setPreviewAppointments(resolvePageItems(appointmentsResult.value));
         } else {
           setPreviewAppointments([]);
-          nextErrors.push(appointmentsResult.reason instanceof Error ? appointmentsResult.reason.message : copy.nextCycleAppointmentsError);
+          nextErrors.push(resolveApiErrorMessage(appointmentsResult.reason, copy.nextCycleAppointmentsError));
         }
 
         setPreviewError(nextErrors.length > 0 ? nextErrors.join(' ') : null);
@@ -574,9 +575,7 @@ export function PetInvoicesPage() {
         } else {
           setFinanceInvoice(null);
           nextErrors.push(
-            invoiceResult.reason instanceof Error
-              ? invoiceResult.reason.message
-              : copy.financeInvoiceError
+            resolveApiErrorMessage(invoiceResult.reason, copy.financeInvoiceError)
           );
         }
 
@@ -585,9 +584,7 @@ export function PetInvoicesPage() {
         } else {
           setCashMovements([]);
           nextErrors.push(
-            cashResult.reason instanceof Error
-              ? cashResult.reason.message
-              : copy.cashMovementsError
+            resolveApiErrorMessage(cashResult.reason, copy.cashMovementsError)
           );
         }
 
@@ -596,9 +593,7 @@ export function PetInvoicesPage() {
         } else {
           setPaymentEvents([]);
           nextErrors.push(
-            eventsResult.reason instanceof Error
-              ? eventsResult.reason.message
-              : copy.billingHistoryError
+            resolveApiErrorMessage(eventsResult.reason, copy.billingHistoryError)
           );
         }
 
@@ -815,7 +810,7 @@ export function PetInvoicesPage() {
       resetForm();
       await load(pageData.page, search, clientFilterId, statusFilter);
     } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : copy.saveError);
+      setError(resolveApiErrorMessage(err, copy.saveError));
     } finally {
       setSubmitting(false);
     }
@@ -854,7 +849,7 @@ export function PetInvoicesPage() {
       resetPaymentForm();
       await load(pageData.page, search, clientFilterId, statusFilter);
     } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : copy.paymentError);
+      setError(resolveApiErrorMessage(err, copy.paymentError));
     } finally {
       setPaymentSubmitting(false);
     }
@@ -875,7 +870,7 @@ export function PetInvoicesPage() {
       }
       await load(pageData.page, search, clientFilterId, statusFilter);
     } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : copy.deleteError);
+      setError(resolveApiErrorMessage(err, copy.deleteError));
     }
   }
 

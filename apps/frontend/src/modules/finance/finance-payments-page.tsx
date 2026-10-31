@@ -7,7 +7,6 @@ import {
   sharedPageStackClass
 } from '@/shared/components/public-visual-system';
 import { StatusBadge } from '@/shared/dashboard/status-badge';
-import { ApiClientError } from '@/shared/lib/http';
 import { resolvePageItems, resolveTotalItems } from '@/shared/lib/pagination';
 import { financeService } from '@/shared/services/finance-service';
 import { PageResponse } from '@/shared/types/common';
@@ -17,6 +16,7 @@ import { FormSelect } from '@/shared/ui/form-select';
 import { PageSection } from '@/shared/ui/page-section';
 import { PageTitle } from '@/shared/ui/page-title';
 import { Pagination } from '@/shared/ui/pagination';
+import { resolveApiErrorMessage } from '@/shared/lib/api-error-message';
 
 const pageSize = 20;
 
@@ -140,7 +140,7 @@ export function FinancePaymentsPage() {
         });
         setPageData(data);
       } catch (err) {
-        setError(err instanceof ApiClientError ? err.message : 'Erro ao carregar pagamentos.');
+        setError(resolveApiErrorMessage(err, 'Erro ao carregar pagamentos.'));
       } finally {
         setLoading(false);
       }

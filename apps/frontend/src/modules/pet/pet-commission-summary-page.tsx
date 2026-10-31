@@ -21,6 +21,7 @@ import { PageSection } from '@/shared/ui/page-section';
 import { PageTitle } from '@/shared/ui/page-title';
 import { useAppMessages } from '@/shared/i18n/app-i18n-provider';
 import type { AppMessages } from '@/shared/i18n/messages/pt-br';
+import { resolveApiErrorMessage } from '@/shared/lib/api-error-message';
 
 const locale = 'pt-BR';
 const allProfessionalsOption = '__all__';
@@ -145,7 +146,7 @@ export function PetCommissionSummaryPage() {
       setPendingInvoices(resolvePageItems(invoicesPage).filter((invoice) => invoice.status !== 'PAID' && invoice.status !== 'CANCELED' && invoice.outstandingAmount > 0));
       setEndingPlans(resolvePageItems(plansPage).filter((plan) => plan.remainingSessions > 0 && plan.remainingSessions <= 2));
     } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : screenCopy.loadError);
+      setError(resolveApiErrorMessage(err, screenCopy.loadError));
     } finally {
       setLoading(false);
     }

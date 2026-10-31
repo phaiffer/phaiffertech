@@ -30,6 +30,7 @@ import { Pagination } from '@/shared/ui/pagination';
 import { SearchBar } from '@/shared/ui/search-bar';
 import { useAppMessages } from '@/shared/i18n/app-i18n-provider';
 import type { AppMessages } from '@/shared/i18n/messages/pt-br';
+import { resolveApiErrorMessage } from '@/shared/lib/api-error-message';
 
 type PetProfilesPageProps = {
   initialView?: 'list' | 'create';
@@ -151,7 +152,7 @@ export function PetProfilesPage({ initialView = 'list' }: PetProfilesPageProps) 
       });
       setPageData(result);
     } catch (err) {
-      const message = err instanceof ApiClientError ? err.message : copy.loadErrorPets;
+      const message = resolveApiErrorMessage(err, copy.loadErrorPets);
       setError(message);
     } finally {
       setLoading(false);
@@ -284,7 +285,7 @@ export function PetProfilesPage({ initialView = 'list' }: PetProfilesPageProps) 
       resetForm();
       await load(pageData.page, search, clientFilterId);
     } catch (err) {
-      const message = err instanceof ApiClientError ? err.message : copy.saveErrorPet;
+      const message = resolveApiErrorMessage(err, copy.saveErrorPet);
       setError(message);
     } finally {
       setSubmitting(false);
@@ -302,7 +303,7 @@ export function PetProfilesPage({ initialView = 'list' }: PetProfilesPageProps) 
       setSuccess(copy.petDeleted);
       await load(pageData.page, search, clientFilterId);
     } catch (err) {
-      const message = err instanceof ApiClientError ? err.message : copy.deleteErrorPet;
+      const message = resolveApiErrorMessage(err, copy.deleteErrorPet);
       setError(message);
     }
   }

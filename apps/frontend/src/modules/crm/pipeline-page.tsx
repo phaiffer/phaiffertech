@@ -19,6 +19,7 @@ import { FormSelect } from '@/shared/ui/form-select';
 import { PageTitle } from '@/shared/ui/page-title';
 import { Pagination } from '@/shared/ui/pagination';
 import { SearchBar } from '@/shared/ui/search-bar';
+import { resolveApiErrorMessage } from '@/shared/lib/api-error-message';
 
 const pageSize = 10;
 const defaultOptions = [
@@ -57,11 +58,9 @@ export function CrmPipelinePage({ surface = 'crm' }: CrmPipelinePageProps) {
       setPageData(result);
     } catch (err) {
       setError(
-        err instanceof ApiClientError
-          ? err.message
-          : isPetSurface
+        resolveApiErrorMessage(err, isPetSurface
             ? 'Erro ao carregar o pipeline comercial.'
-            : 'Erro ao carregar pipeline.'
+            : 'Erro ao carregar pipeline.')
       );
     } finally {
       setLoading(false);
@@ -108,11 +107,9 @@ export function CrmPipelinePage({ surface = 'crm' }: CrmPipelinePageProps) {
       await load(pageData.page, search);
     } catch (err) {
       setError(
-        err instanceof ApiClientError
-          ? err.message
-          : isPetSurface
+        resolveApiErrorMessage(err, isPetSurface
             ? 'Erro ao salvar etapa do pipeline comercial.'
-            : 'Erro ao salvar etapa.'
+            : 'Erro ao salvar etapa.')
       );
     } finally {
       setSaving(false);
@@ -127,11 +124,9 @@ export function CrmPipelinePage({ surface = 'crm' }: CrmPipelinePageProps) {
       await load(pageData.page, search);
     } catch (err) {
       setError(
-        err instanceof ApiClientError
-          ? err.message
-          : isPetSurface
+        resolveApiErrorMessage(err, isPetSurface
             ? 'Erro ao excluir etapa do pipeline comercial.'
-            : 'Erro ao excluir etapa.'
+            : 'Erro ao excluir etapa.')
       );
     }
   }

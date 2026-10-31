@@ -36,6 +36,7 @@ import { PageSection } from '@/shared/ui/page-section';
 import { PageTitle } from '@/shared/ui/page-title';
 import { Pagination } from '@/shared/ui/pagination';
 import { SearchBar } from '@/shared/ui/search-bar';
+import { resolveApiErrorMessage } from '@/shared/lib/api-error-message';
 
 const pageSize = 10;
 
@@ -251,7 +252,7 @@ export function PetInventoryPage() {
       });
       setPageData(result);
     } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : messages.feedback.loadError);
+      setError(resolveApiErrorMessage(err, messages.feedback.loadError));
     } finally {
       setLoading(false);
     }
@@ -378,7 +379,7 @@ export function PetInventoryPage() {
         loadProducts()
       ]);
     } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : messages.feedback.saveError);
+      setError(resolveApiErrorMessage(err, messages.feedback.saveError));
     } finally {
       setSubmitting(false);
     }
@@ -398,7 +399,7 @@ export function PetInventoryPage() {
         loadProducts()
       ]);
     } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : messages.feedback.deleteError);
+      setError(resolveApiErrorMessage(err, messages.feedback.deleteError));
     }
   }
 

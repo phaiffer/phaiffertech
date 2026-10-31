@@ -50,6 +50,7 @@ import { PageSection } from '@/shared/ui/page-section';
 import { PageTitle } from '@/shared/ui/page-title';
 import { Pagination } from '@/shared/ui/pagination';
 import { sharedPageStackClass } from '@/shared/components/public-visual-system';
+import { resolveApiErrorMessage } from '@/shared/lib/api-error-message';
 
 const pageSize = 10;
 
@@ -1039,7 +1040,7 @@ export function PetAppointmentsPage() {
       setSuccess(actualConsumptionCopy.updated);
       await loadData(pageData.page, search, statusFilter, clientFilterId, petFilterId, serviceFilterId, professionalFilterId, viewMode, currentMonth);
     } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : messages.errors.save);
+      setError(resolveApiErrorMessage(err, messages.errors.save));
     } finally {
       setSavingActualServiceLineId(null);
     }
@@ -1069,7 +1070,7 @@ export function PetAppointmentsPage() {
       setSuccess(actualConsumptionCopy.applySuccess);
       await loadData(pageData.page, search, statusFilter, clientFilterId, petFilterId, serviceFilterId, professionalFilterId, viewMode, currentMonth);
     } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : messages.errors.save);
+      setError(resolveApiErrorMessage(err, messages.errors.save));
     } finally {
       setApplyingInventoryRowId(null);
     }
@@ -1172,7 +1173,7 @@ export function PetAppointmentsPage() {
         setPageData(result);
       }
     } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : messages.errors.load);
+      setError(resolveApiErrorMessage(err, messages.errors.load));
     } finally {
       setLoading(false);
     }
@@ -1408,7 +1409,7 @@ export function PetAppointmentsPage() {
       setIsEditorOpen(false);
       await loadData(pageData.page, search, statusFilter, clientFilterId, petFilterId, serviceFilterId, professionalFilterId, viewMode, currentMonth);
     } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : messages.errors.save);
+      setError(resolveApiErrorMessage(err, messages.errors.save));
     } finally {
       setSubmitting(false);
     }
@@ -1424,7 +1425,7 @@ export function PetAppointmentsPage() {
       setSuccess(messages.success.deleted);
       await loadData(pageData.page, search, statusFilter, clientFilterId, petFilterId, serviceFilterId, professionalFilterId, viewMode, currentMonth);
     } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : messages.errors.delete);
+      setError(resolveApiErrorMessage(err, messages.errors.delete));
     }
   }
 
@@ -1447,7 +1448,7 @@ export function PetAppointmentsPage() {
         ? messages.preparedPickup.success
         : messages.preparedPickup.needsReview);
     } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : messages.preparedPickup.error);
+      setError(resolveApiErrorMessage(err, messages.preparedPickup.error));
     } finally {
       setPreparingPickupAppointmentId(null);
     }
@@ -1469,7 +1470,7 @@ export function PetAppointmentsPage() {
         .replace('{amount}', formatCurrencyForLocale(locale, invoice.totalAmount))
         .replace('{client}', invoice.clientName ?? appointment.clientName ?? ''));
     } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : messages.appointmentInvoice.error);
+      setError(resolveApiErrorMessage(err, messages.appointmentInvoice.error));
     } finally {
       setGeneratingInvoiceAppointmentId(null);
     }
@@ -1489,7 +1490,7 @@ export function PetAppointmentsPage() {
       }
       setError(dispatch.failureReason ?? messages.preparedPickup.officialFailure);
     } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : messages.preparedPickup.officialFailure);
+      setError(resolveApiErrorMessage(err, messages.preparedPickup.officialFailure));
     } finally {
       setDispatchingPickupAppointmentId(null);
     }

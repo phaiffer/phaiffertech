@@ -4,7 +4,6 @@ import { useEffect, useState } from 'react';
 import { PermissionGuard } from '@/shared/auth/PermissionGuard';
 import { sharedPageStackClass } from '@/shared/components/public-visual-system';
 import { StatusBadge } from '@/shared/dashboard/status-badge';
-import { ApiClientError } from '@/shared/lib/http';
 import { resolvePageItems, resolveTotalItems } from '@/shared/lib/pagination';
 import { crmService, CreateCompanyInput, UpdateCompanyInput } from '@/shared/services/crm-service';
 import { CrmCompany } from '@/shared/types/crm';
@@ -17,6 +16,7 @@ import { PageSection } from '@/shared/ui/page-section';
 import { PageTitle } from '@/shared/ui/page-title';
 import { Pagination } from '@/shared/ui/pagination';
 import { SearchBar } from '@/shared/ui/search-bar';
+import { resolveApiErrorMessage } from '@/shared/lib/api-error-message';
 
 const pageSize = 10;
 const statusOptions = [
@@ -60,7 +60,7 @@ export function CrmCompaniesPage() {
       const result = await crmService.listCompanies(page, pageSize, currentSearch, { status: currentStatus || undefined });
       setPageData(result);
     } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : 'Erro ao carregar empresas.');
+      setError(resolveApiErrorMessage(err, 'Erro ao carregar empresas.'));
     } finally {
       setLoading(false);
     }
@@ -113,7 +113,7 @@ export function CrmCompaniesPage() {
       setIsEditorOpen(false);
       await load(pageData.page, search, statusFilter);
     } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : 'Erro ao salvar empresa.');
+      setError(resolveApiErrorMessage(err, 'Erro ao salvar empresa.'));
     } finally {
       setSaving(false);
     }
@@ -126,7 +126,7 @@ export function CrmCompaniesPage() {
       setDeleteCandidate(null);
       await load(pageData.page, search, statusFilter);
     } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : 'Erro ao excluir empresa.');
+      setError(resolveApiErrorMessage(err, 'Erro ao excluir empresa.'));
     }
   }
 

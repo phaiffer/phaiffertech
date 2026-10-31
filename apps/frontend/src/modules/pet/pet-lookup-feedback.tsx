@@ -1,7 +1,7 @@
 'use client';
 
-import { ApiClientError } from '@/shared/lib/http';
 import { useAppMessages } from '@/shared/i18n/app-i18n-provider';
+import { resolveApiErrorMessage } from '@/shared/lib/api-error-message';
 
 export type PetLookupIssue = {
   key: string;
@@ -41,7 +41,7 @@ export function resolvePetLookupIssue(error: unknown, requiredPermission?: strin
     return `This reference requires the ${requiredPermission} permission.`;
   }
 
-  return error instanceof ApiClientError ? error.message : 'Unable to load this reference right now.';
+  return resolveApiErrorMessage(error, 'Unable to load this reference right now.');
 }
 
 export function resolvePetLookupLabel<T extends { id: string }>(

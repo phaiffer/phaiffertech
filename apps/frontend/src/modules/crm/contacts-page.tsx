@@ -26,6 +26,7 @@ import { Pagination } from '@/shared/ui/pagination';
 import { SearchBar } from '@/shared/ui/search-bar';
 import { ConfirmDialog } from '@/shared/ui/confirm-dialog';
 import { PermissionGuard } from '@/shared/auth/PermissionGuard';
+import { resolveApiErrorMessage } from '@/shared/lib/api-error-message';
 
 const pageSize = 10;
 const statusOptions = [
@@ -89,7 +90,7 @@ export function CrmContactsPage({ surface = 'crm' }: CrmContactsPageProps) {
         if (!active) {
           return;
         }
-        const message = err instanceof ApiClientError ? err.message : 'Unable to load companies for the contact filter.';
+        const message = resolveApiErrorMessage(err, 'Unable to load companies for the contact filter.');
         setError((current) => current ?? message);
       })
       .finally(() => {
@@ -118,11 +119,9 @@ export function CrmContactsPage({ surface = 'crm' }: CrmContactsPageProps) {
       });
       setPageData(result);
     } catch (err) {
-      const message = err instanceof ApiClientError
-        ? err.message
-        : isPetSurface
+      const message = resolveApiErrorMessage(err, isPetSurface
           ? 'Nao foi possivel carregar os contatos de apoio.'
-          : 'Unable to load CRM contacts.';
+          : 'Unable to load CRM contacts.');
       setError(message);
     } finally {
       setLoading(false);
@@ -143,11 +142,9 @@ export function CrmContactsPage({ surface = 'crm' }: CrmContactsPageProps) {
       setDeleteCandidate(null);
       await load(pageData.page, search, statusFilter, companyFilterId);
     } catch (err) {
-      const message = err instanceof ApiClientError
-        ? err.message
-        : isPetSurface
+      const message = resolveApiErrorMessage(err, isPetSurface
           ? 'Nao foi possivel remover o contato de apoio selecionado.'
-          : 'Unable to delete the selected contact.';
+          : 'Unable to delete the selected contact.');
       setError(message);
     }
   }

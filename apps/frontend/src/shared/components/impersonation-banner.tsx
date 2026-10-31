@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/shared/auth/use-auth';
 import { clearImpersonationBackupSession, getImpersonationBackupSession } from '@/shared/lib/session';
-import { ApiClientError } from '@/shared/lib/http';
+import { resolveApiErrorMessage } from '@/shared/lib/api-error-message';
 import { supportImpersonationService } from '@/shared/services/support-impersonation-service';
 import { useAppMessages } from '@/shared/i18n/app-i18n-provider';
 
@@ -45,11 +45,7 @@ export function ImpersonationBanner({ tenantName, tenantCode }: ImpersonationBan
         return;
       }
 
-      if (err instanceof ApiClientError) {
-        setError(err.message);
-      } else {
-        setError(copy.impersonationExitError);
-      }
+      setError(resolveApiErrorMessage(err, copy.impersonationExitError));
     } finally {
       setStopping(false);
     }

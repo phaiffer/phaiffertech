@@ -27,6 +27,7 @@ import { FormTextarea } from '@/shared/ui/form-textarea';
 import { PageSection } from '@/shared/ui/page-section';
 import { PageTitle } from '@/shared/ui/page-title';
 import { Pagination } from '@/shared/ui/pagination';
+import { resolveApiErrorMessage } from '@/shared/lib/api-error-message';
 
 const pageSize = 20;
 
@@ -233,7 +234,7 @@ export function PetPlansPage() {
       const result = await petService.listClientPlans(undefined, page, pageSize);
       setPageData(result);
     } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : messages.loadingDescription);
+      setError(resolveApiErrorMessage(err, messages.loadingDescription));
     } finally {
       setLoading(false);
     }
@@ -244,7 +245,7 @@ export function PetPlansPage() {
       const result = await petService.listPlanTemplates(0, pageSize, '');
       setTemplatePageData(result);
     } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : screenCopy.catalogLoadError);
+      setError(resolveApiErrorMessage(err, screenCopy.catalogLoadError));
     }
   }, [screenCopy]);
 
@@ -291,7 +292,7 @@ export function PetPlansPage() {
       setPlanRenewalTemplate(settings.planRenewalMessageTemplate ?? '');
       setPetReadyTemplate(settings.petReadyMessageTemplate ?? '');
     }).catch((err) => {
-      setError(err instanceof ApiClientError ? err.message : screenCopy.billingSettingsLoadError);
+      setError(resolveApiErrorMessage(err, screenCopy.billingSettingsLoadError));
     }).finally(() => {
       setBillingSettingsLoading(false);
     });
@@ -429,7 +430,7 @@ export function PetPlansPage() {
       resetForm();
       await load(0);
     } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : messages.feedback.saveError);
+      setError(resolveApiErrorMessage(err, messages.feedback.saveError));
     } finally {
       setSubmitting(false);
     }
@@ -473,7 +474,7 @@ export function PetPlansPage() {
       resetTemplateForm();
       await loadTemplates();
     } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : screenCopy.templateSaveError);
+      setError(resolveApiErrorMessage(err, screenCopy.templateSaveError));
     } finally {
       setTemplateSubmitting(false);
     }
@@ -487,7 +488,7 @@ export function PetPlansPage() {
       setSuccess(messages.dialog.confirm);
       await load(0);
     } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : messages.feedback.removeError);
+      setError(resolveApiErrorMessage(err, messages.feedback.removeError));
     }
   }
 
@@ -509,7 +510,7 @@ export function PetPlansPage() {
       setPetReadyTemplate(settings.petReadyMessageTemplate ?? '');
       setSuccess(messages.messageSetup.settingsUpdated);
     } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : messages.messageSetup.settingsError);
+      setError(resolveApiErrorMessage(err, messages.messageSetup.settingsError));
     } finally {
       setBillingSettingsSaving(false);
     }
@@ -544,7 +545,7 @@ export function PetPlansPage() {
         ? messages.messageSetup.renewalPrepared
         : messages.messageSetup.renewalNeedsBilling);
     } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : messages.messageSetup.prepareError);
+      setError(resolveApiErrorMessage(err, messages.messageSetup.prepareError));
     } finally {
       setPreparingRenewalPlanId(null);
     }
@@ -564,7 +565,7 @@ export function PetPlansPage() {
       }
       setError(dispatch.failureReason ?? messages.messageSetup.officialRenewalFailure);
     } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : messages.messageSetup.officialRenewalFailure);
+      setError(resolveApiErrorMessage(err, messages.messageSetup.officialRenewalFailure));
     } finally {
       setDispatchingRenewalPlanId(null);
     }

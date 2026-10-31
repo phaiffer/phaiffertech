@@ -3,7 +3,7 @@
 import { FormEvent, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { BrandMark, PetMark } from '@/shared/components/brand-assets';
-import { ApiClientError } from '@/shared/lib/http';
+import { resolveApiErrorMessage } from '@/shared/lib/api-error-message';
 import { authService } from '@/shared/services/auth-service';
 import {
   buildLoginVisualContext,
@@ -57,11 +57,7 @@ export default function ForgotPasswordPageClient() {
       });
       setSuccess(true);
     } catch (err) {
-      if (err instanceof ApiClientError) {
-        setError(err.message);
-      } else {
-        setError(t.errorFallback);
-      }
+      setError(resolveApiErrorMessage(err, t.errorFallback));
     } finally {
       setSubmitting(false);
     }

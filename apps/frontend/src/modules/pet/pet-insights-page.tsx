@@ -17,6 +17,7 @@ import {
 } from '@/shared/components/public-visual-system';
 import { workspacePanelSurfaceStyle } from '@/shared/modules/module-workspace-visual';
 import { useAppMessages } from '@/shared/i18n/app-i18n-provider';
+import { resolveApiErrorMessage } from '@/shared/lib/api-error-message';
 
 function ClientGrowthPanel({ thisMonth, lastMonth }: { thisMonth: number; lastMonth: number }) {
   const copy = useAppMessages().screens.petInsights;
@@ -63,7 +64,7 @@ export function PetInsightsPage() {
       const result = await petService.getInsightsSummary();
       setInsights(result);
     } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : loadErrorMessage);
+      setError(resolveApiErrorMessage(err, loadErrorMessage));
     } finally {
       setLoading(false);
     }

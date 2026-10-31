@@ -35,6 +35,7 @@ import { PageSection } from '@/shared/ui/page-section';
 import { PageTitle } from '@/shared/ui/page-title';
 import { Pagination } from '@/shared/ui/pagination';
 import { SearchBar } from '@/shared/ui/search-bar';
+import { resolveApiErrorMessage } from '@/shared/lib/api-error-message';
 
 const pageSize = 50;
 const statusOptions = [
@@ -141,11 +142,9 @@ export function CrmDealsPage({ surface = 'crm' }: CrmDealsPageProps) {
       setStages(resolvePageItems(stagesPage).sort((a, b) => a.position - b.position));
     } catch (err) {
       setError(
-        err instanceof ApiClientError
-          ? err.message
-          : isPetSurface
+        resolveApiErrorMessage(err, isPetSurface
             ? 'Nao foi possivel carregar as dependencias do comercial da Gestão Pet.'
-            : 'Unable to load deal dependencies for the CRM workspace.'
+            : 'Unable to load deal dependencies for the CRM workspace.')
       );
     }
   }, [commercialService, isPetSurface]);
@@ -182,11 +181,9 @@ export function CrmDealsPage({ surface = 'crm' }: CrmDealsPageProps) {
       await loadInvoices();
     } catch (err) {
       setError(
-        err instanceof ApiClientError
-          ? err.message
-          : isPetSurface
+        resolveApiErrorMessage(err, isPetSurface
             ? 'Nao foi possivel carregar os negocios comerciais.'
-            : 'Unable to load CRM deals.'
+            : 'Unable to load CRM deals.')
       );
     } finally {
       setLoading(false);
@@ -267,11 +264,9 @@ export function CrmDealsPage({ surface = 'crm' }: CrmDealsPageProps) {
       await load(pageData.page, search, statusFilter, companyFilterId);
     } catch (err) {
       setError(
-        err instanceof ApiClientError
-          ? err.message
-          : isPetSurface
+        resolveApiErrorMessage(err, isPetSurface
             ? 'Nao foi possivel salvar o negocio comercial.'
-            : 'Unable to save the deal.'
+            : 'Unable to save the deal.')
       );
     } finally {
       setSaving(false);
@@ -287,11 +282,9 @@ export function CrmDealsPage({ surface = 'crm' }: CrmDealsPageProps) {
       await load(pageData.page, search, statusFilter, companyFilterId);
     } catch (err) {
       setError(
-        err instanceof ApiClientError
-          ? err.message
-          : isPetSurface
+        resolveApiErrorMessage(err, isPetSurface
             ? 'Nao foi possivel remover o negocio selecionado.'
-            : 'Unable to delete the selected deal.'
+            : 'Unable to delete the selected deal.')
       );
     }
   }
@@ -316,11 +309,9 @@ export function CrmDealsPage({ surface = 'crm' }: CrmDealsPageProps) {
       await loadInvoices();
     } catch (err) {
       setError(
-        err instanceof ApiClientError
-          ? err.message
-          : isPetSurface
+        resolveApiErrorMessage(err, isPetSurface
             ? 'Nao foi possivel gerar a fatura deste negocio.'
-            : 'Unable to generate invoice for this deal.'
+            : 'Unable to generate invoice for this deal.')
       );
     } finally {
       setGeneratingInvoice(false);
@@ -354,11 +345,9 @@ export function CrmDealsPage({ surface = 'crm' }: CrmDealsPageProps) {
       await load(pageData.page, search, statusFilter, companyFilterId);
     } catch (err) {
       setError(
-        err instanceof ApiClientError
-          ? err.message
-          : isPetSurface
+        resolveApiErrorMessage(err, isPetSurface
             ? 'Nao foi possivel mover o negocio.'
-            : 'Unable to move deal.'
+            : 'Unable to move deal.')
       );
     } finally {
       setIsDragUpdating(false);

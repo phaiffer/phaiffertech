@@ -31,6 +31,7 @@ import type {
   PetPrescription,
   PetVaccination
 } from '@/shared/types/pet';
+import { resolveApiErrorMessage } from '@/shared/lib/api-error-message';
 
 type ClinicDashboardProps = {
   eyebrow: string;
@@ -301,17 +302,13 @@ export function ClinicDashboard({
 
       if (vaccinationsResult.status === 'rejected') {
         nextErrors.push(
-          vaccinationsResult.reason instanceof ApiClientError
-            ? vaccinationsResult.reason.message
-            : t.errors.vaccinations
+          resolveApiErrorMessage(vaccinationsResult.reason, t.errors.vaccinations)
         );
       }
 
       if (recordsResult.status === 'rejected') {
         nextErrors.push(
-          recordsResult.reason instanceof ApiClientError
-            ? recordsResult.reason.message
-            : t.errors.records
+          resolveApiErrorMessage(recordsResult.reason, t.errors.records)
         );
       }
 

@@ -14,6 +14,7 @@ import { resolvePageItems } from '@/shared/lib/pagination';
 import { useFrontendPlatform } from '@/shared/platform/use-frontend-platform';
 import { petService } from '@/shared/services/pet-service';
 import type { ClientPlan, PetAppointment, PetClient, PetInvoice, PetProduct } from '@/shared/types/pet';
+import { resolveApiErrorMessage } from '@/shared/lib/api-error-message';
 
 type PetOperationsDashboardProps = {
   eyebrow: string;
@@ -257,19 +258,19 @@ export function PetOperationsDashboard({
       });
 
       if (todayResult.status === 'rejected') {
-        nextErrors.push(todayResult.reason instanceof ApiClientError ? todayResult.reason.message : t.errors.appointments);
+        nextErrors.push(resolveApiErrorMessage(todayResult.reason, t.errors.appointments));
       }
 
       if (plansResult.status === 'rejected') {
-        nextErrors.push(plansResult.reason instanceof ApiClientError ? plansResult.reason.message : t.errors.plans);
+        nextErrors.push(resolveApiErrorMessage(plansResult.reason, t.errors.plans));
       }
 
       if (productsResult.status === 'rejected') {
-        nextErrors.push(productsResult.reason instanceof ApiClientError ? productsResult.reason.message : t.errors.inventory);
+        nextErrors.push(resolveApiErrorMessage(productsResult.reason, t.errors.inventory));
       }
 
       if (invoicesResult.status === 'rejected') {
-        nextErrors.push(invoicesResult.reason instanceof ApiClientError ? invoicesResult.reason.message : t.errors.billing);
+        nextErrors.push(resolveApiErrorMessage(invoicesResult.reason, t.errors.billing));
       }
 
       setError(nextErrors.length > 0 ? nextErrors.join(' ') : null);

@@ -32,6 +32,7 @@ import {
 } from '@/modules/pet/pet-service-catalog-policy';
 import { useAppI18n, useAppMessages } from '@/shared/i18n/app-i18n-provider';
 import type { AppMessages } from '@/shared/i18n/messages/pt-br';
+import { resolveApiErrorMessage } from '@/shared/lib/api-error-message';
 
 const pageSize = 10;
 
@@ -167,7 +168,7 @@ export function PetServicesPage() {
       });
       setPageData(result);
     } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : copy.loadError);
+      setError(resolveApiErrorMessage(err, copy.loadError));
     } finally {
       setLoading(false);
     }
@@ -184,7 +185,7 @@ export function PetServicesPage() {
       setProductsLookupError(null);
     } catch (err) {
       setProducts([]);
-      setProductsLookupError(err instanceof ApiClientError ? err.message : copy.suppliesLoadError);
+      setProductsLookupError(resolveApiErrorMessage(err, copy.suppliesLoadError));
     }
   }, [copy]);
 
@@ -351,7 +352,7 @@ export function PetServicesPage() {
       resetForm();
       await load(pageData.page, search, categoryFilter, activeFilter);
     } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : copy.saveError);
+      setError(resolveApiErrorMessage(err, copy.saveError));
     } finally {
       setSubmitting(false);
     }
@@ -368,7 +369,7 @@ export function PetServicesPage() {
       setSuccess(copy.deleted);
       await load(pageData.page, search, categoryFilter, activeFilter);
     } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : copy.deleteError);
+      setError(resolveApiErrorMessage(err, copy.deleteError));
     }
   }
 

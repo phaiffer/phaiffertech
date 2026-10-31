@@ -26,6 +26,7 @@ import { useFrontendPlatform } from '@/shared/platform/use-frontend-platform';
 import { moduleService } from '@/shared/services/module-service';
 import { PlatformDashboardSummary } from '@/shared/types/module';
 import { PageTitle } from '@/shared/ui/page-title';
+import { resolveApiErrorMessage } from '@/shared/lib/api-error-message';
 
 function DashboardNotice({ message }: { message: string }) {
   return <div className="ui-notice-error">{message}</div>;
@@ -60,7 +61,7 @@ export default function DashboardPage() {
           return;
         }
 
-        setSummaryError(err instanceof ApiClientError ? err.message : copy.summaryLoadError);
+        setSummaryError(resolveApiErrorMessage(err, copy.summaryLoadError));
         setSummaryLoading(false);
       });
 

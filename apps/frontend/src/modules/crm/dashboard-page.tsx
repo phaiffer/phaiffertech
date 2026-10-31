@@ -7,11 +7,11 @@ import { DashboardSection } from '@/shared/dashboard/dashboard-section';
 import { EmptyStateCard } from '@/shared/dashboard/empty-state-card';
 import { MetricGrid } from '@/shared/dashboard/metric-grid';
 import { PermissionGuard } from '@/shared/auth/PermissionGuard';
-import { ApiClientError } from '@/shared/lib/http';
 import { crmService } from '@/shared/services/crm-service';
 import { CrmDashboardSummary } from '@/shared/types/crm';
 import { PageSection } from '@/shared/ui/page-section';
 import { PageTitle } from '@/shared/ui/page-title';
+import { resolveApiErrorMessage } from '@/shared/lib/api-error-message';
 
 export function CrmDashboardPage() {
   const [summary, setSummary] = useState<CrmDashboardSummary | null>(null);
@@ -29,7 +29,7 @@ export function CrmDashboardPage() {
       const result = await crmService.getDashboardSummary();
       setSummary(result);
     } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : 'Erro ao carregar dashboard do CRM.');
+      setError(resolveApiErrorMessage(err, 'Erro ao carregar dashboard do CRM.'));
     } finally {
       setLoading(false);
     }

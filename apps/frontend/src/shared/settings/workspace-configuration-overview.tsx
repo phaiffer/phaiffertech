@@ -1,4 +1,5 @@
-'use client';
+
+import { resolveApiErrorMessage } from '@/shared/lib/api-error-message';'use client';
 
 import { useState } from 'react';
 import { sharedPageStackClass } from '@/shared/components/public-visual-system';
@@ -84,7 +85,7 @@ export function WorkspaceConfigurationOverview() {
       setIsEditorOpen(false);
       window.location.reload();
     } catch (err) {
-      setError(err instanceof Error && err.message ? err.message : copy.editor.saveError);
+      setError(resolveApiErrorMessage(err, copy.editor.saveError));
     } finally {
       setSubmitting(false);
     }

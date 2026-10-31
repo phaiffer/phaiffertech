@@ -41,6 +41,7 @@ import { useFrontendPlatform } from '@/shared/platform/use-frontend-platform';
 import { petService } from '@/shared/services/pet-service';
 import { PetDashboardSummary } from '@/shared/types/pet';
 import type { AppMessages } from '@/shared/i18n/messages/pt-br';
+import { resolveApiErrorMessage } from '@/shared/lib/api-error-message';
 
 type PetWorkspaceMode = 'clinic' | 'grooming';
 
@@ -681,7 +682,7 @@ export function PetHome() {
         }
 
         setSummary(null);
-        setError(err instanceof ApiClientError ? err.message : copy.summaryLoadError);
+        setError(resolveApiErrorMessage(err, copy.summaryLoadError));
         setLoadingSummary(false);
       });
 

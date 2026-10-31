@@ -25,6 +25,7 @@ import { Pagination } from '@/shared/ui/pagination';
 import { SearchBar } from '@/shared/ui/search-bar';
 import { useAppMessages } from '@/shared/i18n/app-i18n-provider';
 import type { AppMessages } from '@/shared/i18n/messages/pt-br';
+import { resolveApiErrorMessage } from '@/shared/lib/api-error-message';
 
 const pageSize = 10;
 
@@ -73,7 +74,7 @@ export function PetProductsPage() {
       const result = await petService.listProducts(page, pageSize, currentSearch);
       setPageData(result);
     } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : copy.loadError);
+      setError(resolveApiErrorMessage(err, copy.loadError));
     } finally {
       setLoading(false);
     }
@@ -164,7 +165,7 @@ export function PetProductsPage() {
       resetForm();
       await load(pageData.page, search);
     } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : copy.saveError);
+      setError(resolveApiErrorMessage(err, copy.saveError));
     } finally {
       setSubmitting(false);
     }
@@ -181,7 +182,7 @@ export function PetProductsPage() {
       setSuccess(copy.deleted);
       await load(pageData.page, search);
     } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : copy.deleteError);
+      setError(resolveApiErrorMessage(err, copy.deleteError));
     }
   }
 

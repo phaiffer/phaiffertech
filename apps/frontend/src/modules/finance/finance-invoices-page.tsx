@@ -19,6 +19,7 @@ import { FormSelect } from '@/shared/ui/form-select';
 import { PageSection } from '@/shared/ui/page-section';
 import { PageTitle } from '@/shared/ui/page-title';
 import { Pagination } from '@/shared/ui/pagination';
+import { resolveApiErrorMessage } from '@/shared/lib/api-error-message';
 
 const pageSize = 20;
 
@@ -146,7 +147,7 @@ export function FinanceInvoicesPage() {
         });
         setPageData(data);
       } catch (err) {
-        setError(err instanceof ApiClientError ? err.message : 'Erro ao carregar faturas.');
+        setError(resolveApiErrorMessage(err, 'Erro ao carregar faturas.'));
       } finally {
         setLoading(false);
       }
