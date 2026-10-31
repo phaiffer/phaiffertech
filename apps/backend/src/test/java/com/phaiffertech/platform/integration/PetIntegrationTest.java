@@ -165,7 +165,8 @@ class PetIntegrationTest extends AbstractIntegrationTest {
         ResponseEntity<JsonNode> createAppointment = post("/pet/appointments", appointmentPayload, session);
         assertEquals(200, createAppointment.getStatusCode().value());
         String appointmentId = requireBody(createAppointment).path("data").path("id").asText();
-        assertTrue(requireBody(createAppointment).path("data").path("invoiceId").isNull());
+        // Jackson omits nulls (non_null inclusion), so an unbilled appointment has no invoiceId field.
+        assertFalse(requireBody(createAppointment).path("data").hasNonNull("invoiceId"));
 
         ResponseEntity<JsonNode> notCompleted = post("/pet/invoices/from-appointment/" + appointmentId, Map.of(), session);
         assertEquals(409, notCompleted.getStatusCode().value());
