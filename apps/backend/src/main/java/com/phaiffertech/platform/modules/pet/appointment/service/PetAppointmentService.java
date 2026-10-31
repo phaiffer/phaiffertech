@@ -83,6 +83,9 @@ public class PetAppointmentService extends BaseTenantCrudService<
         PetAppointmentUpdateRequest,
         PetAppointmentResponse> {
 
+    // Matches the pet_appointments.service_name column length.
+    private static final int SERVICE_HEADLINE_MAX_LENGTH = 120;
+
     private final PetAppointmentRepository repository;
     private final PetAppointmentServiceLineRepository appointmentServiceLineRepository;
     private final PetAppointmentServiceLineInventoryPlanRepository appointmentServiceLineInventoryPlanRepository;
@@ -857,7 +860,14 @@ public class PetAppointmentService extends BaseTenantCrudService<
         if (services.size() == 1) {
             return primaryService.getName();
         }
-        return primaryService.getName() + " + " + (services.size() - 1) + " more";
+        // Locale-neutral headline: it is persisted and reused in invoices and customer messages.
+        String joinedNames = services.stream()
+                .map(PetServiceCatalog::getName)
+                .collect(Collectors.joining(" + "));
+        if (joinedNames.length() <= SERVICE_HEADLINE_MAX_LENGTH) {
+            return joinedNames;
+        }
+        return primaryService.getName() + " (+" + (services.size() - 1) + ")";
     }
 
     private void reconcileAppointmentServiceLines(

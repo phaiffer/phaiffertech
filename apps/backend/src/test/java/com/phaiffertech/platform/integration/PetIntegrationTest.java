@@ -173,7 +173,9 @@ class PetIntegrationTest extends AbstractIntegrationTest {
         assertEquals(bathServiceId, createdAppointment.path("serviceId").asText());
         assertEquals(2, createdAppointment.path("serviceCount").asInt());
         assertEquals(2, createdAppointment.path("appointmentServices").size());
-        assertEquals("Service " + marker + "-bath + 1 more", createdAppointment.path("serviceName").asText());
+        assertEquals(
+                "Service " + marker + "-bath + Service " + marker + "-hydration",
+                createdAppointment.path("serviceName").asText());
         assertEquals(179.80, createdAppointment.path("totalServiceBasePrice").asDouble(), 0.01);
         assertEquals(80, createdAppointment.path("totalServiceDurationMinutes").asInt());
 

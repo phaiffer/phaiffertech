@@ -889,10 +889,6 @@ export function PetAppointmentsPage() {
     return {
       title: serviceSummaryCopy.title,
       description: serviceSummaryCopy.description,
-      selectedServicesLabel: serviceSummaryCopy.selectedServicesLabel,
-      emptySelectionLabel: serviceSummaryCopy.emptySelectionLabel,
-      addServiceLabel: serviceSummaryCopy.addServiceLabel,
-      removeServiceLabel: serviceSummaryCopy.removeServiceLabel,
       headline: selectedServiceEntries.length === 1
         ? selectedServices[0]?.label ?? serviceSummaryCopy.title
         : `${selectedServiceEntries.length} ${serviceSummaryCopy.bundleHeadlineSuffix}`,
@@ -1440,7 +1436,9 @@ export function PetAppointmentsPage() {
       setPreparedPickupMessage(prepared.message);
       setPreparedPickupAppointmentId(appointment.id);
       if (typeof navigator !== 'undefined' && navigator.clipboard?.writeText) {
-        await navigator.clipboard.writeText(prepared.message);
+        // Best-effort copy: a pending or denied clipboard permission must not lock the
+        // button, and the prepared message stays on screen with its own copy action.
+        void navigator.clipboard.writeText(prepared.message).catch(() => undefined);
       }
       setSuccess(prepared.eligible
         ? messages.preparedPickup.success
@@ -1783,6 +1781,7 @@ export function PetAppointmentsPage() {
                   onExtrasDescriptionChange={setExtrasDescription}
                   serviceSummaryTitle={serviceSummaryCopy.title}
                   serviceSummaryEmpty={serviceSummaryCopy.empty}
+                  serviceLineLabels={serviceSummaryCopy}
                   selectedServiceSummary={selectedServiceSummary}
                   submitting={submitting}
                   appointmentReferencesReady={appointmentReferencesReady}

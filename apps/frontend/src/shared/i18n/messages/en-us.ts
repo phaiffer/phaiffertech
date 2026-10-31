@@ -207,8 +207,8 @@ export const enUSMessages: AppMessages = {
       recurringVsOneTime: 'Recurring vs one-time',
       recurringVsOneTimeDetail: 'Clear separation between plan clients and standalone visits.',
       pickupMessage: 'Pickup message',
-      pickupMessageMissing: 'ready pets still missing client email for automated sending.',
-      pickupMessageReady: 'Every ready pet in this list already qualifies for the automated message.',
+      pickupMessageMissing: 'ready pets still missing client email for the pickup message.',
+      pickupMessageReady: 'Every ready pet in this list already has a pickup message ready to send.',
       expiringPlans: 'Expiring plans',
       expiringPlansDetail: 'plans expire in the next two weeks.',
       petTaxi: 'Pet taxi',
@@ -275,7 +275,7 @@ export const enUSMessages: AppMessages = {
       activePlan: 'Active plan',
       penultimateBath: 'Penultimate bath',
       petTaxi: 'Pet taxi',
-      pickupSent: 'Message sent',
+      pickupSent: 'Message ready',
       pickupPending: 'Message pending',
       responsible: 'Responsible',
       commission: 'Commission',
@@ -322,7 +322,7 @@ export const enUSMessages: AppMessages = {
       commission: 'Commission',
       commissionDetail: 'Projected from the appointments visible right now.',
       pickupRule:
-        'Completed services automatically trigger the pickup message when the client has an email on file. This makes the "pet ready / message sent" rule explicit in the demo.'
+        'Completed services prepare the pickup message when the client has an email on file. The front desk reviews and sends it, which makes the "pet ready / message ready" rule explicit in the demo.'
     },
     table: {
       loadingTitle: 'Loading appointments',
@@ -451,7 +451,7 @@ export const enUSMessages: AppMessages = {
       petTaxi: 'Pet taxi',
       petReady: 'Pet ready for pickup.',
       checkoutAfterSlot: 'Checkout and plan consumption follow this slot.',
-      pickupSent: 'Pickup message sent automatically',
+      pickupSent: 'Pickup message ready to send',
       pickupSkipped: 'Pickup message skipped: client without email',
       inProgressDetail: 'The responsible professional is currently working on this visit.',
       oneTime: 'One-time',
@@ -552,7 +552,7 @@ export const enUSMessages: AppMessages = {
       officialRenewalFailure: 'Unable to send the official WhatsApp renewal. Use the prepared manual fallback.'
     },
     columns: {
-      noRenewalEmail: 'No email on file for automatic renewal',
+      noRenewalEmail: 'No email on file for the renewal message',
       activeLinked: 'Active plan linked to recurring visits.',
       noSessionsLeft: 'Plan has no remaining sessions.',
       used: 'used',
@@ -560,7 +560,7 @@ export const enUSMessages: AppMessages = {
       finalSession: 'Final session before renewal',
       renewBeforeNextVisit: 'Renew or create a new plan before the next visit.',
       status: 'Status',
-      renewalSent: 'Renewal email can be sent automatically',
+      renewalSent: 'Renewal message ready to send',
       renewalNeedsEmail: 'Renewal needs client email',
       lastVisitHint: 'Next completed visit will finish the current plan.',
       activeCycleHint: 'Plan is active and still supports the recurring cycle.',

@@ -213,8 +213,8 @@ const ptBRMessages = {
       recurringVsOneTime: 'Recorrentes vs avulsos',
       recurringVsOneTimeDetail: 'Separacao visivel entre clientes de plano e atendimentos pontuais.',
       pickupMessage: 'Mensagem de retirada',
-      pickupMessageMissing: 'pets prontos ainda sem email do cliente para o envio automatico.',
-      pickupMessageReady: 'Todos os pets prontos desta lista ja entram com mensagem automatica.',
+      pickupMessageMissing: 'pets prontos ainda sem email do cliente para a mensagem de retirada.',
+      pickupMessageReady: 'Todos os pets prontos desta lista ja tem mensagem de retirada pronta para envio.',
       expiringPlans: 'Planos vencendo',
       expiringPlansDetail: 'planos expiram nas proximas duas semanas.',
       petTaxi: 'Pet taxi',
@@ -281,7 +281,7 @@ const ptBRMessages = {
       activePlan: 'Plano ativo',
       penultimateBath: 'Penultimo banho',
       petTaxi: 'Pet taxi',
-      pickupSent: 'Mensagem enviada',
+      pickupSent: 'Mensagem pronta',
       pickupPending: 'Mensagem pendente',
       responsible: 'Responsavel',
       commission: 'Comissao',
@@ -328,7 +328,7 @@ const ptBRMessages = {
       commission: 'Comissao',
       commissionDetail: 'Projetada sobre os atendimentos visiveis agora.',
       pickupRule:
-        'Atendimentos concluidos disparam a mensagem de retirada quando o cliente tem e-mail cadastrado. Isso deixa a regra de "pet pronto / mensagem enviada" explicita na demo.'
+        'Atendimentos concluidos preparam a mensagem de retirada quando o cliente tem e-mail cadastrado. A recepcao revisa e envia, o que deixa a regra de "pet pronto / mensagem pronta" explicita na demo.'
     },
     table: {
       loadingTitle: 'Carregando atendimentos',
@@ -457,7 +457,7 @@ const ptBRMessages = {
       petTaxi: 'Pet taxi',
       petReady: 'Pet pronto para retirada.',
       checkoutAfterSlot: 'Checkout e consumo de plano acompanham este horario.',
-      pickupSent: 'Mensagem de retirada enviada automaticamente',
+      pickupSent: 'Mensagem de retirada pronta para envio',
       pickupSkipped: 'Mensagem de retirada ignorada: cliente sem e-mail',
       inProgressDetail: 'O profissional responsavel esta atuando neste atendimento.',
       oneTime: 'Avulso',
@@ -558,7 +558,7 @@ const ptBRMessages = {
       officialRenewalFailure: 'Nao foi possivel enviar a renovacao por WhatsApp oficial. Use o fallback manual preparado.'
     },
     columns: {
-      noRenewalEmail: 'Sem e-mail para renovacao automatica',
+      noRenewalEmail: 'Sem e-mail para a mensagem de renovacao',
       activeLinked: 'Plano ativo vinculado a visitas recorrentes.',
       noSessionsLeft: 'Plano sem sessoes restantes.',
       used: 'utilizadas',
@@ -566,7 +566,7 @@ const ptBRMessages = {
       finalSession: 'Ultima sessao antes da renovacao',
       renewBeforeNextVisit: 'Renove ou crie um novo plano antes da proxima visita.',
       status: 'Status',
-      renewalSent: 'E-mail de renovacao pode ser enviado automaticamente',
+      renewalSent: 'Mensagem de renovacao pronta para envio',
       renewalNeedsEmail: 'Renovacao depende de e-mail do cliente',
       lastVisitHint: 'O proximo atendimento concluido encerra o plano atual.',
       activeCycleHint: 'Plano ativo e ainda cobre o ciclo recorrente.',
