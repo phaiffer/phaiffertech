@@ -1,11 +1,11 @@
-
-import { resolveApiErrorMessage } from '@/shared/lib/api-error-message';'use client';
+'use client';
 
 import { useState } from 'react';
 import { sharedPageStackClass } from '@/shared/components/public-visual-system';
 import { StatusBadge } from '@/shared/dashboard/status-badge';
 import { useAppI18n } from '@/shared/i18n/app-i18n-provider';
 import { DARK_THEME_SUPPORTED } from '@/shared/lib/tenant-branding';
+import { resolveApiErrorMessage } from '@/shared/lib/api-error-message';
 import { useFrontendPlatform } from '@/shared/platform/use-frontend-platform';
 import { AccountSecurityPanel } from '@/shared/settings/account-security-panel';
 import { buildWorkspaceConfigurationOverview, type WorkspaceConfigurationField } from '@/shared/settings/workspace-configuration';

@@ -39,7 +39,7 @@ describe('StatusBadge capability labels', () => {
       </AppI18nProvider>
     );
 
-    for (const label of ['Sem permissao', 'Recurso desativado', 'Configuracao necessaria', 'Sem dados', 'Indisponivel']) {
+    for (const label of ['Sem permissão', 'Recurso desativado', 'Configuração necessária', 'Sem dados', 'Indisponível']) {
       expect(screen.getByText(label)).toBeInTheDocument();
     }
   });
@@ -56,8 +56,22 @@ describe('StatusBadge capability labels', () => {
       </AppI18nProvider>
     );
 
-    for (const label of ['Em progresso', 'Nao compareceu', 'Concluida', 'Alta']) {
+    for (const label of ['Em progresso', 'Não compareceu', 'Concluída', 'Alta']) {
       expect(screen.getByText(label)).toBeInTheDocument();
     }
+  });
+it('shows backend statuses in English instead of the Portuguese labels when en-US is active', () => {
+    window.localStorage.setItem('phaiffertech-locale', 'en-US');
+
+    render(
+      <AppI18nProvider>
+        <StatusBadge status="COMPLETED" />
+        <StatusBadge status="IN_PROGRESS" />
+      </AppI18nProvider>
+    );
+
+    expect(screen.getByText('Completed')).toBeInTheDocument();
+    expect(screen.getByText('In Progress')).toBeInTheDocument();
+    expect(screen.queryByText('Concluído')).not.toBeInTheDocument();
   });
 });
