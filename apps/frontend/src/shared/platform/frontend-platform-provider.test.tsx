@@ -36,8 +36,8 @@ const { currentUser, moduleCatalog } = vi.hoisted(() => ({
       },
       {
         code: 'PET',
-        name: 'PetFlow',
-        description: 'PetFlow workspace',
+        name: 'Pet Suite',
+        description: 'Pet workspace',
         enabled: true,
         moduleEnabled: true,
         featureFlagEnabled: true,

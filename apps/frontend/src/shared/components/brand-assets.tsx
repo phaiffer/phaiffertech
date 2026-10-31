@@ -20,7 +20,7 @@ type BrandBannerProps = {
   imageClassName?: string;
 };
 
-type PetFlowMarkProps = {
+type PetMarkProps = {
   className?: string;
   iconClassName?: string;
 };
@@ -45,7 +45,7 @@ function resolveBannerToneClass(tone: BrandTone) {
   return 'border-slate-200/80 bg-white shadow-[0_16px_32px_-28px_rgba(15,23,42,0.18)]';
 }
 
-export function PetFlowMark({ className, iconClassName }: PetFlowMarkProps) {
+export function PetMark({ className, iconClassName }: PetMarkProps) {
   return (
     <span
       className={joinClasses(

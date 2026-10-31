@@ -3,7 +3,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { ArrowRight, Check } from 'lucide-react';
-import { BrandMark, PetFlowMark } from '@/shared/components/brand-assets';
+import { BrandMark, PetMark } from '@/shared/components/brand-assets';
 import {
   publicEyebrowClass,
   publicHeroTitleClass,
@@ -80,7 +80,7 @@ export function PublicHeroSection({
             <div className="mt-10 flex flex-wrap items-center gap-4">
               <Link
                 href={primaryCtaHref}
-                className="inline-flex items-center gap-2 rounded-2xl bg-[linear-gradient(135deg,var(--accent),var(--petflow-teal))] px-6 py-3.5 text-sm font-semibold text-white shadow-[0_18px_40px_-26px_rgba(16,185,129,0.55)] transition-transform hover:-translate-y-0.5"
+                className="inline-flex items-center gap-2 rounded-2xl bg-[linear-gradient(135deg,var(--accent),var(--pet-teal))] px-6 py-3.5 text-sm font-semibold text-white shadow-[0_18px_40px_-26px_rgba(16,185,129,0.55)] transition-transform hover:-translate-y-0.5"
               >
                 <span>{primaryCtaLabel}</span>
                 <ArrowRight className="h-4 w-4" />
@@ -112,7 +112,7 @@ export function PublicHeroSection({
             <div className="relative overflow-hidden rounded-[2.2rem] border border-slate-200/80 bg-[linear-gradient(180deg,rgba(16,185,129,0.04),rgba(255,255,255,0.985)_140px)] p-5 shadow-[0_30px_72px_-42px_rgba(15,23,42,0.22)]">
               <div className="flex items-center justify-between gap-4 border-b border-slate-200/80 pb-4">
                 <div className="flex items-center gap-3">
-                  <PetFlowMark className="h-11 w-11 shrink-0 rounded-2xl" iconClassName="scale-95" />
+                  <PetMark className="h-11 w-11 shrink-0 rounded-2xl" iconClassName="scale-95" />
                   <div>
                     <p className="text-sm font-semibold tracking-[-0.02em] text-slate-900">Gestão Pet</p>
                     <p className="text-[10px] font-medium uppercase tracking-[0.18em] text-slate-700">banho, tosa e recorrência</p>

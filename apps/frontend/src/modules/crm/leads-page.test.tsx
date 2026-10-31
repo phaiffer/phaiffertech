@@ -116,7 +116,7 @@ describe('CrmLeadsPage', () => {
     expect(screen.getAllByText('Acme Vet').length).toBeGreaterThan(0);
   });
 
-  it('uses the PetFlow commercial surface without reviving CRM routes', async () => {
+  it('uses the Pet commercial surface without reviving CRM routes', async () => {
     render(<CrmLeadsPage surface="pet" />);
 
     await waitFor(() => {

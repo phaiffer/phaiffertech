@@ -127,7 +127,7 @@ function InventorySpotlightCard({
   tone = 'default'
 }: InventorySpotlightCardProps) {
   const toneClass = tone === 'accent'
-    ? 'border-transparent bg-[linear-gradient(135deg,var(--accent),var(--petflow-teal))] text-white shadow-[0_20px_40px_-28px_rgba(16,185,129,0.5)]'
+    ? 'border-transparent bg-[linear-gradient(135deg,var(--accent),var(--pet-teal))] text-white shadow-[0_20px_40px_-28px_rgba(16,185,129,0.5)]'
     : tone === 'danger'
       ? 'border-red-200 bg-[linear-gradient(180deg,rgba(254,226,226,0.9),rgba(255,255,255,0.98))] shadow-[0_18px_36px_-30px_rgba(220,38,38,0.35)]'
     : tone === 'warning'

@@ -42,7 +42,7 @@ export function WebsiteHomePage() {
             <div className="mt-8 flex flex-col items-center justify-center gap-4 sm:flex-row">
               <Link
                 href={content.hero.primaryCta.href}
-                className="inline-flex w-full items-center justify-center rounded-xl bg-[linear-gradient(135deg,var(--accent),var(--petflow-teal))] px-5 py-3 text-sm font-semibold text-white shadow-[0_18px_38px_-26px_rgba(16,185,129,0.52)] sm:w-auto"
+                className="inline-flex w-full items-center justify-center rounded-xl bg-[linear-gradient(135deg,var(--accent),var(--pet-teal))] px-5 py-3 text-sm font-semibold text-white shadow-[0_18px_38px_-26px_rgba(16,185,129,0.52)] sm:w-auto"
               >
                 {content.hero.primaryCta.label}
                 <ArrowRight className="ml-2 h-4 w-4" />

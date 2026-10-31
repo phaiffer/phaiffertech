@@ -3,7 +3,7 @@
 @tailwind utilities;
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   PetFlow Visual Foundation
+   Pet Visual Foundation
    Shared base for public pages, auth, and the logged workspace
    ═══════════════════════════════════════════════════════════════════════════ */
 
@@ -13,7 +13,7 @@
   --card-foreground: var(--foreground);
   --popover: var(--surface);
   --popover-foreground: var(--foreground);
-  --primary: var(--petflow-primary);
+  --primary: var(--pet-primary);
   --primary-foreground: #ffffff;
   --secondary: var(--surface-inset);
   --secondary-foreground: var(--foreground);
@@ -24,14 +24,14 @@
   /* Sidebar variables */
   --sidebar: #f8fcf9;
   --sidebar-foreground: var(--foreground);
-  --sidebar-primary: var(--petflow-primary);
+  --sidebar-primary: var(--pet-primary);
   --sidebar-primary-foreground: #ffffff;
   --sidebar-accent: #eff8f3;
   --sidebar-accent-foreground: var(--foreground);
   --sidebar-border: var(--border);
-  --sidebar-ring: var(--petflow-primary);
+  --sidebar-ring: var(--pet-primary);
 
-  /* ─── Core Palette - PetFlow Green Theme ───────────────────────────────── */
+  /* ─── Core Palette - Pet Green Theme ───────────────────────────────── */
   --background: #f7fbf8;
   --foreground: #0f172a;
   --muted: #334155;
@@ -47,13 +47,13 @@
   --border-muted: rgba(203, 213, 225, 0.95);
   --ring: #10b981;
 
-  /* ─── PetFlow Brand Colors ─────────────────────────────────────────────── */
-  --petflow-primary: #10B981;
-  --petflow-primary-dark: #059669;
-  --petflow-primary-light: #34D399;
-  --petflow-teal: #14B8A6;
-  --petflow-gradient-start: #064E3B;
-  --petflow-gradient-end: #0F766E;
+  /* ─── Pet Brand Colors ─────────────────────────────────────────────── */
+  --pet-primary: #10B981;
+  --pet-primary-dark: #059669;
+  --pet-primary-light: #34D399;
+  --pet-teal: #14B8A6;
+  --pet-gradient-start: #064E3B;
+  --pet-gradient-end: #0F766E;
 
   /* ─── Feature Card Icon Colors ─────────────────────────────────────────── */
   --icon-green: #10B981;
@@ -157,7 +157,7 @@
   --card-foreground: var(--foreground);
   --popover: var(--surface);
   --popover-foreground: var(--foreground);
-  --primary: var(--petflow-primary);
+  --primary: var(--pet-primary);
   --primary-foreground: #ffffff;
   --secondary: var(--surface-inset);
   --secondary-foreground: var(--foreground);
@@ -165,12 +165,12 @@
   --radius: 0.625rem;
   --sidebar: #0a1120;
   --sidebar-foreground: #e0e1dd;
-  --sidebar-primary: var(--petflow-primary);
+  --sidebar-primary: var(--pet-primary);
   --sidebar-primary-foreground: #ffffff;
   --sidebar-accent: #111b2b;
   --sidebar-accent-foreground: #e0e1dd;
   --sidebar-border: #1e293b;
-  --sidebar-ring: var(--petflow-primary);
+  --sidebar-ring: var(--pet-primary);
 
   --background: #020817;
   --foreground: #f1f5f9;
@@ -185,13 +185,13 @@
   --border-muted: rgba(30, 41, 59, 0.82);
   --ring: #34D399;
 
-  /* ─── PetFlow Brand Colors (Dark) ──────────────────────────────────────── */
-  --petflow-primary: #34D399;
-  --petflow-primary-dark: #10B981;
-  --petflow-primary-light: #6EE7B7;
-  --petflow-teal: #2DD4BF;
-  --petflow-gradient-start: #064E3B;
-  --petflow-gradient-end: #0F766E;
+  /* ─── Pet Brand Colors (Dark) ──────────────────────────────────────── */
+  --pet-primary: #34D399;
+  --pet-primary-dark: #10B981;
+  --pet-primary-light: #6EE7B7;
+  --pet-teal: #2DD4BF;
+  --pet-gradient-start: #064E3B;
+  --pet-gradient-end: #0F766E;
 
   --accent-core: #34D399;
   --accent-core-foreground: #022c22;
@@ -342,7 +342,7 @@ body {
   background:
     linear-gradient(
       180deg,
-      color-mix(in srgb, #ffffff 98%, var(--petflow-primary) 2%),
+      color-mix(in srgb, #ffffff 98%, var(--pet-primary) 2%),
       color-mix(in srgb, #ffffff 94%, var(--surface-inset) 6%)
     ),
     var(--surface-1);
@@ -534,7 +534,7 @@ input[type='number'].ui-input-control::-webkit-outer-spin-button {
   background: linear-gradient(
     135deg,
     color-mix(in srgb, var(--accent) 92%, #ffffff 8%) 0%,
-    color-mix(in srgb, var(--petflow-teal) 70%, var(--accent) 30%) 100%
+    color-mix(in srgb, var(--pet-teal) 70%, var(--accent) 30%) 100%
   );
   color: #ffffff;
   box-shadow:

@@ -46,7 +46,7 @@ describe('PetCommercialPage', () => {
     navigationState.searchParams = new URLSearchParams();
   });
 
-  it('defaults to the first visible PetFlow commercial tab', () => {
+  it('defaults to the first visible Pet commercial tab', () => {
     render(<PetCommercialPage />);
 
     expect(screen.getByTestId('pet-subnav')).toBeInTheDocument();

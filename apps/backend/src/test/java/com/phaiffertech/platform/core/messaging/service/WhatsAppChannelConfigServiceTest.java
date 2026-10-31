@@ -41,7 +41,7 @@ class WhatsAppChannelConfigServiceTest {
 
         WhatsAppChannelConfigResponse response = service.updateCurrentTenantConfig(new WhatsAppChannelConfigRequest(
                 true,
-                "PetFlow WhatsApp",
+                "Pet WhatsApp",
                 "123456789",
                 "987654321",
                 "secret-access-token",

@@ -227,7 +227,7 @@ public class PetServiceCatalogService extends BaseTenantCrudService<
         }
         if (item.getCategory() == null || !item.getCategory().isPetCategory()) {
             throw new ConflictOperationException(
-                    "Pet service inventory links must reference a PetFlow inventory item."
+                    "Pet service inventory links must reference a pet inventory item."
             );
         }
 

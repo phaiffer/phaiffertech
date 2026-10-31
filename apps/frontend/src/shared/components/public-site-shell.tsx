@@ -3,7 +3,7 @@
 import type { ReactNode } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { BrandBanner, BrandMark, PetFlowMark } from '@/shared/components/brand-assets';
+import { BrandBanner, BrandMark, PetMark } from '@/shared/components/brand-assets';
 import { publicSiteContainerClass } from '@/shared/components/public-visual-system';
 import { getPublicSiteMessages } from '@/shared/public/public-site-messages';
 import { usePublicSite } from '@/shared/public/public-site-provider';
@@ -48,7 +48,7 @@ export function PublicSiteShell({ children }: PublicSiteShellProps) {
       <header className="sticky top-0 z-40 border-b border-slate-200/80 bg-white/92 shadow-[0_8px_24px_-20px_rgba(15,23,42,0.08)] backdrop-blur-sm">
         <div className={`${publicSiteContainerClass} flex h-16 items-center justify-between gap-6`}>
           <Link href="/" className="inline-flex shrink-0 items-center gap-2.5">
-            <PetFlowMark className="h-9 w-9 shrink-0" iconClassName="scale-95" />
+            <PetMark className="h-9 w-9 shrink-0" iconClassName="scale-95" />
             <div className="flex flex-col leading-none">
               <span className="text-base font-bold tracking-tight text-slate-900">Gestão Pet</span>
               <span className="mt-0.5 flex items-center gap-1 text-[10px] font-medium uppercase tracking-[0.14em] text-slate-600">
@@ -87,7 +87,7 @@ export function PublicSiteShell({ children }: PublicSiteShellProps) {
 
             <Link
               href="/login"
-              className="inline-flex items-center rounded-xl bg-[linear-gradient(135deg,var(--accent),var(--petflow-teal))] px-4 py-2.5 text-sm font-semibold text-white shadow-[0_18px_38px_-26px_rgba(16,185,129,0.52)] transition-transform hover:-translate-y-0.5"
+              className="inline-flex items-center rounded-xl bg-[linear-gradient(135deg,var(--accent),var(--pet-teal))] px-4 py-2.5 text-sm font-semibold text-white shadow-[0_18px_38px_-26px_rgba(16,185,129,0.52)] transition-transform hover:-translate-y-0.5"
             >
               {t.navLogin}
             </Link>
@@ -119,7 +119,7 @@ export function PublicSiteShell({ children }: PublicSiteShellProps) {
         <div className={`${publicSiteContainerClass} grid gap-10 py-12 md:grid-cols-4`}>
           <div>
             <Link href="/" className="inline-flex items-center gap-2.5">
-              <PetFlowMark className="h-9 w-9 shrink-0" iconClassName="scale-95" />
+              <PetMark className="h-9 w-9 shrink-0" iconClassName="scale-95" />
               <div className="flex flex-col leading-none">
                 <span className="text-base font-bold tracking-tight text-slate-900">Gestão Pet</span>
                 <span className="mt-0.5 flex items-center gap-1 text-[10px] font-medium uppercase tracking-[0.14em] text-slate-600">

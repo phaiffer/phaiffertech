@@ -74,7 +74,7 @@ const { currentPlatformState } = vi.hoisted(() => ({
         },
         {
           code: 'PET',
-          name: 'PetFlow',
+          name: 'Pet Suite',
           description: 'Clinical workspace',
           enabled: true,
           moduleEnabled: true,
@@ -88,7 +88,7 @@ const { currentPlatformState } = vi.hoisted(() => ({
       contractedProducts: [
         {
           code: 'PET',
-          name: 'PetFlow',
+          name: 'Pet Suite',
           description: 'Clinical workspace',
           enabled: true,
           moduleEnabled: true,
@@ -162,7 +162,7 @@ describe('DashboardPage workspace context', () => {
         },
         {
           code: 'PET',
-          name: 'PetFlow',
+          name: 'Pet Suite',
           description: 'Clinical workspace',
           enabled: true,
           moduleEnabled: true,
@@ -176,7 +176,7 @@ describe('DashboardPage workspace context', () => {
       contractedProducts: [
         {
           code: 'PET',
-          name: 'PetFlow',
+          name: 'Pet Suite',
           description: 'Clinical workspace',
           enabled: true,
           moduleEnabled: true,
@@ -262,7 +262,7 @@ describe('DashboardPage workspace context', () => {
         },
         {
           code: 'PET',
-          name: 'PetFlow',
+          name: 'Pet Suite',
           description: 'Clinical workspace',
           enabled: true,
           moduleEnabled: true,
@@ -276,7 +276,7 @@ describe('DashboardPage workspace context', () => {
       contractedProducts: [
         {
           code: 'PET',
-          name: 'PetFlow',
+          name: 'Pet Suite',
           description: 'Clinical workspace',
           enabled: true,
           moduleEnabled: true,
@@ -327,7 +327,7 @@ describe('DashboardPage workspace context', () => {
     expect(screen.getByRole('heading', { name: 'Workspace overview' })).toBeInTheDocument();
     expect(screen.getByText(/Executive workspace for Clinic North/)).toBeInTheDocument();
     expect(screen.getByText('Products in this workspace')).toBeInTheDocument();
-    expect(screen.getByText('PetFlow')).toBeInTheDocument();
+    expect(screen.getByText('Pet Suite')).toBeInTheDocument();
     expect(screen.queryByText('Create first company')).not.toBeInTheDocument();
     expect(screen.queryByText('Manage tenants')).not.toBeInTheDocument();
     expect(screen.queryByText('Visible products')).not.toBeInTheDocument();
@@ -335,7 +335,7 @@ describe('DashboardPage workspace context', () => {
     expect(screen.queryByText('CRM Snapshot')).not.toBeInTheDocument();
   });
 
-  it('opens the PetFlow operations shell for customer tenants as soon as PetFlow is visible', async () => {
+  it('opens the Pet operations shell for customer tenants as soon as Pet is visible', async () => {
     currentPlatformState.branding.scopeName = 'Clinic North';
     currentPlatformState.branding.tenantCode = 'clinic-north';
     currentPlatformState.user = buildUser({
@@ -371,7 +371,7 @@ describe('DashboardPage workspace context', () => {
         },
         {
           code: 'PET',
-          name: 'PetFlow',
+          name: 'Pet Suite',
           description: 'Clinical workspace',
           enabled: true,
           moduleEnabled: true,
@@ -385,7 +385,7 @@ describe('DashboardPage workspace context', () => {
       contractedProducts: [
         {
           code: 'PET',
-          name: 'PetFlow',
+          name: 'Pet Suite',
           description: 'Clinical workspace',
           enabled: true,
           moduleEnabled: true,

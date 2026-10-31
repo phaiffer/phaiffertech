@@ -56,7 +56,7 @@ vi.mock('@/shared/modules/use-module-catalog', () => ({
   useModuleCatalog: () => ({
     modules: [
       { code: 'CORE_PLATFORM', name: 'Core Platform', available: true },
-      { code: 'PET', name: 'PetFlow', available: true }
+      { code: 'PET', name: 'Pet Suite', available: true }
     ],
     loading: false,
     error: null

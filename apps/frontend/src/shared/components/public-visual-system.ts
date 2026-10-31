@@ -8,7 +8,7 @@ import {
 } from '@/shared/lib/visual-profile';
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   PetFlow Visual System
+   Pet Visual System
    Shared foundation for public, auth, and logged product surfaces
    ═══════════════════════════════════════════════════════════════════════════ */
 

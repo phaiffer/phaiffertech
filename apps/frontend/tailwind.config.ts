@@ -30,13 +30,13 @@ const config: Config = {
           crm: 'var(--accent-crm)',
           pet: 'var(--accent-pet)',
         },
-        // PetFlow Brand Colors
-        petflow: {
-          DEFAULT: 'var(--petflow-primary)',
-          primary: 'var(--petflow-primary)',
-          dark: 'var(--petflow-primary-dark)',
-          light: 'var(--petflow-primary-light)',
-          teal: 'var(--petflow-teal)',
+        // Pet Brand Colors
+        pet: {
+          DEFAULT: 'var(--pet-primary)',
+          primary: 'var(--pet-primary)',
+          dark: 'var(--pet-primary-dark)',
+          light: 'var(--pet-primary-light)',
+          teal: 'var(--pet-teal)',
         },
         // Feature Card Icon Colors
         'icon-green': 'var(--icon-green)',
@@ -121,8 +121,8 @@ const config: Config = {
         '128': '32rem',
       },
       backgroundImage: {
-        'petflow-gradient': 'linear-gradient(135deg, var(--petflow-gradient-start) 0%, var(--petflow-gradient-end) 100%)',
-        'petflow-gradient-radial': 'radial-gradient(ellipse at top, var(--petflow-gradient-end) 0%, var(--petflow-gradient-start) 100%)',
+        'pet-gradient': 'linear-gradient(135deg, var(--pet-gradient-start) 0%, var(--pet-gradient-end) 100%)',
+        'pet-gradient-radial': 'radial-gradient(ellipse at top, var(--pet-gradient-end) 0%, var(--pet-gradient-start) 100%)',
         'hero-pattern': 'radial-gradient(circle at 20% 50%, rgba(16, 185, 129, 0.08) 0%, transparent 50%), radial-gradient(circle at 80% 50%, rgba(20, 184, 166, 0.08) 0%, transparent 50%)',
       },
       animation: {

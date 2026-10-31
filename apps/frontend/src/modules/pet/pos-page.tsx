@@ -63,7 +63,7 @@ function POSStatCard({
   return (
     <div className={`rounded-2xl border p-4 ${
       tone === 'accent'
-        ? 'border-transparent bg-[linear-gradient(135deg,var(--accent),var(--petflow-teal))] text-white shadow-[0_16px_32px_-20px_rgba(16,185,129,0.45)]'
+        ? 'border-transparent bg-[linear-gradient(135deg,var(--accent),var(--pet-teal))] text-white shadow-[0_16px_32px_-20px_rgba(16,185,129,0.45)]'
         : 'border-slate-200/80 bg-white shadow-[0_8px_24px_-16px_rgba(15,23,42,0.08)]'
     }`}>
       <div className="flex items-center gap-3">
@@ -728,7 +728,7 @@ export function POSPage({ showSubnav = false }: POSPageProps) {
                 <button
                   type="button"
                   onClick={handleCheckout}
-                  className="flex w-full items-center justify-center gap-2 rounded-xl bg-[linear-gradient(135deg,var(--accent),var(--petflow-teal))] py-3.5 text-sm font-semibold text-white shadow-[0_12px_28px_-12px_rgba(16,185,129,0.5)] transition-all hover:shadow-[0_16px_36px_-12px_rgba(16,185,129,0.6)]"
+                  className="flex w-full items-center justify-center gap-2 rounded-xl bg-[linear-gradient(135deg,var(--accent),var(--pet-teal))] py-3.5 text-sm font-semibold text-white shadow-[0_12px_28px_-12px_rgba(16,185,129,0.5)] transition-all hover:shadow-[0_16px_36px_-12px_rgba(16,185,129,0.6)]"
                 >
                   {t.actions.checkout}
                   <ArrowRight className="h-4 w-4" />
@@ -838,7 +838,7 @@ export function POSPage({ showSubnav = false }: POSPageProps) {
                 <button
                   type="button"
                   onClick={confirmSale}
-                  className="flex w-full items-center justify-center gap-2 rounded-xl bg-[linear-gradient(135deg,var(--accent),var(--petflow-teal))] py-3.5 text-sm font-semibold text-white shadow-[0_12px_28px_-12px_rgba(16,185,129,0.5)]"
+                  className="flex w-full items-center justify-center gap-2 rounded-xl bg-[linear-gradient(135deg,var(--accent),var(--pet-teal))] py-3.5 text-sm font-semibold text-white shadow-[0_12px_28px_-12px_rgba(16,185,129,0.5)]"
                 >
                   {t.checkout.confirm}
                   <Check className="h-4 w-4" />

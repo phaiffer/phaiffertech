@@ -127,7 +127,7 @@ export const enUSMessages: AppMessages = {
   },
   appShell: {
     mobileOverview: 'Overview',
-    mobilePetFlow: 'Pet Management',
+    mobilePetWorkspace: 'Pet Management',
     mobileSettings: 'Settings',
     quickSearchWorkspace: 'Search the workspace',
     quickSearchPet: 'Search appointments, clients, or billing',
@@ -154,7 +154,7 @@ export const enUSMessages: AppMessages = {
   sidebar: {
     overview: 'Overview',
     settings: 'Settings',
-    petFlow: 'Pet Management',
+    petWorkspace: 'Pet Management',
     focusLabel: 'Operational focus',
     workspaceLabel: 'Workspace',
     signOut: 'Sign out'

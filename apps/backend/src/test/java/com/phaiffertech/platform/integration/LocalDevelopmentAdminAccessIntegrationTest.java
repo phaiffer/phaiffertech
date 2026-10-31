@@ -85,7 +85,7 @@ class LocalDevelopmentAdminAccessIntegrationTest extends AbstractIntegrationTest
 
         ResponseEntity<JsonNode> startResponse = post("/auth/impersonation/start", Map.of(
                 "targetTenantId", targetTenantId,
-                "reason", "Validate unrestricted PetFlow profile access in local development",
+                "reason", "Validate unrestricted Pet profile access in local development",
                 "durationMinutes", 15
         ), platformAdmin);
 
@@ -131,7 +131,7 @@ class LocalDevelopmentAdminAccessIntegrationTest extends AbstractIntegrationTest
 
         ResponseEntity<JsonNode> startResponse = post("/auth/impersonation/start", Map.of(
                 "targetTenantId", targetTenantId,
-                "reason", "Validate unrestricted PetFlow commission access in local development",
+                "reason", "Validate unrestricted Pet commission access in local development",
                 "durationMinutes", 15
         ), platformAdmin);
 

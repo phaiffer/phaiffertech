@@ -2,7 +2,7 @@
 
 import { FormEvent, useMemo, useState } from 'react';
 import Link from 'next/link';
-import { BrandMark, PetFlowMark } from '@/shared/components/brand-assets';
+import { BrandMark, PetMark } from '@/shared/components/brand-assets';
 import { ApiClientError } from '@/shared/lib/http';
 import { authService } from '@/shared/services/auth-service';
 import {
@@ -70,7 +70,7 @@ export default function ForgotPasswordPageClient() {
       <main className="mx-auto flex min-h-screen w-full max-w-5xl items-center justify-center px-6 py-12">
         <div className="w-full max-w-[420px]">
           <Link href="/" className="mb-8 inline-flex items-center gap-3 text-foreground">
-            <PetFlowMark className="h-14 w-14" />
+            <PetMark className="h-14 w-14" />
             <div>
               <span className="block text-lg font-semibold tracking-tight">Gestão Pet</span>
               <span className="mt-1 inline-flex items-center gap-1.5 text-[10px] font-medium uppercase tracking-[0.16em] text-slate-500">
@@ -106,7 +106,7 @@ export default function ForgotPasswordPageClient() {
                   onBlur={(event) => commitTenantCodeVisual(event.target.value)}
                   className={sharedInputClass}
                   placeholder="tenant-code"
-                  autoComplete="section-petflow organization"
+                  autoComplete="section-pet organization"
                   autoCapitalize="none"
                   autoCorrect="off"
                   spellCheck={false}
@@ -151,7 +151,7 @@ export default function ForgotPasswordPageClient() {
                 type="submit"
                 disabled={submitting}
                 className={`${publicPrimaryButtonClass} w-full disabled:cursor-not-allowed disabled:opacity-50`}
-                style={{ backgroundImage: 'linear-gradient(135deg, var(--tenant-accent), var(--petflow-teal))' }}
+                style={{ backgroundImage: 'linear-gradient(135deg, var(--tenant-accent), var(--pet-teal))' }}
               >
                 {submitting ? t.loadingLabel : t.submitLabel}
               </button>

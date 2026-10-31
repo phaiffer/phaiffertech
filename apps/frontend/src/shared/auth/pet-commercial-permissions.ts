@@ -1,4 +1,4 @@
-// PetFlow uses its own permission adapter while the backend still exposes
+// Pet uses its own permission adapter while the backend still exposes
 // legacy CRM permission keys during the commercial consolidation.
 export const petCommercialPermissions = {
   leads: {

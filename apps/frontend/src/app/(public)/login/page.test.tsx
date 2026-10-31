@@ -205,7 +205,7 @@ describe('LoginPage', () => {
     const passwordInput = screen.getByLabelText('Password');
 
     expect(tenantInput).toHaveAttribute('name', 'tenantCode');
-    expect(tenantInput).toHaveAttribute('autocomplete', 'section-petflow organization');
+    expect(tenantInput).toHaveAttribute('autocomplete', 'section-pet organization');
     expect(tenantInput).toHaveAttribute('autocapitalize', 'none');
     expect(tenantInput).toHaveAttribute('autocorrect', 'off');
     expect(tenantInput).toHaveAttribute('spellcheck', 'false');

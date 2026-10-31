@@ -66,7 +66,7 @@ describe('CrmNotesPage', () => {
     crmServiceMock.listNotes.mockResolvedValue(createPageResponse([
       {
         id: 'note-1',
-        content: 'Cliente veio do PetFlow',
+        content: 'Cliente veio do Pet',
         relatedType: 'PET.CLIENT',
         relatedReferenceType: 'PET.CLIENT',
         relatedModule: 'PET',

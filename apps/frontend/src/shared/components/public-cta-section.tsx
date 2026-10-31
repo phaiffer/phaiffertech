@@ -46,7 +46,7 @@ export function PublicCtaSection({
           <div className="mt-10 grid gap-4 sm:grid-cols-2 sm:justify-center">
             <Link
               href={primaryCtaHref}
-              className="inline-flex items-center justify-center gap-2 rounded-2xl bg-[linear-gradient(135deg,var(--accent),var(--petflow-teal))] px-8 py-4 text-base font-semibold text-white shadow-[0_18px_40px_-26px_rgba(16,185,129,0.48)] transition-all hover:-translate-y-0.5"
+              className="inline-flex items-center justify-center gap-2 rounded-2xl bg-[linear-gradient(135deg,var(--accent),var(--pet-teal))] px-8 py-4 text-base font-semibold text-white shadow-[0_18px_40px_-26px_rgba(16,185,129,0.48)] transition-all hover:-translate-y-0.5"
             >
               {primaryCtaLabel}
               <ArrowRight className="h-5 w-5" />

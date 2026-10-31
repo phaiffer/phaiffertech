@@ -34,7 +34,7 @@ vi.mock('@/shared/services/pet-service', () => ({
 }));
 
 vi.mock('@/modules/pet/pet-module-subnav', () => ({
-  PetModuleSubnav: () => <nav>PetFlow nav</nav>
+  PetModuleSubnav: () => <nav>Pet nav</nav>
 }));
 
 function createPageResponse<T>(items: T[]) {

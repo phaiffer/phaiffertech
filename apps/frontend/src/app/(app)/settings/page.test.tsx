@@ -73,7 +73,7 @@ const { currentPlatformState } = vi.hoisted(() => ({
         },
         {
           code: 'PET',
-          name: 'PetFlow',
+          name: 'Pet Suite',
           description: 'Pet operations workspace',
           enabled: true,
           moduleEnabled: true,
@@ -87,7 +87,7 @@ const { currentPlatformState } = vi.hoisted(() => ({
       contractedProducts: [
         {
           code: 'PET',
-          name: 'PetFlow',
+          name: 'Pet Suite',
           description: 'Pet operations workspace',
           enabled: true,
           moduleEnabled: true,
@@ -155,7 +155,7 @@ describe('SettingsPage', () => {
         },
         {
           code: 'PET',
-          name: 'PetFlow',
+          name: 'Pet Suite',
           description: 'Pet operations workspace',
           enabled: true,
           moduleEnabled: true,
@@ -169,7 +169,7 @@ describe('SettingsPage', () => {
       contractedProducts: [
         {
           code: 'PET',
-          name: 'PetFlow',
+          name: 'Pet Suite',
           description: 'Pet operations workspace',
           enabled: true,
           moduleEnabled: true,

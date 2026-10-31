@@ -37,7 +37,7 @@ export function WebsitePlatformPage() {
           <p className="mx-auto mt-5 max-w-3xl text-lg leading-8 text-slate-700">{content.description}</p>
           <Link
             href="/contact"
-            className="mt-8 inline-flex items-center justify-center rounded-xl bg-[linear-gradient(135deg,var(--accent),var(--petflow-teal))] px-5 py-3 text-sm font-semibold text-white shadow-[0_18px_38px_-26px_rgba(16,185,129,0.52)]"
+            className="mt-8 inline-flex items-center justify-center rounded-xl bg-[linear-gradient(135deg,var(--accent),var(--pet-teal))] px-5 py-3 text-sm font-semibold text-white shadow-[0_18px_38px_-26px_rgba(16,185,129,0.52)]"
           >
             {labels.action}
             <ArrowRight className="ml-2 h-4 w-4" />

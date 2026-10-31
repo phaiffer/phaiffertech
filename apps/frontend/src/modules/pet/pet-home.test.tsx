@@ -96,7 +96,7 @@ describe('PetHome', () => {
     vi.clearAllMocks();
   });
 
-  it('renders a tenant-scoped PetFlow workspace with medical access and summary pulse', async () => {
+  it('renders a tenant-scoped Pet workspace with medical access and summary pulse', async () => {
     vi.mocked(petService.getDashboardSummary).mockResolvedValue({
       totalClients: 28,
       totalPets: 43,
@@ -148,7 +148,7 @@ describe('PetHome', () => {
     expect(screen.getByText('Fluxo clinico')).toBeInTheDocument();
   }, 10000);
 
-  it('shows guided first-use messaging when the PetFlow workspace has no records yet', async () => {
+  it('shows guided first-use messaging when the Pet workspace has no records yet', async () => {
     vi.mocked(petService.getDashboardSummary).mockResolvedValue({
       totalClients: 0,
       totalPets: 0,
@@ -174,7 +174,7 @@ describe('PetHome', () => {
     expect(screen.getAllByText('Agendar atendimentos').length).toBeGreaterThan(0);
   });
 
-  it('keeps PetFlow metrics capability-aware when dashboard permission is missing', () => {
+  it('keeps Pet metrics capability-aware when dashboard permission is missing', () => {
     currentPermissions.splice(0, currentPermissions.length, 'pet.appointment.read', 'pet.medical-record.read');
 
     render(<PetHome />);

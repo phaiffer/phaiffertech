@@ -64,14 +64,14 @@ vi.mock('@/shared/platform/use-frontend-platform', () => ({
       items: [
         { code: 'CORE_PLATFORM', name: 'Core Platform', description: 'Core', enabled: true, moduleEnabled: true, featureFlagEnabled: true, available: true },
         { code: 'CRM', name: 'CRM', description: 'CRM', enabled: true, moduleEnabled: true, featureFlagEnabled: true, available: true },
-        { code: 'PET', name: 'PetFlow', description: 'Pet', enabled: true, moduleEnabled: true, featureFlagEnabled: true, available: true }
+        { code: 'PET', name: 'Pet Suite', description: 'Pet', enabled: true, moduleEnabled: true, featureFlagEnabled: true, available: true }
       ],
       loading: false,
       error: null,
       availableCodes: ['CORE_PLATFORM', 'CRM', 'PET'],
       contractedProducts: [
         { code: 'CRM', name: 'CRM', description: 'CRM', enabled: true, moduleEnabled: true, featureFlagEnabled: true, available: true },
-        { code: 'PET', name: 'PetFlow', description: 'Pet', enabled: true, moduleEnabled: true, featureFlagEnabled: true, available: true }
+        { code: 'PET', name: 'Pet Suite', description: 'Pet', enabled: true, moduleEnabled: true, featureFlagEnabled: true, available: true }
       ]
     }
   })
@@ -90,7 +90,7 @@ describe('Sidebar', () => {
     currentUser.featureEntitlements = ['crm.full', 'pet.full'];
   });
 
-  it('renders the reduced PetFlow-first navigation and keeps platform framing visible for admins', () => {
+  it('renders the reduced pet-first navigation and keeps platform framing visible for admins', () => {
     const { container, getAllByText } = render(<Sidebar />);
 
     expect(container.textContent).toContain('PhaifferTech');
@@ -129,7 +129,7 @@ describe('Sidebar', () => {
     expect(container.querySelector('a[href="/crm"]')).toBeNull();
   });
 
-  it('keeps grooming-only PetFlow navigation visible while filtering generic and veterinary areas', () => {
+  it('keeps grooming-only Pet navigation visible while filtering generic and veterinary areas', () => {
     currentUser.role = 'TENANT_ADMIN';
     currentUser.platformAdmin = false;
     currentUser.platformOwner = false;
