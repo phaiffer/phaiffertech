@@ -1255,7 +1255,7 @@ export function PetInvoicesPage() {
                     label="Descricao operacional"
                     value={description}
                     onChange={setDescription}
-                    placeholder="Pacote de consulta, sinal de cirurgia, combo de banho e tosa..."
+                    placeholder="Banho e tosa, pacote mensal, hidratacao extra..."
                   />
                 </div>
 

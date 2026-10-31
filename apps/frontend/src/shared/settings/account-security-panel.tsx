@@ -1,4 +1,5 @@
 import { FormEvent, useState } from 'react';
+import { useAppI18n } from '@/shared/i18n/app-i18n-provider';
 import { clearImpersonationBackupSession, clearSession, setAuthNotice } from '@/shared/lib/session';
 import { ApiClientError } from '@/shared/lib/http';
 import { authService } from '@/shared/services/auth-service';
@@ -11,6 +12,8 @@ type AccountSecurityPanelProps = {
 };
 
 export function AccountSecurityPanel({ user }: AccountSecurityPanelProps) {
+  const { messages } = useAppI18n();
+  const copy = messages.workspaceSettings.security;
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmNewPassword, setConfirmNewPassword] = useState('');
@@ -26,12 +29,12 @@ export function AccountSecurityPanel({ user }: AccountSecurityPanelProps) {
     setError(null);
 
     if (newPassword !== confirmNewPassword) {
-      setError('New password confirmation must match.');
+      setError(copy.mismatch);
       return;
     }
 
     if (currentPassword === newPassword) {
-      setError('New password must be different from the current password.');
+      setError(copy.sameAsCurrent);
       return;
     }
 
@@ -50,7 +53,7 @@ export function AccountSecurityPanel({ user }: AccountSecurityPanelProps) {
       if (err instanceof ApiClientError) {
         setError(err.message);
       } else {
-        setError('Unable to update the password right now.');
+        setError(copy.genericError);
       }
     } finally {
       setSubmitting(false);
@@ -58,15 +61,12 @@ export function AccountSecurityPanel({ user }: AccountSecurityPanelProps) {
   }
 
   return (
-    <PageSection
-      title="Account Security"
-      description="Keep the current authenticated workspace coherent while rotating credentials from inside the platform."
-    >
+    <PageSection title={copy.title} description={copy.description}>
       <div className="grid gap-5 xl:grid-cols-[minmax(0,0.82fr)_minmax(0,1.18fr)]">
         <div className="space-y-3">
           <div className="ui-surface-muted p-4 lg:p-5">
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--app-shell-muted)]">
-              Active Account
+              {copy.activeAccount}
             </p>
             <div className="mt-3 space-y-3 text-sm text-[color:var(--app-shell-text)]">
               <div>
@@ -74,21 +74,15 @@ export function AccountSecurityPanel({ user }: AccountSecurityPanelProps) {
                 <p className="text-[color:var(--app-shell-muted)]">{user.email}</p>
               </div>
               <div>
-                <p className="font-semibold text-[color:var(--app-shell-heading)]">Tenant</p>
+                <p className="font-semibold text-[color:var(--app-shell-heading)]">{copy.tenant}</p>
                 <p className="text-[color:var(--app-shell-muted)]">{user.tenantName} ({user.tenantCode})</p>
               </div>
             </div>
           </div>
 
-          <div className="ui-notice-warning">
-            Updating the password signs out this browser, clears any restored support-session backup, and revokes
-            active refresh sessions for the user.
-          </div>
+          <div className="ui-notice-warning">{copy.signOutWarning}</div>
 
-          <div className="ui-notice-neutral">
-            If this browser session is no longer available, use the public forgot-password flow from the login screen
-            to request a reset link safely.
-          </div>
+          <div className="ui-notice-neutral">{copy.forgotPasswordHint}</div>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -97,25 +91,25 @@ export function AccountSecurityPanel({ user }: AccountSecurityPanelProps) {
           ) : null}
 
           <FormInput
-            label="Current password"
+            label={copy.currentPassword}
             value={currentPassword}
             onChange={setCurrentPassword}
             type="password"
-            description="Confirm the current credential before rotating access."
+            description={copy.currentPasswordDescription}
             required
           />
 
           <FormInput
-            label="New password"
+            label={copy.newPassword}
             value={newPassword}
             onChange={setNewPassword}
             type="password"
-            description="Use a new credential that is different from the current password."
+            description={copy.newPasswordDescription}
             required
           />
 
           <FormInput
-            label="Confirm new password"
+            label={copy.confirmNewPassword}
             value={confirmNewPassword}
             onChange={setConfirmNewPassword}
             type="password"
@@ -123,7 +117,7 @@ export function AccountSecurityPanel({ user }: AccountSecurityPanelProps) {
           />
 
           <button type="submit" disabled={submitting} className="ui-primary-button">
-            {submitting ? 'Updating password...' : 'Update password'}
+            {submitting ? copy.submitting : copy.submit}
           </button>
         </form>
       </div>

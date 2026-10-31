@@ -183,15 +183,16 @@ describe('SettingsPage', () => {
   it('renders a platform-owner workspace configuration overview', () => {
     render(<SettingsPage />);
 
-    expect(screen.getByRole('heading', { name: 'Workspace Configuration' })).toBeInTheDocument();
-    expect(screen.getByText('Platform Owner Workspace')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Workspace settings' })).toBeInTheDocument();
+    expect(screen.getByText('Platform administration')).toBeInTheDocument();
     expect(screen.getAllByText('Full platform visibility')).toHaveLength(2);
-    expect(screen.getByText('Workspace Branding Preview')).toBeInTheDocument();
-    expect(screen.getByText('Theme Policy')).toBeInTheDocument();
-    expect(screen.getByText('Contracted Modules')).toBeInTheDocument();
-    expect(screen.getByText('Account Security')).toBeInTheDocument();
+    expect(screen.getByText('Brand preview')).toBeInTheDocument();
+    expect(screen.queryByText('Theme')).not.toBeInTheDocument();
+    expect(screen.getByText('Contracted modules')).toBeInTheDocument();
+    expect(screen.getByText('Account security')).toBeInTheDocument();
     expect(screen.getByText('Available in workspace')).toBeInTheDocument();
-    expect(screen.getByText('Feature exposure enabled')).toBeInTheDocument();
+    expect(screen.getByText('Features released')).toBeInTheDocument();
+    expect(screen.getByText('System admin')).toBeInTheDocument();
   });
 
   it('keeps internal support sessions tenant-scoped for customer workspaces', () => {
@@ -220,9 +221,9 @@ describe('SettingsPage', () => {
 
     render(<SettingsPage />);
 
-    expect(screen.getByText('Internal Support Context')).toBeInTheDocument();
-    expect(screen.getAllByText('Tenant boundary active')).toHaveLength(2);
+    expect(screen.getByText('Support mode')).toBeInTheDocument();
+    expect(screen.getAllByText('Customer boundary')).toHaveLength(2);
     expect(screen.getByText('Internal support on customer contract')).toBeInTheDocument();
-    expect(screen.queryByText('Platform Owner Workspace')).not.toBeInTheDocument();
+    expect(screen.queryByText('Platform administration')).not.toBeInTheDocument();
   });
 });

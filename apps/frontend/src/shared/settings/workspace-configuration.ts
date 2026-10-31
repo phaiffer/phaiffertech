@@ -1,4 +1,4 @@
-import { getAppThemeModeLabel } from '@/shared/lib/tenant-branding';
+import type { AppMessages } from '@/shared/i18n/messages/pt-br';
 import type { FrontendPlatformState } from '@/shared/platform/frontend-platform.types';
 
 export type WorkspaceConfigurationTone = 'active' | 'pending' | 'warn' | 'info' | 'neutral' | 'alert';
@@ -24,6 +24,8 @@ export type WorkspaceConfigurationModule = {
 
 export type WorkspaceConfigurationVariant = 'platform-owner' | 'internal-support' | 'customer';
 
+export type WorkspaceConfigurationCopy = AppMessages['workspaceSettings']['overview'];
+
 export type WorkspaceConfigurationOverviewModel = {
   variant: WorkspaceConfigurationVariant;
   pageDescription: string;
@@ -43,14 +45,32 @@ export type WorkspaceConfigurationOverviewModel = {
   planFields: WorkspaceConfigurationField[];
 };
 
+type VariantKey = 'platformOwner' | 'internalSupport' | 'customer';
+
 const DEFAULT_PRIMARY_COLOR = '#0f172a';
 const DEFAULT_ACCENT_COLOR = '#2563eb';
+
+const VARIANT_KEYS: Record<WorkspaceConfigurationVariant, VariantKey> = {
+  'platform-owner': 'platformOwner',
+  'internal-support': 'internalSupport',
+  customer: 'customer'
+};
 
 function humanizeToken(value: string) {
   return value
     .replace(/[_-]+/g, ' ')
     .trim()
+    .toLowerCase()
     .replace(/\b\w/g, (character) => character.toUpperCase());
+}
+
+function resolveRoleLabel(role: string | undefined, copy: WorkspaceConfigurationCopy) {
+  if (!role) {
+    return copy.fields.unknownRole;
+  }
+
+  const roles: Record<string, string> = copy.roles;
+  return roles[role] ?? humanizeToken(role);
 }
 
 function resolveVariant(platform: FrontendPlatformState): WorkspaceConfigurationVariant {
@@ -67,277 +87,216 @@ function resolveVariant(platform: FrontendPlatformState): WorkspaceConfiguration
 
 function resolveWorkspacePlan(
   variant: WorkspaceConfigurationVariant,
-  contractedModuleCount: number
+  contractedModuleCount: number,
+  copy: WorkspaceConfigurationCopy
 ) {
   if (variant === 'platform-owner') {
-    return {
-      value: 'Platform owner tenant',
-      description: 'This workspace belongs to the PhaifferTech tenant that anchors shared platform governance.'
-    };
+    return copy.plan.platformOwner;
   }
 
   if (variant === 'internal-support') {
-    return {
-      value: 'Internal support session',
-      description: 'Platform-oriented support context is active, but the workspace remains bounded by the customer tenant.'
-    };
+    return copy.plan.internalSupport;
   }
 
   if (contractedModuleCount > 1) {
     return {
-      value: 'Multi-product workspace',
-      description: `${contractedModuleCount} contracted product workspaces are attached to this tenant.`
+      value: copy.plan.multiProduct.value,
+      description: copy.plan.multiProduct.description.replace('{count}', String(contractedModuleCount))
     };
   }
 
   if (contractedModuleCount === 1) {
-    return {
-      value: 'Single-product workspace',
-      description: 'One contracted product workspace is attached to this tenant alongside shared core services.'
-    };
+    return copy.plan.singleProduct;
   }
 
-  return {
-    value: 'Core workspace',
-    description: 'Only the shared core platform services are currently active for this tenant.'
-  };
+  return copy.plan.core;
 }
 
 function resolveWorkspaceStatus(
   platform: FrontendPlatformState,
-  contractedModules: WorkspaceConfigurationModule[]
+  contractedModules: WorkspaceConfigurationModule[],
+  copy: WorkspaceConfigurationCopy
 ) {
   if (platform.modules.error) {
-    return {
-      value: 'Attention required',
-      description: 'Workspace contract data could not be verified from the module catalog.',
-      badgeStatus: 'alert' as const
-    };
+    return { ...copy.status.error, badgeStatus: 'alert' as const };
   }
 
   if (platform.modules.loading) {
-    return {
-      value: 'Syncing',
-      description: 'Module contract and exposure data is still loading for this workspace.',
-      badgeStatus: 'info' as const
-    };
+    return { ...copy.status.loading, badgeStatus: 'info' as const };
   }
 
   if (contractedModules.length === 0) {
-    return {
-      value: 'Core only',
-      description: 'No product modules are contracted yet, so the workspace stays on shared core services.',
-      badgeStatus: 'neutral' as const
-    };
+    return { ...copy.status.coreOnly, badgeStatus: 'neutral' as const };
   }
 
   if (contractedModules.some((moduleItem) => moduleItem.availabilityStatus !== 'active')) {
-    return {
-      value: 'Provisioning',
-      description: 'At least one contracted module is still pending final workspace exposure.',
-      badgeStatus: 'pending' as const
-    };
+    return { ...copy.status.provisioning, badgeStatus: 'pending' as const };
   }
 
-  return {
-    value: 'Active',
-    description: 'All contracted modules are available in the current workspace.',
-    badgeStatus: 'active' as const
-  };
+  return { ...copy.status.active, badgeStatus: 'active' as const };
 }
 
-function resolveVisibilityField(variant: WorkspaceConfigurationVariant) {
+function resolveVisibilityField(variant: WorkspaceConfigurationVariant, copy: WorkspaceConfigurationCopy) {
   if (variant === 'platform-owner') {
-    return {
-      value: 'Full platform visibility',
-      description: 'Only the PhaifferTech platform-owner tenant may expose the shared platform control plane.',
-      badgeStatus: 'active' as const
-    };
+    return { ...copy.visibility.platformOwner, badgeStatus: 'active' as const };
   }
 
   if (variant === 'internal-support') {
-    return {
-      value: 'Tenant boundary active',
-      description: 'SYS_ADMIN support context does not upgrade this customer tenant into a platform-owner workspace.',
-      badgeStatus: 'info' as const
-    };
+    return { ...copy.visibility.internalSupport, badgeStatus: 'info' as const };
   }
 
-  return {
-    value: 'Tenant-scoped visibility',
-    description: 'This workspace is limited to the current tenant contract, permissions, and exposed modules.',
-    badgeStatus: 'neutral' as const
-  };
+  return { ...copy.visibility.customer, badgeStatus: 'neutral' as const };
 }
 
-function resolveBrandingDescription(variant: WorkspaceConfigurationVariant, scopeName: string) {
-  if (variant === 'platform-owner') {
-    return `${scopeName} represents the platform-owner tenant. Branding remains constrained to controlled accent surfaces even here.`;
+function resolveWorkspaceLabel(platform: FrontendPlatformState, copy: WorkspaceConfigurationCopy) {
+  if (platform.user?.impersonation) {
+    return copy.workspaceLabels.support;
   }
 
-  if (variant === 'internal-support') {
-    return `${scopeName} is being reviewed through an internal support lens, but the customer workspace identity stays intact.`;
-  }
-
-  return `${scopeName} is presented as a customer workspace with controlled accent branding applied to shared shell surfaces.`;
+  return platform.user?.platformAdmin ? copy.workspaceLabels.controlPlane : copy.workspaceLabels.workspace;
 }
 
-function resolveThemeDescription(variant: WorkspaceConfigurationVariant) {
-  if (variant === 'platform-owner') {
-    return 'Theme defaults here describe the shared platform-owner workspace experience and its tenant policy.';
-  }
-
+function resolveAccessLabel(
+  platform: FrontendPlatformState,
+  variant: WorkspaceConfigurationVariant,
+  copy: WorkspaceConfigurationCopy
+) {
   if (variant === 'internal-support') {
-    return 'Theme data is read from the active customer tenant while keeping the workspace boundary explicit.';
+    return copy.accessLabels.internalSupport;
   }
 
-  return 'Theme resolution follows the current tenant defaults plus the local override policy exposed to workspace users.';
+  if (platform.user?.impersonation) {
+    return copy.accessLabels.impersonation;
+  }
+
+  return platform.workspace.canManagePlatformAdministration
+    ? copy.accessLabels.platformOwner
+    : copy.accessLabels.contracted;
 }
 
 export function buildWorkspaceConfigurationOverview(
-  platform: FrontendPlatformState
+  platform: FrontendPlatformState,
+  copy: WorkspaceConfigurationCopy
 ): WorkspaceConfigurationOverviewModel {
   const variant = resolveVariant(platform);
+  const variantKey = VARIANT_KEYS[variant];
+  const scopeName = platform.branding.scopeName;
   const primaryColor = platform.user?.tenantPrimaryColor?.toUpperCase() ?? DEFAULT_PRIMARY_COLOR;
   const accentColor = platform.user?.tenantAccentColor?.toUpperCase() ?? DEFAULT_ACCENT_COLOR;
-  const logoState = platform.branding.logoUrl ? 'Custom logo active' : 'Monogram fallback';
+  const hasLogo = Boolean(platform.branding.logoUrl);
+  const moduleCatalog: Record<string, { name: string; description: string } | undefined> = copy.modules.catalog;
   const contractedModules = platform.modules.items
     .filter((moduleItem) => moduleItem.code !== 'CORE_PLATFORM' && moduleItem.moduleEnabled)
     .map<WorkspaceConfigurationModule>((moduleItem) => ({
       code: moduleItem.code,
-      name: moduleItem.name,
-      description: moduleItem.description,
-      availabilityLabel: moduleItem.available ? 'Available in workspace' : 'Pending workspace exposure',
+      name: moduleCatalog[moduleItem.code]?.name ?? moduleItem.name,
+      description: moduleCatalog[moduleItem.code]?.description ?? moduleItem.description,
+      availabilityLabel: moduleItem.available ? copy.modules.available : copy.modules.pending,
       availabilityDescription: moduleItem.available
-        ? 'The contracted module is already exposed to this authenticated workspace.'
-        : 'The contract is active, but final workspace exposure is not complete yet.',
+        ? copy.modules.availableDescription
+        : copy.modules.pendingDescription,
       availabilityStatus: moduleItem.available ? 'active' : 'pending',
-      exposureLabel: moduleItem.featureFlagEnabled ? 'Feature exposure enabled' : 'Feature exposure pending',
+      exposureLabel: moduleItem.featureFlagEnabled ? copy.modules.exposureEnabled : copy.modules.exposurePending,
       exposureDescription: moduleItem.featureFlagEnabled
-        ? 'Feature flags currently allow this module surface to appear in the workspace.'
-        : 'Feature flags still restrict this module surface for the current workspace.',
+        ? copy.modules.exposureEnabledDescription
+        : copy.modules.exposurePendingDescription,
       exposureStatus: moduleItem.featureFlagEnabled ? 'active' : 'warn'
     }));
-  const plan = resolveWorkspacePlan(variant, contractedModules.length);
-  const status = resolveWorkspaceStatus(platform, contractedModules);
-  const visibility = resolveVisibilityField(variant);
-  const workspaceAccess = variant === 'internal-support'
-    ? 'Internal support on customer contract'
-    : platform.workspace.accessLabel;
+  const plan = resolveWorkspacePlan(variant, contractedModules.length, copy);
+  const status = resolveWorkspaceStatus(platform, contractedModules, copy);
+  const visibility = resolveVisibilityField(variant, copy);
 
   return {
     variant,
-    pageDescription:
-      variant === 'platform-owner'
-        ? 'Review platform-owner identity, controlled branding, theme policy, contracted modules, and workspace readiness.'
-        : variant === 'internal-support'
-          ? 'Review customer workspace configuration with internal support context while keeping platform-owner administration out of scope.'
-          : `Review tenant identity, controlled branding, theme policy, contracted modules, and workspace readiness for ${platform.branding.scopeName}.`,
-    identityEyebrow:
-      variant === 'platform-owner'
-        ? 'Platform Owner Workspace'
-        : variant === 'internal-support'
-          ? 'Internal Support Context'
-          : 'Customer Workspace',
-    identityTitle: platform.branding.scopeName,
-    identityDescription:
-      variant === 'platform-owner'
-        ? 'This authenticated session is inside the PhaifferTech platform-owner tenant, where shared platform context and tenant governance converge.'
-        : variant === 'internal-support'
-          ? 'This authenticated session belongs to an internal SYS_ADMIN user inside a customer tenant. The session stays tenant-scoped even though support context is visible.'
-          : 'This authenticated session is scoped to the active customer tenant and should reflect only its contract, branding policy, and exposed module surfaces.',
+    pageDescription: copy.pageDescription[variantKey].replace('{name}', scopeName),
+    identityEyebrow: copy.identityEyebrow[variantKey],
+    identityTitle: scopeName,
+    identityDescription: copy.identityDescription[variantKey],
     identityFields: [
       {
-        label: 'Workspace label',
-        value: platform.workspace.workspaceLabel,
-        description: 'Presentation label derived from the authenticated frontend platform context.'
+        label: copy.fields.workspaceLabel,
+        value: resolveWorkspaceLabel(platform, copy),
+        description: copy.fields.workspaceLabelDescription
       },
       {
-        label: 'Access scope',
-        value: workspaceAccess,
-        description: 'Current workspace scope after tenant and role context are applied.'
+        label: copy.fields.accessScope,
+        value: resolveAccessLabel(platform, variant, copy),
+        description: copy.fields.accessScopeDescription
       },
       {
-        label: 'Tenant code',
-        value: platform.branding.tenantCode ?? 'Not assigned',
-        description: 'Stable tenant identifier used to anchor the active workspace.'
+        label: copy.fields.tenantCode,
+        value: platform.branding.tenantCode ?? copy.fields.notAssigned,
+        description: copy.fields.tenantCodeDescription
       },
       {
-        label: 'Session role',
-        value: platform.user?.role ? humanizeToken(platform.user.role) : 'Unknown role',
+        label: copy.fields.sessionRole,
+        value: resolveRoleLabel(platform.user?.role, copy),
         description: platform.user?.fullName
-          ? `Current authenticated user: ${platform.user.fullName}.`
-          : 'Authenticated user details are not available in the current session.'
+          ? copy.fields.sessionUser.replace('{name}', platform.user.fullName)
+          : copy.fields.sessionUserUnknown
       }
     ],
-    brandingDescription: resolveBrandingDescription(variant, platform.branding.scopeName),
-    brandingPolicy:
-      'Tenant branding stays limited to controlled accent surfaces. Structural layout, neutral panels, and system tokens remain owned by the platform design system.',
+    brandingDescription: copy.branding.description[variantKey].replace('{name}', scopeName),
+    brandingPolicy: copy.branding.policy,
     brandingFields: [
       {
-        label: 'Primary accent',
+        label: copy.branding.primaryLabel,
         value: primaryColor,
-        description: 'Used for controlled highlights and soft branded surfaces.'
+        description: copy.branding.primaryDescription
       },
       {
-        label: 'Accent highlight',
+        label: copy.branding.accentLabel,
         value: accentColor,
-        description: 'Used for focused actions, emphasis, and lightweight callouts.'
+        description: copy.branding.accentDescription
       },
       {
-        label: 'Logo state',
-        value: logoState,
-        description: platform.branding.logoUrl
-          ? 'A tenant-provided logo is available for shared shell accent areas.'
-          : 'The workspace currently falls back to a generated monogram.'
+        label: copy.branding.logoLabel,
+        value: hasLogo ? copy.branding.logoCustom : copy.branding.logoMonogram,
+        description: hasLogo ? copy.branding.logoCustomDescription : copy.branding.logoMonogramDescription
       }
     ],
-    themeDescription: resolveThemeDescription(variant),
+    themeDescription: copy.theme.description[variantKey],
     themeFields: [
       {
-        label: 'Current shell theme',
-        value: getAppThemeModeLabel(platform.theme.mode),
-        description: 'Effective theme mode in the current browser session.'
+        label: copy.theme.currentLabel,
+        value: copy.theme.modes[platform.theme.mode],
+        description: copy.theme.currentDescription
       },
       {
-        label: 'Tenant default theme',
-        value: getAppThemeModeLabel(platform.theme.tenantDefaultMode),
+        label: copy.theme.tenantDefaultLabel,
+        value: copy.theme.modes[platform.theme.tenantDefaultMode],
         description: platform.theme.canOverride
-          ? 'Applied when the user has not stored a local preference.'
-          : 'Enforced for every user because local overrides are disabled.'
+          ? copy.theme.tenantDefaultOverridable
+          : copy.theme.tenantDefaultEnforced
       },
       {
-        label: 'Override policy',
-        value: platform.theme.canOverride ? 'User override enabled' : 'Tenant managed',
+        label: copy.theme.overrideLabel,
+        value: platform.theme.canOverride ? copy.theme.overrideEnabled : copy.theme.overrideManaged,
         description: platform.theme.canOverride
-          ? 'Users may store a personal shell theme without changing tenant defaults.'
-          : 'Theme resolution is centrally controlled by the tenant policy.',
+          ? copy.theme.overrideEnabledDescription
+          : copy.theme.overrideManagedDescription,
         badgeStatus: platform.theme.canOverride ? 'active' : 'neutral'
       }
     ],
     modulesDescription:
-      variant === 'platform-owner'
-        ? 'This view separates contracted tenant bindings, feature exposure, and final workspace availability without turning Settings into a tenant editing flow.'
-        : 'Only modules bound to the active tenant contract are shown here, with availability kept explicit before deeper navigation.',
-    modulesEmptyDescription:
-      'No contracted product modules are currently exposed for this workspace. Shared core platform services remain active.',
+      variant === 'platform-owner' ? copy.modules.description.platformOwner : copy.modules.description.other,
+    modulesEmptyDescription: copy.modules.empty,
     contractedModules,
-    coreAccessNote:
-      'CORE_PLATFORM remains implicit for every tenant workspace and is treated as foundational access rather than a separately managed product.',
+    coreAccessNote: copy.modules.coreAccessNote,
     planFields: [
       {
-        label: 'Workspace plan',
+        label: copy.plan.label,
         value: plan.value,
         description: plan.description
       },
       {
-        label: 'Workspace status',
+        label: copy.status.label,
         value: status.value,
         description: status.description,
         badgeStatus: status.badgeStatus
       },
       {
-        label: 'Visibility model',
+        label: copy.visibility.label,
         value: visibility.value,
         description: visibility.description,
         badgeStatus: visibility.badgeStatus
