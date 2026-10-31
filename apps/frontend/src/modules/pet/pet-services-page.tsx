@@ -30,6 +30,7 @@ import {
   resolveAllowedPetServiceCategories,
   resolvePetServiceBookingMode
 } from '@/modules/pet/pet-service-catalog-policy';
+import { useAppMessages } from '@/shared/i18n/app-i18n-provider';
 
 const pageSize = 10;
 
@@ -114,6 +115,7 @@ function buildServiceAvailabilityLabel(service: Pick<PetServiceCatalog, 'allowIn
 }
 
 export function PetServicesPage() {
+  const copy = useAppMessages().screens.petServices;
   const platform = useFrontendPlatform();
   const allowedCategories = useMemo(
     () => resolveAllowedPetServiceCategories(platform.user),
@@ -163,11 +165,11 @@ export function PetServicesPage() {
       });
       setPageData(result);
     } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : 'Nao foi possivel carregar o catalogo de servicos.');
+      setError(err instanceof ApiClientError ? err.message : copy.loadError);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [copy]);
 
   useEffect(() => {
     void load(0, search, categoryFilter, activeFilter);
@@ -290,12 +292,12 @@ export function PetServicesPage() {
     const parsedBasePrice = Number(basePrice);
     const parsedDuration = Number(durationMinutes);
     if (Number.isNaN(parsedBasePrice) || Number.isNaN(parsedDuration) || parsedDuration < 1) {
-      setError('Informe preco base e duracao validos.');
+      setError(copy.invalidPriceDuration);
       return;
     }
 
     if (active && !allowInPlans && !allowStandaloneBooking) {
-      setError('Servicos ativos precisam permitir agendamento avulso ou por plano.');
+      setError(copy.activeNeedsBookingMode);
       return;
     }
 
@@ -305,13 +307,13 @@ export function PetServicesPage() {
     }));
 
     if (parsedInventoryLinks.some((link) => !link.inventoryItemId || Number.isNaN(link.expectedQuantityNumber) || link.expectedQuantityNumber <= 0)) {
-      setError('Select an inventory item and enter a positive quantity for every linked recipe line.');
+      setError(copy.supplyLineInvalid);
       return;
     }
 
     const selectedInventoryIds = parsedInventoryLinks.map((link) => link.inventoryItemId);
     if (new Set(selectedInventoryIds).size !== selectedInventoryIds.length) {
-      setError('A service recipe cannot repeat the same inventory item.');
+      setError(copy.supplyDuplicate);
       return;
     }
 
@@ -338,16 +340,16 @@ export function PetServicesPage() {
 
       if (editingId) {
         await petService.updateService(editingId, payload);
-        setSuccess('Servico atualizado.');
+        setSuccess(copy.updated);
       } else {
         await petService.createService(payload);
-        setSuccess('Servico criado.');
+        setSuccess(copy.created);
       }
 
       resetForm();
       await load(pageData.page, search, categoryFilter, activeFilter);
     } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : 'Nao foi possivel salvar o servico.');
+      setError(err instanceof ApiClientError ? err.message : copy.saveError);
     } finally {
       setSubmitting(false);
     }
@@ -361,10 +363,10 @@ export function PetServicesPage() {
     try {
       await petService.deleteService(deleteCandidate.id);
       setDeleteCandidate(null);
-      setSuccess('Servico removido.');
+      setSuccess(copy.deleted);
       await load(pageData.page, search, categoryFilter, activeFilter);
     } catch (err) {
-      setError(err instanceof ApiClientError ? err.message : 'Nao foi possivel excluir o servico selecionado.');
+      setError(err instanceof ApiClientError ? err.message : copy.deleteError);
     }
   }
 
@@ -397,11 +399,11 @@ export function PetServicesPage() {
       }));
 
     return [
-      { value: '', label: 'Select an inventory item' },
+      { value: '', label: copy.selectSupply },
       ...knownOptions,
       ...fallbackOptions
     ];
-  }, [inventoryLinks, products]);
+  }, [inventoryLinks, products, copy]);
   const activeInventoryLinks = inventoryLinks.filter((link) => link.inventoryItemId && link.active);
   const inventoryPreview = activeInventoryLinks.length > 0
     ? activeInventoryLinks
@@ -436,7 +438,7 @@ export function PetServicesPage() {
   const summaryCards: DashboardSummaryCard[] = [
     {
       key: 'services-in-scope',
-      label: 'Catalogo visivel',
+      label: copy.metricVisible,
       value: totalItems,
       trend: activeFilterCount > 0
         ? 'Recorte atual do catalogo usado na agenda.'
@@ -444,19 +446,19 @@ export function PetServicesPage() {
     },
     {
       key: 'active-services',
-      label: 'Ativos para agenda',
+      label: copy.metricActive,
       value: activeServices,
       trend: 'Somente servicos ativos entram em novos atendimentos.'
     },
     {
       key: 'plan-ready-services',
-      label: 'Aceitam plano',
+      label: copy.metricPlanEligible,
       value: planReadyServices,
       trend: 'Base para pacotes recorrentes de banho e tosa.'
     },
     {
       key: 'average-service-duration',
-      label: 'Duracao media',
+      label: copy.metricAverageDuration,
       value: averageDuration,
       trend: `Ticket base medio visivel: R$ ${averageBasePrice}.`
     }
@@ -468,14 +470,14 @@ export function PetServicesPage() {
   }));
 
   const filterCategoryOptions = [
-    { value: '', label: 'Todas as categorias' },
+    { value: '', label: copy.allCategories },
     ...categoryOptions
   ];
 
   const activeFilterOptions = [
-    { value: 'all', label: 'Todos os status' },
-    { value: 'active', label: 'Somente ativos' },
-    { value: 'inactive', label: 'Somente inativos' }
+    { value: 'all', label: copy.allStatuses },
+    { value: 'active', label: copy.onlyActive },
+    { value: 'inactive', label: copy.onlyInactive }
   ];
 
   const columns: DataTableColumn<PetServiceCatalog>[] = [
@@ -486,7 +488,7 @@ export function PetServicesPage() {
         <div>
           <p className="font-medium text-slate-900">{item.name}</p>
           <p className="mt-1 text-sm text-[color:var(--app-shell-muted)]">
-            {item.description ?? 'Sem resumo operacional cadastrado.'}
+            {item.description ?? copy.noSummary}
           </p>
         </div>
       )
@@ -498,7 +500,7 @@ export function PetServicesPage() {
         <div className="space-y-1">
           <p className="text-sm font-medium text-slate-900">{formatPetServiceCategory(item.category)}</p>
           <p className="text-xs text-[color:var(--app-shell-muted)]">
-            {item.active ? 'Ativo para novos atendimentos' : 'Inativo para novos atendimentos'}
+            {item.active ? copy.activeForBooking : copy.inactiveForBooking}
           </p>
         </div>
       )
@@ -518,9 +520,9 @@ export function PetServicesPage() {
       header: 'Uso na agenda',
       render: (item) => (
         <div className="space-y-1 text-xs text-[color:var(--app-shell-muted)]">
-          <p>{item.allowStandaloneBooking ? 'Pode ser avulso' : 'Exige plano vinculado'}</p>
-          <p>{item.allowInPlans ? 'Pode consumir sessoes de plano' : 'Somente atendimento avulso'}</p>
-          <p>{item.commissionEligible ? 'Gera comissao' : 'Fora da comissao'}</p>
+          <p>{item.allowStandaloneBooking ? copy.standaloneAllowed : copy.planRequired}</p>
+          <p>{item.allowInPlans ? copy.planSessionsAllowed : copy.standaloneOnly}</p>
+          <p>{item.commissionEligible ? copy.generatesCommission : copy.noCommission}</p>
         </div>
       )
     },
@@ -530,7 +532,7 @@ export function PetServicesPage() {
       render: (item) => (
         <div className="space-y-1 text-xs text-[color:var(--app-shell-muted)]">
           <p className="font-medium text-slate-900">
-            {item.inventoryLinks.filter((link) => link.active).length} insumo(s) vinculado(s)
+            {item.inventoryLinks.filter((link) => link.active).length} {copy.linkedSupplies}
           </p>
           <p>{formatInventoryLinkSummary(item)}</p>
         </div>
@@ -547,7 +549,7 @@ export function PetServicesPage() {
               onClick={() => beginEdit(item)}
               className="ui-inline-button"
             >
-              Editar
+              {copy.edit}
             </button>
           </PermissionGuard>
           <PermissionGuard permission="pet.service.delete">
@@ -556,7 +558,7 @@ export function PetServicesPage() {
               onClick={() => setDeleteCandidate(item)}
               className="ui-inline-danger-button"
             >
-              Excluir
+              {copy.delete}
             </button>
           </PermissionGuard>
         </div>
@@ -567,17 +569,17 @@ export function PetServicesPage() {
   return (
     <PermissionGuard
       permission="pet.service.read"
-      fallback={<div className="ui-notice-warning">Voce nao tem permissao para visualizar o catalogo de servicos.</div>}
+      fallback={<div className="ui-notice-warning">{copy.noPermission}</div>}
     >
       <div className={sharedPageStackClass}>
         <PageTitle
           eyebrow="Gestão Pet"
-          title="Catalogo de Banho e Tosa"
-          description="Estruture banho, tosa e servicos combinados com preco, duracao, plano, comissao, insumos e base operacional para evoluir preco por porte, peso e pelagem."
+          title={copy.title}
+          description={copy.description}
           actions={(
             <PermissionGuard permission="pet.service.create">
               <button type="button" onClick={beginCreateService} className="ui-primary-button">
-                Novo servico
+                {copy.newService}
               </button>
             </PermissionGuard>
           )}
@@ -587,25 +589,25 @@ export function PetServicesPage() {
 
         <PageSection
           tone="muted"
-          title="Filtros do catalogo"
-          description="Encontre rapidamente o servico certo para montar um atendimento de banho e tosa durante a demo."
+          title={copy.filtersTitle}
+          description={copy.filtersDescription}
         >
           <div className={sharedFilterToolbarClass}>
             <div className="grid gap-3 xl:grid-cols-[minmax(0,1.45fr)_repeat(2,minmax(0,0.9fr))] xl:items-end">
               <SearchBar
-                label="Busca"
+                label={copy.searchLabel}
                 value={searchInput}
                 onChange={setSearchInput}
-                placeholder="Nome do servico ou resumo"
+                placeholder={copy.searchPlaceholder}
               />
               <FormSelect
-                label="Categoria"
+                label={copy.category}
                 value={categoryFilter}
                 options={filterCategoryOptions}
                 onChange={setCategoryFilter}
               />
               <FormSelect
-                label="Status"
+                label={copy.status}
                 value={activeFilter}
                 options={activeFilterOptions}
                 onChange={(value) => setActiveFilter(value as 'all' | 'active' | 'inactive')}
@@ -617,7 +619,7 @@ export function PetServicesPage() {
                 onClick={() => setSearch(searchInput)}
                 className="ui-primary-button"
               >
-                Buscar
+                {copy.search}
               </button>
               <button
                 type="button"
@@ -629,12 +631,12 @@ export function PetServicesPage() {
                 }}
                 className="ui-secondary-button"
               >
-                Limpar
+                {copy.clear}
               </button>
               <p className="text-sm text-[color:var(--app-shell-muted)]">
                 {activeFilterCount > 0
-                  ? 'Catalogo filtrado para o recorte operacional da demo.'
-                  : 'Sem filtros ativos. Exibindo o mix completo de servicos.'}
+                  ? copy.filteredHint
+                  : copy.noFiltersHint}
               </p>
             </div>
           </div>
@@ -643,40 +645,40 @@ export function PetServicesPage() {
         <PermissionGuard permission={editingId ? 'pet.service.update' : 'pet.service.create'}>
           <div id="pet-service-form-section">
             <PageSection
-              title={editingId ? 'Editar servico' : 'Criar servico'}
-              description="Cadastre a definicao que a agenda usa: categoria, duracao, preco base, plano, booking avulso, comissao, resumo operacional e insumos."
+              title={editingId ? copy.editService : copy.createService}
+              description={copy.formDescription}
             >
               <form onSubmit={handleSubmit} className="space-y-5">
                 <div className="grid gap-4 xl:grid-cols-2">
-                  <FormInput label="Nome" value={name} onChange={setName} required />
-                  <FormSelect label="Categoria" value={category} options={categoryOptions} onChange={(value) => setCategory(value as PetServiceCategory)} />
-                  <FormInput label="Preco base" value={basePrice} onChange={setBasePrice} type="number" required />
-                  <FormInput label="Duracao (min)" value={durationMinutes} onChange={setDurationMinutes} type="number" required />
-                  <FormInput label="Resumo operacional" value={description} onChange={setDescription} wrapperClassName="xl:col-span-2" />
+                  <FormInput label={copy.name} value={name} onChange={setName} required />
+                  <FormSelect label={copy.category} value={category} options={categoryOptions} onChange={(value) => setCategory(value as PetServiceCategory)} />
+                  <FormInput label={copy.basePrice} value={basePrice} onChange={setBasePrice} type="number" required />
+                  <FormInput label={copy.durationMinutes} value={durationMinutes} onChange={setDurationMinutes} type="number" required />
+                  <FormInput label={copy.operatingSummary} value={description} onChange={setDescription} wrapperClassName="xl:col-span-2" />
                 </div>
 
                 <div className="grid gap-3 xl:grid-cols-2">
                   <ServiceFlagToggle
-                    label="Ativo para agenda"
-                    description="Servicos inativos ficam no historico, mas nao entram em novos atendimentos."
+                    label={copy.activeForSchedule}
+                    description={copy.inactiveHint}
                     checked={active}
                     onChange={setActive}
                   />
                   <ServiceFlagToggle
-                    label="Gera comissao"
-                    description="Mostra na demo quais servicos entram no fechamento de producao da equipe."
+                    label={copy.generatesCommission}
+                    description={copy.commissionHint}
                     checked={commissionEligible}
                     onChange={setCommissionEligible}
                   />
                   <ServiceFlagToggle
-                    label="Permitido em planos"
-                    description="Use para banho recorrente, pacotes mensais e sessoes pre-pagas."
+                    label={copy.allowedInPlans}
+                    description={copy.allowedInPlansHint}
                     checked={allowInPlans}
                     onChange={setAllowInPlans}
                   />
                   <ServiceFlagToggle
-                    label="Permitido como avulso"
-                    description="Use quando o servico pode ser vendido fora de um plano recorrente."
+                    label={copy.allowedStandalone}
+                    description={copy.allowedStandaloneHint}
                     checked={allowStandaloneBooking}
                     onChange={setAllowStandaloneBooking}
                   />
@@ -686,10 +688,10 @@ export function PetServicesPage() {
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div>
                       <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--app-shell-muted)]">
-                        Insumos vinculados
+                        {copy.linkedSuppliesTitle}
                       </p>
                       <p className="mt-2 text-sm text-[color:var(--app-shell-muted)]">
-                        Vincule os produtos ou materiais que este servico deve consumir. A agenda usa isto como consumo planejado antes do ajuste real.
+                        {copy.linkedSuppliesDescription}
                       </p>
                     </div>
                     <button
@@ -698,7 +700,7 @@ export function PetServicesPage() {
                       disabled={Boolean(productsLookupError)}
                       className="ui-secondary-button"
                     >
-                      Adicionar insumo
+                      {copy.addSupply}
                     </button>
                   </div>
 
@@ -717,14 +719,14 @@ export function PetServicesPage() {
                         >
                           <div className="grid gap-3 xl:grid-cols-[minmax(0,1.5fr)_180px_auto] xl:items-end">
                             <FormSelect
-                              label="Insumo"
+                              label={copy.supply}
                               value={link.inventoryItemId}
                               options={inventoryOptions}
                               onChange={(value) => handleInventoryLinkChange(index, { inventoryItemId: value })}
                               disabled={Boolean(productsLookupError)}
                             />
                             <FormInput
-                              label="Qtd. por servico"
+                              label={copy.quantityPerService}
                               value={link.expectedQuantity}
                               onChange={(value) => handleInventoryLinkChange(index, { expectedQuantity: value })}
                               type="number"
@@ -739,30 +741,30 @@ export function PetServicesPage() {
                                   onChange={(event) => handleInventoryLinkChange(index, { active: event.target.checked })}
                                   className="h-4 w-4 rounded border-[color:var(--app-shell-border)]"
                                 />
-                                Ativo
+                                {copy.active}
                               </label>
                               <button
                                 type="button"
                                 onClick={() => handleRemoveInventoryLink(index)}
                                 className="ui-inline-button"
                               >
-                                Remover
+                                {copy.remove}
                               </button>
                             </div>
                           </div>
                           <p className="mt-2 text-xs text-[color:var(--app-shell-muted)]">
                             {link.inventoryItemName
                               ? `${link.inventoryItemName}${link.inventoryItemSku ? ` (${link.inventoryItemSku})` : ''}`
-                              : 'Escolha um produto ou material do estoque atual.'}
+                              : copy.supplyHint}
                             {link.unitOfMeasure ? ` • Unit ${link.unitOfMeasure}` : ''}
-                            {link.active ? ' • Visivel no consumo planejado do atendimento.' : ' • Salvo, mas oculto do consumo planejado ate reativar.'}
+                            {link.active ? copy.supplyVisibleHint : copy.supplyHiddenHint}
                           </p>
                         </div>
                       ))}
                     </div>
                   ) : (
                     <p className="mt-4 text-xs text-[color:var(--app-shell-muted)]">
-                      Deixe vazio para servicos que ainda nao precisam de consumo planejado de estoque.
+                      {copy.noSuppliesHint}
                     </p>
                   )}
                 </div>
@@ -773,28 +775,28 @@ export function PetServicesPage() {
                     : 'border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-panel-muted)]'
                 }`}>
                   <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--app-shell-muted)]">
-                    Previa para a agenda
+                    {copy.previewTitle}
                   </p>
                   <p className="mt-2 text-sm font-medium text-[color:var(--app-shell-heading)]">
                     {draftServicePreview}
                   </p>
                   <div className="mt-3 grid gap-2 text-xs text-[color:var(--app-shell-muted)] xl:grid-cols-2">
-                    <p>Categoria: {formatPetServiceCategory(category)}</p>
-                    <p>Status: {active ? 'Ativo para novos atendimentos' : 'Oculto de novos atendimentos'}</p>
-                    <p>Uso: {draftAvailabilityLabel}</p>
-                    <p>{commissionEligible ? 'Entra na comissao' : 'Fora da comissao'}</p>
-                    <p>Base futura: porte, peso e pelagem podem usar este preco base como ancora.</p>
-                    <p>Status: {active ? 'Ativo para novos atendimentos' : 'Oculto de novos atendimentos'}</p>
-                    <p>Modo de agenda: {draftAvailabilityLabel}</p>
-                    <p>{commissionEligible ? 'Pronto para comissao' : 'Fora da comissao'}</p>
-                    <p className="xl:col-span-2">Previa de insumos: {inventoryPreview}</p>
+                    <p>{copy.previewCategory} {formatPetServiceCategory(category)}</p>
+                    <p>{copy.previewStatus} {active ? copy.activeForBooking : copy.hiddenFromBooking}</p>
+                    <p>{copy.previewUsage} {draftAvailabilityLabel}</p>
+                    <p>{commissionEligible ? copy.inCommission : copy.noCommission}</p>
+                    <p>{copy.pricingFutureHint}</p>
+                    <p>{copy.previewStatus} {active ? copy.activeForBooking : copy.hiddenFromBooking}</p>
+                    <p>{copy.previewBookingMode} {draftAvailabilityLabel}</p>
+                    <p>{commissionEligible ? copy.commissionReady : copy.noCommission}</p>
+                    <p className="xl:col-span-2">{copy.previewSupplies} {inventoryPreview}</p>
                   </div>
                   <p className={`mt-3 text-xs ${activeSchedulingConflict ? 'text-amber-800' : 'text-[color:var(--app-shell-muted)]'}`}>
                     {activeSchedulingConflict
-                      ? 'Servicos ativos precisam de pelo menos um caminho de agendamento habilitado.'
+                      ? copy.activeNeedsBookingPath
                       : active
-                        ? 'Esta previa corresponde ao que o operador ve ao montar um atendimento.'
-                        : 'Servicos inativos ficam disponiveis apenas para leitura historica e edicoes seguras.'}
+                        ? copy.previewMatchesOperator
+                        : copy.inactiveReadOnlyHint}
                   </p>
                 </div>
 
@@ -804,14 +806,14 @@ export function PetServicesPage() {
                     disabled={submitting}
                     className="ui-primary-button"
                   >
-                    {submitting ? 'Salvando...' : editingId ? 'Atualizar servico' : 'Criar servico'}
+                    {submitting ? copy.saving : editingId ? copy.updateService : copy.createService}
                   </button>
                   <button
                     type="button"
                     onClick={resetForm}
                     className="ui-secondary-button"
                   >
-                    {editingId ? 'Cancelar edicao' : 'Limpar formulario'}
+                    {editingId ? copy.cancelEdit : copy.clearForm}
                   </button>
                 </div>
               </form>
@@ -823,9 +825,9 @@ export function PetServicesPage() {
         {success ? <div className="ui-notice-success">{success}</div> : null}
 
         <PageSection
-          title="Catalogo operacional"
-          description="Revise o mix que sera usado para explicar preco, duracao, profissional, plano e comissao no fluxo de banho e tosa."
-          actions={<p className="text-sm text-[color:var(--app-shell-muted)]">Total {totalItems} servico(s)</p>}
+          title={copy.listTitle}
+          description={copy.listDescription}
+          actions={<p className="text-sm text-[color:var(--app-shell-muted)]">{copy.total} {totalItems} {copy.servicesCount}</p>}
         >
           <div className="space-y-5">
             <DataTable
@@ -836,14 +838,14 @@ export function PetServicesPage() {
               loadingTitle="Carregando catalogo"
               loadingDescription="Preparando servicos com categoria, regra de agendamento e preco."
               emptyState={{
-                title: 'Nenhum servico encontrado',
+                title: copy.emptyTitle,
                 description: activeFilterCount > 0
-                  ? 'Ajuste os filtros ou cadastre um servico para manter a demo pronta.'
-                  : 'Crie o primeiro servico para que a agenda, os planos e a comissao fiquem estruturados.',
+                  ? copy.emptyFiltered
+                  : copy.emptyDescription,
                 action: (
                   <PermissionGuard permission="pet.service.create">
                     <button type="button" onClick={beginCreateService} className="ui-primary-button">
-                      Criar primeiro servico
+                      {copy.createFirst}
                     </button>
                   </PermissionGuard>
                 )
@@ -861,7 +863,7 @@ export function PetServicesPage() {
 
         <ConfirmDialog
           open={deleteCandidate !== null}
-          title="Excluir servico?"
+          title={copy.deleteConfirmTitle}
           description={deleteCandidate ? `O servico "${describePetServiceCatalogItem(deleteCandidate, 'pt-BR')}" sera removido do catalogo.` : undefined}
           onConfirm={handleConfirmDelete}
           onCancel={() => setDeleteCandidate(null)}
