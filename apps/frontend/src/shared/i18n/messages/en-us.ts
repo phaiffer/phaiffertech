@@ -394,6 +394,13 @@ export const enUSMessages: AppMessages = {
       officialSuccess: 'Official WhatsApp dispatch sent. Dispatch: {id}.',
       officialFailure: 'Unable to send the official WhatsApp message. Use the prepared manual fallback.'
     },
+    appointmentInvoice: {
+      generate: 'Generate invoice',
+      generating: 'Generating...',
+      open: 'Open invoice',
+      success: 'Invoice of {amount} generated for {client}. Record the payment under Billing.',
+      error: 'Unable to generate the invoice for this appointment.'
+    },
     statuses: {
       all: 'All statuses',
       scheduled: 'Scheduled',

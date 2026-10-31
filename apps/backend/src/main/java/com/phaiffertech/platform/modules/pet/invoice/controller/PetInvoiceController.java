@@ -84,6 +84,12 @@ public class PetInvoiceController {
         return ApiResponse.success(service.restore(id));
     }
 
+    @PostMapping("/from-appointment/{appointmentId}")
+    @RequirePermission("pet.invoice.create")
+    public ApiResponse<PetInvoiceResponse> createFromAppointment(@PathVariable UUID appointmentId) {
+        return ApiResponse.success(service.ensureAppointmentInvoice(appointmentId));
+    }
+
     @PostMapping("/monthly-close")
     @RequirePermission("pet.invoice.create")
     public ApiResponse<PetInvoiceResponse> monthlyClose(@Valid @RequestBody MonthlyCloseRequest request) {

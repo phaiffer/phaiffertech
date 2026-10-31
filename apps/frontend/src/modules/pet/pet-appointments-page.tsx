@@ -557,6 +557,8 @@ export function PetAppointmentsPage() {
   const [applyingInventoryRowId, setApplyingInventoryRowId] = useState<string | null>(null);
   const [preparedPickupMessage, setPreparedPickupMessage] = useState('');
   const [preparingPickupAppointmentId, setPreparingPickupAppointmentId] = useState<string | null>(null);
+  const [generatingInvoiceAppointmentId, setGeneratingInvoiceAppointmentId] = useState<string | null>(null);
+  const [invoicedAppointmentIds, setInvoicedAppointmentIds] = useState<ReadonlySet<string>>(() => new Set());
   const [dispatchingPickupAppointmentId, setDispatchingPickupAppointmentId] = useState<string | null>(null);
   const [preparedPickupAppointmentId, setPreparedPickupAppointmentId] = useState<string | null>(null);
   const [dispatchedPickupAppointmentId, setDispatchedPickupAppointmentId] = useState<string | null>(null);
@@ -1454,6 +1456,24 @@ export function PetAppointmentsPage() {
     messages.preparedPickup.success
   ]);
 
+  const handleGenerateInvoice = useCallback(async (appointment: PetAppointment) => {
+    setGeneratingInvoiceAppointmentId(appointment.id);
+    setError(null);
+    setSuccess(null);
+
+    try {
+      const invoice = await petService.generateInvoiceFromAppointment(appointment.id);
+      setInvoicedAppointmentIds((current) => new Set(current).add(appointment.id));
+      setSuccess(messages.appointmentInvoice.success
+        .replace('{amount}', formatCurrencyForLocale(locale, invoice.totalAmount))
+        .replace('{client}', invoice.clientName ?? appointment.clientName ?? ''));
+    } catch (err) {
+      setError(err instanceof ApiClientError ? err.message : messages.appointmentInvoice.error);
+    } finally {
+      setGeneratingInvoiceAppointmentId(null);
+    }
+  }, [locale, messages.appointmentInvoice]);
+
   const handleDispatchPickupMessage = useCallback(async (appointment: PetAppointment) => {
     setDispatchingPickupAppointmentId(appointment.id);
     setError(null);
@@ -1511,9 +1531,15 @@ export function PetAppointmentsPage() {
     preparingPickupAppointmentId,
     dispatchingPickupAppointmentId,
     preparedPickupAppointmentId,
-    dispatchedPickupAppointmentId
+    dispatchedPickupAppointmentId,
+    onGenerateInvoice: handleGenerateInvoice,
+    generatingInvoiceAppointmentId,
+    invoicedAppointmentIds
   }), [
     clients,
+    generatingInvoiceAppointmentId,
+    handleGenerateInvoice,
+    invoicedAppointmentIds,
     clientsLookupUnavailable,
     commonButtons,
     handlePreparePickupMessage,

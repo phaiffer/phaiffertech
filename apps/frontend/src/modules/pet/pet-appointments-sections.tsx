@@ -576,6 +576,9 @@ type CreatePetAppointmentColumnsArgs = {
   dispatchingPickupAppointmentId: string | null;
   preparedPickupAppointmentId: string | null;
   dispatchedPickupAppointmentId: string | null;
+  onGenerateInvoice: (appointment: PetAppointment) => void;
+  generatingInvoiceAppointmentId: string | null;
+  invoicedAppointmentIds: ReadonlySet<string>;
 };
 
 export function createPetAppointmentColumns({
@@ -595,7 +598,10 @@ export function createPetAppointmentColumns({
   preparingPickupAppointmentId,
   dispatchingPickupAppointmentId,
   preparedPickupAppointmentId,
-  dispatchedPickupAppointmentId
+  dispatchedPickupAppointmentId,
+  onGenerateInvoice,
+  generatingInvoiceAppointmentId,
+  invoicedAppointmentIds
 }: CreatePetAppointmentColumnsArgs): DataTableColumn<PetAppointment>[] {
   const resolveClientEmail = (appointment: PetAppointment) => {
     return clients.find((client) => client.id === appointment.clientId)?.email ?? null;
@@ -946,6 +952,29 @@ export function createPetAppointmentColumns({
               >
                 {dispatchingPickupAppointmentId === appointment.id ? messages.preparedPickup.officialSending : messages.preparedPickup.officialSend}
               </button>
+            </PermissionGuard>
+          ) : null}
+          {appointment.status.toUpperCase() === 'COMPLETED' && (appointment.finalAmountDue ?? 0) > 0 ? (
+            <PermissionGuard permission="pet.invoice.create">
+              {invoicedAppointmentIds.has(appointment.id) ? (
+                <Link
+                  href="/pet/invoices"
+                  className="rounded-lg border border-emerald-300 px-2 py-1 text-xs font-medium text-emerald-700"
+                >
+                  {messages.appointmentInvoice.open}
+                </Link>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => onGenerateInvoice(appointment)}
+                  className="rounded-lg border border-amber-300 px-2 py-1 text-xs font-medium text-amber-800"
+                  disabled={generatingInvoiceAppointmentId === appointment.id}
+                >
+                  {generatingInvoiceAppointmentId === appointment.id
+                    ? messages.appointmentInvoice.generating
+                    : messages.appointmentInvoice.generate}
+                </button>
+              )}
             </PermissionGuard>
           ) : null}
           {preparedPickupAppointmentId === appointment.id ? (

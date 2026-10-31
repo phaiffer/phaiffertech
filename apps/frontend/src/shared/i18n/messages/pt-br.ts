@@ -400,6 +400,13 @@ const ptBRMessages = {
       officialSuccess: 'Envio oficial por WhatsApp realizado. Dispatch: {id}.',
       officialFailure: 'Nao foi possivel enviar o WhatsApp oficial. Use o fallback manual preparado.'
     },
+    appointmentInvoice: {
+      generate: 'Gerar cobranca',
+      generating: 'Gerando...',
+      open: 'Abrir cobranca',
+      success: 'Cobranca de {amount} gerada para {client}. Registre o pagamento em Cobranca.',
+      error: 'Nao foi possivel gerar a cobranca deste atendimento.'
+    },
     statuses: {
       all: 'Todos os status',
       scheduled: 'Agendado',

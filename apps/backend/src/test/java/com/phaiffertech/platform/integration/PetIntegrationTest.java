@@ -147,6 +147,47 @@ class PetIntegrationTest extends AbstractIntegrationTest {
     }
 
     @Test
+    void shouldGenerateInvoiceFromCompletedAppointmentOnce() {
+        AuthSession session = loginAsDefaultAdmin();
+        String marker = randomSearchMarker();
+        String clientId = createClient(session, marker);
+        String petId = createPet(session, clientId, marker);
+        String serviceId = createService(session, marker);
+        String professionalId = createProfessional(session, marker);
+
+        Map<String, Object> appointmentPayload = new LinkedHashMap<>();
+        appointmentPayload.put("clientId", clientId);
+        appointmentPayload.put("petId", petId);
+        appointmentPayload.put("serviceId", serviceId);
+        appointmentPayload.put("professionalId", professionalId);
+        appointmentPayload.put("scheduledAt", Instant.now().plusSeconds(3600).toString());
+        appointmentPayload.put("status", "SCHEDULED");
+        ResponseEntity<JsonNode> createAppointment = post("/pet/appointments", appointmentPayload, session);
+        assertEquals(200, createAppointment.getStatusCode().value());
+        String appointmentId = requireBody(createAppointment).path("data").path("id").asText();
+
+        ResponseEntity<JsonNode> notCompleted = post("/pet/invoices/from-appointment/" + appointmentId, Map.of(), session);
+        assertEquals(409, notCompleted.getStatusCode().value());
+
+        appointmentPayload.put("status", "COMPLETED");
+        assertEquals(200, put("/pet/appointments/" + appointmentId, appointmentPayload, session).getStatusCode().value());
+
+        ResponseEntity<JsonNode> generated = post("/pet/invoices/from-appointment/" + appointmentId, Map.of(), session);
+        assertEquals(200, generated.getStatusCode().value());
+        JsonNode invoice = requireBody(generated).path("data");
+        assertEquals(clientId, invoice.path("clientId").asText());
+        assertEquals(89.90, invoice.path("totalAmount").asDouble(), 0.01);
+        assertEquals("ISSUED", invoice.path("status").asText());
+        assertEquals("PET.APPOINTMENT", invoice.path("businessContextType").asText());
+        assertEquals(appointmentId, invoice.path("businessContextId").asText());
+
+        // A second click returns the same invoice instead of charging the visit twice.
+        ResponseEntity<JsonNode> again = post("/pet/invoices/from-appointment/" + appointmentId, Map.of(), session);
+        assertEquals(200, again.getStatusCode().value());
+        assertEquals(invoice.path("id").asText(), requireBody(again).path("data").path("id").asText());
+    }
+
+    @Test
     void shouldCreateAndFilterMultiServiceAppointment() {
         AuthSession session = loginAsDefaultAdmin();
         String marker = randomSearchMarker();

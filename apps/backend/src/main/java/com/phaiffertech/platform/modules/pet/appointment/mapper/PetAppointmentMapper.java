@@ -20,6 +20,22 @@ public final class PetAppointmentMapper implements BaseCrudMapper<
     private PetAppointmentMapper() {
     }
 
+    /**
+     * Checkout total for the visit: extras only when a plan session covers the service,
+     * otherwise service price plus extras.
+     */
+    public static BigDecimal resolveFinalAmountDue(PetAppointment appointment) {
+        BigDecimal extras = appointment.getExtrasAmount() != null ? appointment.getExtrasAmount() : BigDecimal.ZERO;
+        BigDecimal base = isPlanCovered(appointment)
+                ? BigDecimal.ZERO
+                : (appointment.getServicePrice() != null ? appointment.getServicePrice() : BigDecimal.ZERO);
+        return base.add(extras);
+    }
+
+    private static boolean isPlanCovered(PetAppointment appointment) {
+        return appointment.getClientPlanId() != null && appointment.isPlanSessionConsumed();
+    }
+
     @Override
     public PetAppointment toNewEntity(PetAppointmentCreateRequest request) {
         PetAppointment appointment = new PetAppointment();
@@ -77,12 +93,8 @@ public final class PetAppointmentMapper implements BaseCrudMapper<
             int prescriptionCount,
             Integer planRemainingSessions
     ) {
-        boolean planCovered = appointment.getClientPlanId() != null && appointment.isPlanSessionConsumed();
-        BigDecimal extras = appointment.getExtrasAmount() != null ? appointment.getExtrasAmount() : BigDecimal.ZERO;
-        BigDecimal base = planCovered
-                ? BigDecimal.ZERO
-                : (appointment.getServicePrice() != null ? appointment.getServicePrice() : BigDecimal.ZERO);
-        BigDecimal finalAmountDue = base.add(extras);
+        boolean planCovered = isPlanCovered(appointment);
+        BigDecimal finalAmountDue = resolveFinalAmountDue(appointment);
 
         return new PetAppointmentResponse(
                 appointment.getId(),
