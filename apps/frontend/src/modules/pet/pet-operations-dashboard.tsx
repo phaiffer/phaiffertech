@@ -394,9 +394,9 @@ export function PetOperationsDashboard({
             {copy.printQueue}
           </button>
           {canCreateAppointments ? (
-            <button type="button" onClick={openNewAppointment} className="ui-primary-button">
+            <button type="button" onClick={openNewAppointment} aria-keyshortcuts="N" className="ui-primary-button">
               {copy.newAppointment}
-              <kbd className="ui-kbd">N</kbd>
+              <kbd className="ui-kbd" aria-hidden="true">N</kbd>
             </button>
           ) : null}
         </div>
@@ -409,7 +409,7 @@ export function PetOperationsDashboard({
         {stats.map((stat) => (
           <div key={stat.key} className="flex flex-col gap-0.5 border-r border-[color:var(--line-soft)] px-4 py-3 first:pl-0 last:border-r-0">
             <dt className="text-xs text-[var(--muted)]">{stat.label}</dt>
-            <dd className="ui-mono text-lg font-medium text-[var(--ink)]">{loading ? ', ' : stat.value}</dd>
+            <dd className="ui-mono text-lg font-medium text-[var(--ink)]">{loading ? '…' : stat.value}</dd>
           </div>
         ))}
       </dl>
@@ -465,7 +465,7 @@ export function PetOperationsDashboard({
                   <span className="text-xs text-[var(--muted)]">{item.kind}</span>
                   <span className="min-w-0 truncate">
                     <span className="font-medium text-[var(--ink)]">{item.title}</span>{' '}
-                    <span className="text-[var(--muted)]">, {item.detail}</span>
+                    <span className="text-[var(--muted)]">· {item.detail}</span>
                   </span>
                   <Link href={item.href} className="whitespace-nowrap font-medium text-[var(--ink)] underline-offset-2 hover:underline">
                     {item.action}
@@ -556,7 +556,7 @@ function QueueCard({
     >
       <span className="flex items-baseline gap-2">
         <span className="ui-mono text-xs text-[var(--muted)]">{formatTimeForLocale(locale, appointment.scheduledAt)}</span>
-        <span className={`font-semibold ${ready ? 'ui-highlight' : ''}`}>{appointment.petName ?? ', '}</span>
+        <span className={`font-semibold ${ready ? 'ui-highlight' : ''}`}>{appointment.petName ?? '-'}</span>
         {flag ? <span className="ml-auto whitespace-nowrap text-xs text-[var(--muted)]">{flag}</span> : null}
       </span>
       <span className="truncate text-[13px] text-[var(--ink-2)]">{appointment.serviceName}</span>

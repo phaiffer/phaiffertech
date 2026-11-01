@@ -35,7 +35,18 @@ export const enUSScreens: AppMessages['screens'] = {
     legacyService: 'Legacy appointment services cannot be used for new bookings.',
     serviceNotInPlans: 'At least one selected service is not available for plan-based appointments.',
     serviceRequiresPlan: 'At least one selected service requires a linked plan before booking.',
-    primaryLine: 'Primary line'
+    primaryLine: 'Primary line',
+    viewGroup: 'View',
+    viewDay: 'Day',
+    viewList: 'List',
+    viewMonth: 'Month',
+    previousDay: 'Previous day',
+    nextDay: 'Next day',
+    today: 'Today',
+    dayGrid: 'Day grid',
+    noProfessional: 'No professional',
+    dayEmpty: 'No appointments on this day.',
+    bookAt: 'Book at {time}'
   },
   petClients: {
     documentTypeRequired: 'Select the document type.',

@@ -100,6 +100,11 @@ const { currentPlatformState } = vi.hoisted(() => ({
   } as FrontendPlatformState
 }));
 
+vi.mock('next/navigation', () => ({
+  useRouter: () => ({ push: vi.fn() }),
+  usePathname: () => '/dashboard'
+}));
+
 vi.mock('@/shared/platform/use-frontend-platform', () => ({
   useFrontendPlatform: () => currentPlatformState
 }));
@@ -218,9 +223,9 @@ describe('DashboardPage workspace context', () => {
       expect(moduleService.getDashboardSummary).toHaveBeenCalledTimes(1);
     });
 
-    expect(screen.getByRole('heading', { name: 'Operations overview' })).toBeInTheDocument();
-    expect(screen.getByText('Official demo surface')).toBeInTheDocument();
-    expect(screen.getAllByText('Pet Management').length).toBeGreaterThan(0);
+    // Pet tenants land on "Today" (the v2 operations screen) with today's queue.
+    expect(screen.getByRole('heading', { name: 'Today' })).toBeInTheDocument();
+    expect(screen.getByRole('region', { name: "Today's queue" })).toBeInTheDocument();
     expect(screen.queryByText('Visible products')).not.toBeInTheDocument();
     expect(screen.queryByText('Products in this workspace')).not.toBeInTheDocument();
     expect(screen.queryByText('CRM Snapshot')).not.toBeInTheDocument();
@@ -416,9 +421,9 @@ describe('DashboardPage workspace context', () => {
       expect(moduleService.getDashboardSummary).toHaveBeenCalledTimes(1);
     });
 
-    expect(screen.getByRole('heading', { name: 'Operations overview' })).toBeInTheDocument();
-    expect(screen.getByText('Loading the operating overview...')).toBeInTheDocument();
-    expect(screen.getByText('Official demo surface')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Today' })).toBeInTheDocument();
+    expect(screen.getByText('Loading the day...')).toBeInTheDocument();
+    expect(screen.getByRole('region', { name: "Today's queue" })).toBeInTheDocument();
     expect(screen.queryByText('Create first company')).not.toBeInTheDocument();
     expect(screen.queryByText('Getting started')).not.toBeInTheDocument();
   });

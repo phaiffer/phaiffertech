@@ -1,7 +1,9 @@
 'use client';
 
 import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { CalendarCheck, CarFront, CreditCard, RefreshCcw, type LucideIcon } from 'lucide-react';
+import { CalendarCheck, CarFront, ChevronLeft, ChevronRight, CreditCard, RefreshCcw, type LucideIcon } from 'lucide-react';
+import { PetAppointmentsDayGrid } from '@/modules/pet/pet-appointments-day-grid';
+import { useKeyboardShortcut } from '@/shared/hooks/use-keyboard-shortcut';
 import {
   describePetServiceCatalogItem,
   formatPetServiceCategory
@@ -24,7 +26,7 @@ import { PetModuleSubnav } from '@/modules/pet/pet-module-subnav';
 import { PermissionGuard } from '@/shared/auth/PermissionGuard';
 import { usePermissions } from '@/shared/auth/usePermissions';
 import { useAppI18n, useAppMessages, type AppLocale } from '@/shared/i18n/app-i18n-provider';
-import { formatCurrencyForLocale, formatDateTimeForLocale } from '@/shared/i18n/formatters';
+import { formatCurrencyForLocale, formatDateForLocale, formatDateTimeForLocale } from '@/shared/i18n/formatters';
 import { ApiClientError } from '@/shared/lib/http';
 import { resolvePageItems, resolveTotalItems } from '@/shared/lib/pagination';
 import { petService } from '@/shared/services/pet-service';
@@ -61,6 +63,8 @@ const initialPage: PageResponse<PetAppointment> = {
   page: 0,
   size: pageSize
 };
+
+type AgendaViewMode = 'day' | 'list' | 'calendar';
 
 type AppointmentStatProps = {
   icon: LucideIcon;
@@ -503,8 +507,11 @@ export function PetAppointmentsPage() {
   const [pageData, setPageData] = useState<PageResponse<PetAppointment>>(initialPage);
   const [calendarData, setCalendarData] = useState<PetAppointment[]>([]);
   
-  const [viewMode, setViewMode] = useState<'list' | 'calendar'>('calendar');
+  // Comanda v2: "Dia" (grid by professional) is the default; "Lista" and "Mês" keep
+  // the existing table and month calendar.
+  const [viewMode, setViewMode] = useState<AgendaViewMode>('day');
   const [currentMonth, setCurrentMonth] = useState(new Date());
+  const [currentDay, setCurrentDay] = useState(() => new Date());
 
   const [clients, setClients] = useState<PetClient[]>([]);
   const [profiles, setProfiles] = useState<PetProfile[]>([]);
@@ -1025,7 +1032,7 @@ export function PetAppointmentsPage() {
 
       setEditingServiceLines(updatedAppointment.appointmentServices ?? []);
       setSuccess(actualConsumptionCopy.updated);
-      await loadData(pageData.page, search, statusFilter, clientFilterId, petFilterId, serviceFilterId, professionalFilterId, viewMode, currentMonth);
+      await loadData(pageData.page, search, statusFilter, clientFilterId, petFilterId, serviceFilterId, professionalFilterId, viewMode, currentMonth, currentDay);
     } catch (err) {
       setError(resolveApiErrorMessage(err, messages.errors.save));
     } finally {
@@ -1055,7 +1062,7 @@ export function PetAppointmentsPage() {
 
       setEditingServiceLines(updatedAppointment.appointmentServices ?? []);
       setSuccess(actualConsumptionCopy.applySuccess);
-      await loadData(pageData.page, search, statusFilter, clientFilterId, petFilterId, serviceFilterId, professionalFilterId, viewMode, currentMonth);
+      await loadData(pageData.page, search, statusFilter, clientFilterId, petFilterId, serviceFilterId, professionalFilterId, viewMode, currentMonth, currentDay);
     } catch (err) {
       setError(resolveApiErrorMessage(err, messages.errors.save));
     } finally {
@@ -1124,22 +1131,29 @@ export function PetAppointmentsPage() {
     currentPetId: string,
     currentServiceId: string,
     currentProfessionalId: string,
-    mode: 'list' | 'calendar',
-    monthVal: Date
+    mode: AgendaViewMode,
+    monthVal: Date,
+    dayVal: Date
   ) => {
     setLoading(true);
     setError(null);
 
     try {
-      const isCalendar = mode === 'calendar';
-      
+      // "Dia" and "Mês" load a date range into calendarData; "Lista" is paginated.
+      const isCalendar = mode !== 'list';
+
       let scheduledFrom: string | undefined = undefined;
       let scheduledTo: string | undefined = undefined;
-      
-      if (isCalendar) {
+
+      if (mode === 'calendar') {
         // Fetch entire month for calendar
         const start = new Date(monthVal.getFullYear(), monthVal.getMonth(), 1);
         const end = new Date(monthVal.getFullYear(), monthVal.getMonth() + 1, 0, 23, 59, 59);
+        scheduledFrom = start.toISOString();
+        scheduledTo = end.toISOString();
+      } else if (mode === 'day') {
+        const start = new Date(dayVal.getFullYear(), dayVal.getMonth(), dayVal.getDate(), 0, 0, 0, 0);
+        const end = new Date(dayVal.getFullYear(), dayVal.getMonth(), dayVal.getDate(), 23, 59, 59, 999);
         scheduledFrom = start.toISOString();
         scheduledTo = end.toISOString();
       }
@@ -1190,8 +1204,8 @@ export function PetAppointmentsPage() {
   }, [clientId, isEditorOpen]);
 
   useEffect(() => {
-    loadData(0, search, statusFilter, clientFilterId, petFilterId, serviceFilterId, professionalFilterId, viewMode, currentMonth);
-  }, [clientFilterId, loadData, petFilterId, professionalFilterId, search, serviceFilterId, statusFilter, viewMode, currentMonth]);
+    loadData(0, search, statusFilter, clientFilterId, petFilterId, serviceFilterId, professionalFilterId, viewMode, currentMonth, currentDay);
+  }, [clientFilterId, loadData, petFilterId, professionalFilterId, search, serviceFilterId, statusFilter, viewMode, currentMonth, currentDay]);
 
   function resetForm() {
     setEditingId(null);
@@ -1220,6 +1234,22 @@ export function PetAppointmentsPage() {
     }
     setIsEditorOpen(true);
   }
+
+  // "Novo atendimento" from Hoje opens /pet/appointments?novo=1; open the form once and
+  // clean the URL so a reload does not reopen it.
+  const beginCreateRef = useRef(beginCreate);
+  beginCreateRef.current = beginCreate;
+  useEffect(() => {
+    if (!canCreateAppointments) return;
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('novo') === '1') {
+      beginCreateRef.current();
+      window.history.replaceState(null, '', window.location.pathname);
+    }
+  }, [canCreateAppointments]);
+
+  // N = new appointment (ignored while typing or with the editor already open).
+  useKeyboardShortcut('n', () => beginCreate(), { enabled: canCreateAppointments && !isEditorOpen });
 
   function beginEdit(appointment: PetAppointment) {
     const appointmentServices = appointment.appointmentServices && appointment.appointmentServices.length > 0
@@ -1394,7 +1424,7 @@ export function PetAppointmentsPage() {
       }
 
       setIsEditorOpen(false);
-      await loadData(pageData.page, search, statusFilter, clientFilterId, petFilterId, serviceFilterId, professionalFilterId, viewMode, currentMonth);
+      await loadData(pageData.page, search, statusFilter, clientFilterId, petFilterId, serviceFilterId, professionalFilterId, viewMode, currentMonth, currentDay);
     } catch (err) {
       setError(resolveApiErrorMessage(err, messages.errors.save));
     } finally {
@@ -1410,7 +1440,7 @@ export function PetAppointmentsPage() {
       setDeleteCandidate(null);
       setIsEditorOpen(false); // Close drawer if deleting from inside
       setSuccess(messages.success.deleted);
-      await loadData(pageData.page, search, statusFilter, clientFilterId, petFilterId, serviceFilterId, professionalFilterId, viewMode, currentMonth);
+      await loadData(pageData.page, search, statusFilter, clientFilterId, petFilterId, serviceFilterId, professionalFilterId, viewMode, currentMonth, currentDay);
     } catch (err) {
       setError(resolveApiErrorMessage(err, messages.errors.delete));
     }
@@ -1494,7 +1524,15 @@ export function PetAppointmentsPage() {
   const servicesLookupUnavailable = lookupIssues.some((issue) => issue.key === 'services');
   const professionalsLookupUnavailable = lookupIssues.some((issue) => issue.key === 'professionals');
   const appointmentReferencesReady = !clientsLookupUnavailable && !profilesLookupUnavailable && !servicesLookupUnavailable && !professionalsLookupUnavailable;
-  const visibleAppointments = viewMode === 'calendar' ? calendarData : rows;
+  const visibleAppointments = viewMode === 'list' ? rows : calendarData;
+  const dayLabel = formatDateForLocale(locale, currentDay, '', { weekday: 'long', day: 'numeric', month: 'long' });
+  const shiftDay = (days: number) =>
+    setCurrentDay((day) => new Date(day.getFullYear(), day.getMonth(), day.getDate() + days));
+  const viewOptions: Array<{ value: AgendaViewMode; label: string }> = [
+    { value: 'day', label: screenCopy.viewDay },
+    { value: 'list', label: screenCopy.viewList },
+    { value: 'calendar', label: screenCopy.viewMonth }
+  ];
   const recurringAppointments = visibleAppointments.filter((appointment) => Boolean(appointment.clientPlanId)).length;
   const oneTimeAppointments = visibleAppointments.filter((appointment) => !appointment.clientPlanId).length;
   const readyForPickup = visibleAppointments.filter((appointment) => appointment.status.toUpperCase() === 'COMPLETED').length;
@@ -1557,17 +1595,29 @@ export function PetAppointmentsPage() {
            title={messages.title}
            description={messages.description}
            actions={
-             <div className="flex gap-2">
-                <button 
-                  type="button"
-                  onClick={() => setViewMode(viewMode === 'list' ? 'calendar' : 'list')}
-                  className="ui-secondary-button"
-                >
-                  {viewMode === 'calendar' ? messages.actions.switchToList : messages.actions.switchToCalendar}
-                </button>
+             <div className="flex flex-wrap items-center gap-2">
+                {/* View switcher: Dia / Lista / Mês */}
+                <div role="group" aria-label={screenCopy.viewGroup} className="inline-flex rounded-md border border-[color:var(--control)] p-0.5">
+                  {viewOptions.map((option) => (
+                    <button
+                      key={option.value}
+                      type="button"
+                      aria-pressed={viewMode === option.value}
+                      onClick={() => setViewMode(option.value)}
+                      className={`min-h-8 rounded-[4px] px-3 text-sm ${
+                        viewMode === option.value
+                          ? 'bg-[var(--selected-strong)] font-semibold text-[var(--ink)]'
+                          : 'text-[var(--ink-2)] hover:text-[var(--ink)]'
+                      }`}
+                    >
+                      {option.label}
+                    </button>
+                  ))}
+                </div>
                 <PermissionGuard permission="pet.appointment.create">
-                  <button type="button" onClick={() => beginCreate()} className="ui-primary-button">
+                  <button type="button" onClick={() => beginCreate()} aria-keyshortcuts="N" className="ui-primary-button">
                     {messages.actions.book}
+                    <kbd className="ui-kbd" aria-hidden="true">N</kbd>
                   </button>
                 </PermissionGuard>
              </div>
@@ -1681,7 +1731,35 @@ export function PetAppointmentsPage() {
           </PageSection>
         ) : null}
 
-        {viewMode === 'calendar' ? (
+        {viewMode === 'day' ? (
+          <div className="space-y-3">
+            <div className="flex flex-wrap items-center gap-2">
+              <button type="button" onClick={() => shiftDay(-1)} aria-label={screenCopy.previousDay} className="ui-secondary-button px-2">
+                <ChevronLeft className="h-4 w-4" aria-hidden="true" />
+              </button>
+              <h2 className="min-w-[12rem] text-center text-sm font-semibold capitalize text-[var(--ink)]">{dayLabel}</h2>
+              <button type="button" onClick={() => shiftDay(1)} aria-label={screenCopy.nextDay} className="ui-secondary-button px-2">
+                <ChevronRight className="h-4 w-4" aria-hidden="true" />
+              </button>
+              <button type="button" onClick={() => setCurrentDay(new Date())} className="ui-secondary-button">
+                {screenCopy.today}
+              </button>
+            </div>
+            {loading ? (
+              <p className="text-sm text-[var(--muted)]">{messages.table.loadingTitle}</p>
+            ) : (
+              <PetAppointmentsDayGrid
+                day={currentDay}
+                appointments={calendarData}
+                professionals={professionals}
+                profiles={profiles}
+                canCreate={canCreateAppointments}
+                onEventClick={beginEdit}
+                onSlotClick={(date) => beginCreate(date)}
+              />
+            )}
+          </div>
+        ) : viewMode === 'calendar' ? (
           <PetAppointmentsCalendar
             appointments={calendarData}
             currentMonth={currentMonth}
@@ -1714,7 +1792,7 @@ export function PetAppointmentsPage() {
               totalPages={pageData.totalPages}
               totalElements={totalItems}
               onPageChange={(nextPage) =>
-                loadData(nextPage, search, statusFilter, clientFilterId, petFilterId, serviceFilterId, professionalFilterId, viewMode, currentMonth)
+                loadData(nextPage, search, statusFilter, clientFilterId, petFilterId, serviceFilterId, professionalFilterId, viewMode, currentMonth, currentDay)
               }
             />
           </>

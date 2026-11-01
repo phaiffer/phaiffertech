@@ -33,7 +33,18 @@ export const ptBRScreens = {
     legacyService: 'Serviços antigos de atendimento não podem ser usados em novos agendamentos.',
     serviceNotInPlans: 'Pelo menos um serviço selecionado não está disponível para atendimentos por plano.',
     serviceRequiresPlan: 'Pelo menos um serviço selecionado exige um plano vinculado antes do agendamento.',
-    primaryLine: 'Linha principal'
+    primaryLine: 'Linha principal',
+    viewGroup: 'Visualização',
+    viewDay: 'Dia',
+    viewList: 'Lista',
+    viewMonth: 'Mês',
+    previousDay: 'Dia anterior',
+    nextDay: 'Próximo dia',
+    today: 'Hoje',
+    dayGrid: 'Grade do dia',
+    noProfessional: 'Sem profissional',
+    dayEmpty: 'Nenhum atendimento neste dia.',
+    bookAt: 'Agendar às {time}'
   },
   petClients: {
     documentTypeRequired: 'Selecione o tipo de documento.',
