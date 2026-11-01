@@ -1,149 +1,149 @@
-# Gestão Pet Banho e Tosa - Modelagem de Dominio
+# Gestão Pet Banho e Tosa - Modelagem de Domínio
 
-Data de referencia: 2026-05-11.
+Data de referência: 2026-05-11.
 
-Este documento descreve o dominio funcional de Banho e Tosa implementado no Gestão Pet. O objetivo e apoiar apresentacao tecnica, TCC e validacao manual sem afirmar funcionalidades que ainda nao estao prontas.
+Este documento descreve o domínio funcional de Banho e Tosa implementado no Gestão Pet. O objetivo é apoiar apresentação técnica, TCC e validação manual sem afirmar funcionalidades que ainda não estão prontas.
 
-## Linguagem Ubicua
+## Linguagem Ubíqua
 
-- Cliente/responsavel: pessoa responsavel pelo pet e pela cobranca.
-- Pet: animal atendido pela operacao.
-- Atendimento: horario/agendamento executado pela equipe.
-- Linha de servico: servico individual dentro de um atendimento multi-servico.
-- Catalogo de servicos: banho, tosa e adicionais configuraveis.
-- Profissional: pessoa responsavel por executar uma ou mais linhas.
-- Plano: pacote recorrente de sessoes vendido para cliente/pet.
-- Sessao: unidade consumivel do plano.
-- Estoque: produtos e insumos usados na execucao ou vendidos no balcao.
-- Consumo esperado: receita de estoque definida no servico.
+- Cliente/responsável: pessoa responsável pelo pet e pela cobrança.
+- Pet: animal atendido pela operação.
+- Atendimento: horário/agendamento executado pela equipe.
+- Linha de serviço: serviço individual dentro de um atendimento multi-serviço.
+- Catálogo de serviços: banho, tosa e adicionais configuráveis.
+- Profissional: pessoa responsável por executar uma ou mais linhas.
+- Plano: pacote recorrente de sessões vendido para cliente/pet.
+- Sessão: unidade consumível do plano.
+- Estoque: produtos e insumos usados na execução ou vendidos no balcão.
+- Consumo esperado: receita de estoque definida no serviço.
 - Consumo real: quantidade registrada durante o atendimento.
-- Baixa de estoque: movimento aplicado explicitamente ao inventario.
-- Fatura/cobranca: registro financeiro do atendimento, extra ou renovacao.
-- Mensagem preparada: texto gerado para revisao e envio manual.
+- Baixa de estoque: movimento aplicado explicitamente ao inventário.
+- Fatura/cobrança: registro financeiro do atendimento, extra ou renovação.
+- Mensagem preparada: texto gerado para revisão e envio manual.
 
 ## Agregados e Entidades Principais
 
 ### Cliente
 
-Representa o responsavel comercial. Possui dados de contato, documento, endereco, status e informacoes de responsavel principal.
+Representa o responsável comercial. Possui dados de contato, documento, endereço, status e informações de responsável principal.
 
 Responsabilidades:
 
-- servir como raiz de contato para agenda, pet, plano e cobranca;
-- permitir busca operacional por recepcao;
+- servir como raiz de contato para agenda, pet, plano e cobrança;
+- permitir busca operacional por recepção;
 - fornecer email/telefone para mensagens preparadas.
 
 ### Pet
 
-Vinculado a um cliente. Guarda dados operacionais como especie, porte, pelagem, comportamento, restricoes e observacoes de banho e tosa.
+Vinculado a um cliente. Guarda dados operacionais como espécie, porte, pelagem, comportamento, restrições e observações de banho e tosa.
 
 Responsabilidades:
 
 - qualificar o atendimento;
-- carregar historico operacional;
+- carregar histórico operacional;
 - permitir montagem de plano por cliente/pet.
 
-### Catalogo de Servicos
+### Catálogo de Serviços
 
-Define servicos que podem ser agendados. O modelo atual possui:
+Define serviços que podem ser agendados. O modelo atual possui:
 
-- categoria de servico;
-- preco base;
-- duracao estimada;
+- categoria de serviço;
+- preço base;
+- duração estimada;
 - flags para permitir plano ou atendimento avulso;
-- elegibilidade de comissao;
-- vinculos com itens de estoque.
+- elegibilidade de comissão;
+- vínculos com itens de estoque.
 
 Responsabilidades:
 
 - padronizar oferta comercial;
 - evitar texto solto na agenda;
-- servir de base para comissao, preco e consumo de estoque.
+- servir de base para comissão, preço e consumo de estoque.
 
 ### Atendimento
 
-Representa a execucao agendada. Inclui cliente, pet, profissional ancora, status, horario, observacoes, plano opcional, extras e valores.
+Representa a execução agendada. Inclui cliente, pet, profissional âncora, status, horário, observações, plano opcional, extras e valores.
 
 Estados observados no frontend:
 
 - agendado;
 - confirmado;
 - em andamento;
-- concluido;
+- concluído;
 - cancelado;
-- nao compareceu.
+- não compareceu.
 
 Responsabilidades:
 
 - organizar a fila de banho e tosa;
-- conectar plano, servicos, profissionais, estoque e cobranca;
-- permitir preparacao de mensagem de retirada quando o pet fica pronto.
+- conectar plano, serviços, profissionais, estoque e cobrança;
+- permitir preparação de mensagem de retirada quando o pet fica pronto.
 
-### Linha de Servico
+### Linha de Serviço
 
-Permite multi-servico dentro do atendimento. Cada linha pode ter profissional responsavel proprio, preco e snapshot de comissao.
+Permite multi-serviço dentro do atendimento. Cada linha pode ter profissional responsável próprio, preço e snapshot de comissão.
 
 Responsabilidades:
 
 - preservar compatibilidade com atendimento antigo;
-- permitir pacote como "banho + tosa higienica + adicional";
-- distribuir responsabilidade e comissao por linha.
+- permitir pacote como "banho + tosa higiênica + adicional";
+- distribuir responsabilidade e comissão por linha.
 
 ### Profissional
 
-Representa groomers, tosadores e equipe operacional. Pode ter taxa de comissao.
+Representa groomers, tosadores e equipe operacional. Pode ter taxa de comissão.
 
 Responsabilidades:
 
 - aparecer na agenda e na fila;
-- orientar fechamento por producao;
-- permitir calculo projetado de comissao.
+- orientar fechamento por produção;
+- permitir calculo projetado de comissão.
 
 ### Plano
 
 O fluxo atual separa modelo comercial de plano contratado.
 
-- `pet_plan_templates`: oferta reutilizavel, com preco, validade, sessoes e servicos.
-- `pet_client_plans`: plano vendido para cliente/pet, com sessoes totais, usadas e restantes.
+- `pet_plan_templates`: oferta reutilizável, com preço, validade, sessões e serviços.
+- `pet_client_plans`: plano vendido para cliente/pet, com sessões totais, usadas e restantes.
 
 Responsabilidades:
 
-- controlar recorrencia;
-- destacar penultimo/ultimo uso;
-- apoiar renovacao manual assistida;
-- impedir que toda operacao dependa de planilha.
+- controlar recorrência;
+- destacar penúltimo/último uso;
+- apoiar renovação manual assistida;
+- impedir que toda operação dependa de planilha.
 
 ### Estoque
 
-O estoque usa fundacao compartilhada:
+O estoque usa fundação compartilhada:
 
-- itens de inventario;
+- itens de inventário;
 - movimentos;
-- vinculo produto pet -> item de inventario;
-- receita de consumo por servico;
+- vínculo produto pet -> item de inventário;
+- receita de consumo por serviço;
 - snapshot de consumo esperado/real no atendimento.
 
 Responsabilidades:
 
-- alertar itens abaixo do minimo ou ponto de reposicao;
-- registrar entrada/saida;
+- alertar itens abaixo do mínimo ou ponto de reposição;
+- registrar entrada/saída;
 - aplicar baixa a partir do atendimento quando o operador confirma;
-- manter rastreabilidade entre servico e estoque.
+- manter rastreabilidade entre serviço e estoque.
 
-### Cobranca
+### Cobrança
 
-Faturas e pagamentos registram o saldo financeiro da operacao. A renovacao de plano pode preparar uma fatura de renovacao e exibir valor, status e dados de cobranca no frontend.
+Faturas e pagamentos registram o saldo financeiro da operação. A renovação de plano pode preparar uma fatura de renovação e exibir valor, status e dados de cobrança no frontend.
 
-Importante: nao ha gateway PIX/cartao concluido. PIX e chave/nome de cobranca sao dados textuais para o fluxo manual.
+Importante: não há gateway PIX/cartão concluído. PIX e chave/nome de cobrança são dados textuais para o fluxo manual.
 
 ### Mensagens Preparadas
 
 Mensagens preparadas existem para dois momentos:
 
 - retirada de pet pronto;
-- renovacao de plano.
+- renovação de plano.
 
-Elas usam templates e variaveis, sao exibidas ao usuario e copiadas para envio manual. O proprio backend retorna uma nota de seguranca indicando que nenhum provider externo ou gateway PIX foi acionado.
+Elas usam templates e variáveis, são exibidas ao usuário e copiadas para envio manual. O próprio backend retorna uma nota de segurança indicando que nenhum provider externo ou gateway PIX foi acionado.
 
 ## Fluxos Operacionais Principais
 
@@ -151,19 +151,19 @@ Elas usam templates e variaveis, sao exibidas ao usuario e copiadas para envio m
 
 1. Cadastrar cliente.
 2. Cadastrar pet vinculado ao cliente.
-3. Cadastrar servicos de banho e tosa.
+3. Cadastrar serviços de banho e tosa.
 4. Cadastrar profissionais.
-5. Opcionalmente cadastrar produtos e vinculos de estoque.
+5. Opcionalmente cadastrar produtos e vínculos de estoque.
 
 ### Agendamento avulso
 
 1. Selecionar cliente e pet.
-2. Selecionar servico ou pacote multi-servico.
-3. Definir profissional responsavel.
-4. Informar data/hora, extras e observacoes.
+2. Selecionar serviço ou pacote multi-serviço.
+3. Definir profissional responsável.
+4. Informar data/hora, extras e observações.
 5. Salvar atendimento.
 6. Executar e concluir.
-7. Conferir cobranca e comissao.
+7. Conferir cobrança e comissão.
 
 ### Agendamento com plano
 
@@ -171,40 +171,40 @@ Elas usam templates e variaveis, sao exibidas ao usuario e copiadas para envio m
 2. Contratar plano para cliente/pet.
 3. Agendar atendimento vinculado ao plano.
 4. Concluir atendimento.
-5. Consumir sessao.
-6. Quando restarem poucas sessoes, preparar renovacao manual assistida.
+5. Consumir sessão.
+6. Quando restarem poucas sessões, preparar renovação manual assistida.
 
 ### Consumo de estoque por atendimento
 
-1. Configurar consumo esperado no servico.
-2. Criar atendimento com esse servico.
-3. Ajustar consumo real quando necessario.
+1. Configurar consumo esperado no serviço.
+2. Criar atendimento com esse serviço.
+3. Ajustar consumo real quando necessário.
 4. Aplicar baixa explicitamente.
-5. Verificar movimento no estoque e alertas de reposicao.
+5. Verificar movimento no estoque e alertas de reposição.
 
 ### Fechamento operacional
 
-1. Conferir atendimentos concluidos.
-2. Conferir comissao projetada.
+1. Conferir atendimentos concluídos.
+2. Conferir comissão projetada.
 3. Ver planos perto do fim.
-4. Ver cobrancas pendentes.
-5. Revisar mensagens preparadas para retirada ou renovacao.
+4. Ver cobranças pendentes.
+5. Revisar mensagens preparadas para retirada ou renovação.
 
 ## Regras e Invariantes Importantes
 
-- Dados de negocio sao tenant-scoped.
-- Soft delete preserva historico.
-- Servicos podem ser impedidos de plano ou de atendimento avulso por flags.
-- Comissao depende da elegibilidade do servico e taxa do profissional.
-- Snapshot de comissao protege fechamento contra mudancas futuras no cadastro.
-- Baixa de estoque por atendimento e explicita, nao totalmente automatica.
-- Mensagem preparada nao equivale a envio externo.
+- Dados de negócio são tenant-scoped.
+- Soft delete preserva histórico.
+- Serviços podem ser impedidos de plano ou de atendimento avulso por flags.
+- Comissão depende da elegibilidade do serviço e taxa do profissional.
+- Snapshot de comissão protege fechamento contra mudanças futuras no cadastro.
+- Baixa de estoque por atendimento é explícita, não totalmente automática.
+- Mensagem preparada não equivale a envio externo.
 
 ## Fora do Escopo Atual
 
-- Clinica veterinaria como narrativa principal.
+- Clínica veterinária como narrativa principal.
 - WhatsApp oficial validado.
-- Gateway PIX/cartao.
+- Gateway PIX/cartão.
 - Portal do cliente.
-- Automacoes avancadas de marketing.
-- Relatorios analiticos completos.
+- Automações avancadas de marketing.
+- Relatórios analíticos completos.

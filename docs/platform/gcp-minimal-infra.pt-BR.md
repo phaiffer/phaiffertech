@@ -1,45 +1,45 @@
-# GCP Infra Minima Segura
+# GCP Infra Mínima Segura
 
 ## Objetivo
 
-Preparar a base correta para colocar a plataforma online na GCP sem repetir a arquitetura antiga de VM unica com tudo misturado.
+Preparar a base correta para colocar a plataforma online na GCP sem repetir a arquitetura antiga de VM única com tudo misturado.
 
-## Etapa 1. Diagnostico do deploy atual
+## Etapa 1. Diagnóstico do deploy atual
 
 ### O que existe hoje
 
 - `apps/backend/Dockerfile`: imagem multi-stage Spring Boot pronta para container.
 - `apps/frontend/Dockerfile`: imagem Next.js `standalone`, adequada para Cloud Run depois de exigir `NEXT_PUBLIC_API_URL`.
 - `docker-compose.yml`: stack local com PostgreSQL, backend, frontend e ferramentas auxiliares.
-- `docker-compose.prod.yml`: stack "producao" baseada em `caddy + frontend + backend + postgres` em containers.
+- `docker-compose.prod.yml`: stack "produção" baseada em `caddy + frontend + backend + postgres` em containers.
 - `Caddyfile`: proxy reverso para `app.phaiffertech.com.br` e `api.phaiffertech.com.br`.
 - `infra/terraform`: base legada/inconsistente, com README falando em OCI e recursos reais em GCP.
-- `application-prod.yml`: perfil de producao com docs/observabilidade publicas desabilitadas e segredos obrigatorios.
+- `application-prod.yml`: perfil de produção com docs/observabilidade públicas desabilitadas e segredos obrigatórios.
 
-### O que e reutilizavel
+### O que é reutilizável
 
 - Dockerfiles de backend e frontend.
 - Perfil `prod` do backend.
 - Health checks (`/actuator/health` e `/api/v1/health`).
-- Validacao de producao no backend.
+- Validação de produção no backend.
 - Estrategia atual de frontend e backend separados.
-- CI atual para build/test como validacao de codigo.
+- CI atual para build/test como validação de código.
 
-### O que nao deve ser usado como base final
+### O que não deve ser usado como base final
 
 - `infra/terraform` legado com `google_compute_instance` e PostgreSQL em container.
 - `docker-compose.prod.yml` como arquitetura online final.
-- `Caddyfile` como terminacao TLS/entrada principal em producao GCP.
+- `Caddyfile` como terminação TLS/entrada principal em produção GCP.
 - `.env.production` como fonte final de segredo real.
 
-### Riscos atuais para deploy publico
+### Riscos atuais para deploy público
 
 - banco em container dentro de VM
 - segredos operacionais ainda orbitando em env file
-- fallback do frontend para `localhost` no build de producao
-- CORS de producao aceitando lista comma-separated como um unico item
+- fallback do frontend para `localhost` no build de produção
+- CORS de produção aceitando lista comma-separated como um único item
 - backend usando `remoteAddr`, inadequado atras de proxy/serverless
-- ausencia de fluxo padrao para Artifact Registry, Secret Manager e Cloud SQL
+- ausência de fluxo padrão para Artifact Registry, Secret Manager e Cloud SQL
 
 ## Etapa 2. Base inicial GCP definida
 
@@ -50,7 +50,7 @@ Preparar a base correta para colocar a plataforma online na GCP sem repetir a ar
 - Cloud Run para frontend.
 - Cloud SQL for PostgreSQL para banco gerenciado.
 - Secret Manager para segredos de runtime.
-- service accounts dedicadas com IAM minimo.
+- service accounts dedicadas com IAM mínimo.
 
 ### Por que essa e a menor arquitetura segura
 
@@ -68,54 +68,54 @@ Preparar a base correta para colocar a plataforma online na GCP sem repetir a ar
 - WAF e componentes de edge adicionais
 - backend privado via LB interno
 
-Esses itens podem entrar depois sem retrabalho estrutural, mas nao sao o minimo correto para colocar a stack online agora.
+Esses itens podem entrar depois sem retrabalho estrutural, mas não são o mínimo correto para colocar a stack online agora.
 
-## Etapa 3. Ajustes minimos no projeto
+## Etapa 3. Ajustes mínimos no projeto
 
 ### Ajustes aplicados
 
-- backend passou a aceitar `PORT` alem de `SERVER_PORT`, alinhando com Cloud Run
-- backend recebeu dependencia `com.google.cloud.sql:postgres-socket-factory`
+- backend passou a aceitar `PORT` além de `SERVER_PORT`, alinhando com Cloud Run
+- backend recebeu dependência `com.google.cloud.sql:postgres-socket-factory`
 - backend passou a resolver IP real por `X-Forwarded-For` / `X-Real-Ip`
-- configuracao de CORS agora aceita lista comma-separated corretamente
-- perfil `prod` recebeu pool JDBC explicito e mais conservador
-- frontend passou a falhar em build de producao sem `NEXT_PUBLIC_API_URL`
+- configuração de CORS agora aceita lista comma-separated corretamente
+- perfil `prod` recebeu pool JDBC explícito e mais conservador
+- frontend passou a falhar em build de produção sem `NEXT_PUBLIC_API_URL`
 
 ### Arquivos principais alterados
 
-- [pom.xml](/home/willian/IdeaProjects/phaiffertech/apps/backend/pom.xml)
-- [application.yml](/home/willian/IdeaProjects/phaiffertech/apps/backend/src/main/resources/application.yml)
-- [application-prod.yml](/home/willian/IdeaProjects/phaiffertech/apps/backend/src/main/resources/application-prod.yml)
-- [ClientIpResolver.java](/home/willian/IdeaProjects/phaiffertech/apps/backend/src/main/java/com/phaiffertech/platform/shared/web/ClientIpResolver.java)
-- [AuthController.java](/home/willian/IdeaProjects/phaiffertech/apps/backend/src/main/java/com/phaiffertech/platform/core/auth/controller/AuthController.java)
-- [ApiRateLimitFilter.java](/home/willian/IdeaProjects/phaiffertech/apps/backend/src/main/java/com/phaiffertech/platform/shared/ratelimit/ApiRateLimitFilter.java)
-- [http.ts](/home/willian/IdeaProjects/phaiffertech/apps/frontend/src/shared/lib/http.ts)
-- [Dockerfile](/home/willian/IdeaProjects/phaiffertech/apps/frontend/Dockerfile)
+- [pom.xml](../../apps/backend/pom.xml)
+- [application.yml](../../apps/backend/src/main/resources/application.yml)
+- [application-prod.yml](../../apps/backend/src/main/resources/application-prod.yml)
+- [ClientIpResolver.java](../../apps/backend/src/main/java/com/phaiffertech/platform/shared/web/ClientIpResolver.java)
+- [AuthController.java](../../apps/backend/src/main/java/com/phaiffertech/platform/core/auth/controller/AuthController.java)
+- [ApiRateLimitFilter.java](../../apps/backend/src/main/java/com/phaiffertech/platform/shared/ratelimit/ApiRateLimitFilter.java)
+- [http.ts](../../apps/frontend/src/shared/lib/http.ts)
+- [Dockerfile](../../apps/frontend/Dockerfile)
 
-## Etapa 4. Infra como codigo
+## Etapa 4. Infra como código
 
 ### Base nova criada
 
-- [README.md](/home/willian/IdeaProjects/phaiffertech/infra/gcp/terraform/README.md)
-- [versions.tf](/home/willian/IdeaProjects/phaiffertech/infra/gcp/terraform/versions.tf)
-- [variables.tf](/home/willian/IdeaProjects/phaiffertech/infra/gcp/terraform/variables.tf)
-- [cloud_sql.tf](/home/willian/IdeaProjects/phaiffertech/infra/gcp/terraform/cloud_sql.tf)
-- [secret_manager.tf](/home/willian/IdeaProjects/phaiffertech/infra/gcp/terraform/secret_manager.tf)
-- [cloud_run.tf](/home/willian/IdeaProjects/phaiffertech/infra/gcp/terraform/cloud_run.tf)
-- [outputs.tf](/home/willian/IdeaProjects/phaiffertech/infra/gcp/terraform/outputs.tf)
+- [README.md](../../infra/gcp/terraform/README.md)
+- [versions.tf](../../infra/gcp/terraform/versions.tf)
+- [variables.tf](../../infra/gcp/terraform/variables.tf)
+- [cloud_sql.tf](../../infra/gcp/terraform/cloud_sql.tf)
+- [secret_manager.tf](../../infra/gcp/terraform/secret_manager.tf)
+- [cloud_run.tf](../../infra/gcp/terraform/cloud_run.tf)
+- [outputs.tf](../../infra/gcp/terraform/outputs.tf)
 
 ### Recursos provisionados por essa base
 
-- APIs necessarias do projeto
-- repositorio Docker privado no Artifact Registry
+- APIs necessárias do projeto
+- repositório Docker privado no Artifact Registry
 - Cloud SQL PostgreSQL com backup e PITR
-- database da aplicacao
+- database da aplicação
 - secrets do runtime
 - service accounts dedicadas
-- IAM minimo para backend acessar Cloud SQL e Secret Manager
-- Cloud Run backend e frontend, ativados em fases por variaveis
+- IAM mínimo para backend acessar Cloud SQL e Secret Manager
+- Cloud Run backend e frontend, ativados em fases por variáveis
 
-## Etapa 5. Segredos e variaveis
+## Etapa 5. Segredos e variáveis
 
 ### Segredos
 
@@ -124,13 +124,13 @@ Esses itens podem entrar depois sem retrabalho estrutural, mas nao sao o minimo 
 - `SPRING_DATASOURCE_PASSWORD`
 - `APP_SECURITY_JWT_SECRET`
 - `APP_DEMO_ASSISTED_USER_PASSWORD` quando demo assistida estiver ativa
-- `APP_BOOTSTRAP_MASTER_ADMIN_PASSWORD` quando bootstrap temporario estiver ativo
+- `APP_BOOTSTRAP_MASTER_ADMIN_PASSWORD` quando bootstrap temporário estiver ativo
 
-### Configuracao publica
+### Configuração pública
 
 - `NEXT_PUBLIC_API_URL`
 
-### Configuracao operacional nao sensivel
+### Configuração operacional não sensível
 
 - `SPRING_PROFILES_ACTIVE=prod`
 - `APP_CORS_ALLOWED_ORIGINS`
@@ -149,12 +149,12 @@ Esses itens podem entrar depois sem retrabalho estrutural, mas nao sao o minimo 
 - `APP_BOOTSTRAP_MASTER_ADMIN_EMAIL`
 - `APP_BOOTSTRAP_MASTER_ADMIN_FULL_NAME`
 
-### Variaveis obrigatorias para producao
+### Variáveis obrigatórias para produção
 
 - backend: datasource url, username, password, JWT secret, CORS allowed origins
 - frontend: `NEXT_PUBLIC_API_URL`
 
-## Etapa 6. Sequencia objetiva para o primeiro deploy
+## Etapa 6. Sequência objetiva para o primeiro deploy
 
 ### 1. Provisionar a base
 
@@ -177,7 +177,7 @@ DB_CONN=$(terraform output -raw cloud_sql_connection_name)
 
 ### 3. Criar segredos reais
 
-Exemplo de geracao local segura:
+Exemplo de geração local segura:
 
 ```bash
 DB_USER=platform_app
@@ -195,7 +195,7 @@ printf '%s' "$DB_PASSWORD" | gcloud secrets versions add phaiffertech-prod-sprin
 printf '%s' "$JWT_SECRET" | gcloud secrets versions add phaiffertech-prod-app-security-jwt-secret --data-file=-
 ```
 
-### 4. Configurar o usuario do PostgreSQL
+### 4. Configurar o usuário do PostgreSQL
 
 ```bash
 gcloud sql users create "$DB_USER" --instance "$DB_INSTANCE" --password "$DB_PASSWORD"
@@ -212,31 +212,31 @@ docker push "${AR_REPO}/backend:${BACKEND_TAG}"
 
 ### 6. Deploy do backend
 
-Idealmente defina o dominio final do frontend antes desta etapa para evitar ida e volta de CORS.
+Idealmente defina o domínio final do frontend antes desta etapa para evitar ida e volta de CORS.
 
 ```bash
 terraform apply \
   -var-file=terraform.tfvars.local \
   -var="deploy_backend_service=true" \
   -var="backend_image=${AR_REPO}/backend:${BACKEND_TAG}" \
-  -var="allowed_cors_origins=https://app.seu-dominio.com"
+  -var="allowed_cors_origins=https://app.seu-domínio.com"
 ```
 
 ### 7. Build e push do frontend
 
-Com dominio final da API:
+Com domínio final da API:
 
 ```bash
 FRONTEND_TAG=$(git rev-parse --short HEAD)
 docker build \
   -f apps/frontend/Dockerfile \
-  --build-arg NEXT_PUBLIC_API_URL="https://api.seu-dominio.com/api/v1" \
+  --build-arg NEXT_PUBLIC_API_URL="https://api.seu-domínio.com/api/v1" \
   -t "${AR_REPO}/frontend:${FRONTEND_TAG}" \
   .
 docker push "${AR_REPO}/frontend:${FRONTEND_TAG}"
 ```
 
-Sem dominio final ainda, use temporariamente `$(terraform output -raw backend_service_url)/api/v1`, publique o frontend e reaplique o backend com o `frontend_service_url` real em `allowed_cors_origins`.
+Sem domínio final ainda, use temporariamente `$(terraform output -raw backend_service_url)/api/v1`, publique o frontend e reaplique o backend com o `frontend_service_url` real em `allowed_cors_origins`.
 
 ### 8. Deploy do frontend
 
@@ -247,31 +247,31 @@ terraform apply \
   -var="deploy_frontend_service=true" \
   -var="backend_image=${AR_REPO}/backend:${BACKEND_TAG}" \
   -var="frontend_image=${AR_REPO}/frontend:${FRONTEND_TAG}" \
-  -var="allowed_cors_origins=https://app.seu-dominio.com"
+  -var="allowed_cors_origins=https://app.seu-domínio.com"
 ```
 
-## Etapa 7. Dominio, TLS e exposicao
+## Etapa 7. Domínio, TLS e exposição
 
 ### Estado desta etapa
 
 - frontend e backend ficam prontos para HTTPS nativo do Cloud Run
-- a base de runtime e seguranca esta pronta
-- o mapeamento final de dominio/TLS ainda depende da decisao de entrada externa
+- a base de runtime e segurança está pronta
+- o mapeamento final de domínio/TLS ainda depende da decisão de entrada externa
 
-### O que falta para fechar dominio final corretamente
+### O que falta para fechar domínio final corretamente
 
-1. Definir `app.<dominio>` e `api.<dominio>`.
+1. Definir `app.<domínio>` e `api.<domínio>`.
 2. Escolher a estrategia de entrada:
-   - recomendada: um unico Global External Application Load Balancer com serverless NEG para frontend e backend
-   - alternativa provisoria: Cloud Run domain mapping, aceitando a limitacao de preview
+   - recomendada: um único Global External Application Load Balancer com serverless NEG para frontend e backend
+   - alternativa provisória: Cloud Run domain mapping, aceitando a limitação de preview
 3. Configurar DNS para os dois hosts.
-4. Rebuild do frontend com `NEXT_PUBLIC_API_URL=https://api.<dominio>/api/v1`.
-5. Reaplicar backend com `APP_CORS_ALLOWED_ORIGINS=https://app.<dominio>`.
+4. Rebuild do frontend com `NEXT_PUBLIC_API_URL=https://api.<domínio>/api/v1`.
+5. Reaplicar backend com `APP_CORS_ALLOWED_ORIGINS=https://app.<domínio>`.
 
-### Exposicao resultante
+### Exposição resultante
 
-- frontend publico em HTTPS
-- backend publico em HTTPS apenas porque o navegador chama a API diretamente
-- docs e observabilidade publicas ficam desativadas em `prod`
-- banco nao fica publico para a internet
-- secrets nao ficam em arquivo versionado
+- frontend público em HTTPS
+- backend público em HTTPS apenas porque o navegador chama a API diretamente
+- docs e observabilidade públicas ficam desativadas em `prod`
+- banco não fica público para a internet
+- secrets não ficam em arquivo versionado

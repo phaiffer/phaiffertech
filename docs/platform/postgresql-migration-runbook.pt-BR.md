@@ -24,7 +24,7 @@ Variáveis operacionais mais comuns:
 - `NEXT_PUBLIC_API_URL`
 
 Defaults de referência estão em:
-- [.env.example](/home/willian/IdeaProjects/phaiffertech/.env.example)
+- [.env.example](../../.env.example)
 
 ## Subir o ambiente
 
@@ -57,7 +57,7 @@ make db-shell
 ## Ordem das migrations
 
 O backend executa automaticamente todas as migrations Flyway em ordem crescente a partir de:
-- [apps/backend/src/main/resources/db/migration](/home/willian/IdeaProjects/phaiffertech/apps/backend/src/main/resources/db/migration)
+- [apps/backend/src/main/resources/db/migration](../../apps/backend/src/main/resources/db/migration)
 
 Cadeia atual:
 - `V1__init_schema.sql` até `V35__tenant_productization_foundation.sql`
@@ -103,4 +103,4 @@ Limitação importante:
 
 - diferenças de plano de execução entre MySQL e PostgreSQL podem alterar performance em consultas grandes
 - dados legados com valores fora do esperado para `uuid`, boolean ou timestamps precisam saneamento prévio
-- o blueprint atual para deploy inicial na GCP fica em `infra/gcp/terraform`; qualquer referencia OCI deve ser tratada apenas como historica
+- o blueprint atual para deploy inicial na GCP fica em `infra/gcp/terraform`; qualquer referência OCI deve ser tratada apenas como histórica
