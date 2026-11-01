@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Usuários e permissões</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&amp;family=Instrument+Sans:wght@400;500;600;700&amp;family=IBM+Plex+Mono:wght@500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#161A2E}a:hover{color:#3B4160}
+</style>
+</helmet>
+<div style="min-height: 980px; background: #EFF1F5; color: #161A2E; font-family: 'Instrument Sans', system-ui, sans-serif; display: flex; flex-wrap: wrap; align-items: stretch">
+  <nav aria-label="Navegação principal" style="flex: 1 1 76px; max-width: 100%; background: #161A2E; padding: 20px 14px; box-sizing: border-box; display: flex; flex-wrap: wrap; flex-direction: column; align-items: center; gap: 8px">
+    <a href="Hoje.dc.html" aria-label="Início" style="width: 44px; height: 44px; border-radius: 12px; background: {{accent}}; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 12px"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#161A2E" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"></circle><path d="M5 9h.01M19 9h.01M8 5h.01M16 5h.01M7 17c1-2.5 3-3.5 5-3.5s4 1 5 3.5c.6 1.5-.6 3-2.2 2.6-1-.2-1.8-.6-2.8-.6s-1.8.4-2.8.6C7.6 20 6.4 18.5 7 17z"></path></svg></a>
+    <sc-for list="{{nav}}" as="item" hint-placeholder-count="12"><a href="{{item.href}}" aria-label="{{item.label}}" title="{{item.label}}" style="{{item.style}}"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{item.d}}"></path></svg></a></sc-for>
+  </nav>
+
+  <main style="flex: 999 1 560px; min-width: 0; padding: 28px 32px 48px; box-sizing: border-box; display: flex; flex-direction: column; gap: 22px">
+    <header style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 16px">
+      <div style="display: flex; flex-direction: column; gap: 8px">
+        <div role="tablist" aria-label="Seção" style="display: inline-flex; gap: 4px; padding: 4px; background: #E3E6ED; border-radius: 12px; width: max-content">
+          <a href="Configuracoes.dc.html" role="tab" aria-selected="false" style="height: 34px; padding: 0 14px; border-radius: 9px; font-weight: 600; font-size: 14px; color: #2B3150; display: inline-flex; align-items: center; text-decoration: none">Ambiente</a>
+          <a href="Usuarios.dc.html" role="tab" aria-selected="true" style="height: 34px; padding: 0 14px; border-radius: 9px; background: #FFFFFF; font-weight: 700; font-size: 14px; display: inline-flex; align-items: center; text-decoration: none">Usuários</a>
+          <a href="Ambientes.dc.html" role="tab" aria-selected="false" style="height: 34px; padding: 0 14px; border-radius: 9px; font-weight: 600; font-size: 14px; color: #2B3150; display: inline-flex; align-items: center; text-decoration: none">Plataforma</a>
+        </div>
+        <h1 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 40px; line-height: 1; letter-spacing: -0.03em">Usuários</h1>
+        <p style="margin: 0; font-size: 15px; color: #2B3150">6 pessoas com acesso · 1 convite pendente</p>
+      </div>
+      <button type="button" style="height: 44px; padding: 0 20px; border: 0; border-radius: 12px; background: #161A2E; color: #FFFFFF; font: 600 15px 'Instrument Sans', sans-serif">Convidar pessoa</button>
+    </header>
+
+    <div style="display: flex; flex-wrap: wrap; gap: 24px; align-items: flex-start">
+      <section aria-label="Usuários" style="flex: 999 1 520px; min-width: 0; background: #FFFFFF; border-radius: 20px; overflow: hidden">
+        <sc-for list="{{users}}" as="u" hint-placeholder-count="6">
+          <div style="{{u.rowStyle}}">
+            <span style="width: 42px; height: 42px; flex: 0 0 auto; border-radius: 50%; background: #E3E6ED; display: inline-flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700">{{u.initials}}</span>
+            <span style="display: flex; flex-direction: column; flex: 1 1 auto; min-width: 0"><span style="font-weight: 700; font-size: 15px">{{u.name}}</span><span style="font-size: 13px; color: #4A5170">{{u.email}}</span></span>
+            <span style="{{u.roleStyle}}">{{u.role}}</span>
+            <span style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; font-weight: 600; color: #2B3150; min-width: 92px; text-align: right">{{u.last}}</span>
+          </div>
+        </sc-for>
+      </section>
+
+      <aside aria-label="Permissões do perfil" style="flex: 1 1 380px; min-width: 0; max-width: 100%; background: #FFFFFF; border-radius: 20px; padding: 22px; box-sizing: border-box; display: flex; flex-direction: column; gap: 14px">
+        <div style="display: flex; flex-direction: column; gap: 4px">
+          <span style="font-size: 13px; font-weight: 600; color: #4A5170">Perfil</span>
+          <h2 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 24px">Recepção</h2>
+          <span style="font-size: 14px; color: #2B3150">Usado por Marina e Paula</span>
+        </div>
+        <div style="display: grid; grid-template-columns: minmax(0, 1fr) 64px 64px; gap: 8px; font-size: 12px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: #4A5170; padding-bottom: 6px; border-bottom: 1px solid #E6E9EF"><span>Área</span><span style="text-align: center">Ver</span><span style="text-align: center">Editar</span></div>
+        <sc-for list="{{perms}}" as="p" hint-placeholder-count="8">
+          <div style="display: grid; grid-template-columns: minmax(0, 1fr) 64px 64px; gap: 8px; align-items: center; font-size: 14px">
+            <span style="font-weight: 600">{{p.area}}</span>
+            <label style="display: flex; justify-content: center; align-items: center; min-height: 40px"><span style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">Ver {{p.area}}</span><input type="checkbox" checked="{{p.view}}" style="width: 20px; height: 20px; accent-color: #161A2E; margin: 0"></label>
+            <label style="display: flex; justify-content: center; align-items: center; min-height: 40px"><span style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">Editar {{p.area}}</span><input type="checkbox" checked="{{p.edit}}" style="width: 20px; height: 20px; accent-color: #161A2E; margin: 0"></label>
+          </div>
+        </sc-for>
+        <button type="button" style="height: 44px; border: 0; border-radius: 12px; background: #161A2E; color: #FFFFFF; font: 600 15px 'Instrument Sans', sans-serif">Salvar permissões</button>
+      </aside>
+    </div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#FFC633","options":["#FFC633","#FF8A3D","#7BE0B0","#9CC8FF"]},"$preview":{"width":1440,"height":980}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const accent = this.props.accent ?? '#FFC633';
+    const I = {hoje:'M3 10h18M7 3v4M17 3v4M5 6h14a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2z',agenda:'M12 7v5l3 2M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18z',clientes:'M16 19v-1a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v1M9.5 10a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM21 19v-1a4 4 0 0 0-3-3.9M16 4.1a3 3 0 0 1 0 5.8',planos:'M4 12a8 8 0 0 1 14-5.3L20 9M20 4v5h-5M20 12a8 8 0 0 1-14 5.3L4 15M4 20v-5h5',pdv:'M3 7h18v10H3zM7 12h.01M17 12h.01M12 9.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5z',estoque:'M21 8 12 3 3 8v8l9 5 9-5zM3 8l9 5 9-5M12 13v8',financeiro:'M3 7h15a3 3 0 0 1 3 3v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2zM3 7l12-4v4M17 13h.01',equipe:'M12 3l2.7 5.5 6 .9-4.4 4.2 1 6-5.3-2.8-5.3 2.8 1-6L3.3 9.4l6-.9z',clinica:'M10 3h4v7h7v4h-7v7h-4v-7H3v-4h7z',comercial:'M3 17l6-6 4 4 8-8M15 7h6v6',insights:'M4 20V10M10 20V4M16 20v-7',config:'M4 6h9M17 6h3M4 12h3M11 12h9M4 18h11M19 18h1M15 4v4M9 10v4M17 16v4'};
+    const N = [['hoje','Hoje','Hoje'],['agenda','Agenda','Agenda'],['clientes','Clientes e pets','Clientes'],['planos','Planos','Planos'],['pdv','PDV','PDV'],['estoque','Estoque','Estoque'],['financeiro','Financeiro','Financeiro'],['equipe','Equipe e comissão','Equipe'],['clinica','Clínica','Clinica'],['comercial','Comercial','Comercial'],['insights','Insights','Insights'],['config','Configurações','Configuracoes']];
+    const ACTIVE = 'config';
+    const nav = N.map(([k, label, f]) => ({ label, d: I[k], href: f + '.dc.html', style: 'width: 48px; height: 48px; border-radius: 12px; display: inline-flex; align-items: center; justify-content: center; ' + (k === ACTIVE ? 'background: ' + accent + '; color: #161A2E;' : 'color: #D5D8E5;') }));
+
+    const R = { Dono: ['#161A2E', '#FFFFFF'], Recepção: [accent, '#161A2E'], Tosador: ['#E8DFFF', '#4E33A3'], Veterinária: ['#D6E6FF', '#1A4E9E'], Convite: ['#E3E6ED', '#2B3150'] };
+    const users = [
+      ['Carlos', 'dono@petshopexemplo.com', 'Dono', 'agora'],
+      ['Marina', 'marina@petshopexemplo.com', 'Recepção', 'há 5 min', true],
+      ['Paula', 'paula@petshopexemplo.com', 'Recepção', 'ontem'],
+      ['Jéssica', 'jessica@petshopexemplo.com', 'Tosador', 'há 1 h'],
+      ['Diego', 'diego@petshopexemplo.com', 'Tosador', 'há 2 h'],
+      ['Dra. Renata', 'renata@petshopexemplo.com', 'Veterinária', 'hoje 10:30'],
+      ['Camila', 'camila@petshopexemplo.com', 'Convite', 'pendente']
+    ].map(([name, email, role, last, sel]) => ({
+      name, email, role, last,
+      initials: name.replace('Dra. ', '').slice(0, 2).toUpperCase(),
+      roleStyle: 'padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: 700; white-space: nowrap; background: ' + R[role][0] + '; color: ' + R[role][1],
+      rowStyle: 'display: flex; align-items: center; gap: 14px; padding: 14px 18px; border-bottom: 1px solid #EEF0F4; ' + (sel ? 'background: #FFF1C2;' : '')
+    }));
+    const perms = [
+      ['Agenda e esteira', true, true], ['Clientes e pets', true, true], ['PDV', true, true], ['Planos', true, true],
+      ['Estoque', true, false], ['Caixa e cobrança', true, true], ['Comissão da equipe', false, false], ['Prontuário clínico', false, false], ['Configurações', false, false]
+    ].map(([area, view, edit]) => ({ area, view, edit }));
+    return { accent, nav, users, perms };
+  }
+}
+</script>
+</body>
+</html>

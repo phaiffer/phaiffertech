@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Cobrança · faturas e pagamentos</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&amp;family=Instrument+Sans:wght@400;500;600;700&amp;family=IBM+Plex+Mono:wght@500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#161A2E}a:hover{color:#3B4160}
+</style>
+</helmet>
+<div style="min-height: 1050px; background: #EFF1F5; color: #161A2E; font-family: 'Instrument Sans', system-ui, sans-serif; display: flex; flex-wrap: wrap; align-items: stretch">
+  <nav aria-label="Navegação principal" style="flex: 1 1 76px; max-width: 100%; background: #161A2E; padding: 20px 14px; box-sizing: border-box; display: flex; flex-wrap: wrap; flex-direction: column; align-items: center; gap: 8px">
+    <a href="Hoje.dc.html" aria-label="Início" style="width: 44px; height: 44px; border-radius: 12px; background: {{accent}}; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 12px"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#161A2E" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"></circle><path d="M5 9h.01M19 9h.01M8 5h.01M16 5h.01M7 17c1-2.5 3-3.5 5-3.5s4 1 5 3.5c.6 1.5-.6 3-2.2 2.6-1-.2-1.8-.6-2.8-.6s-1.8.4-2.8.6C7.6 20 6.4 18.5 7 17z"></path></svg></a>
+    <sc-for list="{{nav}}" as="item" hint-placeholder-count="12"><a href="{{item.href}}" aria-label="{{item.label}}" title="{{item.label}}" style="{{item.style}}"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{item.d}}"></path></svg></a></sc-for>
+  </nav>
+
+  <main style="flex: 999 1 560px; min-width: 0; padding: 28px 32px 48px; box-sizing: border-box; display: flex; flex-direction: column; gap: 22px">
+    <header style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 16px">
+      <div style="display: flex; flex-direction: column; gap: 8px">
+        <div role="tablist" aria-label="Seção" style="display: inline-flex; gap: 4px; padding: 4px; background: #E3E6ED; border-radius: 12px; width: max-content">
+          <a href="Financeiro.dc.html" role="tab" aria-selected="false" style="height: 34px; padding: 0 14px; border-radius: 9px; font-weight: 600; font-size: 14px; color: #2B3150; display: inline-flex; align-items: center; text-decoration: none">Visão geral</a>
+          <a href="Caixa.dc.html" role="tab" aria-selected="false" style="height: 34px; padding: 0 14px; border-radius: 9px; font-weight: 600; font-size: 14px; color: #2B3150; display: inline-flex; align-items: center; text-decoration: none">Caixa</a>
+          <a href="Cobranca.dc.html" role="tab" aria-selected="true" style="height: 34px; padding: 0 14px; border-radius: 9px; background: #FFFFFF; font-weight: 700; font-size: 14px; display: inline-flex; align-items: center; text-decoration: none">Cobrança</a>
+        </div>
+        <h1 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 40px; line-height: 1; letter-spacing: -0.03em">Cobrança</h1>
+      </div>
+      <button type="button" style="height: 44px; padding: 0 20px; border: 0; border-radius: 12px; background: #161A2E; color: #FFFFFF; font: 600 15px 'Instrument Sans', sans-serif">Nova fatura</button>
+    </header>
+
+    <div role="tablist" aria-label="Situação" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px">
+      <sc-for list="{{buckets}}" as="b" hint-placeholder-count="4">
+        <button type="button" role="tab" aria-selected="{{b.sel}}" style="{{b.style}}">
+          <span style="font-size: 13px; font-weight: 700">{{b.label}}</span>
+          <span style="font-family: 'IBM Plex Mono', monospace; font-weight: 600; font-size: 26px; letter-spacing: -0.02em">{{b.value}}</span>
+          <span style="font-size: 13px">{{b.count}}</span>
+        </button>
+      </sc-for>
+    </div>
+
+    <div style="display: flex; flex-wrap: wrap; gap: 24px; align-items: flex-start">
+      <section aria-label="Faturas" style="flex: 999 1 520px; min-width: 0; background: #FFFFFF; border-radius: 20px; overflow-x: auto">
+        <div style="min-width: 640px">
+          <div style="display: grid; grid-template-columns: 1.8fr 1.4fr 1fr 1fr 1fr; gap: 14px; padding: 14px 20px; border-bottom: 1px solid #E6E9EF; font-size: 12px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: #4A5170">
+            <span>Cliente</span><span>Referência</span><span>Vence</span><span style="text-align: right">Saldo</span><span>Situação</span>
+          </div>
+          <sc-for list="{{invoices}}" as="i" hint-placeholder-count="7">
+            <div style="{{i.rowStyle}}">
+              <span style="display: flex; flex-direction: column"><span style="font-weight: 700; font-size: 15px">{{i.client}}</span><span style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: #4A5170">{{i.id}}</span></span>
+              <span style="font-size: 14px; color: #2B3150">{{i.ref}}</span>
+              <span style="font-family: 'IBM Plex Mono', monospace; font-size: 13px; font-weight: 600">{{i.due}}</span>
+              <span style="font-family: 'IBM Plex Mono', monospace; font-weight: 600; font-size: 14px; text-align: right">{{i.value}}</span>
+              <span style="{{i.statusStyle}}">{{i.status}}</span>
+            </div>
+          </sc-for>
+        </div>
+      </section>
+
+      <aside aria-label="Fatura selecionada" style="flex: 1 1 360px; min-width: 0; max-width: 100%; display: flex; flex-direction: column; gap: 16px">
+        <article style="background: #FFFFFF; border-radius: 22px; padding: 22px; display: flex; flex-direction: column; gap: 14px; position: relative; box-shadow: 0 20px 40px -28px rgba(22,26,46,.5)">
+          <span aria-hidden="true" style="position: absolute; top: 12px; left: 50%; margin-left: -7px; width: 14px; height: 14px; border-radius: 50%; background: #EFF1F5; box-shadow: inset 0 1px 2px rgba(22,26,46,.25)"></span>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px">
+            <span style="font-family: 'IBM Plex Mono', monospace; font-size: 13px; font-weight: 600; color: #4A5170">FAT-1029</span>
+            <span style="padding: 4px 10px; border-radius: 6px; background: #FFE0E0; color: #A61B1B; font-size: 12px; font-weight: 700">Em atraso · 5 dias</span>
+          </div>
+          <h2 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 26px; letter-spacing: -0.02em">Rafael Duarte</h2>
+          <ul style="list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column">
+            <li style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #EEF0F4; font-size: 14px"><span>Plano quinzenal · Bob · outubro</span><span style="font-family: 'IBM Plex Mono', monospace; font-weight: 600">R$ 190,00</span></li>
+            <li style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #EEF0F4; font-size: 14px"><span>Desembolo × 2</span><span style="font-family: 'IBM Plex Mono', monospace; font-weight: 600">R$ 60,00</span></li>
+            <li style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #EEF0F4; font-size: 14px"><span>Pet taxi × 4</span><span style="font-family: 'IBM Plex Mono', monospace; font-weight: 600">R$ 80,00</span></li>
+            <li style="display: flex; justify-content: space-between; padding: 8px 0; font-size: 14px"><span>Ração Premium 15 kg</span><span style="font-family: 'IBM Plex Mono', monospace; font-weight: 600">R$ 150,00</span></li>
+          </ul>
+          <div style="border-top: 1.5px dashed #D9DDE6; padding-top: 12px; display: flex; justify-content: space-between; align-items: baseline"><span style="font-weight: 700">Saldo</span><span style="font-family: 'IBM Plex Mono', monospace; font-weight: 600; font-size: 28px">R$ 480,00</span></div>
+          <button type="button" style="height: 48px; border: 0; border-radius: 14px; background: {{accent}}; color: #161A2E; font: 700 15px 'Instrument Sans', sans-serif">Enviar link Pix pelo WhatsApp</button>
+          <div style="display: flex; gap: 10px">
+            <button type="button" style="flex: 1 1 0; height: 44px; border-radius: 12px; border: 0; background: #161A2E; color: #FFFFFF; font: 600 14px 'Instrument Sans', sans-serif">Registrar pagamento</button>
+            <button type="button" style="flex: 1 1 0; height: 44px; border-radius: 12px; border: 1.5px solid #D9DDE6; background: #FFFFFF; color: #161A2E; font: 600 14px 'Instrument Sans', sans-serif">Baixar PDF</button>
+          </div>
+        </article>
+        <section style="background: #FFFFFF; border-radius: 20px; padding: 18px 20px; display: flex; flex-direction: column; gap: 4px">
+          <h2 style="margin: 0 0 6px; font-size: 15px; font-weight: 700">Pagamentos recentes</h2>
+          <sc-for list="{{payments}}" as="p" hint-placeholder-count="4">
+            <div style="display: flex; justify-content: space-between; padding: 8px 0; border-top: 1px solid #EEF0F4; font-size: 14px; gap: 10px">
+              <span style="display: flex; flex-direction: column"><span style="font-weight: 600">{{p.who}}</span><span style="font-size: 12px; color: #4A5170">{{p.when}} · {{p.method}}</span></span>
+              <span style="font-family: 'IBM Plex Mono', monospace; font-weight: 600; color: #1B6B3E">{{p.value}}</span>
+            </div>
+          </sc-for>
+        </section>
+      </aside>
+    </div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#FFC633","options":["#FFC633","#FF8A3D","#7BE0B0","#9CC8FF"]},"$preview":{"width":1440,"height":1050}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const accent = this.props.accent ?? '#FFC633';
+    const I = {hoje:'M3 10h18M7 3v4M17 3v4M5 6h14a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2z',agenda:'M12 7v5l3 2M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18z',clientes:'M16 19v-1a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v1M9.5 10a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM21 19v-1a4 4 0 0 0-3-3.9M16 4.1a3 3 0 0 1 0 5.8',planos:'M4 12a8 8 0 0 1 14-5.3L20 9M20 4v5h-5M20 12a8 8 0 0 1-14 5.3L4 15M4 20v-5h5',pdv:'M3 7h18v10H3zM7 12h.01M17 12h.01M12 9.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5z',estoque:'M21 8 12 3 3 8v8l9 5 9-5zM3 8l9 5 9-5M12 13v8',financeiro:'M3 7h15a3 3 0 0 1 3 3v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2zM3 7l12-4v4M17 13h.01',equipe:'M12 3l2.7 5.5 6 .9-4.4 4.2 1 6-5.3-2.8-5.3 2.8 1-6L3.3 9.4l6-.9z',clinica:'M10 3h4v7h7v4h-7v7h-4v-7H3v-4h7z',comercial:'M3 17l6-6 4 4 8-8M15 7h6v6',insights:'M4 20V10M10 20V4M16 20v-7',config:'M4 6h9M17 6h3M4 12h3M11 12h9M4 18h11M19 18h1M15 4v4M9 10v4M17 16v4'};
+    const N = [['hoje','Hoje','Hoje'],['agenda','Agenda','Agenda'],['clientes','Clientes e pets','Clientes'],['planos','Planos','Planos'],['pdv','PDV','PDV'],['estoque','Estoque','Estoque'],['financeiro','Financeiro','Financeiro'],['equipe','Equipe e comissão','Equipe'],['clinica','Clínica','Clinica'],['comercial','Comercial','Comercial'],['insights','Insights','Insights'],['config','Configurações','Configuracoes']];
+    const ACTIVE = 'financeiro';
+    const nav = N.map(([k, label, f]) => ({ label, d: I[k], href: f + '.dc.html', style: 'width: 48px; height: 48px; border-radius: 12px; display: inline-flex; align-items: center; justify-content: center; ' + (k === ACTIVE ? 'background: ' + accent + '; color: #161A2E;' : 'color: #D5D8E5;') }));
+
+    const bk = 'text-align: left; border-radius: 18px; padding: 16px 18px; display: flex; flex-direction: column; gap: 4px; font-family: \'Instrument Sans\', sans-serif; ';
+    const buckets = [
+      ['Em aberto', 'R$ 2.310,00', '6 faturas', 'border: 2px solid #161A2E; background: #FFFFFF; color: #161A2E;', true],
+      ['Em atraso', 'R$ 780,00', '2 faturas', 'border: 0; background: #FFE0E0; color: #7A1414;'],
+      ['Próximo ciclo', 'R$ 18.720,00', '96 planos renovam em novembro', 'border: 0; background: #FFFFFF; color: #161A2E;'],
+      ['Pago em outubro', 'R$ 31.940,00', '412 pagamentos', 'border: 0; background: #D7F0E0; color: #134D2C;']
+    ].map(([label, value, count, s, sel]) => ({ label, value, count, sel: sel ? 'true' : 'false', style: bk + s }));
+    const S = { 'Em atraso': ['#FFE0E0', '#A61B1B'], 'Em aberto': ['#E3E6ED', '#2B3150'], 'Vence hoje': ['#FFE4D4', '#A33A06'], 'Parcial': ['#D6E6FF', '#1A4E9E'] };
+    const invoices = [
+      ['Rafael Duarte', 'FAT-1029', 'Outubro · plano + extras', '26/10', 'R$ 480,00', 'Em atraso', true],
+      ['Sérgio Alves', 'FAT-1021', 'Tosa da raça · Kiara', '28/10', 'R$ 300,00', 'Em atraso'],
+      ['Carla Nogueira', 'FAT-1034', 'Três pets · outubro', '31/10', 'R$ 410,00', 'Vence hoje'],
+      ['Lucas Andrade', 'FAT-1035', 'Banho simples · Paçoca', '05/11', 'R$ 55,00', 'Em aberto'],
+      ['Marcos Pereira', 'FAT-1036', 'Banho + escovação · Fred', '05/11', 'R$ 75,00', 'Em aberto'],
+      ['Helena Prado', 'FAT-1018', 'Banho · Mingau', '10/11', 'R$ 450,00', 'Parcial'],
+      ['Adestra Pet Zona Sul', 'FAT-1037', 'Parceria · indicações', '15/11', 'R$ 540,00', 'Em aberto']
+    ].map(([client, id, ref, due, value, status, sel]) => ({
+      client, id, ref, due, value, status,
+      statusStyle: 'justify-self: start; padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: 700; background: ' + S[status][0] + '; color: ' + S[status][1],
+      rowStyle: 'display: grid; grid-template-columns: 1.8fr 1.4fr 1fr 1fr 1fr; gap: 14px; padding: 12px 20px; border-bottom: 1px solid #EEF0F4; align-items: center; ' + (sel ? 'background: #FFF1C2;' : '')
+    }));
+    const payments = [['Ana Paula Souza', 'hoje 11:20', 'Pix', 'R$ 129,90'], ['Fernanda Lima', 'hoje 09:40', 'Pix', 'R$ 180,00'], ['Paulo Henrique', 'ontem', 'Cartão', 'R$ 180,00'], ['Júlia Martins', '29/10', 'Pix', 'R$ 70,00']].map(([who, when, method, value]) => ({ who, when, method, value }));
+    return { accent, nav, buckets, invoices, payments };
+  }
+}
+</script>
+</body>
+</html>

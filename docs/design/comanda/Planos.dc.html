@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Planos recorrentes</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&amp;family=Instrument+Sans:wght@400;500;600;700&amp;family=IBM+Plex+Mono:wght@500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#161A2E}a:hover{color:#3B4160}
+</style>
+</helmet>
+<div style="min-height: 1050px; background: #EFF1F5; color: #161A2E; font-family: 'Instrument Sans', system-ui, sans-serif; display: flex; flex-wrap: wrap; align-items: stretch">
+  <nav aria-label="Navegação principal" style="flex: 1 1 76px; max-width: 100%; background: #161A2E; padding: 20px 14px; box-sizing: border-box; display: flex; flex-wrap: wrap; flex-direction: column; align-items: center; gap: 8px">
+    <a href="Hoje.dc.html" aria-label="Início" style="width: 44px; height: 44px; border-radius: 12px; background: {{accent}}; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 12px"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#161A2E" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"></circle><path d="M5 9h.01M19 9h.01M8 5h.01M16 5h.01M7 17c1-2.5 3-3.5 5-3.5s4 1 5 3.5c.6 1.5-.6 3-2.2 2.6-1-.2-1.8-.6-2.8-.6s-1.8.4-2.8.6C7.6 20 6.4 18.5 7 17z"></path></svg></a>
+    <sc-for list="{{nav}}" as="item" hint-placeholder-count="12"><a href="{{item.href}}" aria-label="{{item.label}}" title="{{item.label}}" style="{{item.style}}"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{item.d}}"></path></svg></a></sc-for>
+  </nav>
+
+  <main style="flex: 999 1 560px; min-width: 0; padding: 28px 32px 48px; box-sizing: border-box; display: flex; flex-direction: column; gap: 22px">
+    <header style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 16px">
+      <div style="display: flex; flex-direction: column; gap: 8px">
+        <span style="font-family: 'IBM Plex Mono', monospace; font-size: 13px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: #4A5170">Recorrência</span>
+        <h1 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 40px; line-height: 1; letter-spacing: -0.03em">Planos</h1>
+        <p style="margin: 0; font-size: 15px; color: #2B3150"><strong>96</strong> planos ativos · <strong style="font-family: 'IBM Plex Mono', monospace">R$ 18.720,00</strong> por mês · <strong>7</strong> para renovar esta semana</p>
+      </div>
+      <div style="display: flex; gap: 12px; flex-wrap: wrap">
+        <button type="button" style="height: 44px; padding: 0 18px; border: 1.5px solid #C9CEDA; border-radius: 12px; background: #FFFFFF; color: #161A2E; font: 600 15px 'Instrument Sans', sans-serif">Editar modelos</button>
+        <button type="button" style="height: 44px; padding: 0 20px; border: 0; border-radius: 12px; background: #161A2E; color: #FFFFFF; font: 600 15px 'Instrument Sans', sans-serif">Vender plano</button>
+      </div>
+    </header>
+
+    <section aria-label="Modelos de plano" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px">
+      <sc-for list="{{models}}" as="m" hint-placeholder-count="4">
+        <article style="{{m.style}}">
+          <span style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase">{{m.cadence}}</span>
+          <h2 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 24px; letter-spacing: -0.02em">{{m.name}}</h2>
+          <span style="font-size: 14px; line-height: 1.4">{{m.desc}}</span>
+          <span style="display: flex; justify-content: space-between; align-items: baseline; margin-top: auto; padding-top: 10px; border-top: 1.5px dashed rgba(22,26,46,.2)">
+            <span style="font-family: 'IBM Plex Mono', monospace; font-weight: 600; font-size: 22px">{{m.price}}</span>
+            <span style="font-size: 13px; font-weight: 700">{{m.count}}</span>
+          </span>
+        </article>
+      </sc-for>
+    </section>
+
+    <div style="display: flex; flex-wrap: wrap; gap: 8px">
+      <sc-for list="{{filters}}" as="f" hint-placeholder-count="5"><button type="button" aria-pressed="{{f.pressed}}" style="{{f.style}}">{{f.label}}</button></sc-for>
+    </div>
+
+    <section aria-label="Assinaturas" style="background: #FFFFFF; border-radius: 20px; overflow-x: auto">
+      <div style="min-width: 920px">
+        <div style="display: grid; grid-template-columns: 1.8fr 1.4fr 1.6fr 1fr 1fr 1fr; gap: 16px; padding: 14px 20px; border-bottom: 1px solid #E6E9EF; font-size: 12px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: #4A5170">
+          <span>Pet · tutor</span><span>Plano</span><span>Sessões</span><span>Renova em</span><span>Status</span><span style="text-align: right">Ação</span>
+        </div>
+        <sc-for list="{{subs}}" as="s" hint-placeholder-count="7">
+          <div style="display: grid; grid-template-columns: 1.8fr 1.4fr 1.6fr 1fr 1fr 1fr; gap: 16px; padding: 12px 20px; border-bottom: 1px solid #EEF0F4; align-items: center">
+            <span style="display: flex; flex-direction: column"><span style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 17px">{{s.pet}}</span><span style="font-size: 12px; color: #4A5170">{{s.owner}}</span></span>
+            <span style="font-size: 14px; font-weight: 600">{{s.plan}}</span>
+            <span style="display: flex; align-items: center; gap: 6px">
+              <sc-for list="{{s.dots}}" as="d" hint-placeholder-count="4"><span style="{{d.style}}"></span></sc-for>
+              <span style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; font-weight: 600; margin-left: 4px">{{s.used}}</span>
+            </span>
+            <span style="font-family: 'IBM Plex Mono', monospace; font-size: 13px; font-weight: 600">{{s.renew}}</span>
+            <span style="{{s.statusStyle}}">{{s.status}}</span>
+            <span style="text-align: right"><button type="button" style="{{s.actionStyle}}">{{s.action}}</button></span>
+          </div>
+        </sc-for>
+      </div>
+    </section>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#FFC633","options":["#FFC633","#FF8A3D","#7BE0B0","#9CC8FF"]},"$preview":{"width":1440,"height":1050}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const accent = this.props.accent ?? '#FFC633';
+    const I = {hoje:'M3 10h18M7 3v4M17 3v4M5 6h14a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2z',agenda:'M12 7v5l3 2M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18z',clientes:'M16 19v-1a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v1M9.5 10a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM21 19v-1a4 4 0 0 0-3-3.9M16 4.1a3 3 0 0 1 0 5.8',planos:'M4 12a8 8 0 0 1 14-5.3L20 9M20 4v5h-5M20 12a8 8 0 0 1-14 5.3L4 15M4 20v-5h5',pdv:'M3 7h18v10H3zM7 12h.01M17 12h.01M12 9.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5z',estoque:'M21 8 12 3 3 8v8l9 5 9-5zM3 8l9 5 9-5M12 13v8',financeiro:'M3 7h15a3 3 0 0 1 3 3v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2zM3 7l12-4v4M17 13h.01',equipe:'M12 3l2.7 5.5 6 .9-4.4 4.2 1 6-5.3-2.8-5.3 2.8 1-6L3.3 9.4l6-.9z',clinica:'M10 3h4v7h7v4h-7v7h-4v-7H3v-4h7z',comercial:'M3 17l6-6 4 4 8-8M15 7h6v6',insights:'M4 20V10M10 20V4M16 20v-7',config:'M4 6h9M17 6h3M4 12h3M11 12h9M4 18h11M19 18h1M15 4v4M9 10v4M17 16v4'};
+    const N = [['hoje','Hoje','Hoje'],['agenda','Agenda','Agenda'],['clientes','Clientes e pets','Clientes'],['planos','Planos','Planos'],['pdv','PDV','PDV'],['estoque','Estoque','Estoque'],['financeiro','Financeiro','Financeiro'],['equipe','Equipe e comissão','Equipe'],['clinica','Clínica','Clinica'],['comercial','Comercial','Comercial'],['insights','Insights','Insights'],['config','Configurações','Configuracoes']];
+    const ACTIVE = 'planos';
+    const nav = N.map(([k, label, f]) => ({ label, d: I[k], href: f + '.dc.html', style: 'width: 48px; height: 48px; border-radius: 12px; display: inline-flex; align-items: center; justify-content: center; ' + (k === ACTIVE ? 'background: ' + accent + '; color: #161A2E;' : 'color: #D5D8E5;') }));
+
+    const card = 'border-radius: 20px; padding: 20px; display: flex; flex-direction: column; gap: 8px; min-height: 190px; box-sizing: border-box; ';
+    const models = [
+      ['4 banhos / mês', 'Mensal banho', 'Um banho por semana, com hidratação no 4º.', 'a partir de R$ 180', '52 ativos', 'background: #161A2E; color: #FFFFFF;'],
+      ['2 banhos / mês', 'Quinzenal', 'Para pelagem curta ou rotina mais leve.', 'a partir de R$ 95', '23 ativos', 'background: #FFFFFF; color: #161A2E;'],
+      ['4 banhos + 1 tosa', 'Mensal completo', 'Banho semanal e tosa bebê no fim do ciclo.', 'a partir de R$ 260', '17 ativos', 'background: ' + accent + '; color: #161A2E;'],
+      ['8 banhos / 60 dias', 'Pacote pré-pago', 'Sem renovação automática; vale por 60 dias.', 'a partir de R$ 340', '4 ativos', 'background: #FFFFFF; color: #161A2E;']
+    ].map(([cadence, name, desc, price, count, style]) => ({ cadence, name, desc, price, count, style: card + style }));
+    const filters = ['Todos', 'Renovar esta semana', 'Ativos', 'Pausados', 'Cancelados'].map((label, i) => ({
+      label, pressed: i === 1 ? 'true' : 'false',
+      style: 'height: 40px; padding: 0 14px; border-radius: 999px; font: 600 14px \'Instrument Sans\', sans-serif; ' + (i === 1 ? 'border: 0; background: #161A2E; color: #FFFFFF;' : 'border: 1.5px solid #D9DDE6; background: #FFFFFF; color: #2B3150;')
+    }));
+    const ST = { Ativo: ['#D7F0E0', '#1B6B3E'], Pausado: ['#E3E6ED', '#2B3150'], 'Último banho': ['#FFE4D4', '#A33A06'], Atrasado: ['#FFE0E0', '#A61B1B'] };
+    const subs = [
+      ['Amora', 'Júlia Martins', 'Mensal banho', 4, 4, 'hoje', 'Último banho', 'Renovar'],
+      ['Nina', 'Beatriz Rocha', 'Mensal banho', 3, 4, '06/11', 'Ativo', 'Lembrar'],
+      ['Bob', 'Rafael Duarte', 'Quinzenal', 1, 2, '04/11', 'Atrasado', 'Cobrar'],
+      ['Thor', 'Ana Paula Souza', 'Mensal completo', 3, 5, '07/11', 'Ativo', 'Lembrar'],
+      ['Zeus', 'Paulo Henrique', 'Mensal banho', 4, 4, '02/11', 'Último banho', 'Renovar'],
+      ['Kiara', 'Sérgio Alves', 'Quinzenal', 0, 2, '—', 'Pausado', 'Retomar'],
+      ['Luna', 'Fernanda Lima', 'Mensal banho', 1, 4, '28/11', 'Ativo', 'Ver']
+    ].map(([pet, owner, plan, used, total, renew, status, action]) => ({
+      pet, owner, plan, renew, status, action, used: used + '/' + total,
+      dots: Array.from({ length: total }, (_, i) => ({ style: 'width: 14px; height: 14px; border-radius: 50%; ' + (i < used ? 'background: #161A2E;' : 'border: 2px solid #C9CEDA; box-sizing: border-box;') })),
+      statusStyle: 'justify-self: start; padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: 700; background: ' + ST[status][0] + '; color: ' + ST[status][1],
+      actionStyle: 'height: 36px; padding: 0 14px; border-radius: 10px; font: 700 13px \'Instrument Sans\', sans-serif; ' + (action === 'Renovar' ? 'border: 0; background: ' + accent + '; color: #161A2E;' : action === 'Cobrar' ? 'border: 0; background: #161A2E; color: #FFFFFF;' : 'border: 1.5px solid #D9DDE6; background: #FFFFFF; color: #161A2E;')
+    }));
+    return { accent, nav, models, filters, subs };
+  }
+}
+</script>
+</body>
+</html>

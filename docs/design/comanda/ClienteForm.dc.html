@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Cadastro de cliente</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&amp;family=Instrument+Sans:wght@400;500;600;700&amp;family=IBM+Plex+Mono:wght@500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#161A2E}a:hover{color:#3B4160}
+</style>
+</helmet>
+<div style="min-height: 1100px; background: #EFF1F5; color: #161A2E; font-family: 'Instrument Sans', system-ui, sans-serif; display: flex; flex-wrap: wrap; align-items: stretch">
+  <nav aria-label="Navegação principal" style="flex: 1 1 76px; max-width: 100%; background: #161A2E; padding: 20px 14px; box-sizing: border-box; display: flex; flex-wrap: wrap; flex-direction: column; align-items: center; gap: 8px">
+    <a href="Hoje.dc.html" aria-label="Início" style="width: 44px; height: 44px; border-radius: 12px; background: {{accent}}; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 12px"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#161A2E" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"></circle><path d="M5 9h.01M19 9h.01M8 5h.01M16 5h.01M7 17c1-2.5 3-3.5 5-3.5s4 1 5 3.5c.6 1.5-.6 3-2.2 2.6-1-.2-1.8-.6-2.8-.6s-1.8.4-2.8.6C7.6 20 6.4 18.5 7 17z"></path></svg></a>
+    <sc-for list="{{nav}}" as="item" hint-placeholder-count="12"><a href="{{item.href}}" aria-label="{{item.label}}" title="{{item.label}}" style="{{item.style}}"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{item.d}}"></path></svg></a></sc-for>
+  </nav>
+
+  <main style="flex: 999 1 560px; min-width: 0; padding: 28px 32px 48px; box-sizing: border-box; display: flex; flex-direction: column; gap: 24px">
+    <header style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 16px">
+      <div style="display: flex; flex-direction: column; gap: 8px">
+        <nav aria-label="Caminho" style="font-size: 13px; color: #4A5170; display: flex; gap: 6px"><a href="Clientes.dc.html" style="color: #4A5170">Clientes</a><span aria-hidden="true">/</span><span style="color: #161A2E; font-weight: 600">Fernanda Lima</span></nav>
+        <h1 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 40px; line-height: 1; letter-spacing: -0.03em">Fernanda Lima</h1>
+        <p style="margin: 0; font-size: 15px; color: #2B3150">Cliente desde março de 2024 · 2 pets · Plano mensal</p>
+      </div>
+      <div style="display: flex; gap: 12px; flex-wrap: wrap">
+        <a href="Agenda.dc.html" style="height: 44px; padding: 0 18px; border: 1.5px solid #C9CEDA; border-radius: 12px; background: #FFFFFF; font-weight: 600; font-size: 15px; display: inline-flex; align-items: center; text-decoration: none; box-sizing: border-box">Agendar</a>
+        <button type="button" style="height: 44px; padding: 0 20px; border: 0; border-radius: 12px; background: #161A2E; color: #FFFFFF; font: 600 15px 'Instrument Sans', sans-serif">Salvar alterações</button>
+      </div>
+    </header>
+
+    <div style="display: flex; flex-wrap: wrap; gap: 24px; align-items: flex-start">
+      <form style="flex: 999 1 520px; min-width: 0; display: flex; flex-direction: column; gap: 16px">
+        <sc-for list="{{sections}}" as="s" hint-placeholder-count="3">
+          <fieldset style="border: 0; margin: 0; background: #FFFFFF; border-radius: 20px; padding: 24px; display: flex; flex-direction: column; gap: 16px">
+            <legend style="float: left; padding: 0; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 700; font-size: 21px; letter-spacing: -0.02em">{{s.title}}</legend>
+            <p style="clear: both; margin: 0; font-size: 14px; color: #4A5170">{{s.hint}}</p>
+            <div style="display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 14px">
+              <sc-for list="{{s.fields}}" as="f" hint-placeholder-count="4">
+                <label style="{{f.wrap}}">{{f.label}}
+                  <input type="text" value="{{f.value}}" style="{{f.input}}">
+                </label>
+              </sc-for>
+            </div>
+          </fieldset>
+        </sc-for>
+        <fieldset style="border: 0; margin: 0; background: #FFFFFF; border-radius: 20px; padding: 24px; display: flex; flex-direction: column; gap: 14px">
+          <legend style="float: left; padding: 0; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 700; font-size: 21px; letter-spacing: -0.02em">Avisos e observações</legend>
+          <div style="clear: both; display: flex; flex-wrap: wrap; gap: 10px">
+            <label style="display: inline-flex; align-items: center; gap: 10px; min-height: 44px; padding: 0 14px; border-radius: 12px; border: 1.5px solid #161A2E; font-size: 14px; font-weight: 600"><input type="checkbox" checked style="width: 18px; height: 18px; accent-color: #161A2E; margin: 0">Avisar retirada pelo WhatsApp</label>
+            <label style="display: inline-flex; align-items: center; gap: 10px; min-height: 44px; padding: 0 14px; border-radius: 12px; border: 1.5px solid #D9DDE6; font-size: 14px; font-weight: 600"><input type="checkbox" style="width: 18px; height: 18px; accent-color: #161A2E; margin: 0">Enviar recibo por e-mail</label>
+            <label style="display: inline-flex; align-items: center; gap: 10px; min-height: 44px; padding: 0 14px; border-radius: 12px; border: 1.5px solid #161A2E; font-size: 14px; font-weight: 600"><input type="checkbox" checked style="width: 18px; height: 18px; accent-color: #161A2E; margin: 0">Lembrete de renovação do plano</label>
+          </div>
+          <label style="display: flex; flex-direction: column; gap: 6px; font-size: 13px; font-weight: 600">Observações
+            <textarea rows="3" style="padding: 12px 14px; border: 1.5px solid #D9DDE6; border-radius: 12px; font: 500 15px/1.5 'Instrument Sans', sans-serif; color: #161A2E; resize: vertical">Prefere horários pela manhã. Portão lateral para o pet taxi.</textarea>
+          </label>
+          <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; border-top: 1px solid #E6E9EF; padding-top: 14px">
+            <span style="font-size: 14px"><strong>Status:</strong> Ativo</span>
+            <button type="button" style="height: 40px; padding: 0 14px; border-radius: 10px; border: 1.5px solid #E7B8B8; background: #FFFFFF; color: #A61B1B; font: 600 14px 'Instrument Sans', sans-serif">Inativar cliente</button>
+          </div>
+        </fieldset>
+      </form>
+
+      <aside style="flex: 1 1 340px; min-width: 0; max-width: 100%; display: flex; flex-direction: column; gap: 16px">
+        <section style="background: #FFFFFF; border-radius: 20px; padding: 20px; display: flex; flex-direction: column; gap: 12px">
+          <div style="display: flex; justify-content: space-between; align-items: baseline">
+            <h2 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 700; font-size: 20px">Pets</h2>
+            <a href="CadastroPet.dc.html" style="font-size: 13px; font-weight: 700">+ Adicionar pet</a>
+          </div>
+          <sc-for list="{{pets}}" as="p" hint-placeholder-count="2">
+            <a href="PetPerfil.dc.html" style="display: flex; align-items: center; gap: 12px; padding: 10px; border-radius: 14px; background: #EFF1F5; text-decoration: none">
+              <span style="{{p.avatar}}">{{p.initial}}</span>
+              <span style="display: flex; flex-direction: column; flex: 1 1 auto"><span style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 18px">{{p.name}}</span><span style="font-size: 12px; color: #4A5170">{{p.detail}}</span></span>
+              <span style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; font-weight: 600; color: #2B3150">{{p.next}}</span>
+            </a>
+          </sc-for>
+        </section>
+        <section style="background: #FFFFFF; border-radius: 20px; padding: 20px; display: flex; flex-direction: column; gap: 10px">
+          <h2 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 700; font-size: 20px">Pode retirar o pet</h2>
+          <div style="display: flex; justify-content: space-between; font-size: 14px; padding: 8px 0; border-bottom: 1px solid #EEF0F4"><span><strong>Ricardo Lima</strong> · marido</span><span style="font-family: 'IBM Plex Mono', monospace; font-size: 13px">(11) 9XXXX-4411</span></div>
+          <a href="Contatos.dc.html" style="font-size: 13px; font-weight: 700">+ Adicionar contato autorizado</a>
+        </section>
+        <section style="background: #161A2E; color: #FFFFFF; border-radius: 20px; padding: 20px; display: flex; flex-direction: column; gap: 12px">
+          <h2 style="margin: 0; font-size: 15px; font-weight: 700">Resumo financeiro</h2>
+          <dl style="margin: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px">
+            <div><dt style="font-size: 12px; color: #B9BED3">Gasto em 2026</dt><dd style="margin: 0; font-family: 'IBM Plex Mono', monospace; font-weight: 600; font-size: 18px">R$ 2.140,00</dd></div>
+            <div><dt style="font-size: 12px; color: #B9BED3">Em aberto</dt><dd style="margin: 0; font-family: 'IBM Plex Mono', monospace; font-weight: 600; font-size: 18px">R$ 0,00</dd></div>
+            <div><dt style="font-size: 12px; color: #B9BED3">Visitas</dt><dd style="margin: 0; font-family: 'IBM Plex Mono', monospace; font-weight: 600; font-size: 18px">22</dd></div>
+            <div><dt style="font-size: 12px; color: #B9BED3">Plano</dt><dd style="margin: 0; font-family: 'IBM Plex Mono', monospace; font-weight: 600; font-size: 18px">1 de 4</dd></div>
+          </dl>
+          <a href="Cobranca.dc.html" style="color: #FFFFFF; font-size: 13px; font-weight: 700">Ver faturas</a>
+        </section>
+      </aside>
+    </div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#FFC633","options":["#FFC633","#FF8A3D","#7BE0B0","#9CC8FF"]},"$preview":{"width":1440,"height":1100}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const accent = this.props.accent ?? '#FFC633';
+    const I = {hoje:'M3 10h18M7 3v4M17 3v4M5 6h14a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2z',agenda:'M12 7v5l3 2M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18z',clientes:'M16 19v-1a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v1M9.5 10a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM21 19v-1a4 4 0 0 0-3-3.9M16 4.1a3 3 0 0 1 0 5.8',planos:'M4 12a8 8 0 0 1 14-5.3L20 9M20 4v5h-5M20 12a8 8 0 0 1-14 5.3L4 15M4 20v-5h5',pdv:'M3 7h18v10H3zM7 12h.01M17 12h.01M12 9.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5z',estoque:'M21 8 12 3 3 8v8l9 5 9-5zM3 8l9 5 9-5M12 13v8',financeiro:'M3 7h15a3 3 0 0 1 3 3v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2zM3 7l12-4v4M17 13h.01',equipe:'M12 3l2.7 5.5 6 .9-4.4 4.2 1 6-5.3-2.8-5.3 2.8 1-6L3.3 9.4l6-.9z',clinica:'M10 3h4v7h7v4h-7v7h-4v-7H3v-4h7z',comercial:'M3 17l6-6 4 4 8-8M15 7h6v6',insights:'M4 20V10M10 20V4M16 20v-7',config:'M4 6h9M17 6h3M4 12h3M11 12h9M4 18h11M19 18h1M15 4v4M9 10v4M17 16v4'};
+    const N = [['hoje','Hoje','Hoje'],['agenda','Agenda','Agenda'],['clientes','Clientes e pets','Clientes'],['planos','Planos','Planos'],['pdv','PDV','PDV'],['estoque','Estoque','Estoque'],['financeiro','Financeiro','Financeiro'],['equipe','Equipe e comissão','Equipe'],['clinica','Clínica','Clinica'],['comercial','Comercial','Comercial'],['insights','Insights','Insights'],['config','Configurações','Configuracoes']];
+    const ACTIVE = 'clientes';
+    const nav = N.map(([k, label, f]) => ({ label, d: I[k], href: f + '.dc.html', style: 'width: 48px; height: 48px; border-radius: 12px; display: inline-flex; align-items: center; justify-content: center; ' + (k === ACTIVE ? 'background: ' + accent + '; color: #161A2E;' : 'color: #D5D8E5;') }));
+
+    const field = (label, value, span, mono) => ({
+      label, value,
+      wrap: 'grid-column: span ' + span + '; display: flex; flex-direction: column; gap: 6px; font-size: 13px; font-weight: 600; min-width: 0',
+      input: 'height: 44px; padding: 0 14px; border: 1.5px solid #D9DDE6; border-radius: 12px; font: ' + (mono ? '600 15px \'IBM Plex Mono\', monospace' : '500 15px \'Instrument Sans\', sans-serif') + '; color: #161A2E; box-sizing: border-box; width: 100%; min-width: 0'
+    });
+    const sections = [
+      { title: 'Responsável', hint: 'Quem agenda, recebe os avisos e paga.', fields: [
+        field('Nome completo', 'Fernanda Lima', 4), field('CPF', '000.000.000-00', 2, true),
+        field('WhatsApp', '(11) 9XXXX-4410', 3, true), field('E-mail', 'fernanda@exemplo.com', 3)
+      ] },
+      { title: 'Endereço', hint: 'Usado no pet taxi e no cálculo da distância de coleta.', fields: [
+        field('CEP', '00000-000', 2, true), field('Rua', 'Rua das Acácias', 3), field('Número', '120', 1, true),
+        field('Bairro', 'Jardim Paulista', 3), field('Complemento', 'Casa 2', 3)
+      ] }
+    ];
+    const pets = [
+      { name: 'Luna', initial: 'L', detail: 'Yorkshire · porte P · pele sensível', next: 'hoje 09:30', avatar: 'width: 44px; height: 44px; border-radius: 13px; background: #E8DFFF; color: #4E33A3; display: inline-flex; align-items: center; justify-content: center; font-family: \'Bricolage Grotesque\', sans-serif; font-weight: 800; font-size: 19px' },
+      { name: 'Bento', initial: 'B', detail: 'Beagle · porte M', next: 'hoje 13:00', avatar: 'width: 44px; height: 44px; border-radius: 13px; background: #D6E6FF; color: #1A4E9E; display: inline-flex; align-items: center; justify-content: center; font-family: \'Bricolage Grotesque\', sans-serif; font-weight: 800; font-size: 19px' }
+    ];
+    return { accent, nav, sections, pets };
+  }
+}
+</script>
+</body>
+</html>
