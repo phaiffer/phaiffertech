@@ -11,6 +11,13 @@ Este arquivo lista o que os protótipos de `docs/design/comanda/` pedem e o back
 | 1 | Menu lateral | Busca `/` "Buscar pet ou tutor" | Busca unificada de pets e tutores | Omitida nesta fase; a fase 3 liga a busca à tela de Clientes |
 | 1 | Menu lateral | Função do usuário ("Marina · recepção") | Rótulo amigável da função no tenant (hoje há apenas o papel técnico) | Mostra só o nome do usuário |
 | 1 | Shell | Sino de notificações | Fonte de notificações | O sino não tinha dados ("nenhuma notificação"); foi removido |
+| 2 | Hoje | Colunas "No banho" e "Na tosa" | Status separado para banho e tosa | Unificadas em "Em atendimento" (`IN_PROGRESS`) |
+| 2 | Hoje | Coluna e métrica "Retirado" | Sinal de que o pet foi retirado | Omitidas |
+| 2 | Hoje | Caixa: linha "Saídas" e caixa completo do dia | Movimentos de caixa do dia (entradas e saídas) por forma de pagamento | Mostra pagamentos confirmados hoje nas 200 faturas mais recentes; sem saídas |
+| 2 | Hoje | "Avisar tutor" direto no cartão | Ação de envio na própria fila | O cartão leva para a Agenda, onde a mensagem de retirada já é preparada |
+| 2 | Agenda | "Horário livre / encaixe" e carga do profissional ("6/7") | Jornada e capacidade de cada profissional | Omitidos; clicar numa hora vazia agenda naquele horário |
+| 2 | PDV | **Registro da venda** | Fluxo de venda: fatura, pagamento e baixa de estoque a partir do PDV | **O checkout continua simulado, como já era antes do redesign**; a tela avisa que a venda não é registrada |
+| 2 | PDV | "Coberto pelo plano", troco e "atendimentos prontos para cobrar" | Vínculo da venda com plano e atendimento; valor recebido em dinheiro | Omitidos |
 
 ## Pendências de frontend (fases seguintes)
 
@@ -26,4 +33,7 @@ Itens que não dependem do backend, mas que a fase 1 não alcança por exigirem 
 
 - **Escopo do visual v2**: os tokens, a fonte IBM Plex e os componentes `.ui-*` valem dentro de `[data-surface='app']`, que o `AppShell` aplica à raiz e ao `<body>` enquanto está montado. O site público, o login e a recuperação de senha (fase 7) mantêm o visual atual até sua fase.
 - **Paletas do Tailwind**: `slate`, `emerald`, `amber`, `red`, `rose`, `blue`, `sky`, `violet` e `white` leem variáveis CSS. Fora do app usam os valores originais da Tailwind; dentro do app viram neutros (tons 50-300) e as cores semânticas do v2 (tons 400+). No tema escuro a escala se inverte.
+- **Fase 2, Hoje**: `/dashboard`, `/pet` e `/pet/dashboard` abrem a mesma tela "Hoje". A antiga tela `/pet` (cartões de "Workspace", código do ambiente) foi removida, assim como a aba duplicada "Workspace" da sub-navegação.
+- **Fase 2, Agenda**: visões Dia (grade por profissional, padrão), Lista e Mês. "Semana" não depende de dado novo e fica como evolução de frontend.
+- **Fase 2, PDV**: os quatro cartões de resumo mostravam números fixos no código (vendas, faturamento, ticket médio, itens) e foram removidos. Corrigido também um erro antigo: o PDV pedia 500 itens por página, acima do limite da API (200), e ficava sem produtos e clientes sem avisar.
 - **Status como ponto**: `StatusBadge` agrupa os status em aguardando (cinza: agendado, confirmado, pendente), em atendimento (azul), concluído (verde), atenção (`warn`) e erro/cancelado (`danger`). A separação "No banho" / "Na tosa" e o estágio "Retirado" da fila serão tratados na fase 2, conforme a regra de estágios do prompt.

@@ -1,33 +1,11 @@
 'use client';
 
-import type { ReactNode } from 'react';
-import { useEffect, useMemo, useState, useCallback } from 'react';
-import {
-  Search,
-  ShoppingCart,
-  Plus,
-  Minus,
-  Trash2,
-  User,
-  CreditCard,
-  Banknote,
-  Smartphone,
-  ArrowRight,
-  Package,
-  Scissors,
-  X,
-  Check,
-  Receipt
-} from 'lucide-react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Minus, Plus, Search, Trash2, X } from 'lucide-react';
 import { PetModuleSubnav } from '@/modules/pet/pet-module-subnav';
-import {
-  sharedInputClass,
-  sharedInputLeadingAccessoryClass,
-  sharedInputWithLeadingAccessoryClass,
-  sharedInputWithTrailingAccessoryClass,
-  sharedPageStackClass
-} from '@/shared/components/public-visual-system';
-import { useAppI18n, useAppMessages, type AppLocale } from '@/shared/i18n/app-i18n-provider';
+import { sharedPageStackClass } from '@/shared/components/public-visual-system';
+import { useKeyboardShortcut } from '@/shared/hooks/use-keyboard-shortcut';
+import { useAppI18n, useAppMessages } from '@/shared/i18n/app-i18n-provider';
 import { formatCurrencyForLocale } from '@/shared/i18n/formatters';
 import { resolvePageItems } from '@/shared/lib/pagination';
 import { useFrontendPlatform } from '@/shared/platform/use-frontend-platform';
@@ -47,265 +25,54 @@ type CartItem = {
   maxQuantity?: number;
 };
 
-type PaymentMethod = 'cash' | 'credit' | 'debit' | 'pix' | 'transfer';
+type PaymentMethod = 'pix' | 'cash' | 'credit' | 'debit' | 'transfer';
 
-function POSStatCard({
-  label,
-  value,
-  icon,
-  tone = 'default'
-}: {
-  label: string;
-  value: string;
-  icon: ReactNode;
-  tone?: 'default' | 'accent';
-}) {
-  return (
-    <div className={`rounded-2xl border p-4 ${
-      tone === 'accent'
-        ? 'border-transparent bg-[linear-gradient(135deg,var(--accent),var(--pet-teal))] text-white '
-        : 'border-slate-200/80 bg-white '
-    }`}>
-      <div className="flex items-center gap-3">
-        <span className={`inline-flex h-10 w-10 items-center justify-center rounded-xl ${
-          tone === 'accent' ? 'bg-white/15' : 'bg-slate-100'
-        }`}>
-          {icon}
-        </span>
-        <div>
-          <p className={`text-xs font-semibold uppercase tracking-wider ${
-            tone === 'accent' ? 'text-white/70' : 'text-slate-600'
-          }`}>
-            {label}
-          </p>
-          <p className={`text-lg font-bold tracking-tight ${
-            tone === 'accent' ? 'text-white' : 'text-slate-900'
-          }`}>
-            {value}
-          </p>
-        </div>
-      </div>
-    </div>
-  );
-}
+type SearchResult = Omit<CartItem, 'quantity'> & {
+  code: string;
+  stock?: number;
+};
 
-function ProductCard({
-  product,
-  onAdd,
-  locale
-}: {
-  product: PetProduct;
-  onAdd: () => void;
-  locale: AppLocale;
-}) {
-  const t = useAppMessages().petPOS;
-  const isLowStock = product.currentQuantity <= product.reorderPoint;
-  const isOutOfStock = product.currentQuantity <= 0;
+const MAX_RESULTS = 12;
+// Backend page size limit (PageRequestDto: @Max(200)); larger sizes are rejected with 400.
+const API_MAX_PAGE_SIZE = 200;
 
-  return (
-    <div className={`group relative rounded-2xl border p-4 transition-all ${
-      isOutOfStock
-        ? 'border-slate-200 bg-slate-50 opacity-60'
-        : 'border-slate-200/80 bg-white hover:border-[color:var(--accent)]/30 '
-    }`}>
-      <div className="flex items-start justify-between gap-3">
-        <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-slate-100">
-          <Package className="h-6 w-6 text-slate-600" />
-        </div>
-        {isOutOfStock ? (
-          <span className="rounded-full bg-red-100 px-2 py-0.5 text-xs font-medium text-red-700">
-            {t.products.outOfStock}
-          </span>
-        ) : isLowStock ? (
-          <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-700">
-            {t.products.lowStock}
-          </span>
-        ) : null}
-      </div>
+// Function keys select the payment method (Comanda v2 PDV).
+const PAYMENT_SHORTCUTS: Array<{ method: PaymentMethod; key?: string }> = [
+  { method: 'pix', key: 'F5' },
+  { method: 'cash', key: 'F6' },
+  { method: 'credit', key: 'F7' },
+  { method: 'debit', key: 'F8' },
+  { method: 'transfer' }
+];
 
-      <div className="mt-3">
-        <h3 className="font-semibold text-slate-900">{product.name}</h3>
-        <p className="mt-1 text-xs text-slate-600">
-          {t.products.inStock}: {product.currentQuantity} {product.unitOfMeasure}
-        </p>
-      </div>
-
-      <div className="mt-4 flex items-center justify-between">
-        <p className="text-lg font-bold text-slate-900">
-          {formatCurrencyForLocale(locale, product.price)}
-        </p>
-        <button
-          type="button"
-          onClick={onAdd}
-          disabled={isOutOfStock}
-          className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-[color:var(--accent)] text-white shadow-sm transition-all hover:scale-105 hover:shadow-md disabled:cursor-not-allowed disabled:bg-slate-300"
-        >
-          <Plus className="h-5 w-5" />
-        </button>
-      </div>
-    </div>
-  );
-}
-
-function ServiceCard({
-  service,
-  onAdd,
-  locale
-}: {
-  service: PetServiceCatalog;
-  onAdd: () => void;
-  locale: AppLocale;
-}) {
-  return (
-    <div className="group relative rounded-2xl border border-slate-200/80 bg-white p-4 transition-all hover:border-[color:var(--accent)]/30 ">
-      <div className="flex items-start justify-between gap-3">
-        <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[color:var(--accent)]/10">
-          <Scissors className="h-6 w-6 text-[color:var(--accent)]" />
-        </div>
-        <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600">
-          {service.durationMinutes} min
-        </span>
-      </div>
-
-      <div className="mt-3">
-        <h3 className="font-semibold text-slate-900">{service.name}</h3>
-        {service.description ? (
-          <p className="mt-1 line-clamp-2 text-xs text-slate-600">{service.description}</p>
-        ) : null}
-      </div>
-
-      <div className="mt-4 flex items-center justify-between">
-        <p className="text-lg font-bold text-slate-900">
-          {formatCurrencyForLocale(locale, service.basePrice)}
-        </p>
-        <button
-          type="button"
-          onClick={onAdd}
-          className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-[color:var(--accent)] text-white shadow-sm transition-all hover:scale-105 hover:shadow-md"
-        >
-          <Plus className="h-5 w-5" />
-        </button>
-      </div>
-    </div>
-  );
-}
-
-function CartItemRow({
-  item,
-  onIncrease,
-  onDecrease,
-  onRemove,
-  locale
-}: {
-  item: CartItem;
-  onIncrease: () => void;
-  onDecrease: () => void;
-  onRemove: () => void;
-  locale: AppLocale;
-}) {
-  const canIncrease = !item.maxQuantity || item.quantity < item.maxQuantity;
-
-  return (
-    <div className="flex items-center gap-3 rounded-xl border border-slate-100 bg-slate-50/50 p-3">
-      <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-white shadow-sm">
-        {item.type === 'product' ? (
-          <Package className="h-5 w-5 text-slate-600" />
-        ) : (
-          <Scissors className="h-5 w-5 text-[color:var(--accent)]" />
-        )}
-      </div>
-
-      <div className="min-w-0 flex-1">
-        <p className="truncate text-sm font-medium text-slate-900">{item.name}</p>
-        <p className="text-xs text-slate-600">
-          {formatCurrencyForLocale(locale, item.price)} cada
-        </p>
-      </div>
-
-      <div className="flex items-center gap-2">
-        <button
-          type="button"
-          onClick={onDecrease}
-          className="inline-flex h-7 w-7 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 transition-colors hover:border-slate-300 hover:bg-slate-50"
-        >
-          <Minus className="h-3.5 w-3.5" />
-        </button>
-        <span className="w-8 text-center text-sm font-semibold text-slate-900">
-          {item.quantity}
-        </span>
-        <button
-          type="button"
-          onClick={onIncrease}
-          disabled={!canIncrease}
-          className="inline-flex h-7 w-7 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 transition-colors hover:border-slate-300 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
-        >
-          <Plus className="h-3.5 w-3.5" />
-        </button>
-      </div>
-
-      <p className="w-20 text-right text-sm font-semibold text-slate-900">
-        {formatCurrencyForLocale(locale, item.price * item.quantity)}
-      </p>
-
-      <button
-        type="button"
-        onClick={onRemove}
-        className="inline-flex h-7 w-7 items-center justify-center rounded-lg text-slate-400 transition-colors hover:bg-red-50 hover:text-red-600"
-      >
-        <Trash2 className="h-4 w-4" />
-      </button>
-    </div>
-  );
-}
-
-function PaymentMethodButton({
-  method,
-  label,
-  icon,
-  selected,
-  onClick
-}: {
-  method: PaymentMethod;
-  label: string;
-  icon: ReactNode;
-  selected: boolean;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`flex flex-1 flex-col items-center gap-2 rounded-xl border-2 p-4 transition-all ${
-        selected
-          ? 'border-[color:var(--accent)] bg-[color:var(--accent)]/5 text-[color:var(--accent)]'
-          : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300'
-      }`}
-    >
-      {icon}
-      <span className="text-xs font-medium">{label}</span>
-    </button>
-  );
-}
-
+// Comanda v2 PDV: search + dense results on the left, current sale on the right,
+// keyboard-first (F2 search, Enter adds, F4 discount, F5 to F8 payment, F9 finish).
+// NOTE: checkout is still simulated (it was before the redesign): no invoice,
+// payment or stock movement is recorded. See docs/design/comanda/GAPS.md.
 export function POSPage({ showSubnav = false }: POSPageProps) {
   const { locale } = useAppI18n();
   const t = useAppMessages().petPOS;
+  const copy = useAppMessages().screens.petPos;
   const platform = useFrontendPlatform();
 
   const [products, setProducts] = useState<PetProduct[]>([]);
   const [services, setServices] = useState<PetServiceCatalog[]>([]);
   const [clients, setClients] = useState<PetClient[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
   const [activeTab, setActiveTab] = useState<'products' | 'services'>('products');
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('');
   const [cart, setCart] = useState<CartItem[]>([]);
   const [selectedClient, setSelectedClient] = useState<PetClient | null>(null);
   const [showClientSearch, setShowClientSearch] = useState(false);
   const [clientSearchQuery, setClientSearchQuery] = useState('');
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('pix');
+  const [discountInput, setDiscountInput] = useState('');
   const [showCheckout, setShowCheckout] = useState(false);
   const [checkoutSuccess, setCheckoutSuccess] = useState(false);
+  const [confirming, setConfirming] = useState(false);
+  const searchRef = useRef<HTMLInputElement>(null);
+  const discountRef = useRef<HTMLInputElement>(null);
 
   const hasPermission = (permission: string) => platform.user?.permissions.includes(permission) ?? false;
   const hasWorkspaceWidePetVisibility =
@@ -313,7 +80,6 @@ export function POSPage({ showSubnav = false }: POSPageProps) {
   const canReadProducts = hasPermission('pet.product.read') || hasWorkspaceWidePetVisibility;
   const canReadServices = hasPermission('pet.service.read') || hasWorkspaceWidePetVisibility;
   const canReadClients = hasPermission('pet.client.read') || hasWorkspaceWidePetVisibility;
-  const canCreateInvoices = hasPermission('pet.invoice.write') || hasWorkspaceWidePetVisibility;
 
   useEffect(() => {
     let active = true;
@@ -321,13 +87,14 @@ export function POSPage({ showSubnav = false }: POSPageProps) {
     setLoading(true);
 
     Promise.allSettled([
-      canReadProducts ? petService.listProducts(0, 500, '') : Promise.resolve(null),
-      canReadServices ? petService.listServices(0, 200, '') : Promise.resolve(null),
-      canReadClients ? petService.listClients(0, 500, '') : Promise.resolve(null)
+      canReadProducts ? petService.listProducts(0, API_MAX_PAGE_SIZE, '') : Promise.resolve(null),
+      canReadServices ? petService.listServices(0, API_MAX_PAGE_SIZE, '') : Promise.resolve(null),
+      canReadClients ? petService.listClients(0, API_MAX_PAGE_SIZE, '') : Promise.resolve(null)
     ]).then((results) => {
       if (!active) return;
 
       const [productsResult, servicesResult, clientsResult] = results;
+      setLoadError(results.some((result) => result.status === 'rejected'));
 
       if (productsResult.status === 'fulfilled' && productsResult.value) {
         setProducts(resolvePageItems(productsResult.value));
@@ -349,48 +116,50 @@ export function POSPage({ showSubnav = false }: POSPageProps) {
     };
   }, [canReadClients, canReadProducts, canReadServices]);
 
-  const categories = useMemo(() => {
-    const cats = new Set(products.map((p) => p.category).filter(Boolean));
-    return Array.from(cats).sort();
-  }, [products]);
+  const results = useMemo<SearchResult[]>(() => {
+    const query = searchQuery.trim().toLowerCase();
+    if (activeTab === 'products') {
+      return products
+        .filter((product) => !query
+          || product.name.toLowerCase().includes(query)
+          || product.sku?.toLowerCase().includes(query))
+        .slice(0, MAX_RESULTS)
+        .map((product) => ({
+          id: product.id,
+          type: 'product' as const,
+          name: product.name,
+          price: product.price,
+          maxQuantity: product.currentQuantity,
+          code: product.sku,
+          stock: product.currentQuantity
+        }));
+    }
 
-  const filteredProducts = useMemo(() => {
-    return products.filter((p) => {
-      const matchesSearch = !searchQuery || p.name.toLowerCase().includes(searchQuery.toLowerCase());
-      const matchesCategory = !selectedCategory || p.category === selectedCategory;
-      return matchesSearch && matchesCategory;
-    });
-  }, [products, searchQuery, selectedCategory]);
-
-  const filteredServices = useMemo(() => {
-    return services.filter((s) => {
-      if (!s.active) {
-        return false;
-      }
-
-      return !searchQuery || s.name.toLowerCase().includes(searchQuery.toLowerCase());
-    });
-  }, [services, searchQuery]);
+    return services
+      .filter((service) => service.active && (!query || service.name.toLowerCase().includes(query)))
+      .slice(0, MAX_RESULTS)
+      .map((service) => ({
+        id: service.id,
+        type: 'service' as const,
+        name: service.name,
+        price: service.basePrice,
+        code: copy.serviceCode
+      }));
+  }, [activeTab, copy.serviceCode, products, searchQuery, services]);
 
   const filteredClients = useMemo(() => {
     if (!clientSearchQuery) return clients.slice(0, 10);
-    return clients.filter((c) => {
-      const searchLower = clientSearchQuery.toLowerCase();
-      return (
-        c.name.toLowerCase().includes(searchLower) ||
-        c.email?.toLowerCase().includes(searchLower) ||
-        c.phone?.includes(clientSearchQuery)
-      );
-    });
+    const searchLower = clientSearchQuery.toLowerCase();
+    return clients.filter((client) =>
+      client.name.toLowerCase().includes(searchLower)
+      || client.email?.toLowerCase().includes(searchLower)
+      || client.phone?.includes(clientSearchQuery)
+    );
   }, [clients, clientSearchQuery]);
 
-  const cartTotal = useMemo(() => {
-    return cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
-  }, [cart]);
-
-  const cartItemCount = useMemo(() => {
-    return cart.reduce((sum, item) => sum + item.quantity, 0);
-  }, [cart]);
+  const subtotal = useMemo(() => cart.reduce((sum, item) => sum + item.price * item.quantity, 0), [cart]);
+  const discount = Math.min(Math.max(Number(discountInput.replace(',', '.')) || 0, 0), subtotal);
+  const total = subtotal - discount;
 
   const addToCart = useCallback((item: Omit<CartItem, 'quantity'>) => {
     setCart((prev) => {
@@ -407,442 +176,394 @@ export function POSPage({ showSubnav = false }: POSPageProps) {
     });
   }, []);
 
-  const updateQuantity = useCallback((id: string, type: 'product' | 'service', delta: number) => {
-    setCart((prev) => {
-      return prev
-        .map((item) => {
-          if (item.id === id && item.type === type) {
-            const newQty = item.quantity + delta;
-            if (newQty <= 0) return null;
-            if (item.maxQuantity && newQty > item.maxQuantity) return item;
-            return { ...item, quantity: newQty };
-          }
-          return item;
-        })
-        .filter(Boolean) as CartItem[];
-    });
+  const updateQuantity = useCallback((id: string, type: CartItem['type'], delta: number) => {
+    setCart((prev) => prev
+      .map((item) => {
+        if (item.id !== id || item.type !== type) return item;
+        const nextQuantity = item.quantity + delta;
+        if (nextQuantity <= 0) return null;
+        if (item.maxQuantity && nextQuantity > item.maxQuantity) return item;
+        return { ...item, quantity: nextQuantity };
+      })
+      .filter((item): item is CartItem => item !== null));
   }, []);
 
-  const removeFromCart = useCallback((id: string, type: 'product' | 'service') => {
-    setCart((prev) => prev.filter((i) => !(i.id === id && i.type === type)));
+  const removeFromCart = useCallback((id: string, type: CartItem['type']) => {
+    setCart((prev) => prev.filter((item) => !(item.id === id && item.type === type)));
   }, []);
 
-  const clearCart = useCallback(() => {
+  const resetSale = useCallback(() => {
     setCart([]);
     setSelectedClient(null);
+    setDiscountInput('');
     setCheckoutSuccess(false);
+    setShowCheckout(false);
   }, []);
 
-  const handleCheckout = useCallback(async () => {
-    if (cart.length === 0) return;
-
-    setShowCheckout(true);
-  }, [cart]);
+  const openCheckout = useCallback(() => {
+    if (cart.length > 0) setShowCheckout(true);
+  }, [cart.length]);
 
   const confirmSale = useCallback(async () => {
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1500));
+    // Simulated, as before the redesign: nothing is persisted (see GAPS.md).
+    setConfirming(true);
+    await new Promise((resolve) => setTimeout(resolve, 600));
+    setConfirming(false);
     setCheckoutSuccess(true);
   }, []);
+
+  const shortcutsEnabled = !showCheckout;
+  useKeyboardShortcut('F2', () => searchRef.current?.focus(), { allowInInputs: true, enabled: shortcutsEnabled });
+  useKeyboardShortcut('F4', () => discountRef.current?.focus(), { allowInInputs: true, enabled: shortcutsEnabled });
+  useKeyboardShortcut('F5', () => setPaymentMethod('pix'), { allowInInputs: true, enabled: shortcutsEnabled });
+  useKeyboardShortcut('F6', () => setPaymentMethod('cash'), { allowInInputs: true, enabled: shortcutsEnabled });
+  useKeyboardShortcut('F7', () => setPaymentMethod('credit'), { allowInInputs: true, enabled: shortcutsEnabled });
+  useKeyboardShortcut('F8', () => setPaymentMethod('debit'), { allowInInputs: true, enabled: shortcutsEnabled });
+  useKeyboardShortcut('F9', openCheckout, { allowInInputs: true, enabled: shortcutsEnabled });
 
   if (!canReadProducts && !canReadServices) {
     return <div className="ui-notice-warning">{t.noPermission}</div>;
   }
 
+  const money = (value: number) => formatCurrencyForLocale(locale, value);
+  const tabs: Array<{ value: 'products' | 'services'; label: string; enabled: boolean }> = [
+    { value: 'products', label: t.products.title, enabled: canReadProducts },
+    { value: 'services', label: t.services.title, enabled: canReadServices }
+  ];
+
   return (
     <div className={sharedPageStackClass}>
       {showSubnav ? <PetModuleSubnav /> : null}
 
-      {/* Stats Row */}
-      <div className="grid gap-4 md:grid-cols-4">
-        <POSStatCard
-          label={t.stats.todaySales}
-          value="12"
-          icon={<ShoppingCart className="h-5 w-5 text-white" />}
-          tone="accent"
-        />
-        <POSStatCard
-          label={t.stats.todayRevenue}
-          value={formatCurrencyForLocale(locale, 2456.9)}
-          icon={<Banknote className="h-5 w-5 text-slate-600" />}
-        />
-        <POSStatCard
-          label={t.stats.avgTicket}
-          value={formatCurrencyForLocale(locale, 204.74)}
-          icon={<Receipt className="h-5 w-5 text-slate-600" />}
-        />
-        <POSStatCard
-          label={t.stats.itemsSold}
-          value="34"
-          icon={<Package className="h-5 w-5 text-slate-600" />}
-        />
-      </div>
+      {loadError ? <div className="ui-notice-error">{copy.loadError}</div> : null}
 
-      {/* Main Content */}
-      <div className="grid gap-6 lg:grid-cols-[1fr_380px]">
-        {/* Products/Services Grid */}
-        <div className="space-y-4">
-          {/* Search and Filters */}
-          <div className="flex flex-wrap items-center gap-3">
-            <div className="relative flex-1">
-              <span className={sharedInputLeadingAccessoryClass}>
-                <Search className="h-4 w-4" />
-              </span>
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder={activeTab === 'products' ? t.products.search : 'Buscar servico...'}
-                className={`${sharedInputClass} ${sharedInputWithLeadingAccessoryClass}`}
-              />
-            </div>
+      <div className="grid gap-0 overflow-hidden rounded-md border border-[color:var(--line)] lg:grid-cols-[minmax(0,1fr)_380px]">
+        {/* Left: search and results */}
+        <div className="min-w-0 p-4 lg:p-5">
+          <header className="mb-3 flex flex-wrap items-baseline justify-between gap-2">
+            <h1 className="text-xl font-semibold text-[var(--ink)]">{copy.title}</h1>
+            <span className="text-xs text-[var(--muted)]">{copy.shortcutsHint}</span>
+          </header>
 
-            {activeTab === 'products' && categories.length > 0 ? (
-              <select
-                value={selectedCategory}
-                onChange={(e) => setSelectedCategory(e.target.value)}
-                className={`${sharedInputClass} min-w-[12rem] ${sharedInputWithTrailingAccessoryClass}`}
-              >
-                <option value="">{t.products.allCategories}</option>
-                {categories.map((cat) => (
-                  <option key={cat} value={cat}>
-                    {cat}
-                  </option>
-                ))}
-              </select>
-            ) : null}
+          <label className="ui-field-shell flex min-h-11 items-center gap-2 rounded-md border border-[var(--ink)] px-3">
+            <Search className="h-4 w-4 shrink-0 text-[var(--ink)]" aria-hidden="true" />
+            <span className="sr-only">{copy.searchLabel}</span>
+            <input
+              ref={searchRef}
+              type="search"
+              value={searchQuery}
+              onChange={(event) => setSearchQuery(event.target.value)}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter' && results[0]) {
+                  event.preventDefault();
+                  addToCart(results[0]);
+                }
+              }}
+              placeholder={copy.searchLabel}
+              autoComplete="off"
+              className="min-w-0 flex-1 bg-transparent py-2 text-base text-[var(--ink)] outline-none placeholder:text-[var(--muted)]"
+            />
+            <kbd className="ui-kbd" aria-hidden="true">F2</kbd>
+          </label>
 
-            {/* Tab Switcher */}
-            <div className="flex rounded-xl border border-slate-200 bg-white p-1">
+          <div className="mt-3 flex gap-4 border-b border-[color:var(--line)]">
+            {tabs.filter((tab) => tab.enabled).map((tab) => (
               <button
+                key={tab.value}
                 type="button"
-                onClick={() => setActiveTab('products')}
-                className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
-                  activeTab === 'products'
-                    ? 'bg-[color:var(--accent)] text-white'
-                    : 'text-slate-600 hover:text-slate-900'
+                aria-pressed={activeTab === tab.value}
+                onClick={() => setActiveTab(tab.value)}
+                className={`-mb-px h-9 border-b-2 text-sm ${
+                  activeTab === tab.value
+                    ? 'border-[var(--ink)] font-semibold text-[var(--ink)]'
+                    : 'border-transparent text-[var(--ink-2)] hover:text-[var(--ink)]'
                 }`}
               >
-                {t.products.title}
+                {tab.label}
               </button>
-              <button
-                type="button"
-                onClick={() => setActiveTab('services')}
-                className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
-                  activeTab === 'services'
-                    ? 'bg-[color:var(--accent)] text-white'
-                    : 'text-slate-600 hover:text-slate-900'
-                }`}
-              >
-                {t.services.title}
-              </button>
-            </div>
+            ))}
           </div>
 
-          {/* Product/Service Grid */}
-          {loading ? (
-            <div className="ui-notice-neutral">{t.loading}</div>
-          ) : activeTab === 'products' ? (
-            filteredProducts.length === 0 ? (
-              <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50/50 p-12 text-center">
-                <Package className="mx-auto mb-3 h-12 w-12 text-slate-400" />
-                <p className="text-sm font-medium text-slate-700">{t.products.empty}</p>
-              </div>
+          <section aria-label={copy.resultsCount.replace('{n}', String(results.length))} className="mt-2">
+            {loading ? (
+              <p className="py-6 text-sm text-[var(--muted)]">{t.loading}</p>
+            ) : results.length === 0 ? (
+              <p className="py-6 text-sm text-[var(--muted)]">
+                {activeTab === 'products' ? t.products.empty : t.services.empty}
+              </p>
             ) : (
-              <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-                {filteredProducts.map((product) => (
-                  <ProductCard
-                    key={product.id}
-                    product={product}
-                    locale={locale}
-                    onAdd={() =>
-                      addToCart({
-                        id: product.id,
-                        type: 'product',
-                        name: product.name,
-                        price: product.price,
-                        maxQuantity: product.currentQuantity
-                      })
-                    }
-                  />
-                ))}
+              <div className="overflow-x-auto">
+                <div className="grid min-w-[480px] grid-cols-[minmax(0,1fr)_110px_70px_100px] gap-3 border-b border-[color:var(--line)] bg-[var(--bg-row)] px-2 py-2 text-xs text-[var(--muted)]">
+                  <span>{copy.resultsCount.replace('{n}', String(results.length))}</span>
+                  <span>{copy.colCode}</span>
+                  <span className="text-right">{copy.colStock}</span>
+                  <span className="text-right">{copy.colPrice}</span>
+                </div>
+                {results.map((result, index) => {
+                  const outOfStock = result.type === 'product' && (result.stock ?? 0) <= 0;
+                  return (
+                    <button
+                      key={`${result.type}-${result.id}`}
+                      type="button"
+                      disabled={outOfStock}
+                      onClick={() => addToCart(result)}
+                      aria-label={copy.addItem.replace('{name}', result.name)}
+                      className={`grid min-h-10 w-full min-w-[480px] grid-cols-[minmax(0,1fr)_110px_70px_100px] items-center gap-3 border-b border-[color:var(--line-soft)] px-2 text-left hover:bg-[var(--selected)] disabled:cursor-not-allowed disabled:text-[var(--faint)] ${
+                        index === 0 && searchQuery ? 'bg-[var(--selected)]' : ''
+                      }`}
+                    >
+                      <span className="truncate">{result.name}</span>
+                      <span className="ui-mono truncate text-xs text-[var(--muted)]">{result.code}</span>
+                      <span className={`ui-mono text-right text-sm ${outOfStock ? 'text-[var(--danger)]' : ''}`}>
+                        {result.stock ?? ''}
+                      </span>
+                      <span className="ui-mono text-right text-sm">{money(result.price)}</span>
+                    </button>
+                  );
+                })}
               </div>
-            )
-          ) : filteredServices.length === 0 ? (
-            <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50/50 p-12 text-center">
-              <Scissors className="mx-auto mb-3 h-12 w-12 text-slate-400" />
-              <p className="text-sm font-medium text-slate-700">{t.services.empty}</p>
-            </div>
-          ) : (
-            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-              {filteredServices.map((service) => (
-                <ServiceCard
-                  key={service.id}
-                  service={service}
-                  locale={locale}
-                  onAdd={() =>
-                    addToCart({
-                      id: service.id,
-                      type: 'service',
-                      name: service.name,
-                      price: service.basePrice
-                    })
-                  }
-                />
-              ))}
-            </div>
-          )}
+            )}
+          </section>
         </div>
 
-        {/* Cart Panel */}
-        <div className="lg:sticky lg:top-4 lg:h-fit">
-          <div className="rounded-2xl border border-slate-200/80 bg-white ">
-            {/* Cart Header */}
-            <div className="flex items-center justify-between border-b border-slate-100 p-4">
-              <div className="flex items-center gap-2">
-                <ShoppingCart className="h-5 w-5 text-slate-600" />
-                <h2 className="font-semibold text-slate-900">{t.cart.title}</h2>
-                {cartItemCount > 0 ? (
-                  <span className="rounded-full bg-[color:var(--accent)] px-2 py-0.5 text-xs font-semibold text-white">
-                    {cartItemCount}
-                  </span>
-                ) : null}
-              </div>
-              {cart.length > 0 ? (
+        {/* Right: current sale */}
+        <aside aria-label={copy.currentSale} className="flex flex-col border-t border-[color:var(--line)] bg-[var(--bg-row)] lg:border-l lg:border-t-0">
+          <header className="border-b border-[color:var(--line)] px-4 py-3">
+            <h2 className="text-sm font-semibold text-[var(--ink)]">{copy.currentSale}</h2>
+            {selectedClient ? (
+              <div className="mt-1 flex items-center justify-between gap-2 text-[13px]">
+                <span className="truncate text-[var(--ink-2)]">{selectedClient.name}</span>
                 <button
                   type="button"
-                  onClick={clearCart}
-                  className="text-xs font-medium text-red-600 hover:underline"
+                  onClick={() => setSelectedClient(null)}
+                  className="shrink-0 text-[var(--ink)] underline-offset-2 hover:underline"
                 >
-                  {t.actions.clearCart}
+                  {copy.changeClient}
                 </button>
-              ) : null}
-            </div>
-
-            {/* Client Selection */}
-            <div className="border-b border-slate-100 p-4">
-              <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-slate-600">
-                {t.client.title}
-              </p>
-              {selectedClient ? (
-                <div className="flex items-center justify-between rounded-xl border border-[color:var(--accent)]/20 bg-[color:var(--accent)]/5 p-3">
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[color:var(--accent)]/10">
-                      <User className="h-4 w-4 text-[color:var(--accent)]" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium text-slate-900">{selectedClient.name}</p>
-                      <p className="text-xs text-slate-600">{selectedClient.email ?? selectedClient.phone}</p>
-                    </div>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => setSelectedClient(null)}
-                    className="rounded-lg p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600"
-                  >
-                    <X className="h-4 w-4" />
-                  </button>
-                </div>
-              ) : (
-                <div className="relative">
-                  <span className={sharedInputLeadingAccessoryClass}>
-                    <User className="h-4 w-4" />
-                  </span>
-                  <input
-                    type="text"
-                    value={clientSearchQuery}
-                    onChange={(e) => {
-                      setClientSearchQuery(e.target.value);
-                      setShowClientSearch(true);
-                    }}
-                    onFocus={() => setShowClientSearch(true)}
-                    placeholder={t.client.search}
-                    className={`${sharedInputClass} ${sharedInputWithLeadingAccessoryClass}`}
-                  />
-
-                  {showClientSearch && filteredClients.length > 0 ? (
-                    <div className="absolute left-0 right-0 top-full z-10 mt-1 max-h-48 overflow-y-auto rounded-xl border border-slate-200 bg-white shadow-lg">
-                      {filteredClients.map((client) => (
+              </div>
+            ) : canReadClients ? (
+              <div className="relative mt-2">
+                <label className="sr-only" htmlFor="pos-client-search">{t.client.search}</label>
+                <input
+                  id="pos-client-search"
+                  type="text"
+                  value={clientSearchQuery}
+                  onChange={(event) => {
+                    setClientSearchQuery(event.target.value);
+                    setShowClientSearch(true);
+                  }}
+                  onFocus={() => setShowClientSearch(true)}
+                  placeholder={t.client.search}
+                  className="ui-input-control"
+                />
+                {showClientSearch && filteredClients.length > 0 ? (
+                  <ul className="absolute left-0 right-0 top-full z-10 mt-1 max-h-48 overflow-y-auto rounded-md border border-[color:var(--line)] bg-[var(--bg)]">
+                    {filteredClients.map((client) => (
+                      <li key={client.id}>
                         <button
-                          key={client.id}
                           type="button"
                           onClick={() => {
                             setSelectedClient(client);
                             setShowClientSearch(false);
                             setClientSearchQuery('');
                           }}
-                          className="flex w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-slate-50"
+                          className="flex min-h-10 w-full flex-col justify-center px-3 py-1.5 text-left hover:bg-[var(--selected)]"
                         >
-                          <User className="h-4 w-4 text-slate-400" />
-                          <div>
-                            <p className="text-sm font-medium text-slate-900">{client.name}</p>
-                            <p className="text-xs text-slate-600">{client.email ?? client.phone}</p>
-                          </div>
+                          <span className="text-sm text-[var(--ink)]">{client.name}</span>
+                          <span className="text-xs text-[var(--muted)]">{client.email ?? client.phone}</span>
                         </button>
-                      ))}
-                    </div>
-                  ) : null}
-                </div>
-              )}
-            </div>
-
-            {/* Cart Items */}
-            <div className="max-h-[300px] overflow-y-auto p-4">
-              {cart.length === 0 ? (
-                <div className="py-8 text-center">
-                  <ShoppingCart className="mx-auto mb-2 h-10 w-10 text-slate-300" />
-                  <p className="text-sm font-medium text-slate-600">{t.cart.empty}</p>
-                  <p className="mt-1 text-xs text-slate-500">{t.cart.emptyDescription}</p>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {cart.map((item) => (
-                    <CartItemRow
-                      key={`${item.type}-${item.id}`}
-                      item={item}
-                      locale={locale}
-                      onIncrease={() => updateQuantity(item.id, item.type, 1)}
-                      onDecrease={() => updateQuantity(item.id, item.type, -1)}
-                      onRemove={() => removeFromCart(item.id, item.type)}
-                    />
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* Cart Footer */}
-            {cart.length > 0 ? (
-              <div className="border-t border-slate-100 p-4">
-                <div className="mb-4 flex items-center justify-between">
-                  <span className="text-sm text-slate-600">{t.cart.subtotal}</span>
-                  <span className="text-sm font-medium text-slate-900">
-                    {formatCurrencyForLocale(locale, cartTotal)}
-                  </span>
-                </div>
-                <div className="mb-4 flex items-center justify-between border-b border-slate-100 pb-4">
-                  <span className="text-base font-semibold text-slate-900">{t.cart.total}</span>
-                  <span className="text-xl font-bold text-[color:var(--accent)]">
-                    {formatCurrencyForLocale(locale, cartTotal)}
-                  </span>
-                </div>
-                <button
-                  type="button"
-                  onClick={handleCheckout}
-                  className="flex w-full items-center justify-center gap-2 rounded-xl bg-[linear-gradient(135deg,var(--accent),var(--pet-teal))] py-3.5 text-sm font-semibold text-white  transition-all "
-                >
-                  {t.actions.checkout}
-                  <ArrowRight className="h-4 w-4" />
-                </button>
-              </div>
-            ) : null}
-          </div>
-        </div>
-      </div>
-
-      {/* Checkout Modal */}
-      {showCheckout ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
-          <div className="mx-4 w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
-            {checkoutSuccess ? (
-              <div className="text-center">
-                <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-emerald-100">
-                  <Check className="h-8 w-8 text-emerald-600" />
-                </div>
-                <h3 className="text-xl font-bold text-slate-900">{t.checkout.success}</h3>
-                <p className="mt-2 text-sm text-slate-600">
-                  Total: {formatCurrencyForLocale(locale, cartTotal)}
-                </p>
-                <div className="mt-6 flex gap-3">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setShowCheckout(false);
-                      clearCart();
-                    }}
-                    className="flex-1 rounded-xl border border-slate-200 py-3 text-sm font-medium text-slate-700 hover:bg-slate-50"
-                  >
-                    {t.actions.newSale}
-                  </button>
-                  <button
-                    type="button"
-                    className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-[color:var(--accent)] py-3 text-sm font-medium text-white"
-                  >
-                    <Receipt className="h-4 w-4" />
-                    {t.checkout.printReceipt}
-                  </button>
-                </div>
+                      </li>
+                    ))}
+                  </ul>
+                ) : null}
               </div>
             ) : (
+              <p className="mt-1 text-[13px] text-[var(--muted)]">{copy.noClient}</p>
+            )}
+          </header>
+
+          <div className="min-h-[120px] flex-1 overflow-y-auto px-4 py-2">
+            {cart.length === 0 ? (
+              <div className="py-6 text-center">
+                <p className="text-sm text-[var(--ink-2)]">{t.cart.empty}</p>
+                <p className="mt-1 text-xs text-[var(--muted)]">{t.cart.emptyDescription}</p>
+              </div>
+            ) : (
+              <ol>
+                {cart.map((item, index) => (
+                  <li
+                    key={`${item.type}-${item.id}`}
+                    className="grid grid-cols-[20px_minmax(0,1fr)_auto] items-start gap-2 border-b border-[color:var(--line-soft)] py-2"
+                  >
+                    <span className="ui-mono pt-0.5 text-xs text-[var(--muted)]">{index + 1}</span>
+                    <div className="min-w-0">
+                      <p className="truncate text-sm text-[var(--ink)]">{item.name}</p>
+                      <div className="mt-1 flex items-center gap-1">
+                        <button
+                          type="button"
+                          onClick={() => updateQuantity(item.id, item.type, -1)}
+                          aria-label={copy.decrease.replace('{name}', item.name)}
+                          className="inline-flex h-7 w-7 items-center justify-center rounded border border-[color:var(--control)] bg-[var(--bg)] hover:bg-[var(--selected)]"
+                        >
+                          <Minus className="h-3 w-3" aria-hidden="true" />
+                        </button>
+                        <span className="ui-mono w-7 text-center text-sm">{item.quantity}</span>
+                        <button
+                          type="button"
+                          onClick={() => updateQuantity(item.id, item.type, 1)}
+                          disabled={Boolean(item.maxQuantity) && item.quantity >= (item.maxQuantity ?? 0)}
+                          aria-label={copy.increase.replace('{name}', item.name)}
+                          className="inline-flex h-7 w-7 items-center justify-center rounded border border-[color:var(--control)] bg-[var(--bg)] hover:bg-[var(--selected)] disabled:opacity-50"
+                        >
+                          <Plus className="h-3 w-3" aria-hidden="true" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => removeFromCart(item.id, item.type)}
+                          aria-label={copy.remove.replace('{name}', item.name)}
+                          className="ml-1 inline-flex h-7 w-7 items-center justify-center rounded text-[var(--muted)] hover:text-[var(--danger)]"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
+                        </button>
+                      </div>
+                    </div>
+                    <span className="ui-mono pt-0.5 text-sm">{money(item.price * item.quantity)}</span>
+                  </li>
+                ))}
+              </ol>
+            )}
+          </div>
+
+          <dl className="border-t border-[color:var(--line)] px-4 py-2 text-sm">
+            <div className="flex justify-between py-1">
+              <dt className="text-[var(--ink-2)]">{t.cart.subtotal}</dt>
+              <dd className="ui-mono">{money(subtotal)}</dd>
+            </div>
+            <div className="flex items-center justify-between gap-3 py-1">
+              <dt>
+                <label htmlFor="pos-discount" className="text-[var(--ink-2)]">
+                  {copy.discount} <kbd className="ui-kbd" aria-hidden="true">F4</kbd>
+                </label>
+              </dt>
+              <dd>
+                <input
+                  id="pos-discount"
+                  ref={discountRef}
+                  inputMode="decimal"
+                  value={discountInput}
+                  onChange={(event) => setDiscountInput(event.target.value.replace(/[^0-9.,]/g, ''))}
+                  aria-label={copy.discountLabel}
+                  aria-keyshortcuts="F4"
+                  placeholder="0,00"
+                  className="ui-mono h-8 w-24 rounded border border-[color:var(--control)] bg-[var(--bg)] px-2 text-right text-sm"
+                />
+              </dd>
+            </div>
+            <div className="mt-1 flex justify-between border-t border-[var(--ink)] pt-2 text-base font-semibold">
+              <dt>{t.cart.total}</dt>
+              <dd className="ui-mono">{money(total)}</dd>
+            </div>
+          </dl>
+
+          <fieldset className="border-t border-[color:var(--line)] px-4 py-3">
+            <legend className="mb-2 text-xs text-[var(--muted)]">{t.payment.method}</legend>
+            <div className="grid grid-cols-2 gap-1.5">
+              {PAYMENT_SHORTCUTS.map(({ method, key }) => (
+                <label
+                  key={method}
+                  className={`flex min-h-9 cursor-pointer items-center gap-2 rounded-md border px-2.5 text-sm ${
+                    paymentMethod === method
+                      ? 'border-[var(--ink)] bg-[var(--bg)] font-semibold text-[var(--ink)]'
+                      : 'border-[color:var(--control)] bg-[var(--bg)] text-[var(--ink-2)]'
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="pos-payment"
+                    value={method}
+                    checked={paymentMethod === method}
+                    onChange={() => setPaymentMethod(method)}
+                    className="accent-[var(--ink)]"
+                  />
+                  <span className="flex-1">{t.payment.methods[method]}</span>
+                  {key ? <kbd className="ui-kbd" aria-hidden="true">{key}</kbd> : null}
+                </label>
+              ))}
+            </div>
+          </fieldset>
+
+          <div className="border-t border-[color:var(--line)] px-4 py-3">
+            <button
+              type="button"
+              onClick={openCheckout}
+              disabled={cart.length === 0}
+              aria-keyshortcuts="F9"
+              className="ui-primary-button ui-critical-button w-full"
+            >
+              {copy.finalize}
+              <kbd className="ui-kbd" aria-hidden="true">F9</kbd>
+            </button>
+            <div className="mt-2 flex items-center justify-between gap-2 text-[13px]">
+              <span className="text-[var(--muted)]">{copy.simulatedNotice}</span>
+              {cart.length > 0 ? (
+                <button type="button" onClick={resetSale} className="shrink-0 text-[var(--danger)] underline-offset-2 hover:underline">
+                  {copy.cancelSale}
+                </button>
+              ) : null}
+            </div>
+          </div>
+        </aside>
+      </div>
+
+      {showCheckout ? (
+        <div className="ui-dialog-overlay fixed inset-0 z-50 flex items-center justify-center px-4">
+          <div role="dialog" aria-modal="true" aria-labelledby="pos-checkout-title" className="ui-dialog-panel w-full max-w-sm p-5">
+            {checkoutSuccess ? (
               <>
-                <div className="mb-6 flex items-center justify-between">
-                  <h3 className="text-lg font-bold text-slate-900">{t.checkout.title}</h3>
+                <h2 id="pos-checkout-title" className="text-base font-semibold text-[var(--ink)]">{t.checkout.success}</h2>
+                <p className="ui-mono mt-1 text-sm text-[var(--ink-2)]">{money(total)}</p>
+                <p className="mt-2 text-xs text-[var(--muted)]">{copy.simulatedNotice}</p>
+                <button type="button" onClick={resetSale} className="ui-primary-button mt-4 w-full">
+                  {t.actions.newSale}
+                </button>
+              </>
+            ) : (
+              <>
+                <div className="flex items-start justify-between gap-3">
+                  <h2 id="pos-checkout-title" className="text-base font-semibold text-[var(--ink)]">{copy.confirmTitle}</h2>
                   <button
                     type="button"
                     onClick={() => setShowCheckout(false)}
-                    className="rounded-lg p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600"
+                    aria-label={copy.back}
+                    className="inline-flex h-9 w-9 items-center justify-center rounded-md text-[var(--muted)] hover:bg-[var(--selected)]"
                   >
-                    <X className="h-5 w-5" />
+                    <X className="h-4 w-4" aria-hidden="true" />
                   </button>
                 </div>
-
-                <div className="mb-6 rounded-xl bg-slate-50 p-4">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-slate-600">{cart.length} {t.cart.items}</span>
-                    <span className="text-xl font-bold text-slate-900">
-                      {formatCurrencyForLocale(locale, cartTotal)}
-                    </span>
+                <dl className="mt-3 text-sm">
+                  <div className="flex justify-between py-1">
+                    <dt className="text-[var(--ink-2)]">{cart.length} {t.cart.items}</dt>
+                    <dd className="ui-mono font-semibold">{money(total)}</dd>
+                  </div>
+                  <div className="flex justify-between py-1">
+                    <dt className="text-[var(--ink-2)]">{t.payment.method}</dt>
+                    <dd>{t.payment.methods[paymentMethod]}</dd>
                   </div>
                   {selectedClient ? (
-                    <p className="mt-2 text-sm text-slate-600">
-                      {t.client.selected}: {selectedClient.name}
-                    </p>
+                    <div className="flex justify-between py-1">
+                      <dt className="text-[var(--ink-2)]">{t.client.title}</dt>
+                      <dd className="truncate">{selectedClient.name}</dd>
+                    </div>
                   ) : null}
+                </dl>
+                <div className="mt-4 flex gap-2">
+                  <button type="button" onClick={() => setShowCheckout(false)} className="ui-secondary-button flex-1">
+                    {copy.back}
+                  </button>
+                  <button type="button" onClick={confirmSale} disabled={confirming} className="ui-primary-button flex-1">
+                    {copy.confirm}
+                  </button>
                 </div>
-
-                <div className="mb-6">
-                  <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-slate-500">
-                    {t.payment.method}
-                  </p>
-                  <div className="flex gap-2">
-                    <PaymentMethodButton
-                      method="pix"
-                      label={t.payment.methods.pix}
-                      icon={<Smartphone className="h-5 w-5" />}
-                      selected={paymentMethod === 'pix'}
-                      onClick={() => setPaymentMethod('pix')}
-                    />
-                    <PaymentMethodButton
-                      method="cash"
-                      label={t.payment.methods.cash}
-                      icon={<Banknote className="h-5 w-5" />}
-                      selected={paymentMethod === 'cash'}
-                      onClick={() => setPaymentMethod('cash')}
-                    />
-                    <PaymentMethodButton
-                      method="credit"
-                      label={t.payment.methods.credit}
-                      icon={<CreditCard className="h-5 w-5" />}
-                      selected={paymentMethod === 'credit'}
-                      onClick={() => setPaymentMethod('credit')}
-                    />
-                    <PaymentMethodButton
-                      method="debit"
-                      label={t.payment.methods.debit}
-                      icon={<CreditCard className="h-5 w-5" />}
-                      selected={paymentMethod === 'debit'}
-                      onClick={() => setPaymentMethod('debit')}
-                    />
-                  </div>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={confirmSale}
-                  className="flex w-full items-center justify-center gap-2 rounded-xl bg-[linear-gradient(135deg,var(--accent),var(--pet-teal))] py-3.5 text-sm font-semibold text-white "
-                >
-                  {t.checkout.confirm}
-                  <Check className="h-4 w-4" />
-                </button>
               </>
             )}
           </div>

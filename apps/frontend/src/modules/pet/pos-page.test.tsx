@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { POSPage } from '@/modules/pet/pos-page';
 
@@ -92,13 +92,33 @@ describe('POSPage', () => {
     expect(screen.getByTestId('pet-subnav')).toBeInTheDocument();
     expect(screen.getByText('Biscoito Natural Canino')).toBeInTheDocument();
 
-    const buttons = screen.getAllByRole('button');
-    const addProductButton = buttons.find((btn) => btn.className.includes('bg-[color:var(--accent)]') && !btn.textContent);
-    expect(addProductButton).toBeDefined();
-    if (addProductButton) {
-      fireEvent.click(addProductButton);
-    }
+    fireEvent.click(screen.getByRole('button', { name: 'Add Biscoito Natural Canino' }));
 
-    expect(screen.getAllByText('Biscoito Natural Canino').length).toBeGreaterThan(1);
+    // The item now appears in the current sale too.
+    const sale = screen.getByRole('complementary', { name: 'Current sale' });
+    expect(within(sale).getByText('Biscoito Natural Canino')).toBeInTheDocument();
+  });
+
+  it('adds the first result with Enter and opens the confirmation with F9', async () => {
+    render(<POSPage />);
+    await screen.findByText('Biscoito Natural Canino');
+
+    const search = screen.getByPlaceholderText('Item code or name');
+    fireEvent.change(search, { target: { value: 'bisc' } });
+    fireEvent.keyDown(search, { key: 'Enter' });
+
+    const sale = screen.getByRole('complementary', { name: 'Current sale' });
+    expect(within(sale).getByText('Biscoito Natural Canino')).toBeInTheDocument();
+
+    fireEvent.keyDown(window, { key: 'F9' });
+    expect(screen.getByRole('dialog', { name: 'Confirm sale' })).toBeInTheDocument();
+  });
+
+  it('does not show invented sales metrics', async () => {
+    render(<POSPage />);
+    await screen.findByText('Biscoito Natural Canino');
+
+    // The pre-redesign page showed hardcoded numbers (12 sales, R$ 2,456.90...).
+    expect(screen.queryByText(/2,456\.90|2\.456,90/)).not.toBeInTheDocument();
   });
 });
