@@ -62,51 +62,38 @@ const initialPage: PageResponse<PetAppointment> = {
   size: pageSize
 };
 
-type AppointmentFocusCardProps = {
+type AppointmentStatProps = {
   icon: LucideIcon;
   label: string;
   value: string;
   detail: string;
-  tone?: 'default' | 'accent' | 'warning';
+  /** `attention` marks a value the front desk should act on (colored only when it matters). */
+  tone?: 'default' | 'attention';
 };
 
-function AppointmentFocusCard({
+// One cell of the agenda metrics strip: label, value, one-line context. No fills or
+// gradients; color is reserved for values that need action.
+function AppointmentStat({
   icon: Icon,
   label,
   value,
   detail,
   tone = 'default'
-}: AppointmentFocusCardProps) {
-  const toneClass = tone === 'accent'
-    ? 'border-transparent bg-[linear-gradient(135deg,var(--accent),var(--pet-teal))] text-white '
-    : tone === 'warning'
-      ? 'border-amber-200/80 bg-white'
-      : 'border-slate-200/90 bg-white';
+}: AppointmentStatProps) {
+  const isAttention = tone === 'attention';
 
   return (
-    <div className={`rounded-2xl border p-5  ${toneClass}`}>
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <p className={`text-xs font-semibold uppercase tracking-[0.16em] ${tone === 'accent' ? 'text-white/72' : 'text-slate-600'}`}>
-            {label}
-          </p>
-          <p className={`mt-3 text-3xl font-bold tracking-[-0.03em] ${tone === 'accent' ? 'text-white' : 'text-slate-900'}`}>
-            {value}
-          </p>
-        </div>
-        <span
-          className={`flex h-11 w-11 items-center justify-center rounded-xl ${
-            tone === 'accent'
-              ? 'bg-white/12 text-white'
-              : tone === 'warning'
-                ? 'bg-amber-100 text-amber-700'
-                : 'bg-[color:var(--accent)]/10 text-[color:var(--accent)]'
-          }`}
-        >
-          <Icon className="h-5 w-5" />
-        </span>
-      </div>
-      <p className={`mt-3 ${tone === 'accent' ? 'text-sm leading-6 text-white/80' : 'text-sm leading-6 text-slate-700'}`}>{detail}</p>
+    <div className="min-w-0 bg-[var(--surface)] px-4 py-3">
+      <p className="flex items-center gap-1.5 text-xs font-medium text-slate-600">
+        <Icon className={`h-3.5 w-3.5 shrink-0 ${isAttention ? 'text-[color:var(--warning)]' : 'text-slate-500'}`} aria-hidden="true" />
+        <span className="truncate">{label}</span>
+      </p>
+      <p className={`mt-1 text-xl font-semibold tracking-tight ${isAttention ? 'text-[color:var(--warning)]' : 'text-slate-900'}`}>
+        {value}
+      </p>
+      <p className="mt-0.5 line-clamp-2 text-xs leading-5 text-slate-600" title={detail}>
+        {detail}
+      </p>
     </div>
   );
 }
@@ -1587,11 +1574,55 @@ export function PetAppointmentsPage() {
            }
         />
 
-        <PageSection
-          tone="muted"
-          title={messages.filters.title}
-          description={messages.filters.description}
-        >
+        <section aria-labelledby="pet-appointments-focus-title" className="ui-surface-panel overflow-hidden">
+          <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 border-b border-[color:var(--app-shell-border)] px-4 py-2.5">
+            <h2 id="pet-appointments-focus-title" className="text-sm font-semibold text-slate-900">
+              {messages.focus.title}
+            </h2>
+            <p className="text-xs text-slate-600">{messages.focus.pickupRule}</p>
+          </div>
+          <div className="grid grid-cols-2 gap-px bg-[color:var(--app-shell-border)] md:grid-cols-3 xl:grid-cols-6">
+            <AppointmentStat
+              icon={RefreshCcw}
+              label={messages.focus.recurring}
+              value={new Intl.NumberFormat(locale).format(recurringAppointments)}
+              detail={messages.focus.recurringDetail}
+            />
+            <AppointmentStat
+              icon={CalendarCheck}
+              label={messages.focus.oneTime}
+              value={new Intl.NumberFormat(locale).format(oneTimeAppointments)}
+              detail={messages.focus.oneTimeDetail}
+            />
+            <AppointmentStat
+              icon={CalendarCheck}
+              label={messages.focus.ready}
+              value={new Intl.NumberFormat(locale).format(readyForPickup)}
+              detail={`${pickupMessagesReady} ${messages.focus.readyDetailSuffix}`}
+            />
+            <AppointmentStat
+              icon={CreditCard}
+              label={messages.focus.planAlerts}
+              value={new Intl.NumberFormat(locale).format(lowPlanAlerts)}
+              detail={messages.focus.planAlertsDetail}
+              tone={lowPlanAlerts > 0 ? 'attention' : 'default'}
+            />
+            <AppointmentStat
+              icon={CarFront}
+              label={messages.focus.petTaxi}
+              value={new Intl.NumberFormat(locale).format(petTaxiAppointments)}
+              detail={messages.focus.petTaxiDetail}
+            />
+            <AppointmentStat
+              icon={CreditCard}
+              label={messages.focus.commission}
+              value={formatCurrencyForLocale(locale, visibleCommissionTotal)}
+              detail={messages.focus.commissionDetail}
+            />
+          </div>
+        </section>
+
+        <section aria-label={messages.filters.title} className="ui-surface-panel p-3">
           <PetAppointmentsFilters
             searchInput={searchInput}
             onSearchInputChange={setSearchInput}
@@ -1625,7 +1656,7 @@ export function PetAppointmentsPage() {
               setProfessionalFilterId('');
             }}
           />
-        </PageSection>
+        </section>
 
         <PetLookupFeedback issues={lookupIssues} />
 
@@ -1649,56 +1680,6 @@ export function PetAppointmentsPage() {
             />
           </PageSection>
         ) : null}
-
-        <PageSection
-          tone="muted"
-          title={messages.focus.title}
-          description={messages.focus.description}
-        >
-          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-6">
-            <AppointmentFocusCard
-              icon={RefreshCcw}
-              label={messages.focus.recurring}
-              value={new Intl.NumberFormat(locale).format(recurringAppointments)}
-              detail={messages.focus.recurringDetail}
-            />
-            <AppointmentFocusCard
-              icon={CalendarCheck}
-              label={messages.focus.oneTime}
-              value={new Intl.NumberFormat(locale).format(oneTimeAppointments)}
-              detail={messages.focus.oneTimeDetail}
-            />
-            <AppointmentFocusCard
-              icon={CalendarCheck}
-              label={messages.focus.ready}
-              value={new Intl.NumberFormat(locale).format(readyForPickup)}
-              detail={`${pickupMessagesReady} ${messages.focus.readyDetailSuffix}`}
-            />
-            <AppointmentFocusCard
-              icon={CreditCard}
-              label={messages.focus.planAlerts}
-              value={new Intl.NumberFormat(locale).format(lowPlanAlerts)}
-              detail={messages.focus.planAlertsDetail}
-              tone={lowPlanAlerts > 0 ? 'warning' : 'default'}
-            />
-            <AppointmentFocusCard
-              icon={CarFront}
-              label={messages.focus.petTaxi}
-              value={new Intl.NumberFormat(locale).format(petTaxiAppointments)}
-              detail={messages.focus.petTaxiDetail}
-            />
-            <AppointmentFocusCard
-              icon={CreditCard}
-              label={messages.focus.commission}
-              value={formatCurrencyForLocale(locale, visibleCommissionTotal)}
-              detail={messages.focus.commissionDetail}
-              tone="accent"
-            />
-          </div>
-          <p className="mt-4 text-sm text-[color:var(--app-shell-muted)]">
-            {messages.focus.pickupRule}
-          </p>
-        </PageSection>
 
         {viewMode === 'calendar' ? (
           <PetAppointmentsCalendar
