@@ -1,872 +1,168 @@
-# Platform Architecture
+# Arquitetura da Plataforma
 
-## Overview
+Data de referência: 2026-10-31. Todas as afirmações deste documento foram conferidas contra o código nessa data; caminhos de classe são relativos a `apps/backend/src/main/java/com/phaiffertech/platform`.
 
-The platform is implemented as a **modular monolith** with multi-tenancy from the beginning.
+## Visão geral
 
-Active repository direction after the Pet Management-only transition:
-- active business modules are CRM and Pet
-- historical IoT references below are retained only as archived architecture notes or migration compatibility context
+A plataforma é um **monólito modular multi-tenant**: um único backend Spring Boot e um único banco PostgreSQL com schema compartilhado, em que cada linha de negócio carrega `tenant_id`. O produto em foco é o **Gestão Pet** para banho e tosa; o módulo de CRM existe como apoio (tarefas, notas e atividades) e o código clínico veterinário é preservado, mas fica oculto no plano de banho e tosa.
 
-Principles:
-- single PostgreSQL database, shared schema
-- tenant isolation by `tenant_id`
-- domain boundaries by package/module
-- incremental evolution through Flyway migrations
-- security first (JWT + tenant roles + permissions)
-
-## Backend Package Root
-
-- `com.phaiffertech.platform`
-
-## Backend Package Layout
-
-```text
-com.phaiffertech.platform
-├── PlatformApplication
-├── shared
-│   ├── config
-│   ├── crud
-│   ├── domain
-│   │   ├── base
-│   │   └── enums
-│   ├── exception
-│   ├── health
-│   ├── logging
-│   ├── metrics
-│   ├── pagination
-│   ├── ratelimit
-│   ├── response
-│   ├── security
-│   ├── tenancy
-│   └── util
-├── core
-│   ├── auth
-│   ├── tenant
-│   ├── user
-│   ├── iam
-│   ├── settings
-│   ├── audit
-│   ├── notification
-│   ├── attachment
-│   ├── finance
-│   ├── inventory
-│   ├── messaging
-│   ├── subscription
-│   └── module
-├── modules
-│   ├── crm
-│   │   ├── activity
-│   │   ├── campaign
-│   │   ├── capability
-│   │   ├── company
-│   │   ├── contact
-│   │   ├── dashboard
-│   │   ├── lead
-│   │   ├── pipeline
-│   │   ├── deal
-│   │   ├── note
-│   │   ├── shared
-│   │   └── task
-│   ├── pet
-│   │   ├── client
-│   │   ├── capability
-│   │   ├── petprofile
-│   │   ├── appointment
-│   │   ├── servicecatalog
-│   │   ├── professional
-│   │   ├── commission
-│   │   ├── plan
-│   │   ├── billing
-│   │   ├── dashboard
-│   │   ├── medical
-│   │   │   ├── record
-│   │   │   ├── timeline
-│   │   │   ├── vaccination
-│   │   │   └── prescription
-│   │   ├── product
-│   │   ├── inventory
-│   │   ├── invoice
-│   │   ├── subscription
-│   │   └── portal
-└── infrastructure
-    ├── bootstrap
-    ├── demo
-    ├── docs
-    ├── notification
-    ├── persistence
-    └── web
+```mermaid
+flowchart LR
+    subgraph Frontend [Next.js - apps/frontend]
+        UI[Telas Gestão Pet, painel e site público]
+    end
+    subgraph Backend [Spring Boot - apps/backend]
+        SH[shared: segurança, tenancy, CRUD, paginação, contratos]
+        CO[core: auth, tenant, IAM, módulos, finance, inventory, messaging]
+        PET[modules.pet]
+        CRM[modules.crm]
+        INF[infrastructure: bootstrap, demo, persistência, web]
+    end
+    DB[(PostgreSQL)]
+    UI -- REST /api/v1 + JWT --> Backend
+    PET --> CO
+    CRM --> CO
+    PET --> SH
+    CRM --> SH
+    CO --> SH
+    Backend --> DB
 ```
 
-## Core And Vertical Boundaries
+Por que monólito modular e não microsserviços: um único deploy reduz custo operacional e complexidade de consistência transacional (fatura, pagamento, estoque e sessões de plano mudam na mesma transação), enquanto a divisão por pacotes preserva fronteiras de domínio que permitem extrair serviços no futuro, se houver necessidade real.
 
-Core owns platform concerns only:
-- `core.auth`, `core.tenant`, `core.user`, `core.iam`, `core.subscription`
-- `core.settings`
-- `core.audit`, `core.notification`, `core.attachment`
-- `core.finance` (shared billing/invoices, payments, cash movements, fiscal readiness), `core.inventory` (shared inventory items/movements) and `core.messaging` (WhatsApp Cloud API foundation)
-- `core.module` for registry, feature flags, tenant module bindings and aggregated dashboard entrypoints
-- `shared.*` for technical infrastructure, shared CRUD primitives and cross-module contracts
+## Organização do backend
 
-Vertical modules own business rules:
-- `modules.crm`: companies, contacts, leads, deals, pipeline, tasks, notes, activity and CRM dashboard
-- `modules.pet`: clients, pets, appointments (multi-service lines), services, professionals, commissions, plans/templates, products, inventory, billing/prepared messages, invoices, and adjacent clinical records (medical records, vaccinations, prescriptions, clinical timeline)
-
-Explicit rule:
-- core cannot contain CRM or Pet business logic
-- one vertical module cannot access another vertical module directly
-- cross-module reads must happen through contracts/capabilities, not through another module repository
-
-## Architectural Findings
-
-Repository analysis on `2026-03-07` found:
-
-- no direct repository access from CRM to IoT/Pet, from IoT to CRM/Pet, or from Pet to CRM/IoT
-- no direct vertical imports inside `core.*`
-- one critical leakage existed before this refactor: `shared.health.TelemetryPipelineHealthIndicator` imported IoT telemetry abstractions and therefore mixed vertical behavior into shared/core-like infrastructure
-- module enablement already existed in backend, but the registry response did not distinguish tenant module binding from feature flag state, which blurred tenant access rules on the frontend
-- there was no central aggregated dashboard contract; any future platform dashboard risked pulling repositories from multiple vertical modules into core
-
-Corrections applied in this stage:
-
-- telemetry pipeline health moved to `modules.iot.monitoring.health`
-- `shared.contracts.module` introduced as the explicit cross-module contract package
-- `/api/v1/dashboard/summary` introduced as a core aggregation endpoint backed only by capabilities
-- `/api/v1/modules` now returns `moduleEnabled`, `featureFlagEnabled` and `available`
-- module dashboards now expose standardized summary payloads through `/api/v1/crm/dashboard/summary`, `/api/v1/iot/dashboard/summary` and `/api/v1/pet/dashboard/summary`
-
-## Module Capabilities And Contracts
-
-Cross-module contracts now live in:
-- `shared.contracts.module.ModuleSummaryCapability`
-- `shared.dashboard.dto.DashboardSummaryCardDto`
-- `shared.dashboard.dto.DashboardCountMetricDto`
-- `shared.dashboard.dto.DashboardListItemDto`
-- `shared.dashboard.dto.DashboardTimeSeriesPointDto`
-- `shared.dashboard.dto.DashboardSectionDto`
-- `shared.dashboard.dto.DashboardModuleSummaryDto`
-- `shared.dashboard.dto.PlatformDashboardResponseDto`
-
-Implemented module capabilities:
-- `modules.crm.capability.CrmDashboardCapability`
-- `modules.iot.capability.IotDashboardCapability`
-- `modules.pet.capability.PetDashboardCapability`
-
-Capability rules:
-- the contract exposes summary data only
-- core consumes the contract interface, never a vertical repository
-- each vertical module keeps ownership of how its summary is built internally
-
-Current pragmatic scope:
-- this stage standardizes dashboard/summary aggregation first
-- narrower capabilities such as contact summary, device status summary or pet owner summary can be added later only where a real integration needs them
-
-## Module Enablement Model
-
-Three separate concepts now remain explicit:
-
-1. Module enabled
-   - tenant condition
-   - stored in `tenant_modules`
-   - answers: "is this tenant subscribed/allowed to use the module?"
-2. Feature flag
-   - rollout condition
-   - stored in `feature_flags`
-   - answers: "should this capability be exposed right now for this tenant?"
-3. Permission
-   - user/role condition
-   - resolved from JWT + `role_permissions`
-   - answers: "can this authenticated user perform this action?"
-
-Backend flow:
-
-- `ModuleAccessService` evaluates module availability from tenant binding + feature flag
-- `ModuleAccessGuard` blocks `/api/v1/crm/**`, `/api/v1/iot/**` and `/api/v1/pet/**` when unavailable
-- `@RequirePermission` still enforces per-endpoint authorization after module access passes
-
-Frontend flow:
-
-- sidebar hides module menus when `available=false`
-- route-level `ModuleGuard` blocks `/crm`, `/iot` and `/pet` screens when the module is unavailable
-- dashboard shows the difference between tenant binding, feature flag and final availability
-
-## Dashboard Aggregation
-
-Platform-level aggregation is now intentionally thin:
-
-- `PlatformDashboardService` depends on `List<ModuleSummaryCapability>`
-- each capability returns a `DashboardModuleSummaryDto`
-- the core dashboard filters capabilities through `ModuleAccessService`
-- the core dashboard also filters capabilities through dashboard permissions resolved from the authenticated user
-- the core dashboard does not import vertical repositories or entities
-
-This keeps the platform dashboard extensible without turning `core` into a god service.
-
-## Dashboard Architecture
-
-Adopted dashboard model:
-
-1. Platform dashboard
-   - executive summary only
-   - aggregates core-owned counts plus `ModuleSummaryCapability` outputs
-2. Module dashboards
-   - CRM, IoT and Pet own their operational summaries and can query only their own repositories
-3. Shared payload model
-   - cards, grouped metrics, recent items, time series and reusable sections are standardized in `shared.dashboard.dto`
-4. Frontend widget model
-   - widgets live under `apps/frontend/src/shared/dashboard` and render the same payload shape for all modules
-
-Access rules on dashboards:
-
-- `ModuleAccessGuard` still blocks module routes when the tenant does not have the module available
-- module dashboard endpoints still require explicit permissions:
-  - `crm.dashboard.read`
-  - `iot.dashboard.read`
-  - `pet.dashboard.read`
-- the platform dashboard omits module sections that are unavailable or unauthorized instead of querying module internals directly
-
-## Multi-Tenancy
-
-- `TenantContext` carries active tenant ID per request.
-- `TenantContextFilter` validates tenant header against authenticated context.
-- Tenant-scoped queries are mandatory on business data.
-- Cross-tenant access is rejected with `403`.
-
-## Observability
-
-### Structured Logging
-- Logback JSON output (`logback-spring.xml`)
-- MDC context: `trace_id`, `span_id`, `tenant_id`, `user_id`
-- Request log filter emits method/path/status/duration
-
-### Metrics
-- Actuator endpoints:
-  - `/actuator/metrics`
-  - `/actuator/prometheus`
-- Custom counters:
-  - `crm.contacts.created`
-  - `pet.appointments.created`
-  - `iot.telemetry.received`
-  - `iot.alarms.triggered`
-  - `auth.attempts` (tagged by outcome)
-
-### Tracing
-- Micrometer tracing bridge with OpenTelemetry.
-- Trace and span identifiers are correlated into structured logs.
-
-### Health
-- Expanded `/actuator/health` with:
-  - database indicator
-  - migration status indicator
-  - redis future-ready indicator
-  - telemetry pipeline indicator, implemented inside `modules.iot.monitoring.health`
-
-## Shared CRUD Layer
-
-`shared.crud` centralizes recurring CRUD behavior without hiding module rules.
-
-Main components:
-- `BaseTenantCrudService`
-- `BaseTenantCrudRepository`
-- `BaseCrudMapper`
-- `BaseSearchSpecificationBuilder`
-- `BasePageQuery`
-- `BaseSoftDeleteService`
-- `BaseAuditableCrudHooks`
-
-Applied modules:
-- CRM: contacts and leads
-- PET: clients, profiles, appointments, services, professionals, medical records, vaccinations, prescriptions, products and invoices
-- IoT: devices, registers, maintenance and alarms where CRUD is sufficient; telemetry keeps explicit data-plane services
-
-Exception:
-- `modules.pet.inventory` keeps an explicit service because stock snapshot recalculation must remain transactional when movements are created, edited, deleted or restored
-
-## Authorization Model
-
-Entities:
-- `users` (global identity)
-- `tenants` (organization)
-- `user_tenants` (user-tenant binding)
-- `user_tenant_roles` (roles bound to the active user-tenant relation)
-- `roles`, `permissions`, `role_permissions`
-
-Resolution flow:
-1. Login identifies user + tenant.
-2. System resolves `user_tenant` and `user_tenant_roles`.
-3. Permissions are aggregated from `role_permissions`.
-4. JWT includes `user_id`, `tenant_id`, `roles`, `permissions`.
-
-Enforcement:
-- role checks via Spring Security
-- granular checks via `@RequirePermission("...")`
-- module guard for `/api/v1/crm/**`, `/api/v1/pet/**`, `/api/v1/iot/**`
-- module availability computed from tenant module binding + feature flag
-- feature flag checks (global and tenant-scoped)
-
-## Rate Limiting
-
-- Bucket4j filter-based strategy in `shared.ratelimit`.
-- Policies:
-  - auth endpoints: 10 req/min
-  - default API: 100 req/min
-  - telemetry ingestion (`POST /api/v1/iot/telemetry`): 500 req/min
-
-Support table:
-- `rate_limit_policies` (future policy externalization)
-
-## Refresh Token Security
-
-- Raw refresh token is never stored.
-- `refresh_tokens.token_hash` stores SHA-256 hash.
-- Rotation on refresh: old token revoked, new token generated.
-- Logout endpoint revokes active token.
-
-## Auditing
-
-`audit_logs` captures:
-- tenant and user context
-- action (`CREATE`, `UPDATE`, `DELETE`, `LOGIN`, `REFRESH_TOKEN`, etc.)
-- entity and entity id
-- optional payload snapshot
-- timestamp
-
-Audit events are emitted by AOP annotation (`@AuditableAction`) and auth flows.
-
-## Soft Delete
-
-Business entities use:
-- `deleted_at`
-- `@Where(clause = "deleted_at IS NULL")`
-- optional restore endpoints where relevant
-
-This preserves history and avoids hard-delete by default.
-
-## Pagination Contract
-
-Shared package: `shared.pagination`
-
-Main classes:
-- `PageRequestDto`
-- `PageResponseDto`
-- `PageMapper`
-- `PaginationUtils`
-
-Standard query params:
-- `page`
-- `size`
-- `sort`
-- `direction`
-- `search`
-
-Standard response:
-- `items`
-- `page`
-- `size`
-- `totalItems`
-- `totalPages`
-
-Legacy fields (`content`, `totalElements`) remain for compatibility.
-
-## IoT Legacy Functional Summary
-
-The legacy reference at `../iotsystem` was inspected as a reference source only. Main findings:
-
-- control-plane domains: devices, registers, alarm rules/events, maintenance orders, reports metadata, governance/plans/quotas and audit trail
-- data-plane and runtime flows: telemetry ingestion, telemetry poller, device health history, dashboard summaries and alert generation
-- integrations found in the legacy repository:
-  - dedicated telemetry poller service
-  - Kafka topics for raw/status/dead-letter telemetry
-  - split OLTP + TSDB design with separate datasource/flyway ADRs
-  - health indicators, metrics, tracing and rate limiting support
-- high-value features reused as V1 scope in this platform:
-  - device registry
-  - logical registers/sensors
-  - telemetry ingestion/query
-  - alarms with acknowledge
-  - maintenance queue
-  - operational dashboard and summary reports
-
-Important modeling decision for the new platform:
-
-- the legacy `register` concept includes protocol-level concerns such as addresses and function codes
-- IoT V1 in this platform models `registers` as logical telemetry channels linked to a device
-- protocol/runtime specifics remain future-ready and were not copied into the new control plane
-
-## IoT Gap Analysis
-
-Comparison baseline:
-
-- legacy reference: `../iotsystem`
-- current platform code:
-  - `apps/backend/src/main/java/com/phaiffertech/platform/modules/iot`
-  - `apps/frontend/src/app/(app)/iot`
-  - `apps/frontend/src/modules/iot`
-
-| Funcionalidade | Status na nova plataforma |
+| Pacote | Responsabilidade |
 | --- | --- |
-| devices | já implementado |
-| registers / sensors | já implementado |
-| telemetry write | já implementado |
-| telemetry read/query | já implementado |
-| alarms | já implementado |
-| alarm acknowledge | já implementado |
-| maintenance | já implementado |
-| reports | já implementado |
-| monitoring dashboard | já implementado |
-| polling | adiar para IoT V2 |
-| device health | parcialmente implementado |
-| governance / quotas | depende de abstração futura |
-| metrics / tracing | parcialmente implementado |
-| activity / audit | parcialmente implementado |
+| `shared` | Infraestrutura técnica sem regra de negócio: `security`, `tenancy`, `crud`, `pagination`, `response`, `exception`, `ratelimit`, `metrics`, `logging`, `health`, `contracts`, `dashboard` (DTOs), `usage`, `web` |
+| `core` | Capacidades de plataforma: `auth`, `tenant`, `user`, `iam`, `module`, `settings`, `audit`, `notification`, `attachment`, `subscription`, `finance`, `inventory`, `messaging` |
+| `modules.pet` | Domínio Gestão Pet: `client`, `petprofile`, `appointment`, `servicecatalog`, `professional`, `commission`, `plan`, `product`, `inventory`, `invoice`, `billing`, `dashboard`, `capability`; e o código clínico/adjacente `medical`, `subscription`, `portal` |
+| `modules.crm` | Empresas, contatos, leads, negócios, pipeline, tarefas, notas, atividade e dashboard |
+| `infrastructure` | `bootstrap` (admin master), `demo` (ambiente comercial de demonstração), `persistence` (seed de desenvolvimento), `docs` (OpenAPI), `web`, `notification` |
 
-Status interpretation:
+### Regras de dependência
 
-- `já implementado`: delivered in backend + frontend with tenant-aware flows
-- `parcialmente implementado`: basic coverage exists, but not at the same operational depth as legacy
-- `depende de abstração futura`: belongs partly to shared subscription/governance layers, not only IoT
-- `adiar para IoT V2`: intentionally excluded from commercial V1 scope
+- `core` e `shared` não importam classes de `modules.*`.
+- Um módulo vertical não importa outro (`modules.pet` ↔ `modules.crm`).
+- Agregações entre módulos passam por contratos em `shared.contracts`, como `ModuleSummaryCapability`, implementado por `modules.pet.capability.PetDashboardCapability` e `modules.crm.capability.CrmDashboardCapability` e consumido por `core.module.service.PlatformDashboardService`.
 
-## IoT V1 Scope
+Em 2026-10-31 não há nenhuma violação dessas regras no código (verificado por busca de imports). Elas são mantidas por convenção e revisão; ainda não existe teste automatizado de arquitetura (por exemplo, ArchUnit) que as garanta.
 
-Mandatory V1 delivered:
+## Multi-tenancy
 
-- devices
-- registers
-- telemetry ingestion
-- telemetry query
-- alarms
-- alarm acknowledge
-- maintenance
-- dashboard summary
+- `shared.tenancy.TenantContext` guarda o tenant ativo durante a requisição.
+- `shared.tenancy.TenantContextFilter` valida o tenant informado contra o tenant do usuário autenticado; acesso cruzado é rejeitado com `403`.
+- Repositórios e serviços de negócio filtram sempre por `tenant_id`. A camada `shared.crud` (`BaseTenantCrudService` e afins) concentra esse comportamento para os CRUDs comuns.
+- Cada tenant tem plano comercial e *entitlements* (`pet.aesthetics`, `pet.clinic`, `pet.retail`, `pet.veterinary`, `crm.basic` etc.). O frontend usa os entitlements para decidir quais telas aparecem (`apps/frontend/src/shared/entitlements/tenant-entitlements.ts`); é assim que as telas clínicas ficam ocultas no plano de banho e tosa.
 
-Recommended V1 delivered:
+## Segurança e autorização
 
-- reports summary
-- device status
-- operational counters
-- basic last-seen/health logic
+Modelo de dados: `users` (identidade global), `tenants`, `user_tenants` (vínculo), `user_tenant_roles`, `roles`, `permissions` e `role_permissions`.
 
-Explicitly deferred to IoT V2:
+Fluxo:
 
-- Kafka as mandatory ingestion backbone
-- TSDB/TimescaleDB as mandatory telemetry store
-- advanced polling orchestration
-- advanced risk scoring
-- predictive analytics
-- advanced quotas/plans/governance
-- deep observability by device and analytical dashboards
+1. O login identifica usuário e tenant.
+2. O backend resolve papéis do vínculo usuário-tenant e agrega as permissões.
+3. O JWT de acesso carrega `user_id`, `tenant_id`, papéis e permissões.
+4. Cada endpoint exige a permissão adequada via `@RequirePermission` (`shared.security.RequirePermission`), por exemplo `pet.appointment.update`.
 
-## IoT Control Plane vs Data Plane
+Três condições independentes controlam o acesso a um módulo:
 
-Control plane responsibilities:
+| Condição | Escopo | Onde fica | Pergunta |
+| --- | --- | --- | --- |
+| Módulo habilitado | tenant | `tenant_modules` | O tenant contratou o módulo? |
+| Feature flag | rollout | `feature_flags` | A funcionalidade está liberada agora? |
+| Permissão | usuário | JWT + `role_permissions` | Este usuário pode fazer esta ação? |
 
-- devices
-- registers
-- maintenance
-- configuration and metadata concerns
+`core.module.service.ModuleAccessService` combina as duas primeiras e `shared.security.ModuleAccessGuard` bloqueia `/api/v1/pet/**` e `/api/v1/crm/**` quando o módulo não está disponível. No frontend, o menu lateral e os guards de rota usam a mesma informação.
 
-Data plane responsibilities:
+Outros controles:
 
-- telemetry ingestion
-- telemetry storage abstraction
-- telemetry query
-- alarm evaluation
-- monitoring summaries
-- report aggregates
+- **Refresh token**: apenas o hash SHA-256 é armazenado (`refresh_tokens.token_hash`); há rotação a cada renovação e revogação no logout.
+- **Recuperação de senha**: tokens de uso único com expiração (padrão de 30 minutos no profile `dev`).
+- **Rate limiting** (Bucket4j, `shared.ratelimit.ApiRateLimitFilter`): 10 req/min nos endpoints de autenticação e 100 req/min no restante da API, configuráveis por `APP_RATE_LIMIT_*`.
+- **Auditoria**: ações de autenticação e escrita geram registros em `audit_logs` via `@AuditableAction`.
+- **Impersonação de suporte**: sessões explícitas e auditadas para o time de suporte entrar em um tenant, com banner visível no frontend.
+- **Segredos de integração**: tokens de canais de mensageria são cifrados antes de persistir (`core.messaging.service.SecretCipherService`).
 
-Current backend abstractions that preserve this split:
+## Persistência
 
-- `TelemetryWriter`
-- `TelemetryReader`
-- `AlarmEvaluator`
-- `DeviceStatusService`
-- `MonitoringSummaryService`
+- PostgreSQL 16 com schema evoluído exclusivamente por migrações Flyway incrementais em `apps/backend/src/main/resources/db/migration` (72 versões em 2026-10-31). Migrações publicadas nunca são editadas; correções entram como nova versão.
+- Entidades de negócio usam *soft delete* (`deleted_at`) e várias têm endpoint de restauração.
+- Contrato de paginação padrão: parâmetros `page`, `size`, `sort`, `direction`, `search`; resposta com `items`, `page`, `size`, `totalItems`, `totalPages` (`shared.pagination.PageResponseDto`).
+- Algumas migrações antigas criaram tabelas de um módulo de IoT que foi removido do produto. Elas permanecem na cadeia para não quebrar bancos já migrados, mas nenhum código atual depende delas.
 
-This keeps PostgreSQL practical for the current stage without treating it as the permanent final architecture for telemetry.
+## Domínio Gestão Pet
 
-## IoT V1 Implementation Notes
+Detalhes de entidades e regras em [domain/grooming-domain.md](domain/grooming-domain.md). Principais tabelas:
 
-Backend domains now in active use:
-
-- `modules.iot.device`
-- `modules.iot.register`
-- `modules.iot.telemetry`
-- `modules.iot.alarm`
-- `modules.iot.maintenance`
-- `modules.iot.monitoring`
-- `modules.iot.report`
-- `modules.iot.processing`
-
-Device health rule in V1:
-
-- `ALERT` when a critical open alarm exists for the device
-- `ONLINE` when recent telemetry and/or fresh `lastSeenAt` is available without critical open alarm
-- `OFFLINE` when the device has stale last-seen / no recent telemetry
-- `MAINTENANCE` remains available as an explicit operational status on the control plane
-
-## Legacy CRM Functional Summary
-
-The legacy CRM at `../crm-platform` was inspected only as a reference source. Functional findings:
-
-- companies: tenant/organization scoped company registry with owner, contact channels, status and audit trail.
-- contacts: linked to companies, unique email rules, soft delete and owner/status filtering.
-- leads: source and status management, optional company/contact linkage, notes and conversion to deal.
-- deals: stage transitions, expected close date, amount/probability and linkage with company/contact/lead.
-- pipeline stages: ordered stages with default stage handling.
-- tasks: linked to CRM entities, due date/assignee, notification emission and audit logging.
-- notes: linked to CRM entities, author tracking and audit logging.
-- campaigns: campaign registry with targets from contacts/leads and schedule validation.
-- conversations: conversation and message threads, plus attachment linkage.
-- attachments: generic file linkage to CRM entities.
-- notifications: user-level operational notifications.
-- activity feed: audit-log-based event history.
-- dashboard: summary counts plus task and pipeline snapshots.
-- invites/onboarding: tenant bootstrap and initial admin creation.
-- chatbot: conversational helper with stored conversation history.
-
-## CRM Gap Analysis and Scope
-
-The table below reflects the decision taken for the new platform after comparing the legacy CRM against `apps/backend/src/main/java/com/phaiffertech/platform/modules/crm`.
-
-| Funcionalidade | Status na nova plataforma | Decisão |
-| --- | --- | --- |
-| companies | não implementado no início da etapa | já implementado em CRM V1 |
-| contacts | parcialmente implementado no início da etapa | já implementado em CRM V1 |
-| leads | parcialmente implementado no início da etapa | já implementado em CRM V1 |
-| deals | parcialmente implementado no início da etapa | já implementado em CRM V1 |
-| pipeline stages | parcialmente implementado no início da etapa | já implementado em CRM V1 |
-| tasks | parcialmente implementado no início da etapa | já implementado em CRM V1 |
-| notes | parcialmente implementado no início da etapa | já implementado em CRM V1 |
-| activity feed | não implementado no início da etapa | já implementado em CRM V1 usando `core.audit` |
-| dashboard summary | não implementado no início da etapa | já implementado em CRM V1 |
-| notifications | não integrado no CRM | mover para `core.notification` |
-| attachments | não implementado no CRM | mover para `core.attachment` |
-| invites | fora do módulo CRM | mover para `core`/tenant lifecycle |
-| onboarding | fora do módulo CRM | mover para `core`/tenant lifecycle |
-| campaigns | não implementado | adiar para CRM V2 |
-| conversations | não implementado | adiar para CRM V2 |
-| chatbot | não implementado | adiar para CRM V2 |
-
-## CRM V1 Scope
-
-Mandatory scope delivered:
-
-- companies
-- contacts
-- leads
-- deals
-- pipeline stages
-- tasks
-- notes
-
-Recommended V1 scope delivered:
-
-- activity feed (`GET /api/v1/crm/activity`)
-- dashboard summary (`GET /api/v1/crm/dashboard/summary`)
-
-Core-aligned scope:
-
-- notifications remain a core concern and should be integrated from `core.notification`
-- attachments remain a core concern and should reuse `core.attachment`
-- invites and onboarding stay in core because they are tenant lifecycle workflows, not CRM records
-
-Deferred to CRM V2:
-
-- campaigns
-- conversations
-- advanced attachments and richer document flows
-- chatbot
-
-## CRM V1 Implementation Notes
-
-Implemented backend domains:
-
-- `modules.crm.company`
-- `modules.crm.contact`
-- `modules.crm.lead`
-- `modules.crm.pipeline`
-- `modules.crm.deal`
-- `modules.crm.task`
-- `modules.crm.note`
-- `modules.crm.activity`
-- `modules.crm.dashboard`
-
-Common guarantees across CRM V1:
-
-- true multi-tenancy through mandatory `tenant_id` scoping
-- soft delete on CRM entities
-- audit trail integration
-- standard paginated list contract
-- granular permissions with `@RequirePermission`
-- tenant isolation in read/write validation
-
-Main V1 permissions:
-
-- `crm.company.read|create|update|delete`
-- `crm.contact.read|create|update|delete`
-- `crm.lead.read|create|update|delete`
-- `crm.deal.read|create|update|delete`
-- `crm.pipeline.read|create|update|delete`
-- `crm.task.read|create|update|delete`
-- `crm.note.read|create|update|delete`
-- `crm.activity.read`
-- `crm.dashboard.read`
-
-## Legacy PetFlow Functional Summary
-
-The legacy PetFlow at `../petflow` was inspected only as a functional reference. Relevant findings:
-
-- operational domains found in code: clients/tutors, pets, appointments/agenda, products, inventory transactions, subscriptions, finance/invoices, dashboard/reports and client portal endpoints
-- clinical and commercial rules found in legacy services:
-  - deactivating a client or pet cancels future scheduled appointments
-  - appointment flows validate company ownership and active client/pet relations
-  - inventory movements cannot drive stock below zero
-  - appointments covered by subscription should not be invoiced as regular cash sales
-  - client portal booking is restricted to the authenticated client and that client's pets
-- important structural limit in the legacy reference:
-  - no mature standalone modules were found for service catalog, professionals, medical records, vaccinations or prescriptions
-  - those capabilities were therefore modeled natively for the SaaS platform instead of copied from legacy assumptions
-
-## Pet Gap Analysis and Scope
-
-Comparison baseline:
-
-- legacy reference: `../petflow`
-- current platform code:
-  - `apps/backend/src/main/java/com/phaiffertech/platform/modules/pet`
-  - `apps/frontend/src/app/(app)/pet`
-  - `apps/frontend/src/modules/pet`
-
-| Funcionalidade | Status na nova plataforma |
+| Conceito | Tabelas |
 | --- | --- |
-| clients | já implementado |
-| pets | já implementado |
-| appointments | já implementado |
-| services | já implementado |
-| professionals | já implementado |
-| medical records | já implementado |
-| vaccinations | já implementado |
-| prescriptions | já implementado |
-| products | já implementado |
-| inventory | já implementado |
-| invoices | já implementado |
-| subscriptions | adiar para Pet V2 |
-| notifications / reminders | adiar para Pet V2 |
-| reports | adiar para Pet V2 |
-| agenda | parcialmente implementado |
-| client portal | adiar para Pet V2 |
+| Clientes e pets | `pet_clients`, `pet_profiles` |
+| Catálogo e equipe | `pet_services` (flags de plano, avulso e comissão), `pet_professionals` (taxa de comissão opcional) |
+| Atendimento | `pet_appointments` e `pet_appointment_services` (linhas multi-serviço com preço, profissional e snapshot de comissão) |
+| Planos | `pet_plan_templates`, `pet_client_plans` (sessões totais, usadas e restantes) |
+| Estoque | `inventory_items`, `inventory_movements` (core), `pet_service_inventory_links` (consumo esperado), `pet_appointment_service_inventory` (consumo real) |
+| Cobrança | `finance_invoices`, `finance_payments`, `finance_cash_movements`, `finance_payment_events` (core) e `pet_invoices` (vínculo com cliente, pet e atendimento) |
+| Mensagens | `pet_billing_message_settings` e as tabelas de `core.messaging` |
 
-Status interpretation:
+Fluxos centrais:
 
-- `já implementado`: backend + frontend tenant-aware CRUD delivered in Pet V1
-- `parcialmente implementado`: there is operational coverage, but not at the legacy UX depth yet
-- `adiar para Pet V2`: intentionally excluded from the commercial/clinical SaaS baseline for this stage
+- **Atendimento multi-serviço**: cada linha guarda serviço, preço, profissional e a elegibilidade/taxa de comissão vigente no momento, para que o fechamento não mude quando o cadastro mudar.
+- **Plano e sessões**: concluir um atendimento vinculado a um plano consome uma sessão; o painel destaca planos na penúltima e na última sessão.
+- **Estoque**: o consumo real é registrado por linha de atendimento e a baixa é uma ação explícita do operador, não automática.
+- **Cobrança a partir do atendimento**: o atendimento guarda o `invoiceId` da fatura gerada, o que permite reabrir a cobrança depois.
 
-## Pet V1 Scope
+## Pagamentos
 
-Mandatory clinical scope delivered:
+A cobrança é uma capacidade genérica de `core.finance`, independente do meio de pagamento:
 
-- clients
-- pets
-- appointments
-- services
-- professionals
-- medical records
-- vaccinations
-- prescriptions
+- `finance_invoices` → `finance_payments` → `finance_cash_movements` representam o que é devido, o que foi pago e o reflexo no caixa.
+- `core.finance.payment.provider.PaymentProvider` é a porta para provedores. Hoje existem `ManualPaymentProvider` (confirmação manual pelo operador) e `NoopPaymentProvider`, resolvidos por `PaymentProviderRegistry`.
+- `finance_payment_events` registra eventos de pagamento com chave de idempotência única por tenant e provedor (`uq_finance_payment_events_tenant_provider_idempotency`), base para webhooks idempotentes quando houver um provedor externo.
 
-Commercial V1 delivered:
+Não há gateway PIX ou cartão integrado; os dados de PIX aparecem como texto nas mensagens. A evolução planejada está em [payments/payment-roadmap.md](payments/payment-roadmap.md).
 
-- products
-- inventory
-- invoices
+## Mensageria
 
-Explicitly deferred to Pet V2:
+Duas camadas separadas:
 
-- subscriptions aligned with shared platform billing/governance
-- automatic reminders/notifications
-- client portal
-- advanced reports
-- external integrations
+1. **Mensagens preparadas (fluxo validado)**: `modules.pet.billing` monta o texto de retirada do pet e de renovação de plano a partir de cliente, pet, atendimento, plano e fatura; o frontend exibe e copia o texto para envio manual.
+2. **Fundação WhatsApp Cloud API**: `core.messaging` tem configuração de canal, registro de envios (`message_dispatches`), eventos de entrega e webhook de verificação/recebimento, atrás da interface `MessageProvider`. O envio oficial não está validado por depender de liberação de cobrança da Meta.
 
-## Pet V1 Implementation Notes
+A mensageria fica no core, e não no domínio pet, para que outros módulos possam enviar mensagens sem acoplar o WhatsApp ao atendimento.
 
-Implemented backend domains now in active use:
+## Dashboards
 
-- `modules.pet.client`
-- `modules.pet.petprofile`
-- `modules.pet.appointment`
-- `modules.pet.servicecatalog`
-- `modules.pet.professional`
-- `modules.pet.medical.record`
-- `modules.pet.medical.vaccination`
-- `modules.pet.medical.prescription`
-- `modules.pet.product`
-- `modules.pet.inventory`
-- `modules.pet.invoice`
+- `GET /api/v1/dashboard/summary`: painel da plataforma, agregado por `PlatformDashboardService` a partir das `ModuleSummaryCapability` que o usuário pode ver.
+- `GET /api/v1/pet/dashboard/summary` e `GET /api/v1/crm/dashboard/summary`: painéis operacionais, cada um construído pelo próprio módulo.
+- Os DTOs de cartões, métricas, listas e séries ficam em `shared.dashboard.dto`, e os componentes visuais correspondentes em `apps/frontend/src/shared/dashboard`.
 
-Main architectural decisions:
+## Frontend
 
-- existing core auth, tenant, RBAC and permission layers were reused; no PetFlow auth/user model was ported
-- legacy appointment `service_name` history was normalized into `pet_services`, and appointments now reference `service_id`
-- professionals, medical records, vaccinations and prescriptions were introduced as first-class tenant entities because the legacy implementation did not provide reusable modular boundaries for them
-- inventory is modeled as movement history plus current stock snapshot on product, keeping auditability without breaking the shared CRUD conventions elsewhere
-- subscriptions, reminders and client portal remain future work because they depend on broader shared-platform concerns and should not be hard-copied from a standalone product
+- Next.js App Router com grupos de rota `(public)` (site institucional, login e recuperação de senha) e `(app)` (área autenticada; telas Gestão Pet em `/pet/*`).
+- As telas ficam em `apps/frontend/src/modules/<domínio>` e os componentes compartilhados em `apps/frontend/src/shared`.
+- Proteção em camadas: rota autenticada, `ModuleGuard` (módulo disponível), verificação de permissões e de entitlements.
+- **Internacionalização**: pt-BR (padrão) e en-US. Todos os textos das telas de banho e tosa vêm de catálogos tipados (`shared/i18n/messages`); erros da API são exibidos traduzidos em pt-BR. Convenções em [apps/frontend/README.md](../apps/frontend/README.md).
 
-Main Pet V1 permissions:
+## Observabilidade
 
-- `pet.client.read|create|update|delete`
-- `pet.profile.read|create|update|delete`
-- `pet.appointment.read|create|update|delete`
-- `pet.service.read|create|update|delete`
-- `pet.professional.read|create|update|delete`
-- `pet.medical-record.read|create|update|delete`
-- `pet.vaccination.read|create|update|delete`
-- `pet.prescription.read|create|update|delete`
-- `pet.product.read|create|update|delete`
-- `pet.inventory.read|create|update|delete`
-- `pet.invoice.read|create|update|delete`
+- Logs JSON (Logback) com `trace_id`, `span_id`, `tenant_id` e `user_id` no MDC.
+- Métricas Micrometer expostas em `/actuator/prometheus`, incluindo `auth.attempts`, `crm.contacts.created`, `pet.appointments.created`, `platform.api.requests`, `platform.audit.events` e `platform.usage.events`.
+- Tracing via ponte Micrometer/OpenTelemetry.
+- `/actuator/health` com indicadores de banco e de estado das migrações Flyway.
+- Stack local opcional com Prometheus, Grafana e Loki (`make observability-up`).
 
-## IoT Control Plane vs Data Plane
+## Testes e entrega
 
-- Control plane: administrative CRUD (`device`, alarms and operational metadata).
-- Data plane: telemetry ingestion and processing.
+- Backend: testes unitários e de integração com Testcontainers (PostgreSQL real), cobrindo autenticação, isolamento entre tenants, permissões, CRUDs e os fluxos de pet e finance.
+- Frontend: Vitest + Testing Library para componentes e utilitários.
+- CI (`.github/workflows/ci.yml`): `mvn clean verify` e `npm ci && npm test && npm run lint && npm run build` em cada PR.
+- Deploy (`backend-deploy.yml`, `frontend-deploy.yml`): imagens no Artifact Registry e serviços no Cloud Run, com infraestrutura em `infra/gcp/terraform` (Cloud SQL, Secret Manager, contas de serviço com IAM mínimo). Detalhes em [platform/gcp-minimal-infra.pt-BR.md](platform/gcp-minimal-infra.pt-BR.md).
 
-Abstractions:
-- `TelemetryWriter`
-- `TelemetryReader`
-- `AlarmEvaluator`
+## Limitações atuais
 
-Current implementation uses PostgreSQL (`PostgresTelemetryStore`) but keeps interface boundaries ready for future storage extraction.
-
-## Migration Strategy
-
-Current migration chain:
-- `V1__init_schema.sql`
-- `V2__init_crm_schema.sql`
-- `V3__init_pet_schema.sql`
-- `V4__init_iot_schema.sql`
-- `V5__seed_reference_data.sql`
-- `V6__seed_permissions.sql`
-- `V7__refresh_token_security.sql`
-- `V8__crm_extended_schema.sql`
-- `V9__tenant_role_model.sql`
-- `V10__crm_contacts_leads_improvements.sql`
-- `V11__crm_pipeline_and_deals.sql`
-- `V12__crm_notes_and_tasks.sql`
-- `V13__pet_v1_schema.sql`
-- `V14__iot_v1_schema.sql`
-- `V15__seed_pet_iot_permissions.sql`
-- `V16__feature_flags.sql`
-- `V17__rate_limit_support.sql`
-- `V18__crm_companies_pipeline_deals.sql`
-- `V19__crm_tasks_notes_activity.sql`
-- `V20__crm_permissions_seed.sql`
-- `V21__iot_devices_registers.sql`
-- `V22__iot_telemetry_alarms.sql`
-- `V23__iot_maintenance_dashboard_permissions.sql`
-- `V24__pet_clients_pets.sql`
-- `V25__pet_appointments_services.sql`
-- `V26__pet_medical_records.sql`
-- `V27__pet_products_inventory_invoices.sql`
-- `V28__pet_dashboard_permission.sql`
-- `V29__align_core_user_permissions.sql`
-- `V30__iot_modbus_explicit_model.sql`
-- `V31__iot_maintenance_operational_links.sql`
-- `V32__pet_appointments_integrity_hardening.sql`
-- `V33__pet_clinical_appointment_context.sql`
-- `V34__crm_relation_reference_normalization.sql`
-- `V35__tenant_productization_foundation.sql`
-- `V36__setup_prod_admin.sql`
-- `V37__setup_master_tenant_phaiffer.sql`
-- `V38__seed_demo_assisted_feature_flag.sql`
-- `V39__saas_operational_foundations.sql`
-- `V40__plan_contract_resolution_and_dashboard_indexes.sql`
-- `V41__support_impersonation_sessions.sql`
-- `V42__shared_inventory_foundation.sql`
-- `V43__tenant_finance_foundation.sql`
-- `V44__brazil_fiscal_readiness.sql`
-- `V45__password_reset_tokens.sql`
-- `V46__demo_enrichment_seed.sql`
-- `V47__pet_appointment_professional_and_pricing.sql`
-- `V48__pet_client_plans_and_permissions.sql`
-- `V49__pet_appointment_client_plan_link.sql`
-- `V50__pet_appointment_payment_summary.sql`
-- `V51__pet_professional_commission_rate.sql`
-- `V52__pet_demo_enrichment_seed.sql`
-- `V53__petflow_package_catalog.sql`
-- `V54__tenant_admin_bootstrap_access.sql`
-- `V55__tenant_commercial_status_enforcement.sql`
-- `V56__pet_client_document_type.sql`
-- `V57__pet_service_catalog_categories_and_flags.sql`
-- `V58__pet_appointment_multi_service_lines.sql`
-- `V59__pet_appointment_service_line_commission_snapshot.sql`
-- `V60__pet_appointment_service_line_professional_assignment.sql`
-- `V61__pet_commission_summary_permission.sql`
-- `V62__pet_service_inventory_linkage.sql`
-- `V63__pet_appointment_actual_inventory_consumption.sql`
-- `V64__pet_appointment_inventory_stock_application.sql`
-- `V65__pet_billing_message_settings.sql`
-- `V66__petflow_grooming_profile_fields.sql`
-- `V67__pet_plan_templates_and_sales_flow.sql`
-- `V68__pet_client_plan_notes.sql`
-- `V69__petflow_grooming_and_plan_template_repair.sql`
-- `V70__messaging_whatsapp_foundation.sql`
-
-Previous migrations were preserved; new changes are strictly incremental.
-
-Important note:
-
-- the requested Pet V1 migrations were introduced as `V24..V27`, not `V17..V20`, because the existing repository already had later Flyway versions allocated and reusing them would break the migration chain
-
-## Test Architecture
-
-Folders:
-- `src/test/java/com/phaiffertech/platform/support`
-- `src/test/java/com/phaiffertech/platform/integration`
-- `src/test/java/com/phaiffertech/platform/integration/crm`
-
-Base classes:
-- `IntegrationTestContainersConfig` (singleton PostgreSQL Testcontainer + dynamic datasource properties)
-- `AbstractIntegrationTest` (HTTP and SQL helpers)
-
-Coverage includes:
-- auth login/refresh/me
-- tenant isolation
-- tenant role and permission resolution
-- permission enforcement
-- CRM companies/contacts/leads/deals/pipeline/tasks/notes CRUD
-- CRM dashboard summary and activity feed
-- PET clients/profiles/appointments CRUD
-- PET services/professionals CRUD
-- PET medical records/vaccinations/prescriptions CRUD
-- PET products/inventory/invoices CRUD
-- IoT devices/alarms CRUD
-- IoT telemetry write/read
-- shared CRUD behavior (tenant filter + soft delete + paginated list contract)
-- pagination contract
-
-Docker compatibility note:
-- tests run with Testcontainers and require Docker.
-- Integration test bootstrap sets `api.version=1.44` by default, overridable through `DOCKER_API_VERSION`.
-
-## DevOps Foundation
-
-### CI
-- GitHub Actions workflow at `.github/workflows/ci.yml`
-- Runs backend build/tests, frontend lint/build and docker image build
-
-### Docker Compose Profiles
-- default (sem profile): postgres + backend + frontend
-- `tools`: adminer
-- `observability`: prometheus + grafana + loki
-
-### Terraform (GCP Minimal)
-Base IaC scaffolding at `infra/gcp/terraform`:
-- Artifact Registry for container images
-- Cloud SQL for PostgreSQL
-- Secret Manager for runtime secrets
-- Cloud Run backend/frontend and minimum IAM
-
-Legacy Terraform under `infra/terraform` is historical reference only and should not be treated as the target online architecture.
+- WhatsApp oficial não validado; a demo usa mensagens preparadas.
+- Sem gateway de pagamento integrado.
+- Fronteiras entre módulos sem teste automatizado de arquitetura.
+- Telas de CRM, clínica e administração ainda sem internacionalização completa.
