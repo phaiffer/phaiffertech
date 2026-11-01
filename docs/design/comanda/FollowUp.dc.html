@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Follow-up</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&amp;family=Instrument+Sans:wght@400;500;600;700&amp;family=IBM+Plex+Mono:wght@500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#161A2E}a:hover{color:#3B4160}
+</style>
+</helmet>
+<div style="min-height: 1000px; background: #EFF1F5; color: #161A2E; font-family: 'Instrument Sans', system-ui, sans-serif; display: flex; flex-wrap: wrap; align-items: stretch">
+  <nav aria-label="Navegação principal" style="flex: 1 1 76px; max-width: 100%; background: #161A2E; padding: 20px 14px; box-sizing: border-box; display: flex; flex-wrap: wrap; flex-direction: column; align-items: center; gap: 8px">
+    <a href="Hoje.dc.html" aria-label="Início" style="width: 44px; height: 44px; border-radius: 12px; background: {{accent}}; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 12px"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#161A2E" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"></circle><path d="M5 9h.01M19 9h.01M8 5h.01M16 5h.01M7 17c1-2.5 3-3.5 5-3.5s4 1 5 3.5c.6 1.5-.6 3-2.2 2.6-1-.2-1.8-.6-2.8-.6s-1.8.4-2.8.6C7.6 20 6.4 18.5 7 17z"></path></svg></a>
+    <sc-for list="{{nav}}" as="item" hint-placeholder-count="12"><a href="{{item.href}}" aria-label="{{item.label}}" title="{{item.label}}" style="{{item.style}}"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{item.d}}"></path></svg></a></sc-for>
+  </nav>
+
+  <main style="flex: 999 1 560px; min-width: 0; padding: 28px 32px 48px; box-sizing: border-box; display: flex; flex-direction: column; gap: 22px">
+    <header style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 16px">
+      <div style="display: flex; flex-direction: column; gap: 8px">
+        <span style="font-family: 'IBM Plex Mono', monospace; font-size: 13px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: #4A5170">Relacionamento</span>
+        <h1 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 40px; line-height: 1; letter-spacing: -0.03em">Follow-up</h1>
+        <p style="margin: 0; font-size: 15px; color: #2B3150"><strong style="color: #A61B1B">3 atrasados</strong> · 6 para hoje · 9 nesta semana</p>
+      </div>
+      <button type="button" style="height: 44px; padding: 0 20px; border: 0; border-radius: 12px; background: #161A2E; color: #FFFFFF; font: 600 15px 'Instrument Sans', sans-serif; display: inline-flex; align-items: center; gap: 8px"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg>Nova tarefa</button>
+    </header>
+
+    <div role="tablist" aria-label="Tipo" style="display: inline-flex; gap: 4px; padding: 4px; background: #E3E6ED; border-radius: 12px; width: max-content">
+      <button type="button" role="tab" aria-selected="true" style="height: 36px; padding: 0 16px; border: 0; border-radius: 9px; background: #FFFFFF; font: 700 14px 'Instrument Sans', sans-serif; color: #161A2E">Tarefas</button>
+      <button type="button" role="tab" aria-selected="false" style="height: 36px; padding: 0 16px; border: 0; border-radius: 9px; background: transparent; font: 600 14px 'Instrument Sans', sans-serif; color: #2B3150">Notas</button>
+      <button type="button" role="tab" aria-selected="false" style="height: 36px; padding: 0 16px; border: 0; border-radius: 9px; background: transparent; font: 600 14px 'Instrument Sans', sans-serif; color: #2B3150">Atividade</button>
+    </div>
+
+    <div style="display: flex; flex-wrap: wrap; gap: 24px; align-items: flex-start">
+      <div style="flex: 999 1 520px; min-width: 0; display: flex; flex-direction: column; gap: 18px">
+        <sc-for list="{{groups}}" as="g" hint-placeholder-count="3">
+          <section style="display: flex; flex-direction: column; gap: 8px">
+            <h2 style="{{g.headStyle}}">{{g.title}} <span style="font-family: 'IBM Plex Mono', monospace; font-weight: 600">{{g.count}}</span></h2>
+            <ul style="list-style: none; margin: 0; padding: 0; background: #FFFFFF; border-radius: 18px; overflow: hidden">
+              <sc-for list="{{g.tasks}}" as="t" hint-placeholder-count="3">
+                <li style="display: flex; align-items: center; gap: 14px; padding: 12px 16px; border-bottom: 1px solid #EEF0F4">
+                  <label style="display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; flex: 0 0 auto"><span style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">Concluir</span><input type="checkbox" style="width: 22px; height: 22px; accent-color: #161A2E; margin: 0"></label>
+                  <span style="display: flex; flex-direction: column; gap: 2px; flex: 1 1 auto; min-width: 0"><span style="font-weight: 700; font-size: 15px">{{t.title}}</span><span style="font-size: 13px; color: #4A5170">{{t.who}}</span></span>
+                  <span style="{{t.chanStyle}}">{{t.channel}}</span>
+                  <span style="{{t.dueStyle}}">{{t.due}}</span>
+                </li>
+              </sc-for>
+            </ul>
+          </section>
+        </sc-for>
+      </div>
+
+      <aside style="flex: 1 1 340px; min-width: 0; max-width: 100%; display: flex; flex-direction: column; gap: 16px">
+        <section style="background: #FFFFFF; border-radius: 20px; padding: 20px; display: flex; flex-direction: column; gap: 12px">
+          <h2 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 700; font-size: 20px">Nota rápida</h2>
+          <label style="display: flex; flex-direction: column; gap: 6px; font-size: 13px; font-weight: 600">Sobre<input type="text" value="Rafael Duarte · Bob" style="height: 44px; padding: 0 14px; border: 1.5px solid #D9DDE6; border-radius: 12px; font: 500 15px 'Instrument Sans', sans-serif; color: #161A2E"></label>
+          <label style="display: flex; flex-direction: column; gap: 6px; font-size: 13px; font-weight: 600">Nota<textarea rows="3" placeholder="O que foi combinado?" style="padding: 12px 14px; border: 1.5px solid #D9DDE6; border-radius: 12px; font: 500 15px/1.5 'Instrument Sans', sans-serif; color: #161A2E; resize: vertical"></textarea></label>
+          <button type="button" style="height: 44px; border: 0; border-radius: 12px; background: #161A2E; color: #FFFFFF; font: 700 15px 'Instrument Sans', sans-serif">Salvar nota</button>
+        </section>
+        <section style="background: #FFFFFF; border-radius: 20px; padding: 20px; display: flex; flex-direction: column; gap: 4px">
+          <h2 style="margin: 0 0 8px; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 700; font-size: 20px">Atividade recente</h2>
+          <sc-for list="{{activity}}" as="a" hint-placeholder-count="5">
+            <div style="display: grid; grid-template-columns: 48px minmax(0, 1fr); gap: 10px; padding: 8px 0; border-top: 1px solid #EEF0F4">
+              <span style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; font-weight: 600; color: #4A5170; padding-top: 2px">{{a.time}}</span>
+              <span style="font-size: 14px; line-height: 1.4"><strong>{{a.who}}</strong> {{a.what}}</span>
+            </div>
+          </sc-for>
+        </section>
+      </aside>
+    </div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#FFC633","options":["#FFC633","#FF8A3D","#7BE0B0","#9CC8FF"]},"$preview":{"width":1440,"height":1000}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const accent = this.props.accent ?? '#FFC633';
+    const I = {hoje:'M3 10h18M7 3v4M17 3v4M5 6h14a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2z',agenda:'M12 7v5l3 2M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18z',clientes:'M16 19v-1a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v1M9.5 10a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM21 19v-1a4 4 0 0 0-3-3.9M16 4.1a3 3 0 0 1 0 5.8',planos:'M4 12a8 8 0 0 1 14-5.3L20 9M20 4v5h-5M20 12a8 8 0 0 1-14 5.3L4 15M4 20v-5h5',pdv:'M3 7h18v10H3zM7 12h.01M17 12h.01M12 9.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5z',estoque:'M21 8 12 3 3 8v8l9 5 9-5zM3 8l9 5 9-5M12 13v8',financeiro:'M3 7h15a3 3 0 0 1 3 3v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2zM3 7l12-4v4M17 13h.01',equipe:'M12 3l2.7 5.5 6 .9-4.4 4.2 1 6-5.3-2.8-5.3 2.8 1-6L3.3 9.4l6-.9z',clinica:'M10 3h4v7h7v4h-7v7h-4v-7H3v-4h7z',comercial:'M3 17l6-6 4 4 8-8M15 7h6v6',insights:'M4 20V10M10 20V4M16 20v-7',config:'M4 6h9M17 6h3M4 12h3M11 12h9M4 18h11M19 18h1M15 4v4M9 10v4M17 16v4'};
+    const N = [['hoje','Hoje','Hoje'],['agenda','Agenda','Agenda'],['clientes','Clientes e pets','Clientes'],['planos','Planos','Planos'],['pdv','PDV','PDV'],['estoque','Estoque','Estoque'],['financeiro','Financeiro','Financeiro'],['equipe','Equipe e comissão','Equipe'],['clinica','Clínica','Clinica'],['comercial','Comercial','Comercial'],['insights','Insights','Insights'],['config','Configurações','Configuracoes']];
+    const ACTIVE = 'clientes';
+    const nav = N.map(([k, label, f]) => ({ label, d: I[k], href: f + '.dc.html', style: 'width: 48px; height: 48px; border-radius: 12px; display: inline-flex; align-items: center; justify-content: center; ' + (k === ACTIVE ? 'background: ' + accent + '; color: #161A2E;' : 'color: #D5D8E5;') }));
+
+    const CH = { WhatsApp: ['#D7F0E0', '#1B6B3E'], Ligação: ['#D6E6FF', '#1A4E9E'], 'E-mail': ['#E8DFFF', '#4E33A3'], Balcão: ['#E3E6ED', '#2B3150'] };
+    const task = (title, who, channel, due, late) => ({
+      title, who, channel, due,
+      chanStyle: 'padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: 700; white-space: nowrap; background: ' + CH[channel][0] + '; color: ' + CH[channel][1],
+      dueStyle: 'font-family: \'IBM Plex Mono\', monospace; font-size: 13px; font-weight: 600; min-width: 64px; text-align: right; color: ' + (late ? '#A61B1B' : '#2B3150')
+    });
+    const head = (c) => 'margin: 0; font-size: 13px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: ' + c;
+    const groups = [
+      { title: 'Atrasados', count: '3', headStyle: head('#A61B1B'), tasks: [
+        task('Cobrar fatura de outubro', 'Rafael Duarte · R$ 480,00', 'WhatsApp', 'há 5 dias', true),
+        task('Confirmar endereço do pet taxi', 'Carla Nogueira · Mel', 'Ligação', 'ontem', true),
+        task('Enviar fotos da tosa', 'Paulo Henrique · Zeus', 'WhatsApp', 'ontem', true)
+      ] },
+      { title: 'Hoje', count: '6', headStyle: head('#161A2E'), tasks: [
+        task('Oferecer renovação do plano', 'Júlia Martins · Amora · última sessão', 'WhatsApp', '14:00'),
+        task('Lembrar penúltimo banho', 'Beatriz Rocha · Nina', 'WhatsApp', '15:00'),
+        task('Pós-atendimento: como ficou a pele?', 'Fernanda Lima · Luna', 'WhatsApp', '17:00')
+      ] },
+      { title: 'Esta semana', count: '9', headStyle: head('#4A5170'), tasks: [
+        task('Retomar plano pausado', 'Sérgio Alves · Kiara', 'Ligação', 'seg 03/11'),
+        task('Pedir avaliação no Google', 'Marcos Pereira · Fred', 'E-mail', 'ter 04/11'),
+        task('Entregar brinde de aniversário', 'Lucas Andrade · Paçoca', 'Balcão', 'qua 05/11')
+      ] }
+    ];
+    const activity = [
+      ['11:12', 'Marina', 'avisou Ana Paula que o Thor está pronto'],
+      ['10:48', 'Diego', 'concluiu o banho da Nina'],
+      ['10:05', 'Marina', 'registrou ligação com Rafael: paga na sexta'],
+      ['09:30', 'Jéssica', 'adicionou nota em Luna: pele irritada no dorso'],
+      ['08:02', 'Marina', 'abriu o caixa']
+    ].map(([time, who, what]) => ({ time, who, what }));
+    return { accent, nav, groups, activity };
+  }
+}
+</script>
+</body>
+</html>

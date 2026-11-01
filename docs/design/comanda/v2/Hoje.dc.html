@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Hoje</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&amp;family=IBM+Plex+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#1C1C1A}a:hover{color:#000000}
+</style>
+</helmet>
+<div style="min-height: 960px; background: #FFFFFF; color: #1C1C1A; font-family: 'IBM Plex Sans', system-ui, sans-serif; font-size: 14px; display: flex; flex-wrap: wrap; align-items: stretch">
+
+  <nav aria-label="Navegação principal" style="flex: 1 1 220px; max-width: 100%; background: #F7F7F5; border-right: 1px solid #E6E6E1; padding: 12px 10px; box-sizing: border-box; display: flex; flex-direction: column; gap: 14px">
+    <button type="button" style="display: flex; align-items: center; gap: 10px; min-height: 44px; padding: 0 8px; border: 0; background: transparent; text-align: left; font: inherit; color: inherit; border-radius: 6px">
+      <span style="width: 24px; height: 24px; border-radius: 5px; background: #1C1C1A; color: #FFFFFF; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 600">PE</span>
+      <span style="display: flex; flex-direction: column; flex: 1 1 auto; line-height: 1.25"><span style="font-weight: 600">Pet Shop Exemplo</span><span style="font-size: 12px; color: #5F5F5A">Unidade Centro</span></span>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#5F5F5A" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="m7 10 5 5 5-5"></path></svg>
+    </button>
+    <button type="button" style="display: flex; align-items: center; gap: 8px; min-height: 36px; padding: 0 10px; border: 1px solid #E0E0DA; background: #FFFFFF; border-radius: 6px; font: inherit; color: #5F5F5A; text-align: left">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg>
+      <span style="flex: 1 1 auto">Buscar pet ou tutor</span>
+      <kbd style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #5F5F5A; border: 1px solid #E0E0DA; border-radius: 4px; padding: 0 4px">/</kbd>
+    </button>
+    <sc-for list="{{groups}}" as="g" hint-placeholder-count="3">
+      <div style="display: flex; flex-direction: column; gap: 1px">
+        <span style="font-size: 12px; color: #6B6B65; padding: 0 10px 4px">{{g.title}}</span>
+        <sc-for list="{{g.items}}" as="i" hint-placeholder-count="4">
+          <a href="{{i.href}}" style="{{i.style}}"><span style="flex: 1 1 auto">{{i.label}}</span><span style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: #5F5F5A">{{i.count}}</span></a>
+        </sc-for>
+      </div>
+    </sc-for>
+    <div style="margin-top: auto; display: flex; flex-direction: column; gap: 1px; border-top: 1px solid #E6E6E1; padding-top: 10px">
+      <a href="../Configuracoes.dc.html" style="display: flex; align-items: center; min-height: 36px; padding: 0 10px; border-radius: 6px; text-decoration: none; color: #3A3A36">Configurações</a>
+      <span style="display: flex; align-items: center; gap: 8px; min-height: 36px; padding: 0 10px; color: #5F5F5A; font-size: 13px">Marina · recepção</span>
+    </div>
+  </nav>
+
+  <main style="flex: 999 1 560px; min-width: 0; display: flex; flex-direction: column">
+    <header style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 12px; padding: 14px 24px; border-bottom: 1px solid #E6E6E1">
+      <div style="display: flex; align-items: baseline; gap: 10px">
+        <h1 style="margin: 0; font-size: 20px; font-weight: 600">Hoje</h1>
+        <span style="color: #5F5F5A">sexta, 31 de outubro</span>
+      </div>
+      <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap">
+        <span style="font-size: 12px; color: #6B6B65; margin-right: 6px">atualizado 10:42</span>
+        <button type="button" style="height: 36px; padding: 0 12px; border: 1px solid #D6D6D0; border-radius: 6px; background: #FFFFFF; font: 500 14px 'IBM Plex Sans', sans-serif; color: #1C1C1A">Imprimir fila</button>
+        <button type="button" style="height: 36px; padding: 0 12px; border: 0; border-radius: 6px; background: #1C1C1A; font: 500 14px 'IBM Plex Sans', sans-serif; color: #FFFFFF; display: inline-flex; align-items: center; gap: 8px">Novo atendimento <kbd style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #C9C9C3">N</kbd></button>
+      </div>
+    </header>
+
+    <dl style="margin: 0; display: flex; flex-wrap: wrap; border-bottom: 1px solid #E6E6E1">
+      <sc-for list="{{stats}}" as="s" hint-placeholder-count="6">
+        <div style="padding: 12px 24px; border-right: 1px solid #EFEFEA; display: flex; flex-direction: column; gap: 2px">
+          <dt style="font-size: 12px; color: #5F5F5A">{{s.label}}</dt>
+          <dd style="margin: 0; font-family: 'IBM Plex Mono', monospace; font-size: 18px; font-weight: 500">{{s.value}}</dd>
+        </div>
+      </sc-for>
+    </dl>
+
+    <section aria-label="Fila do dia" style="overflow-x: auto; padding: 16px 24px 8px">
+      <div style="display: grid; grid-template-columns: 1.15fr 1fr 1fr 1.15fr 0.85fr; gap: 12px; min-width: 1000px; align-items: start">
+        <sc-for list="{{columns}}" as="c" hint-placeholder-count="5">
+          <div style="display: flex; flex-direction: column; gap: 6px">
+            <h2 style="margin: 0 0 4px; font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 6px; padding: 0 2px"><span style="{{c.dot}}"></span>{{c.name}} <span style="font-family: 'IBM Plex Mono', monospace; font-weight: 400; color: #5F5F5A">{{c.count}}</span></h2>
+            <sc-for list="{{c.cards}}" as="t" hint-placeholder-count="2">
+              <a href="../Ficha.dc.html" style="display: flex; flex-direction: column; gap: 3px; padding: 9px 10px; border: 1px solid #E3E3DE; border-radius: 6px; text-decoration: none; color: #1C1C1A; background: #FFFFFF">
+                <span style="display: flex; gap: 8px; align-items: baseline"><span style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: #5F5F5A">{{t.time}}</span><span style="{{t.nameStyle}}">{{t.pet}}</span><span style="font-size: 12px; color: #5F5F5A; margin-left: auto; white-space: nowrap">{{t.flag}}</span></span>
+                <span style="font-size: 13px; color: #3A3A36; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{t.service}}</span>
+                <span style="font-size: 12px; color: #5F5F5A">{{t.meta}}</span>
+                <sc-if value="{{t.ready}}" hint-placeholder-val="{{false}}"><span style="display: flex; justify-content: space-between; align-items: center; margin-top: 4px; padding-top: 6px; border-top: 1px solid #EFEFEA; font-size: 12px"><span style="color: #5F5F5A">{{t.wait}}</span><span style="font-weight: 600; text-decoration: underline">Avisar tutor</span></span></sc-if>
+              </a>
+            </sc-for>
+            <sc-if value="{{c.more}}" hint-placeholder-val="{{false}}"><span style="font-size: 12px; color: #5F5F5A; padding: 4px 2px">{{c.more}}</span></sc-if>
+          </div>
+        </sc-for>
+      </div>
+    </section>
+
+    <div style="display: flex; flex-wrap: wrap; gap: 0; border-top: 1px solid #E6E6E1; margin-top: 16px">
+      <section aria-labelledby="pend-h" style="flex: 2 1 480px; min-width: 0; padding: 16px 24px; border-right: 1px solid #E6E6E1">
+        <h2 id="pend-h" style="margin: 0 0 8px; font-size: 14px; font-weight: 600">Pendências <span style="font-family: 'IBM Plex Mono', monospace; font-weight: 400; color: #5F5F5A">5</span></h2>
+        <sc-for list="{{todo}}" as="p" hint-placeholder-count="5">
+          <div style="display: grid; grid-template-columns: 76px minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 8px 0; border-top: 1px solid #EFEFEA">
+            <span style="font-size: 12px; color: #5F5F5A">{{p.kind}}</span>
+            <span style="min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis"><span style="{{p.titleStyle}}">{{p.title}}</span> <span style="color: #5F5F5A">— {{p.detail}}</span></span>
+            <a href="{{p.href}}" style="font-weight: 500; white-space: nowrap">{{p.action}}</a>
+          </div>
+        </sc-for>
+      </section>
+      <section aria-labelledby="cx-h" style="flex: 1 1 300px; min-width: 0; padding: 16px 24px">
+        <h2 id="cx-h" style="margin: 0 0 8px; font-size: 14px; font-weight: 600">Caixa <span style="font-weight: 400; color: #5F5F5A">aberto 08:02</span></h2>
+        <sc-for list="{{cash}}" as="r" hint-placeholder-count="5">
+          <div style="{{r.rowStyle}}"><span>{{r.label}}</span><span style="font-family: 'IBM Plex Mono', monospace">{{r.value}}</span></div>
+        </sc-for>
+        <a href="PDV.dc.html" style="display: inline-block; margin-top: 10px; font-weight: 500">Abrir PDV</a>
+      </section>
+    </div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"highlight":{"editor":"color","default":"#FFE066","options":["#FFE066","#FFC9A8","#B9F0D2"]},"$preview":{"width":1440,"height":960}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const hl = this.props.highlight ?? '#FFE066';
+    const navItem = (label, href, count, active) => ({
+      label, href, count: count || '',
+      style: 'display: flex; align-items: center; min-height: 36px; padding: 0 10px; border-radius: 6px; text-decoration: none; ' + (active ? 'background: #EAEAE5; color: #1C1C1A; font-weight: 600;' : 'color: #3A3A36;')
+    });
+    const groups = [
+      { title: 'Operação', items: [navItem('Hoje', 'Hoje.dc.html', '14', true), navItem('Agenda', '../Agenda.dc.html'), navItem('PDV', 'PDV.dc.html')] },
+      { title: 'Cadastros', items: [navItem('Clientes', 'Clientes.dc.html', '248'), navItem('Pets', '../Pets.dc.html'), navItem('Serviços', '../Servicos.dc.html'), navItem('Planos', '../Planos.dc.html', '96')] },
+      { title: 'Gestão', items: [navItem('Estoque', '../Estoque.dc.html', '3'), navItem('Financeiro', '../Financeiro.dc.html'), navItem('Equipe', '../Equipe.dc.html'), navItem('Clínica', '../Clinica.dc.html'), navItem('Comercial', '../Comercial.dc.html'), navItem('Relatórios', '../Insights.dc.html')] }
+    ];
+    const stats = [['No dia', '14'], ['Em atendimento', '3'], ['Prontos', '3'], ['Retirados', '4'], ['Previsto', 'R$ 1.247,50'], ['Recebido', 'R$ 640,00']].map(([label, value]) => ({ label, value }));
+    const dot = (c) => 'width: 7px; height: 7px; border-radius: 50%; background: ' + c;
+    const name = (ready) => 'font-weight: 600; font-size: 14px; ' + (ready ? 'background: ' + hl + '; padding: 0 3px; margin: 0 -3px;' : '');
+    const t = (time, pet, service, meta, flag, ready, wait) => ({ time, pet, service, meta, flag: flag || '', ready: !!ready, wait: wait || '', nameStyle: name(ready) });
+    const columns = [
+      { name: 'Aguardando', count: '5', dot: dot('#8A8A84'), more: '+ 1 às 15:30 (Bento)', cards: [
+        t('11:30', 'Mel', 'Banho + tosa na máquina', 'Jéssica · avulso · R$ 95,00'),
+        t('12:00', 'Bob', 'Banho + desembolo', 'Diego · plano 2/4 · R$ 120,00', 'taxi'),
+        t('13:00', 'Bento', 'Banho simples', 'Camila · R$ 60,00'),
+        t('14:00', 'Kiara', 'Tosa da raça (schnauzer) — tutor pediu sobrancelha mais curta', 'Jéssica · R$ 130,00')
+      ] },
+      { name: 'No banho', count: '2', dot: dot('#2F6FD6'), cards: [
+        t('10:00', 'Nina', 'Banho + hidratação', 'Diego · plano 3/4', 'penúlt.'),
+        t('10:30', 'Paçoca', 'Banho simples', 'Diego · avulso · R$ 55,00')
+      ] },
+      { name: 'Na tosa', count: '1', dot: dot('#7350D9'), cards: [
+        t('09:30', 'Luna', 'Tosa bebê + unhas', 'Jéssica · plano 1/4', 'pele sens.')
+      ] },
+      { name: 'Pronto', count: '3', dot: dot('#C79A00'), cards: [
+        t('08:30', 'Thor', 'Banho + tosa higiênica', 'Jéssica · plano 3/4', 'taxi 11:30', true, 'pronto há 42 min'),
+        t('09:00', 'Fred', 'Banho + escovação', 'Diego · R$ 75,00', '', true, 'avisado 10:31'),
+        t('09:00', 'Amora', 'Banho + laço', 'Camila · última do plano', '', true, 'pronto há 8 min')
+      ] },
+      { name: 'Retirado', count: '4', dot: dot('#23894F'), cards: [
+        t('08:00', 'Zeus', 'Banho terapêutico', 'saiu 09:12 · pago Pix'),
+        t('08:00', 'Pipoca', 'Corte de unhas', 'saiu 08:25 · pago cartão')
+      ], more: '+ 2 (Mingau, Tobias)' }
+    ];
+    const strong = 'font-weight: 500';
+    const todo = [
+      ['Cobrança', 'Rafael Duarte', 'R$ 480,00 em atraso há 5 dias', 'Cobrar', '../Cobranca.dc.html'],
+      ['Plano', 'Amora', 'última sessão hoje, sem renovação', 'Renovar', '../Planos.dc.html'],
+      ['Plano', 'Nina', 'penúltimo banho; vence 06/11', 'Lembrar', '../Planos.dc.html'],
+      ['Estoque', 'Shampoo neutro 5 L', '1 un. (repor em 3)', 'Pedir', '../Estoque.dc.html'],
+      ['Estoque', 'Ração Filhote 1 kg', '2 un. (repor em 6)', 'Pedir', '../Estoque.dc.html']
+    ].map(([kind, title, detail, action, href]) => ({ kind, title, detail, action, href, titleStyle: strong }));
+    const cash = [['Dinheiro', 'R$ 110,00'], ['Pix', 'R$ 395,00'], ['Cartão', 'R$ 135,00'], ['Saídas', '− R$ 0,00'], ['Total recebido', 'R$ 640,00']].map(([label, value], i, a) => ({
+      label, value,
+      rowStyle: 'display: flex; justify-content: space-between; padding: 7px 0; border-top: 1px solid #EFEFEA; ' + (i === a.length - 1 ? 'font-weight: 600; border-top: 1px solid #1C1C1A;' : '')
+    }));
+    return { groups, stats, columns, todo, cash };
+  }
+}
+</script>
+</body>
+</html>

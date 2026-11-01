@@ -1,0 +1,229 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Cadastro de pet</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&amp;family=Instrument+Sans:wght@400;500;600;700&amp;family=IBM+Plex+Mono:wght@500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#161A2E}a:hover{color:#3B4160}
+</style>
+</helmet>
+<div style="min-height: 1240px; background: #EFF1F5; color: #161A2E; font-family: 'Instrument Sans', system-ui, sans-serif; display: flex; flex-wrap: wrap; align-items: stretch">
+
+  <nav aria-label="Navegação principal" style="flex: 1 1 76px; max-width: 100%; background: #161A2E; padding: 20px 14px; box-sizing: border-box; display: flex; flex-wrap: wrap; flex-direction: column; align-items: center; gap: 8px">
+    <span style="width: 44px; height: 44px; border-radius: 12px; background: {{accent}}; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 12px">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#161A2E" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"></circle><path d="M5 9h.01M19 9h.01M8 5h.01M16 5h.01"></path><path d="M7 17c1-2.5 3-3.5 5-3.5s4 1 5 3.5c.6 1.5-.6 3-2.2 2.6-1-.2-1.8-.6-2.8-.6s-1.8.4-2.8.6C7.6 20 6.4 18.5 7 17z"></path></svg>
+    </span>
+    <sc-for list="{{nav}}" as="item" hint-placeholder-count="6">
+      <a href="#" aria-label="{{item.label}}" style="{{item.style}}">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{item.d}}"></path></svg>
+      </a>
+    </sc-for>
+  </nav>
+
+  <main style="flex: 999 1 560px; min-width: 0; padding: 28px 32px 48px; box-sizing: border-box; display: flex; flex-direction: column; gap: 24px">
+    <header style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 16px">
+      <div style="display: flex; flex-direction: column; gap: 8px">
+        <nav aria-label="Caminho" style="font-size: 13px; color: #4A5170; display: flex; gap: 6px; flex-wrap: wrap">
+          <a href="#" style="color: #4A5170">Clientes e pets</a><span aria-hidden="true">/</span><a href="#" style="color: #4A5170">Fernanda Lima</a><span aria-hidden="true">/</span><span style="color: #161A2E; font-weight: 600">Novo pet</span>
+        </nav>
+        <h1 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 40px; line-height: 1; letter-spacing: -0.03em">Novo pet</h1>
+      </div>
+      <div style="display: flex; gap: 12px; flex-wrap: wrap">
+        <a href="#" style="height: 44px; padding: 0 18px; border: 1.5px solid #C9CEDA; border-radius: 12px; background: #FFFFFF; color: #161A2E; font-weight: 600; font-size: 15px; display: inline-flex; align-items: center; text-decoration: none; box-sizing: border-box">Cancelar</a>
+        <button type="button" style="height: 44px; padding: 0 20px; border: 0; border-radius: 12px; background: #161A2E; color: #FFFFFF; font: 600 15px 'Instrument Sans', sans-serif">Salvar pet</button>
+      </div>
+    </header>
+
+    <div style="display: flex; flex-wrap: wrap; gap: 24px; align-items: flex-start">
+      <form style="flex: 999 1 520px; min-width: 0; display: flex; flex-direction: column; gap: 16px">
+
+        <fieldset style="border: 0; margin: 0; background: #FFFFFF; border-radius: 20px; padding: 24px; display: flex; flex-direction: column; gap: 18px">
+          <legend style="float: left; padding: 0; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 700; font-size: 21px; letter-spacing: -0.02em">Quem é</legend>
+          <div style="display: flex; flex-wrap: wrap; gap: 20px; align-items: flex-start; clear: both">
+            <button type="button" style="width: 120px; height: 120px; flex: 0 0 auto; border-radius: 22px; border: 2px dashed #C9CEDA; background: #EFF1F5; color: #2B3150; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; font: 600 13px 'Instrument Sans', sans-serif">
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z"></path><circle cx="12" cy="13" r="3.5"></circle></svg>Adicionar foto</button>
+            <div style="flex: 1 1 320px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px">
+              <label style="grid-column: 1 / -1; display: flex; flex-direction: column; gap: 6px; font-size: 13px; font-weight: 600">Nome do pet
+                <input type="text" value="Luna" style="height: 48px; padding: 0 14px; border: 1.5px solid #161A2E; border-radius: 12px; font: 700 20px 'Bricolage Grotesque', sans-serif; color: #161A2E; box-sizing: border-box">
+              </label>
+              <label style="display: flex; flex-direction: column; gap: 6px; font-size: 13px; font-weight: 600">Raça
+                <input type="text" value="Yorkshire Terrier" style="height: 44px; padding: 0 14px; border: 1.5px solid #D9DDE6; border-radius: 12px; font: 500 15px 'Instrument Sans', sans-serif; color: #161A2E; box-sizing: border-box">
+              </label>
+              <label style="display: flex; flex-direction: column; gap: 6px; font-size: 13px; font-weight: 600">Nascimento
+                <input type="text" value="12/03/2022" style="height: 44px; padding: 0 14px; border: 1.5px solid #D9DDE6; border-radius: 12px; font: 600 15px 'IBM Plex Mono', monospace; color: #161A2E; box-sizing: border-box">
+              </label>
+            </div>
+          </div>
+          <div style="display: flex; flex-wrap: wrap; gap: 20px">
+            <sc-for list="{{groupsA}}" as="g" hint-placeholder-count="2">
+              <div role="radiogroup" aria-label="{{g.label}}" style="display: flex; flex-direction: column; gap: 8px">
+                <span style="font-size: 13px; font-weight: 600">{{g.label}}</span>
+                <div style="display: inline-flex; padding: 4px; background: #EFF1F5; border-radius: 12px; gap: 4px">
+                  <sc-for list="{{g.options}}" as="o" hint-placeholder-count="2">
+                    <label style="{{o.style}}"><input type="radio" name="{{g.name}}" checked="{{o.selected}}" style="position: absolute; opacity: 0; width: 1px; height: 1px">{{o.label}}</label>
+                  </sc-for>
+                </div>
+              </div>
+            </sc-for>
+            <label style="display: flex; flex-direction: column; gap: 8px; font-size: 13px; font-weight: 600">Peso
+              <span style="display: inline-flex; align-items: center; height: 44px; border: 1.5px solid #D9DDE6; border-radius: 12px; padding: 0 14px; gap: 6px; box-sizing: border-box; width: 120px">
+                <input type="text" value="3,2" style="border: 0; outline: none; width: 100%; font: 600 15px 'IBM Plex Mono', monospace; color: #161A2E; background: transparent">
+                <span style="font-size: 13px; color: #4A5170">kg</span>
+              </span>
+            </label>
+          </div>
+        </fieldset>
+
+        <fieldset style="border: 0; margin: 0; background: #FFFFFF; border-radius: 20px; padding: 24px; display: flex; flex-direction: column; gap: 18px">
+          <legend style="float: left; padding: 0; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 700; font-size: 21px; letter-spacing: -0.02em">Porte e pelagem</legend>
+          <p style="clear: both; margin: 0; font-size: 14px; color: #4A5170">Define o tempo padrão na agenda e o preço sugerido dos serviços.</p>
+          <div role="radiogroup" aria-label="Porte" style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px">
+            <sc-for list="{{sizes}}" as="s" hint-placeholder-count="4">
+              <label style="{{s.style}}">
+                <input type="radio" name="porte" checked="{{s.selected}}" style="position: absolute; opacity: 0; width: 1px; height: 1px">
+                <span style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 26px; letter-spacing: -0.02em">{{s.code}}</span>
+                <span style="font-size: 13px; font-weight: 600">{{s.range}}</span>
+                <span style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; font-weight: 600">{{s.time}}</span>
+              </label>
+            </sc-for>
+          </div>
+          <sc-for list="{{groupsB}}" as="g" hint-placeholder-count="1">
+            <div role="radiogroup" aria-label="{{g.label}}" style="display: flex; flex-direction: column; gap: 8px">
+              <span style="font-size: 13px; font-weight: 600">{{g.label}}</span>
+              <div style="display: flex; flex-wrap: wrap; gap: 8px">
+                <sc-for list="{{g.options}}" as="o" hint-placeholder-count="4">
+                  <label style="{{o.style}}"><input type="radio" name="{{g.name}}" checked="{{o.selected}}" style="position: absolute; opacity: 0; width: 1px; height: 1px">{{o.label}}</label>
+                </sc-for>
+              </div>
+            </div>
+          </sc-for>
+        </fieldset>
+
+        <fieldset style="border: 0; margin: 0; background: #FFFFFF; border-radius: 20px; padding: 24px; display: flex; flex-direction: column; gap: 18px">
+          <legend style="float: left; padding: 0; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 700; font-size: 21px; letter-spacing: -0.02em">Cuidados na hora do banho</legend>
+          <p style="clear: both; margin: 0; font-size: 14px; color: #4A5170">O que marcar aqui aparece como alerta na comanda e no celular do tosador.</p>
+          <sc-for list="{{flags}}" as="f" hint-placeholder-count="2">
+            <div style="display: flex; flex-direction: column; gap: 8px">
+              <span style="font-size: 13px; font-weight: 600">{{f.label}}</span>
+              <div style="display: flex; flex-wrap: wrap; gap: 8px">
+                <sc-for list="{{f.options}}" as="o" hint-placeholder-count="5">
+                  <label style="{{o.style}}"><input type="checkbox" checked="{{o.selected}}" style="position: absolute; opacity: 0; width: 1px; height: 1px"><sc-if value="{{o.selected}}" hint-placeholder-val="{{false}}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 5 5 9-10"></path></svg></sc-if>{{o.label}}</label>
+                </sc-for>
+              </div>
+            </div>
+          </sc-for>
+          <label style="display: flex; flex-direction: column; gap: 6px; font-size: 13px; font-weight: 600">Observações para a equipe
+            <textarea rows="3" style="padding: 12px 14px; border: 1.5px solid #D9DDE6; border-radius: 12px; font: 500 15px/1.5 'Instrument Sans', sans-serif; color: #161A2E; resize: vertical">Pele sensível: usar shampoo hipoalergênico, sem perfume. Tutora prefere tosa bebê com tesoura no rosto.</textarea>
+          </label>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px">
+            <label style="display: flex; flex-direction: column; gap: 6px; font-size: 13px; font-weight: 600">Vacina V10 · última dose
+              <input type="text" value="02/02/2026" style="height: 44px; padding: 0 14px; border: 1.5px solid #D9DDE6; border-radius: 12px; font: 600 15px 'IBM Plex Mono', monospace; color: #161A2E; box-sizing: border-box">
+            </label>
+            <label style="display: flex; flex-direction: column; gap: 6px; font-size: 13px; font-weight: 600">Antirrábica · última dose
+              <input type="text" value="02/02/2026" style="height: 44px; padding: 0 14px; border: 1.5px solid #D9DDE6; border-radius: 12px; font: 600 15px 'IBM Plex Mono', monospace; color: #161A2E; box-sizing: border-box">
+            </label>
+          </div>
+        </fieldset>
+      </form>
+
+      <aside aria-label="Prévia" style="flex: 1 1 340px; min-width: 0; max-width: 100%; display: flex; flex-direction: column; gap: 16px">
+        <span style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: #4A5170">Assim a Luna aparece na esteira</span>
+        <article style="background: #FFFFFF; border-radius: 18px; padding: 20px; display: flex; flex-direction: column; gap: 12px; position: relative; box-shadow: 0 1px 0 #D9DDE6, 0 18px 34px -24px rgba(22,26,46,.5)">
+          <span aria-hidden="true" style="position: absolute; top: 12px; left: 50%; margin-left: -7px; width: 14px; height: 14px; border-radius: 50%; background: #EFF1F5; box-shadow: inset 0 1px 2px rgba(22,26,46,.25)"></span>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px">
+            <span style="font-family: 'IBM Plex Mono', monospace; font-weight: 600; font-size: 14px">Tempo padrão · 1h30</span>
+            <span style="padding: 3px 9px; border-radius: 6px; border: 1px solid #D9DDE6; font-size: 12px; font-weight: 600; color: #2B3150">Porte P</span>
+          </div>
+          <div style="display: flex; gap: 12px; align-items: center">
+            <span style="width: 52px; height: 52px; border-radius: 15px; background: #E8DFFF; color: #4E33A3; display: inline-flex; align-items: center; justify-content: center; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 24px">L</span>
+            <div style="display: flex; flex-direction: column; gap: 2px">
+              <span style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 26px; letter-spacing: -0.02em; line-height: 1">Luna</span>
+              <span style="font-size: 13px; color: #4A5170">Yorkshire · 4 anos · 3,2 kg</span>
+            </div>
+          </div>
+          <div style="display: flex; gap: 6px; flex-wrap: wrap">
+            <span style="padding: 3px 8px; border-radius: 6px; background: #FFE4D4; font-size: 12px; font-weight: 600; color: #A33A06">Pele sensível</span>
+            <span style="padding: 3px 8px; border-radius: 6px; background: #FFE4D4; font-size: 12px; font-weight: 600; color: #A33A06">Medo de secador</span>
+            <span style="padding: 3px 8px; border-radius: 6px; border: 1px solid #D9DDE6; font-size: 12px; font-weight: 600; color: #2B3150">Pelagem longa</span>
+          </div>
+          <div style="border-top: 1.5px dashed #D9DDE6; padding-top: 12px; display: flex; justify-content: space-between; align-items: center">
+            <span style="font-size: 13px; font-weight: 600">Fernanda Lima</span>
+            <span style="font-family: 'IBM Plex Mono', monospace; font-weight: 600; font-size: 14px">a partir de R$ 70,00</span>
+          </div>
+        </article>
+
+        <section style="background: #FFFFFF; border-radius: 18px; padding: 18px 20px; display: flex; flex-direction: column; gap: 12px">
+          <div style="display: flex; justify-content: space-between; align-items: baseline">
+            <h2 style="margin: 0; font-size: 15px; font-weight: 700">Tutora</h2>
+            <a href="#" style="font-size: 13px; font-weight: 600">Trocar</a>
+          </div>
+          <div style="display: flex; gap: 12px; align-items: center">
+            <span style="width: 40px; height: 40px; border-radius: 50%; background: #E3E6ED; display: inline-flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700">FL</span>
+            <div style="display: flex; flex-direction: column; gap: 2px">
+              <span style="font-size: 15px; font-weight: 600">Fernanda Lima</span>
+              <span style="font-family: 'IBM Plex Mono', monospace; font-size: 13px; color: #4A5170">(11) 9XXXX-XXXX</span>
+            </div>
+          </div>
+          <span style="font-size: 13px; color: #4A5170">Também tutora de <strong style="color: #161A2E">Bento</strong> · Beagle</span>
+        </section>
+
+        <section style="background: #161A2E; color: #FFFFFF; border-radius: 18px; padding: 18px 20px; display: flex; flex-direction: column; gap: 12px">
+          <h2 style="margin: 0; font-size: 15px; font-weight: 700">Depois de salvar</h2>
+          <label style="display: flex; align-items: center; gap: 10px; min-height: 44px; font-size: 14px"><input type="checkbox" checked style="width: 20px; height: 20px; accent-color: {{accent}}; margin: 0">Agendar o primeiro banho</label>
+          <label style="display: flex; align-items: center; gap: 10px; min-height: 44px; font-size: 14px"><input type="checkbox" style="width: 20px; height: 20px; accent-color: {{accent}}; margin: 0">Oferecer plano mensal</label>
+        </section>
+      </aside>
+    </div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#FFC633","options":["#FFC633","#FF8A3D","#7BE0B0","#9CC8FF"]},"$preview":{"width":1440,"height":1240}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const accent = this.props.accent ?? '#FFC633';
+    const icons = [
+      ['Hoje', 'M3 10h18M7 3v4M17 3v4M5 6h14a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2z'],
+      ['Agenda', 'M12 7v5l3 2M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18z'],
+      ['Clientes e pets', 'M16 19v-1a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v1M9.5 10a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM21 19v-1a4 4 0 0 0-3-3.9M16 4.1a3 3 0 0 1 0 5.8', true],
+      ['Planos', 'M4 12a8 8 0 0 1 14-5.3L20 9M20 4v5h-5M20 12a8 8 0 0 1-14 5.3L4 15M4 20v-5h5'],
+      ['PDV', 'M3 7h18v10H3zM7 12h.01M17 12h.01M12 9.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5z'],
+      ['Estoque', 'M21 8 12 3 3 8v8l9 5 9-5zM3 8l9 5 9-5M12 13v8']
+    ];
+    const nav = icons.map(([label, d, active]) => ({
+      label, d,
+      style: 'width: 48px; height: 48px; border-radius: 12px; display: inline-flex; align-items: center; justify-content: center; ' + (active ? 'background: ' + accent + '; color: #161A2E;' : 'color: #D5D8E5;')
+    }));
+    const seg = (sel) => 'position: relative; height: 36px; padding: 0 16px; border-radius: 9px; display: inline-flex; align-items: center; font-size: 14px; cursor: pointer; ' + (sel ? 'background: #FFFFFF; color: #161A2E; font-weight: 700; box-shadow: 0 1px 2px rgba(22,26,46,.15);' : 'color: #2B3150; font-weight: 600;');
+    const chip = (sel) => 'position: relative; min-height: 40px; padding: 0 14px; border-radius: 999px; display: inline-flex; align-items: center; gap: 6px; font-size: 14px; cursor: pointer; box-sizing: border-box; ' + (sel ? 'background: #161A2E; color: #FFFFFF; font-weight: 700; border: 1.5px solid #161A2E;' : 'background: #FFFFFF; color: #2B3150; font-weight: 600; border: 1.5px solid #D9DDE6;');
+    const warn = (sel) => 'position: relative; min-height: 40px; padding: 0 14px; border-radius: 999px; display: inline-flex; align-items: center; gap: 6px; font-size: 14px; cursor: pointer; box-sizing: border-box; ' + (sel ? 'background: #FFE4D4; color: #7A2B04; font-weight: 700; border: 1.5px solid #A33A06;' : 'background: #FFFFFF; color: #2B3150; font-weight: 600; border: 1.5px solid #D9DDE6;');
+    const group = (name, label, opts, picked, styler) => ({
+      name, label, options: opts.map((o) => ({ label: o, selected: picked.includes(o), style: styler(picked.includes(o)) }))
+    });
+    const groupsA = [
+      group('especie', 'Espécie', ['Cão', 'Gato'], ['Cão'], seg),
+      group('sexo', 'Sexo', ['Fêmea', 'Macho'], ['Fêmea'], seg),
+      group('castrado', 'Castrado', ['Sim', 'Não'], ['Sim'], seg)
+    ];
+    const sizes = [['P', 'até 10 kg', '1h30'], ['M', '10 a 20 kg', '2h'], ['G', '20 a 35 kg', '2h30'], ['GG', 'acima de 35 kg', '3h']].map(([code, range, time], i) => ({
+      code, range, time: 'agenda ' + time, selected: i === 0,
+      style: 'position: relative; display: flex; flex-direction: column; gap: 2px; padding: 14px; border-radius: 14px; cursor: pointer; ' + (i === 0 ? 'background: ' + accent + '; color: #161A2E; border: 2px solid #161A2E;' : 'background: #FFFFFF; color: #2B3150; border: 1.5px solid #D9DDE6;')
+    }));
+    const groupsB = [group('pelagem', 'Pelagem', ['Curta', 'Média', 'Longa', 'Dupla', 'Encaracolada'], ['Longa'], chip)];
+    const flags = [
+      { label: 'Saúde', options: ['Pele sensível', 'Alergia', 'Cardíaco', 'Idoso', 'Pós-cirúrgico'].map((o) => ({ label: o, selected: o === 'Pele sensível', style: warn(o === 'Pele sensível') })) },
+      { label: 'Comportamento', options: ['Calmo', 'Agitado', 'Medo de secador', 'Pode morder', 'Não gosta de outros pets'].map((o) => ({ label: o, selected: o === 'Medo de secador', style: warn(o === 'Medo de secador') })) }
+    ];
+    return { accent, nav, groupsA, sizes, groupsB, flags };
+  }
+}
+</script>
+</body>
+</html>
