@@ -6,6 +6,35 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
+        // "Operacional calmo" palette. `slate` and `emerald` are remapped instead of
+        // renamed so the existing utility classes adopt the new look in one place:
+        // slate = warm neutral, emerald = deep pine green (white text >= 4.5:1 from 600 up).
+        slate: {
+          50: '#faf9f7',
+          100: '#f4f2ee',
+          200: '#e7e3dc',
+          300: '#d4cec4',
+          400: '#a8a196',
+          500: '#7a7368',
+          600: '#5c564d',
+          700: '#45403a',
+          800: '#2e2a26',
+          900: '#1f1c19',
+          950: '#141210',
+        },
+        emerald: {
+          50: '#f0f7f3',
+          100: '#dcede3',
+          200: '#bbdcc9',
+          300: '#8fc4a8',
+          400: '#5ea683',
+          500: '#3b8a66',
+          600: '#2b7153',
+          700: '#235a43',
+          800: '#1e4837',
+          900: '#193b2e',
+          950: '#0d2119',
+        },
         background: 'var(--background)',
         foreground: 'var(--foreground)',
         muted: {
@@ -123,7 +152,7 @@ const config: Config = {
       backgroundImage: {
         'pet-gradient': 'linear-gradient(135deg, var(--pet-gradient-start) 0%, var(--pet-gradient-end) 100%)',
         'pet-gradient-radial': 'radial-gradient(ellipse at top, var(--pet-gradient-end) 0%, var(--pet-gradient-start) 100%)',
-        'hero-pattern': 'radial-gradient(circle at 20% 50%, rgba(16, 185, 129, 0.08) 0%, transparent 50%), radial-gradient(circle at 80% 50%, rgba(20, 184, 166, 0.08) 0%, transparent 50%)',
+        'hero-pattern': 'radial-gradient(circle at 20% 50%, rgba(43, 113, 83, 0.06) 0%, transparent 50%)',
       },
       animation: {
         'fade-in': 'fade-in 0.2s ease-out',

@@ -172,14 +172,12 @@ export function PetAppointmentsFilters({
   const statusOptions = buildPetAppointmentStatusOptions(t);
 
   return (
-    <div className="space-y-4">
-      <div className="grid gap-3 xl:grid-cols-[minmax(0,1.45fr)_repeat(2,minmax(0,0.9fr))]">
-        <SearchBar value={searchInput} onChange={onSearchInputChange} placeholder={t.filters.searchPlaceholder} />
+    <div className="space-y-3">
+      <SearchBar value={searchInput} onChange={onSearchInputChange} placeholder={t.filters.searchPlaceholder} />
+
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-[repeat(5,minmax(0,1fr))_auto] xl:items-end">
         <FormSelect label={t.filters.status} value={statusFilter} options={statusOptions} onChange={onStatusFilterChange} />
         <FormSelect label={t.filters.client} value={clientFilterId} options={clientOptions} onChange={onClientFilterIdChange} disabled={clientsLookupUnavailable} />
-      </div>
-
-      <div className="grid gap-3 xl:grid-cols-[repeat(3,minmax(0,1fr))_auto] xl:items-end">
         <FormSelect label={t.filters.pet} value={petFilterId} options={petOptions} onChange={onPetFilterIdChange} disabled={profilesLookupUnavailable} />
         <FormSelect label={t.filters.service} value={serviceFilterId} options={serviceOptions} onChange={onServiceFilterIdChange} disabled={servicesLookupUnavailable} />
         <FormSelect
@@ -189,7 +187,7 @@ export function PetAppointmentsFilters({
           onChange={onProfessionalFilterIdChange}
           disabled={professionalsLookupUnavailable}
         />
-        <div className="flex items-end gap-2 pb-0.5">
+        <div className="flex items-center gap-2 xl:pb-0.5">
           <button
             type="button"
             onClick={onSearch}
@@ -200,18 +198,18 @@ export function PetAppointmentsFilters({
           <button
             type="button"
             onClick={onClear}
-            className="ui-inline-button"
+            className="ui-secondary-button"
           >
             {commonButtons.clear}
           </button>
         </div>
       </div>
 
-      <div className="text-sm text-[color:var(--app-shell-muted)]">
+      <p className="text-xs text-[color:var(--app-shell-muted)]" aria-live="polite">
         {activeFilterCount > 0
           ? `${activeFilterCount} ${t.filters.activeCountSuffix}`
           : t.filters.noActive}
-      </div>
+      </p>
     </div>
   );
 }
