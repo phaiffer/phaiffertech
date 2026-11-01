@@ -14,7 +14,8 @@ const { petServiceMock } = vi.hoisted(() => ({
 }));
 
 vi.mock('next/navigation', () => ({
-  useRouter: () => ({ push: vi.fn() })
+  useRouter: () => ({ push: vi.fn() }),
+  useSearchParams: () => new URLSearchParams(window.location.search)
 }));
 
 vi.mock('@/shared/auth/PermissionGuard', () => ({

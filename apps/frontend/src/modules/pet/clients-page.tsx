@@ -2,7 +2,7 @@
 
 import type { FormEvent, ReactNode } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Search, X } from 'lucide-react';
 import {
@@ -81,12 +81,6 @@ function clientName(client: PetClient) {
   return client.name ?? client.fullName ?? '-';
 }
 
-/** Search term passed by the sidebar "/" search (/pet/clients?search=...). */
-function readInitialSearch() {
-  if (typeof window === 'undefined') return '';
-  return new URLSearchParams(window.location.search).get('search')?.trim() ?? '';
-}
-
 function FormSection({ title, children }: { title: string; children: ReactNode }) {
   return (
     <fieldset className="border-t border-[color:var(--line)] pt-4">
@@ -108,8 +102,16 @@ export function PetClientsPage({ initialView = 'list' }: PetClientsPageProps) {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
-  const [searchInput, setSearchInput] = useState(readInitialSearch);
-  const [search, setSearch] = useState(readInitialSearch);
+  // Search term passed by the sidebar "/" search (/pet/clients?search=...). Read it
+  // reactively: navigating to the same route with a new term does not remount the page.
+  const urlSearch = useSearchParams()?.get('search')?.trim() ?? '';
+  const [searchInput, setSearchInput] = useState(urlSearch);
+  const [search, setSearch] = useState(urlSearch);
+
+  useEffect(() => {
+    setSearchInput(urlSearch);
+    setSearch(urlSearch);
+  }, [urlSearch]);
   const [statusFilter, setStatusFilter] = useState('');
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 

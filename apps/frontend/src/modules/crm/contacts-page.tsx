@@ -153,8 +153,6 @@ export function CrmContactsPage({ surface = 'crm' }: CrmContactsPageProps) {
   const totalItems = resolveTotalItems(pageData);
   const activeFilterCount = [search, statusFilter, companyFilterId].filter(Boolean).length;
   const activeContactsOnPage = rows.filter((contact) => contact.status === 'ACTIVE').length;
-  const contactsWithEmail = rows.filter((contact) => Boolean(contact.email)).length;
-  const contactsWithPhone = rows.filter((contact) => Boolean(contact.phone)).length;
   const availableStatusOptions = isPetSurface ? petStatusOptions : statusOptions;
   const companyOptions = [
     { value: '', label: loadingCompanies ? 'Loading companies...' : 'All companies' },
@@ -163,35 +161,9 @@ export function CrmContactsPage({ surface = 'crm' }: CrmContactsPageProps) {
       label: company.name
     }))
   ];
+  // Comanda v2: the pet surface shows the total in the title; the per-page counts were misleading.
   const summaryCards: DashboardSummaryCard[] = isPetSurface
-    ? [
-      {
-        key: 'support-contacts-in-scope',
-        label: 'Contatos de apoio',
-        value: totalItems,
-        trend: activeFilterCount > 0
-          ? 'Os resultados refletem os filtros ativos deste diretorio.'
-          : 'Base de contatos adicionais disponivel para a operacao da Gestão Pet.'
-      },
-      {
-        key: 'support-contacts-active-on-page',
-        label: 'Ativos na pagina',
-        value: activeContactsOnPage,
-        trend: 'Registros visiveis prontos para apoiar recepcao, cobranca e follow-up.'
-      },
-      {
-        key: 'support-contacts-with-email',
-        label: 'Com e-mail',
-        value: contactsWithEmail,
-        trend: 'Cobertura de contato digital para responsaveis adicionais.'
-      },
-      {
-        key: 'support-contacts-with-phone',
-        label: 'Com telefone',
-        value: contactsWithPhone,
-        trend: 'Cobertura de telefone para recados operacionais e urgencias.'
-      }
-    ]
+    ? []
     : [
       {
         key: 'contacts-in-scope',
@@ -303,6 +275,7 @@ export function CrmContactsPage({ surface = 'crm' }: CrmContactsPageProps) {
         <PageTitle
           eyebrow={isPetSurface ? 'Gestão Pet · Clientes' : 'CRM workspace'}
           title={isPetSurface ? 'Contatos de apoio' : 'CRM Contacts'}
+          count={loading ? undefined : totalItems}
           description={isPetSurface
             ? 'Cadastre responsaveis adicionais, contatos financeiros ou apoios operacionais usados pela base de clientes da Gestão Pet. O contexto de company legado permanece apenas para compatibilidade.'
             : 'Commercial contact management with stronger filtering, clearer account context, and a more demo-ready first-use surface.'}
@@ -318,7 +291,7 @@ export function CrmContactsPage({ surface = 'crm' }: CrmContactsPageProps) {
           )}
         />
 
-        <MetricGrid cards={summaryCards} columns="md:grid-cols-2 xl:grid-cols-4" />
+        {summaryCards.length > 0 ? <MetricGrid cards={summaryCards} columns="md:grid-cols-2 xl:grid-cols-4" /> : null}
 
         <PageSection
           tone="muted"
@@ -435,6 +408,7 @@ export function CrmContactsPage({ surface = 'crm' }: CrmContactsPageProps) {
               page={pageData.page}
               totalPages={pageData.totalPages}
               totalElements={totalItems}
+              pageSize={pageSize}
               onPageChange={(nextPage) => load(nextPage, search, statusFilter, companyFilterId)}
             />
           </div>

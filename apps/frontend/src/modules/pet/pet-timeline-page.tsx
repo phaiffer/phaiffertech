@@ -1,44 +1,21 @@
 'use client';
 
-import type { ReactNode } from 'react';
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import {
-  ArrowLeft,
-  Calendar,
-  ChevronDown,
-  FileText,
-  Filter,
-  PawPrint,
-  Pill,
-  Printer,
-  Stethoscope,
-  Syringe,
-  Clock,
-  AlertTriangle,
-  CheckCircle2,
-  Activity
-} from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import { PetModuleSubnav } from '@/modules/pet/pet-module-subnav';
-import {
-  sharedInputClass,
-  sharedInputLabelClass,
-  sharedInputLeadingAccessoryClass,
-  sharedInputTrailingAccessoryClass,
-  sharedInputWithLeadingAccessoryClass,
-  sharedInputWithTrailingAccessoryClass,
-  sharedPageStackClass
-} from '@/shared/components/public-visual-system';
-import { useAppI18n, useAppMessages, type AppLocale } from '@/shared/i18n/app-i18n-provider';
-import { formatDateForLocale, formatTimeForLocale } from '@/shared/i18n/formatters';
+import { sharedPageStackClass } from '@/shared/components/public-visual-system';
+import { StatusBadge } from '@/shared/dashboard/status-badge';
+import { useAppI18n, useAppMessages } from '@/shared/i18n/app-i18n-provider';
+import { formatCurrencyForLocale, formatDateForLocale, formatTimeForLocale } from '@/shared/i18n/formatters';
 import { resolvePageItems } from '@/shared/lib/pagination';
 import { useFrontendPlatform } from '@/shared/platform/use-frontend-platform';
 import { petService } from '@/shared/services/pet-service';
 import type {
+  PetAppointment,
+  PetClient,
   PetClinicalTimeline,
   PetClinicalTimelineEvent,
-  PetMedicalRecord,
-  PetPrescription,
   PetProfile,
   PetVaccination
 } from '@/shared/types/pet';
@@ -58,313 +35,136 @@ type GroupedEvents = {
   events: PetClinicalTimelineEvent[];
 };
 
+const APPOINTMENTS_LIMIT = 50;
+const DUE_SOON_DAYS = 14;
+const PERIOD_DAYS: Record<string, number> = { week: 7, month: 30, '3months': 90, year: 365 };
+
 function groupEventsByDate(events: PetClinicalTimelineEvent[]): GroupedEvents[] {
   const groups = new Map<string, PetClinicalTimelineEvent[]>();
-
   events.forEach((event) => {
-    const dateKey = new Date(event.occurredAt).toISOString().split('T')[0];
-    const existing = groups.get(dateKey) ?? [];
-    groups.set(dateKey, [...existing, event]);
+    const day = event.occurredAt.slice(0, 10);
+    groups.set(day, [...(groups.get(day) ?? []), event]);
   });
-
-  return Array.from(groups.entries())
-    .map(([date, evts]) => ({ date, events: evts }))
-    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  return Array.from(groups.entries()).map(([date, items]) => ({ date, events: items }));
 }
 
 function addDays(date: Date, days: number) {
-  const result = new Date(date);
-  result.setDate(result.getDate() + days);
-  return result;
+  const next = new Date(date);
+  next.setDate(next.getDate() + days);
+  return next;
 }
 
 function startOfDay(date = new Date()) {
-  return new Date(date.getFullYear(), date.getMonth(), date.getDate(), 0, 0, 0, 0);
+  return new Date(date.getFullYear(), date.getMonth(), date.getDate());
 }
 
-function TimelineStatCard({
-  label,
-  value,
-  icon,
-  tone = 'default'
-}: {
-  label: string;
-  value: string | number;
-  icon: ReactNode;
-  tone?: 'default' | 'accent' | 'success' | 'warning';
-}) {
-  const toneClasses = {
-    default: 'border-slate-200/80 bg-white',
-    accent: 'border-[color:var(--accent)]/20 bg-[color:var(--accent)]/5',
-    success: 'border-emerald-200 bg-emerald-50',
-    warning: 'border-amber-200 bg-amber-50'
-  };
-
-  const iconToneClasses = {
-    default: 'bg-slate-100 text-slate-600',
-    accent: 'bg-[color:var(--accent)]/10 text-[color:var(--accent)]',
-    success: 'bg-emerald-100 text-emerald-600',
-    warning: 'bg-amber-100 text-amber-600'
-  };
-
-  return (
-    <div className={`rounded-2xl border p-4 shadow-sm ${toneClasses[tone]}`}>
-      <div className="flex items-center gap-3">
-        <div className={`flex h-10 w-10 items-center justify-center rounded-xl ${iconToneClasses[tone]}`}>
-          {icon}
-        </div>
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">{label}</p>
-          <p className="text-lg font-bold text-slate-900">{value}</p>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function EventTypeIcon({ type }: { type: string }) {
-  const iconConfig: Record<string, { icon: ReactNode; bgClass: string }> = {
-    MEDICAL_RECORD: {
-      icon: <FileText className="h-5 w-5 text-blue-600" />,
-      bgClass: 'bg-blue-100'
-    },
-    VACCINATION: {
-      icon: <Syringe className="h-5 w-5 text-emerald-600" />,
-      bgClass: 'bg-emerald-100'
-    },
-    PRESCRIPTION: {
-      icon: <Pill className="h-5 w-5 text-purple-600" />,
-      bgClass: 'bg-purple-100'
-    },
-    APPOINTMENT: {
-      icon: <Calendar className="h-5 w-5 text-slate-600" />,
-      bgClass: 'bg-slate-100'
-    }
-  };
-
-  const config = iconConfig[type] ?? {
-    icon: <Activity className="h-5 w-5 text-slate-600" />,
-    bgClass: 'bg-slate-100'
-  };
-
-  return (
-    <div className={`flex h-12 w-12 items-center justify-center rounded-full border-4 border-white shadow-sm ${config.bgClass}`}>
-      {config.icon}
-    </div>
-  );
-}
-
-function EventTypeBadge({ type }: { type: string }) {
-  const t = useAppMessages().petTimeline.events;
-  
-  const config: Record<string, { label: string; className: string }> = {
-    MEDICAL_RECORD: {
-      label: t.medicalRecord,
-      className: 'bg-blue-100 text-blue-800'
-    },
-    VACCINATION: {
-      label: t.vaccination,
-      className: 'bg-emerald-100 text-emerald-800'
-    },
-    PRESCRIPTION: {
-      label: t.prescription,
-      className: 'bg-purple-100 text-purple-800'
-    },
-    APPOINTMENT: {
-      label: t.appointment,
-      className: 'bg-slate-100 text-slate-700'
-    }
-  };
-
-  const typeConfig = config[type] ?? { label: type, className: 'bg-slate-100 text-slate-700' };
-
-  return (
-    <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold uppercase tracking-wide ${typeConfig.className}`}>
-      {typeConfig.label}
-    </span>
-  );
-}
-
-function VaccinationCard({
-  vaccination,
-  locale
-}: {
-  vaccination: PetVaccination;
-  locale: AppLocale;
-}) {
+function vaccineState(vaccination: PetVaccination): 'overdue' | 'dueSoon' | 'ok' {
+  if (!vaccination.nextDueAt) return 'ok';
   const today = startOfDay();
-  const nextDue = vaccination.nextDueAt ? startOfDay(new Date(vaccination.nextDueAt)) : null;
-  const isOverdue = nextDue && nextDue < today;
-  const isDueSoon = nextDue && !isOverdue && nextDue <= addDays(today, 14);
-
-  return (
-    <div className={`rounded-xl border p-4 ${
-      isOverdue
-        ? 'border-red-200 bg-red-50'
-        : isDueSoon
-          ? 'border-amber-200 bg-amber-50'
-          : 'border-slate-200 bg-white'
-    }`}>
-      <div className="flex items-start justify-between gap-3">
-        <div className="flex items-center gap-3">
-          <div className={`flex h-10 w-10 items-center justify-center rounded-xl ${
-            isOverdue ? 'bg-red-100' : isDueSoon ? 'bg-amber-100' : 'bg-emerald-100'
-          }`}>
-            <Syringe className={`h-5 w-5 ${
-              isOverdue ? 'text-red-600' : isDueSoon ? 'text-amber-600' : 'text-emerald-600'
-            }`} />
-          </div>
-          <div>
-            <h4 className="font-semibold text-slate-900">{vaccination.vaccineName}</h4>
-            <p className="text-sm text-slate-600">
-              Aplicada em {formatDateForLocale(locale, vaccination.appliedAt)}
-            </p>
-          </div>
-        </div>
-        {isOverdue ? (
-          <span className="inline-flex items-center gap-1 rounded-full bg-red-100 px-2.5 py-1 text-xs font-medium text-red-700">
-            <AlertTriangle className="h-3 w-3" />
-            Vencida
-          </span>
-        ) : isDueSoon ? (
-          <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2.5 py-1 text-xs font-medium text-amber-700">
-            <Clock className="h-3 w-3" />
-            Vence em breve
-          </span>
-        ) : (
-          <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-medium text-emerald-700">
-            <CheckCircle2 className="h-3 w-3" />
-            Em dia
-          </span>
-        )}
-      </div>
-      {nextDue ? (
-        <p className="mt-3 text-sm text-slate-600">
-          <span className="font-medium">Proxima dose:</span> {formatDateForLocale(locale, vaccination.nextDueAt!)}
-        </p>
-      ) : null}
-      {vaccination.notes ? (
-        <p className="mt-2 text-sm text-slate-500">{vaccination.notes}</p>
-      ) : null}
-    </div>
-  );
+  const nextDue = startOfDay(new Date(vaccination.nextDueAt));
+  if (nextDue < today) return 'overdue';
+  if (nextDue <= addDays(today, DUE_SOON_DAYS)) return 'dueSoon';
+  return 'ok';
 }
 
+// Comanda v2 pet profile (banho e tosa first): pet details, care notes and the pet's
+// appointments. The clinical history (vaccines, records, prescriptions) only shows
+// for users with clinical permissions.
 export function PetTimelinePage({ petId, showSubnav = false }: PetTimelinePageProps) {
   const { locale } = useAppI18n();
   const t = useAppMessages().petTimeline;
+  const copy = useAppMessages().screens.petProfile;
+  const profileCopy = useAppMessages().screens.petProfiles;
   const platform = useFrontendPlatform();
 
   const [pet, setPet] = useState<PetProfile | null>(null);
+  const [owner, setOwner] = useState<PetClient | null>(null);
+  const [appointments, setAppointments] = useState<PetAppointment[]>([]);
   const [timeline, setTimeline] = useState<PetClinicalTimeline | null>(null);
   const [vaccinations, setVaccinations] = useState<PetVaccination[]>([]);
-  const [records, setRecords] = useState<PetMedicalRecord[]>([]);
-  const [prescriptions, setPrescriptions] = useState<PetPrescription[]>([]);
   const [loading, setLoading] = useState(true);
-  const [showFilters, setShowFilters] = useState(false);
-  const [filters, setFilters] = useState<TimelineFilters>({
-    eventType: '',
-    period: ''
-  });
+  const [filters, setFilters] = useState<TimelineFilters>({ eventType: '', period: '' });
 
   const hasPermission = (permission: string) => platform.user?.permissions.includes(permission) ?? false;
   const hasWorkspaceWidePetVisibility =
     platform.workspace.hasFullPlatformVisibility || platform.workspace.canManagePlatformAdministration;
   const canReadProfiles = hasPermission('pet.profile.read') || hasWorkspaceWidePetVisibility;
+  const canReadClients = hasPermission('pet.client.read') || hasWorkspaceWidePetVisibility;
+  const canReadAppointments = hasPermission('pet.appointment.read') || hasWorkspaceWidePetVisibility;
+  const canCreateAppointments = hasPermission('pet.appointment.create') || hasWorkspaceWidePetVisibility;
   const canReadMedicalRecords = hasPermission('pet.medical-record.read') || hasWorkspaceWidePetVisibility;
   const canReadVaccinations = hasPermission('pet.vaccination.read') || hasWorkspaceWidePetVisibility;
   const canReadPrescriptions = hasPermission('pet.prescription.read') || hasWorkspaceWidePetVisibility;
+  const canReadClinical = canReadMedicalRecords || canReadVaccinations || canReadPrescriptions;
 
   useEffect(() => {
-    let active = true;
+    if (!canReadProfiles) {
+      setLoading(false);
+      return;
+    }
 
+    let active = true;
     setLoading(true);
 
     Promise.allSettled([
-      canReadProfiles ? petService.getProfile(petId) : Promise.resolve(null),
-      petService.getClinicalTimeline({ petId, limit: 200 }),
-      canReadVaccinations ? petService.listVaccinations(0, 100, '', { petId }) : Promise.resolve(null),
-      canReadMedicalRecords ? petService.listMedicalRecords(0, 100, '', { petId }) : Promise.resolve(null),
-      canReadPrescriptions ? petService.listPrescriptions(0, 100, '', { petId }) : Promise.resolve(null)
-    ]).then((results) => {
+      petService.getProfile(petId),
+      canReadAppointments
+        ? petService.listAppointments(0, APPOINTMENTS_LIMIT, '', { petId })
+        : Promise.resolve(null),
+      canReadClinical ? petService.getClinicalTimeline({ petId, limit: 200 }) : Promise.resolve(null),
+      canReadVaccinations ? petService.listVaccinations(0, 100, '', { petId }) : Promise.resolve(null)
+    ]).then(async (results) => {
       if (!active) return;
+      const [petResult, appointmentsResult, timelineResult, vaccinationsResult] = results;
 
-      const [petResult, timelineResult, vaccinationsResult, recordsResult, prescriptionsResult] = results;
+      const profile = petResult.status === 'fulfilled' ? petResult.value : null;
+      setPet(profile);
 
-      if (petResult.status === 'fulfilled' && petResult.value) {
-        setPet(petResult.value);
+      if (appointmentsResult.status === 'fulfilled' && appointmentsResult.value) {
+        const items = resolvePageItems(appointmentsResult.value);
+        setAppointments([...items].sort((a, b) => new Date(b.scheduledAt).getTime() - new Date(a.scheduledAt).getTime()));
       }
-
-      if (timelineResult.status === 'fulfilled') {
+      if (timelineResult.status === 'fulfilled' && timelineResult.value) {
         setTimeline(timelineResult.value);
       }
-
       if (vaccinationsResult.status === 'fulfilled' && vaccinationsResult.value) {
         setVaccinations(resolvePageItems(vaccinationsResult.value));
       }
 
-      if (recordsResult.status === 'fulfilled' && recordsResult.value) {
-        setRecords(resolvePageItems(recordsResult.value));
+      if (profile && canReadClients) {
+        try {
+          const client = await petService.getClient(profile.clientId);
+          if (active) setOwner(client);
+        } catch {
+          if (active) setOwner(null);
+        }
       }
 
-      if (prescriptionsResult.status === 'fulfilled' && prescriptionsResult.value) {
-        setPrescriptions(resolvePageItems(prescriptionsResult.value));
-      }
-
-      setLoading(false);
+      if (active) setLoading(false);
     });
 
     return () => {
       active = false;
     };
-  }, [canReadMedicalRecords, canReadPrescriptions, canReadProfiles, canReadVaccinations, petId]);
+  }, [canReadAppointments, canReadClients, canReadClinical, canReadProfiles, canReadVaccinations, petId]);
 
   const filteredEvents = useMemo(() => {
     if (!timeline) return [];
-
     let events = timeline.events;
-
-    // Filter by event type
     if (filters.eventType) {
-      events = events.filter((e) => e.eventType === filters.eventType);
+      events = events.filter((event) => event.eventType === filters.eventType);
     }
-
-    // Filter by period
-    if (filters.period) {
-      const today = startOfDay();
-      let startDate: Date;
-
-      switch (filters.period) {
-        case 'week':
-          startDate = addDays(today, -7);
-          break;
-        case 'month':
-          startDate = addDays(today, -30);
-          break;
-        case '3months':
-          startDate = addDays(today, -90);
-          break;
-        case 'year':
-          startDate = addDays(today, -365);
-          break;
-        default:
-          startDate = new Date(0);
-      }
-
-      events = events.filter((e) => new Date(e.occurredAt) >= startDate);
+    const days = PERIOD_DAYS[filters.period];
+    if (days) {
+      const from = addDays(startOfDay(), -days);
+      events = events.filter((event) => new Date(event.occurredAt) >= from);
     }
-
     return events;
   }, [timeline, filters]);
 
   const groupedEvents = useMemo(() => groupEventsByDate(filteredEvents), [filteredEvents]);
 
-  const lastVisitDate = useMemo(() => {
-    if (!timeline || timeline.events.length === 0) return null;
-    return timeline.events[0].occurredAt;
-  }, [timeline]);
-
-  if (!canReadMedicalRecords && !canReadVaccinations && !canReadPrescriptions) {
+  if (!canReadProfiles) {
     return <div className="ui-notice-warning">{t.noPermission}</div>;
   }
 
@@ -372,7 +172,7 @@ export function PetTimelinePage({ petId, showSubnav = false }: PetTimelinePagePr
     return (
       <div className={sharedPageStackClass}>
         {showSubnav ? <PetModuleSubnav /> : null}
-        <div className="ui-notice-neutral">{t.loading}</div>
+        <p className="text-sm text-[var(--muted)]">{t.loading}</p>
       </div>
     );
   }
@@ -386,297 +186,253 @@ export function PetTimelinePage({ petId, showSubnav = false }: PetTimelinePagePr
     );
   }
 
+  const sexLabel = pet.gender === 'MALE' ? profileCopy.sexMale : pet.gender === 'FEMALE' ? profileCopy.sexFemale : null;
+  const sizeLabels: Record<string, string> = {
+    TOY: profileCopy.sizeToy,
+    SMALL: profileCopy.sizeSmall,
+    MEDIUM: profileCopy.sizeMedium,
+    LARGE: profileCopy.sizeLarge,
+    GIANT: profileCopy.sizeGiant
+  };
+  const sizeLabel = pet.size ? sizeLabels[pet.size] ?? pet.size : null;
+  const details: Array<[string, string | null | undefined, boolean?]> = [
+    [copy.owner, owner?.name ?? owner?.fullName],
+    [copy.sex, sexLabel],
+    [copy.size, sizeLabel],
+    [copy.coat, pet.coatType],
+    [copy.weight, pet.weight !== undefined && pet.weight !== null ? `${pet.weight} kg` : null, true],
+    [copy.birth, pet.birthDate ? formatDateForLocale(locale, pet.birthDate) : null, true],
+    [copy.color, pet.color]
+  ];
+  const careNotes: Array<{ label: string; value?: string; alert: boolean }> = [
+    { label: copy.behavior, value: pet.behavior, alert: true },
+    { label: copy.restrictions, value: pet.restrictions, alert: true },
+    { label: copy.groomingNotes, value: pet.groomingNotes, alert: false }
+  ].filter((note) => Boolean(note.value));
+  const eventTypeLabel: Record<string, string> = {
+    MEDICAL_RECORD: t.events.medicalRecord,
+    VACCINATION: t.events.vaccination,
+    PRESCRIPTION: t.events.prescription,
+    APPOINTMENT: t.events.appointment
+  };
+
   return (
     <div className={sharedPageStackClass}>
       {showSubnav ? <PetModuleSubnav /> : null}
 
-      {/* Header Section */}
-      <section className="rounded-md border border-slate-200/80 bg-white p-6  lg:p-7">
-        <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
-          <div className="max-w-3xl">
-            <Link
-              href="/pet/pets"
-              className="mb-4 inline-flex items-center gap-1.5 text-sm font-medium text-slate-600 hover:text-slate-900"
-            >
-              <ArrowLeft className="h-4 w-4" />
-              {t.backToPets}
-            </Link>
-
-            <div className="flex items-center gap-4">
-              <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-[color:var(--accent)]/10">
-                <PawPrint className="h-8 w-8 text-[color:var(--accent)]" />
-              </div>
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
-                  {t.eyebrow}
-                </p>
-                <h1 className="mt-1 text-3xl font-bold tracking-[-0.04em] text-slate-900">
-                  {pet.name}
-                </h1>
-                <p className="mt-1 text-sm text-slate-600">
-                  {pet.species} {pet.breed ? `· ${pet.breed}` : ''} {pet.gender ? `· ${pet.gender}` : ''}
-                </p>
-              </div>
-            </div>
-
-            <p className="mt-4 text-sm leading-7 text-slate-600">{t.description}</p>
-          </div>
-
-          <div className="flex flex-wrap items-center gap-3">
-            <button
-              type="button"
-              onClick={() => setShowFilters(!showFilters)}
-              className={`inline-flex items-center gap-2 rounded-xl border px-4 py-3 text-sm font-medium transition-colors ${
-                showFilters
-                  ? 'border-[color:var(--accent)] bg-[color:var(--accent)]/5 text-[color:var(--accent)]'
-                  : 'border-slate-200 text-slate-700 hover:border-slate-300'
-              }`}
-            >
-              <Filter className="h-4 w-4" />
-              {t.filters.title}
-              <ChevronDown className={`h-4 w-4 transition-transform ${showFilters ? 'rotate-180' : ''}`} />
-            </button>
-            <button
-              type="button"
-              className="inline-flex items-center gap-2 rounded-xl border border-slate-200 px-4 py-3 text-sm font-medium text-slate-700 transition-colors hover:border-slate-300"
-            >
-              <Printer className="h-4 w-4" />
-              {t.actions.printHistory}
-            </button>
-          </div>
+      <header className="flex flex-wrap items-start justify-between gap-3">
+        <div className="min-w-0">
+          <Link href="/pet/pets" className="inline-flex items-center gap-1 text-sm text-[var(--ink-2)] hover:text-[var(--ink)]">
+            <ArrowLeft className="h-3.5 w-3.5" aria-hidden="true" />
+            {t.backToPets}
+          </Link>
+          <h1 className="mt-1 text-xl font-semibold text-[var(--ink)]">{pet.name}</h1>
+          <p className="text-sm text-[var(--muted)]">{[pet.species, pet.breed].filter(Boolean).join(' · ')}</p>
         </div>
-      </section>
-
-      {/* Filters Panel */}
-      {showFilters ? (
-        <section className="rounded-md border border-slate-200/80 bg-white p-6 ">
-          <div className="grid gap-4 md:grid-cols-2">
-            <div>
-              <label htmlFor="type-filter" className={sharedInputLabelClass}>
-                Tipo de evento
-              </label>
-              <div className="relative">
-                <span className={sharedInputLeadingAccessoryClass}>
-                  <Activity className="h-4 w-4" />
-                </span>
-                <select
-                  id="type-filter"
-                  value={filters.eventType}
-                  onChange={(e) => setFilters((f) => ({ ...f, eventType: e.target.value }))}
-                  className={`${sharedInputClass} ${sharedInputWithLeadingAccessoryClass} ${sharedInputWithTrailingAccessoryClass}`}
-                >
-                  <option value="">{t.filters.allTypes}</option>
-                  <option value="MEDICAL_RECORD">{t.events.medicalRecord}</option>
-                  <option value="VACCINATION">{t.events.vaccination}</option>
-                  <option value="PRESCRIPTION">{t.events.prescription}</option>
-                </select>
-                <span className={sharedInputTrailingAccessoryClass}>
-                  <ChevronDown className="h-4 w-4" />
-                </span>
-              </div>
-            </div>
-
-            <div>
-              <label htmlFor="period-filter" className={sharedInputLabelClass}>
-                {t.filters.period}
-              </label>
-              <div className="relative">
-                <span className={sharedInputLeadingAccessoryClass}>
-                  <Calendar className="h-4 w-4" />
-                </span>
-                <select
-                  id="period-filter"
-                  value={filters.period}
-                  onChange={(e) => setFilters((f) => ({ ...f, period: e.target.value }))}
-                  className={`${sharedInputClass} ${sharedInputWithLeadingAccessoryClass} ${sharedInputWithTrailingAccessoryClass}`}
-                >
-                  <option value="">{t.filters.allTime}</option>
-                  <option value="week">{t.filters.lastWeek}</option>
-                  <option value="month">{t.filters.lastMonth}</option>
-                  <option value="3months">{t.filters.last3Months}</option>
-                  <option value="year">{t.filters.lastYear}</option>
-                </select>
-                <span className={sharedInputTrailingAccessoryClass}>
-                  <ChevronDown className="h-4 w-4" />
-                </span>
-              </div>
-            </div>
-          </div>
-
-          {(filters.eventType || filters.period) ? (
-            <div className="mt-4 flex items-center justify-between border-t border-slate-100 pt-4">
-              <p className="text-sm text-slate-600">
-                <span className="font-medium">{filteredEvents.length}</span> evento(s) encontrado(s)
-              </p>
-              <button
-                type="button"
-                onClick={() => setFilters({ eventType: '', period: '' })}
-                className="text-sm font-medium text-[color:var(--accent)] hover:underline"
-              >
-                Limpar filtros
-              </button>
-            </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <button type="button" onClick={() => window.print()} className="ui-secondary-button">
+            {copy.print}
+          </button>
+          {canCreateAppointments ? (
+            <Link href="/pet/appointments?novo=1" className="ui-primary-button">
+              {copy.schedule}
+            </Link>
           ) : null}
-        </section>
-      ) : null}
+        </div>
+      </header>
 
-      {/* Stats Cards */}
-      <div className="grid gap-4 md:grid-cols-5">
-        <TimelineStatCard
-          label={t.stats.totalEvents}
-          value={timeline?.totalEvents ?? 0}
-          icon={<Activity className="h-5 w-5" />}
-          tone="accent"
-        />
-        <TimelineStatCard
-          label={t.stats.vaccinations}
-          value={vaccinations.length}
-          icon={<Syringe className="h-5 w-5" />}
-          tone="success"
-        />
-        <TimelineStatCard
-          label={t.stats.records}
-          value={records.length}
-          icon={<FileText className="h-5 w-5" />}
-        />
-        <TimelineStatCard
-          label={t.stats.prescriptions}
-          value={prescriptions.length}
-          icon={<Pill className="h-5 w-5" />}
-        />
-        <TimelineStatCard
-          label={t.stats.lastVisit}
-          value={lastVisitDate ? formatDateForLocale(locale, lastVisitDate, '', { day: '2-digit', month: 'short' }) : '-'}
-          icon={<Calendar className="h-5 w-5" />}
-        />
-      </div>
+      <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_320px]">
+        <div className="min-w-0 space-y-5">
+          {/* Appointments of this pet */}
+          {canReadAppointments ? (
+            <section aria-labelledby="pet-appointments-title">
+              <h2 id="pet-appointments-title" className="mb-2 text-sm font-semibold text-[var(--ink)]">
+                {copy.appointments} <span className="ui-mono font-normal text-[var(--muted)]">{appointments.length}</span>
+              </h2>
+              {appointments.length === 0 ? (
+                <p className="text-sm text-[var(--muted)]">{copy.appointmentsEmpty}</p>
+              ) : (
+                <div className="overflow-x-auto rounded-md border border-[color:var(--line)]">
+                  <table className="min-w-full text-sm">
+                    <thead className="bg-[var(--bg-row)] text-left text-xs text-[var(--muted)]">
+                      <tr className="border-b border-[color:var(--line)]">
+                        <th scope="col" className="h-9 px-3 font-medium">{copy.colDate}</th>
+                        <th scope="col" className="h-9 px-3 font-medium">{copy.colService}</th>
+                        <th scope="col" className="h-9 px-3 font-medium">{copy.colProfessional}</th>
+                        <th scope="col" className="h-9 px-3 font-medium">{copy.colStatus}</th>
+                        <th scope="col" className="h-9 px-3 text-right font-medium">{copy.colAmount}</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {appointments.map((appointment) => {
+                        const amount = appointment.finalAmountDue ?? appointment.servicePrice;
+                        return (
+                          <tr key={appointment.id} className="border-b border-[color:var(--line-soft)] last:border-b-0">
+                            <td className="ui-mono h-10 whitespace-nowrap px-3">
+                              {formatDateForLocale(locale, appointment.scheduledAt)} {formatTimeForLocale(locale, appointment.scheduledAt)}
+                            </td>
+                            <td className="max-w-[16rem] truncate px-3">{appointment.serviceName}</td>
+                            <td className="px-3">{appointment.professionalName ?? '-'}</td>
+                            <td className="px-3"><StatusBadge status={appointment.status} /></td>
+                            <td className="ui-mono px-3 text-right">{amount ? formatCurrencyForLocale(locale, amount) : '-'}</td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </section>
+          ) : null}
 
-      {/* Vaccination Card Section */}
-      {vaccinations.length > 0 ? (
-        <section className="rounded-md border border-slate-200/80 bg-white p-6  lg:p-7">
-          <div className="mb-6 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-100">
-                <Syringe className="h-5 w-5 text-emerald-600" />
+          {/* Clinical history: only for users with clinical permissions */}
+          {canReadClinical ? (
+            <section aria-labelledby="pet-clinical-title" className="border-t border-[color:var(--line)] pt-4">
+              <div className="mb-2 flex flex-wrap items-center gap-2">
+                <h2 id="pet-clinical-title" className="mr-auto text-sm font-semibold text-[var(--ink)]">
+                  {copy.clinical}{' '}
+                  <span className="ui-mono font-normal text-[var(--muted)]">
+                    {copy.eventsCount.replace('{n}', String(filteredEvents.length))}
+                  </span>
+                </h2>
+                <label className="ui-filter-chip" data-active={filters.eventType ? 'true' : 'false'}>
+                  <span>{copy.eventType}</span>
+                  <select
+                    value={filters.eventType}
+                    onChange={(event) => setFilters((current) => ({ ...current, eventType: event.target.value }))}
+                    className="bg-transparent font-medium text-[var(--ink)] outline-none"
+                  >
+                    <option value="">{t.filters.allTypes}</option>
+                    <option value="MEDICAL_RECORD">{t.events.medicalRecord}</option>
+                    <option value="VACCINATION">{t.events.vaccination}</option>
+                    <option value="PRESCRIPTION">{t.events.prescription}</option>
+                  </select>
+                </label>
+                <label className="ui-filter-chip" data-active={filters.period ? 'true' : 'false'}>
+                  <span>{t.filters.period}</span>
+                  <select
+                    value={filters.period}
+                    onChange={(event) => setFilters((current) => ({ ...current, period: event.target.value }))}
+                    className="bg-transparent font-medium text-[var(--ink)] outline-none"
+                  >
+                    <option value="">{t.filters.allTime}</option>
+                    <option value="week">{t.filters.lastWeek}</option>
+                    <option value="month">{t.filters.lastMonth}</option>
+                    <option value="3months">{t.filters.last3Months}</option>
+                    <option value="year">{t.filters.lastYear}</option>
+                  </select>
+                </label>
+                {filters.eventType || filters.period ? (
+                  <button
+                    type="button"
+                    onClick={() => setFilters({ eventType: '', period: '' })}
+                    className="text-sm text-[var(--ink-2)] underline-offset-2 hover:underline"
+                  >
+                    {copy.clearFilters}
+                  </button>
+                ) : null}
               </div>
-              <div>
-                <h2 className="text-lg font-semibold text-slate-900">{t.sections.vaccinations}</h2>
-                <p className="text-sm text-slate-600">{vaccinations.length} vacinas registradas</p>
-              </div>
-            </div>
-            <Link
-              href="/pet/appointments"
-              className="text-sm font-medium text-[color:var(--accent)] hover:underline"
-            >
-              {t.actions.addVaccine}
-            </Link>
-          </div>
 
-          <div className="grid gap-4 md:grid-cols-2">
-            {vaccinations.slice(0, 4).map((v) => (
-              <VaccinationCard key={v.id} vaccination={v} locale={locale} />
-            ))}
-          </div>
-        </section>
-      ) : null}
-
-      {/* Timeline Section */}
-      <section className="rounded-md border border-slate-200/80 bg-white p-6  lg:p-7">
-        <div className="mb-6 flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100">
-            <Clock className="h-5 w-5 text-slate-600" />
-          </div>
-          <div>
-            <h2 className="text-lg font-semibold text-slate-900">{t.title}</h2>
-            <p className="text-sm text-slate-600">{t.description}</p>
-          </div>
+              {groupedEvents.length === 0 ? (
+                <p className="text-sm text-[var(--muted)]">{t.events.empty}</p>
+              ) : (
+                <ol>
+                  {groupedEvents.map((group) => (
+                    <li key={group.date} className="border-t border-[color:var(--line-soft)] py-2">
+                      <h3 className="ui-mono text-xs text-[var(--muted)]">{formatDateForLocale(locale, group.date)}</h3>
+                      <ul>
+                        {group.events.map((event) => (
+                          <li key={event.eventId} className="grid grid-cols-[56px_minmax(0,1fr)] gap-3 py-1.5">
+                            <span className="ui-mono text-xs text-[var(--muted)]">{formatTimeForLocale(locale, event.occurredAt)}</span>
+                            <div className="min-w-0">
+                              <p className="text-sm">
+                                <span className="text-xs text-[var(--muted)]">{eventTypeLabel[event.eventType] ?? event.eventType}</span>{' '}
+                                <span className="font-medium text-[var(--ink)]">{event.title}</span>
+                              </p>
+                              {event.summary ? <p className="text-sm text-[var(--ink-2)]">{event.summary}</p> : null}
+                              {event.professionalName || event.appointmentServiceName ? (
+                                <p className="text-xs text-[var(--muted)]">
+                                  {[event.professionalName, event.appointmentServiceName].filter(Boolean).join(' · ')}
+                                </p>
+                              ) : null}
+                            </div>
+                          </li>
+                        ))}
+                      </ul>
+                    </li>
+                  ))}
+                </ol>
+              )}
+            </section>
+          ) : null}
         </div>
 
-        {groupedEvents.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50/50 py-12 text-center">
-            <Activity className="mx-auto mb-3 h-12 w-12 text-slate-400" />
-            <h3 className="text-base font-semibold text-slate-900">{t.events.empty}</h3>
-            <p className="mt-2 text-sm text-slate-600">{t.events.emptyDescription}</p>
-          </div>
-        ) : (
-          <div className="space-y-8">
-            {groupedEvents.map((group) => (
-              <div key={group.date} className="relative">
-                {/* Date Header */}
-                <div className="sticky top-4 z-10 mb-6">
-                  <div className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 shadow-sm">
-                    <Calendar className="h-4 w-4 text-slate-500" />
-                    <span className="text-sm font-semibold text-slate-900">
-                      {formatDateForLocale(locale, group.date)}
-                    </span>
-                    <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600">
-                      {group.events.length} evento(s)
-                    </span>
-                  </div>
+        <aside className="space-y-5">
+          <section aria-labelledby="pet-details-title">
+            <h2 id="pet-details-title" className="mb-2 text-sm font-semibold text-[var(--ink)]">{copy.details}</h2>
+            <dl className="text-sm">
+              {details.map(([label, value, mono]) => (
+                <div key={label} className="flex justify-between gap-3 border-t border-[color:var(--line-soft)] py-1.5">
+                  <dt className="text-[var(--muted)]">{label}</dt>
+                  <dd className={`text-right ${mono ? 'ui-mono' : ''} ${value ? 'text-[var(--ink)]' : 'text-[var(--faint)]'}`}>
+                    {value || copy.notInformed}
+                  </dd>
                 </div>
+              ))}
+            </dl>
+          </section>
 
-                {/* Events */}
-                <div className="relative ml-6 border-l-2 border-slate-200 pl-8">
-                  <div className="space-y-6">
-                    {group.events.map((event) => (
-                      <div key={event.eventId} className="relative">
-                        {/* Timeline Dot */}
-                        <div className="absolute -left-[52px] top-0">
-                          <EventTypeIcon type={event.eventType} />
-                        </div>
+          <section aria-labelledby="pet-care-title">
+            <h2 id="pet-care-title" className="mb-2 text-sm font-semibold text-[var(--ink)]">{copy.care}</h2>
+            {careNotes.length === 0 ? (
+              <p className="text-sm text-[var(--muted)]">{copy.noCareNotes}</p>
+            ) : (
+              <dl className="text-sm">
+                {careNotes.map((note) => (
+                  <div key={note.label} className="border-t border-[color:var(--line-soft)] py-1.5">
+                    <dt className="text-xs text-[var(--muted)]">{note.label}</dt>
+                    <dd className={note.alert ? 'text-[var(--warn)]' : 'text-[var(--ink)]'}>{note.value}</dd>
+                  </div>
+                ))}
+              </dl>
+            )}
+          </section>
 
-                        {/* Event Card */}
-                        <div className="rounded-2xl border border-slate-200 bg-white p-5  transition-shadow ">
-                          <div className="flex flex-wrap items-center gap-3">
-                            <EventTypeBadge type={event.eventType} />
-                            <span className="text-sm font-medium text-slate-900">
-                              {formatTimeForLocale(locale, event.occurredAt)}
-                            </span>
-                          </div>
-
-                          <h3 className="mt-3 text-base font-semibold text-slate-900">
-                            {event.title}
-                          </h3>
-
-                          {event.summary ? (
-                            <p className="mt-2 text-sm leading-relaxed text-slate-600">
-                              {event.summary}
-                            </p>
-                          ) : null}
-
-                          <div className="mt-4 flex flex-wrap items-center gap-4 border-t border-slate-100 pt-4">
-                            {event.professionalName ? (
-                              <div className="flex items-center gap-2">
-                                <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-slate-100">
-                                  <Stethoscope className="h-3.5 w-3.5 text-slate-600" />
-                                </div>
-                                <span className="text-sm font-medium text-slate-700">
-                                  {event.professionalName}
-                                </span>
-                              </div>
-                            ) : null}
-
-                            {event.appointmentServiceName ? (
-                              <div className="flex items-center gap-2">
-                                <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-slate-100">
-                                  <Calendar className="h-3.5 w-3.5 text-slate-600" />
-                                </div>
-                                <span className="text-sm text-slate-600">
-                                  {event.appointmentServiceName}
-                                </span>
-                              </div>
-                            ) : null}
-                          </div>
-                        </div>
+          {canReadVaccinations && vaccinations.length > 0 ? (
+            <section aria-labelledby="pet-vaccines-title">
+              <h2 id="pet-vaccines-title" className="mb-2 text-sm font-semibold text-[var(--ink)]">
+                {copy.vaccines} <span className="ui-mono font-normal text-[var(--muted)]">{vaccinations.length}</span>
+              </h2>
+              <ul>
+                {vaccinations.map((vaccination) => {
+                  const state = vaccineState(vaccination);
+                  return (
+                    <li key={vaccination.id} className="border-t border-[color:var(--line-soft)] py-2 text-sm">
+                      <div className="flex items-baseline justify-between gap-2">
+                        <span className="font-medium text-[var(--ink)]">{vaccination.vaccineName}</span>
+                        <span className="inline-flex items-center gap-1.5 whitespace-nowrap text-[13px] text-[var(--ink-2)]">
+                          <span
+                            className="ui-status-dot"
+                            data-status={state === 'overdue' ? 'danger' : state === 'dueSoon' ? 'warn' : 'done'}
+                            aria-hidden="true"
+                          />
+                          {state === 'overdue' ? copy.vaccineOverdue : state === 'dueSoon' ? copy.vaccineDueSoon : copy.vaccineUpToDate}
+                        </span>
                       </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </section>
+                      <p className="text-xs text-[var(--muted)]">
+                        {copy.vaccineApplied.replace('{date}', formatDateForLocale(locale, vaccination.appliedAt))}
+                        {vaccination.nextDueAt
+                          ? ` · ${copy.vaccineNextDose.replace('{date}', formatDateForLocale(locale, vaccination.nextDueAt))}`
+                          : ''}
+                      </p>
+                    </li>
+                  );
+                })}
+              </ul>
+            </section>
+          ) : null}
+        </aside>
+      </div>
     </div>
   );
 }
