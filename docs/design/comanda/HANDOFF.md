@@ -14,8 +14,8 @@ Os protótipos de referência estão nesta pasta (`*.dc.html`; a direção visua
 | --- | --- | --- | --- |
 | 1 | Fundação: tokens, fontes, primitivos, menu lateral e app shell | Concluída | #100 |
 | 2 | Operação: Hoje, Agenda, PDV (com atalhos) | Concluída | #101 |
-| 3 | Cadastros: Clientes, cadastro de cliente, Contatos, Pets, cadastro de pet, Perfil do pet | **Próxima** | |
-| 4 | Operação de serviço: Serviços, Planos, Follow-up, Equipe, Fechamento | Pendente | |
+| 3 | Cadastros: Clientes, cadastro de cliente, Contatos, Pets, cadastro de pet, Perfil do pet | Concluída | #103 |
+| 4 | Operação de serviço: Serviços, Planos, Follow-up, Equipe, Fechamento | **Próxima** | |
 | 5 | Dinheiro e estoque: Estoque/Produtos, Financeiro, Caixa, Cobrança | Pendente | |
 | 6 | Clínica, Comercial e Insights | Pendente | |
 | 7 | Conta e admin: Login, Esqueci/Redefinir senha, Configurações, Usuários, Ambientes | Pendente | |
@@ -72,14 +72,13 @@ Depois da fase 7, o próximo trabalho combinado com o dono do projeto é o **Pro
 - Dados de exemplo do seed do backend têm palavras sem acento ("Pastor Alemao", "Shampoo hipoalergenico"); é dado, não texto de tela.
 - O PDV **não registra vendas** (checkout simulado desde antes do redesign; a tela avisa). Não "consertar" dentro do redesign sem combinar com o dono: é funcionalidade nova.
 
-## Próximo passo concreto: fase 3 (Cadastros)
+## Próximo passo concreto: fase 4 (Operação de serviço)
 
-Referências: `v2/Clientes.dc.html` (direção visual), `Contatos.dc.html`, `Pets.dc.html`, `PetPerfil.dc.html`, `Ficha.dc.html` (versão celular). Componentes: `src/modules/pet/clients-page.tsx`, `client-support-contacts-page.tsx`, `client-support-contact-form-page.tsx`, `pet-profiles-page.tsx`, `pet-timeline-page.tsx`.
+Referências: `Servicos.dc.html`, `Planos.dc.html`, `FollowUp.dc.html`, `Equipe.dc.html`, `Fechamento.dc.html` (siga a direção visual de `v2/Clientes.dc.html`). Componentes: `src/modules/pet/pet-services-page.tsx`, `pet-plans-page.tsx`, `pet-follow-up-page.tsx`, `pet-professionals-page.tsx`, `pet-commission-summary-page.tsx`.
 
-- Clientes: tabela densa com contagem no título, filtros como `.ui-filter-chip`, seleção em lote com barra de ações (só ações que já existem), paginação com `pageSize`.
-- Ligar a busca `/` do menu lateral à tela de Clientes: o menu navega para `/pet/clients?search=termo` e a tela passa a ler o parâmetro (hoje ela não lê). Registrar no GAPS que a busca unificada de pet e tutor depende do backend.
-- Formulários de cliente e pet: campos com `<label>`, estados de erro e de carregamento, sem cartões decorativos.
-- Perfil do pet: dados do pet + linha do tempo, sem gradientes nem pílulas pastel.
+- Mesmo padrão da fase 3 (ver `clients-page.tsx` e `pet-profiles-page.tsx`): contagem no título (`PageTitle count`), `DataTable` densa, filtros como `.ui-filter-chip`, `Pagination` com `pageSize`, formulários em `FormSection` com `<label>`, datas com `formatDateForLocale`.
+- Remover cartões de métrica que contam só a página atual ou mostram números fixos; registrar no GAPS o que o design pede e a API não dá.
+- Textos novos nos catálogos `screens-pt-br.ts` / `screens-en-us.ts`; testes rodam em en-US.
 
 ## Depois do redesign: Projeto de Aplicação (PUCPR)
 

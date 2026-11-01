@@ -1,19 +1,17 @@
 'use client';
 
-import type { FormEvent } from 'react';
+import type { FormEvent, ReactNode } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { CalendarDays, PawPrint, Users } from 'lucide-react';
+import { Search, X } from 'lucide-react';
 import {
-  sharedCompactTextClass,
-  sharedFilterToolbarClass,
   sharedFormActionsClass,
   sharedInlineActionsClass,
-  sharedPageStackClass,
-  sharedSummaryCardClass,
-  sharedSummaryCardLabelClass
+  sharedPageStackClass
 } from '@/shared/components/public-visual-system';
+import { formatDateForLocale } from '@/shared/i18n/formatters';
+import type { AppLocale } from '@/shared/i18n/app-i18n-provider';
 import { PermissionGuard } from '@/shared/auth/PermissionGuard';
 import { ApiClientError } from '@/shared/lib/http';
 import { resolvePageItems, resolveTotalItems } from '@/shared/lib/pagination';
@@ -24,11 +22,9 @@ import { ConfirmDialog } from '@/shared/ui/confirm-dialog';
 import { DataTable, type DataTableColumn } from '@/shared/ui/data-table';
 import { FormInput } from '@/shared/ui/form-input';
 import { FormSelect } from '@/shared/ui/form-select';
-import { PageSection } from '@/shared/ui/page-section';
 import { PageTitle } from '@/shared/ui/page-title';
 import { Pagination } from '@/shared/ui/pagination';
-import { SearchBar } from '@/shared/ui/search-bar';
-import { useAppMessages } from '@/shared/i18n/app-i18n-provider';
+import { useAppI18n, useAppMessages } from '@/shared/i18n/app-i18n-provider';
 import type { AppMessages } from '@/shared/i18n/messages/pt-br';
 import { resolveApiErrorMessage } from '@/shared/lib/api-error-message';
 
@@ -36,7 +32,7 @@ type PetProfilesPageProps = {
   initialView?: 'list' | 'create';
 };
 
-const pageSize = 10;
+const pageSize = 14;
 
 const initialPage: PageResponse<PetProfile> = {
   items: [],
@@ -74,16 +70,26 @@ function resolveSizeLabel(copy: PetProfilesCopy, size?: string | null): string |
   return buildSizeOptions(copy).find((option) => option.value === size)?.label ?? size;
 }
 
-function formatDate(copy: AppMessages['screens']['petProfiles'], value?: string) {
+function formatDate(copy: PetProfilesCopy, locale: AppLocale, value?: string) {
   if (!value) {
     return copy.notProvided;
   }
 
-  return new Intl.DateTimeFormat('pt-BR', { dateStyle: 'short' }).format(new Date(value));
+  return formatDateForLocale(locale, value);
+}
+
+function FormSection({ title, children }: { title: string; children: ReactNode }) {
+  return (
+    <fieldset className="border-t border-[color:var(--line)] pt-4">
+      <legend className="pr-2 text-sm font-semibold text-[var(--ink)]">{title}</legend>
+      <div className="mt-2 grid gap-4 md:grid-cols-2">{children}</div>
+    </fieldset>
+  );
 }
 
 export function PetProfilesPage({ initialView = 'list' }: PetProfilesPageProps) {
   const copy = useAppMessages().screens.petProfiles;
+  const { locale } = useAppI18n();
   const router = useRouter();
   const isCreateRoute = initialView === 'create';
 
@@ -310,23 +316,22 @@ export function PetProfilesPage({ initialView = 'list' }: PetProfilesPageProps) 
 
   const rows = resolvePageItems(pageData);
   const totalItems = resolveTotalItems(pageData);
-  const activeFilterCount = [search, clientFilterId].filter(Boolean).length;
-  const linkedClientsCount = new Set(rows.map((profile) => profile.clientId)).size;
-  const withBirthDateCount = rows.filter((profile) => Boolean(profile.birthDate)).length;
-  const speciesCount = new Set(rows.map((profile) => profile.species)).size;
+  const hasActiveFilters = Boolean(search || clientFilterId);
 
   const columns: DataTableColumn<PetProfile>[] = [
     {
       key: 'pet',
-      header: 'Pet',
+      header: copy.columnPet,
       render: (profile) => (
-        <div>
-          <p className="font-medium text-slate-900">{profile.name}</p>
-          <p className={`mt-1 ${sharedCompactTextClass}`}>
-            {[profile.species, profile.breed].filter(Boolean).join(' - ')}
-          </p>
-          <p className={sharedCompactTextClass}>
-            {[resolveSizeLabel(copy, profile.size), profile.coatType].filter(Boolean).join(' - ') || copy.sizeCoatMissing}
+        <div className="min-w-0">
+          <Link
+            href={`/pet/pets/${profile.id}/timeline`}
+            className="font-medium text-[var(--ink)] underline-offset-2 hover:underline"
+          >
+            {profile.name}
+          </Link>
+          <p className="truncate text-xs text-[var(--muted)]">
+            {[profile.species, profile.breed].filter(Boolean).join(' · ')}
           </p>
         </div>
       )
@@ -336,35 +341,51 @@ export function PetProfilesPage({ initialView = 'list' }: PetProfilesPageProps) 
       header: copy.client,
       render: (profile) => {
         const client = clients.find((entry) => entry.id === profile.clientId);
-
-        return (
-          <div>
-            <p className="font-medium text-slate-900">{client?.name ?? client?.fullName ?? profile.clientId}</p>
-            <p className={`mt-1 ${sharedCompactTextClass}`}>{copy.birthLabel} {formatDate(copy, profile.birthDate)}</p>
-          </div>
-        );
+        return <span className="block max-w-[14rem] truncate">{client?.name ?? client?.fullName ?? profile.clientId}</span>;
       }
     },
     {
-      key: 'details',
-      header: copy.columnGrooming,
+      key: 'size',
+      header: copy.size,
+      render: (profile) => {
+        const sizeCoat = [resolveSizeLabel(copy, profile.size), profile.coatType].filter(Boolean).join(' · ');
+        return sizeCoat
+          ? <span>{sizeCoat}</span>
+          : <span className="text-[var(--faint)]">{copy.sizeCoatMissing}</span>;
+      }
+    },
+    {
+      key: 'birth',
+      header: copy.birthDate,
+      className: 'whitespace-nowrap',
+      render: (profile) => <span className="ui-mono">{formatDate(copy, locale, profile.birthDate)}</span>
+    },
+    {
+      key: 'weight',
+      header: copy.weight,
+      className: 'text-right',
       render: (profile) => (
-        <div>
-          <p className="font-medium text-slate-900">{profile.color ?? copy.colorMissing}</p>
-          <p className={`mt-1 ${sharedCompactTextClass}`}>
-            {profile.weight === undefined ? copy.weightMissing : `${profile.weight} kg`}
-          </p>
-          <p className={sharedCompactTextClass}>
-            {profile.behavior ?? profile.restrictions ?? copy.noBehaviorAlert}
-          </p>
-        </div>
+        profile.weight === undefined || profile.weight === null
+          ? <span className="text-[var(--faint)]">{copy.weightMissing}</span>
+          : <span className="ui-mono">{profile.weight} kg</span>
       )
+    },
+    {
+      key: 'behavior',
+      header: copy.behavior,
+      render: (profile) => {
+        const alert = profile.behavior ?? profile.restrictions;
+        return alert
+          ? <span className="block max-w-[16rem] truncate text-[var(--warn)]" title={alert}>{alert}</span>
+          : <span className="text-[var(--faint)]">{copy.noBehaviorAlert}</span>;
+      }
     },
     {
       key: 'actions',
       header: copy.actions,
+      className: 'text-right',
       render: (profile) => (
-        <div className={sharedInlineActionsClass}>
+        <div className={`${sharedInlineActionsClass} justify-end`}>
           <PermissionGuard permission="pet.profile.update">
             <button type="button" onClick={() => beginEdit(profile)} className="ui-inline-button">
               {copy.edit}
@@ -388,8 +409,8 @@ export function PetProfilesPage({ initialView = 'list' }: PetProfilesPageProps) 
     >
       <div className={sharedPageStackClass}>
         <PageTitle
-          eyebrow="Gestão Pet"
           title={isCreateRoute ? copy.newPet : copy.titlePets}
+          count={isCreateRoute || loading ? undefined : totalItems}
           description={
             isCreateRoute
               ? copy.descriptionCreatePet
@@ -409,58 +430,54 @@ export function PetProfilesPage({ initialView = 'list' }: PetProfilesPageProps) 
         />
 
         {!isCreateRoute ? (
-          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-            {[
-              { label: copy.metricTotalPets, value: totalItems, icon: PawPrint },
-              { label: copy.metricLinkedClients, value: linkedClientsCount, icon: Users },
-              { label: copy.metricWithBirthDate, value: withBirthDateCount, icon: CalendarDays },
-              { label: copy.metricSpecies, value: speciesCount, icon: PawPrint }
-            ].map((item) => (
-              <div key={item.label} className={sharedSummaryCardClass}>
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <p className={sharedSummaryCardLabelClass}>{item.label}</p>
-                    <p className="mt-3 text-3xl font-bold tracking-[-0.03em] text-slate-900">{item.value}</p>
-                  </div>
-                  <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-[color:var(--accent)]/10 text-[color:var(--accent)]">
-                    <item.icon className="h-5 w-5" />
-                  </span>
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : null}
-
-        {!isCreateRoute ? (
-          <PageSection tone="muted" title={copy.filters} description={copy.filtersDescriptionPets}>
-            <div className={sharedFilterToolbarClass}>
-              <div className="grid gap-3 xl:grid-cols-[minmax(0,1.45fr)_260px] xl:items-end">
-                <SearchBar value={searchInput} onChange={setSearchInput} placeholder={copy.searchPlaceholderPets} />
-                <FormSelect label={copy.client} value={clientFilterId} options={clientOptions} onChange={setClientFilterId} />
-              </div>
-              <div className={sharedFormActionsClass}>
-                <button type="button" onClick={() => setSearch(searchInput)} className="ui-primary-button">
-                  {copy.search}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setSearchInput('');
-                    setSearch('');
-                    setClientFilterId('');
-                  }}
-                  className="ui-inline-button"
-                >
-                  {copy.clear}
-                </button>
-                <p className="text-sm text-slate-700">
-                  {activeFilterCount > 0
-                    ? copy.activeFiltersCountPets.replace('{count}', String(activeFilterCount))
-                    : copy.noActiveFiltersPets}
-                </p>
-              </div>
-            </div>
-          </PageSection>
+          <form
+            role="search"
+            aria-label={copy.filters}
+            onSubmit={(event) => {
+              event.preventDefault();
+              setSearch(searchInput.trim());
+            }}
+            className="flex flex-wrap items-center gap-2"
+          >
+            <label className="ui-field-shell flex min-h-9 min-w-[16rem] flex-1 items-center gap-2 rounded-md border border-[color:var(--control)] px-3 md:max-w-md">
+              <Search className="h-3.5 w-3.5 shrink-0 text-[var(--muted)]" aria-hidden="true" />
+              <span className="sr-only">{copy.search}</span>
+              <input
+                type="search"
+                value={searchInput}
+                onChange={(event) => setSearchInput(event.target.value)}
+                placeholder={copy.searchPlaceholderPets}
+                className="min-w-0 flex-1 bg-transparent py-1.5 text-sm text-[var(--ink)] outline-none placeholder:text-[var(--muted)]"
+              />
+            </label>
+            <label className="ui-filter-chip max-w-full" data-active={clientFilterId ? 'true' : 'false'}>
+              <span>{copy.client}</span>
+              <select
+                value={clientFilterId}
+                onChange={(event) => setClientFilterId(event.target.value)}
+                className="max-w-[12rem] truncate bg-transparent font-medium text-[var(--ink)] outline-none"
+              >
+                {clientOptions.map((option) => (
+                  <option key={option.value} value={option.value}>{option.label}</option>
+                ))}
+              </select>
+            </label>
+            <button type="submit" className="ui-secondary-button">{copy.search}</button>
+            {hasActiveFilters ? (
+              <button
+                type="button"
+                onClick={() => {
+                  setSearchInput('');
+                  setSearch('');
+                  setClientFilterId('');
+                }}
+                className="inline-flex min-h-9 items-center gap-1 px-1 text-sm text-[var(--ink-2)] hover:text-[var(--ink)]"
+              >
+                <X className="h-3.5 w-3.5" aria-hidden="true" />
+                {copy.clear}
+              </button>
+            ) : null}
+          </form>
         ) : null}
 
         {clients.length === 0 ? (
@@ -474,27 +491,37 @@ export function PetProfilesPage({ initialView = 'list' }: PetProfilesPageProps) 
 
         {isEditorOpen ? (
           <PermissionGuard permission={editingId ? 'pet.profile.update' : 'pet.profile.create'}>
-            <PageSection
-              title={editingId ? copy.editPet : copy.newPet}
-              description={copy.formDescriptionPet}
-            >
-              <form onSubmit={handleSubmit} className="space-y-5">
-                <div className="grid gap-4 xl:grid-cols-2">
+            <section aria-labelledby="pet-editor-title" className="rounded-md border border-[color:var(--line)] p-4">
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <h2 id="pet-editor-title" className="text-sm font-semibold text-[var(--ink)]">
+                    {editingId ? copy.editPet : copy.newPet}
+                  </h2>
+                  <p className="text-xs text-[var(--muted)]">{copy.formDescriptionPet}</p>
+                </div>
+
+                <FormSection title={copy.sectionIdentity}>
                   <FormSelect label={copy.client} value={clientId} options={formClientOptions} onChange={setClientId} />
                   <FormInput label={copy.name} value={name} onChange={setName} required />
                   <FormInput label={copy.species} value={species} onChange={setSpecies} required />
                   <FormInput label={copy.breed} value={breed} onChange={setBreed} />
                   <FormInput label={copy.birthDate} value={birthDate} onChange={setBirthDate} type="date" />
                   <FormSelect label={copy.sex} value={gender} options={buildGenderOptions(copy)} onChange={setGender} />
+                </FormSection>
+
+                <FormSection title={copy.sectionSizeCoat}>
                   <FormSelect label={copy.size} value={size} options={buildSizeOptions(copy)} onChange={setSize} />
                   <FormInput label={copy.weight} value={weight} onChange={setWeight} type="number" />
                   <FormInput label={copy.coatType} value={coatType} onChange={setCoatType} placeholder={copy.coatTypePlaceholder} />
-                  <FormInput label={copy.behavior} value={behavior} onChange={setBehavior} placeholder={copy.behaviorPlaceholder} />
                   <FormInput label={copy.color} value={color} onChange={setColor} />
-                  <FormInput label={copy.restrictions} value={restrictions} onChange={setRestrictions} placeholder={copy.restrictionsPlaceholder} wrapperClassName="xl:col-span-2" />
-                  <FormInput label={copy.groomingNotes} value={groomingNotes} onChange={setGroomingNotes} placeholder={copy.groomingNotesPlaceholder} wrapperClassName="xl:col-span-2" />
-                  <FormInput label={copy.generalNotes} value={notes} onChange={setNotes} wrapperClassName="xl:col-span-2" />
-                </div>
+                </FormSection>
+
+                <FormSection title={copy.sectionCare}>
+                  <FormInput label={copy.behavior} value={behavior} onChange={setBehavior} placeholder={copy.behaviorPlaceholder} wrapperClassName="md:col-span-2" />
+                  <FormInput label={copy.restrictions} value={restrictions} onChange={setRestrictions} placeholder={copy.restrictionsPlaceholder} wrapperClassName="md:col-span-2" />
+                  <FormInput label={copy.groomingNotes} value={groomingNotes} onChange={setGroomingNotes} placeholder={copy.groomingNotesPlaceholder} wrapperClassName="md:col-span-2" />
+                  <FormInput label={copy.generalNotes} value={notes} onChange={setNotes} wrapperClassName="md:col-span-2" />
+                </FormSection>
 
                 <div className={sharedFormActionsClass}>
                   <button type="submit" disabled={submitting || clients.length === 0} className="ui-primary-button">
@@ -505,17 +532,13 @@ export function PetProfilesPage({ initialView = 'list' }: PetProfilesPageProps) 
                   </button>
                 </div>
               </form>
-            </PageSection>
+            </section>
           </PermissionGuard>
         ) : null}
 
         {!isCreateRoute ? (
-          <PageSection
-            title={copy.listTitlePets}
-            description={copy.listDescriptionPets}
-            actions={<p className="text-sm text-slate-700">{copy.totalOf} {totalItems} {copy.petsCount}</p>}
-          >
-            <div className="space-y-5">
+          <div>
+            <div className="space-y-2">
               <DataTable
                 columns={columns}
                 rows={rows}
@@ -540,10 +563,11 @@ export function PetProfilesPage({ initialView = 'list' }: PetProfilesPageProps) 
                 page={pageData.page}
                 totalPages={pageData.totalPages}
                 totalElements={totalItems}
+                pageSize={pageSize}
                 onPageChange={(nextPage) => load(nextPage, search, clientFilterId)}
               />
             </div>
-          </PageSection>
+          </div>
         ) : null}
 
         <ConfirmDialog

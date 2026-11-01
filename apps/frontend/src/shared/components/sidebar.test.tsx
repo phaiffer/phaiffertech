@@ -1,9 +1,10 @@
-import { render } from '@testing-library/react';
+import { fireEvent, render } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { Sidebar } from '@/shared/components/sidebar';
 import { AuthenticatedUser } from '@/shared/types/auth';
 
-const { navigationState, signOutMock, currentUser } = vi.hoisted(() => ({
+const { navigationState, signOutMock, currentUser, routerPush } = vi.hoisted(() => ({
+  routerPush: vi.fn(),
   navigationState: { pathname: '/pet/follow-up' },
   signOutMock: vi.fn(),
   currentUser: {
@@ -28,7 +29,8 @@ const { navigationState, signOutMock, currentUser } = vi.hoisted(() => ({
 }));
 
 vi.mock('next/navigation', () => ({
-  usePathname: () => navigationState.pathname
+  usePathname: () => navigationState.pathname,
+  useRouter: () => ({ push: routerPush })
 }));
 
 vi.mock('@/shared/auth/use-auth', () => ({
@@ -101,6 +103,17 @@ describe('Sidebar', () => {
     expect(container.querySelector('a[href="/pet/commercial"]')).not.toBeNull();
     expect(container.querySelector('a[href="/crm"]')).toBeNull();
     expect(container.querySelector('a[href="/tenants"]')).toBeNull();
+  });
+
+  it('searches owners on the clients screen from the sidebar search', () => {
+    currentUser.permissions = [...currentUser.permissions, 'pet.client.read'];
+    const { getByRole } = render(<Sidebar />);
+
+    const search = getByRole('searchbox', { name: 'Search owner by name, email or phone' });
+    fireEvent.change(search, { target: { value: 'Fernanda Lima' } });
+    fireEvent.submit(search.closest('form') as HTMLFormElement);
+
+    expect(routerPush).toHaveBeenCalledWith('/pet/clients?search=Fernanda%20Lima');
   });
 
   it('hides platform-only tenant administration for regular tenant users', () => {

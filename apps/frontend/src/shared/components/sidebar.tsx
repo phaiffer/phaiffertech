@@ -1,9 +1,10 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { LogOut, X } from 'lucide-react';
+import { usePathname, useRouter } from 'next/navigation';
+import { LogOut, Search, X } from 'lucide-react';
+import { useKeyboardShortcut } from '@/shared/hooks/use-keyboard-shortcut';
 import { useAuth } from '@/shared/auth/use-auth';
 import { petCommercialNavigationPermissions } from '@/shared/auth/pet-commercial-permissions';
 import {
@@ -264,6 +265,66 @@ export function Sidebar({ mobileOpen = false, onNavigate }: SidebarProps) {
   ];
   const supportItems = visibleItems('support');
   const workspaceName = branding.scopeName || user?.tenantName || shellMessages.petWorkspace;
+  // "/" searches owners on the Clientes screen (no unified pet + owner search API yet).
+  const canSearchOwners = visibleIds.has('/pet/clients');
+
+  return (
+    <SidebarFrame
+      mobileOpen={mobileOpen}
+      onNavigate={onNavigate}
+      workspaceName={workspaceName}
+      canSearchOwners={canSearchOwners}
+      sections={sections}
+      visibleItems={visibleItems}
+      supportItems={supportItems}
+      pathname={pathname}
+      locale={locale}
+      onToggleLocale={() => setLocale(locale === 'pt-BR' ? 'en-US' : 'pt-BR')}
+      userLabel={user?.fullName ?? user?.email}
+      userEmail={user?.email ?? undefined}
+      onSignOut={() => void signOut()}
+    />
+  );
+}
+
+type SidebarFrameProps = {
+  mobileOpen: boolean;
+  onNavigate?: () => void;
+  workspaceName: string;
+  canSearchOwners: boolean;
+  sections: Array<{ key: SidebarSection; title: string }>;
+  visibleItems: (section: SidebarSection) => SidebarItem[];
+  supportItems: SidebarItem[];
+  pathname: string;
+  locale: string;
+  onToggleLocale: () => void;
+  userLabel?: string;
+  userEmail?: string;
+  onSignOut: () => void;
+};
+
+function SidebarFrame({
+  mobileOpen,
+  onNavigate,
+  workspaceName,
+  canSearchOwners,
+  sections,
+  visibleItems,
+  supportItems,
+  pathname,
+  locale,
+  onToggleLocale,
+  userLabel,
+  userEmail,
+  onSignOut
+}: SidebarFrameProps) {
+  const copy = useAppMessages().screens.shell;
+  const shellMessages = useAppMessages().sidebar;
+  const router = useRouter();
+  const searchRef = useRef<HTMLInputElement>(null);
+  const [ownerSearch, setOwnerSearch] = useState('');
+
+  useKeyboardShortcut('/', () => searchRef.current?.focus(), { enabled: canSearchOwners });
 
   return (
     <aside
@@ -294,6 +355,34 @@ export function Sidebar({ mobileOpen = false, onNavigate }: SidebarProps) {
         </button>
       </div>
 
+      {canSearchOwners ? (
+        <form
+          role="search"
+          onSubmit={(event) => {
+            event.preventDefault();
+            const term = ownerSearch.trim();
+            router.push(term ? `/pet/clients?search=${encodeURIComponent(term)}` : '/pet/clients');
+            setOwnerSearch('');
+            onNavigate?.();
+          }}
+        >
+          <label className="ui-field-shell flex min-h-9 items-center gap-2 rounded-md border border-[color:var(--line)] bg-[var(--bg)] px-2.5 text-[var(--muted)]">
+            <Search className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+            <span className="sr-only">{copy.searchOwnerLabel}</span>
+            <input
+              ref={searchRef}
+              type="search"
+              value={ownerSearch}
+              onChange={(event) => setOwnerSearch(event.target.value)}
+              placeholder={copy.searchOwner}
+              aria-keyshortcuts="/"
+              className="min-w-0 flex-1 bg-transparent py-1 text-sm text-[var(--ink)] outline-none placeholder:text-[var(--muted)]"
+            />
+            <kbd className="ui-kbd" aria-hidden="true">/</kbd>
+          </label>
+        </form>
+      ) : null}
+
       <nav className="flex flex-col gap-3.5" aria-label={copy.mainNavigation}>
         {sections.map((section) => (
           <SidebarGroup
@@ -312,7 +401,7 @@ export function Sidebar({ mobileOpen = false, onNavigate }: SidebarProps) {
         ))}
         <button
           type="button"
-          onClick={() => setLocale(locale === 'pt-BR' ? 'en-US' : 'pt-BR')}
+          onClick={onToggleLocale}
           aria-label={copy.language}
           className="flex min-h-9 items-center justify-between rounded-md px-2.5 text-left text-[var(--ink-2)] hover:bg-[var(--selected)]"
         >
@@ -320,12 +409,12 @@ export function Sidebar({ mobileOpen = false, onNavigate }: SidebarProps) {
           <span className="ui-mono text-xs text-[var(--muted)]">{locale === 'pt-BR' ? 'PT-BR' : 'EN-US'}</span>
         </button>
         <div className="flex min-h-9 items-center gap-2 px-2.5">
-          <span className="min-w-0 flex-1 truncate text-[13px] text-[var(--muted)]" title={user?.email ?? undefined}>
-            {user?.fullName ?? user?.email}
+          <span className="min-w-0 flex-1 truncate text-[13px] text-[var(--muted)]" title={userEmail}>
+            {userLabel}
           </span>
           <button
             type="button"
-            onClick={() => void signOut()}
+            onClick={onSignOut}
             aria-label={copy.signOut}
             title={copy.signOut}
             className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-md text-[var(--muted)] hover:bg-[var(--selected)] hover:text-[var(--ink)]"
