@@ -178,8 +178,9 @@ export function PetModuleSubnav() {
   });
 
   return (
-    <nav className="overflow-x-auto rounded-[calc(var(--radius-2xl)-0.1rem)] border border-slate-200 bg-white px-2 py-2 shadow-sm">
-      <div className="flex min-w-max items-center gap-2">
+    // Comanda v2: simple tabs, underline on the active one.
+    <nav className="overflow-x-auto border-b border-[color:var(--line)]">
+      <div className="flex min-w-max items-center gap-4">
         {items.map((item) => {
           const active = isActive(pathname, item.href);
 
@@ -187,14 +188,12 @@ export function PetModuleSubnav() {
             <Link
               key={item.href}
               href={item.href}
-              className={`inline-flex h-10 items-center rounded-[1rem] px-3.5 text-sm font-medium transition-all duration-200 ${
+              aria-current={active ? 'page' : undefined}
+              className={`-mb-px inline-flex h-9 items-center border-b-2 text-sm transition-colors ${
                 active
-                  ? 'text-white shadow-sm'
-                  : 'text-slate-600 hover:bg-slate-50 hover:text-foreground'
+                  ? 'border-[var(--ink)] font-semibold text-[var(--ink)]'
+                  : 'border-transparent text-[var(--ink-2)] hover:text-[var(--ink)]'
               }`}
-              style={active ? {
-                background: 'var(--accent)'
-              } : undefined}
             >
               {item.label}
             </Link>

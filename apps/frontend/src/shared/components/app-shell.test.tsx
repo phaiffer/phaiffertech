@@ -84,6 +84,7 @@ describe('AppShell', () => {
 
     const shell = screen.getByTestId('sidebar').parentElement;
     expect(shell).not.toBeNull();
-    expect(shell?.style.getPropertyValue('--tenant-accent')).toBe('var(--pet-primary)');
+    expect(shell?.style.getPropertyValue('--tenant-accent')).toBe('var(--ink)');
+    expect(shell?.getAttribute('data-surface')).toBe('app');
   });
 });

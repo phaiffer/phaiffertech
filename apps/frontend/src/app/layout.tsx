@@ -1,11 +1,22 @@
 import type { Metadata, Viewport } from 'next';
-import { Geist, Geist_Mono } from 'next/font/google';
+import { IBM_Plex_Mono, IBM_Plex_Sans } from 'next/font/google';
 import './globals.css';
 import { Providers } from '@/shared/components/providers';
 
-// Self-hosted at build time by next/font; exposes the CSS variables used by globals.css and Tailwind.
-const geistSans = Geist({ subsets: ['latin'], variable: '--font-geist-sans', display: 'swap' });
-const geistMono = Geist_Mono({ subsets: ['latin'], variable: '--font-geist-mono', display: 'swap' });
+// Comanda v2 type: Plex Sans for text, Plex Mono for times, amounts, codes and counts.
+// Self-hosted by next/font; the variables are consumed inside [data-surface='app'].
+const plexSans = IBM_Plex_Sans({
+  subsets: ['latin'],
+  weight: ['400', '500', '600'],
+  variable: '--font-plex-sans',
+  display: 'swap',
+});
+const plexMono = IBM_Plex_Mono({
+  subsets: ['latin'],
+  weight: ['400', '500'],
+  variable: '--font-plex-mono',
+  display: 'swap',
+});
 
 export const metadata: Metadata = {
   title: {
@@ -27,8 +38,8 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   themeColor: [
-    { media: '(prefers-color-scheme: light)', color: '#f6f4f0' },
-    { media: '(prefers-color-scheme: dark)', color: '#141210' },
+    { media: '(prefers-color-scheme: light)', color: '#ffffff' },
+    { media: '(prefers-color-scheme: dark)', color: '#161615' },
   ],
   width: 'device-width',
   initialScale: 1,
@@ -36,7 +47,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="pt-BR" className={`${geistSans.variable} ${geistMono.variable}`} suppressHydrationWarning>
+    <html lang="pt-BR" className={`${plexSans.variable} ${plexMono.variable}`} suppressHydrationWarning>
       <body className="font-sans bg-background text-foreground antialiased">
         <Providers>{children}</Providers>
       </body>

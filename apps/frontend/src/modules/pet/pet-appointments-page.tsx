@@ -1668,7 +1668,7 @@ export function PetAppointmentsPage() {
             title={messages.preparedPickup.title}
             description={messages.preparedPickup.description}
           >
-            <div className="mb-4 rounded-[1.35rem] border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-950">
+            <div className="mb-4 rounded-md border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-950">
               <p className="font-semibold">{messages.preparedPickup.reviewTitle}</p>
               <p className="mt-1 text-emerald-800">{messages.preparedPickup.reviewDescription}</p>
             </div>
@@ -1727,7 +1727,7 @@ export function PetAppointmentsPage() {
               role="dialog"
               aria-modal="true"
               aria-labelledby="pet-appointment-editor-title"
-              className="flex max-h-[92vh] w-full max-w-6xl flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_32px_90px_-42px_rgba(15,23,42,0.45)]"
+              className="flex max-h-[92vh] w-full max-w-6xl flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white "
             >
               <div className="flex items-start justify-between gap-4 border-b border-slate-200 bg-white px-5 py-4 sm:px-6">
                 <div>

@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Comercial · funil</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&amp;family=Instrument+Sans:wght@400;500;600;700&amp;family=IBM+Plex+Mono:wght@500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#161A2E}a:hover{color:#3B4160}
+</style>
+</helmet>
+<div style="min-height: 1000px; background: #EFF1F5; color: #161A2E; font-family: 'Instrument Sans', system-ui, sans-serif; display: flex; flex-wrap: wrap; align-items: stretch">
+  <nav aria-label="Navegação principal" style="flex: 1 1 76px; max-width: 100%; background: #161A2E; padding: 20px 14px; box-sizing: border-box; display: flex; flex-wrap: wrap; flex-direction: column; align-items: center; gap: 8px">
+    <a href="Hoje.dc.html" aria-label="Início" style="width: 44px; height: 44px; border-radius: 12px; background: {{accent}}; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 12px"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#161A2E" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"></circle><path d="M5 9h.01M19 9h.01M8 5h.01M16 5h.01M7 17c1-2.5 3-3.5 5-3.5s4 1 5 3.5c.6 1.5-.6 3-2.2 2.6-1-.2-1.8-.6-2.8-.6s-1.8.4-2.8.6C7.6 20 6.4 18.5 7 17z"></path></svg></a>
+    <sc-for list="{{nav}}" as="item" hint-placeholder-count="12"><a href="{{item.href}}" aria-label="{{item.label}}" title="{{item.label}}" style="{{item.style}}"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{item.d}}"></path></svg></a></sc-for>
+  </nav>
+
+  <main style="flex: 999 1 560px; min-width: 0; padding: 28px 32px 48px; box-sizing: border-box; display: flex; flex-direction: column; gap: 22px">
+    <header style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 16px">
+      <div style="display: flex; flex-direction: column; gap: 8px">
+        <div role="tablist" aria-label="Seção" style="display: inline-flex; gap: 4px; padding: 4px; background: #E3E6ED; border-radius: 12px; width: max-content">
+          <a href="Comercial.dc.html" role="tab" aria-selected="true" style="height: 34px; padding: 0 14px; border-radius: 9px; background: #FFFFFF; font-weight: 700; font-size: 14px; display: inline-flex; align-items: center; text-decoration: none">Funil</a>
+          <a href="Lead.dc.html" role="tab" aria-selected="false" style="height: 34px; padding: 0 14px; border-radius: 9px; font-weight: 600; font-size: 14px; color: #2B3150; display: inline-flex; align-items: center; text-decoration: none">Leads</a>
+          <a href="Comercial.dc.html" role="tab" aria-selected="false" style="height: 34px; padding: 0 14px; border-radius: 9px; font-weight: 600; font-size: 14px; color: #2B3150; display: inline-flex; align-items: center; text-decoration: none">Negócios</a>
+        </div>
+        <h1 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 40px; line-height: 1; letter-spacing: -0.03em">Comercial</h1>
+        <p style="margin: 0; font-size: 15px; color: #2B3150"><strong>18</strong> oportunidades · <strong style="font-family: 'IBM Plex Mono', monospace">R$ 4.260,00</strong> por mês em planos possíveis · conversão de 38% no trimestre</p>
+      </div>
+      <a href="Lead.dc.html" style="height: 44px; padding: 0 20px; border-radius: 12px; background: #161A2E; color: #FFFFFF; font-weight: 600; font-size: 15px; display: inline-flex; align-items: center; gap: 8px; text-decoration: none"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg>Novo lead</a>
+    </header>
+
+    <section aria-label="Funil" style="overflow-x: auto; margin: 0 -4px; padding: 4px">
+      <div style="display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 14px; min-width: 1060px">
+        <sc-for list="{{stages}}" as="s" hint-placeholder-count="5">
+          <div style="background: #E3E6ED; border-radius: 18px; padding: 10px; display: flex; flex-direction: column; gap: 10px">
+            <div style="display: flex; flex-direction: column; gap: 2px; padding: 4px 4px 2px">
+              <span style="display: flex; justify-content: space-between; align-items: center"><h2 style="margin: 0; font-size: 15px; font-weight: 700">{{s.name}}</h2><span style="font-family: 'IBM Plex Mono', monospace; font-size: 13px; font-weight: 600">{{s.count}}</span></span>
+              <span style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; font-weight: 600; color: #2B3150">{{s.total}}</span>
+            </div>
+            <sc-for list="{{s.cards}}" as="c" hint-placeholder-count="2">
+              <a href="Lead.dc.html" style="{{c.style}}">
+                <span style="display: flex; justify-content: space-between; gap: 8px; align-items: center"><span style="{{c.srcStyle}}">{{c.source}}</span><span style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; font-weight: 600; color: #4A5170">{{c.age}}</span></span>
+                <span style="font-weight: 700; font-size: 15px">{{c.name}}</span>
+                <span style="font-size: 13px; color: #2B3150">{{c.pets}}</span>
+                <span style="border-top: 1.5px dashed #D9DDE6; padding-top: 8px; display: flex; justify-content: space-between; font-size: 13px"><span style="font-weight: 600">{{c.offer}}</span><span style="font-family: 'IBM Plex Mono', monospace; font-weight: 600">{{c.value}}</span></span>
+              </a>
+            </sc-for>
+          </div>
+        </sc-for>
+      </div>
+    </section>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#FFC633","options":["#FFC633","#FF8A3D","#7BE0B0","#9CC8FF"]},"$preview":{"width":1440,"height":1000}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const accent = this.props.accent ?? '#FFC633';
+    const I = {hoje:'M3 10h18M7 3v4M17 3v4M5 6h14a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2z',agenda:'M12 7v5l3 2M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18z',clientes:'M16 19v-1a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v1M9.5 10a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM21 19v-1a4 4 0 0 0-3-3.9M16 4.1a3 3 0 0 1 0 5.8',planos:'M4 12a8 8 0 0 1 14-5.3L20 9M20 4v5h-5M20 12a8 8 0 0 1-14 5.3L4 15M4 20v-5h5',pdv:'M3 7h18v10H3zM7 12h.01M17 12h.01M12 9.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5z',estoque:'M21 8 12 3 3 8v8l9 5 9-5zM3 8l9 5 9-5M12 13v8',financeiro:'M3 7h15a3 3 0 0 1 3 3v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2zM3 7l12-4v4M17 13h.01',equipe:'M12 3l2.7 5.5 6 .9-4.4 4.2 1 6-5.3-2.8-5.3 2.8 1-6L3.3 9.4l6-.9z',clinica:'M10 3h4v7h7v4h-7v7h-4v-7H3v-4h7z',comercial:'M3 17l6-6 4 4 8-8M15 7h6v6',insights:'M4 20V10M10 20V4M16 20v-7',config:'M4 6h9M17 6h3M4 12h3M11 12h9M4 18h11M19 18h1M15 4v4M9 10v4M17 16v4'};
+    const N = [['hoje','Hoje','Hoje'],['agenda','Agenda','Agenda'],['clientes','Clientes e pets','Clientes'],['planos','Planos','Planos'],['pdv','PDV','PDV'],['estoque','Estoque','Estoque'],['financeiro','Financeiro','Financeiro'],['equipe','Equipe e comissão','Equipe'],['clinica','Clínica','Clinica'],['comercial','Comercial','Comercial'],['insights','Insights','Insights'],['config','Configurações','Configuracoes']];
+    const ACTIVE = 'comercial';
+    const nav = N.map(([k, label, f]) => ({ label, d: I[k], href: f + '.dc.html', style: 'width: 48px; height: 48px; border-radius: 12px; display: inline-flex; align-items: center; justify-content: center; ' + (k === ACTIVE ? 'background: ' + accent + '; color: #161A2E;' : 'color: #D5D8E5;') }));
+
+    const SRC = { Instagram: ['#E8DFFF', '#4E33A3'], Indicação: ['#D7F0E0', '#1B6B3E'], Google: ['#D6E6FF', '#1A4E9E'], Avulso: ['#E3E6ED', '#2B3150'], WhatsApp: ['#D7F0E0', '#1B6B3E'] };
+    const card = (name, pets, source, age, offer, value, hot) => ({
+      name, pets, source, age, offer, value,
+      srcStyle: 'padding: 3px 8px; border-radius: 6px; font-size: 11px; font-weight: 700; background: ' + SRC[source][0] + '; color: ' + SRC[source][1],
+      style: 'background: #FFFFFF; border-radius: 14px; padding: 12px; display: flex; flex-direction: column; gap: 6px; text-decoration: none; color: #161A2E; box-shadow: 0 1px 0 #D9DDE6;' + (hot ? ' outline: 2px solid ' + accent + ';' : '')
+    });
+    const stages = [
+      { name: 'Novo lead', count: '5', total: 'R$ 1.040/mês', cards: [
+        card('Patrícia Gomes', 'Duas shih-tzus', 'Instagram', '2h', 'Mensal banho', 'R$ 360'),
+        card('Otávio Ramos', 'Golden · 30 kg', 'Google', '1d', 'Quinzenal', 'R$ 170')
+      ] },
+      { name: 'Primeiro contato', count: '4', total: 'R$ 880/mês', cards: [
+        card('Renata Campos', 'Lhasa · pele sensível', 'Indicação', '2d', 'Mensal banho', 'R$ 180', true),
+        card('Igor Tavares', 'Spitz', 'WhatsApp', '3d', 'Mensal completo', 'R$ 260')
+      ] },
+      { name: 'Banho teste', count: '3', total: 'R$ 720/mês', cards: [
+        card('Lívia Rezende', 'Poodle toy', 'Instagram', 'sáb 01/11', 'Mensal completo', 'R$ 260'),
+        card('Carla Nogueira', 'Pipoca e Tobias', 'Avulso', 'hoje', 'Pacote 8 banhos', 'R$ 340', true)
+      ] },
+      { name: 'Proposta', count: '4', total: 'R$ 1.020/mês', cards: [
+        card('Helena Prado', 'Mingau · persa', 'Indicação', '4d', 'Mensal banho gato', 'R$ 220'),
+        card('Condomínio Jardins', '12 tutores', 'Indicação', '1 sem', 'Pet taxi coletivo', 'R$ 600')
+      ] },
+      { name: 'Fechado', count: '2', total: 'R$ 600/mês', cards: [
+        card('Marcos Pereira', 'Fred · spitz', 'Google', 'ontem', 'Mensal banho', 'R$ 180'),
+        card('Sérgio Alves', 'Kiara · schnauzer', 'Indicação', '29/10', 'Mensal completo', 'R$ 420')
+      ] }
+    ];
+    return { accent, nav, stages };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,39 +1,60 @@
 import type { Config } from 'tailwindcss';
 
+// Palette scales read RGB channels from CSS variables (see globals.css). Outside the
+// app surface they resolve to Tailwind's original values, so the public website keeps
+// its look; inside `[data-surface='app']` they resolve to the Comanda v2 neutrals.
+const SCALE_STEPS = [50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 950] as const;
+const channel = (variable: string) => `rgb(var(${variable}) / <alpha-value>)`;
+const variableScale = (name: string) =>
+  Object.fromEntries(SCALE_STEPS.map((step) => [step, channel(`--tw-${name}-${step}`)]));
+
 const config: Config = {
   content: ['./src/**/*.{js,ts,jsx,tsx,mdx}'],
   darkMode: ['class', '[data-theme="dark"]'],
   theme: {
     extend: {
+      screens: {
+        // Comanda v2: the sidebar becomes a drawer below 900px.
+        nav: '900px',
+      },
       colors: {
-        // "Operacional calmo" palette. `slate` and `emerald` are remapped instead of
-        // renamed so the existing utility classes adopt the new look in one place:
-        // slate = warm neutral, emerald = deep pine green (white text >= 4.5:1 from 600 up).
-        slate: {
-          50: '#faf9f7',
-          100: '#f4f2ee',
-          200: '#e7e3dc',
-          300: '#d4cec4',
-          400: '#a8a196',
-          500: '#7a7368',
-          600: '#5c564d',
-          700: '#45403a',
-          800: '#2e2a26',
-          900: '#1f1c19',
-          950: '#141210',
+        slate: variableScale('slate'),
+        emerald: variableScale('emerald'),
+        // In the app these become neutral tints (50-300) and the v2 semantic hue
+        // (400+): amber = warn, red/rose = danger, blue/sky = in progress, violet = grooming.
+        amber: variableScale('amber'),
+        red: variableScale('red'),
+        rose: variableScale('rose'),
+        blue: variableScale('blue'),
+        sky: variableScale('sky'),
+        violet: variableScale('violet'),
+        white: channel('--tw-white'),
+        // Comanda v2 tokens
+        ink: {
+          DEFAULT: 'var(--ink)',
+          2: 'var(--ink-2)',
         },
-        emerald: {
-          50: '#f0f7f3',
-          100: '#dcede3',
-          200: '#bbdcc9',
-          300: '#8fc4a8',
-          400: '#5ea683',
-          500: '#3b8a66',
-          600: '#2b7153',
-          700: '#235a43',
-          800: '#1e4837',
-          900: '#193b2e',
-          950: '#0d2119',
+        faint: 'var(--faint)',
+        page: 'var(--bg)',
+        'bg-subtle': 'var(--bg-subtle)',
+        'bg-row': 'var(--bg-row)',
+        selected: {
+          DEFAULT: 'var(--selected)',
+          strong: 'var(--selected-strong)',
+        },
+        line: {
+          DEFAULT: 'var(--line)',
+          soft: 'var(--line-soft)',
+        },
+        control: 'var(--control)',
+        highlight: 'var(--highlight)',
+        warn: 'var(--warn)',
+        status: {
+          waiting: 'var(--status-waiting)',
+          'in-progress': 'var(--status-in-progress)',
+          grooming: 'var(--status-grooming)',
+          ready: 'var(--status-ready)',
+          done: 'var(--status-done)',
         },
         background: 'var(--background)',
         foreground: 'var(--foreground)',
@@ -128,6 +149,7 @@ const config: Config = {
         lg: 'var(--radius-lg)',
         xl: 'var(--radius-xl)',
         '2xl': 'var(--radius-2xl)',
+        '3xl': 'var(--radius-3xl)',
         sidebar: 'calc(var(--radius) - 2px)',
       },
       boxShadow: {
@@ -138,8 +160,9 @@ const config: Config = {
         card: 'var(--shadow-card)',
       },
       fontFamily: {
-        sans: ['var(--font-geist-sans)', 'system-ui', 'sans-serif'],
-        mono: ['var(--font-geist-mono)', 'ui-monospace', 'monospace'],
+        // --font-app-* switch to IBM Plex inside the app surface (globals.css).
+        sans: ['var(--font-app-sans)', 'system-ui', 'sans-serif'],
+        mono: ['var(--font-app-mono)', 'ui-monospace', 'monospace'],
       },
       fontSize: {
         '2xs': ['0.625rem', { lineHeight: '0.875rem' }],
@@ -152,7 +175,7 @@ const config: Config = {
       backgroundImage: {
         'pet-gradient': 'linear-gradient(135deg, var(--pet-gradient-start) 0%, var(--pet-gradient-end) 100%)',
         'pet-gradient-radial': 'radial-gradient(ellipse at top, var(--pet-gradient-end) 0%, var(--pet-gradient-start) 100%)',
-        'hero-pattern': 'radial-gradient(circle at 20% 50%, rgba(43, 113, 83, 0.06) 0%, transparent 50%)',
+        'hero-pattern': 'radial-gradient(circle at 20% 50%, rgba(16, 185, 129, 0.08) 0%, transparent 50%), radial-gradient(circle at 80% 50%, rgba(20, 184, 166, 0.08) 0%, transparent 50%)',
       },
       animation: {
         'fade-in': 'fade-in 0.2s ease-out',

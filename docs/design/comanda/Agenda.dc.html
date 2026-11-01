@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Agenda por profissional</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&amp;family=Instrument+Sans:wght@400;500;600;700&amp;family=IBM+Plex+Mono:wght@500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#161A2E}a:hover{color:#3B4160}
+</style>
+</helmet>
+<div style="min-height: 1000px; background: #EFF1F5; color: #161A2E; font-family: 'Instrument Sans', system-ui, sans-serif; display: flex; flex-wrap: wrap; align-items: stretch">
+
+  <nav aria-label="Navegação principal" style="flex: 1 1 76px; max-width: 100%; background: #161A2E; padding: 20px 14px; box-sizing: border-box; display: flex; flex-wrap: wrap; flex-direction: column; align-items: center; gap: 8px">
+    <span style="width: 44px; height: 44px; border-radius: 12px; background: {{accent}}; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 12px">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#161A2E" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"></circle><path d="M5 9h.01M19 9h.01M8 5h.01M16 5h.01"></path><path d="M7 17c1-2.5 3-3.5 5-3.5s4 1 5 3.5c.6 1.5-.6 3-2.2 2.6-1-.2-1.8-.6-2.8-.6s-1.8.4-2.8.6C7.6 20 6.4 18.5 7 17z"></path></svg>
+    </span>
+    <sc-for list="{{nav}}" as="item" hint-placeholder-count="6">
+      <a href="#" aria-label="{{item.label}}" style="{{item.style}}">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{item.d}}"></path></svg>
+      </a>
+    </sc-for>
+  </nav>
+
+  <main style="flex: 999 1 560px; min-width: 0; padding: 28px 32px 40px; box-sizing: border-box; display: flex; flex-direction: column; gap: 20px">
+    <header style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 20px">
+      <div style="display: flex; flex-direction: column; gap: 8px">
+        <span style="font-family: 'IBM Plex Mono', monospace; font-size: 13px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: #4A5170">Agenda</span>
+        <div style="display: flex; align-items: center; gap: 12px">
+          <button type="button" aria-label="Dia anterior" style="width: 44px; height: 44px; border-radius: 12px; border: 1.5px solid #D9DDE6; background: #FFFFFF; display: inline-flex; align-items: center; justify-content: center; color: #161A2E"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="m15 6-6 6 6 6"></path></svg></button>
+          <h1 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 40px; line-height: 1; letter-spacing: -0.03em">Sexta, 31 out</h1>
+          <button type="button" aria-label="Próximo dia" style="width: 44px; height: 44px; border-radius: 12px; border: 1.5px solid #D9DDE6; background: #FFFFFF; display: inline-flex; align-items: center; justify-content: center; color: #161A2E"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="m9 6 6 6-6 6"></path></svg></button>
+        </div>
+      </div>
+      <div style="display: flex; flex-wrap: wrap; gap: 12px; align-items: center">
+        <div role="group" aria-label="Visualização" style="display: inline-flex; padding: 4px; background: #E3E6ED; border-radius: 12px; gap: 4px">
+          <button type="button" aria-pressed="true" style="height: 36px; padding: 0 16px; border: 0; border-radius: 9px; background: #FFFFFF; color: #161A2E; font: 700 14px 'Instrument Sans', sans-serif">Dia</button>
+          <button type="button" aria-pressed="false" style="height: 36px; padding: 0 16px; border: 0; border-radius: 9px; background: transparent; color: #2B3150; font: 600 14px 'Instrument Sans', sans-serif">Semana</button>
+          <button type="button" aria-pressed="false" style="height: 36px; padding: 0 16px; border: 0; border-radius: 9px; background: transparent; color: #2B3150; font: 600 14px 'Instrument Sans', sans-serif">Lista</button>
+        </div>
+        <button type="button" style="height: 44px; padding: 0 20px; border: 0; border-radius: 12px; background: #161A2E; color: #FFFFFF; font: 600 15px 'Instrument Sans', sans-serif; display: inline-flex; align-items: center; gap: 8px">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg>Agendar</button>
+      </div>
+    </header>
+
+    <div style="display: flex; flex-wrap: wrap; gap: 8px; align-items: center">
+      <span style="font-size: 13px; color: #4A5170; margin-right: 4px">Legenda</span>
+      <span style="display: inline-flex; align-items: center; gap: 6px; padding: 5px 10px; border-radius: 999px; background: #E3E6ED; font-size: 12px; font-weight: 600; color: #2B3150">Aguardando</span>
+      <span style="display: inline-flex; align-items: center; gap: 6px; padding: 5px 10px; border-radius: 999px; background: #D6E6FF; font-size: 12px; font-weight: 600; color: #1A4E9E">No banho</span>
+      <span style="display: inline-flex; align-items: center; gap: 6px; padding: 5px 10px; border-radius: 999px; background: #E8DFFF; font-size: 12px; font-weight: 600; color: #4E33A3">Na tosa</span>
+      <span style="display: inline-flex; align-items: center; gap: 6px; padding: 5px 10px; border-radius: 999px; background: {{accent}}; font-size: 12px; font-weight: 700; color: #161A2E">Pronto</span>
+      <span style="display: inline-flex; align-items: center; gap: 6px; padding: 5px 10px; border-radius: 999px; background: #D7F0E0; font-size: 12px; font-weight: 600; color: #1B6B3E">Retirado</span>
+      <span style="display: inline-flex; align-items: center; gap: 6px; padding: 5px 10px; border-radius: 999px; background: #FFFFFF; border: 1.5px dashed #C9CEDA; font-size: 12px; font-weight: 600; color: #2B3150">Horário livre</span>
+    </div>
+
+    <section aria-label="Grade do dia" style="background: #FFFFFF; border-radius: 20px; padding: 16px 16px 20px; overflow-x: auto">
+      <div style="min-width: 860px; display: grid; grid-template-columns: 64px repeat(3, minmax(0, 1fr)); column-gap: 12px">
+        <div></div>
+        <sc-for list="{{pros}}" as="p" hint-placeholder-count="3">
+          <div style="display: flex; align-items: center; gap: 10px; padding: 4px 4px 14px; border-bottom: 1px solid #E6E9EF">
+            <span style="width: 36px; height: 36px; border-radius: 50%; background: #E3E6ED; display: inline-flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700">{{p.initials}}</span>
+            <div style="display: flex; flex-direction: column; flex: 1 1 auto">
+              <span style="font-weight: 700; font-size: 15px">{{p.name}}</span>
+              <span style="font-size: 12px; color: #4A5170">{{p.role}}</span>
+            </div>
+            <span style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; font-weight: 600; color: #2B3150">{{p.load}}</span>
+          </div>
+        </sc-for>
+
+        <div style="position: relative; height: 720px; margin-top: 8px">
+          <sc-for list="{{hours}}" as="h" hint-placeholder-count="10">
+            <span style="{{h.style}}">{{h.label}}</span>
+          </sc-for>
+        </div>
+        <sc-for list="{{pros}}" as="p" hint-placeholder-count="3">
+          <div style="position: relative; height: 720px; margin-top: 8px; background-image: repeating-linear-gradient(to bottom, #E6E9EF 0, #E6E9EF 1px, transparent 1px, transparent 72px)">
+            <sc-for list="{{p.blocks}}" as="b" hint-placeholder-count="4">
+              <a href="#" style="{{b.style}}">
+                <span style="display: flex; justify-content: space-between; gap: 8px; font-family: 'IBM Plex Mono', monospace; font-size: 12px; font-weight: 600">{{b.time}}<span>{{b.price}}</span></span>
+                <span style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 17px; letter-spacing: -0.01em; line-height: 1.1">{{b.pet}} <span style="font-family: 'Instrument Sans', sans-serif; font-weight: 500; font-size: 12px">· {{b.breed}}</span></span>
+                <span style="font-size: 12px; line-height: 1.3">{{b.service}}</span>
+              </a>
+            </sc-for>
+            <sc-if value="{{p.hasNow}}" hint-placeholder-val="{{false}}">
+              <span aria-hidden="true" style="position: absolute; left: -6px; right: 0; top: 192px; height: 2px; background: #D93A1F"></span>
+            </sc-if>
+          </div>
+        </sc-for>
+      </div>
+    </section>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#FFC633","options":["#FFC633","#FF8A3D","#7BE0B0","#9CC8FF"]},"$preview":{"width":1440,"height":1000}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const accent = this.props.accent ?? '#FFC633';
+    const icons = [
+      ['Hoje', 'M3 10h18M7 3v4M17 3v4M5 6h14a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2z'],
+      ['Agenda', 'M12 7v5l3 2M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18z', true],
+      ['Clientes e pets', 'M16 19v-1a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v1M9.5 10a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM21 19v-1a4 4 0 0 0-3-3.9M16 4.1a3 3 0 0 1 0 5.8'],
+      ['Planos', 'M4 12a8 8 0 0 1 14-5.3L20 9M20 4v5h-5M20 12a8 8 0 0 1-14 5.3L4 15M4 20v-5h5'],
+      ['PDV', 'M3 7h18v10H3zM7 12h.01M17 12h.01M12 9.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5z'],
+      ['Estoque', 'M21 8 12 3 3 8v8l9 5 9-5zM3 8l9 5 9-5M12 13v8']
+    ];
+    const nav = icons.map(([label, d, active]) => ({
+      label, d,
+      style: 'width: 48px; height: 48px; border-radius: 12px; display: inline-flex; align-items: center; justify-content: center; ' + (active ? 'background: ' + accent + '; color: #161A2E;' : 'color: #D5D8E5;')
+    }));
+    const START = 8, PX = 72;
+    const hours = Array.from({ length: 10 }, (_, i) => ({
+      label: String(START + i).padStart(2, '0') + ':00',
+      style: 'position: absolute; top: ' + (i * PX - 7) + 'px; right: 0; font-family: \'IBM Plex Mono\', monospace; font-size: 12px; font-weight: 600; color: #4A5170'
+    }));
+    const stage = {
+      wait: ['#E3E6ED', '#2B3150'], bath: ['#D6E6FF', '#1A4E9E'], groom: ['#E8DFFF', '#4E33A3'],
+      ready: [accent, '#161A2E'], done: ['#D7F0E0', '#1B6B3E']
+    };
+    const toMin = (t) => { const [h, m] = t.split(':').map(Number); return h * 60 + m; };
+    const block = (from, to, pet, breed, service, price, st) => {
+      const top = (toMin(from) - START * 60) / 60 * PX;
+      const h = (toMin(to) - toMin(from)) / 60 * PX;
+      const free = st === 'free';
+      const [bg, fg] = free ? ['#FFFFFF', '#2B3150'] : stage[st];
+      return {
+        time: from + '–' + to, pet, breed, service, price,
+        style: 'position: absolute; left: 0; right: 0; top: ' + (top + 2) + 'px; height: ' + (h - 4) + 'px; box-sizing: border-box; padding: 8px 10px; border-radius: 12px; overflow: hidden; display: flex; flex-direction: column; gap: 3px; text-decoration: none; background: ' + bg + '; color: ' + fg + ';' + (free ? ' border: 1.5px dashed #C9CEDA;' : '')
+      };
+    };
+    const pros = [
+      { name: 'Jéssica', initials: 'JE', role: 'Tosadora', load: '6/7', hasNow: true, blocks: [
+        block('08:30', '09:30', 'Thor', 'Shih-tzu', 'Banho + tosa higiênica · pet taxi', 'R$ 85', 'ready'),
+        block('09:30', '11:00', 'Luna', 'Yorkshire', 'Tosa bebê + unhas', 'R$ 90', 'groom'),
+        block('11:30', '13:00', 'Mel', 'Poodle', 'Banho + tosa na máquina', 'R$ 95', 'wait'),
+        block('14:00', '15:30', 'Kiara', 'Schnauzer', 'Tosa da raça', 'R$ 130', 'wait'),
+        block('15:30', '16:30', 'Livre', '1h30', 'Encaixe disponível', '', 'free')
+      ] },
+      { name: 'Diego', initials: 'DI', role: 'Banhista', load: '7/8', hasNow: true, blocks: [
+        block('08:00', '09:00', 'Zeus', 'Bulldog', 'Banho terapêutico', 'R$ 110', 'done'),
+        block('09:00', '10:00', 'Fred', 'Spitz', 'Banho + escovação', 'R$ 75', 'ready'),
+        block('10:00', '11:00', 'Nina', 'Lhasa', 'Banho + hidratação', 'R$ 80', 'bath'),
+        block('11:00', '11:45', 'Paçoca', 'SRD', 'Banho simples', 'R$ 55', 'bath'),
+        block('12:00', '13:30', 'Bob', 'Golden', 'Banho + desembolo · pet taxi', 'R$ 120', 'wait'),
+        block('14:30', '15:30', 'Pipoca', 'Pinscher', 'Banho simples', 'R$ 50', 'wait')
+      ] },
+      { name: 'Camila', initials: 'CA', role: 'Banhista · meio período', load: '2/4', hasNow: true, blocks: [
+        block('09:00', '10:00', 'Amora', 'Maltês', 'Banho + laço', 'R$ 70', 'ready'),
+        block('10:00', '12:00', 'Livre', '2h', 'Encaixe disponível', '', 'free'),
+        block('13:00', '14:00', 'Bento', 'Beagle', 'Banho simples', 'R$ 60', 'wait')
+      ] }
+    ];
+    return { accent, nav, hours, pros };
+  }
+}
+</script>
+</body>
+</html>

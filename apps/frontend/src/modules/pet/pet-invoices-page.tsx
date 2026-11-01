@@ -284,21 +284,21 @@ function isOverdueInvoice(invoice: PetInvoice) {
 
 function statToneClass(tone: 'default' | 'warning' | 'danger' = 'default') {
   if (tone === 'warning') {
-    return 'border-amber-200/80 bg-[linear-gradient(180deg,rgba(251,191,36,0.12),rgba(255,255,255,0.98))]';
+    return 'border-amber-200/80 bg-white';
   }
 
   if (tone === 'danger') {
-    return 'border-red-200/80 bg-[linear-gradient(180deg,rgba(248,113,113,0.12),rgba(255,255,255,0.98))]';
+    return 'border-red-200/80 bg-white';
   }
 
-  return 'border-slate-200/90 bg-[linear-gradient(180deg,rgba(16,185,129,0.05),rgba(255,255,255,0.99)_140px)]';
+  return 'border-slate-200/90 bg-white';
 }
 
 const billingPanelClass =
-  'rounded-3xl border border-slate-200/90 bg-[linear-gradient(180deg,rgba(16,185,129,0.045),rgba(255,255,255,0.99)_140px)] p-5 shadow-[0_18px_36px_-30px_rgba(15,23,42,0.14)]';
+  'rounded-3xl border border-slate-200/90 bg-white p-5 ';
 
 const billingPanelMutedClass =
-  'rounded-2xl border border-slate-200/80 bg-[linear-gradient(180deg,rgba(16,185,129,0.03),rgba(248,250,252,0.96)_120px)] p-4';
+  'rounded-2xl border border-slate-200/80 bg-slate-50 p-4';
 
 const billingPanelEyebrowClass = 'text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--accent)]';
 const billingPanelTitleClass = 'mt-2 text-[1.15rem] font-semibold text-slate-950';
@@ -317,7 +317,7 @@ type SnapshotCardProps = {
 
 function SnapshotCard({ icon: Icon, label, value, detail, tone = 'default' }: SnapshotCardProps) {
   return (
-    <div className={`rounded-3xl border p-4 shadow-[0_16px_34px_-28px_rgba(15,23,42,0.16)] ${statToneClass(tone)}`}>
+    <div className={`rounded-3xl border p-4  ${statToneClass(tone)}`}>
       <div className="flex items-start justify-between gap-3">
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-800">

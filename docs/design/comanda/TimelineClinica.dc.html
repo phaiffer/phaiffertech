@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Linha do tempo clínica</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&amp;family=Instrument+Sans:wght@400;500;600;700&amp;family=IBM+Plex+Mono:wght@500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#161A2E}a:hover{color:#3B4160}
+</style>
+</helmet>
+<div style="min-height: 1000px; background: #EFF1F5; color: #161A2E; font-family: 'Instrument Sans', system-ui, sans-serif; display: flex; flex-wrap: wrap; align-items: stretch">
+  <nav aria-label="Navegação principal" style="flex: 1 1 76px; max-width: 100%; background: #161A2E; padding: 20px 14px; box-sizing: border-box; display: flex; flex-wrap: wrap; flex-direction: column; align-items: center; gap: 8px">
+    <a href="Hoje.dc.html" aria-label="Início" style="width: 44px; height: 44px; border-radius: 12px; background: {{accent}}; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 12px"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#161A2E" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"></circle><path d="M5 9h.01M19 9h.01M8 5h.01M16 5h.01M7 17c1-2.5 3-3.5 5-3.5s4 1 5 3.5c.6 1.5-.6 3-2.2 2.6-1-.2-1.8-.6-2.8-.6s-1.8.4-2.8.6C7.6 20 6.4 18.5 7 17z"></path></svg></a>
+    <sc-for list="{{nav}}" as="item" hint-placeholder-count="12"><a href="{{item.href}}" aria-label="{{item.label}}" title="{{item.label}}" style="{{item.style}}"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{item.d}}"></path></svg></a></sc-for>
+  </nav>
+
+  <main style="flex: 999 1 560px; min-width: 0; padding: 28px 32px 48px; box-sizing: border-box; display: flex; flex-direction: column; gap: 22px; max-width: 1100px">
+    <header style="display: flex; flex-direction: column; gap: 8px">
+      <div role="tablist" aria-label="Seção" style="display: inline-flex; gap: 4px; padding: 4px; background: #E3E6ED; border-radius: 12px; width: max-content">
+        <a href="Clinica.dc.html" role="tab" aria-selected="false" style="height: 34px; padding: 0 14px; border-radius: 9px; font-weight: 600; font-size: 14px; color: #2B3150; display: inline-flex; align-items: center; text-decoration: none">Painel</a>
+        <a href="Prontuario.dc.html" role="tab" aria-selected="false" style="height: 34px; padding: 0 14px; border-radius: 9px; font-weight: 600; font-size: 14px; color: #2B3150; display: inline-flex; align-items: center; text-decoration: none">Prontuários</a>
+        <a href="TimelineClinica.dc.html" role="tab" aria-selected="true" style="height: 34px; padding: 0 14px; border-radius: 9px; background: #FFFFFF; font-weight: 700; font-size: 14px; display: inline-flex; align-items: center; text-decoration: none">Linha do tempo</a>
+      </div>
+      <h1 style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 40px; line-height: 1; letter-spacing: -0.03em">Linha do tempo clínica</h1>
+      <p style="margin: 0; font-size: 15px; color: #2B3150">Tudo o que foi registrado na clínica, do mais recente ao mais antigo.</p>
+    </header>
+
+    <div style="display: flex; flex-wrap: wrap; gap: 10px; align-items: center">
+      <label style="display: flex; align-items: center; gap: 8px; height: 44px; padding: 0 14px; border: 1.5px solid #D9DDE6; border-radius: 12px; background: #FFFFFF; font-size: 14px; font-weight: 600; box-sizing: border-box">Pet<select style="border: 0; background: transparent; font: 600 15px 'Instrument Sans', sans-serif; color: #161A2E"><option>Todos</option><option>Kiara</option><option>Zeus</option></select></label>
+      <label style="display: flex; align-items: center; gap: 8px; height: 44px; padding: 0 14px; border: 1.5px solid #D9DDE6; border-radius: 12px; background: #FFFFFF; font-size: 14px; font-weight: 600; box-sizing: border-box">Profissional<select style="border: 0; background: transparent; font: 600 15px 'Instrument Sans', sans-serif; color: #161A2E"><option>Todos</option><option>Dra. Renata</option></select></label>
+      <sc-for list="{{kinds}}" as="k" hint-placeholder-count="4"><button type="button" aria-pressed="{{k.pressed}}" style="{{k.style}}">{{k.label}}</button></sc-for>
+    </div>
+
+    <sc-for list="{{days}}" as="d" hint-placeholder-count="3">
+      <section style="display: flex; flex-direction: column; gap: 10px">
+        <h2 style="margin: 0; font-family: 'IBM Plex Mono', monospace; font-size: 13px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: #4A5170">{{d.label}}</h2>
+        <sc-for list="{{d.items}}" as="e" hint-placeholder-count="3">
+          <a href="Prontuario.dc.html" style="display: grid; grid-template-columns: 56px 44px minmax(0, 1fr) auto; gap: 14px; align-items: center; background: #FFFFFF; border-radius: 16px; padding: 14px 16px; text-decoration: none; color: #161A2E">
+            <span style="font-family: 'IBM Plex Mono', monospace; font-weight: 600; font-size: 14px">{{e.time}}</span>
+            <span style="{{e.icon}}"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{e.d}}"></path></svg></span>
+            <span style="display: flex; flex-direction: column; gap: 2px; min-width: 0"><span style="font-weight: 700; font-size: 15px">{{e.pet}} · {{e.title}}</span><span style="font-size: 13px; color: #2B3150; line-height: 1.4">{{e.text}}</span></span>
+            <span style="font-size: 13px; color: #4A5170; white-space: nowrap">{{e.who}}</span>
+          </a>
+        </sc-for>
+      </section>
+    </sc-for>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#FFC633","options":["#FFC633","#FF8A3D","#7BE0B0","#9CC8FF"]},"$preview":{"width":1440,"height":1000}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const accent = this.props.accent ?? '#FFC633';
+    const I = {hoje:'M3 10h18M7 3v4M17 3v4M5 6h14a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2z',agenda:'M12 7v5l3 2M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18z',clientes:'M16 19v-1a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v1M9.5 10a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM21 19v-1a4 4 0 0 0-3-3.9M16 4.1a3 3 0 0 1 0 5.8',planos:'M4 12a8 8 0 0 1 14-5.3L20 9M20 4v5h-5M20 12a8 8 0 0 1-14 5.3L4 15M4 20v-5h5',pdv:'M3 7h18v10H3zM7 12h.01M17 12h.01M12 9.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5z',estoque:'M21 8 12 3 3 8v8l9 5 9-5zM3 8l9 5 9-5M12 13v8',financeiro:'M3 7h15a3 3 0 0 1 3 3v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2zM3 7l12-4v4M17 13h.01',equipe:'M12 3l2.7 5.5 6 .9-4.4 4.2 1 6-5.3-2.8-5.3 2.8 1-6L3.3 9.4l6-.9z',clinica:'M10 3h4v7h7v4h-7v7h-4v-7H3v-4h7z',comercial:'M3 17l6-6 4 4 8-8M15 7h6v6',insights:'M4 20V10M10 20V4M16 20v-7',config:'M4 6h9M17 6h3M4 12h3M11 12h9M4 18h11M19 18h1M15 4v4M9 10v4M17 16v4'};
+    const N = [['hoje','Hoje','Hoje'],['agenda','Agenda','Agenda'],['clientes','Clientes e pets','Clientes'],['planos','Planos','Planos'],['pdv','PDV','PDV'],['estoque','Estoque','Estoque'],['financeiro','Financeiro','Financeiro'],['equipe','Equipe e comissão','Equipe'],['clinica','Clínica','Clinica'],['comercial','Comercial','Comercial'],['insights','Insights','Insights'],['config','Configurações','Configuracoes']];
+    const ACTIVE = 'clinica';
+    const nav = N.map(([k, label, f]) => ({ label, d: I[k], href: f + '.dc.html', style: 'width: 48px; height: 48px; border-radius: 12px; display: inline-flex; align-items: center; justify-content: center; ' + (k === ACTIVE ? 'background: ' + accent + '; color: #161A2E;' : 'color: #D5D8E5;') }));
+
+    const kinds = ['Tudo', 'Prontuários', 'Vacinas', 'Prescrições'].map((label, i) => ({
+      label, pressed: i === 0 ? 'true' : 'false',
+      style: 'height: 40px; padding: 0 14px; border-radius: 999px; font: 600 14px \'Instrument Sans\', sans-serif; ' + (i === 0 ? 'border: 0; background: #161A2E; color: #FFFFFF;' : 'border: 1.5px solid #D9DDE6; background: #FFFFFF; color: #2B3150;')
+    }));
+    const K = {
+      pront: ['#D6E6FF', '#1A4E9E', 'M6 3h9l4 4v14H6zM14 3v5h5M9 13h7M9 17h5'],
+      vac: ['#D7F0E0', '#1B6B3E', 'M18 2l4 4M15 5l4 4M3 21l4-4M7 17l-2-2 9-9 4 4-9 9zM10 10l2 2'],
+      rx: ['#FFE4D4', '#A33A06', 'M10 3h4a3 3 0 0 1 3 3v12a3 3 0 0 1-3 3h-4a3 3 0 0 1-3-3V6a3 3 0 0 1 3-3zM7 12h10']
+    };
+    const ev = (time, k, pet, title, text, who) => ({
+      time, pet, title, text, who, d: K[k][2],
+      icon: 'width: 44px; height: 44px; border-radius: 12px; display: inline-flex; align-items: center; justify-content: center; background: ' + K[k][0] + '; color: ' + K[k][1]
+    });
+    const days = [
+      { label: 'Hoje · sex 31/10', items: [
+        ev('10:30', 'pront', 'Kiara', 'Consulta geriátrica', 'Sopro grau II/VI. Ecocardiograma solicitado.', 'Dra. Renata'),
+        ev('09:30', 'vac', 'Mingau', 'V4 felina', 'Lote 2290-F · próxima dose 10/2027.', 'Dra. Renata'),
+        ev('08:30', 'pront', 'Zeus', 'Retorno dermatite', 'Em regressão; manter banho terapêutico.', 'Dra. Renata')
+      ] },
+      { label: 'Ontem · qui 30/10', items: [
+        ev('16:10', 'rx', 'Pipoca', 'Otosporin', '3 gotas 2× ao dia por 7 dias.', 'Dra. Renata'),
+        ev('15:40', 'pront', 'Pipoca', 'Otite externa', 'Conduto auditivo direito inflamado.', 'Dra. Renata')
+      ] },
+      { label: 'qua 29/10', items: [
+        ev('11:00', 'vac', 'Bento', 'V10', 'Reforço anual · lote 4480-A.', 'Dra. Renata'),
+        ev('10:20', 'rx', 'Luna', 'Clorexidina 2%', 'Banho terapêutico 2× por semana por 4 semanas.', 'Dra. Renata')
+      ] }
+    ];
+    return { accent, nav, kinds, days };
+  }
+}
+</script>
+</body>
+</html>

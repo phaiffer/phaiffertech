@@ -1,6 +1,5 @@
 import { ReactNode } from 'react';
 import {
-  sharedEyebrowClass,
   sharedPageHeaderBodyClass,
   sharedPageHeaderClass,
   sharedPageTitleClass,
@@ -10,20 +9,31 @@ import {
 type PageTitleProps = {
   title: string;
   description: string;
+  /** @deprecated Comanda v2 has no eyebrows; the value is ignored. */
   eyebrow?: string;
+  /** Optional count shown in mono next to the title (e.g. number of records). */
+  count?: ReactNode;
   actions?: ReactNode;
 };
 
-export function PageTitle({ title, description, eyebrow, actions }: PageTitleProps) {
+// Comanda v2 page header: H1 20px/600 + optional mono count, short description,
+// actions aligned to the right.
+export function PageTitle({ title, description, count, actions }: PageTitleProps) {
   return (
-    <section className="space-y-1">
+    <section>
       <div className={sharedPageHeaderClass}>
         <div className={sharedPageHeaderBodyClass}>
-          {eyebrow ? <p className={sharedEyebrowClass}>{eyebrow}</p> : null}
-          <h1 className={eyebrow ? `mt-3 ${sharedPageTitleClass}` : sharedPageTitleClass}>{title}</h1>
-          <p className={`mt-2 max-w-3xl ${sharedSupportingTextClass}`}>{description}</p>
+          <div className="flex items-baseline gap-2.5">
+            <h1 className={sharedPageTitleClass}>{title}</h1>
+            {count !== undefined && count !== null ? (
+              <span className="ui-mono text-sm text-slate-600">{count}</span>
+            ) : null}
+          </div>
+          {description ? (
+            <p className={`mt-1 line-clamp-2 ${sharedSupportingTextClass}`}>{description}</p>
+          ) : null}
         </div>
-        {actions ? <div className="flex flex-wrap items-center gap-3">{actions}</div> : null}
+        {actions ? <div className="flex flex-wrap items-center gap-2">{actions}</div> : null}
       </div>
     </section>
   );

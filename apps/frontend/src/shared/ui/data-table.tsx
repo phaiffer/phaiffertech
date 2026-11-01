@@ -4,6 +4,7 @@ export type DataTableColumn<T> = {
   key: string;
   header: string;
   render: (row: T) => ReactNode;
+  /** Applied to header and cells. Use `text-right ui-mono` for amounts, times and counts. */
   className?: string;
 };
 
@@ -24,6 +25,8 @@ type DataTableProps<T> = {
   emptyState?: DataTableEmptyState;
 };
 
+// Comanda v2 dense table: 1px borders, row-colored header, 40px rows, wide tables
+// scroll inside their own box.
 export function DataTable<T>({
   columns,
   rows,
@@ -31,7 +34,7 @@ export function DataTable<T>({
   loading = false,
   emptyMessage = 'Nenhum registro encontrado.',
   loadingTitle = 'Carregando registros',
-  loadingDescription = 'Aguarde enquanto os dados mais recentes sao preparados para esta tabela.',
+  loadingDescription = 'Aguarde enquanto os dados mais recentes são preparados para esta tabela.',
   emptyState
 }: DataTableProps<T>) {
   const renderStateRow = (
@@ -40,14 +43,11 @@ export function DataTable<T>({
     action?: ReactNode
   ) => (
     <tr>
-      <td
-        colSpan={columns.length}
-        className="px-6 py-12"
-      >
+      <td colSpan={columns.length} className="px-4 py-10">
         <div className="mx-auto flex max-w-2xl flex-col items-center gap-3 text-center">
           <div>
             <p className="text-sm font-semibold text-slate-900">{title}</p>
-            <p className="mt-1 text-sm text-slate-700">{description}</p>
+            <p className="mt-1 text-sm text-slate-600">{description}</p>
           </div>
           {action ? <div>{action}</div> : null}
         </div>
@@ -56,21 +56,22 @@ export function DataTable<T>({
   );
 
   return (
-    <div className="overflow-x-auto rounded-2xl border border-slate-200/90 bg-[linear-gradient(180deg,rgba(16,185,129,0.035),rgba(255,255,255,0.99)_140px)] shadow-[0_16px_34px_-28px_rgba(15,23,42,0.14)] [color-scheme:light]">
-      <table className="min-w-full divide-y divide-slate-200">
-        <thead className="bg-[linear-gradient(180deg,rgba(16,185,129,0.06),rgba(248,250,252,0.92))]">
-          <tr>
+    <div className="overflow-x-auto rounded-md border border-slate-200 bg-white">
+      <table className="min-w-full border-collapse text-sm">
+        <thead className="bg-[var(--bg-row)]">
+          <tr className="border-b border-slate-200">
             {columns.map((column) => (
               <th
                 key={column.key}
-                className={`px-6 py-4 text-left text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-600 ${column.className ?? ''}`}
+                scope="col"
+                className={`h-9 whitespace-nowrap px-3 text-left text-xs font-medium text-slate-600 ${column.className ?? ''}`}
               >
                 {column.header}
               </th>
             ))}
           </tr>
         </thead>
-        <tbody className="divide-y divide-slate-100 text-sm text-slate-900">
+        <tbody className="text-slate-900">
           {loading ? (
             renderStateRow(loadingTitle, loadingDescription)
           ) : rows.length === 0 ? (
@@ -83,12 +84,12 @@ export function DataTable<T>({
             rows.map((row) => (
               <tr
                 key={getRowKey(row)}
-                className="align-top transition-colors duration-200 hover:bg-emerald-50/40"
+                className="border-b border-[color:var(--line-soft)] align-top transition-colors last:border-b-0 hover:bg-[var(--selected)]"
               >
                 {columns.map((column) => (
                   <td
                     key={`${getRowKey(row)}-${column.key}`}
-                    className={`px-6 py-4 ${column.className ?? ''}`}
+                    className={`h-10 px-3 py-2 ${column.className ?? ''}`}
                   >
                     {column.render(row)}
                   </td>

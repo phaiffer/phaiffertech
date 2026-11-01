@@ -112,13 +112,13 @@ function OperationsStatCard({
   icon?: ReactNode;
 }) {
   const toneClass = tone === 'accent'
-    ? 'border-transparent bg-[linear-gradient(135deg,var(--accent),var(--pet-teal))] text-white shadow-[0_24px_48px_-34px_rgba(16,185,129,0.52)]'
+    ? 'border-transparent bg-[linear-gradient(135deg,var(--accent),var(--pet-teal))] text-white '
     : tone === 'warning'
-      ? 'border-warning/20 bg-[linear-gradient(180deg,rgba(202,138,4,0.08),rgba(255,255,255,0.98))]'
-      : 'border-slate-200/80 bg-white/95 shadow-[0_18px_38px_-32px_rgba(15,23,42,0.12)]';
+      ? 'border-warning/20 bg-white'
+      : 'border-slate-200/80 bg-white/95 ';
 
   return (
-    <div className={`rounded-[1.6rem] border p-6 ${toneClass}`}>
+    <div className={`rounded-md border p-6 ${toneClass}`}>
       <div className="flex items-start justify-between gap-4">
         <div>
           <p className={`text-[11px] font-semibold uppercase tracking-[0.18em] ${tone === 'accent' ? 'text-white/78' : 'text-slate-700'}`}>
@@ -536,7 +536,7 @@ export function PetOperationsDashboard({
     <div className={sharedPageStackClass}>
       {showSubnav ? <PetModuleSubnav /> : null}
 
-      <section className="rounded-[2rem] border border-slate-200/80 bg-[linear-gradient(180deg,rgba(16,185,129,0.05),rgba(255,255,255,0.98)_120px)] p-6 shadow-[0_24px_54px_-40px_rgba(15,23,42,0.14)] lg:p-7">
+      <section className="rounded-md border border-slate-200/80 bg-white p-6  lg:p-7">
         <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
           <div className="max-w-3xl">
             {surfaceLabel ? (
@@ -559,7 +559,7 @@ export function PetOperationsDashboard({
             </Link>
             <Link
               href="/pet/invoices"
-              className="inline-flex items-center rounded-xl bg-[linear-gradient(135deg,var(--accent),var(--pet-teal))] px-4 py-3 text-sm font-semibold text-white shadow-[0_18px_38px_-26px_rgba(16,185,129,0.52)]"
+              className="inline-flex items-center rounded-xl bg-[linear-gradient(135deg,var(--accent),var(--pet-teal))] px-4 py-3 text-sm font-semibold text-white "
             >
               {t.actions.billing}
             </Link>
@@ -601,7 +601,7 @@ export function PetOperationsDashboard({
             />
           </div>
 
-          <section className="rounded-[2rem] border border-slate-200/80 bg-white/95 p-6 shadow-[0_22px_48px_-40px_rgba(15,23,42,0.12)]">
+          <section className="rounded-md border border-slate-200/80 bg-white/95 p-6 ">
             <div className="mb-5 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
               <div>
                 <h2 className="text-lg font-semibold text-slate-900">{t.closing.title}</h2>
@@ -617,7 +617,7 @@ export function PetOperationsDashboard({
               {operationalClosingItems.map((item) => (
                 <div
                   key={item.key}
-                  className={`rounded-[1.35rem] border p-4 ${
+                  className={`rounded-md border p-4 ${
                     item.tone === 'danger'
                       ? 'border-red-200 bg-red-50 text-red-950'
                       : item.tone === 'warning'
@@ -636,7 +636,7 @@ export function PetOperationsDashboard({
           </section>
 
           <div className="grid gap-6 xl:grid-cols-[minmax(0,1.75fr)_minmax(320px,1fr)]">
-            <section className="rounded-[2rem] border border-slate-200/80 bg-white/95 p-6 shadow-[0_22px_48px_-40px_rgba(15,23,42,0.12)]">
+            <section className="rounded-md border border-slate-200/80 bg-white/95 p-6 ">
               <div className="mb-6 flex items-center justify-between gap-4">
                 <div>
                   <h2 className="text-lg font-semibold text-slate-900">{t.queue.title}</h2>
@@ -652,7 +652,7 @@ export function PetOperationsDashboard({
               ) : (
                 <div className="space-y-4">
                   {todayAppointments.slice(0, 5).map((appointment) => (
-                    <div key={appointment.id} className="flex items-center gap-4 rounded-[1.35rem] border border-slate-200/80 bg-white p-4 transition-colors hover:border-[color:var(--accent)]/15 hover:bg-[color:var(--accent)]/5">
+                    <div key={appointment.id} className="flex items-center gap-4 rounded-md border border-slate-200/80 bg-white p-4 transition-colors hover:border-[color:var(--accent)]/15 hover:bg-[color:var(--accent)]/5">
                       <div className="min-w-[4.5rem] text-center">
                         <p className="text-sm font-bold text-slate-900">{formatTimeForLocale(locale, appointment.scheduledAt)}</p>
                         <p className="mt-1 text-xs font-medium text-slate-700">{appointment.serviceName}</p>
@@ -697,7 +697,7 @@ export function PetOperationsDashboard({
               )}
             </section>
 
-            <section className="rounded-[2rem] border border-slate-200/80 bg-white/95 p-6 shadow-[0_22px_48px_-40px_rgba(15,23,42,0.12)]">
+            <section className="rounded-md border border-slate-200/80 bg-white/95 p-6 ">
               <h2 className="text-lg font-semibold text-slate-900">{t.billing.title}</h2>
               <p className="mt-1 text-sm text-slate-700">{t.billing.description}</p>
 
@@ -727,7 +727,7 @@ export function PetOperationsDashboard({
                 ))}
               </div>
 
-              <div className="mt-6 rounded-[1.35rem] border border-slate-200/80 bg-[linear-gradient(180deg,rgba(16,185,129,0.08),rgba(255,255,255,0.96))] p-4">
+              <div className="mt-6 rounded-md border border-slate-200/80 bg-white p-4">
                 <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[color:var(--accent)]">{t.billing.nextCycleLabel}</p>
                 <p className="mt-2 text-2xl font-bold tracking-[-0.03em] text-slate-900">
                   {formatCurrencyForLocale(locale, nextCycleProjectedDue)}
@@ -737,7 +737,7 @@ export function PetOperationsDashboard({
             </section>
           </div>
 
-          <section className="rounded-[2rem] border border-slate-200/80 bg-white/95 p-6 shadow-[0_22px_48px_-40px_rgba(15,23,42,0.12)]">
+          <section className="rounded-md border border-slate-200/80 bg-white/95 p-6 ">
             <div className="mb-6 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
               <div>
                 <h2 className="text-lg font-semibold text-slate-900">{t.billing.title}</h2>
@@ -757,7 +757,7 @@ export function PetOperationsDashboard({
             {dashboardRows.length === 0 ? (
               <div className="ui-notice-neutral">{t.billing.noAlerts}</div>
             ) : (
-              <div className="overflow-x-auto rounded-[1.5rem] border border-slate-200/80">
+              <div className="overflow-x-auto rounded-md border border-slate-200/80">
                 <table className="min-w-full">
                   <thead>
                     <tr className="border-b border-slate-200 bg-slate-50/80">
@@ -819,7 +819,7 @@ export function PetOperationsDashboard({
           </section>
 
           <div className="grid gap-6 xl:grid-cols-[minmax(0,1.2fr)_minmax(320px,0.9fr)]">
-            <section className="rounded-[2rem] border border-slate-200/80 bg-white/95 p-6 shadow-[0_22px_48px_-40px_rgba(15,23,42,0.12)]">
+            <section className="rounded-md border border-slate-200/80 bg-white/95 p-6 ">
               <div className="mb-6 flex items-center justify-between gap-4">
                 <div>
                   <h2 className="text-lg font-semibold text-slate-900">{t.inventory.title}</h2>
@@ -835,7 +835,7 @@ export function PetOperationsDashboard({
               ) : (
                 <div className="grid gap-4 md:grid-cols-2">
                   {lowStockProducts.slice(0, 4).map((product) => (
-                    <div key={product.id} className="rounded-[1.35rem] border border-slate-200/80 bg-slate-50/80 p-4">
+                    <div key={product.id} className="rounded-md border border-slate-200/80 bg-slate-50/80 p-4">
                       <div className="flex items-start justify-between gap-3">
                         <div>
                           <p className="text-sm font-semibold text-slate-900">{product.name}</p>
@@ -855,7 +855,7 @@ export function PetOperationsDashboard({
               )}
             </section>
 
-            <section className="rounded-[2rem] border border-slate-200/80 bg-white/95 p-6 shadow-[0_22px_48px_-40px_rgba(15,23,42,0.12)]">
+            <section className="rounded-md border border-slate-200/80 bg-white/95 p-6 ">
               <h2 className="text-lg font-semibold text-slate-900">{t.production.title}</h2>
               <p className="mt-1 text-sm text-slate-700">{t.production.description}</p>
 
@@ -864,7 +864,7 @@ export function PetOperationsDashboard({
               ) : (
                 <div className="mt-6 space-y-4">
                   {productionByProfessional.map((professional) => (
-                    <div key={professional.professionalName} className="rounded-[1.35rem] border border-slate-200/80 bg-slate-50/80 p-4">
+                    <div key={professional.professionalName} className="rounded-md border border-slate-200/80 bg-slate-50/80 p-4">
                       <div className="flex items-start justify-between gap-3">
                         <div>
                           <p className="text-sm font-semibold text-slate-900">{professional.professionalName}</p>
