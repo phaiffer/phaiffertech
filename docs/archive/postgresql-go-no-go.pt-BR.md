@@ -5,7 +5,7 @@
 - projeto: Phaiffer Platform
 - tema: migração completa da camada de persistência para PostgreSQL
 - commit de referência: `9521062`
-- documento complementar: [postgresql-migration-runbook.pt-BR.md](/home/willian/IdeaProjects/phaiffertech/docs/platform/postgresql-migration-runbook.pt-BR.md)
+- documento complementar: [postgresql-migration-runbook.pt-BR.md](../platform/postgresql-migration-runbook.pt-BR.md)
 
 ## Resumo Executivo
 
@@ -268,7 +268,7 @@ Condições mínimas para virar `GO`:
 ### JdbcTemplate
 
 - risco: binds de `UUID` e `Instant` fora do padrão podem reaparecer em casos não cobertos
-- foco: [CrmDashboardRepository.java](/home/willian/IdeaProjects/phaiffertech/apps/backend/src/main/java/com/phaiffertech/platform/modules/crm/dashboard/repository/CrmDashboardRepository.java) e [IotMonitoringRepository.java](/home/willian/IdeaProjects/phaiffertech/apps/backend/src/main/java/com/phaiffertech/platform/modules/iot/monitoring/repository/IotMonitoringRepository.java)
+- foco: [CrmDashboardRepository.java](../../apps/backend/src/main/java/com/phaiffertech/platform/modules/crm/dashboard/repository/CrmDashboardRepository.java) e [IotMonitoringRepository.java](../../apps/backend/src/main/java/com/phaiffertech/platform/modules/iot/monitoring/repository/IotMonitoringRepository.java)
 
 ### UUID
 
@@ -292,19 +292,19 @@ Condições mínimas para virar `GO`:
 
 ## Arquivos Mais Sensíveis para Revisão Manual
 
-- [V1__init_schema.sql](/home/willian/IdeaProjects/phaiffertech/apps/backend/src/main/resources/db/migration/V1__init_schema.sql)
-- [V11__crm_pipeline_and_deals.sql](/home/willian/IdeaProjects/phaiffertech/apps/backend/src/main/resources/db/migration/V11__crm_pipeline_and_deals.sql)
-- [V18__crm_companies_pipeline_deals.sql](/home/willian/IdeaProjects/phaiffertech/apps/backend/src/main/resources/db/migration/V18__crm_companies_pipeline_deals.sql)
-- [V19__crm_tasks_notes_activity.sql](/home/willian/IdeaProjects/phaiffertech/apps/backend/src/main/resources/db/migration/V19__crm_tasks_notes_activity.sql)
-- [V21__iot_devices_registers.sql](/home/willian/IdeaProjects/phaiffertech/apps/backend/src/main/resources/db/migration/V21__iot_devices_registers.sql)
-- [V22__iot_telemetry_alarms.sql](/home/willian/IdeaProjects/phaiffertech/apps/backend/src/main/resources/db/migration/V22__iot_telemetry_alarms.sql)
-- [PostgresTelemetryStore.java](/home/willian/IdeaProjects/phaiffertech/apps/backend/src/main/java/com/phaiffertech/platform/modules/iot/telemetry/service/PostgresTelemetryStore.java)
-- [IotMonitoringRepository.java](/home/willian/IdeaProjects/phaiffertech/apps/backend/src/main/java/com/phaiffertech/platform/modules/iot/monitoring/repository/IotMonitoringRepository.java)
-- [CrmDashboardRepository.java](/home/willian/IdeaProjects/phaiffertech/apps/backend/src/main/java/com/phaiffertech/platform/modules/crm/dashboard/repository/CrmDashboardRepository.java)
-- [docker-compose.yml](/home/willian/IdeaProjects/phaiffertech/docker-compose.yml)
-- [Makefile](/home/willian/IdeaProjects/phaiffertech/Makefile)
-- [postgresql.tf](/home/willian/IdeaProjects/phaiffertech/infra/terraform/postgresql.tf)
-- [postgresql-migration-runbook.pt-BR.md](/home/willian/IdeaProjects/phaiffertech/docs/platform/postgresql-migration-runbook.pt-BR.md)
+- [V1__init_schema.sql](../../apps/backend/src/main/resources/db/migration/V1__init_schema.sql)
+- [V11__crm_pipeline_and_deals.sql](../../apps/backend/src/main/resources/db/migration/V11__crm_pipeline_and_deals.sql)
+- [V18__crm_companies_pipeline_deals.sql](../../apps/backend/src/main/resources/db/migration/V18__crm_companies_pipeline_deals.sql)
+- [V19__crm_tasks_notes_activity.sql](../../apps/backend/src/main/resources/db/migration/V19__crm_tasks_notes_activity.sql)
+- [V21__iot_devices_registers.sql](../../apps/backend/src/main/resources/db/migration/V21__iot_devices_registers.sql)
+- [V22__iot_telemetry_alarms.sql](../../apps/backend/src/main/resources/db/migration/V22__iot_telemetry_alarms.sql)
+- [PostgresTelemetryStore.java](../../apps/backend/src/main/java/com/phaiffertech/platform/modules/iot/telemetry/service/PostgresTelemetryStore.java)
+- [IotMonitoringRepository.java](../../apps/backend/src/main/java/com/phaiffertech/platform/modules/iot/monitoring/repository/IotMonitoringRepository.java)
+- [CrmDashboardRepository.java](../../apps/backend/src/main/java/com/phaiffertech/platform/modules/crm/dashboard/repository/CrmDashboardRepository.java)
+- [docker-compose.yml](../../docker-compose.yml)
+- [Makefile](../../Makefile)
+- [postgresql.tf](../../infra/terraform/postgresql.tf)
+- [postgresql-migration-runbook.pt-BR.md](../platform/postgresql-migration-runbook.pt-BR.md)
 
 ## Critérios Objetivos de Aprovação
 

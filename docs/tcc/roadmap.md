@@ -1,106 +1,106 @@
-# Gestão Pet Banho e Tosa - Roadmap Tecnico
+# Gestão Pet Banho e Tosa - Roadmap Técnico
 
-Data de referencia: 2026-05-11.
+Data de referência: 2026-05-11.
 
-Este roadmap separa o que ja existe, o que esta parcialmente estruturado e o que deve ficar para evolucao futura. Ele nao transforma itens futuros em promessas concluidas.
+Este roadmap separa o que já existe, o que está parcialmente estruturado e o que deve ficar para evolução futura. Ele não transforma itens futuros em promessas concluídas.
 
 ## Estado Atual Consolidado
 
-Funcionalidades ja representadas no produto:
+Funcionalidades já representadas no produto:
 
-- clientes/responsaveis;
+- clientes/responsáveis;
 - pets;
 - agenda de banho e tosa;
-- catalogo de servicos;
-- multi-servico por atendimento;
+- catálogo de serviços;
+- multi-serviço por atendimento;
 - profissionais;
-- comissao projetada;
-- planos e sessoes restantes;
-- consumo de sessao;
-- estoque e movimentacoes;
-- vinculo de estoque por servico;
+- comissão projetada;
+- planos e sessões restantes;
+- consumo de sessão;
+- estoque e movimentações;
+- vínculo de estoque por serviço;
 - consumo esperado e real por atendimento;
-- baixa explicita de estoque;
+- baixa explícita de estoque;
 - faturas e pagamentos;
 - dashboard operacional;
 - fechamento operacional;
-- mensagens preparadas para retirada e renovacao;
-- fundacao tecnica de mensageria para WhatsApp.
+- mensagens preparadas para retirada e renovação;
+- fundação técnica de mensageria para WhatsApp.
 
-## Limitacoes Atuais
+## Limitações Atuais
 
-- WhatsApp oficial nao esta validado por bloqueio de billing externo da Meta.
-- PIX e dados de cobranca aparecem como texto para fluxo manual, nao como gateway integrado.
-- Cartao/pagamento online nao estao integrados.
-- Portal do cliente nao faz parte da demo atual.
-- Relatorios gerenciais avancados ainda podem evoluir.
-- A narrativa clinica nao e foco da sprint atual.
+- WhatsApp oficial não está validado por bloqueio de billing externo da Meta.
+- PIX e dados de cobrança aparecem como texto para fluxo manual, não como gateway integrado.
+- Cartão/pagamento online não estão integrados.
+- Portal do cliente não faz parte da demo atual.
+- Relatórios gerenciais avancados ainda podem evoluir.
+- A narrativa clínica não é foco da sprint atual.
 
 ## Curto Prazo
 
-Objetivo: fortalecer apresentacao e validacao operacional.
+Objetivo: fortalecer apresentação e validação operacional.
 
 - Melhorar dados seed de demo para cobrir:
   - um cliente recorrente;
   - um atendimento avulso;
-  - um plano no penultimo/ultimo uso;
-  - um item abaixo do minimo;
-  - uma cobranca pendente;
-  - um profissional com comissao.
-- Refinar textos do produto em portugues, mantendo consistencia com Banho e Tosa.
+  - um plano no penúltimo/último uso;
+  - um item abaixo do mínimo;
+  - uma cobrança pendente;
+  - um profissional com comissão.
+- Refinar textos do produto em portugues, mantendo consistência com Banho e Tosa.
 - Expandir testes focados nos fluxos de plano, estoque e mensagens preparadas.
-- Criar roteiro de apresentacao com prints e ordem sugerida.
-- Revisar documentacao tecnica antes da entrega academica.
+- Criar roteiro de apresentação com prints e ordem sugerida.
+- Revisar documentação técnica antes da entrega acadêmica.
 
-## Medio Prazo
+## Médio Prazo
 
 Objetivo: transformar a demo em produto operacional mais completo.
 
-- Criar relatorios de fechamento por periodo.
-- Melhorar filtros de agenda e visoes por profissional.
-- Evoluir cobranca para reconciliacao mais clara de pagamentos.
-- Melhorar alertas de renovacao com priorizacao por data/sessao.
-- Adicionar trilha de auditoria mais visivel para acoes criticas de estoque.
+- Criar relatórios de fechamento por período.
+- Melhorar filtros de agenda e visões por profissional.
+- Evoluir cobrança para reconciliação mais clara de pagamentos.
+- Melhorar alertas de renovação com priorização por data/sessão.
+- Adicionar trilha de auditoria mais visível para ações críticas de estoque.
 - Preparar ambiente controlado para validar WhatsApp quando billing externo estiver liberado.
 
 ## Longo Prazo
 
-Objetivo: preparar expansao de produto sem quebrar a fundacao.
+Objetivo: preparar expansão de produto sem quebrar a fundação.
 
-- Ativar envio oficial de WhatsApp Cloud API apos resolver billing, credenciais e politicas de template.
+- Ativar envio oficial de WhatsApp Cloud API após resolver billing, credenciais e políticas de template.
 - Evoluir mensagens para templates aprovados e rastreio de entrega.
 - Avaliar gateway de pagamento real somente quando houver escopo fiscal/financeiro adequado.
-- Criar portal do cliente para consulta de plano, agendamentos e historico.
-- Evoluir relatorios para BI leve: recorrencia, churn de planos, ticket medio, consumo de estoque e produtividade.
-- Avaliar extracao de mensageria ou financeiro para servicos dedicados apenas se volume/complexidade justificar.
+- Criar portal do cliente para consulta de plano, agendamentos e histórico.
+- Evoluir relatórios para BI leve: recorrência, churn de planos, ticket médio, consumo de estoque e produtividade.
+- Avaliar extração de mensageria ou financeiro para serviços dedicados apenas se volume/complexidade justificar.
 
-## Criterios de Priorizacao
+## Criterios de Priorização
 
 Priorizar itens que:
 
-- reduzam trabalho manual da recepcao;
+- reduzam trabalho manual da recepção;
 - aumentem clareza do fechamento operacional;
 - diminuam risco de estoque incorreto;
-- melhorem renovacao de planos;
-- sejam demonstraveis sem depender de fornecedor externo;
-- preservem tenant isolation e permissoes.
+- melhorem renovação de planos;
+- sejam demonstráveis sem depender de fornecedor externo;
+- preservem tenant isolation e permissões.
 
 Evitar itens que:
 
-- dependam de integracoes externas ainda bloqueadas;
-- abram escopo de clinica sem necessidade;
-- refatorem arquitetura sem ganho demonstravel;
-- misturem CRM generico com a narrativa principal de Banho e Tosa.
+- dependam de integrações externas ainda bloqueadas;
+- abram escopo de clínica sem necessidade;
+- refatorem arquitetura sem ganho demonstrável;
+- misturem CRM genérico com a narrativa principal de Banho e Tosa.
 
-## Marco de Pronto para Apresentacao
+## Marco de Pronto para Apresentação
 
 O Gestão Pet pode ser apresentado tecnicamente quando:
 
-- dashboard mostra a operacao do dia;
+- dashboard mostra a operação do dia;
 - agenda possui atendimento recorrente e avulso;
 - plano perto do fim gera mensagem preparada;
-- estoque baixo fica visivel;
-- atendimento concluido gera leitura de comissao;
-- cobranca pendente aparece no fechamento;
-- limitacoes de WhatsApp/pagamento online sao explicadas com clareza;
+- estoque baixo fica visível;
+- atendimento concluído gera leitura de comissão;
+- cobrança pendente aparece no fechamento;
+- limitações de WhatsApp/pagamento online são explicadas com clareza;
 - checklist manual foi executado com evidencias.

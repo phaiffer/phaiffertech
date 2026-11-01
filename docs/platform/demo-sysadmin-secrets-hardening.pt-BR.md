@@ -8,41 +8,41 @@ Este documento separa explicitamente tres conceitos operacionais que estavam mis
 - `sysadmin` operacional da empresa
 - `demo comercial assistida`
 
-Tambem define como configurar o projeto com environment variables e secrets no GCP sem expor credenciais no frontend.
+Também define como configurar o projeto com environment variables e secrets no GCP sem expor credenciais no frontend.
 
 ## Estado alvo
 
 ### Master tenant e sysadmin
 
-- O tenant `PHAIFFER_TECH` e o usuario `sysadmin@phaiffer.tech` representam a operacao real da PhaifferTech.
-- Eles nao devem ser usados como demo comercial.
+- O tenant `PHAIFFER_TECH` e o usuário `sysadmin@phaiffer.tech` representam a operação real da PhaifferTech.
+- Eles não devem ser usados como demo comercial.
 - A migration `V37__setup_master_tenant_phaiffer.sql` cria apenas o bootstrap estrutural:
   - tenant master marcado como `platform_owner`
-  - usuario placeholder de sysadmin
-  - senha nao operacional e nao reutilizavel
-  - vinculo com `PLATFORM_ADMIN`
+  - usuário placeholder de sysadmin
+  - senha não operacional e não reutilizável
+  - vínculo com `PLATFORM_ADMIN`
 - A senha operacional passa a ser aplicada fora da migration, por bootstrap/reset controlado por env.
 
 ### Demo comercial assistida
 
-- A demo comercial deve usar tenant e usuario proprios.
-- O frontend nao conhece e nao preenche credenciais.
-- O botao `Usar demo` chama `POST /api/v1/auth/demo-login`.
+- A demo comercial deve usar tenant e usuário próprios.
+- O frontend não conhece e não preenche credenciais.
+- O botão `Usar demo` chama `POST /api/v1/auth/demo-login`.
 - O backend executa o login usando secrets do ambiente.
-- Em producao, a demo so deve funcionar quando:
+- Em produção, a demo só deve funcionar quando:
   - `APP_DEMO_ASSISTED_ENABLED=true`
   - as credenciais do demo estiverem configuradas
   - a feature flag global `demo.assisted.enabled` estiver ativa
 
-### Dev versus producao
+### Dev versus produção
 
 - `admin@local.test` / `Admin@123` continuam sendo apenas seed de desenvolvimento.
-- Esse acesso nao deve ser tratado como demo comercial.
-- O frontend de producao nao embute mais o fluxo de demo via preenchimento de formulario.
+- Esse acesso não deve ser tratado como demo comercial.
+- O frontend de produção não embute mais o fluxo de demo via preenchimento de formulário.
 
-## Variaveis relevantes
+## Variáveis relevantes
 
-### Backend obrigatorias em producao
+### Backend obrigatórias em produção
 
 - `SPRING_DATASOURCE_URL`
 - `SPRING_DATASOURCE_USERNAME`
@@ -72,13 +72,13 @@ Tambem define como configurar o projeto com environment variables e secrets no G
 
 ### Frontend
 
-- O frontend so precisa de `NEXT_PUBLIC_API_URL`.
-- Essa variavel e publica por definicao e deve apontar para a API com `/api/v1`.
+- O frontend só precisa de `NEXT_PUBLIC_API_URL`.
+- Essa variável é pública por definição e deve apontar para a API com `/api/v1`.
 - Nenhuma senha de demo ou sysadmin deve existir no build do frontend.
 
 ### Backend com Secret Manager
 
-Mapeie os secrets do GCP Secret Manager para environment variables do servico backend:
+Mapeie os secrets do GCP Secret Manager para environment variables do serviço backend:
 
 - `SPRING_DATASOURCE_URL`
 - `SPRING_DATASOURCE_USERNAME`
@@ -87,7 +87,7 @@ Mapeie os secrets do GCP Secret Manager para environment variables do servico ba
 - `APP_DEMO_ASSISTED_USER_PASSWORD`
 - `APP_BOOTSTRAP_MASTER_ADMIN_PASSWORD`
 
-Variaveis nao sensiveis podem permanecer como env comuns:
+Variáveis não sensíveis podem permanecer como env comuns:
 
 - `SPRING_PROFILES_ACTIVE=prod`
 - `APP_CORS_ALLOWED_ORIGINS`
@@ -104,34 +104,34 @@ Variaveis nao sensiveis podem permanecer como env comuns:
 Fluxo recomendado:
 
 1. Deploy normal com `APP_BOOTSTRAP_MASTER_ADMIN_ENABLED=false`.
-2. Para bootstrap inicial ou reset controlado, publicar uma revisao temporaria com:
+2. Para bootstrap inicial ou reset controlado, publicar uma revisão temporária com:
    - `APP_BOOTSTRAP_MASTER_ADMIN_ENABLED=true`
    - `APP_BOOTSTRAP_MASTER_ADMIN_PASSWORD` vindo do Secret Manager
 3. Validar acesso do sysadmin.
 4. Voltar `APP_BOOTSTRAP_MASTER_ADMIN_ENABLED=false`.
 
-Isso evita senha fixa em migration e evita deixar reset automatico permanentemente ativo.
+Isso evita senha fixa em migration e evita deixar reset automático permanentemente ativo.
 
-### Habilitacao da demo comercial
+### Habilitação da demo comercial
 
 Fluxo recomendado:
 
 1. Criar tenant demo dedicado.
-2. Criar usuario demo dedicado.
+2. Criar usuário demo dedicado.
 3. Configurar `APP_DEMO_ASSISTED_*` com essas credenciais.
-4. Ativar a feature flag global `demo.assisted.enabled` apenas quando a demo precisar ficar disponivel.
-5. Desativar a feature flag quando a demo nao for necessaria.
+4. Ativar a feature flag global `demo.assisted.enabled` apenas quando a demo precisar ficar disponível.
+5. Desativar a feature flag quando a demo não for necessária.
 
-## Decisoes de seguranca
+## Decisões de segurança
 
-- O frontend nao preenche nem revela credenciais de demo.
-- A conta `sysadmin@phaiffer.tech` nao e mais tratada como demo.
-- A migration do master nao depende de senha hardcoded operacional.
+- O frontend não preenche nem revela credenciais de demo.
+- A conta `sysadmin@phaiffer.tech` não é mais tratada como demo.
+- A migration do master não depende de senha hardcoded operacional.
 - Endpoints de docs e observabilidade ficam desabilitados publicamente em `prod`.
 - O proxy reverso bloqueia `/actuator`, `/swagger-ui` e `/v3/api-docs`.
 
 ## Limites atuais
 
-- O diretorio `infra/terraform` permanece apenas como referencia historica e nao representa a arquitetura alvo.
+- O diretório `infra/terraform` permanece apenas como referência histórica e não representa a arquitetura alvo.
 - A base atual de IaC para GCP passou para `infra/gcp/terraform`.
-- O runbook de deploy inicial na GCP esta em `docs/platform/gcp-minimal-infra.pt-BR.md`.
+- O runbook de deploy inicial na GCP está em `docs/platform/gcp-minimal-infra.pt-BR.md`.
