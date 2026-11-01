@@ -1,604 +1,106 @@
-# Phaiffer Platform Monorepo
+# Gestão Pet, Plataforma PhaifferTech
 
-Unified multi-tenant SaaS platform focused on Pet Management, with CRM support capabilities and historical IoT compatibility preserved where required.
+Plataforma SaaS multi-tenant para pet shops de **banho e tosa**. Cobre clientes, pets, agenda multi-serviço, catálogo de serviços, profissionais e comissões, planos com consumo de sessões, estoque, cobrança e mensagens preparadas para o cliente.
+
+O repositório é um monorepo com backend Java/Spring Boot e frontend Next.js. O produto é exibido como **Gestão Pet** (pt-BR) / **Pet Management** (en-US).
 
 ## Stack
 
-### Backend
-- Java 21
-- Spring Boot 3.x
-- Maven
-- Spring Security (JWT + RBAC + granular permissions)
-- Micrometer + Prometheus + OpenTelemetry tracing bridge
-- Spring Data JPA
-- Flyway
-- PostgreSQL 16
-- Springdoc OpenAPI
-- Testcontainers (integration tests)
+| Camada | Tecnologias |
+| --- | --- |
+| Backend | Java 21, Spring Boot 3, Spring Security (JWT + RBAC + permissões granulares), Spring Data JPA, Flyway, PostgreSQL 16, Springdoc OpenAPI, Micrometer/Prometheus, Testcontainers |
+| Frontend | Next.js (App Router), React, TypeScript, Tailwind CSS, Vitest + Testing Library |
+| Infra | Docker Compose, GitHub Actions, Terraform (GCP: Cloud Run, Cloud SQL, Secret Manager, Artifact Registry) |
 
-### Frontend
-- Next.js (App Router)
-- TypeScript
-- Tailwind CSS
-
-### Infra
-- Docker Compose
-- GitHub Actions CI
-- Terraform (GCP minimal base)
-- Root Makefile
-
-Operational hardening notes:
-
-- `docs/platform/demo-sysadmin-secrets-hardening.pt-BR.md`
-
-## Pet Management Banho e Tosa Documentation
-
-Technical documentation focused on the current Pet Management grooming scope:
-
-- [Architecture overview](docs/architecture/overview.md)
-- [Grooming domain model](docs/domain/petflow-grooming-domain.md)
-- [Payments layer overview](docs/payments/payment-layer-overview.md)
-- [Payments domain model](docs/payments/payment-domain-model.md)
-- [Payments roadmap](docs/payments/payment-roadmap.md)
-- [Manual validation checklist](docs/validation/manual-validation-checklist.md)
-- [TCC decision log](docs/tcc/decision-log.md)
-- [TCC payment architecture notes](docs/tcc/payment-architecture-notes.md)
-- [TCC roadmap](docs/tcc/roadmap.md)
-
-## Package Root
-
-Backend package root is fixed:
-
-- `com.phaiffertech.platform`
-
-## Monorepo Structure
+## Estrutura
 
 ```text
 .
-├── Makefile
-├── docker-compose.yml
-├── .env.example
 ├── apps/
-│   ├── backend/
-│   └── frontend/
-├── docs/
-└── infra/
+│   ├── backend/     # API Spring Boot (pacote raiz com.phaiffertech.platform)
+│   └── frontend/    # Next.js (painel, telas Gestão Pet e site público)
+├── docs/            # Documentação técnica (índice abaixo)
+├── infra/           # Docker, Terraform GCP e observabilidade
+├── scripts/         # Scripts PowerShell para desenvolvimento local no Windows
+├── Makefile
+└── docker-compose.yml
 ```
 
-## Platform Highlights
+## Como rodar
 
-- Modular monolith with clear boundaries: `shared`, `core`, `modules`, `infrastructure`.
-- Shared anti-duplication application layer in `shared.crud` for tenant-safe CRUD flows.
-- Multi-tenancy with tenant context enforcement and tenant-isolated queries.
-- Authorization model with `user_tenants` + `user_tenant_roles` + `role_permissions`.
-- JWT access token + secure refresh token (hash + rotation + revoke on logout).
-- Granular permission checks via `@RequirePermission`.
-- Automatic auditing for auth and CRUD flows.
-- Soft delete with `deleted_at` on business entities.
-- Standard pagination contract (`page`, `size`, `sort`, `direction`, `search`).
-- Pet Management-first product surface with CRM support lanes behind the same SaaS foundation.
-- Structured JSON logs with tenant/user/trace correlation.
-- Actuator metrics + Prometheus endpoint.
-- API rate limiting (auth and default API).
-- Feature flags (global + tenant) and module enablement guards.
-
-## Architecture Guardrails
-
-Core ownership:
-
-- `core.auth`, `core.tenant`, `core.user`, `core.iam`, `core.subscription`
-- `core.settings`, `core.audit`, `core.notification`, `core.attachment`
-- `core.finance` (shared invoices, payments, cash movements and Brazil fiscal readiness), `core.inventory` (shared inventory foundation) and `core.messaging` (WhatsApp Cloud API foundation)
-- `core.module` for module registry, feature flags and tenant module enablement
-- `shared.*` only for technical infrastructure, CRUD primitives and cross-module contracts
-
-Vertical ownership:
-
-- `modules.crm`: companies, contacts, leads, deals, pipeline, tasks, notes, CRM dashboard/activity
-- `modules.pet`: clients, pets, appointments (multi-service lines), services, professionals, commissions, client plans/templates, products, inventory, billing/prepared messages, invoices, and adjacent clinical domains (medical records, vaccinations, prescriptions, clinical timeline)
-
-Enforced rules:
-
-- core/shared cannot import business classes from `modules.crm` or `modules.pet`
-- one vertical module cannot import another vertical module directly
-- cross-module aggregation happens through `shared.contracts.module.ModuleSummaryCapability`
-- module access is centralized in `core.module.ModuleAccessService` and enforced by `shared.security.ModuleAccessGuard`
-
-Current architectural corrections:
-
-- `/api/v1/modules` now separates `moduleEnabled`, `featureFlagEnabled` and `available`
-- `/api/v1/dashboard/summary` now aggregates module summaries through capabilities instead of direct repository access from core
-- dashboard payloads are standardized in `shared.dashboard.dto`, while each vertical module owns its own operational summary endpoint
-
-## Dashboard Architecture
-
-- Platform dashboard: `GET /api/v1/dashboard/summary`
-- CRM dashboard: `GET /api/v1/crm/dashboard/summary`
-- Pet dashboard: `GET /api/v1/pet/dashboard/summary`
-- Cross-module aggregation contract: `shared.contracts.module.ModuleSummaryCapability`
-- Shared dashboard payloads: `DashboardSummaryCardDto`, `DashboardCountMetricDto`, `DashboardListItemDto`, `DashboardTimeSeriesPointDto`, `DashboardSectionDto`, `DashboardModuleSummaryDto`, `PlatformDashboardResponseDto`
-- Frontend widgets: `SummaryCard`, `DashboardSection`, `MetricGrid`, `StatusBadge`, `RecentItemsList`, `SimpleBarChart`, `SimpleLineChart`, `EmptyStateCard`
-- Access model: module enabled is tenant-scoped, feature flag is rollout-scoped, permission is user-scoped
-
-## CRM Delivery Status
-
-Legacy CRM reference was analyzed in `../crm-platform` only as a functional reference. Main conclusions:
-
-- Legacy domains found: companies, contacts, leads, deals, pipeline stages, tasks, notes, campaigns, conversations, attachments, notifications, audit/activity, dashboard, invites, onboarding and chatbot.
-- CRM V1 in this platform now covers: companies, contacts, leads, deals, pipeline stages, tasks, notes, activity feed and dashboard summary.
-- Cross-module concerns remain outside CRM: notifications, attachments, invites and onboarding belong conceptually to `core`.
-- Deferred to CRM V2: campaigns, conversations and chatbot-oriented flows.
-
-Gap decision summary:
-
-| Domain | Status na nova plataforma |
-| --- | --- |
-| companies | já implementado |
-| contacts | já implementado |
-| leads | já implementado |
-| deals | já implementado |
-| pipeline stages | já implementado |
-| tasks | já implementado |
-| notes | já implementado |
-| activity feed | já implementado |
-| dashboard | já implementado |
-| notifications | mover para core |
-| attachments | mover para core |
-| invites | mover para core |
-| onboarding | mover para core |
-| campaigns | adiar para CRM V2 |
-| conversations | adiar para CRM V2 |
-| chatbot | adiar para CRM V2 |
-
-## Pet Delivery Status
-
-The legacy PetFlow reference was analyzed in `../petflow` strictly as a functional reference. Main conclusions:
-
-- Legacy domains effectively implemented: clients/tutors, pets, appointments/agenda, products, inventory transactions, subscriptions, finance/invoices, dashboard/reports and client portal endpoints.
-- Legacy business flows retained as reference: client/pet deactivation cascades to scheduled appointments, tenant/company ownership validation on clinical actions, stock cannot go negative, and subscription-covered appointments should not be invoiced twice.
-- Legacy gaps also mattered: PetFlow does not expose mature standalone modules for service catalog, professionals, medical records, vaccinations or prescriptions, so these were modeled natively for the SaaS platform instead of being copied blindly.
-- Multi-tenant SaaS concerns were not reusable from legacy; tenant isolation, auth, RBAC and permissions remain owned by platform core.
-
-Gap decision summary for Pet V1:
-
-| Funcionalidade | Status na nova plataforma |
-| --- | --- |
-| clients | já implementado |
-| pets | já implementado |
-| appointments | já implementado |
-| services | já implementado |
-| professionals | já implementado |
-| medical records | já implementado |
-| vaccinations | já implementado |
-| prescriptions | já implementado |
-| products | já implementado |
-| inventory | já implementado |
-| invoices | já implementado |
-| subscriptions | adiar para Pet V2 |
-| notifications / reminders | adiar para Pet V2 |
-| reports | adiar para Pet V2 |
-| agenda | parcialmente implementado |
-| client portal | adiar para Pet V2 |
-
-Pet V1 delivered in this platform:
-
-- clinical base: clients, pets, appointments, services, professionals, medical records, vaccinations and prescriptions
-- commercial base: products, inventory and invoices
-- SaaS guarantees: tenant-aware CRUD, granular permissions, soft delete, standard pagination and Next.js management pages
-
-Deferred to Pet V2:
-
-- subscription lifecycle aligned with shared platform billing/governance
-- automatic reminders/notifications
-- client portal
-- advanced reports
-- external integrations
-
-## Historical Compatibility Notes
-
-Phase 2B keeps historical IoT compatibility only where it still protects upgraded databases or old records:
-
-- Flyway migrations and seeded reference data stay untouched in the migration chain.
-- Shared enums still preserve historical IoT values when persisted rows can still reference them.
-- CRM related-reference handling still accepts historical `IOT.*` payloads, but the frontend now renders them with neutral legacy copy.
-- Local bootstrap/demo flows explicitly avoid re-enabling archived IoT modules while still clearing stale historical rows when needed.
-
-## Flyway Migrations
-
-- `V1__init_schema.sql`
-- `V2__init_crm_schema.sql`
-- `V3__init_pet_schema.sql`
-- `V4__init_iot_schema.sql`
-- `V5__seed_reference_data.sql`
-- `V6__seed_permissions.sql`
-- `V7__refresh_token_security.sql`
-- `V8__crm_extended_schema.sql`
-- `V9__tenant_role_model.sql`
-- `V10__crm_contacts_leads_improvements.sql`
-- `V11__crm_pipeline_and_deals.sql`
-- `V12__crm_notes_and_tasks.sql`
-- `V13__pet_v1_schema.sql`
-- `V14__iot_v1_schema.sql`
-- `V15__seed_pet_iot_permissions.sql`
-- `V16__feature_flags.sql`
-- `V17__rate_limit_support.sql`
-- `V18__crm_companies_pipeline_deals.sql`
-- `V19__crm_tasks_notes_activity.sql`
-- `V20__crm_permissions_seed.sql`
-- `V21__iot_devices_registers.sql`
-- `V22__iot_telemetry_alarms.sql`
-- `V23__iot_maintenance_dashboard_permissions.sql`
-- `V24__pet_clients_pets.sql`
-- `V25__pet_appointments_services.sql`
-- `V26__pet_medical_records.sql`
-- `V27__pet_products_inventory_invoices.sql`
-- `V28__pet_dashboard_permission.sql`
-- `V29__align_core_user_permissions.sql`
-- `V30__iot_modbus_explicit_model.sql`
-- `V31__iot_maintenance_operational_links.sql`
-- `V32__pet_appointments_integrity_hardening.sql`
-- `V33__pet_clinical_appointment_context.sql`
-- `V34__crm_relation_reference_normalization.sql`
-- `V35__tenant_productization_foundation.sql`
-- `V36__setup_prod_admin.sql`
-- `V37__setup_master_tenant_phaiffer.sql`
-- `V38__seed_demo_assisted_feature_flag.sql`
-- `V39__saas_operational_foundations.sql`
-- `V40__plan_contract_resolution_and_dashboard_indexes.sql`
-- `V41__support_impersonation_sessions.sql`
-- `V42__shared_inventory_foundation.sql`
-- `V43__tenant_finance_foundation.sql`
-- `V44__brazil_fiscal_readiness.sql`
-- `V45__password_reset_tokens.sql`
-- `V46__demo_enrichment_seed.sql`
-- `V47__pet_appointment_professional_and_pricing.sql`
-- `V48__pet_client_plans_and_permissions.sql`
-- `V49__pet_appointment_client_plan_link.sql`
-- `V50__pet_appointment_payment_summary.sql`
-- `V51__pet_professional_commission_rate.sql`
-- `V52__pet_demo_enrichment_seed.sql`
-- `V53__petflow_package_catalog.sql`
-- `V54__tenant_admin_bootstrap_access.sql`
-- `V55__tenant_commercial_status_enforcement.sql`
-- `V56__pet_client_document_type.sql`
-- `V57__pet_service_catalog_categories_and_flags.sql`
-- `V58__pet_appointment_multi_service_lines.sql`
-- `V59__pet_appointment_service_line_commission_snapshot.sql`
-- `V60__pet_appointment_service_line_professional_assignment.sql`
-- `V61__pet_commission_summary_permission.sql`
-- `V62__pet_service_inventory_linkage.sql`
-- `V63__pet_appointment_actual_inventory_consumption.sql`
-- `V64__pet_appointment_inventory_stock_application.sql`
-- `V65__pet_billing_message_settings.sql`
-- `V66__petflow_grooming_profile_fields.sql`
-- `V67__pet_plan_templates_and_sales_flow.sql`
-- `V68__pet_client_plan_notes.sql`
-- `V69__petflow_grooming_and_plan_template_repair.sql`
-- `V70__messaging_whatsapp_foundation.sql`
-
-Note:
-- Pet V1 expansion requested originally as `V17..V20` was created as `V24..V27`, because `V17..V23` were already allocated in the existing Flyway chain and could not be reused safely.
-- Historical IoT migrations remain in place for compatibility with existing databases and are not removed as part of the Pet Management-only transition.
-
-## Main Endpoints (`/api/v1`)
-
-### Auth
-- `POST /auth/login`
-- `POST /auth/refresh`
-- `POST /auth/logout`
-- `POST /auth/forgot-password`
-- `POST /auth/reset-password`
-- `GET /auth/me`
-
-### Core
-- `GET /health`
-- `GET|POST /tenants`
-- `GET|POST /users`
-- `GET /modules`
-- `GET /dashboard/summary`
-- `GET /feature-flags`
-- `GET|POST /finance/invoices`
-- `GET|POST /finance/payments`
-- `GET|POST /finance/cash-movements`
-- `GET|PUT /finance/fiscal-profile`
-- `GET /finance/fiscal-readiness`
-- `GET|PUT /messaging/whatsapp/channel`
-- `GET|POST /messaging/whatsapp/dispatches`
-- `GET|POST /messaging/whatsapp/webhook`
-- `GET /actuator/metrics`
-- `GET /actuator/prometheus`
-- `GET /actuator/health`
-
-### CRM
-- Companies:
-  - `GET|POST /crm/companies`
-  - `GET|PUT|DELETE /crm/companies/{id}`
-- Contacts:
-  - `GET|POST /crm/contacts`
-  - `GET|PUT|DELETE /crm/contacts/{id}`
-  - `PATCH /crm/contacts/{id}/restore`
-- Leads:
-  - `GET|POST /crm/leads`
-  - `GET|PUT|DELETE /crm/leads/{id}`
-  - `PATCH /crm/leads/{id}/restore`
-- Pipeline stages:
-  - `GET|POST /crm/pipeline-stages`
-  - `GET|PUT|DELETE /crm/pipeline-stages/{id}`
-- Deals:
-  - `GET|POST /crm/deals`
-  - `GET|PUT|DELETE /crm/deals/{id}`
-- Tasks:
-  - `GET|POST /crm/tasks`
-  - `GET|PUT|DELETE /crm/tasks/{id}`
-- Notes:
-  - `GET|POST /crm/notes`
-  - `GET|PUT|DELETE /crm/notes/{id}`
-- Activity and dashboard:
-  - `GET /crm/activity`
-  - `GET /crm/dashboard/summary`
-
-### Pet
-- Pet dashboard:
-  - `GET /pet/dashboard/summary`
-- Pet clients:
-  - `GET|POST /pet/clients`
-  - `GET|PUT|DELETE /pet/clients/{id}`
-  - `PATCH /pet/clients/{id}/restore`
-- Pet profiles:
-  - `GET|POST /pet/pets`
-  - `GET|PUT|DELETE /pet/pets/{id}`
-  - `PATCH /pet/pets/{id}/restore`
-- Pet appointments:
-  - `GET|POST /pet/appointments`
-  - `GET|PUT|DELETE /pet/appointments/{id}`
-  - `PATCH /pet/appointments/{id}/restore`
-- Pet services:
-  - `GET|POST /pet/services`
-  - `GET|PUT|DELETE /pet/services/{id}`
-  - `PATCH /pet/services/{id}/restore`
-- Pet professionals:
-  - `GET|POST /pet/professionals`
-  - `GET|PUT|DELETE /pet/professionals/{id}`
-  - `PATCH /pet/professionals/{id}/restore`
-- Pet medical records:
-  - `GET|POST /pet/medical-records`
-  - `GET|PUT|DELETE /pet/medical-records/{id}`
-  - `PATCH /pet/medical-records/{id}/restore`
-- Pet vaccinations:
-  - `GET|POST /pet/vaccinations`
-  - `GET|PUT|DELETE /pet/vaccinations/{id}`
-  - `PATCH /pet/vaccinations/{id}/restore`
-- Pet prescriptions:
-  - `GET|POST /pet/prescriptions`
-  - `GET|PUT|DELETE /pet/prescriptions/{id}`
-  - `PATCH /pet/prescriptions/{id}/restore`
-- Pet products:
-  - `GET|POST /pet/products`
-  - `GET|PUT|DELETE /pet/products/{id}`
-  - `PATCH /pet/products/{id}/restore`
-- Pet inventory:
-  - `GET|POST /pet/inventory`
-  - `GET|PUT|DELETE /pet/inventory/{id}`
-  - `PATCH /pet/inventory/{id}/restore`
-- Pet invoices:
-  - `GET|POST /pet/invoices`
-  - `GET|PUT|DELETE /pet/invoices/{id}`
-  - `PATCH /pet/invoices/{id}/restore`
-- Pet plans & templates:
-  - `GET|POST /pet/plans`
-  - `GET|PUT|DELETE /pet/plans/{id}`
-  - `GET|POST /pet/plan-templates`
-- Pet commissions:
-  - `GET /pet/commissions/summary`
-- Pet billing & prepared messages:
-  - `GET|PUT /pet/billing-message-settings`
-  - `POST /pet/messages/appointments/{appointmentId}/pickup`
-  - `POST /pet/messages/plans/{planId}/renewal-reminder`
-  - `POST /pet/whatsapp/dispatches/**`
-
-Swagger UI:
-- `http://localhost:8080/swagger-ui.html`
-
-## Frontend
-
-Implemented pages:
-
-- Public / Institutional & Auth (`(public)`):
-  - `/`, `/about`, `/platform`, `/products`, `/engineering`, `/research`, `/articles`, `/articles/[slug]`, `/contact`
-  - `/login`, `/forgot-password`, `/reset-password`
-- Core & Shared Foundations (`(app)`):
-  - `/dashboard`, `/tenants`, `/users`, `/settings`
-  - `/finance/invoices`, `/finance/payments`, `/finance/cash`
-  - `/inventory`
-- PET (`(app)/pet`):
-  - `/pet`
-  - `/pet/dashboard`
-  - `/pet/insights`
-  - `/pet/follow-up`
-  - `/pet/clients`
-  - `/pet/pets`
-  - `/pet/appointments`
-  - `/pet/services`
-  - `/pet/professionals`
-  - `/pet/commissions`
-  - `/pet/plans`
-  - `/pet/pos`
-  - `/pet/commercial`
-  - `/pet/products`
-  - `/pet/inventory`
-  - `/pet/invoices`
-  - `/pet/finance`
-  - `/pet/clinic`, `/pet/medical-records` (clinical entitlement scope)
-- CRM (`src/modules/crm`):
-  - Retained in frontend modules/services as support lane for tasks, notes, activity and relationship workflows.
-
-Guards:
-- Route protection via authenticated layout (`ProtectedRoute`).
-- Permission checks via `PermissionGuard` + `usePermissions`.
-- Sidebar module visibility based on permissions + module enablement/feature flags.
-- Global error boundary + client-side structured logger.
-
-## Quick Start (Docker)
-
-1. Copy env file:
+### Com Docker
 
 ```bash
 cp .env.example .env
-```
-
-2. Start stack:
-
-```bash
 make up
 ```
 
-3. Access:
-- Frontend: `http://localhost:3000`
-- Backend: `http://localhost:8080`
-- Swagger: `http://localhost:8080/swagger-ui.html`
-- Adminer (optional): `http://localhost:8081` (`docker compose --profile tools up -d`)
-- Prometheus (optional): `http://localhost:9090` (`make observability-up`)
-- Grafana (optional): `http://localhost:3001` (`make observability-up`)
+### No Windows, sem Docker
 
-## Local Development Without Docker
-
-Windows local development can run directly against a locally installed PostgreSQL database without Docker.
-
-Required local database:
-
-- Database: `platform_db`
-- Username: `platform_user`
-- Password: `platform_pass`
-
-Copy the local env example:
+Requer PostgreSQL local com o banco `platform_db` (usuário `platform_user`). O passo a passo completo está em [docs/local-windows-development.md](docs/local-windows-development.md).
 
 ```powershell
 Copy-Item .env.local.example .env.local
+.\scripts\start-local-backend.ps1    # janela 1
+.\scripts\start-local-frontend.ps1   # janela 2
+.\scripts\smoke-local.ps1            # verificação rápida
 ```
 
-Start backend and frontend in separate PowerShell windows:
+### Endereços
 
-```powershell
-.\scripts\start-local-backend.ps1
-.\scripts\start-local-frontend.ps1
-```
+| Serviço | URL |
+| --- | --- |
+| Frontend | http://localhost:3000 |
+| Backend | http://localhost:8080 |
+| Swagger UI (referência completa da API) | http://localhost:8080/swagger-ui.html |
+| Adminer (profile `tools`) | http://localhost:8081 |
+| Prometheus / Grafana (`make observability-up`) | http://localhost:9090 / http://localhost:3001 |
 
-Smoke check:
+### Acessos locais (profile `dev`)
 
-```powershell
-.\scripts\smoke-local.ps1
-```
+| Uso | Tenant | E-mail | Senha |
+| --- | --- | --- | --- |
+| Demo comercial de banho e tosa (dados de exemplo) | `phaiffertech-demo` | `demo@phaiffertech.local` | `Demo@123` |
+| Administrador local (acesso irrestrito para validação) | `default` | `admin@local.test` | `Admin@123` |
 
-Local login:
+Essas credenciais existem apenas no profile `dev` e podem ser sobrescritas por variáveis `APP_DEMO_COMMERCIAL_*`. Ambientes publicados usam segredos próprios (ver [docs/platform/demo-sysadmin-secrets-hardening.pt-BR.md](docs/platform/demo-sysadmin-secrets-hardening.pt-BR.md)).
 
-- Tenant: `default`
-- Email: `admin@local.test`
-- Password: `Admin@123`
-
-In local/dev, `admin@local.test` keeps unrestricted wildcard entitlement access for full platform validation. Keep `SPRING_PROFILES_ACTIVE=dev` for this behavior.
-
-Full Windows setup guide:
-
-- [docs/local-windows-development.md](docs/local-windows-development.md)
-
-Docker-based flows remain available for Linux validation and production-like testing.
-
-## Makefile
-
-List commands:
+## Comandos úteis
 
 ```bash
-make help
+make help              # lista todos os alvos
+make test              # testes do backend
+make test-integration  # testes de integração (Testcontainers + PostgreSQL)
+make verify            # build + testes
+make logs-follow       # logs do Docker Compose
 ```
 
-Main targets:
-- `make up`, `make down`, `make restart`, `make status`
-- `make logs-follow`, `make logs-all`, `make logs-json`, `make logs-backend`, `make logs-frontend`, `make logs-db`
-- `make docker-build`, `make docker-reset-db`
-- `make test`, `make test-backend`, `make test-integration`, `make test-unit`, `make test-pet`
-- `make build`, `make verify`, `make ci`
-- `make metrics`
-- `make observability-up`, `make observability-down`
-- `make terraform-init`, `make terraform-plan`
-- `make terraform-legacy-init`, `make terraform-legacy-plan`
-- `make migrate`, `make crm-seed`, `make pet-seed`, `make db-shell`
-
-## Docker Profiles
-
-- default (sem profile): postgres + backend + frontend
-- `tools`: adminer
-- `observability`: prometheus + grafana + loki
-
-## Integration Tests
-
-Integration tests are under:
-
-- `apps/backend/src/test/java/com/phaiffertech/platform/integration`
-- `apps/backend/src/test/java/com/phaiffertech/platform/integration/crm`
-- `apps/backend/src/test/java/com/phaiffertech/platform/support`
-
-Current coverage includes:
-- auth (`login`, `refresh`, `me`)
-- tenant isolation
-- tenant-role resolution and permission inheritance
-- permission enforcement
-- CRM contacts/leads CRUD
-- CRM companies/deals/pipeline/tasks/notes CRUD
-- CRM dashboard summary and activity feed
-- CRM legacy external-reference compatibility
-- PET clients/profiles/appointments CRUD
-- PET services/professionals CRUD
-- PET medical records/vaccinations/prescriptions CRUD
-- PET products/inventory/invoices CRUD
-- shared CRUD behavior (soft delete, tenant filter, pagination behavior)
-- pagination contract
-
-Execution:
+Frontend (em `apps/frontend`):
 
 ```bash
-make test-integration
+npm test        # Vitest
+npm run lint
+npm run build
 ```
 
-Notes:
-- Testcontainers + PostgreSQL are mandatory for integration tests.
-- Integration test bootstrap sets Docker `api.version=1.44` by default (can be overridden with `DOCKER_API_VERSION`).
+O CI (`.github/workflows/ci.yml`) executa `mvn clean verify` no backend e `npm ci && npm test && npm run lint && npm run build` no frontend a cada PR.
 
-## CI/CD
+## Documentação
 
-- Workflow file: `.github/workflows/ci.yml`
-- Stages:
-  - backend `mvn clean verify`
-  - frontend `npm ci && npm test && npm run lint && npm run build`
+| Tema | Documento |
+| --- | --- |
+| Arquitetura (módulos, multi-tenancy, segurança, pagamentos, mensageria, i18n) | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) |
+| Modelo de domínio de banho e tosa | [docs/domain/grooming-domain.md](docs/domain/grooming-domain.md) |
+| Camada de pagamentos | [visão geral](docs/payments/payment-layer-overview.md), [modelo de domínio](docs/payments/payment-domain-model.md), [roadmap](docs/payments/payment-roadmap.md) |
+| Backend | [apps/backend/README.md](apps/backend/README.md) |
+| Frontend e i18n | [apps/frontend/README.md](apps/frontend/README.md) |
+| Desenvolvimento local no Windows | [docs/local-windows-development.md](docs/local-windows-development.md) |
+| Operação, deploy e infraestrutura GCP | [docs/platform/](docs/platform/) |
+| Validação manual da demo | [docs/validation/manual-validation-checklist.md](docs/validation/manual-validation-checklist.md) |
+| Decisões e roadmap do projeto | [docs/tcc/](docs/tcc/) |
 
-## Terraform (GCP)
+## Limitações conhecidas
 
-Current deploy base is available at `infra/gcp/terraform`:
-- Artifact Registry
-- Cloud SQL for PostgreSQL
-- Secret Manager
-- Cloud Run backend/frontend
-- service accounts and minimum IAM
-
-Legacy Terraform remains in `infra/terraform` only as historical reference and should not be used as the target production architecture.
-
-Detailed runbook:
-- [docs/platform/gcp-minimal-infra.pt-BR.md](docs/platform/gcp-minimal-infra.pt-BR.md)
-
-## Dev Credentials
-
-- Tenant code: `default`
-- Email: `admin@local.test`
-- Password: `Admin@123`
-- In local/dev, `admin@local.test` keeps unrestricted wildcard entitlement access for full platform validation.
-
-## Default Ports
-
-- PostgreSQL: `5432`
-- Backend: `8080`
-- Frontend: `3000`
-- Adminer: `8081`
-
-## PostgreSQL Runbook
-
-Operational runbook:
-- [docs/platform/postgresql-migration-runbook.pt-BR.md](docs/platform/postgresql-migration-runbook.pt-BR.md)
+- O envio oficial via WhatsApp Cloud API tem fundação técnica no código, mas não está validado; a demo usa mensagens preparadas para envio manual.
+- Não há gateway de pagamento integrado (PIX dinâmico ou cartão). A cobrança é manual assistida, com providers `Manual` e `Noop` atrás de uma interface.
+- As telas de CRM, clínica veterinária e administração da plataforma ainda têm textos fixos em inglês ou português; a internacionalização completa cobre as telas de banho e tosa.
