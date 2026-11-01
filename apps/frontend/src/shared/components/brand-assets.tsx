@@ -31,29 +31,29 @@ function joinClasses(...values: Array<string | undefined | false>) {
 
 function resolveMarkToneClass(tone: BrandTone) {
   if (tone === 'dark') {
-    return 'border-white/12 bg-white  backdrop-blur';
+    return 'border-white/12 bg-[linear-gradient(180deg,rgba(255,255,255,0.14),rgba(255,255,255,0.06))] shadow-[0_24px_64px_-36px_rgba(15,23,42,0.72)] backdrop-blur';
   }
 
-  return 'border-slate-200/80 bg-[radial-gradient(circle_at_top,rgba(28,28,26,0.08),transparent_68%),linear-gradient(180deg,#ffffff,#f8fbf9)] ';
+  return 'border-slate-200/80 bg-[radial-gradient(circle_at_top,rgba(16,185,129,0.08),transparent_68%),linear-gradient(180deg,#ffffff,#f8fbf9)] shadow-[0_18px_42px_-30px_rgba(15,23,42,0.18)]';
 }
 
 function resolveBannerToneClass(tone: BrandTone) {
   if (tone === 'dark') {
-    return 'border-white/10 bg-white  backdrop-blur';
+    return 'border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.1),rgba(255,255,255,0.04))] shadow-[0_28px_72px_-38px_rgba(15,23,42,0.8)] backdrop-blur';
   }
 
-  return 'border-slate-200/80 bg-white ';
+  return 'border-slate-200/80 bg-white shadow-[0_16px_32px_-28px_rgba(15,23,42,0.18)]';
 }
 
 export function PetMark({ className, iconClassName }: PetMarkProps) {
   return (
     <span
       className={joinClasses(
-        'relative inline-flex items-center justify-center overflow-hidden rounded-md border border-emerald-200/80 bg-[radial-gradient(circle_at_top,rgba(167,243,208,0.44),transparent_58%),linear-gradient(135deg,#10b981,#0f766e)] text-white  ring-1 ring-white/35',
+        'relative inline-flex items-center justify-center overflow-hidden rounded-[1.2rem] border border-emerald-200/80 bg-[radial-gradient(circle_at_top,rgba(167,243,208,0.44),transparent_58%),linear-gradient(135deg,#10b981,#0f766e)] text-white shadow-[0_18px_40px_-26px_rgba(16,185,129,0.5)] ring-1 ring-white/35',
         className
       )}
     >
-      <span className="pointer-events-none absolute inset-[10%] rounded-md border border-white/18" />
+      <span className="pointer-events-none absolute inset-[10%] rounded-[0.95rem] border border-white/18" />
       <svg
         viewBox="0 0 24 24"
         fill="currentColor"
@@ -78,7 +78,7 @@ export function BrandMark({
   return (
     <span
       className={joinClasses(
-        'relative inline-flex items-center justify-center overflow-hidden rounded-md border p-[0.34rem]',
+        'relative inline-flex items-center justify-center overflow-hidden rounded-[1.45rem] border p-[0.34rem]',
         resolveMarkToneClass(tone),
         className
       )}
@@ -106,7 +106,7 @@ export function BrandBanner({
   return (
     <span
       className={joinClasses(
-        'relative inline-flex items-center justify-center overflow-hidden rounded-md border p-0.5',
+        'relative inline-flex items-center justify-center overflow-hidden rounded-[1.45rem] border p-0.5',
         resolveBannerToneClass(tone),
         className
       )}
