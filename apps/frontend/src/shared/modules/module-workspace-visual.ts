@@ -14,27 +14,21 @@ type ModuleWorkspaceVisualInput = {
   defaultProfile: VisualProfileKey;
 };
 
+// "Operacional calmo": panels are flat surfaces with a neutral border. The tenant
+// tint variables below are still computed (branding keeps them available), but
+// they no longer paint gradients behind every panel.
 export const workspacePanelSurfaceStyle: CSSProperties = {
-  borderColor: 'var(--workspace-panel-border)',
-  boxShadow: 'var(--workspace-panel-shadow)',
-  backgroundImage: [
-    'linear-gradient(180deg, var(--workspace-panel-tint) 0%, transparent 180px)',
-    'radial-gradient(circle at top right, var(--workspace-panel-support), transparent 50%)'
-  ].join(', ')
+  borderColor: 'var(--app-shell-border)',
+  boxShadow: 'var(--shadow-xs)'
 };
 
 export const workspaceMutedSurfaceStyle: CSSProperties = {
-  borderColor: 'var(--workspace-panel-border)',
-  boxShadow: 'var(--workspace-muted-shadow)',
-  backgroundImage: [
-    'linear-gradient(180deg, var(--workspace-panel-muted-tint) 0%, transparent 160px)',
-    'radial-gradient(circle at bottom right, var(--workspace-panel-muted-support), transparent 55%)'
-  ].join(', ')
+  borderColor: 'var(--app-shell-border)',
+  boxShadow: 'none'
 };
 
 export const workspaceDashedSurfaceStyle: CSSProperties = {
-  borderColor: 'var(--workspace-panel-border)',
-  backgroundImage: 'linear-gradient(180deg, var(--workspace-panel-muted-tint) 0%, transparent 160px)'
+  borderColor: 'var(--app-shell-border)'
 };
 
 export function resolveModuleWorkspaceVisualState(
