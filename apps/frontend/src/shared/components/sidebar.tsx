@@ -1,38 +1,17 @@
 'use client';
 
-import type { ReactNode } from 'react';
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import {
-  LayoutGrid,
-  Users,
-  PawPrint,
-  Calendar,
-  ClipboardList,
-  FileText,
-  Package,
-  CreditCard,
-  TrendingUp,
-  UserCog,
-  Banknote,
-  Settings,
-  LogOut,
-  ChevronLeft,
-  ChevronRight,
-  ChevronDown,
-  Stethoscope,
-  ShoppingCart,
-} from 'lucide-react';
+import { LogOut, X } from 'lucide-react';
 import { useAuth } from '@/shared/auth/use-auth';
 import { petCommercialNavigationPermissions } from '@/shared/auth/pet-commercial-permissions';
-import { BrandMark, PetMark } from '@/shared/components/brand-assets';
 import {
   petClinicalEntitlements,
   petRetailEntitlements,
   petSubmoduleEntitlements
 } from '@/shared/entitlements/tenant-entitlements';
-import { useAppMessages } from '@/shared/i18n/app-i18n-provider';
+import { useAppI18n, useAppMessages } from '@/shared/i18n/app-i18n-provider';
 import { useFrontendPlatform } from '@/shared/platform/use-frontend-platform';
 import {
   filterSidebarItems,
@@ -41,14 +20,8 @@ import {
   petCommercialNavigationPlanCodes,
   petPosNavigationPlanCodes
 } from '@/shared/platform/sidebar-navigation';
-import { Avatar, AvatarFallback } from '@/shared/ui/shadcn/avatar';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/shared/ui/shadcn/dropdown-menu';
+
+type SidebarSection = 'operation' | 'registry' | 'management' | 'support';
 
 type SidebarItem = {
   href: string;
@@ -58,8 +31,14 @@ type SidebarItem = {
   allowedPlanCodes?: readonly string[];
   blockedPlanCodes?: readonly string[];
   moduleCode?: 'PET';
-  group: 'principal' | 'gestao' | 'suporte';
-  icon: ReactNode;
+  section: SidebarSection;
+};
+
+type SidebarProps = {
+  /** Below 900px the sidebar is a drawer; AppShell owns its open state. */
+  mobileOpen?: boolean;
+  /** Called when a link is followed or the drawer is closed. */
+  onNavigate?: () => void;
 };
 
 function isItemActive(pathname: string, href: string) {
@@ -69,7 +48,7 @@ function isItemActive(pathname: string, href: string) {
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
-function getInitials(name?: string) {
+function getInitials(name?: string | null) {
   if (!name) return 'PT';
   return name
     .split(/\s+/)
@@ -78,14 +57,17 @@ function getInitials(name?: string) {
     .join('');
 }
 
-export function Sidebar() {
+// Comanda v2 sidebar: light, labelled, grouped as Operação / Cadastros / Gestão.
+// Visibility rules (module, permission, entitlement, plan) are unchanged and still
+// resolved by filterSidebarItems.
+export function Sidebar({ mobileOpen = false, onNavigate }: SidebarProps) {
   const copy = useAppMessages().screens.shell;
   const pathname = usePathname();
   const { signOut } = useAuth();
+  const { locale, setLocale } = useAppI18n();
   const shellMessages = useAppMessages().sidebar;
   const petMessages = useAppMessages().petSubnav;
-  const { modules, user, workspace } = useFrontendPlatform();
-  const [collapsed, setCollapsed] = useState(false);
+  const { branding, modules, user, workspace } = useFrontendPlatform();
 
   const items = useMemo<SidebarItem[]>(
     () => [
@@ -95,26 +77,7 @@ export function Sidebar() {
         anyOf: ['pet.dashboard.read', 'pet.appointment.read', 'pet.invoice.read'],
         anyEntitlements: petSubmoduleEntitlements,
         moduleCode: 'PET',
-        group: 'principal',
-        icon: <LayoutGrid className="h-4 w-4" />,
-      },
-      {
-        href: '/pet/clients',
-        label: petMessages.clients,
-        anyOf: ['pet.client.read'],
-        anyEntitlements: petSubmoduleEntitlements,
-        moduleCode: 'PET',
-        group: 'principal',
-        icon: <Users className="h-4 w-4" />,
-      },
-      {
-        href: '/pet/pets',
-        label: petMessages.pets,
-        anyOf: ['pet.profile.read'],
-        anyEntitlements: petSubmoduleEntitlements,
-        moduleCode: 'PET',
-        group: 'principal',
-        icon: <PawPrint className="h-4 w-4" />,
+        section: 'operation',
       },
       {
         href: '/pet/appointments',
@@ -122,50 +85,7 @@ export function Sidebar() {
         anyOf: ['pet.appointment.read'],
         anyEntitlements: petSubmoduleEntitlements,
         moduleCode: 'PET',
-        group: 'principal',
-        icon: <Calendar className="h-4 w-4" />,
-      },
-      {
-        href: '/pet/services',
-        label: petMessages.services,
-        anyOf: ['pet.service.read'],
-        anyEntitlements: petSubmoduleEntitlements,
-        moduleCode: 'PET',
-        group: 'principal',
-        icon: <ClipboardList className="h-4 w-4" />,
-      },
-      {
-        href: '/pet/follow-up',
-        label: petMessages.followUp,
-        anyOf: ['crm.task.read', 'crm.note.read', 'crm.activity.read'],
-        anyEntitlements: petSubmoduleEntitlements,
-        allowedPlanCodes: petCommercialNavigationPlanCodes,
-        blockedPlanCodes: banhoTosaOnlyPlanCodes,
-        moduleCode: 'PET',
-        group: 'principal',
-        icon: <ClipboardList className="h-4 w-4" />,
-      },
-      {
-        href: '/pet/commercial',
-        label: petMessages.commercial,
-        anyOf: [...petCommercialNavigationPermissions],
-        anyEntitlements: petSubmoduleEntitlements,
-        allowedPlanCodes: petCommercialNavigationPlanCodes,
-        blockedPlanCodes: banhoTosaOnlyPlanCodes,
-        moduleCode: 'PET',
-        group: 'principal',
-        icon: <TrendingUp className="h-4 w-4" />,
-      },
-      {
-        href: '/pet/clinic',
-        label: petMessages.clinic,
-        anyOf: ['pet.medical-record.read'],
-        anyEntitlements: petClinicalEntitlements,
-        allowedPlanCodes: petClinicNavigationPlanCodes,
-        blockedPlanCodes: banhoTosaOnlyPlanCodes,
-        moduleCode: 'PET',
-        group: 'principal',
-        icon: <Stethoscope className="h-4 w-4" />,
+        section: 'operation',
       },
       {
         href: '/pet/pos',
@@ -175,8 +95,57 @@ export function Sidebar() {
         allowedPlanCodes: petPosNavigationPlanCodes,
         blockedPlanCodes: banhoTosaOnlyPlanCodes,
         moduleCode: 'PET',
-        group: 'principal',
-        icon: <ShoppingCart className="h-4 w-4" />,
+        section: 'operation',
+      },
+      {
+        href: '/pet/follow-up',
+        label: petMessages.followUp,
+        anyOf: ['crm.task.read', 'crm.note.read', 'crm.activity.read'],
+        anyEntitlements: petSubmoduleEntitlements,
+        allowedPlanCodes: petCommercialNavigationPlanCodes,
+        blockedPlanCodes: banhoTosaOnlyPlanCodes,
+        moduleCode: 'PET',
+        section: 'operation',
+      },
+      {
+        href: '/pet/clients',
+        label: petMessages.clients,
+        anyOf: ['pet.client.read'],
+        anyEntitlements: petSubmoduleEntitlements,
+        moduleCode: 'PET',
+        section: 'registry',
+      },
+      {
+        href: '/pet/pets',
+        label: petMessages.pets,
+        anyOf: ['pet.profile.read'],
+        anyEntitlements: petSubmoduleEntitlements,
+        moduleCode: 'PET',
+        section: 'registry',
+      },
+      {
+        href: '/pet/services',
+        label: petMessages.services,
+        anyOf: ['pet.service.read'],
+        anyEntitlements: petSubmoduleEntitlements,
+        moduleCode: 'PET',
+        section: 'registry',
+      },
+      {
+        href: '/pet/plans',
+        label: petMessages.plans,
+        anyOf: ['pet.plan.read'],
+        anyEntitlements: petSubmoduleEntitlements,
+        moduleCode: 'PET',
+        section: 'registry',
+      },
+      {
+        href: '/pet/inventory',
+        label: petMessages.inventory,
+        anyOf: ['pet.product.read'],
+        anyEntitlements: petSubmoduleEntitlements,
+        moduleCode: 'PET',
+        section: 'management',
       },
       {
         href: '/pet/finance',
@@ -185,26 +154,7 @@ export function Sidebar() {
         anyEntitlements: petSubmoduleEntitlements,
         blockedPlanCodes: banhoTosaOnlyPlanCodes,
         moduleCode: 'PET',
-        group: 'gestao',
-        icon: <Banknote className="h-4 w-4" />,
-      },
-      {
-        href: '/pet/plans',
-        label: petMessages.plans,
-        anyOf: ['pet.plan.read'],
-        anyEntitlements: petSubmoduleEntitlements,
-        moduleCode: 'PET',
-        group: 'gestao',
-        icon: <FileText className="h-4 w-4" />,
-      },
-      {
-        href: '/pet/inventory',
-        label: petMessages.inventory,
-        anyOf: ['pet.product.read'],
-        anyEntitlements: petSubmoduleEntitlements,
-        moduleCode: 'PET',
-        group: 'gestao',
-        icon: <Package className="h-4 w-4" />,
+        section: 'management',
       },
       {
         href: '/pet/invoices',
@@ -212,8 +162,7 @@ export function Sidebar() {
         anyOf: ['pet.invoice.read'],
         anyEntitlements: petSubmoduleEntitlements,
         moduleCode: 'PET',
-        group: 'gestao',
-        icon: <CreditCard className="h-4 w-4" />,
+        section: 'management',
       },
       {
         href: '/pet/professionals',
@@ -221,8 +170,7 @@ export function Sidebar() {
         anyOf: ['pet.professional.read'],
         anyEntitlements: petSubmoduleEntitlements,
         moduleCode: 'PET',
-        group: 'gestao',
-        icon: <UserCog className="h-4 w-4" />,
+        section: 'management',
       },
       {
         href: '/pet/commissions',
@@ -230,14 +178,32 @@ export function Sidebar() {
         anyOf: ['pet.appointment.read'],
         anyEntitlements: petSubmoduleEntitlements,
         moduleCode: 'PET',
-        group: 'gestao',
-        icon: <Banknote className="h-4 w-4" />,
+        section: 'management',
+      },
+      {
+        href: '/pet/clinic',
+        label: petMessages.clinic,
+        anyOf: ['pet.medical-record.read'],
+        anyEntitlements: petClinicalEntitlements,
+        allowedPlanCodes: petClinicNavigationPlanCodes,
+        blockedPlanCodes: banhoTosaOnlyPlanCodes,
+        moduleCode: 'PET',
+        section: 'management',
+      },
+      {
+        href: '/pet/commercial',
+        label: petMessages.commercial,
+        anyOf: [...petCommercialNavigationPermissions],
+        anyEntitlements: petSubmoduleEntitlements,
+        allowedPlanCodes: petCommercialNavigationPlanCodes,
+        blockedPlanCodes: banhoTosaOnlyPlanCodes,
+        moduleCode: 'PET',
+        section: 'management',
       },
       {
         href: '/settings',
         label: shellMessages.settings,
-        group: 'suporte',
-        icon: <Settings className="h-4 w-4" />,
+        section: 'support',
       },
     ],
     [
@@ -264,7 +230,7 @@ export function Sidebar() {
     () =>
       items.map((item) => ({
         ...item,
-        group: item.group === 'suporte' ? ('core' as const) : ('pet' as const),
+        group: item.section === 'support' ? ('core' as const) : ('pet' as const),
       })),
     [items]
   );
@@ -288,172 +254,136 @@ export function Sidebar() {
     workspace.hasFullPlatformVisibility
   ]);
 
-  const principalItems = items.filter((i) => i.group === 'principal' && visibleIds.has(i.href));
-  const gestaoItems = items.filter((i) => i.group === 'gestao' && visibleIds.has(i.href));
-  const suporteItems = items.filter((i) => i.group === 'suporte' && visibleIds.has(i.href));
+  const visibleItems = (section: SidebarSection) =>
+    items.filter((item) => item.section === section && visibleIds.has(item.href));
+
+  const sections: Array<{ key: SidebarSection; title: string }> = [
+    { key: 'operation', title: copy.groupOperation },
+    { key: 'registry', title: copy.groupRegistry },
+    { key: 'management', title: copy.groupManagement },
+  ];
+  const supportItems = visibleItems('support');
+  const workspaceName = branding.scopeName || user?.tenantName || shellMessages.petWorkspace;
 
   return (
     <aside
-      className={`sticky top-0 hidden h-screen flex-col border-r border-slate-200/80 bg-[linear-gradient(180deg,rgba(255,255,255,0.98),rgba(247,250,248,0.96)_180px,rgba(243,248,245,0.94))] shadow-[10px_0_28px_-28px_rgba(15,23,42,0.18)] transition-all duration-200 lg:flex ${
-        collapsed ? 'w-16' : 'w-64'
+      id="app-sidebar"
+      aria-label={copy.mainNavigation}
+      className={`fixed inset-y-0 left-0 z-50 flex w-64 flex-col gap-3.5 overflow-y-auto border-r border-[color:var(--line)] bg-[var(--bg-subtle)] px-2.5 py-3 transition-transform duration-200 nav:sticky nav:top-0 nav:z-auto nav:h-screen nav:w-[220px] nav:shrink-0 nav:translate-x-0 nav:visible ${
+        mobileOpen ? 'translate-x-0' : 'invisible -translate-x-full'
       }`}
     >
-      {/* Header */}
-      <div className="flex h-16 items-center justify-between border-b border-slate-200/80 bg-white/50 px-3">
-        {collapsed ? (
-          <div className="flex w-full items-center justify-center">
-            <PetMark className="h-9 w-9 shrink-0 rounded-[1rem]" />
-          </div>
-        ) : (
-          <div className="flex min-w-0 items-center gap-2.5">
-            <PetMark className="h-9 w-9 shrink-0 rounded-[1rem]" />
-            <div className="min-w-0">
-              <p className="truncate text-sm font-bold tracking-[-0.02em] text-[var(--sidebar-foreground)]">
-                {shellMessages.petWorkspace}
-              </p>
-              <span className="mt-0.5 inline-flex items-center gap-1 truncate text-[9px] font-medium uppercase tracking-[0.18em] text-[var(--muted-foreground)]">
-                by
-                <BrandMark className="h-3 w-3 rounded-[0.35rem] p-[0.06rem]" imageClassName="scale-[1.08]" />
-                PhaifferTech
-              </span>
-            </div>
-          </div>
-        )}
+      <div className="flex min-h-11 items-center gap-2.5 px-2">
+        <span
+          className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-[5px] bg-[var(--ink)] text-[11px] font-semibold text-[var(--bg)]"
+          aria-hidden="true"
+        >
+          {getInitials(workspaceName)}
+        </span>
+        <span className="flex min-w-0 flex-1 flex-col leading-tight">
+          <span className="truncate font-semibold text-[var(--ink)]">{workspaceName}</span>
+          <span className="truncate text-xs text-[var(--muted)]">{shellMessages.petWorkspace}</span>
+        </span>
         <button
           type="button"
-          onClick={() => setCollapsed((c) => !c)}
-          className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-slate-500 transition-colors hover:bg-emerald-50 hover:text-slate-900 ${
-            collapsed ? 'mx-auto' : ''
-          }`}
-          aria-label={collapsed ? copy.expandSidebar : copy.collapseSidebar}
+          onClick={onNavigate}
+          aria-label={copy.closeMenu}
+          className="inline-flex h-9 w-9 items-center justify-center rounded-md text-[var(--muted)] hover:bg-[var(--selected)] hover:text-[var(--ink)] nav:hidden"
         >
-          {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
+          <X className="h-4 w-4" aria-hidden="true" />
         </button>
       </div>
 
-      {/* Navigation */}
-      <nav className="flex-1 overflow-y-auto py-3">
-        <SidebarGroup
-          label={copy.groupMain}
-          items={principalItems}
-          pathname={pathname}
-          collapsed={collapsed}
-        />
-        <SidebarGroup
-          label={copy.groupManagement}
-          items={gestaoItems}
-          pathname={pathname}
-          collapsed={collapsed}
-          className="mt-4"
-        />
-        {suporteItems.length > 0 && (
+      <nav className="flex flex-col gap-3.5" aria-label={copy.mainNavigation}>
+        {sections.map((section) => (
           <SidebarGroup
-            label={copy.groupSupport}
-            items={suporteItems}
+            key={section.key}
+            title={section.title}
+            items={visibleItems(section.key)}
             pathname={pathname}
-            collapsed={collapsed}
-            className="mt-4"
+            onNavigate={onNavigate}
           />
-        )}
+        ))}
       </nav>
 
-      {/* Footer */}
-      <div className="border-t border-[var(--sidebar-border)] p-3">
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <button
-              type="button"
-              className={`flex w-full items-center gap-2.5 rounded-xl border border-transparent p-2 text-left transition-colors hover:border-slate-200 hover:bg-white/80 ${
-                collapsed ? 'justify-center' : ''
-              }`}
-            >
-              <Avatar className="h-8 w-8 shrink-0 text-xs">
-                <AvatarFallback className="bg-[var(--sidebar-primary)] text-[var(--sidebar-primary-foreground)]">
-                  {getInitials(user?.fullName)}
-                </AvatarFallback>
-              </Avatar>
-              {!collapsed && (
-                <>
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-medium text-[var(--sidebar-foreground)]">
-                      {user?.fullName}
-                    </p>
-                    <p className="truncate text-xs text-[var(--muted-foreground)]">{user?.email}</p>
-                  </div>
-                  <ChevronDown className="h-4 w-4 shrink-0 text-[var(--muted-foreground)]" />
-                </>
-              )}
-            </button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent side="top" align="start" className="w-56">
-            <div className="px-2 py-1.5">
-              <p className="text-sm font-medium text-[var(--foreground)]">{user?.fullName}</p>
-              <p className="text-xs text-[var(--muted-foreground)]">{user?.email}</p>
-            </div>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem asChild>
-              <Link href="/settings" className="cursor-pointer">
-                <Settings className="h-4 w-4" />
-                {copy.settings}
-              </Link>
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem
-              onClick={() => void signOut()}
-              className="cursor-pointer text-[var(--destructive)] focus:text-[var(--destructive)]"
-            >
-              <LogOut className="h-4 w-4" />
-              {copy.signOut}
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+      <div className="mt-auto flex flex-col gap-px border-t border-[color:var(--line)] pt-2.5">
+        {supportItems.map((item) => (
+          <SidebarLink key={item.href} item={item} pathname={pathname} onNavigate={onNavigate} />
+        ))}
+        <button
+          type="button"
+          onClick={() => setLocale(locale === 'pt-BR' ? 'en-US' : 'pt-BR')}
+          aria-label={copy.language}
+          className="flex min-h-9 items-center justify-between rounded-md px-2.5 text-left text-[var(--ink-2)] hover:bg-[var(--selected)]"
+        >
+          <span>{copy.language}</span>
+          <span className="ui-mono text-xs text-[var(--muted)]">{locale === 'pt-BR' ? 'PT-BR' : 'EN-US'}</span>
+        </button>
+        <div className="flex min-h-9 items-center gap-2 px-2.5">
+          <span className="min-w-0 flex-1 truncate text-[13px] text-[var(--muted)]" title={user?.email ?? undefined}>
+            {user?.fullName ?? user?.email}
+          </span>
+          <button
+            type="button"
+            onClick={() => void signOut()}
+            aria-label={copy.signOut}
+            title={copy.signOut}
+            className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-md text-[var(--muted)] hover:bg-[var(--selected)] hover:text-[var(--ink)]"
+          >
+            <LogOut className="h-4 w-4" aria-hidden="true" />
+          </button>
+        </div>
       </div>
     </aside>
   );
 }
 
 function SidebarGroup({
-  label,
+  title,
   items,
   pathname,
-  collapsed,
-  className = '',
+  onNavigate,
 }: {
-  label: string;
+  title: string;
   items: SidebarItem[];
   pathname: string;
-  collapsed: boolean;
-  className?: string;
+  onNavigate?: () => void;
 }) {
   if (items.length === 0) return null;
 
   return (
-    <div className={className}>
-      {!collapsed && (
-        <p className="mb-2 px-4 text-[10px] font-semibold uppercase tracking-[0.15em] text-slate-500">
-          {label}
-        </p>
-      )}
-      <div className="space-y-0.5 px-2">
-        {items.map((item) => {
-          const active = isItemActive(pathname, item.href);
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              title={collapsed ? item.label : undefined}
-              className={`flex items-center gap-3 rounded-xl border px-2.5 py-2.5 text-sm transition-all ${
-                active
-                  ? 'border-emerald-100/90 bg-emerald-50/80 font-medium text-emerald-800 shadow-[0_12px_24px_-22px_rgba(16,185,129,0.35)]'
-                  : 'border-transparent text-slate-700 hover:border-slate-200 hover:bg-white/82 hover:text-slate-900'
-              } ${collapsed ? 'justify-center' : ''}`}
-            >
-              <span className="shrink-0">{item.icon}</span>
-              {!collapsed && <span className="truncate">{item.label}</span>}
-            </Link>
-          );
-        })}
-      </div>
+    <div className="flex flex-col gap-px">
+      <span className="px-2.5 pb-1 text-xs text-[var(--muted)]">{title}</span>
+      {items.map((item) => (
+        <SidebarLink key={item.href} item={item} pathname={pathname} onNavigate={onNavigate} />
+      ))}
     </div>
+  );
+}
+
+function SidebarLink({
+  item,
+  pathname,
+  onNavigate,
+}: {
+  item: SidebarItem;
+  pathname: string;
+  onNavigate?: () => void;
+}) {
+  const active = isItemActive(pathname, item.href);
+
+  return (
+    <Link
+      href={item.href}
+      onClick={onNavigate}
+      aria-current={active ? 'page' : undefined}
+      className={`flex min-h-9 items-center rounded-md px-2.5 ${
+        active
+          ? 'bg-[var(--selected-strong)] font-semibold text-[var(--ink)]'
+          : 'text-[var(--ink-2)] hover:bg-[var(--selected)] hover:text-[var(--ink)]'
+      }`}
+    >
+      <span className="truncate">{item.label}</span>
+    </Link>
   );
 }

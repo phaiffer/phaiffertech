@@ -78,13 +78,13 @@ function AppointmentFocusCard({
   tone = 'default'
 }: AppointmentFocusCardProps) {
   const toneClass = tone === 'accent'
-    ? 'border-transparent bg-[linear-gradient(135deg,var(--accent),var(--pet-teal))] text-white shadow-[0_20px_40px_-28px_rgba(16,185,129,0.5)]'
+    ? 'border-transparent bg-[linear-gradient(135deg,var(--accent),var(--pet-teal))] text-white '
     : tone === 'warning'
-      ? 'border-amber-200/80 bg-[linear-gradient(180deg,rgba(251,191,36,0.12),rgba(255,255,255,0.98))]'
-      : 'border-slate-200/90 bg-[linear-gradient(180deg,rgba(16,185,129,0.05),rgba(255,255,255,0.99)_140px)]';
+      ? 'border-amber-200/80 bg-white'
+      : 'border-slate-200/90 bg-white';
 
   return (
-    <div className={`rounded-2xl border p-5 shadow-[0_16px_34px_-28px_rgba(15,23,42,0.16)] ${toneClass}`}>
+    <div className={`rounded-2xl border p-5  ${toneClass}`}>
       <div className="flex items-start justify-between gap-3">
         <div>
           <p className={`text-xs font-semibold uppercase tracking-[0.16em] ${tone === 'accent' ? 'text-white/72' : 'text-slate-600'}`}>
@@ -1637,7 +1637,7 @@ export function PetAppointmentsPage() {
             title={messages.preparedPickup.title}
             description={messages.preparedPickup.description}
           >
-            <div className="mb-4 rounded-[1.35rem] border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-950">
+            <div className="mb-4 rounded-md border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-950">
               <p className="font-semibold">{messages.preparedPickup.reviewTitle}</p>
               <p className="mt-1 text-emerald-800">{messages.preparedPickup.reviewDescription}</p>
             </div>
@@ -1746,7 +1746,7 @@ export function PetAppointmentsPage() {
               role="dialog"
               aria-modal="true"
               aria-labelledby="pet-appointment-editor-title"
-              className="flex max-h-[92vh] w-full max-w-6xl flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_32px_90px_-42px_rgba(15,23,42,0.45)]"
+              className="flex max-h-[92vh] w-full max-w-6xl flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white "
             >
               <div className="flex items-start justify-between gap-4 border-b border-slate-200 bg-white px-5 py-4 sm:px-6">
                 <div>

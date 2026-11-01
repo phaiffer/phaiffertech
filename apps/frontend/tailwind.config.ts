@@ -1,11 +1,61 @@
 import type { Config } from 'tailwindcss';
 
+// Palette scales read RGB channels from CSS variables (see globals.css). Outside the
+// app surface they resolve to Tailwind's original values, so the public website keeps
+// its look; inside `[data-surface='app']` they resolve to the Comanda v2 neutrals.
+const SCALE_STEPS = [50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 950] as const;
+const channel = (variable: string) => `rgb(var(${variable}) / <alpha-value>)`;
+const variableScale = (name: string) =>
+  Object.fromEntries(SCALE_STEPS.map((step) => [step, channel(`--tw-${name}-${step}`)]));
+
 const config: Config = {
   content: ['./src/**/*.{js,ts,jsx,tsx,mdx}'],
   darkMode: ['class', '[data-theme="dark"]'],
   theme: {
     extend: {
+      screens: {
+        // Comanda v2: the sidebar becomes a drawer below 900px.
+        nav: '900px',
+      },
       colors: {
+        slate: variableScale('slate'),
+        emerald: variableScale('emerald'),
+        // In the app these become neutral tints (50-300) and the v2 semantic hue
+        // (400+): amber = warn, red/rose = danger, blue/sky = in progress, violet = grooming.
+        amber: variableScale('amber'),
+        red: variableScale('red'),
+        rose: variableScale('rose'),
+        blue: variableScale('blue'),
+        sky: variableScale('sky'),
+        violet: variableScale('violet'),
+        white: channel('--tw-white'),
+        // Comanda v2 tokens
+        ink: {
+          DEFAULT: 'var(--ink)',
+          2: 'var(--ink-2)',
+        },
+        faint: 'var(--faint)',
+        page: 'var(--bg)',
+        'bg-subtle': 'var(--bg-subtle)',
+        'bg-row': 'var(--bg-row)',
+        selected: {
+          DEFAULT: 'var(--selected)',
+          strong: 'var(--selected-strong)',
+        },
+        line: {
+          DEFAULT: 'var(--line)',
+          soft: 'var(--line-soft)',
+        },
+        control: 'var(--control)',
+        highlight: 'var(--highlight)',
+        warn: 'var(--warn)',
+        status: {
+          waiting: 'var(--status-waiting)',
+          'in-progress': 'var(--status-in-progress)',
+          grooming: 'var(--status-grooming)',
+          ready: 'var(--status-ready)',
+          done: 'var(--status-done)',
+        },
         background: 'var(--background)',
         foreground: 'var(--foreground)',
         muted: {
@@ -99,6 +149,7 @@ const config: Config = {
         lg: 'var(--radius-lg)',
         xl: 'var(--radius-xl)',
         '2xl': 'var(--radius-2xl)',
+        '3xl': 'var(--radius-3xl)',
         sidebar: 'calc(var(--radius) - 2px)',
       },
       boxShadow: {
@@ -109,8 +160,9 @@ const config: Config = {
         card: 'var(--shadow-card)',
       },
       fontFamily: {
-        sans: ['var(--font-geist-sans)', 'system-ui', 'sans-serif'],
-        mono: ['var(--font-geist-mono)', 'ui-monospace', 'monospace'],
+        // --font-app-* switch to IBM Plex inside the app surface (globals.css).
+        sans: ['var(--font-app-sans)', 'system-ui', 'sans-serif'],
+        mono: ['var(--font-app-mono)', 'ui-monospace', 'monospace'],
       },
       fontSize: {
         '2xs': ['0.625rem', { lineHeight: '0.875rem' }],

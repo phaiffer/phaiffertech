@@ -91,13 +91,13 @@ function ClinicStatCard({
   icon?: ReactNode;
 }) {
   const toneClass = tone === 'accent'
-    ? 'border-transparent bg-[linear-gradient(135deg,var(--accent),var(--pet-teal))] text-white shadow-[0_24px_48px_-34px_rgba(16,185,129,0.52)]'
+    ? 'border-transparent bg-[linear-gradient(135deg,var(--accent),var(--pet-teal))] text-white '
     : tone === 'warning'
-      ? 'border-warning/20 bg-[linear-gradient(180deg,rgba(202,138,4,0.08),rgba(255,255,255,0.98))]'
-      : 'border-slate-200/80 bg-white/95 shadow-[0_18px_38px_-32px_rgba(15,23,42,0.12)]';
+      ? 'border-warning/20 bg-white'
+      : 'border-slate-200/80 bg-white/95 ';
 
   return (
-    <div className={`rounded-[1.6rem] border p-6 ${toneClass}`}>
+    <div className={`rounded-md border p-6 ${toneClass}`}>
       <div className="flex items-start justify-between gap-4">
         <div>
           <p className={`text-[11px] font-semibold uppercase tracking-[0.18em] ${tone === 'accent' ? 'text-white/72' : 'text-slate-500'}`}>
@@ -355,7 +355,7 @@ export function ClinicDashboard({
       {showSubnav ? <PetModuleSubnav /> : null}
 
       {/* Header Section */}
-      <section className="rounded-[2rem] border border-slate-200/80 bg-[linear-gradient(180deg,rgba(16,185,129,0.05),rgba(255,255,255,0.98)_120px)] p-6 shadow-[0_24px_54px_-40px_rgba(15,23,42,0.14)] lg:p-7">
+      <section className="rounded-md border border-slate-200/80 bg-white p-6  lg:p-7">
         <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
           <div className="max-w-3xl">
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
@@ -375,7 +375,7 @@ export function ClinicDashboard({
             </Link>
             <Link
               href="/pet/appointments"
-              className="inline-flex items-center rounded-xl bg-[linear-gradient(135deg,var(--accent),var(--pet-teal))] px-4 py-3 text-sm font-semibold text-white shadow-[0_18px_38px_-26px_rgba(16,185,129,0.52)]"
+              className="inline-flex items-center rounded-xl bg-[linear-gradient(135deg,var(--accent),var(--pet-teal))] px-4 py-3 text-sm font-semibold text-white "
             >
               {t.actions.newRecord}
             </Link>
@@ -419,7 +419,7 @@ export function ClinicDashboard({
           </div>
 
           {/* Pending Vaccinations Section */}
-          <section className="rounded-[2rem] border border-slate-200/80 bg-white p-6 shadow-[0_18px_38px_-32px_rgba(15,23,42,0.10)] lg:p-7">
+          <section className="rounded-md border border-slate-200/80 bg-white p-6  lg:p-7">
             <div className="mb-6 flex items-start justify-between">
               <div>
                 <h2 className="text-lg font-semibold tracking-[-0.02em] text-slate-900">
@@ -477,7 +477,7 @@ export function ClinicDashboard({
           </section>
 
           {/* Recent Timeline Section */}
-          <section className="rounded-[2rem] border border-slate-200/80 bg-white p-6 shadow-[0_18px_38px_-32px_rgba(15,23,42,0.10)] lg:p-7">
+          <section className="rounded-md border border-slate-200/80 bg-white p-6  lg:p-7">
             <div className="mb-6 flex items-start justify-between">
               <div>
                 <h2 className="text-lg font-semibold tracking-[-0.02em] text-slate-900">
@@ -548,7 +548,7 @@ export function ClinicDashboard({
           </section>
 
           {/* Clinical Appointments Today Section */}
-          <section className="rounded-[2rem] border border-slate-200/80 bg-white p-6 shadow-[0_18px_38px_-32px_rgba(15,23,42,0.10)] lg:p-7">
+          <section className="rounded-md border border-slate-200/80 bg-white p-6  lg:p-7">
             <div className="mb-6">
               <h2 className="text-lg font-semibold tracking-[-0.02em] text-slate-900">
                 {t.appointments.title}

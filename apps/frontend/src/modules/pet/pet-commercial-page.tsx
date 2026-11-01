@@ -56,7 +56,7 @@ export function PetCommercialPage() {
                   <Link
                     key={tab.key}
                     href={buildTabHref(pathname, tab.key)}
-                    className={`inline-flex h-10 items-center rounded-[1rem] px-3.5 text-sm font-medium transition-all duration-200 ${
+                    className={`inline-flex h-10 items-center rounded-md px-3.5 text-sm font-medium transition-all duration-200 ${
                       active
                         ? 'text-white shadow-sm'
                         : 'border border-[color:var(--app-shell-border)] bg-white text-[color:var(--app-shell-heading)] hover:bg-[color:var(--app-shell-panel-muted)]'

@@ -205,7 +205,7 @@ export function ClinicTimelinePage({ showSubnav = false }: ClinicTimelinePagePro
       {showSubnav ? <PetModuleSubnav /> : null}
 
       {/* Header Section */}
-      <section className="rounded-[2rem] border border-slate-200/80 bg-[linear-gradient(180deg,rgba(16,185,129,0.05),rgba(255,255,255,0.98)_120px)] p-6 shadow-[0_24px_54px_-40px_rgba(15,23,42,0.14)] lg:p-7">
+      <section className="rounded-md border border-slate-200/80 bg-white p-6  lg:p-7">
         <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
           <div className="max-w-3xl">
             <Link
@@ -257,7 +257,7 @@ export function ClinicTimelinePage({ showSubnav = false }: ClinicTimelinePagePro
 
       {/* Filters Panel */}
       {showFilters ? (
-        <section className="rounded-[2rem] border border-slate-200/80 bg-white p-6 shadow-[0_18px_38px_-32px_rgba(15,23,42,0.10)]">
+        <section className="rounded-md border border-slate-200/80 bg-white p-6 ">
           <div className="grid gap-4 md:grid-cols-3">
             <div>
               <label htmlFor="pet-filter" className={sharedInputLabelClass}>
@@ -364,7 +364,7 @@ export function ClinicTimelinePage({ showSubnav = false }: ClinicTimelinePagePro
       {/* Timeline Content */}
       {!loading ? (
         groupedEvents.length === 0 ? (
-          <section className="rounded-[2rem] border border-slate-200/80 bg-white p-12 text-center shadow-[0_18px_38px_-32px_rgba(15,23,42,0.10)]">
+          <section className="rounded-md border border-slate-200/80 bg-white p-12 text-center ">
             <FileText className="mx-auto mb-4 h-12 w-12 text-slate-400" />
             <h3 className="text-lg font-semibold text-slate-900">{t.timeline.empty}</h3>
             <p className="mt-2 text-sm text-slate-600">
@@ -399,7 +399,7 @@ export function ClinicTimelinePage({ showSubnav = false }: ClinicTimelinePagePro
                         </div>
 
                         {/* Event Card */}
-                        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-[0_8px_24px_-16px_rgba(15,23,42,0.1)] transition-shadow hover:shadow-[0_12px_32px_-16px_rgba(15,23,42,0.15)]">
+                        <div className="rounded-2xl border border-slate-200 bg-white p-5  transition-shadow ">
                           <div className="flex flex-wrap items-center gap-3">
                             <TimelineEventTypeBadge type={event.eventType} />
                             <span className="text-sm font-medium text-slate-900">

@@ -128,15 +128,15 @@ function InventorySpotlightCard({
   tone = 'default'
 }: InventorySpotlightCardProps) {
   const toneClass = tone === 'accent'
-    ? 'border-transparent bg-[linear-gradient(135deg,var(--accent),var(--pet-teal))] text-white shadow-[0_20px_40px_-28px_rgba(16,185,129,0.5)]'
+    ? 'border-transparent bg-[linear-gradient(135deg,var(--accent),var(--pet-teal))] text-white '
     : tone === 'danger'
-      ? 'border-red-200 bg-[linear-gradient(180deg,rgba(254,226,226,0.9),rgba(255,255,255,0.98))] shadow-[0_18px_36px_-30px_rgba(220,38,38,0.35)]'
+      ? 'border-red-200 bg-white '
     : tone === 'warning'
-      ? 'border-amber-200/80 bg-[linear-gradient(180deg,rgba(251,191,36,0.12),rgba(255,255,255,0.98))]'
-      : 'border-slate-200/90 bg-[linear-gradient(180deg,rgba(16,185,129,0.05),rgba(255,255,255,0.99)_140px)]';
+      ? 'border-amber-200/80 bg-white'
+      : 'border-slate-200/90 bg-white';
 
   return (
-    <div className={`rounded-2xl border p-5 shadow-[0_16px_34px_-28px_rgba(15,23,42,0.16)] ${toneClass}`}>
+    <div className={`rounded-2xl border p-5  ${toneClass}`}>
       <div className="flex items-start justify-between gap-3">
         <div>
           <p className={`text-xs font-semibold uppercase tracking-[0.16em] ${tone === 'accent' ? 'text-white/72' : 'text-slate-600'}`}>
@@ -589,7 +589,7 @@ export function PetInventoryPage() {
                 return (
                   <div
                     key={product.id}
-                    className={`rounded-[1.35rem] border p-5 shadow-xs ${
+                    className={`rounded-md border p-5 shadow-xs ${
                       stockHealth.status === 'alert'
                         ? 'border-red-200 bg-red-50'
                         : 'border-amber-200 bg-amber-50'

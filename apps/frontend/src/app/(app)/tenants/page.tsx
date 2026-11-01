@@ -167,15 +167,15 @@ const compactPanelCopyClass = 'text-[13px] leading-5 text-[color:var(--tenant-ad
 const contrastInputClass = `${sharedInputClass} placeholder:text-[color:var(--tenant-admin-placeholder)]`;
 const contrastTextareaClass = 'placeholder:text-[color:var(--tenant-admin-placeholder)]';
 const sectionPanelClass =
-  'ui-surface-muted space-y-4 border-[color:var(--tenant-admin-soft-border)] bg-[color:var(--tenant-admin-soft-surface)] p-4 text-[color:var(--app-shell-text)] shadow-[0_18px_30px_-28px_rgba(15,23,42,0.18)] lg:p-5';
+  'ui-surface-muted space-y-4 border-[color:var(--tenant-admin-soft-border)] bg-[color:var(--tenant-admin-soft-surface)] p-4 text-[color:var(--app-shell-text)]  lg:p-5';
 const detailPanelClass =
-  'space-y-4 rounded-[1.5rem] border border-[color:var(--tenant-admin-soft-border)] bg-[color:var(--tenant-admin-detail-surface)] px-4 py-4 text-sm text-[color:var(--app-shell-text)] shadow-[inset_0_1px_0_rgba(255,255,255,0.74)]';
+  'space-y-4 rounded-md border border-[color:var(--tenant-admin-soft-border)] bg-[color:var(--tenant-admin-detail-surface)] px-4 py-4 text-sm text-[color:var(--app-shell-text)] ';
 const surfaceToggleClass =
   'ui-surface-panel flex items-center gap-3 border-[color:var(--tenant-admin-soft-border)] bg-[color:var(--tenant-admin-detail-surface)] px-4 py-3 text-sm text-[color:var(--app-shell-text)]';
 const surfaceTogglePillClass =
   'ui-surface-panel inline-flex items-center gap-2 rounded-full border-[color:var(--tenant-admin-soft-border)] bg-[color:var(--tenant-admin-detail-surface)] px-3 py-2 text-sm text-[color:var(--app-shell-text)]';
 const contractReviewCardClass =
-  'rounded-2xl border border-[color:var(--tenant-admin-soft-border)] bg-[color:var(--tenant-admin-detail-surface)] p-4 shadow-[0_16px_28px_-28px_rgba(15,23,42,0.18)]';
+  'rounded-2xl border border-[color:var(--tenant-admin-soft-border)] bg-[color:var(--tenant-admin-detail-surface)] p-4 ';
 const packageMetaClass =
   'rounded-full border border-[color:var(--tenant-admin-contrast-chip-border)] bg-[color:var(--tenant-admin-tag-surface)] px-2.5 py-1 text-[11px] font-semibold text-[color:var(--tenant-admin-secondary-text)]';
 const selectedPackageBadgeClass =
@@ -913,7 +913,7 @@ export default function TenantsPage() {
           <PageSection
             title={editingTenantId ? 'Update workspace' : 'Create workspace'}
             description="Core platform access stays active by default. Package contracts and branding remain controlled here."
-            className="border-[color:var(--tenant-admin-soft-border)] bg-[color:var(--tenant-admin-section-surface)] shadow-[0_24px_44px_-36px_rgba(15,23,42,0.2)]"
+            className="border-[color:var(--tenant-admin-soft-border)] bg-[color:var(--tenant-admin-section-surface)] "
             actions={editingTenantId ? (
               <button
                 type="button"
@@ -1126,8 +1126,8 @@ export default function TenantsPage() {
                               className={[
                                 'flex cursor-pointer flex-col gap-3 rounded-2xl border px-4 py-4 transition-colors duration-200',
                                 selected
-                                  ? 'border-[color:var(--tenant-admin-selected-border)] bg-[color:var(--tenant-admin-selected-surface)] shadow-[0_20px_36px_-30px_rgba(15,23,42,0.22)]'
-                                  : 'border-[color:var(--tenant-admin-soft-border)] bg-[color:var(--tenant-admin-tag-surface)] shadow-[0_12px_22px_-24px_rgba(15,23,42,0.12)] hover:border-[color:var(--tenant-accent)]/30 hover:bg-white'
+                                  ? 'border-[color:var(--tenant-admin-selected-border)] bg-[color:var(--tenant-admin-selected-surface)] '
+                                  : 'border-[color:var(--tenant-admin-soft-border)] bg-[color:var(--tenant-admin-tag-surface)]  hover:border-[color:var(--tenant-accent)]/30 hover:bg-white'
                               ].join(' ')}
                             >
                               <div className="flex items-start justify-between gap-3">
@@ -1623,7 +1623,7 @@ export default function TenantsPage() {
                           return (
                             <div
                               key={featureFlag.key}
-                              className="flex flex-col gap-3 rounded-2xl border border-[color:var(--tenant-admin-soft-border)] bg-[color:var(--tenant-admin-detail-surface)] p-4 shadow-[0_14px_24px_-24px_rgba(15,23,42,0.16)]"
+                              className="flex flex-col gap-3 rounded-2xl border border-[color:var(--tenant-admin-soft-border)] bg-[color:var(--tenant-admin-detail-surface)] p-4 "
                             >
                               <div className="flex items-center justify-between gap-3">
                                 <div>

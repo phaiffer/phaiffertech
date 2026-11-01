@@ -330,11 +330,11 @@ function FinanceSnapshotCard({
   tone = 'default'
 }: FinanceSnapshotCardProps) {
   const toneClass = tone === 'positive'
-    ? 'border-emerald-200/80 bg-[linear-gradient(180deg,rgba(16,185,129,0.08),rgba(255,255,255,0.98))]'
+    ? 'border-emerald-200/80 bg-white'
     : tone === 'negative'
-      ? 'border-red-200/80 bg-[linear-gradient(180deg,rgba(239,68,68,0.08),rgba(255,255,255,0.98))]'
+      ? 'border-red-200/80 bg-white'
       : tone === 'warning'
-        ? 'border-amber-200/80 bg-[linear-gradient(180deg,rgba(245,158,11,0.08),rgba(255,255,255,0.98))]'
+        ? 'border-amber-200/80 bg-white'
         : 'border-slate-200/90 bg-white';
   const iconClass = tone === 'positive'
     ? 'bg-emerald-100 text-emerald-700'
@@ -345,7 +345,7 @@ function FinanceSnapshotCard({
         : 'bg-[color:var(--accent)]/10 text-[color:var(--accent)]';
 
   return (
-    <div className={`rounded-2xl border p-5 shadow-[0_16px_34px_-28px_rgba(15,23,42,0.16)] ${toneClass}`}>
+    <div className={`rounded-2xl border p-5  ${toneClass}`}>
       <div className="flex items-start justify-between gap-3">
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">{label}</p>
