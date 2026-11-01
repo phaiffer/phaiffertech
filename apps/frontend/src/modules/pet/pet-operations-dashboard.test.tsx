@@ -1,8 +1,9 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { PetOperationsDashboard } from '@/modules/pet/pet-operations-dashboard';
 
-const { petServiceMock, platformState } = vi.hoisted(() => ({
+const { petServiceMock, platformState, routerPush } = vi.hoisted(() => ({
+  routerPush: vi.fn(),
   petServiceMock: {
     listClients: vi.fn(),
     listAppointments: vi.fn(),
@@ -26,6 +27,10 @@ const { petServiceMock, platformState } = vi.hoisted(() => ({
       canManagePlatformAdministration: false
     }
   }
+}));
+
+vi.mock('next/navigation', () => ({
+  useRouter: () => ({ push: routerPush })
 }));
 
 vi.mock('@/shared/platform/use-frontend-platform', () => ({
@@ -143,8 +148,31 @@ describe('PetOperationsDashboard', () => {
 
     expect(screen.getByTestId('pet-subnav')).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Visão operacional do dia' })).toBeInTheDocument();
-    expect(screen.getAllByText('Pacote Mensal 4 Banhos').length).toBeGreaterThan(0);
+    // Plan near the end and low stock show up as pending items.
+    expect(screen.getAllByText((text) => text.includes('Pacote Mensal 4 Banhos')).length).toBeGreaterThan(0);
     expect(screen.getAllByText('Shampoo Neutro 5L').length).toBeGreaterThan(0);
+  });
+
+  it("groups today's queue by stage and highlights ready pets", async () => {
+    render(<PetOperationsDashboard title="Today" />);
+
+    const petName = await screen.findByText('Thor');
+
+    // COMPLETED appointments land in the "Ready" stage with the highlighter on the pet name.
+    expect(screen.getByRole('heading', { name: /Ready/ })).toBeInTheDocument();
+    expect(petName).toHaveClass('ui-highlight');
+    expect(screen.getByText('pickup message ready')).toBeInTheDocument();
+  });
+
+  it('opens a new appointment with the N shortcut when the user can book', async () => {
+    platformState.user.permissions = [...platformState.user.permissions, 'pet.appointment.create'];
+
+    render(<PetOperationsDashboard title="Today" />);
+    await screen.findByText('Thor');
+
+    fireEvent.keyDown(window, { key: 'n' });
+
+    expect(routerPush).toHaveBeenCalledWith('/pet/appointments?novo=1');
   });
 
   it('shows a permission warning when pet.dashboard.read is missing', () => {

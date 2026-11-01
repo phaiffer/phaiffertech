@@ -153,7 +153,7 @@ export const enUSMessages: AppMessages = {
     }
   },
   sidebar: {
-    overview: 'Overview',
+    overview: 'Today',
     settings: 'Settings',
     petWorkspace: 'Pet Management',
     focusLabel: 'Operational focus',
@@ -161,8 +161,7 @@ export const enUSMessages: AppMessages = {
     signOut: 'Sign out'
   },
   petSubnav: {
-    workspace: 'Workspace',
-    dashboard: 'Dashboard',
+    dashboard: 'Today',
     clients: 'Clients',
     pets: 'Pets',
     appointments: 'Appointments',
@@ -180,14 +179,12 @@ export const enUSMessages: AppMessages = {
   },
   dashboardRoutes: {
     mainEyebrow: 'Pet Management',
-    mainTitle: 'Operations overview',
-    mainDescription:
-      'Main demo view with today appointments, plans near the end, low stock, next-cycle billing, and team commission.',
+    mainTitle: 'Today',
+    mainDescription: "Today's queue, pending items and cash.",
     surfaceLabel: 'Official demo surface',
     petDashboardEyebrow: 'Operations dashboard',
-    petDashboardTitle: 'Operations dashboard',
-    petDashboardDescription:
-      'Follow the daily queue, ready pets, recurrence, low stock, next-cycle billing, and commission in one operational read.'
+    petDashboardTitle: 'Today',
+    petDashboardDescription: "Today's queue, pending items and cash."
   },
   petDashboard: {
     noPermission: 'You do not have permission to view the operations dashboard.',

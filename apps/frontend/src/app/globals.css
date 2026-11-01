@@ -1165,6 +1165,17 @@ input[type='number'].ui-input-control::-webkit-outer-spin-button {
   outline-offset: 2px;
 }
 
+/* Field shell: a bordered container (label) wrapping a bare input, e.g. the POS
+   search. The focus ring goes on the shell so it is not drawn twice. */
+[data-surface='app'] .ui-field-shell:focus-within {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+}
+
+[data-surface='app'] .ui-field-shell input:focus-visible {
+  outline: none;
+}
+
 [data-surface='app'] ::selection {
   background-color: var(--selected-strong);
   color: var(--ink);

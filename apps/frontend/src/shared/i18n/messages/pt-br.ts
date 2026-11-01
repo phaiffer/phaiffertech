@@ -160,7 +160,7 @@ const ptBRMessages = {
     }
   },
   sidebar: {
-    overview: 'Visão geral',
+    overview: 'Hoje',
     settings: 'Configurações',
     petWorkspace: 'Gestão Pet',
     focusLabel: 'Foco operacional',
@@ -168,8 +168,7 @@ const ptBRMessages = {
     signOut: 'Sair'
   },
   petSubnav: {
-    workspace: 'Workspace',
-    dashboard: 'Dashboard',
+    dashboard: 'Hoje',
     clients: 'Clientes',
     pets: 'Pets',
     appointments: 'Atendimentos',
@@ -187,14 +186,12 @@ const ptBRMessages = {
   },
   dashboardRoutes: {
     mainEyebrow: 'Gestão Pet',
-    mainTitle: 'Visão geral da operação',
-    mainDescription:
-      'Visão principal da demo com atendimentos do dia, planos perto do fim, estoque baixo, cobrança do próximo ciclo e comissão do time.',
+    mainTitle: 'Hoje',
+    mainDescription: 'Fila do dia, pendências e caixa.',
     surfaceLabel: 'Superfície oficial da demo',
     petDashboardEyebrow: 'Dashboard Operacional',
-    petDashboardTitle: 'Dashboard operacional',
-    petDashboardDescription:
-      'Acompanhe fila do dia, pets prontos, recorrência, estoque baixo, cobrança do próximo ciclo e comissão em uma única leitura operacional.'
+    petDashboardTitle: 'Hoje',
+    petDashboardDescription: 'Fila do dia, pendências e caixa.'
   },
   petDashboard: {
     noPermission: 'Você não possui permissão para visualizar o dashboard operacional.',

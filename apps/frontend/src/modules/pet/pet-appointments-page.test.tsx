@@ -228,7 +228,7 @@ describe('PetAppointmentsPage', () => {
     expect(screen.getByText('Plan alerts')).toBeInTheDocument();
     expect(screen.getByText((text) => text.includes('18.50') || text.includes('18,50'))).toBeInTheDocument();
 
-    const switchToListButton = screen.queryByRole('button', { name: 'Switch to list' });
+    const switchToListButton = screen.queryByRole('button', { name: 'List' });
     if (switchToListButton) {
       fireEvent.click(switchToListButton);
     }
@@ -311,7 +311,7 @@ describe('PetAppointmentsPage', () => {
 
     render(<PetAppointmentsPage />);
 
-    const switchToListButton = await screen.findByRole('button', { name: 'Switch to list' }).catch(() => null);
+    const switchToListButton = await screen.findByRole('button', { name: 'List' }).catch(() => null);
     if (switchToListButton) {
       fireEvent.click(switchToListButton);
     }
@@ -353,7 +353,7 @@ describe('PetAppointmentsPage', () => {
 
     render(<PetAppointmentsPage />);
 
-    const switchToListButton = await screen.findByRole('button', { name: 'Switch to list' }).catch(() => null);
+    const switchToListButton = await screen.findByRole('button', { name: 'List' }).catch(() => null);
     if (switchToListButton) {
       fireEvent.click(switchToListButton);
     }
@@ -971,7 +971,7 @@ describe('PetAppointmentsPage', () => {
       expect(petServiceMock.listAppointments).toHaveBeenCalled();
     });
 
-    fireEvent.click(screen.getByRole('button', { name: 'Switch to list' }));
+    fireEvent.click(screen.getByRole('button', { name: 'List' }));
 
     await waitFor(() => {
       expect(screen.getByText('Bath')).toBeInTheDocument();
@@ -1128,7 +1128,7 @@ describe('PetAppointmentsPage', () => {
       expect(petServiceMock.listAppointments).toHaveBeenCalled();
     });
 
-    fireEvent.click(screen.getByRole('button', { name: 'Switch to list' }));
+    fireEvent.click(screen.getByRole('button', { name: 'List' }));
 
     await waitFor(() => {
       expect(screen.getByText('Bath')).toBeInTheDocument();
