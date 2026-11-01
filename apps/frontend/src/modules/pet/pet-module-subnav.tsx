@@ -35,7 +35,6 @@ export function PetModuleSubnav() {
   const t = useAppMessages().petSubnav;
   const platform = useFrontendPlatform();
   const items = filterSidebarItems([
-    { href: '/pet', label: t.workspace, group: 'pet' as const },
     {
       href: '/pet/dashboard',
       label: t.dashboard,
