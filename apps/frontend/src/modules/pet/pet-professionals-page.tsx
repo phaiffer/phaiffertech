@@ -2,14 +2,11 @@
 
 import Link from 'next/link';
 import { FormEvent, useCallback, useEffect, useState } from 'react';
-import { CalendarDays, DollarSign, Star, Users, type LucideIcon } from 'lucide-react';
 import { PetModuleSubnav } from '@/modules/pet/pet-module-subnav';
 import { PermissionGuard } from '@/shared/auth/PermissionGuard';
 import {
-  sharedCompactTextClass,
   sharedFilterToolbarClass,
-  sharedPageStackClass,
-  sharedReminderSurfaceClass
+  sharedPageStackClass
 } from '@/shared/components/public-visual-system';
 import { StatusBadge } from '@/shared/dashboard/status-badge';
 import { useAppI18n, useAppMessages } from '@/shared/i18n/app-i18n-provider';
@@ -39,55 +36,6 @@ const initialPage: PageResponse<PetProfessional> = {
   size: pageSize
 };
 
-type TeamSnapshotCardProps = {
-  icon: LucideIcon;
-  label: string;
-  value: string;
-  detail: string;
-  tone?: 'default' | 'accent' | 'warning';
-};
-
-function TeamSnapshotCard({
-  icon: Icon,
-  label,
-  value,
-  detail,
-  tone = 'default'
-}: TeamSnapshotCardProps) {
-  const toneClass = tone === 'accent'
-    ? 'border-transparent bg-[linear-gradient(135deg,var(--accent),var(--pet-teal))] text-white '
-    : tone === 'warning'
-      ? 'border-amber-200/80 bg-white'
-      : 'border-slate-200/90 bg-white';
-
-  return (
-    <div className={`rounded-2xl border p-5  ${toneClass}`}>
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <p className={`text-xs font-semibold uppercase tracking-[0.16em] ${tone === 'accent' ? 'text-white/80' : 'text-slate-800'}`}>
-            {label}
-          </p>
-          <p className={`mt-3 text-3xl font-bold tracking-[-0.03em] ${tone === 'accent' ? 'text-white' : 'text-slate-900'}`}>
-            {value}
-          </p>
-        </div>
-        <span
-          className={`flex h-11 w-11 items-center justify-center rounded-xl ${
-            tone === 'accent'
-              ? 'bg-white/12 text-white'
-              : tone === 'warning'
-                ? 'bg-amber-100 text-amber-700'
-                : 'bg-[color:var(--accent)]/10 text-[color:var(--accent)]'
-          }`}
-        >
-          <Icon className="h-5 w-5" />
-        </span>
-      </div>
-      <p className={`mt-3 ${tone === 'accent' ? 'text-sm leading-6 text-white/80' : sharedCompactTextClass}`}>{detail}</p>
-    </div>
-  );
-}
-
 export function PetProfessionalsPage() {
   const { locale } = useAppI18n();
   const appMessages = useAppMessages();
@@ -102,6 +50,7 @@ export function PetProfessionalsPage() {
 
   const [searchInput, setSearchInput] = useState('');
   const [search, setSearch] = useState('');
+  const [isEditorOpen, setIsEditorOpen] = useState(false);
 
   const [editingId, setEditingId] = useState<string | null>(null);
   const [name, setName] = useState('');
@@ -182,6 +131,7 @@ export function PetProfessionalsPage() {
   }
 
   function beginEdit(item: PetProfessional) {
+    setIsEditorOpen(true);
     setEditingId(item.id);
     setName(item.name);
     setSpecialty(item.specialty ?? '');
@@ -219,6 +169,7 @@ export function PetProfessionalsPage() {
       }
 
       resetForm();
+      setIsEditorOpen(false);
       await load(pageData.page, search);
     } catch (err) {
       setError(resolveApiErrorMessage(err, messages.feedback.saveError));
@@ -244,9 +195,7 @@ export function PetProfessionalsPage() {
 
   const rows = resolvePageItems(pageData);
   const totalItems = resolveTotalItems(pageData);
-  const configuredCommissionCount = rows.filter((item) => item.commissionRate != null).length;
   const projectedCommissionTotal = Object.values(monthlyAppointments).reduce((total, item) => total + item.total, 0);
-  const pendingCommissionSetup = rows.filter((item) => item.commissionRate == null).length;
 
   const columns: DataTableColumn<PetProfessional>[] = [
     {
@@ -254,8 +203,8 @@ export function PetProfessionalsPage() {
       header: messages.columns.professional,
       render: (item) => (
         <div className="space-y-1">
-          <p className="font-medium text-slate-900">{item.name}</p>
-          <p className="text-xs text-slate-800">
+          <p className="font-medium text-[var(--ink)]">{item.name}</p>
+          <p className="text-xs text-[var(--muted)]">
             {item.specialty ?? messages.columns.defaultSpecialty}
           </p>
         </div>
@@ -266,8 +215,8 @@ export function PetProfessionalsPage() {
       header: messages.columns.contact,
       render: (item) => (
         <div className="space-y-1">
-          <p className="text-sm text-slate-900">{item.email ?? messages.columns.noEmail}</p>
-          <p className="text-xs text-slate-800">{item.phone ?? messages.columns.noPhone}</p>
+          <p className="text-sm text-[var(--ink)]">{item.email ?? messages.columns.noEmail}</p>
+          <p className="text-xs text-[var(--muted)]">{item.phone ?? messages.columns.noPhone}</p>
         </div>
       )
     },
@@ -276,17 +225,17 @@ export function PetProfessionalsPage() {
       header: messages.columns.commission,
       render: (item) => (
         <div className="space-y-1">
-          <p className="font-medium text-slate-900">
+          <p className="ui-mono font-medium text-[var(--ink)]">
             {item.commissionRate != null
               ? `${(item.commissionRate * 100).toLocaleString(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}%`
               : '—'}
           </p>
-          <p className="text-xs text-slate-800">
+          <p className="text-xs text-[var(--muted)]">
             {monthlyAppointments[item.id]
               ? `${monthlyAppointments[item.id].count} · ${formatCurrencyForLocale(locale, monthlyAppointments[item.id].total)}`
               : messages.columns.noCompletedServices}
           </p>
-          <p className="text-xs text-slate-800">
+          <p className="text-xs text-[var(--muted)]">
             {item.commissionRate != null
               ? messages.columns.ruleVisible
               : messages.columns.defineRate}
@@ -302,9 +251,9 @@ export function PetProfessionalsPage() {
         const status = item.commissionRate == null ? 'warn' : monthlySummary ? 'active' : 'neutral';
 
         return (
-          <div className="space-y-2">
+          <div className="space-y-1">
             <StatusBadge status={status} />
-            <p className="text-xs text-slate-800">
+            <p className="text-xs text-[var(--muted)]">
               {item.commissionRate == null
                 ? messages.columns.needsSetup
                 : monthlySummary
@@ -352,55 +301,33 @@ export function PetProfessionalsPage() {
         <PetModuleSubnav />
 
         <PageTitle
-          eyebrow={messages.eyebrow}
           title={messages.title}
+          count={loading ? undefined : totalItems}
           description={messages.description}
           actions={(
-            <Link href="/pet/commissions" className="ui-secondary-button">
-              {messages.openSummary}
-            </Link>
+            <div className="flex flex-wrap gap-2">
+              <PermissionGuard permission="pet.professional.create">
+                <button type="button" className="ui-primary-button" onClick={() => { resetForm(); setIsEditorOpen(true); }}>
+                  {messages.form.create}
+                </button>
+              </PermissionGuard>
+              <Link href="/pet/commissions" className="ui-secondary-button">{messages.openSummary}</Link>
+            </div>
           )}
         />
 
-        <PageSection
-          tone="muted"
-          title={messages.snapshotTitle}
-          description={messages.snapshotDescription}
-        >
-          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-            <TeamSnapshotCard
-              icon={Users}
-              label={messages.metrics.professionals}
-              value={new Intl.NumberFormat(locale).format(totalItems)}
-              detail={messages.snapshotDescription}
-            />
-            <TeamSnapshotCard
-              icon={CalendarDays}
-              label={messages.metrics.configured}
-              value={new Intl.NumberFormat(locale).format(configuredCommissionCount)}
-              detail={messages.columns.ruleVisible}
-            />
-            <TeamSnapshotCard
-              icon={DollarSign}
-              label={messages.metrics.projected}
-              value={summaryLoading ? messages.metrics.loading : formatCurrencyForLocale(locale, projectedCommissionTotal)}
-              detail={projectedCommissionTotal > 0 ? messages.metrics.projectedDetail : messages.columns.noCompletedServices}
-              tone="accent"
-            />
-            <TeamSnapshotCard
-              icon={Star}
-              label={messages.metrics.needSetup}
-              value={new Intl.NumberFormat(locale).format(pendingCommissionSetup)}
-              detail={messages.columns.defineRate}
-              tone={pendingCommissionSetup > 0 ? 'warning' : 'default'}
-            />
+        <dl className="grid gap-4 border-y border-[color:var(--line)] py-4 sm:grid-cols-2">
+          <div>
+            <dt className="text-xs text-[var(--muted)]">{messages.metrics.professionals}</dt>
+            <dd className="ui-mono mt-1 text-lg font-semibold text-[var(--ink)]">{new Intl.NumberFormat(locale).format(totalItems)}</dd>
           </div>
-          {pendingCommissionSetup > 0 ? (
-            <div className="ui-notice-warning mt-5">
-              {messages.warnings.pendingSetup.replace('{count}', String(pendingCommissionSetup))}
-            </div>
-          ) : null}
-        </PageSection>
+          <div>
+            <dt className="text-xs text-[var(--muted)]">{messages.metrics.projected}</dt>
+            <dd className="ui-mono mt-1 text-lg font-semibold text-[var(--ink)]">
+              {summaryLoading ? messages.metrics.loading : formatCurrencyForLocale(locale, projectedCommissionTotal)}
+            </dd>
+          </div>
+        </dl>
 
         <div className={`grid gap-3 md:grid-cols-[1fr_auto] ${sharedFilterToolbarClass}`}>
           <SearchBar value={searchInput} onChange={setSearchInput} placeholder={messages.search.placeholder} />
@@ -425,8 +352,9 @@ export function PetProfessionalsPage() {
           </div>
         </div>
 
+        {isEditorOpen ? (
         <PermissionGuard permission={editingId ? 'pet.professional.update' : 'pet.professional.create'}>
-          <form onSubmit={handleSubmit} className="grid gap-3 ui-surface-panel p-4 md:grid-cols-2">
+          <form onSubmit={handleSubmit} className="grid gap-3 rounded-md border border-[color:var(--line)] p-4 md:grid-cols-2">
             <FormInput
               id="professional-name"
               name="professionalName"
@@ -483,13 +411,6 @@ export function PetProfessionalsPage() {
               placeholder={messages.form.commissionRatePlaceholder}
             />
 
-            <div className={`md:col-span-2 ${sharedReminderSurfaceClass}`}>
-              <p className="text-sm font-medium text-[color:var(--app-shell-heading)]">{messages.form.reminderTitle}</p>
-              <p className="mt-1 text-xs text-slate-800">
-                {messages.form.reminderDescription}
-              </p>
-            </div>
-
             <div className="md:col-span-2 flex gap-2">
               <button
                 type="submit"
@@ -498,18 +419,13 @@ export function PetProfessionalsPage() {
               >
                 {submitting ? messages.form.saving : editingId ? messages.form.update : messages.form.create}
               </button>
-              {editingId ? (
-                <button
-                  type="button"
-                  onClick={resetForm}
-                  className="ui-secondary-button"
-                >
-                  {messages.form.cancel}
-                </button>
-              ) : null}
+              <button type="button" onClick={() => { resetForm(); setIsEditorOpen(false); }} className="ui-secondary-button">
+                {messages.form.cancel}
+              </button>
             </div>
           </form>
         </PermissionGuard>
+        ) : null}
 
         {error ? <div className="ui-notice-error">{error}</div> : null}
         {success ? <div className="ui-notice-success">{success}</div> : null}
@@ -527,7 +443,7 @@ export function PetProfessionalsPage() {
                 type="button"
                 onClick={() => {
                   resetForm();
-                  document.querySelector('form')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                  setIsEditorOpen(true);
                 }}
                 className="ui-primary-button"
               >
@@ -536,7 +452,7 @@ export function PetProfessionalsPage() {
             )
           }}
         />
-        <Pagination page={pageData.page} totalPages={pageData.totalPages} totalElements={totalItems} onPageChange={(page) => load(page, search)} />
+        <Pagination page={pageData.page} totalPages={pageData.totalPages} totalElements={totalItems} pageSize={pageSize} onPageChange={(page) => load(page, search)} />
 
         <ConfirmDialog
           open={deleteCandidate !== null}

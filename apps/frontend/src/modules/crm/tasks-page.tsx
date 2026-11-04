@@ -374,9 +374,11 @@ export function CrmTasksPage({ surface = 'crm' }: CrmTasksPageProps) {
       fallback={<div className="ui-notice-warning">{permissionFallback}</div>}
     >
       <div className="space-y-5">
-        <PageTitle title={pageTitle} description={pageDescription} eyebrow={isPetSurface ? 'Gestão Pet' : undefined} />
+        {isPetSurface
+          ? <h2 className="text-sm font-semibold text-[var(--ink)]">{pageTitle}</h2>
+          : <PageTitle title={pageTitle} description={pageDescription} />}
 
-        <div className="grid gap-3 ui-surface-panel p-4 xl:grid-cols-[1fr_160px_160px_180px_220px_auto_auto]">
+        <div className={`grid gap-3 xl:grid-cols-[1fr_160px_160px_180px_220px_auto_auto] ${isPetSurface ? 'border-b border-[color:var(--line)] pb-3' : 'ui-surface-panel p-4'}`}>
           <SearchBar value={searchInput} onChange={setSearchInput} placeholder="Título, descrição, prioridade" />
           <FormSelect label="Status" value={statusFilter} options={statusOptions} onChange={setStatusFilter} />
           <FormSelect label="Prioridade" value={priorityFilter} options={priorityOptions} onChange={setPriorityFilter} />
@@ -419,7 +421,7 @@ export function CrmTasksPage({ surface = 'crm' }: CrmTasksPageProps) {
         </div>
 
         <PermissionGuard permission={editingId ? 'crm.task.update' : 'crm.task.create'}>
-          <div className="grid gap-3 ui-surface-panel p-4 md:grid-cols-2">
+          <div className={`grid gap-3 md:grid-cols-2 ${isPetSurface ? 'rounded-md border border-[color:var(--line)] p-4' : 'ui-surface-panel p-4'}`}>
             <FormInput label="Título" value={title} onChange={setTitle} required />
             <FormInput label="Descrição" value={description} onChange={setDescription} />
             <DateInput label="Prazo" value={dueDate} onChange={setDueDate} />
@@ -454,6 +456,7 @@ export function CrmTasksPage({ surface = 'crm' }: CrmTasksPageProps) {
           page={pageData.page}
           totalPages={pageData.totalPages}
           totalElements={totalItems}
+          pageSize={pageSize}
           onPageChange={(nextPage) => void load(nextPage, search, statusFilter, priorityFilter, relationTypeFilter, relationIdFilter)}
         />
 

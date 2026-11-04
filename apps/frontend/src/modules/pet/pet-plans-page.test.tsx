@@ -206,7 +206,8 @@ describe('PetPlansPage', () => {
     expect(screen.getAllByText((text) => text.includes('220,00')).length).toBeGreaterThan(0);
     expect(screen.getAllByText('pix@petshop.com.br').length).toBeGreaterThan(0);
     expect(screen.getAllByText('Pet Shop Teste').length).toBeGreaterThan(0);
-    expect(screen.getByText(/Linked invoice: invoice-1/)).toBeInTheDocument();
+    expect(screen.getByText(/Linked invoice:/)).toBeInTheDocument();
+    expect(screen.getByText('invoice-1')).toBeInTheDocument();
     expect((screen.getByLabelText('Prepared renewal message') as HTMLTextAreaElement).value)
       .toContain('Assim que pagar, nos envie o comprovante.');
 
@@ -240,6 +241,8 @@ describe('PetPlansPage', () => {
     await waitFor(() => {
       expect(petServiceMock.listPlanTemplates).toHaveBeenCalledTimes(1);
     });
+
+    fireEvent.click(screen.getByRole('button', { name: 'Create plan' }));
 
     fireEvent.change(screen.getByLabelText('Client'), { target: { value: 'client-1' } });
     fireEvent.change(screen.getByLabelText('Pet'), { target: { value: 'pet-1' } });

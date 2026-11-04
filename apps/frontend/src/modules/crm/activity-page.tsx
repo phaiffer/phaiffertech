@@ -234,9 +234,11 @@ export function CrmActivityPage({ surface = 'crm' }: CrmActivityPageProps) {
       fallback={<div className="ui-notice-warning">{permissionFallback}</div>}
     >
       <div className="space-y-5">
-        <PageTitle title={pageTitle} description={pageDescription} eyebrow={isPetSurface ? 'Gestão Pet' : undefined} />
+        {isPetSurface
+          ? <h2 className="text-sm font-semibold text-[var(--ink)]">{pageTitle}</h2>
+          : <PageTitle title={pageTitle} description={pageDescription} />}
 
-        <div className="grid gap-3 ui-surface-panel p-4 xl:grid-cols-[180px_220px_auto]">
+        <div className={`grid gap-3 xl:grid-cols-[180px_220px_auto] ${isPetSurface ? 'border-b border-[color:var(--line)] pb-3' : 'ui-surface-panel p-4'}`}>
           <FormSelect
             label="Tipo de vínculo"
             value={relationTypeFilter}
@@ -276,6 +278,7 @@ export function CrmActivityPage({ surface = 'crm' }: CrmActivityPageProps) {
           page={pageData.page}
           totalPages={pageData.totalPages}
           totalElements={totalItems}
+          pageSize={pageSize}
           onPageChange={(nextPage) => void load(nextPage, relationTypeFilter, relationIdFilter)}
         />
       </div>

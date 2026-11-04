@@ -22,6 +22,9 @@ Este arquivo lista o que os protótipos de `docs/design/comanda/` pedem e o back
 | 3 | Cadastro de cliente | Preferências de aviso (WhatsApp, SMS, e-mail) e "pode retirar o pet" | Campos de preferência de contato e de pessoas autorizadas a retirar | Omitidos; os contatos de apoio continuam em "Contatos de apoio" |
 | 3 | Cadastro de cliente | Resumo financeiro do cliente (gasto total, em aberto) | Agregado financeiro por cliente | Omitido |
 | 3 | Menu lateral | Busca `/` "Buscar pet ou tutor" | Busca unificada de pets e tutores | A busca procura só tutores: leva para `/pet/clients?search=termo` |
+| 4 | Serviços | Matriz de preço e duração por porte P/M/G/GG | Preço e duração por porte no catálogo e no contrato de atendimento; hoje há apenas `basePrice` e `durationMinutes` | Mantidos preço e duração base, sem valores por porte |
+| 4 | Equipe | Escala semanal e capacidade por profissional | Jornada, horários e capacidade por profissional | Omitidas; a tela usa cadastro de profissionais e resumo de comissão disponíveis |
+| 4 | Fechamento | Total de cobranças pendentes e planos próximos do fim | Agregados completos, filtráveis por período, para faturas em aberto e planos perto do fim | Omitidos; a consulta limitada aos 100 primeiros registros podia mostrar totais incompletos |
 
 ## Pendências de frontend (fases seguintes)
 
@@ -33,6 +36,7 @@ Itens que não dependem do backend, mas que a fase 1 não alcança por exigirem 
 - **Variáveis antigas** `--pet-*` (24 usos) e `--accent*` (135 usos): na fase 1 elas apontam para os tokens v2; o uso direto sai à medida que cada tela é refeita.
 - **Frases de efeito e textos de "demo"** nos catálogos de mensagens: revisados junto com cada tela.
 - **Contatos de apoio / Contatos do CRM** (`modules/crm/contacts-page.tsx` e `contact-form-page.tsx`): a tela é compartilhada entre a Gestão Pet e o CRM e ainda tem textos fixos no código, sem acento e fora dos catálogos de i18n. Na fase 3 ganhou contagem no título, paginação com `pageSize` e perdeu os cartões de métrica na superfície pet; a migração completa dos textos fica para a fase 6, junto com o Comercial.
+- **Tarefas, notas e atividade do CRM** (`modules/crm/tasks-page.tsx`, `notes-page.tsx`, `activity-page.tsx`), usadas no Follow-up: na fase 4 ganharam título, filtros e paginação v2 na superfície pet, mas ainda têm textos fixos fora do i18n e o formulário de tarefa/nota fica sempre aberto acima da lista. Migração dos textos e editor sob demanda ficam para a fase 6.
 
 ## Decisões registradas
 
@@ -43,4 +47,7 @@ Itens que não dependem do backend, mas que a fase 1 não alcança por exigirem 
 - **Fase 2, PDV**: os quatro cartões de resumo mostravam números fixos no código (vendas, faturamento, ticket médio, itens) e foram removidos. Corrigido também um erro antigo: o PDV pedia 500 itens por página, acima do limite da API (200), e ficava sem produtos e clientes sem avisar.
 - **Fase 3, Clientes e Pets**: os cartões de métrica contavam só os registros da página atual e foram removidos; o total vai no título. A seleção em lote usa apenas ações que já existem (exportar CSV no navegador). Datas passam a seguir o idioma ativo.
 - **Fase 3, Perfil do pet**: a tela `/pet/pets/[id]/timeline` é o perfil do pet e exige só `pet.profile.read` (antes exigia permissões clínicas e bloqueava a equipe de banho e tosa). Mostra dados do pet, cuidados, atendimentos e tutor; o histórico clínico e as vacinas aparecem apenas para quem tem as permissões clínicas.
+- **Fase 4, Fechamento**: o resumo de comissão da API é a fonte dos indicadores do período. Foram removidos os números de cobranças e planos derivados de uma única página de até 100 registros, pois não representavam totais confiáveis. Valores e datas passam a seguir o idioma ativo.
+- **Fase 4, Serviços**: o editor abre sob demanda e cada linha tem um liga/desliga "Ativo" que reenvia o serviço com os mesmos campos pelo `PUT` já existente; ativar um serviço sem caminho de agendamento (nem avulso nem plano) é bloqueado na tela, como no formulário.
+- **Fase 4, Planos**: o "Radar de renovação" (quatro cartões com contagens da página atual) foi removido; o estado de cada plano aparece na linha. A configuração de mensagens de cobrança virou um bloco recolhível no fim da página e o lembrete PIX preparado aparece como seção própria acima da tabela.
 - **Status como ponto**: `StatusBadge` agrupa os status em aguardando (cinza: agendado, confirmado, pendente), em atendimento (azul), concluído (verde), atenção (`warn`) e erro/cancelado (`danger`). A separação "No banho" / "Na tosa" e o estágio "Retirado" da fila serão tratados na fase 2, conforme a regra de estágios do prompt.

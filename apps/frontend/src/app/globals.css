@@ -1427,6 +1427,68 @@ input[type='number'].ui-input-control::-webkit-outer-spin-button {
   color: var(--ink);
 }
 
+/* On/off switch: <button role="switch" aria-checked> with an empty <span> as the thumb. */
+.ui-switch {
+  position: relative;
+  display: inline-flex;
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  border: 0;
+  background: transparent;
+  align-items: center;
+  justify-content: center;
+}
+
+.ui-switch::before {
+  content: '';
+  width: 36px;
+  height: 20px;
+  border-radius: 999px;
+  border: 1px solid var(--control);
+  background: var(--bg-subtle);
+  transition: background-color 150ms ease, border-color 150ms ease;
+}
+
+.ui-switch > span {
+  position: absolute;
+  top: 15px;
+  left: 6px;
+  width: 14px;
+  height: 14px;
+  border-radius: 999px;
+  background: var(--muted);
+  transition: transform 150ms ease, background-color 150ms ease;
+}
+
+.ui-switch[aria-checked='true']::before {
+  border-color: var(--ink);
+  background: var(--ink);
+}
+
+.ui-switch[aria-checked='true'] > span {
+  transform: translateX(16px);
+  background: var(--bg);
+}
+
+.ui-switch:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+}
+
+.ui-switch:disabled {
+  opacity: 0.5;
+  cursor: progress;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ui-switch,
+  .ui-switch::before,
+  .ui-switch > span {
+    transition: none;
+  }
+}
+
 .ui-mono {
   font-family: var(--font-app-mono);
   font-variant-numeric: tabular-nums;

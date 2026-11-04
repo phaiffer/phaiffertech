@@ -49,9 +49,9 @@ describe('PetFollowUpPage', () => {
     render(<PetFollowUpPage />);
 
     expect(screen.getByTestId('pet-subnav')).toBeInTheDocument();
-    expect(screen.getByText('Follow-up Banho e Tosa')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Grooming follow-up' })).toBeInTheDocument();
     expect(screen.getByText('tasks-surface:pet')).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Tarefas' })).toHaveAttribute('href', '/pet/follow-up');
+    expect(screen.getByRole('link', { name: 'Tasks' })).toHaveAttribute('href', '/pet/follow-up');
   });
 
   it('renders the requested tab when it is available for the current permissions', () => {
@@ -68,6 +68,6 @@ describe('PetFollowUpPage', () => {
 
     render(<PetFollowUpPage />);
 
-    expect(screen.getByText('Voce nao possui permissao para visualizar o follow-up operacional.')).toBeInTheDocument();
+    expect(screen.getByText('You do not have permission to view operational follow-up.')).toBeInTheDocument();
   });
 });

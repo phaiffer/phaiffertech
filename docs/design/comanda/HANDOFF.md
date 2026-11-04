@@ -15,8 +15,8 @@ Os protótipos de referência estão nesta pasta (`*.dc.html`; a direção visua
 | 1 | Fundação: tokens, fontes, primitivos, menu lateral e app shell | Concluída | #100 |
 | 2 | Operação: Hoje, Agenda, PDV (com atalhos) | Concluída | #101 |
 | 3 | Cadastros: Clientes, cadastro de cliente, Contatos, Pets, cadastro de pet, Perfil do pet | Concluída | #103 |
-| 4 | Operação de serviço: Serviços, Planos, Follow-up, Equipe, Fechamento | **Próxima** | |
-| 5 | Dinheiro e estoque: Estoque/Produtos, Financeiro, Caixa, Cobrança | Pendente | |
+| 4 | Operação de serviço: Serviços, Planos, Follow-up, Equipe, Fechamento | Concluída | #104 |
+| 5 | Dinheiro e estoque: Estoque/Produtos, Financeiro, Caixa, Cobrança | **Próxima** | |
 | 6 | Clínica, Comercial e Insights | Pendente | |
 | 7 | Conta e admin: Login, Esqueci/Redefinir senha, Configurações, Usuários, Ambientes | Pendente | |
 
@@ -69,15 +69,18 @@ Depois da fase 7, o próximo trabalho combinado com o dono do projeto é o **Pro
 - Não procure botões por classe CSS nos testes; use `getByRole(..., { name })`.
 - `tsc` e testes não pegam tudo que quebra o `next build` (exemplo real: `import` antes de `'use client'`). Rode o build ou confira o CI.
 - Após apagar arquivos, o `next dev` pode manter o módulo antigo em cache: reinicie o servidor de dev.
+- **Não rode `npm run build` com o `next dev` ligado**: os dois usam a pasta `.next`, o build a sobrescreve e o servidor de dev passa a servir páginas sem CSS (`layout.css` 404). Para recuperar: pare o dev, apague `apps/frontend/.next` e suba de novo. Prefira deixar o build para o CI.
+- Para subir o ambiente local sem Docker: `.\scripts\start-local-backend.ps1` e `.\scripts\start-local-frontend.ps1` na raiz (PostgreSQL local na porta 5432). Se der `EADDRINUSE` / "Port 8080 was already in use", há um servidor antigo nas portas 3000/8080.
 - Dados de exemplo do seed do backend têm palavras sem acento ("Pastor Alemao", "Shampoo hipoalergenico"); é dado, não texto de tela.
 - O PDV **não registra vendas** (checkout simulado desde antes do redesign; a tela avisa). Não "consertar" dentro do redesign sem combinar com o dono: é funcionalidade nova.
 
-## Próximo passo concreto: fase 4 (Operação de serviço)
+## Próximo passo concreto: fase 5 (Dinheiro e estoque)
 
-Referências: `Servicos.dc.html`, `Planos.dc.html`, `FollowUp.dc.html`, `Equipe.dc.html`, `Fechamento.dc.html` (siga a direção visual de `v2/Clientes.dc.html`). Componentes: `src/modules/pet/pet-services-page.tsx`, `pet-plans-page.tsx`, `pet-follow-up-page.tsx`, `pet-professionals-page.tsx`, `pet-commission-summary-page.tsx`.
+Referências: `Estoque.dc.html`, `Financeiro.dc.html`, `Caixa.dc.html`, `Cobranca.dc.html` (siga a direção visual de `v2/Clientes.dc.html`). Componentes: `src/modules/pet/pet-inventory-page.tsx`, `pet-products-page.tsx`, `modules/inventory/inventory-hub-page.tsx`, `modules/pet/finance-dashboard.tsx`, `modules/finance/finance-cash-page.tsx`, `pet-invoices-page.tsx`, `modules/finance/finance-invoices-page.tsx`, `finance-payments-page.tsx`.
 
-- Mesmo padrão da fase 3 (ver `clients-page.tsx` e `pet-profiles-page.tsx`): contagem no título (`PageTitle count`), `DataTable` densa, filtros como `.ui-filter-chip`, `Pagination` com `pageSize`, formulários em `FormSection` com `<label>`, datas com `formatDateForLocale`.
+- Mesmo padrão das fases 3 e 4 (ver `clients-page.tsx`, `pet-services-page.tsx`): contagem no título (`PageTitle count`), `DataTable` densa, filtros como `.ui-filter-chip`, `Pagination` com `pageSize`, editor que abre sob demanda com `FormSection` (`src/shared/ui/form-section.tsx`), valores com `formatCurrencyForLocale` e `.ui-mono`, datas com `formatDateForLocale`. Liga/desliga em linha: `.ui-switch` (`<button role="switch" aria-checked>`).
 - Remover cartões de métrica que contam só a página atual ou mostram números fixos; registrar no GAPS o que o design pede e a API não dá.
+- Valores em dinheiro nunca com `'pt-BR'` fixo: use o `locale` de `useAppI18n()`.
 - Textos novos nos catálogos `screens-pt-br.ts` / `screens-en-us.ts`; testes rodam em en-US.
 
 ## Depois do redesign: Projeto de Aplicação (PUCPR)
