@@ -1,18 +1,14 @@
 'use client';
 
 import { FormEvent, useCallback, useEffect, useMemo, useState } from 'react';
-import { RefreshCcw, Repeat, TriangleAlert, Users, type LucideIcon } from 'lucide-react';
 import { PetModuleSubnav } from '@/modules/pet/pet-module-subnav';
 import { PermissionGuard } from '@/shared/auth/PermissionGuard';
 import { usePermissions } from '@/shared/auth/usePermissions';
-import {
-  sharedCompactTextClass,
-  sharedPageStackClass
-} from '@/shared/components/public-visual-system';
+import { sharedPageStackClass } from '@/shared/components/public-visual-system';
 import { StatusBadge } from '@/shared/dashboard/status-badge';
 import { useAppI18n, useAppMessages } from '@/shared/i18n/app-i18n-provider';
 import type { AppMessages } from '@/shared/i18n/messages/pt-br';
-import { formatDateForLocale } from '@/shared/i18n/formatters';
+import { formatCurrencyForLocale, formatDateForLocale } from '@/shared/i18n/formatters';
 import { ApiClientError } from '@/shared/lib/http';
 import { resolvePageItems, resolveTotalItems } from '@/shared/lib/pagination';
 import { isOfficialWhatsAppEnabled } from '@/shared/messaging/official-whatsapp';
@@ -29,7 +25,7 @@ import { PageTitle } from '@/shared/ui/page-title';
 import { Pagination } from '@/shared/ui/pagination';
 import { resolveApiErrorMessage } from '@/shared/lib/api-error-message';
 
-const pageSize = 20;
+const pageSize = 14;
 
 const initialPage: PageResponse<ClientPlan> = {
   items: [],
@@ -53,55 +49,6 @@ function buildSoldPlanStatusOptions(copy: AppMessages['screens']['petPlans']) {
     { value: 'PAUSED', label: copy.statusPaused },
     { value: 'CANCELED', label: copy.statusCanceled }
   ];
-}
-
-type PlanSignalCardProps = {
-  icon: LucideIcon;
-  label: string;
-  value: string;
-  detail: string;
-  tone?: 'default' | 'accent' | 'warning';
-};
-
-function PlanSignalCard({
-  icon: Icon,
-  label,
-  value,
-  detail,
-  tone = 'default'
-}: PlanSignalCardProps) {
-  const toneClass = tone === 'accent'
-    ? 'border-transparent bg-[linear-gradient(135deg,var(--accent),var(--pet-teal))] text-white '
-    : tone === 'warning'
-      ? 'border-amber-200/80 bg-white'
-      : 'border-slate-200/90 bg-white';
-
-  return (
-    <div className={`rounded-2xl border p-5  ${toneClass}`}>
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <p className={`text-xs font-semibold uppercase tracking-[0.16em] ${tone === 'accent' ? 'text-white/72' : 'text-slate-600'}`}>
-            {label}
-          </p>
-          <p className={`mt-3 text-3xl font-bold tracking-[-0.03em] ${tone === 'accent' ? 'text-white' : 'text-slate-900'}`}>
-            {value}
-          </p>
-        </div>
-        <span
-          className={`flex h-11 w-11 items-center justify-center rounded-xl ${
-            tone === 'accent'
-              ? 'bg-white/12 text-white'
-              : tone === 'warning'
-                ? 'bg-amber-100 text-amber-700'
-                : 'bg-[color:var(--accent)]/10 text-[color:var(--accent)]'
-          }`}
-        >
-          <Icon className="h-5 w-5" />
-        </span>
-      </div>
-      <p className={`mt-3 ${tone === 'accent' ? 'text-sm leading-6 text-white/80' : sharedCompactTextClass}`}>{detail}</p>
-    </div>
-  );
 }
 
 // Returns a toneMap-compatible status key for StatusBadge
@@ -143,6 +90,7 @@ export function PetPlansPage() {
   const [success, setSuccess] = useState<string | null>(null);
 
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [isPlanEditorOpen, setIsPlanEditorOpen] = useState(false);
   const [clientId, setClientId] = useState('');
   const [petId, setPetId] = useState('');
   const [planTemplateId, setPlanTemplateId] = useState('');
@@ -156,6 +104,7 @@ export function PetPlansPage() {
   const [submitting, setSubmitting] = useState(false);
 
   const [editingTemplateId, setEditingTemplateId] = useState<string | null>(null);
+  const [isTemplateEditorOpen, setIsTemplateEditorOpen] = useState(false);
   const [templateName, setTemplateName] = useState('');
   const [templateDescription, setTemplateDescription] = useState('');
   const [templatePrice, setTemplatePrice] = useState('');
@@ -313,6 +262,7 @@ export function PetPlansPage() {
   }
 
   function beginEdit(plan: ClientPlan) {
+    setIsPlanEditorOpen(true);
     setEditingId(plan.id);
     setClientId(plan.clientId);
     setPetId(plan.petId ?? '');
@@ -326,7 +276,7 @@ export function PetPlansPage() {
     setSoldPlanNotes(plan.notes ?? '');
     setError(null);
     setSuccess(null);
-    document.getElementById('pet-plan-form-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    document.getElementById('pet-plan-form-section')?.scrollIntoView?.({ behavior: 'smooth', block: 'start' });
   }
 
   function resetTemplateForm() {
@@ -342,6 +292,7 @@ export function PetPlansPage() {
   }
 
   function beginEditTemplate(template: PlanTemplate) {
+    setIsTemplateEditorOpen(true);
     setEditingTemplateId(template.id);
     setTemplateName(template.commercialName);
     setTemplateDescription(template.description ?? '');
@@ -351,7 +302,7 @@ export function PetPlansPage() {
     setTemplateServiceIds(template.serviceIds ?? []);
     setTemplateRenewalRules(template.renewalRules ?? '');
     setTemplateActive(template.active);
-    document.getElementById('pet-plan-template-form-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    document.getElementById('pet-plan-template-form-section')?.scrollIntoView?.({ behavior: 'smooth', block: 'start' });
   }
 
   function handlePlanTemplateChange(value: string) {
@@ -428,6 +379,7 @@ export function PetPlansPage() {
         setSuccess(messages.form.create);
       }
       resetForm();
+      setIsPlanEditorOpen(false);
       await load(0);
     } catch (err) {
       setError(resolveApiErrorMessage(err, messages.feedback.saveError));
@@ -472,6 +424,7 @@ export function PetPlansPage() {
         setSuccess(screenCopy.templateCreated);
       }
       resetTemplateForm();
+      setIsTemplateEditorOpen(false);
       await loadTemplates();
     } catch (err) {
       setError(resolveApiErrorMessage(err, screenCopy.templateSaveError));
@@ -597,34 +550,19 @@ export function PetPlansPage() {
   }
 
   function formatCurrency(value?: number | null) {
-    return (value ?? 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    return formatCurrencyForLocale(locale, value ?? 0);
   }
 
   const rows = resolvePageItems(pageData);
-  // A plan in its final sessions still covers the client, so "active" means sessions left and not expired.
-  const activePlans = rows.filter((plan) => {
-    const statusKey = resolvePlanStatusKey(plan);
-    return statusKey === 'active' || statusKey === 'warn';
-  }).length;
-  const lowSessionPlans = rows.filter((plan) => plan.remainingSessions > 0 && plan.remainingSessions <= 2).length;
-  const exhaustedPlans = rows.filter((plan) => plan.remainingSessions <= 0).length;
-  const penultimatePlans = rows.filter((plan) => plan.remainingSessions === 2).length;
-  const renewalEmailMissingCount = rows.filter((plan) => plan.remainingSessions === 2 && !resolveClientEmail(plan)).length;
 
   const columns: DataTableColumn<ClientPlan>[] = [
     {
       key: 'client',
       header: messages.form.client,
       render: (plan) => (
-        <div className="space-y-1">
-          <p className="font-medium text-slate-900">{resolveClientName(plan)}</p>
-          <p className="text-xs text-[color:var(--app-shell-muted)]">{screenCopy.petLabel} {resolvePetName(plan)}</p>
-          <p className="text-xs text-[color:var(--app-shell-muted)]">
-            {resolveClientEmail(plan) ?? messages.columns.noRenewalEmail}
-          </p>
-          <span className="inline-flex items-center rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-medium text-emerald-800">
-            {appointmentMessages.columns.recurring}
-          </span>
+        <div>
+          <p className="font-medium text-[var(--ink)]">{resolveClientName(plan)}</p>
+          <p className="text-xs text-[var(--muted)]">{screenCopy.petLabel} {resolvePetName(plan)}</p>
         </div>
       )
     },
@@ -632,16 +570,11 @@ export function PetPlansPage() {
       key: 'planName',
       header: messages.form.planName,
       render: (plan) => (
-        <div className="space-y-1">
-          <span className="font-medium">{plan.planName}</span>
-          <p className="text-xs text-[color:var(--app-shell-muted)]">
-            {plan.remainingSessions > 0 ? messages.columns.activeLinked : messages.columns.noSessionsLeft}
-          </p>
-          <p className="text-xs text-[color:var(--app-shell-muted)]">
-            {screenCopy.contractedBy} {formatCurrency(plan.finalPrice)}
-          </p>
+        <div>
+          <p className="text-[var(--ink)]">{plan.planName}</p>
+          <p className="ui-mono text-xs text-[var(--muted)]">{formatCurrency(plan.finalPrice)}</p>
           {plan.notes ? (
-            <p className="text-xs text-[color:var(--app-shell-muted)]">{screenCopy.notesLabel} {plan.notes}</p>
+            <p className="line-clamp-1 max-w-xs text-xs text-[var(--muted)]">{screenCopy.notesLabel} {plan.notes}</p>
           ) : null}
         </div>
       )
@@ -654,23 +587,14 @@ export function PetPlansPage() {
         const isProblematic = statusKey === 'canceled' || statusKey === 'error';
         const isLow = statusKey === 'warn';
         return (
-          <div className="space-y-1">
-            <div className="flex items-center gap-1.5">
-              <span className={`text-sm font-semibold ${isProblematic ? 'text-red-600' : isLow ? 'text-amber-600' : 'text-emerald-700'}`}>
+          <div className="whitespace-nowrap">
+            <p>
+              <span className={`ui-mono text-sm font-semibold ${isProblematic ? 'text-[var(--danger)]' : isLow ? 'text-[var(--warn)]' : 'text-[var(--ink)]'}`}>
                 {plan.remainingSessions} {appointmentMessages.columns.leftSuffix}
               </span>
-              <span className="text-xs text-[color:var(--app-shell-muted)]">/ {plan.totalSessions}</span>
-            </div>
-            <div className="text-xs text-[color:var(--app-shell-muted)]">{plan.usedSessions} {messages.columns.used}</div>
-            {plan.remainingSessions === 2 ? (
-              <div className="text-xs text-amber-700">{messages.columns.penultimateAlert}</div>
-            ) : null}
-            {plan.remainingSessions === 1 ? (
-              <div className="text-xs text-amber-700">{messages.columns.finalSession}</div>
-            ) : null}
-            {plan.remainingSessions <= 0 ? (
-              <div className="text-xs text-red-700">{messages.columns.renewBeforeNextVisit}</div>
-            ) : null}
+              <span className="ui-mono text-xs text-[var(--muted)]"> / {plan.totalSessions}</span>
+            </p>
+            <p className="text-xs text-[var(--muted)]">{plan.usedSessions} {messages.columns.used}</p>
           </div>
         );
       }
@@ -679,23 +603,13 @@ export function PetPlansPage() {
       key: 'status',
       header: messages.columns.status,
       render: (plan) => (
-        <div className="space-y-2">
+        <div>
           <StatusBadge status={resolvePlanStatusKey(plan)} />
-          <p className="text-xs text-[color:var(--app-shell-muted)]">
+          <p className="text-xs text-[var(--muted)]">
             {resolveRenewalStateLabel(plan.renewalState, messages.columns.renewalStates)}
           </p>
-          {plan.remainingSessions === 2 ? (
-            <p className="text-xs text-[color:var(--app-shell-muted)]">
-              {resolveClientEmail(plan) ? messages.columns.renewalSent : messages.columns.renewalNeedsEmail}
-            </p>
-          ) : plan.remainingSessions === 1 ? (
-            <p className="text-xs text-[color:var(--app-shell-muted)]">
-              {messages.columns.lastVisitHint}
-            </p>
-          ) : plan.remainingSessions > 2 ? (
-            <p className="text-xs text-[color:var(--app-shell-muted)]">
-              {messages.columns.activeCycleHint}
-            </p>
+          {plan.remainingSessions === 2 && !resolveClientEmail(plan) ? (
+            <p className="text-xs text-[var(--warn)]">{messages.columns.renewalNeedsEmail}</p>
           ) : null}
         </div>
       )
@@ -704,14 +618,9 @@ export function PetPlansPage() {
       key: 'expiry',
       header: messages.form.expiresOn,
       render: (plan) => (
-        <div className="space-y-1">
-          <p className="font-medium text-slate-900">
-            {formatExpiryLabel(locale, plan.expiresAt, messages.filters.noExpiry)}
-          </p>
-          <p className="text-xs text-[color:var(--app-shell-muted)]">
-            {plan.expiresAt ? messages.columns.expiryAlign : messages.columns.sessionTrigger}
-          </p>
-        </div>
+        <span className="ui-mono whitespace-nowrap text-[var(--ink)]">
+          {formatExpiryLabel(locale, plan.expiresAt, messages.filters.noExpiry)}
+        </span>
       )
     },
     {
@@ -744,7 +653,7 @@ export function PetPlansPage() {
               <button
                 type="button"
                 onClick={() => void handleDispatchRenewalMessage(plan)}
-                className="rounded-lg border border-emerald-300 px-2 py-1 text-xs font-medium text-emerald-700"
+                className="ui-inline-button"
                 disabled={dispatchingRenewalPlanId === plan.id}
               >
                 {dispatchingRenewalPlanId === plan.id
@@ -754,7 +663,8 @@ export function PetPlansPage() {
             </PermissionGuard>
           ) : null}
           {dispatchedRenewalPlanId === plan.id ? (
-            <span className="inline-flex items-center rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-medium text-emerald-800">
+            <span className="inline-flex items-center gap-1.5 text-xs text-[var(--ink-2)]">
+              <span className="ui-status-dot" data-status="done" aria-hidden="true" />
               {messages.messageSetup.officialRenewalSent}
             </span>
           ) : null}
@@ -772,15 +682,16 @@ export function PetPlansPage() {
         <PetModuleSubnav />
 
         <PageTitle
-          eyebrow={messages.eyebrow}
           title={messages.title}
+          count={loading ? undefined : resolveTotalItems(pageData)}
           description={messages.description}
           actions={canManagePlan ? (
             <button
               type="button"
               onClick={() => {
                 resetForm();
-                document.getElementById('pet-plan-form-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                setIsPlanEditorOpen(true);
+                document.getElementById('pet-plan-form-section')?.scrollIntoView?.({ behavior: 'smooth', block: 'start' });
               }}
               className="ui-primary-button"
             >
@@ -795,27 +706,29 @@ export function PetPlansPage() {
         <PageSection
           title={screenCopy.catalogTitle}
           description={screenCopy.catalogDescription}
+          actions={hasPermission('pet.plan.create') ? (
+            <button type="button" className="ui-secondary-button" onClick={() => { resetTemplateForm(); setIsTemplateEditorOpen(true); }}>
+              {screenCopy.newTemplateTitle}
+            </button>
+          ) : undefined}
         >
-          <div className="grid gap-3 lg:grid-cols-3">
+          <div className="divide-y divide-[color:var(--line-soft)]">
             {templates.map((template) => (
-              <div key={template.id} className="rounded-2xl border border-slate-200 bg-white p-4">
-                <div className="flex items-start justify-between gap-3">
+              <div key={template.id} className="flex flex-wrap items-center justify-between gap-3 py-3 first:pt-0 last:pb-0">
+                <div className="min-w-0 flex-1">
                   <div>
-                    <p className="font-semibold text-slate-900">{template.commercialName}</p>
-                    <p className="mt-1 text-xs text-[color:var(--app-shell-muted)]">
+                    <p className="font-medium text-[var(--ink)]">{template.commercialName}</p>
+                    <p className="mt-1 line-clamp-1 text-xs text-[var(--muted)]">
                       {template.description ?? screenCopy.noDescription}
                     </p>
                   </div>
-                  <StatusBadge status={template.active ? 'active' : 'inactive'} />
+                  <p className="ui-mono mt-1 text-xs text-[var(--muted)]">
+                    {formatCurrency(template.price)} / {template.totalSessions} {screenCopy.sessionsUnit} / {template.validityDays} {screenCopy.daysUnit}
+                  </p>
                 </div>
-                <div className="mt-3 grid gap-2 text-xs text-[color:var(--app-shell-muted)]">
-                  <p>{formatCurrency(template.price)} - {template.totalSessions} sessoes</p>
-                  <p>{screenCopy.validityLabel} {template.validityDays} dias</p>
-                  <p>{screenCopy.includedServicesLabel} {template.serviceIds.length || screenCopy.allPlanServices}</p>
-                  <p>{screenCopy.renewalLabel} {template.renewalRules ?? screenCopy.renewalDefault}</p>
-                </div>
+                <StatusBadge status={template.active ? 'active' : 'inactive'} />
                 <PermissionGuard permission="pet.plan.create">
-                  <button type="button" onClick={() => beginEditTemplate(template)} className="ui-inline-button mt-3">
+                  <button type="button" onClick={() => beginEditTemplate(template)} className="ui-inline-button">
                     {screenCopy.editTemplate}
                   </button>
                 </PermissionGuard>
@@ -826,6 +739,7 @@ export function PetPlansPage() {
 
         <PermissionGuard permission="pet.plan.create">
           <div id="pet-plan-template-form-section">
+            {isTemplateEditorOpen ? (
             <form onSubmit={handleTemplateSubmit} className="ui-surface-panel p-4 space-y-4">
               <div>
                 <h3 className="text-sm font-semibold text-foreground">
@@ -843,10 +757,10 @@ export function PetPlansPage() {
                 <FormInput label={screenCopy.description} value={templateDescription} onChange={setTemplateDescription} wrapperClassName="lg:col-span-2" />
                 <FormInput label={screenCopy.renewalRules} value={templateRenewalRules} onChange={setTemplateRenewalRules} wrapperClassName="lg:col-span-2" />
               </div>
-              <div className="rounded-2xl border border-slate-200 bg-white/80 p-3">
-                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--app-shell-muted)]">
+              <fieldset className="border-t border-[color:var(--line)] pt-3">
+                <legend className="pr-2 text-sm font-semibold text-[var(--ink)]">
                   {screenCopy.includedServices}
-                </p>
+                </legend>
                 <div className="mt-3 grid gap-2 md:grid-cols-2 xl:grid-cols-3">
                   {serviceOptions.map((option) => (
                     <label key={option.value} className="flex items-center gap-2 text-sm text-slate-700">
@@ -866,7 +780,7 @@ export function PetPlansPage() {
                 {serviceOptions.length === 0 ? (
                   <p className="mt-2 text-xs text-[color:var(--app-shell-muted)]">{screenCopy.noActiveServices}</p>
                 ) : null}
-              </div>
+              </fieldset>
               <label className="flex items-center gap-2 text-sm text-slate-700">
                 <input type="checkbox" checked={templateActive} onChange={(event) => setTemplateActive(event.target.checked)} />
                 {screenCopy.templateActive}
@@ -875,185 +789,78 @@ export function PetPlansPage() {
                 <button type="submit" disabled={templateSubmitting} className="ui-primary-button">
                   {templateSubmitting ? screenCopy.saving : editingTemplateId ? screenCopy.updateTemplate : screenCopy.createTemplate}
                 </button>
-                {editingTemplateId ? (
-                  <button type="button" onClick={resetTemplateForm} className="ui-secondary-button">
+                <button type="button" onClick={() => { resetTemplateForm(); setIsTemplateEditorOpen(false); }} className="ui-secondary-button">
                     {screenCopy.cancelEdit}
-                  </button>
-                ) : null}
+                </button>
               </div>
             </form>
+            ) : null}
           </div>
         </PermissionGuard>
 
-        <PageSection
-          tone="muted"
-          title={messages.messageSetup.title}
-          description={messages.messageSetup.description}
-        >
-          <div className="grid gap-4 lg:grid-cols-2">
-            <FormInput
-              label={messages.messageSetup.pixKey}
-              value={billingPixKey}
-              onChange={setBillingPixKey}
-              placeholder="pix@petshop.com.br"
-              disabled={billingSettingsLoading}
-            />
-            <FormInput
-              label={messages.messageSetup.billingDisplayName}
-              value={billingDisplayName}
-              onChange={setBillingDisplayName}
-              placeholder={screenCopy.billingNamePlaceholder}
-              disabled={billingSettingsLoading}
-            />
-            <FormTextarea
-              label={messages.messageSetup.renewalTemplate}
-              value={planRenewalTemplate}
-              onChange={setPlanRenewalTemplate}
-              placeholder={screenCopy.renewalTemplateHint}
-              rows={4}
-              disabled={billingSettingsLoading}
-            />
-            <FormTextarea
-              label={messages.messageSetup.pickupTemplate}
-              value={petReadyTemplate}
-              onChange={setPetReadyTemplate}
-              placeholder={screenCopy.pickupTemplateHint}
-              rows={4}
-              disabled={billingSettingsLoading}
-            />
-          </div>
-          <div className="flex flex-wrap items-center gap-3">
-            <PermissionGuard permission="pet.plan.create">
-              <button
-                type="button"
-                onClick={() => void handleSaveBillingSettings()}
-                className="ui-primary-button"
-                disabled={billingSettingsSaving}
-              >
-                {billingSettingsSaving ? messages.messageSetup.saving : messages.messageSetup.save}
-              </button>
-            </PermissionGuard>
-            <p className="text-sm text-[color:var(--app-shell-muted)]">
-              {messages.messageSetup.manualNotice}
-            </p>
-          </div>
-          {preparedRenewalMessage ? (
-            <div className="space-y-3">
-              {preparedRenewalCharge ? (
-                <div className="rounded-md border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
-                  <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
-                    <div>
-                      <p className="font-semibold">{messages.messageSetup.pendingTitle}</p>
-                      <p className="mt-1 text-amber-800">
-                        {messages.messageSetup.pendingDescription}
-                      </p>
-                    </div>
-                    <div className="flex flex-wrap gap-2">
-                      <button
-                        type="button"
-                        className="ui-secondary-button"
-                        onClick={() => void copyManualRenewalText(preparedRenewalMessage, messages.messageSetup.messageCopied)}
-                      >
-                        {messages.messageSetup.copyMessage}
-                      </button>
-                      {preparedRenewalCharge.pixKey ? (
-                        <button
-                          type="button"
-                          className="ui-inline-button"
-                          onClick={() => void copyManualRenewalText(preparedRenewalCharge.pixKey ?? '', messages.messageSetup.pixCopied)}
-                        >
-                          {messages.messageSetup.copyPix}
-                        </button>
-                      ) : null}
-                    </div>
-                  </div>
-                  <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-                    <div>
-                      <p className="text-xs font-semibold uppercase tracking-[0.14em] text-amber-700">{screenCopy.plan}</p>
-                      <p className="mt-1 font-medium">{preparedRenewalCharge.planName || screenCopy.planMissing}</p>
-                    </div>
-                    <div>
-                      <p className="text-xs font-semibold uppercase tracking-[0.14em] text-amber-700">{screenCopy.client}</p>
-                      <p className="mt-1 font-medium">{preparedRenewalCharge.clientName || screenCopy.clientMissing}</p>
-                    </div>
-                    <div>
-                      <p className="text-xs font-semibold uppercase tracking-[0.14em] text-amber-700">Pet</p>
-                      <p className="mt-1 font-medium">{preparedRenewalCharge.petName || screenCopy.petMissing}</p>
-                    </div>
-                    <div>
-                      <p className="text-xs font-semibold uppercase tracking-[0.14em] text-amber-700">{screenCopy.amount}</p>
-                      <p className="mt-1 font-medium">{formatCurrency(preparedRenewalCharge.outstandingAmount ?? preparedRenewalCharge.amount ?? 0)}</p>
-                    </div>
-                    <div>
-                      <p className="text-xs font-semibold uppercase tracking-[0.14em] text-amber-700">{screenCopy.pixKey}</p>
-                      <p className="mt-1 break-all font-medium">{preparedRenewalCharge.pixKey || screenCopy.pixKeyMissing}</p>
-                    </div>
-                    <div>
-                      <p className="text-xs font-semibold uppercase tracking-[0.14em] text-amber-700">{screenCopy.billingName}</p>
-                      <p className="mt-1 font-medium">{preparedRenewalCharge.billingDisplayName || screenCopy.billingNameMissing}</p>
-                    </div>
-                  </div>
-                  <p className="mt-1">
-                    {screenCopy.amount} {formatCurrency(preparedRenewalCharge.outstandingAmount ?? preparedRenewalCharge.amount ?? 0)}
-                    {' '}{screenCopy.statusSeparator} {preparedRenewalCharge.status ?? 'ISSUED'}
-                  </p>
-                  <p className="mt-1">
-                    PIX: {preparedRenewalCharge.pixKey || screenCopy.pixKeyMissing} {screenCopy.receiverSeparator} {preparedRenewalCharge.billingDisplayName || screenCopy.billingNameMissing}
-                  </p>
-                  {preparedRenewalCharge.invoiceId ? (
-                    <p className="mt-1 text-xs">{screenCopy.linkedInvoice} {preparedRenewalCharge.invoiceId}</p>
-                  ) : null}
-                </div>
-              ) : null}
-              <FormTextarea
-                label={messages.messageSetup.preparedRenewalLabel}
-                value={preparedRenewalMessage}
-                onChange={setPreparedRenewalMessage}
-                rows={6}
-              />
+        {preparedRenewalMessage ? (
+          <section
+            id="pet-plan-renewal-charge"
+            aria-labelledby="pet-plan-renewal-charge-title"
+            className="space-y-3 rounded-md border border-[color:var(--line)] p-4"
+          >
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <h2 id="pet-plan-renewal-charge-title" className="text-sm font-semibold text-[var(--ink)]">
+                  {messages.messageSetup.pendingTitle}
+                </h2>
+                <p className="mt-0.5 text-xs text-[var(--muted)]">{messages.messageSetup.pendingDescription}</p>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  className="ui-secondary-button"
+                  onClick={() => void copyManualRenewalText(preparedRenewalMessage, messages.messageSetup.messageCopied)}
+                >
+                  {messages.messageSetup.copyMessage}
+                </button>
+                {preparedRenewalCharge?.pixKey ? (
+                  <button
+                    type="button"
+                    className="ui-secondary-button"
+                    onClick={() => void copyManualRenewalText(preparedRenewalCharge.pixKey ?? '', messages.messageSetup.pixCopied)}
+                  >
+                    {messages.messageSetup.copyPix}
+                  </button>
+                ) : null}
+              </div>
             </div>
-          ) : null}
-        </PageSection>
-
-        <PageSection
-          tone="muted"
-          title={messages.watchTitle}
-          description={messages.watchDescription}
-        >
-          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-            <PlanSignalCard
-              icon={Users}
-              label={messages.activePlans}
-              value={new Intl.NumberFormat(locale).format(activePlans)}
-              detail={messages.activePlansDetail}
+            {preparedRenewalCharge ? (
+              <dl className="grid gap-x-6 gap-y-2 text-sm sm:grid-cols-2 xl:grid-cols-3">
+                {[
+                  [screenCopy.plan, preparedRenewalCharge.planName || screenCopy.planMissing],
+                  [screenCopy.client, preparedRenewalCharge.clientName || screenCopy.clientMissing],
+                  [screenCopy.pet, preparedRenewalCharge.petName || screenCopy.petMissing],
+                  [screenCopy.amount, formatCurrency(preparedRenewalCharge.outstandingAmount ?? preparedRenewalCharge.amount ?? 0)],
+                  [screenCopy.pixKey, preparedRenewalCharge.pixKey || screenCopy.pixKeyMissing],
+                  [screenCopy.billingName, preparedRenewalCharge.billingDisplayName || screenCopy.billingNameMissing]
+                ].map(([label, value]) => (
+                  <div key={label}>
+                    <dt className="text-xs text-[var(--muted)]">{label}</dt>
+                    <dd className="break-all text-[var(--ink)]">{value}</dd>
+                  </div>
+                ))}
+              </dl>
+            ) : null}
+            {preparedRenewalCharge?.invoiceId ? (
+              <p className="text-xs text-[var(--muted)]">
+                {screenCopy.linkedInvoice} <span className="ui-mono">{preparedRenewalCharge.invoiceId}</span>
+                {preparedRenewalCharge.status ? <> · {preparedRenewalCharge.status}</> : null}
+              </p>
+            ) : null}
+            <FormTextarea
+              label={messages.messageSetup.preparedRenewalLabel}
+              value={preparedRenewalMessage}
+              onChange={setPreparedRenewalMessage}
+              rows={6}
             />
-            <PlanSignalCard
-              icon={RefreshCcw}
-              label={messages.renewSoon}
-              value={new Intl.NumberFormat(locale).format(lowSessionPlans)}
-              detail={messages.renewSoonDetail}
-              tone={lowSessionPlans > 0 ? 'warning' : 'default'}
-            />
-            <PlanSignalCard
-              icon={Repeat}
-              label={messages.penultimateBath}
-              value={new Intl.NumberFormat(locale).format(penultimatePlans)}
-              detail={messages.penultimateBathDetail}
-            />
-            <PlanSignalCard
-              icon={TriangleAlert}
-              label={messages.renewalEmailMissing}
-              value={new Intl.NumberFormat(locale).format(renewalEmailMissingCount)}
-              detail={messages.renewalEmailMissingDetail}
-              tone={renewalEmailMissingCount > 0 ? 'accent' : 'default'}
-            />
-          </div>
-          {exhaustedPlans > 0 ? (
-            <div className="ui-notice-warning mt-5">
-              {exhaustedPlans} {messages.exhaustedWarning}
-            </div>
-          ) : null}
-        </PageSection>
+          </section>
+        ) : null}
 
         <DataTable
           columns={columns}
@@ -1070,7 +877,8 @@ export function PetPlansPage() {
                 type="button"
                 onClick={() => {
                   resetForm();
-                  document.getElementById('pet-plan-form-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                  setIsPlanEditorOpen(true);
+                  document.getElementById('pet-plan-form-section')?.scrollIntoView?.({ behavior: 'smooth', block: 'start' });
                 }}
                 className="ui-primary-button"
               >
@@ -1084,10 +892,12 @@ export function PetPlansPage() {
           page={pageData.page}
           totalPages={pageData.totalPages}
           totalElements={resolveTotalItems(pageData)}
+          pageSize={pageSize}
           onPageChange={(nextPage) => load(nextPage)}
         />
 
         <div id="pet-plan-form-section">
+          {isPlanEditorOpen ? (
           <PermissionGuard permission="pet.plan.create">
             <form onSubmit={handleSubmit} className="ui-surface-panel p-4 space-y-4">
               <div>
@@ -1113,7 +923,7 @@ export function PetPlansPage() {
                   disabled={!!editingId || !canReadClients}
                 />
                 <FormSelect
-                  label="Pet"
+                  label={screenCopy.pet}
                   value={petId}
                   options={formPetOptions}
                   onChange={setPetId}
@@ -1184,15 +994,70 @@ export function PetPlansPage() {
                 <button type="submit" disabled={submitting} className="ui-primary-button">
                   {submitting ? messages.form.save : editingId ? messages.form.update : messages.form.create}
                 </button>
-                {editingId ? (
-                  <button type="button" onClick={resetForm} className="ui-secondary-button">
+                <button type="button" onClick={() => { resetForm(); setIsPlanEditorOpen(false); }} className="ui-secondary-button">
                     {messages.form.cancel}
-                  </button>
-                ) : null}
+                </button>
               </div>
             </form>
           </PermissionGuard>
+          ) : null}
         </div>
+
+        <details className="rounded-md border border-[color:var(--line)]">
+          <summary className="cursor-pointer px-4 py-3 text-sm font-semibold text-[var(--ink)]">
+            {messages.messageSetup.title}
+          </summary>
+          <div className="space-y-4 border-t border-[color:var(--line)] p-4">
+            <p className="text-xs text-[var(--muted)]">{messages.messageSetup.description}</p>
+          <div className="grid gap-4 md:grid-cols-2">
+            <FormInput
+              label={messages.messageSetup.pixKey}
+              value={billingPixKey}
+              onChange={setBillingPixKey}
+              placeholder="pix@petshop.com.br"
+              disabled={billingSettingsLoading}
+            />
+            <FormInput
+              label={messages.messageSetup.billingDisplayName}
+              value={billingDisplayName}
+              onChange={setBillingDisplayName}
+              placeholder={screenCopy.billingNamePlaceholder}
+              disabled={billingSettingsLoading}
+            />
+            <FormTextarea
+              label={messages.messageSetup.renewalTemplate}
+              value={planRenewalTemplate}
+              onChange={setPlanRenewalTemplate}
+              placeholder={screenCopy.renewalTemplateHint}
+              rows={4}
+              disabled={billingSettingsLoading}
+            />
+            <FormTextarea
+              label={messages.messageSetup.pickupTemplate}
+              value={petReadyTemplate}
+              onChange={setPetReadyTemplate}
+              placeholder={screenCopy.pickupTemplateHint}
+              rows={4}
+              disabled={billingSettingsLoading}
+            />
+          </div>
+          <div className="flex flex-wrap items-center gap-3">
+            <PermissionGuard permission="pet.plan.create">
+              <button
+                type="button"
+                onClick={() => void handleSaveBillingSettings()}
+                className="ui-primary-button"
+                disabled={billingSettingsSaving}
+              >
+                {billingSettingsSaving ? messages.messageSetup.saving : messages.messageSetup.save}
+              </button>
+            </PermissionGuard>
+            <p className="text-sm text-[color:var(--app-shell-muted)]">
+              {messages.messageSetup.manualNotice}
+            </p>
+          </div>
+          </div>
+        </details>
 
         <ConfirmDialog
           open={Boolean(deleteCandidate)}

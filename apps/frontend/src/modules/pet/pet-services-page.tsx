@@ -1,29 +1,25 @@
 'use client';
 
 import { FormEvent, useCallback, useEffect, useMemo, useState } from 'react';
+import { Search, X } from 'lucide-react';
 import { PermissionGuard } from '@/shared/auth/PermissionGuard';
 import {
-  sharedFilterToolbarClass,
   sharedFormActionsClass,
-  sharedInlineActionsClass,
   sharedPageStackClass
 } from '@/shared/components/public-visual-system';
-import { MetricGrid } from '@/shared/dashboard/metric-grid';
-import { ApiClientError } from '@/shared/lib/http';
+import { formatCurrencyForLocale } from '@/shared/i18n/formatters';
 import { resolvePageItems, resolveTotalItems } from '@/shared/lib/pagination';
 import { useFrontendPlatform } from '@/shared/platform/use-frontend-platform';
 import { petService } from '@/shared/services/pet-service';
 import { PageResponse } from '@/shared/types/common';
-import { DashboardSummaryCard } from '@/shared/types/dashboard';
 import { PetProduct, PetServiceCatalog, PetServiceCategory } from '@/shared/types/pet';
 import { ConfirmDialog } from '@/shared/ui/confirm-dialog';
 import { DataTable, DataTableColumn } from '@/shared/ui/data-table';
 import { FormInput } from '@/shared/ui/form-input';
+import { FormSection } from '@/shared/ui/form-section';
 import { FormSelect } from '@/shared/ui/form-select';
-import { PageSection } from '@/shared/ui/page-section';
 import { PageTitle } from '@/shared/ui/page-title';
 import { Pagination } from '@/shared/ui/pagination';
-import { SearchBar } from '@/shared/ui/search-bar';
 import {
   describePetServiceCatalogItem,
   formatPetServiceCategory,
@@ -34,7 +30,7 @@ import { useAppI18n, useAppMessages } from '@/shared/i18n/app-i18n-provider';
 import type { AppMessages } from '@/shared/i18n/messages/pt-br';
 import { resolveApiErrorMessage } from '@/shared/lib/api-error-message';
 
-const pageSize = 10;
+const pageSize = 14;
 
 const initialPage: PageResponse<PetServiceCatalog> = {
   items: [],
@@ -43,6 +39,8 @@ const initialPage: PageResponse<PetServiceCatalog> = {
   page: 0,
   size: pageSize
 };
+
+type ActiveFilter = 'all' | 'active' | 'inactive';
 
 type ServiceInventoryLinkFormState = {
   inventoryItemId: string;
@@ -69,11 +67,32 @@ function formatInventoryLinkSummary(copy: AppMessages['screens']['petServices'],
   const preview = activeLinks
     .slice(0, 2)
     .map((link) => `${link.inventoryItemName} x${formatExpectedQuantity(link.expectedQuantity)} ${link.unitOfMeasure}`)
-    .join(' • ');
+    .join(' · ');
 
   return activeLinks.length > 2
     ? copy.moreSupplies.replace('{preview}', preview).replace('{count}', String(activeLinks.length - 2))
     : preview;
+}
+
+// Rebuilds the update payload from a listed service, so a row toggle keeps every other field intact.
+function buildPayloadFromService(service: PetServiceCatalog, overrides: Partial<Pick<PetServiceCatalog, 'active'>>) {
+  return {
+    name: service.name,
+    description: service.description || undefined,
+    category: service.category,
+    active: overrides.active ?? service.active,
+    basePrice: service.basePrice,
+    durationMinutes: service.durationMinutes,
+    commissionEligible: service.commissionEligible,
+    allowInPlans: service.allowInPlans,
+    allowStandaloneBooking: service.allowStandaloneBooking,
+    inventoryLinks: service.inventoryLinks.map((link) => ({
+      inventoryItemId: link.inventoryItemId,
+      expectedQuantity: link.expectedQuantity,
+      consumptionRule: link.consumptionRule,
+      active: link.active
+    }))
+  };
 }
 
 function ServiceFlagToggle({
@@ -88,16 +107,16 @@ function ServiceFlagToggle({
   onChange: (checked: boolean) => void;
 }) {
   return (
-    <label className="flex cursor-pointer items-start gap-3 rounded-2xl border border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-panel-muted)] px-4 py-3">
+    <label className="flex cursor-pointer items-start gap-3 rounded-md border border-[color:var(--line)] px-3 py-2.5">
       <input
         type="checkbox"
         checked={checked}
         onChange={(event) => onChange(event.target.checked)}
-        className="mt-0.5 h-4 w-4 rounded border-[color:var(--app-shell-border)]"
+        className="mt-0.5 h-4 w-4 rounded border-[color:var(--control)]"
       />
-      <span className="space-y-1">
-        <span className="block text-sm font-medium text-[color:var(--app-shell-heading)]">{label}</span>
-        <span className="block text-xs leading-5 text-[color:var(--app-shell-muted)]">{description}</span>
+      <span className="space-y-0.5">
+        <span className="block text-sm font-medium text-[var(--ink)]">{label}</span>
+        <span className="block text-xs leading-5 text-[var(--muted)]">{description}</span>
       </span>
     </label>
   );
@@ -136,8 +155,9 @@ export function PetServicesPage() {
   const [searchInput, setSearchInput] = useState('');
   const [search, setSearch] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('');
-  const [activeFilter, setActiveFilter] = useState<'all' | 'active' | 'inactive'>('all');
+  const [activeFilter, setActiveFilter] = useState<ActiveFilter>('all');
 
+  const [isEditorOpen, setIsEditorOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
@@ -150,6 +170,7 @@ export function PetServicesPage() {
   const [allowStandaloneBooking, setAllowStandaloneBooking] = useState(true);
   const [inventoryLinks, setInventoryLinks] = useState<ServiceInventoryLinkFormState[]>([]);
   const [submitting, setSubmitting] = useState(false);
+  const [togglingId, setTogglingId] = useState<string | null>(null);
 
   const [deleteCandidate, setDeleteCandidate] = useState<PetServiceCatalog | null>(null);
 
@@ -157,7 +178,7 @@ export function PetServicesPage() {
     page: number,
     currentSearch: string,
     currentCategoryFilter: string,
-    currentActiveFilter: 'all' | 'active' | 'inactive'
+    currentActiveFilter: ActiveFilter
   ) => {
     setLoading(true);
     setError(null);
@@ -217,12 +238,22 @@ export function PetServicesPage() {
     setInventoryLinks([]);
   }
 
+  function closeEditor() {
+    resetForm();
+    setIsEditorOpen(false);
+  }
+
   function scrollToServiceForm() {
-    document.getElementById('pet-service-form-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    window.requestAnimationFrame(() => {
+      document.getElementById('pet-service-editor')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
   }
 
   function beginCreateService() {
     resetForm();
+    setError(null);
+    setSuccess(null);
+    setIsEditorOpen(true);
     scrollToServiceForm();
   }
 
@@ -248,6 +279,7 @@ export function PetServicesPage() {
     })));
     setError(null);
     setSuccess(null);
+    setIsEditorOpen(true);
     scrollToServiceForm();
   }
 
@@ -349,12 +381,33 @@ export function PetServicesPage() {
         setSuccess(copy.created);
       }
 
-      resetForm();
+      closeEditor();
       await load(pageData.page, search, categoryFilter, activeFilter);
     } catch (err) {
       setError(resolveApiErrorMessage(err, copy.saveError));
     } finally {
       setSubmitting(false);
+    }
+  }
+
+  async function handleToggleActive(item: PetServiceCatalog) {
+    const nextActive = !item.active;
+    if (nextActive && !item.allowInPlans && !item.allowStandaloneBooking) {
+      setError(copy.activeNeedsBookingMode);
+      return;
+    }
+
+    setError(null);
+    setSuccess(null);
+    setTogglingId(item.id);
+    try {
+      await petService.updateService(item.id, buildPayloadFromService(item, { active: nextActive }));
+      setSuccess(copy.updated);
+      await load(pageData.page, search, categoryFilter, activeFilter);
+    } catch (err) {
+      setError(resolveApiErrorMessage(err, copy.saveError));
+    } finally {
+      setTogglingId(null);
     }
   }
 
@@ -375,17 +428,7 @@ export function PetServicesPage() {
 
   const rows = resolvePageItems(pageData);
   const totalItems = resolveTotalItems(pageData);
-  const activeFilterCount = [search, categoryFilter, activeFilter !== 'all' ? activeFilter : ''].filter(Boolean).length;
-  const activeServices = rows.filter((item) => item.active).length;
-  const planReadyServices = rows.filter((item) => item.allowInPlans).length;
-  const averageDuration = rows.length > 0
-    ? Math.round(rows.reduce((total, item) => total + item.durationMinutes, 0) / rows.length)
-    : 0;
-  const averageBasePrice = rows.length > 0
-    ? Math.round(rows.reduce((total, item) => total + item.basePrice, 0) / rows.length)
-    : 0;
-  const parsedDraftBasePrice = Number(basePrice);
-  const parsedDraftDuration = Number(durationMinutes);
+  const hasActiveFilters = Boolean(search || categoryFilter || activeFilter !== 'all');
   const activeSchedulingConflict = active && !allowInPlans && !allowStandaloneBooking;
   const inventoryOptions = useMemo(() => {
     const knownOptions = products.map((product) => ({
@@ -407,65 +450,6 @@ export function PetServicesPage() {
       ...fallbackOptions
     ];
   }, [inventoryLinks, products, copy]);
-  const activeInventoryLinks = inventoryLinks.filter((link) => link.inventoryItemId && link.active);
-  const inventoryPreview = activeInventoryLinks.length > 0
-    ? activeInventoryLinks
-      .map((link) => {
-        const itemLabel = link.inventoryItemName
-          ?? products.find((product) => product.inventoryItemId === link.inventoryItemId)?.name
-          ?? copy.linkedSupplyFallback;
-        const unit = link.unitOfMeasure
-          ?? products.find((product) => product.inventoryItemId === link.inventoryItemId)?.unitOfMeasure
-          ?? 'UNIT';
-        return `${itemLabel} x${link.expectedQuantity || '0'} ${unit}`;
-      })
-      .join(' • ')
-    : copy.noPlannedUsage;
-  const draftServicePreview = describePetServiceCatalogItem({
-    id: editingId ?? 'draft-service',
-    name: name.trim() || copy.draftService,
-    description: description.trim() || undefined,
-    category,
-    active,
-    basePrice: Number.isFinite(parsedDraftBasePrice) ? parsedDraftBasePrice : 0,
-    durationMinutes: Number.isFinite(parsedDraftDuration) && parsedDraftDuration > 0 ? parsedDraftDuration : 0,
-    commissionEligible,
-    allowInPlans,
-    allowStandaloneBooking,
-    inventoryLinks: [],
-    createdAt: '',
-    updatedAt: ''
-  }, 'pt-BR');
-  const draftAvailabilityLabel = buildServiceAvailabilityLabel(copy, { allowInPlans, allowStandaloneBooking });
-
-  const summaryCards: DashboardSummaryCard[] = [
-    {
-      key: 'services-in-scope',
-      label: copy.metricVisible,
-      value: totalItems,
-      trend: activeFilterCount > 0
-        ? copy.metricVisibleFiltered
-        : copy.metricVisibleAll
-    },
-    {
-      key: 'active-services',
-      label: copy.metricActive,
-      value: activeServices,
-      trend: copy.metricActiveDetail
-    },
-    {
-      key: 'plan-ready-services',
-      label: copy.metricPlanEligible,
-      value: planReadyServices,
-      trend: copy.metricPlanEligibleDetail
-    },
-    {
-      key: 'average-service-duration',
-      label: copy.metricAverageDuration,
-      value: averageDuration,
-      trend: copy.averageBasePrice.replace('{amount}', String(averageBasePrice))
-    }
-  ];
 
   const categoryOptions = allowedCategories.map((value) => ({
     value,
@@ -477,7 +461,7 @@ export function PetServicesPage() {
     ...categoryOptions
   ];
 
-  const activeFilterOptions = [
+  const activeFilterOptions: { value: ActiveFilter; label: string }[] = [
     { value: 'all', label: copy.allStatuses },
     { value: 'active', label: copy.onlyActive },
     { value: 'inactive', label: copy.onlyInactive }
@@ -488,22 +472,10 @@ export function PetServicesPage() {
       key: 'service',
       header: copy.columnService,
       render: (item) => (
-        <div>
-          <p className="font-medium text-slate-900">{item.name}</p>
-          <p className="mt-1 text-sm text-[color:var(--app-shell-muted)]">
-            {item.description ?? copy.noSummary}
-          </p>
-        </div>
-      )
-    },
-    {
-      key: 'category',
-      header: copy.category,
-      render: (item) => (
-        <div className="space-y-1">
-          <p className="text-sm font-medium text-slate-900">{formatPetServiceCategory(item.category)}</p>
-          <p className="text-xs text-[color:var(--app-shell-muted)]">
-            {item.active ? copy.activeForBooking : copy.inactiveForBooking}
+        <div className={item.active ? undefined : 'opacity-60'}>
+          <p className="font-medium text-[var(--ink)]">{item.name}</p>
+          <p className="line-clamp-1 max-w-md text-xs text-[var(--muted)]">
+            {[formatPetServiceCategory(item.category), item.description].filter(Boolean).join(' · ')}
           </p>
         </div>
       )
@@ -511,41 +483,65 @@ export function PetServicesPage() {
     {
       key: 'basePrice',
       header: copy.basePrice,
-      render: (item) => item.basePrice.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
+      className: 'text-right',
+      render: (item) => <span className="ui-mono whitespace-nowrap">{formatCurrencyForLocale(locale, item.basePrice)}</span>
     },
     {
       key: 'durationMinutes',
       header: copy.columnDuration,
-      render: (item) => `${item.durationMinutes} min`
+      className: 'text-right',
+      render: (item) => <span className="ui-mono whitespace-nowrap">{item.durationMinutes} min</span>
     },
     {
       key: 'bookingRules',
       header: copy.columnScheduleUsage,
       render: (item) => (
-        <div className="space-y-1 text-xs text-[color:var(--app-shell-muted)]">
-          <p>{item.allowStandaloneBooking ? copy.standaloneAllowed : copy.planRequired}</p>
-          <p>{item.allowInPlans ? copy.planSessionsAllowed : copy.standaloneOnly}</p>
-          <p>{item.commissionEligible ? copy.generatesCommission : copy.noCommission}</p>
-        </div>
+        <span className="text-sm text-[var(--ink-2)]">{buildServiceAvailabilityLabel(copy, item)}</span>
+      )
+    },
+    {
+      key: 'commission',
+      header: copy.columnCommission,
+      render: (item) => (
+        <span className="text-sm text-[var(--ink-2)]">
+          {item.commissionEligible ? copy.generatesCommission : copy.noCommission}
+        </span>
       )
     },
     {
       key: 'inventoryRecipe',
       header: copy.columnSupplies,
       render: (item) => (
-        <div className="space-y-1 text-xs text-[color:var(--app-shell-muted)]">
-          <p className="font-medium text-slate-900">
-            {item.inventoryLinks.filter((link) => link.active).length} {copy.linkedSupplies}
-          </p>
-          <p>{formatInventoryLinkSummary(copy, item)}</p>
-        </div>
+        <span className="text-xs text-[var(--muted)]">{formatInventoryLinkSummary(copy, item)}</span>
+      )
+    },
+    {
+      key: 'active',
+      header: copy.active,
+      render: (item) => (
+        <PermissionGuard
+          permission="pet.service.update"
+          fallback={<span className="text-sm text-[var(--ink-2)]">{item.active ? copy.active : copy.inactive}</span>}
+        >
+          <button
+            type="button"
+            role="switch"
+            aria-checked={item.active}
+            aria-label={copy.toggleActive.replace('{name}', item.name)}
+            disabled={togglingId === item.id}
+            onClick={() => void handleToggleActive(item)}
+            className="ui-switch"
+          >
+            <span aria-hidden="true" />
+          </button>
+        </PermissionGuard>
       )
     },
     {
       key: 'actions',
       header: copy.actions,
       render: (item) => (
-        <div className={sharedInlineActionsClass}>
+        <div className="flex items-center gap-2 whitespace-nowrap">
           <PermissionGuard permission="pet.service.update">
             <button
               type="button"
@@ -576,8 +572,8 @@ export function PetServicesPage() {
     >
       <div className={sharedPageStackClass}>
         <PageTitle
-          eyebrow="Gestão Pet"
           title={copy.title}
+          count={loading ? undefined : totalItems}
           description={copy.description}
           actions={(
             <PermissionGuard permission="pet.service.create">
@@ -588,79 +584,98 @@ export function PetServicesPage() {
           )}
         />
 
-        <MetricGrid cards={summaryCards} columns="md:grid-cols-2 xl:grid-cols-4" />
-
-        <PageSection
-          tone="muted"
-          title={copy.filtersTitle}
-          description={copy.filtersDescription}
+        <form
+          role="search"
+          aria-label={copy.searchLabel}
+          onSubmit={(event) => {
+            event.preventDefault();
+            setSearch(searchInput.trim());
+          }}
+          className="flex flex-wrap items-center gap-2"
         >
-          <div className={sharedFilterToolbarClass}>
-            <div className="grid gap-3 xl:grid-cols-[minmax(0,1.45fr)_repeat(2,minmax(0,0.9fr))] xl:items-end">
-              <SearchBar
-                label={copy.searchLabel}
-                value={searchInput}
-                onChange={setSearchInput}
-                placeholder={copy.searchPlaceholder}
-              />
-              <FormSelect
-                label={copy.category}
-                value={categoryFilter}
-                options={filterCategoryOptions}
-                onChange={setCategoryFilter}
-              />
-              <FormSelect
-                label={copy.status}
-                value={activeFilter}
-                options={activeFilterOptions}
-                onChange={(value) => setActiveFilter(value as 'all' | 'active' | 'inactive')}
-              />
-            </div>
-            <div className={sharedFormActionsClass}>
-              <button
-                type="button"
-                onClick={() => setSearch(searchInput)}
-                className="ui-primary-button"
-              >
-                {copy.search}
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setSearchInput('');
-                  setSearch('');
-                  setCategoryFilter('');
-                  setActiveFilter('all');
-                }}
-                className="ui-secondary-button"
-              >
-                {copy.clear}
-              </button>
-              <p className="text-sm text-[color:var(--app-shell-muted)]">
-                {activeFilterCount > 0
-                  ? copy.filteredHint
-                  : copy.noFiltersHint}
-              </p>
-            </div>
-          </div>
-        </PageSection>
-
-        <PermissionGuard permission={editingId ? 'pet.service.update' : 'pet.service.create'}>
-          <div id="pet-service-form-section">
-            <PageSection
-              title={editingId ? copy.editService : copy.createService}
-              description={copy.formDescription}
+          <label className="ui-field-shell flex min-h-9 min-w-[16rem] flex-1 items-center gap-2 rounded-md border border-[color:var(--control)] px-3 md:max-w-md">
+            <Search className="h-3.5 w-3.5 shrink-0 text-[var(--muted)]" aria-hidden="true" />
+            <span className="sr-only">{copy.searchLabel}</span>
+            <input
+              type="search"
+              value={searchInput}
+              onChange={(event) => setSearchInput(event.target.value)}
+              placeholder={copy.searchPlaceholder}
+              className="min-w-0 flex-1 bg-transparent py-1.5 text-sm text-[var(--ink)] outline-none placeholder:text-[var(--muted)]"
+            />
+          </label>
+          <label className="ui-filter-chip max-w-full" data-active={categoryFilter ? 'true' : 'false'}>
+            <span>{copy.category}</span>
+            <select
+              value={categoryFilter}
+              onChange={(event) => setCategoryFilter(event.target.value)}
+              className="max-w-[12rem] truncate bg-transparent font-medium text-[var(--ink)] outline-none"
             >
-              <form onSubmit={handleSubmit} className="space-y-5">
-                <div className="grid gap-4 xl:grid-cols-2">
-                  <FormInput label={copy.name} value={name} onChange={setName} required />
-                  <FormSelect label={copy.category} value={category} options={categoryOptions} onChange={(value) => setCategory(value as PetServiceCategory)} />
-                  <FormInput label={copy.basePrice} value={basePrice} onChange={setBasePrice} type="number" required />
-                  <FormInput label={copy.durationMinutes} value={durationMinutes} onChange={setDurationMinutes} type="number" required />
-                  <FormInput label={copy.operatingSummary} value={description} onChange={setDescription} wrapperClassName="xl:col-span-2" />
+              {filterCategoryOptions.map((option) => (
+                <option key={option.value} value={option.value}>{option.label}</option>
+              ))}
+            </select>
+          </label>
+          <label className="ui-filter-chip max-w-full" data-active={activeFilter !== 'all' ? 'true' : 'false'}>
+            <span>{copy.status}</span>
+            <select
+              value={activeFilter}
+              onChange={(event) => setActiveFilter(event.target.value as ActiveFilter)}
+              className="max-w-[12rem] truncate bg-transparent font-medium text-[var(--ink)] outline-none"
+            >
+              {activeFilterOptions.map((option) => (
+                <option key={option.value} value={option.value}>{option.label}</option>
+              ))}
+            </select>
+          </label>
+          <button type="submit" className="ui-secondary-button">{copy.search}</button>
+          {hasActiveFilters ? (
+            <button
+              type="button"
+              onClick={() => {
+                setSearchInput('');
+                setSearch('');
+                setCategoryFilter('');
+                setActiveFilter('all');
+              }}
+              className="inline-flex min-h-9 items-center gap-1 px-1 text-sm text-[var(--ink-2)] hover:text-[var(--ink)]"
+            >
+              <X className="h-3.5 w-3.5" aria-hidden="true" />
+              {copy.clear}
+            </button>
+          ) : null}
+        </form>
+
+        {error ? <div className="ui-notice-error">{error}</div> : null}
+        {success ? <div className="ui-notice-success">{success}</div> : null}
+
+        {isEditorOpen ? (
+          <PermissionGuard permission={editingId ? 'pet.service.update' : 'pet.service.create'}>
+            <section
+              id="pet-service-editor"
+              aria-labelledby="pet-service-editor-title"
+              className="scroll-mt-4 rounded-md border border-[color:var(--line)] p-4"
+            >
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <h2 id="pet-service-editor-title" className="text-sm font-semibold text-[var(--ink)]">
+                    {editingId ? copy.editService : copy.newService}
+                  </h2>
+                  <p className="text-xs text-[var(--muted)]">{copy.formDescription}</p>
                 </div>
 
-                <div className="grid gap-3 xl:grid-cols-2">
+                <FormSection title={copy.sectionService}>
+                  <FormInput label={copy.name} value={name} onChange={setName} required />
+                  <FormSelect label={copy.category} value={category} options={categoryOptions} onChange={(value) => setCategory(value as PetServiceCategory)} />
+                  <FormInput label={copy.operatingSummary} value={description} onChange={setDescription} wrapperClassName="md:col-span-2" />
+                </FormSection>
+
+                <FormSection title={copy.sectionPriceTime}>
+                  <FormInput label={copy.basePrice} value={basePrice} onChange={setBasePrice} type="number" step="0.01" min="0" required />
+                  <FormInput label={copy.durationMinutes} value={durationMinutes} onChange={setDurationMinutes} type="number" min="1" required />
+                </FormSection>
+
+                <FormSection title={copy.sectionRules}>
                   <ServiceFlagToggle
                     label={copy.activeForSchedule}
                     description={copy.inactiveHint}
@@ -685,18 +700,15 @@ export function PetServicesPage() {
                     checked={allowStandaloneBooking}
                     onChange={setAllowStandaloneBooking}
                   />
-                </div>
+                  {activeSchedulingConflict ? (
+                    <p role="alert" className="text-sm text-[var(--warn)] md:col-span-2">{copy.activeNeedsBookingPath}</p>
+                  ) : null}
+                </FormSection>
 
-                <div className="rounded-2xl border border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-panel-muted)] px-4 py-4">
-                  <div className="flex flex-wrap items-start justify-between gap-3">
-                    <div>
-                      <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--app-shell-muted)]">
-                        {copy.linkedSuppliesTitle}
-                      </p>
-                      <p className="mt-2 text-sm text-[color:var(--app-shell-muted)]">
-                        {copy.linkedSuppliesDescription}
-                      </p>
-                    </div>
+                <fieldset className="border-t border-[color:var(--line)] pt-4">
+                  <legend className="pr-2 text-sm font-semibold text-[var(--ink)]">{copy.linkedSuppliesTitle}</legend>
+                  <div className="mt-2 flex flex-wrap items-start justify-between gap-3">
+                    <p className="max-w-2xl text-xs text-[var(--muted)]">{copy.linkedSuppliesDescription}</p>
                     <button
                       type="button"
                       onClick={handleAddInventoryLink}
@@ -708,19 +720,14 @@ export function PetServicesPage() {
                   </div>
 
                   {productsLookupError ? (
-                    <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
-                      {productsLookupError}
-                    </div>
+                    <div className="ui-notice-warning mt-3">{productsLookupError}</div>
                   ) : null}
 
                   {inventoryLinks.length > 0 ? (
-                    <div className="mt-4 space-y-3">
+                    <ul className="mt-3 divide-y divide-[color:var(--line-soft)]">
                       {inventoryLinks.map((link, index) => (
-                        <div
-                          key={`${link.inventoryItemId || 'draft'}-${index}`}
-                          className="rounded-xl border border-[color:var(--app-shell-border)] bg-white/80 px-3 py-3"
-                        >
-                          <div className="grid gap-3 xl:grid-cols-[minmax(0,1.5fr)_180px_auto] xl:items-end">
+                        <li key={`${link.inventoryItemId || 'draft'}-${index}`} className="py-3">
+                          <div className="grid gap-3 md:grid-cols-[minmax(0,1.5fr)_180px_auto] md:items-end">
                             <FormSelect
                               label={copy.supply}
                               value={link.inventoryItemId}
@@ -736,13 +743,13 @@ export function PetServicesPage() {
                               step="0.01"
                               min="0.01"
                             />
-                            <div className="flex gap-2 xl:justify-end">
-                              <label className="flex items-center gap-2 text-sm text-[color:var(--app-shell-muted)]">
+                            <div className="flex items-center gap-3 md:justify-end">
+                              <label className="flex items-center gap-2 text-sm text-[var(--ink-2)]">
                                 <input
                                   type="checkbox"
                                   checked={link.active}
                                   onChange={(event) => handleInventoryLinkChange(index, { active: event.target.checked })}
-                                  className="h-4 w-4 rounded border-[color:var(--app-shell-border)]"
+                                  className="h-4 w-4 rounded border-[color:var(--control)]"
                                 />
                                 {copy.active}
                               </label>
@@ -755,53 +762,20 @@ export function PetServicesPage() {
                               </button>
                             </div>
                           </div>
-                          <p className="mt-2 text-xs text-[color:var(--app-shell-muted)]">
+                          <p className="mt-1.5 text-xs text-[var(--muted)]">
                             {link.inventoryItemName
                               ? `${link.inventoryItemName}${link.inventoryItemSku ? ` (${link.inventoryItemSku})` : ''}`
                               : copy.supplyHint}
                             {link.unitOfMeasure ? copy.unitSuffix.replace('{unit}', link.unitOfMeasure) : ''}
                             {link.active ? copy.supplyVisibleHint : copy.supplyHiddenHint}
                           </p>
-                        </div>
+                        </li>
                       ))}
-                    </div>
+                    </ul>
                   ) : (
-                    <p className="mt-4 text-xs text-[color:var(--app-shell-muted)]">
-                      {copy.noSuppliesHint}
-                    </p>
+                    <p className="mt-3 text-xs text-[var(--muted)]">{copy.noSuppliesHint}</p>
                   )}
-                </div>
-
-                <div className={`rounded-2xl border px-4 py-3 ${
-                  activeSchedulingConflict
-                    ? 'border-amber-200 bg-amber-50'
-                    : 'border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-panel-muted)]'
-                }`}>
-                  <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--app-shell-muted)]">
-                    {copy.previewTitle}
-                  </p>
-                  <p className="mt-2 text-sm font-medium text-[color:var(--app-shell-heading)]">
-                    {draftServicePreview}
-                  </p>
-                  <div className="mt-3 grid gap-2 text-xs text-[color:var(--app-shell-muted)] xl:grid-cols-2">
-                    <p>{copy.previewCategory} {formatPetServiceCategory(category)}</p>
-                    <p>{copy.previewStatus} {active ? copy.activeForBooking : copy.hiddenFromBooking}</p>
-                    <p>{copy.previewUsage} {draftAvailabilityLabel}</p>
-                    <p>{commissionEligible ? copy.inCommission : copy.noCommission}</p>
-                    <p>{copy.pricingFutureHint}</p>
-                    <p>{copy.previewStatus} {active ? copy.activeForBooking : copy.hiddenFromBooking}</p>
-                    <p>{copy.previewBookingMode} {draftAvailabilityLabel}</p>
-                    <p>{commissionEligible ? copy.commissionReady : copy.noCommission}</p>
-                    <p className="xl:col-span-2">{copy.previewSupplies} {inventoryPreview}</p>
-                  </div>
-                  <p className={`mt-3 text-xs ${activeSchedulingConflict ? 'text-amber-800' : 'text-[color:var(--app-shell-muted)]'}`}>
-                    {activeSchedulingConflict
-                      ? copy.activeNeedsBookingPath
-                      : active
-                        ? copy.previewMatchesOperator
-                        : copy.inactiveReadOnlyHint}
-                  </p>
-                </div>
+                </fieldset>
 
                 <div className={sharedFormActionsClass}>
                   <button
@@ -813,56 +787,48 @@ export function PetServicesPage() {
                   </button>
                   <button
                     type="button"
-                    onClick={resetForm}
+                    onClick={closeEditor}
                     className="ui-secondary-button"
                   >
-                    {editingId ? copy.cancelEdit : copy.clearForm}
+                    {copy.cancelEdit}
                   </button>
                 </div>
               </form>
-            </PageSection>
-          </div>
-        </PermissionGuard>
+            </section>
+          </PermissionGuard>
+        ) : null}
 
-        {error ? <div className="ui-notice-error">{error}</div> : null}
-        {success ? <div className="ui-notice-success">{success}</div> : null}
+        <div className="space-y-2">
+          <DataTable
+            columns={columns}
+            rows={rows}
+            getRowKey={(row) => row.id}
+            loading={loading}
+            loadingTitle={copy.loadingTitle}
+            loadingDescription={copy.loadingDescription}
+            emptyState={{
+              title: copy.emptyTitle,
+              description: hasActiveFilters
+                ? copy.emptyFiltered
+                : copy.emptyDescription,
+              action: (
+                <PermissionGuard permission="pet.service.create">
+                  <button type="button" onClick={beginCreateService} className="ui-primary-button">
+                    {copy.createFirst}
+                  </button>
+                </PermissionGuard>
+              )
+            }}
+          />
 
-        <PageSection
-          title={copy.listTitle}
-          description={copy.listDescription}
-          actions={<p className="text-sm text-[color:var(--app-shell-muted)]">{copy.total} {totalItems} {copy.servicesCount}</p>}
-        >
-          <div className="space-y-5">
-            <DataTable
-              columns={columns}
-              rows={rows}
-              getRowKey={(row) => row.id}
-              loading={loading}
-              loadingTitle={copy.loadingTitle}
-              loadingDescription={copy.loadingDescription}
-              emptyState={{
-                title: copy.emptyTitle,
-                description: activeFilterCount > 0
-                  ? copy.emptyFiltered
-                  : copy.emptyDescription,
-                action: (
-                  <PermissionGuard permission="pet.service.create">
-                    <button type="button" onClick={beginCreateService} className="ui-primary-button">
-                      {copy.createFirst}
-                    </button>
-                  </PermissionGuard>
-                )
-              }}
-            />
-
-            <Pagination
-              page={pageData.page}
-              totalPages={pageData.totalPages}
-              totalElements={totalItems}
-              onPageChange={(page) => void load(page, search, categoryFilter, activeFilter)}
-            />
-          </div>
-        </PageSection>
+          <Pagination
+            page={pageData.page}
+            totalPages={pageData.totalPages}
+            totalElements={totalItems}
+            pageSize={pageSize}
+            onPageChange={(page) => void load(page, search, categoryFilter, activeFilter)}
+          />
+        </div>
 
         <ConfirmDialog
           open={deleteCandidate !== null}

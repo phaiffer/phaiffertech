@@ -1,6 +1,6 @@
 'use client';
 
-import type { FormEvent, ReactNode } from 'react';
+import type { FormEvent } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useState } from 'react';
@@ -22,6 +22,7 @@ import { ConfirmDialog } from '@/shared/ui/confirm-dialog';
 import { DataTable, type DataTableColumn } from '@/shared/ui/data-table';
 import { FormInput } from '@/shared/ui/form-input';
 import { FormSelect } from '@/shared/ui/form-select';
+import { FormSection } from '@/shared/ui/form-section';
 import { PageTitle } from '@/shared/ui/page-title';
 import { Pagination } from '@/shared/ui/pagination';
 import { useAppI18n, useAppMessages } from '@/shared/i18n/app-i18n-provider';
@@ -76,15 +77,6 @@ function formatDate(copy: PetProfilesCopy, locale: AppLocale, value?: string) {
   }
 
   return formatDateForLocale(locale, value);
-}
-
-function FormSection({ title, children }: { title: string; children: ReactNode }) {
-  return (
-    <fieldset className="border-t border-[color:var(--line)] pt-4">
-      <legend className="pr-2 text-sm font-semibold text-[var(--ink)]">{title}</legend>
-      <div className="mt-2 grid gap-4 md:grid-cols-2">{children}</div>
-    </fieldset>
-  );
 }
 
 export function PetProfilesPage({ initialView = 'list' }: PetProfilesPageProps) {

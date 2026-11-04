@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { PetProfessionalsPage } from '@/modules/pet/pet-professionals-page';
 
@@ -67,6 +67,8 @@ describe('PetProfessionalsPage', () => {
       expect(petServiceMock.listProfessionals).toHaveBeenCalledTimes(1);
     });
 
+    fireEvent.click(screen.getByRole('button', { name: 'Add professional' }));
+
     const emailInput = screen.getByLabelText('Email');
 
     expect(emailInput).toHaveAttribute('id', 'professional-email');
@@ -86,6 +88,8 @@ describe('PetProfessionalsPage', () => {
     await waitFor(() => {
       expect(petServiceMock.listProfessionals).toHaveBeenCalledTimes(1);
     });
+
+    fireEvent.click(screen.getByRole('button', { name: 'Add professional' }));
 
     const phoneInput = screen.getByLabelText(/phone/i);
 

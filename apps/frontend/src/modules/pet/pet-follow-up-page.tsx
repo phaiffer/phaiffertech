@@ -7,13 +7,15 @@ import { CrmNotesPage } from '@/modules/crm/notes-page';
 import { CrmTasksPage } from '@/modules/crm/tasks-page';
 import { PetModuleSubnav } from '@/modules/pet/pet-module-subnav';
 import { usePermissions } from '@/shared/auth/usePermissions';
+import { useAppMessages } from '@/shared/i18n/app-i18n-provider';
+import { PageTitle } from '@/shared/ui/page-title';
 
 type FollowUpTabKey = 'tasks' | 'notes' | 'activity';
 
-const followUpTabs: Array<{ key: FollowUpTabKey; label: string; permission: string }> = [
-  { key: 'tasks', label: 'Tarefas', permission: 'crm.task.read' },
-  { key: 'notes', label: 'Notas', permission: 'crm.note.read' },
-  { key: 'activity', label: 'Atividade', permission: 'crm.activity.read' }
+const followUpTabs: Array<{ key: FollowUpTabKey; permission: string }> = [
+  { key: 'tasks', permission: 'crm.task.read' },
+  { key: 'notes', permission: 'crm.note.read' },
+  { key: 'activity', permission: 'crm.activity.read' }
 ];
 
 function buildTabHref(pathname: string, key: FollowUpTabKey) {
@@ -21,6 +23,7 @@ function buildTabHref(pathname: string, key: FollowUpTabKey) {
 }
 
 export function PetFollowUpPage() {
+  const copy = useAppMessages().screens.petFollowUp;
   const { hasPermission } = usePermissions();
   const pathname = usePathname() ?? '/pet/follow-up';
   const searchParams = useSearchParams();
@@ -29,23 +32,13 @@ export function PetFollowUpPage() {
   const activeTab = visibleTabs.find((tab) => tab.key === requestedTab) ?? visibleTabs[0] ?? null;
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-4">
       <PetModuleSubnav />
 
       {activeTab ? (
         <>
-          <section className="ui-surface-panel space-y-4 p-4">
-            <div className="space-y-2">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[color:var(--accent)]">
-                Follow-up Banho e Tosa
-              </p>
-              <p className="max-w-3xl text-sm text-[color:var(--app-shell-muted)]">
-                Tarefas, notas e atividade ajudam a recepcao a lembrar retirada, retorno, renovacao de plano e pendencias
-                do atendimento sem sair da leitura operacional.
-              </p>
-            </div>
-
-            <div className="flex flex-wrap gap-2">
+          <PageTitle title={copy.title} description={copy.description} />
+          <nav aria-label={copy.tabsLabel} className="flex gap-1 overflow-x-auto border-b border-[color:var(--line)]">
               {visibleTabs.map((tab) => {
                 const active = tab.key === activeTab.key;
 
@@ -53,26 +46,25 @@ export function PetFollowUpPage() {
                   <Link
                     key={tab.key}
                     href={buildTabHref(pathname, tab.key)}
-                    className={`inline-flex h-10 items-center rounded-md px-3.5 text-sm font-medium transition-all duration-200 ${
+                    aria-current={active ? 'page' : undefined}
+                    className={`inline-flex min-h-11 shrink-0 items-center border-b-2 px-3 text-sm font-medium transition-colors ${
                       active
-                        ? 'text-white shadow-sm'
-                        : 'border border-[color:var(--app-shell-border)] bg-white text-[color:var(--app-shell-heading)] hover:bg-[color:var(--app-shell-panel-muted)]'
+                        ? 'border-[color:var(--ink)] text-[var(--ink)]'
+                        : 'border-transparent text-[var(--muted)] hover:text-[var(--ink)]'
                     }`}
-                    style={active ? { background: 'var(--accent)' } : undefined}
                   >
-                    {tab.label}
+                    {copy.tabs[tab.key]}
                   </Link>
                 );
               })}
-            </div>
-          </section>
+          </nav>
 
           {activeTab.key === 'tasks' ? <CrmTasksPage surface="pet" /> : null}
           {activeTab.key === 'notes' ? <CrmNotesPage surface="pet" /> : null}
           {activeTab.key === 'activity' ? <CrmActivityPage surface="pet" /> : null}
         </>
       ) : (
-        <div className="ui-notice-warning">Voce nao possui permissao para visualizar o follow-up operacional.</div>
+        <div className="ui-notice-warning">{copy.noPermission}</div>
       )}
     </div>
   );

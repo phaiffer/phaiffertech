@@ -211,8 +211,8 @@ describe('PetCommissionSummaryPage', () => {
     expect(screen.getByText('Legacy Bath')).toBeInTheDocument();
     expect(screen.getByText('Excluded lines')).toBeInTheDocument();
     expect(screen.getByText('Lines with commission')).toBeInTheDocument();
-    expect(screen.getByText('Pending charges')).toBeInTheDocument();
-    expect(screen.getByText('Plans near their end')).toBeInTheDocument();
-    expect(screen.getByText(/R\$\s?220,00/)).toBeInTheDocument();
+    expect(screen.getAllByText('Total generated').length).toBeGreaterThan(0);
+    expect(petServiceMock.listInvoices).not.toHaveBeenCalled();
+    expect(petServiceMock.listClientPlans).not.toHaveBeenCalled();
   });
 });

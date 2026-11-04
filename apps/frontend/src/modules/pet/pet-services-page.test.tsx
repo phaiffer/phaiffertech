@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { PetServicesPage } from '@/modules/pet/pet-services-page';
 
@@ -104,9 +104,44 @@ describe('PetServicesPage', () => {
       expect(petServiceMock.listServices).toHaveBeenCalledTimes(1);
     });
 
-    expect(screen.getByText('Grooming catalog')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Grooming catalog' })).toBeInTheDocument();
     expect(screen.getByText('Banho Premium Porte Médio')).toBeInTheDocument();
     expect(screen.getByText('Shampoo Neutro x50 ML')).toBeInTheDocument();
-    expect(screen.getByText('Can use plan sessions')).toBeInTheDocument();
+    expect(screen.getByText('One-off and plan enabled')).toBeInTheDocument();
+    expect(screen.getByText('1-1 of 1')).toBeInTheDocument();
+  });
+
+  it('keeps the editor closed until a service is created or edited', async () => {
+    render(<PetServicesPage />);
+    await screen.findByText('Banho Premium Porte Médio');
+
+    expect(screen.queryByRole('group', { name: 'Price and time' })).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Edit' }));
+
+    expect(screen.getByRole('heading', { name: 'Edit service' })).toBeInTheDocument();
+    expect(screen.getByRole('group', { name: 'Price and time' })).toBeInTheDocument();
+  });
+
+  it('turns a service off from the row switch keeping the other fields', async () => {
+    petServiceMock.updateService.mockResolvedValue({});
+    render(<PetServicesPage />);
+    await screen.findByText('Banho Premium Porte Médio');
+
+    const toggle = screen.getByRole('switch', { name: 'Turn Banho Premium Porte Médio on or off' });
+    expect(toggle).toHaveAttribute('aria-checked', 'true');
+
+    fireEvent.click(toggle);
+
+    await waitFor(() => {
+      expect(petServiceMock.updateService).toHaveBeenCalledWith('service-1', expect.objectContaining({
+        active: false,
+        basePrice: 110,
+        durationMinutes: 60,
+        allowInPlans: true,
+        inventoryLinks: [{ inventoryItemId: 'inv-1', expectedQuantity: 50, consumptionRule: 'FIXED_PER_SERVICE', active: true }]
+      }));
+    });
+    expect(await screen.findByText('Service updated.')).toBeInTheDocument();
   });
 });

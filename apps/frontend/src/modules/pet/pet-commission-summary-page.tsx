@@ -4,26 +4,22 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { PermissionGuard } from '@/shared/auth/PermissionGuard';
 import { sharedPageStackClass } from '@/shared/components/public-visual-system';
 import { StatusBadge } from '@/shared/dashboard/status-badge';
-import { ApiClientError } from '@/shared/lib/http';
-import { resolvePageItems } from '@/shared/lib/pagination';
 import { petService } from '@/shared/services/pet-service';
 import {
-  ClientPlan,
   PetCommissionSummary,
   PetCommissionSummaryDetail,
-  PetCommissionSummaryProfessional,
-  PetInvoice
+  PetCommissionSummaryProfessional
 } from '@/shared/types/pet';
 import { DataTable, DataTableColumn } from '@/shared/ui/data-table';
 import { FormInput } from '@/shared/ui/form-input';
 import { FormSelect } from '@/shared/ui/form-select';
 import { PageSection } from '@/shared/ui/page-section';
 import { PageTitle } from '@/shared/ui/page-title';
-import { useAppMessages } from '@/shared/i18n/app-i18n-provider';
+import { useAppI18n, useAppMessages } from '@/shared/i18n/app-i18n-provider';
 import type { AppMessages } from '@/shared/i18n/messages/pt-br';
 import { resolveApiErrorMessage } from '@/shared/lib/api-error-message';
 
-const locale = 'pt-BR';
+type DisplayLocale = 'pt-BR' | 'en-US';
 const allProfessionalsOption = '__all__';
 const compatibilityOption = '__compatibility__';
 
@@ -49,11 +45,11 @@ function toIsoBoundary(date: string, boundary: 'start' | 'end') {
   return new Date(`${date}T${boundary === 'start' ? '00:00:00' : '23:59:59'}`).toISOString();
 }
 
-function formatCurrency(value?: number | null) {
+function formatCurrency(locale: DisplayLocale, value?: number | null) {
   return (value ?? 0).toLocaleString(locale, { style: 'currency', currency: 'BRL' });
 }
 
-function formatCommissionRate(screenCopy: AppMessages['screens']['petCommissions'], value?: number | null) {
+function formatCommissionRate(locale: DisplayLocale, screenCopy: AppMessages['screens']['petCommissions'], value?: number | null) {
   if (value == null) {
     return screenCopy.rateUnavailable;
   }
@@ -64,7 +60,7 @@ function formatCommissionRate(screenCopy: AppMessages['screens']['petCommissions
   })}%`;
 }
 
-function formatDateTime(value: string) {
+function formatDateTime(locale: DisplayLocale, value: string) {
   return new Intl.DateTimeFormat(locale, {
     dateStyle: 'short',
     timeStyle: 'short'
@@ -77,37 +73,37 @@ function resolveLineStatusCopy(screenCopy: AppMessages['screens']['petCommission
       return {
         label: screenCopy.lineGenerated,
         detail: screenCopy.lineGeneratedDetail,
-        className: 'border-emerald-200 bg-emerald-50 text-emerald-700'
+        className: 'text-[var(--ink-2)]'
       };
     case 'EXCLUDED':
       return {
         label: screenCopy.lineExcluded,
         detail: screenCopy.lineExcludedDetail,
-        className: 'border-slate-200 bg-slate-100 text-slate-700'
+        className: 'text-[var(--muted)]'
       };
     case 'ELIGIBLE_WITHOUT_AMOUNT':
       return {
         label: screenCopy.lineEligibleNoAmount,
         detail: screenCopy.lineEligibleNoAmountDetail,
-        className: 'border-amber-200 bg-amber-50 text-amber-700'
+        className: 'text-[var(--warn)]'
       };
     case 'UNASSIGNED':
       return {
         label: screenCopy.lineUnassigned,
         detail: screenCopy.lineUnassignedDetail,
-        className: 'border-amber-200 bg-amber-50 text-amber-700'
+        className: 'text-[var(--warn)]'
       };
     case 'LEGACY_UNAVAILABLE':
       return {
         label: screenCopy.lineLegacy,
         detail: screenCopy.lineLegacyDetail,
-        className: 'border-rose-200 bg-rose-50 text-rose-700'
+        className: 'text-[var(--danger)]'
       };
     default:
       return {
         label: status,
         detail: screenCopy.lineNoClassification,
-        className: 'border-slate-200 bg-slate-100 text-slate-700'
+        className: 'text-[var(--muted)]'
       };
   }
 }
@@ -120,12 +116,11 @@ function resolveDataSourceCopy(screenCopy: AppMessages['screens']['petCommission
 
 export function PetCommissionSummaryPage() {
   const screenCopy = useAppMessages().screens.petCommissions;
+  const { locale } = useAppI18n();
   const [dateFrom, setDateFrom] = useState(buildDefaultFrom);
   const [dateTo, setDateTo] = useState(buildDefaultTo);
   const [selectedProfessionalFilter, setSelectedProfessionalFilter] = useState(allProfessionalsOption);
   const [report, setReport] = useState<PetCommissionSummary | null>(null);
-  const [pendingInvoices, setPendingInvoices] = useState<PetInvoice[]>([]);
-  const [endingPlans, setEndingPlans] = useState<ClientPlan[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -134,17 +129,11 @@ export function PetCommissionSummaryPage() {
     setError(null);
 
     try {
-      const [result, invoicesPage, plansPage] = await Promise.all([
-        petService.getCommissionSummary({
-          scheduledFrom: toIsoBoundary(from, 'start'),
-          scheduledTo: toIsoBoundary(to, 'end')
-        }),
-        petService.listInvoices(0, 100, '', { status: 'ISSUED' }),
-        petService.listClientPlans(undefined, 0, 100)
-      ]);
+      const result = await petService.getCommissionSummary({
+        scheduledFrom: toIsoBoundary(from, 'start'),
+        scheduledTo: toIsoBoundary(to, 'end')
+      });
       setReport(result);
-      setPendingInvoices(resolvePageItems(invoicesPage).filter((invoice) => invoice.status !== 'PAID' && invoice.status !== 'CANCELED' && invoice.outstandingAmount > 0));
-      setEndingPlans(resolvePageItems(plansPage).filter((plan) => plan.remainingSessions > 0 && plan.remainingSessions <= 2));
     } catch (err) {
       setError(resolveApiErrorMessage(err, screenCopy.loadError));
     } finally {
@@ -183,7 +172,6 @@ export function PetCommissionSummaryPage() {
   }, [professionalOptions, selectedProfessionalFilter]);
 
   const summaryRows = report?.professionals ?? [];
-  const pendingChargeTotal = pendingInvoices.reduce((total, invoice) => total + invoice.outstandingAmount, 0);
   const detailRows = useMemo(() => {
     if (!report) {
       return [];
@@ -220,7 +208,7 @@ export function PetCommissionSummaryPage() {
       header: screenCopy.metricTotal,
       render: (row) => (
         <div className="space-y-1">
-          <p className="font-medium text-slate-900">{formatCurrency(row.totalCommissionAmount)}</p>
+          <p className="font-medium text-slate-900">{formatCurrency(locale, row.totalCommissionAmount)}</p>
           <p className="text-xs text-slate-700">{row.generatedLineCount} {screenCopy.linesWithCommission}</p>
         </div>
       )
@@ -248,7 +236,7 @@ export function PetCommissionSummaryPage() {
       header: screenCopy.columnAppointment,
       render: (row) => (
         <div className="space-y-1">
-          <p className="font-medium text-slate-900">{formatDateTime(row.scheduledAt)}</p>
+          <p className="font-medium text-slate-900">{formatDateTime(locale, row.scheduledAt)}</p>
           <p className="text-xs text-slate-700">
             {row.clientName} - {row.petName}
           </p>
@@ -264,7 +252,7 @@ export function PetCommissionSummaryPage() {
           <p className="font-medium text-slate-900">{row.serviceName}</p>
           <p className="text-xs text-slate-700">{screenCopy.line} {row.lineOrder + 1}</p>
           <p className="text-xs text-slate-700">
-            {screenCopy.base} {row.basePrice != null ? formatCurrency(row.basePrice) : 'indisponivel'}
+            {screenCopy.base} {row.basePrice != null ? formatCurrency(locale, row.basePrice) : screenCopy.baseUnavailable}
           </p>
         </div>
       )
@@ -287,7 +275,8 @@ export function PetCommissionSummaryPage() {
 
         return (
           <div className="space-y-2">
-            <span className={`inline-flex rounded-full border px-2.5 py-1 text-xs font-medium ${copy.className}`}>
+            <span className={`inline-flex items-center gap-1.5 text-xs font-medium ${copy.className}`}>
+              <span aria-hidden="true" className="h-1.5 w-1.5 rounded-full bg-current" />
               {copy.label}
             </span>
             <p className="text-xs text-slate-700">{copy.detail}</p>
@@ -301,9 +290,9 @@ export function PetCommissionSummaryPage() {
       render: (row) => (
         <div className="space-y-1">
           <p className="font-medium text-slate-900">
-            {row.commissionAmount != null ? formatCurrency(row.commissionAmount) : '-'}
+            {row.commissionAmount != null ? formatCurrency(locale, row.commissionAmount) : '-'}
           </p>
-          <p className="text-xs text-slate-700">{formatCommissionRate(screenCopy, row.commissionRate)}</p>
+          <p className="text-xs text-slate-700">{formatCommissionRate(locale, screenCopy, row.commissionRate)}</p>
         </div>
       )
     },
@@ -332,31 +321,23 @@ export function PetCommissionSummaryPage() {
     >
       <div className={sharedPageStackClass}>
         <PageTitle
-          eyebrow="Gestão Pet"
           title={screenCopy.title}
           description={screenCopy.description}
         />
 
-        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-          <div className="ui-surface-panel p-4">
-            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">{screenCopy.metricTotal}</p>
-            <p className="mt-2 text-lg font-semibold text-slate-900">
-              {formatCurrency(report?.totalCommissionAmount)}
-            </p>
-          </div>
-          <div className="ui-surface-panel p-4">
-            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">{screenCopy.metricProfessionals}</p>
-            <p className="mt-2 text-lg font-semibold text-slate-900">{report?.professionalCount ?? 0}</p>
-          </div>
-          <div className="ui-surface-panel p-4">
-            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">{screenCopy.metricLines}</p>
-            <p className="mt-2 text-lg font-semibold text-slate-900">{report?.generatedLineCount ?? 0}</p>
-          </div>
-          <div className="ui-surface-panel p-4">
-            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">{screenCopy.metricCompleted}</p>
-            <p className="mt-2 text-lg font-semibold text-slate-900">{report?.contributingAppointmentCount ?? 0}</p>
-          </div>
-        </div>
+        <dl className="grid gap-4 border-y border-[color:var(--line)] py-4 sm:grid-cols-2 xl:grid-cols-4">
+          {[
+            [screenCopy.metricTotal, formatCurrency(locale, report?.totalCommissionAmount)],
+            [screenCopy.metricProfessionals, String(report?.professionalCount ?? 0)],
+            [screenCopy.metricLines, String(report?.generatedLineCount ?? 0)],
+            [screenCopy.metricCompleted, String(report?.contributingAppointmentCount ?? 0)]
+          ].map(([label, value]) => (
+            <div key={label}>
+              <dt className="text-xs text-[var(--muted)]">{label}</dt>
+              <dd className="ui-mono mt-1 text-lg font-semibold text-[var(--ink)]">{value}</dd>
+            </div>
+          ))}
+        </dl>
 
         <PageSection
           tone="muted"
@@ -380,53 +361,21 @@ export function PetCommissionSummaryPage() {
 
         {error ? <div className="ui-notice-error">{error}</div> : null}
 
-        <PageSection
-          tone="muted"
-          title={screenCopy.groomingClosing}
-          description={screenCopy.groomingClosingDescription}
-        >
-          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-            <div className="ui-surface-panel p-4">
-              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">{screenCopy.completedInPeriod}</p>
-              <p className="mt-2 text-lg font-semibold text-slate-900">{report?.contributingAppointmentCount ?? 0}</p>
-              <p className="mt-1 text-xs text-slate-600">{screenCopy.completedInPeriodDetail}</p>
-            </div>
-            <div className="ui-surface-panel p-4">
-              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">{screenCopy.commissions}</p>
-              <p className="mt-2 text-lg font-semibold text-slate-900">{formatCurrency(report?.totalCommissionAmount)}</p>
-              <p className="mt-1 text-xs text-slate-600">{screenCopy.commissionsDetail}</p>
-            </div>
-            <div className="ui-surface-panel p-4">
-              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">{screenCopy.pendingCharges}</p>
-              <p className="mt-2 text-lg font-semibold text-slate-900">{pendingInvoices.length}</p>
-              <p className="mt-1 text-xs text-slate-600">{formatCurrency(pendingChargeTotal)} {screenCopy.open}</p>
-            </div>
-            <div className="ui-surface-panel p-4">
-              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">{screenCopy.plansNearEnd}</p>
-              <p className="mt-2 text-lg font-semibold text-slate-900">{endingPlans.length}</p>
-              <p className="mt-1 text-xs text-slate-600">{screenCopy.plansNearEndDetail}</p>
-            </div>
-          </div>
+        <PageSection title={screenCopy.groomingClosing} description={screenCopy.groomingClosingDescription}>
+          <dl className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            {[
+              [screenCopy.excludedLines, report?.excludedLineCount ?? 0],
+              [screenCopy.eligibleNoAmount, report?.eligibleWithoutAmountLineCount ?? 0],
+              [screenCopy.lineUnassigned, report?.unassignedLineCount ?? 0],
+              [screenCopy.legacyData, report?.legacyLineCount ?? 0]
+            ].map(([label, value]) => (
+              <div key={label} className="border-t border-[color:var(--line)] pt-3">
+                <dt className="text-xs text-[var(--muted)]">{label}</dt>
+                <dd className="ui-mono mt-1 text-base font-semibold text-[var(--ink)]">{value}</dd>
+              </div>
+            ))}
+          </dl>
         </PageSection>
-
-        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-          <div className="ui-surface-panel p-4">
-            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">{screenCopy.excludedLines}</p>
-            <p className="mt-2 text-lg font-semibold text-slate-900">{report?.excludedLineCount ?? 0}</p>
-          </div>
-          <div className="ui-surface-panel p-4">
-            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">{screenCopy.eligibleNoAmount}</p>
-            <p className="mt-2 text-lg font-semibold text-slate-900">{report?.eligibleWithoutAmountLineCount ?? 0}</p>
-          </div>
-          <div className="ui-surface-panel p-4">
-            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">{screenCopy.lineUnassigned}</p>
-            <p className="mt-2 text-lg font-semibold text-slate-900">{report?.unassignedLineCount ?? 0}</p>
-          </div>
-          <div className="ui-surface-panel p-4">
-            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">{screenCopy.legacyData}</p>
-            <p className="mt-2 text-lg font-semibold text-slate-900">{report?.legacyLineCount ?? 0}</p>
-          </div>
-        </div>
 
         <PageSection
           title={screenCopy.byProfessional}
