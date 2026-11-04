@@ -604,15 +604,12 @@ export const enUSMessages: AppMessages = {
   },
   petInventory: {
     noPermission: 'You do not have permission to view inventory.',
-    eyebrow: 'Pet operations',
     title: 'Stock and replenishment',
     description:
       'Keep bath, grooming, and retail stock visible with below-minimum alerts, replenishment context, and movement history the team can trust.',
     openProducts: 'Open products',
     recordMovement: 'Record movement',
     watchTitle: 'Stock health watchlist',
-    watchDescription:
-      'Keep the most important replenishment risks visible before they become service delays, lost add-on sales, or rushed purchases.',
     movementTypes: {
       all: 'All movement types',
       inbound: 'Inbound',
@@ -638,16 +635,8 @@ export const enUSMessages: AppMessages = {
     },
     summary: {
       trackedLabel: 'Products tracked',
-      trackedDetail: 'Catalog items already visible for grooming consumption, reception, and retail support.',
       belowMinimumLabel: 'Below minimum',
-      belowMinimumDetail: 'These items can already pressure the next grooming cycle or front-desk sale.',
-      belowMinimumSafe: 'No product is currently below the minimum threshold.',
-      reorderLabel: 'Reorder now',
-      reorderDetail: 'These products are at or below the replenishment point and should not wait for the next count.',
-      reorderSafe: 'No product is currently at the reorder point.',
-      outboundLabel: 'Outbound movements',
-      filteredDetail: 'Count reflects the filtered operational view.',
-      visibleQuantityDetail: 'Visible stock movement quantity on this page: {value} unit(s).'
+      reorderLabel: 'Reorder now'
     },
     lookup: {
       productsLabel: 'Products',
@@ -664,22 +653,19 @@ export const enUSMessages: AppMessages = {
       created: 'Inventory movement created successfully.',
       updated: 'Inventory movement updated successfully.',
       removed: 'Inventory movement removed successfully.',
-      healthy: 'No product is currently below the reorder point. The shared inventory catalog looks operationally healthy right now.',
-      criticalWarning: '{count} product(s) already fell below the minimum quantity threshold and should be replenished before the next busy day.'
+      healthy: 'No product is currently below the reorder point. The shared inventory catalog looks operationally healthy right now.'
     },
     filters: {
-      title: 'Inventory filters',
-      description: 'Slice the movement ledger by product or direction while keeping the operational context attached to each change.',
       searchLabel: 'Search',
       searchPlaceholder: 'Reason, note, source, or product',
       productLabel: 'Product',
       directionLabel: 'Direction',
-      apply: 'Apply filters',
       clear: 'Clear filters',
       allProducts: 'All products',
       selectProduct: 'Select a product'
     },
     form: {
+      sectionMovement: 'Movement',
       createTitle: 'Record stock movement',
       editTitle: 'Adjust stock movement',
       description: 'Capture the operational reason behind each stock change so inventory discussions stay grounded in a real business event.',
@@ -688,8 +674,6 @@ export const enUSMessages: AppMessages = {
       quantityLabel: 'Quantity',
       noteLabel: 'Operational note',
       notePlaceholder: 'Shampoo used in bath, retail sale, manual count correction...',
-      reminderTitle: 'Operator reminder',
-      reminderDescription: 'Keep the movement reason explicit so reception, grooming execution, stock control, and billing stay aligned during the demo.',
       saving: 'Saving movement...',
       update: 'Update movement',
       create: 'Create movement',
@@ -697,7 +681,6 @@ export const enUSMessages: AppMessages = {
     },
     ledger: {
       title: 'Inventory ledger',
-      description: 'Review what changed, why it changed, and how it affected the visible on-hand balance for the selected product set.',
       loadingTitle: 'Loading inventory operations',
       loadingDescription: 'Preparing the most recent shared inventory movement history for this workspace.',
       emptyTitle: 'No inventory movement recorded yet',
@@ -706,18 +689,12 @@ export const enUSMessages: AppMessages = {
     },
     columns: {
       recorded: 'Recorded',
-      updated: 'Updated',
       product: 'Product',
       movement: 'Movement',
       source: 'Source',
       balanceImpact: 'Balance impact',
       actions: 'Actions',
-      stockLine: 'Stock {quantity} {unit} · Reorder at {reorder}',
-      returnedLine: 'Stock returned to the shelf or was replenished.',
-      outboundLine: 'Stock left the shelf for sale, use, or correction.',
       noOperationalNote: 'No operational note recorded.',
-      reasonDetail: 'Keep this reason explicit so billing, stock, and service teams read the same story.',
-      balanceChanged: 'Visible on-hand balance changed by {quantity} unit(s).',
       unit: 'unit',
       units: 'units'
     },
@@ -799,94 +776,6 @@ export const enUSMessages: AppMessages = {
     dialog: {
       title: 'Remove team member?',
       description: '"{name}" will be removed from this workspace.'
-    }
-  },
-  petFinance: {
-    eyebrow: 'Financial Management',
-    title: 'Cash and Finance',
-    description: 'Track income, expenses, payments, and the cash flow of your petshop.',
-    noPermission: 'You do not have permission to access the financial module.',
-    loading: 'Loading financial data...',
-    actions: {
-      newMovement: 'New movement',
-      newInvoice: 'New invoice',
-      viewReport: 'View report',
-      exportData: 'Export'
-    },
-    stats: {
-      todayBalance: 'Today balance',
-      todayIncome: 'Today income',
-      todayExpenses: 'Today expenses',
-      pendingPayments: 'Pending payments',
-      monthRevenue: 'Month revenue',
-      openInvoices: 'Open invoices'
-    },
-    cashMovements: {
-      title: 'Cash movements',
-      description: 'History of cash inflows and outflows.',
-      empty: 'No movements recorded today.',
-      emptyDescription: 'Record the first inflow or outflow to start tracking.',
-      inbound: 'Inbound',
-      outbound: 'Outbound',
-      categories: {
-        sale: 'Sale',
-        service: 'Service',
-        refund: 'Refund',
-        expense: 'Expense',
-        withdrawal: 'Withdrawal',
-        deposit: 'Deposit',
-        adjustment: 'Adjustment',
-        other: 'Other'
-      }
-    },
-    invoices: {
-      title: 'Recent invoices',
-      description: 'Track the status of issued invoices.',
-      empty: 'No invoices found.',
-      status: {
-        draft: 'Draft',
-        issued: 'Issued',
-        paid: 'Paid',
-        partiallyPaid: 'Partially paid',
-        overdue: 'Overdue',
-        canceled: 'Canceled'
-      }
-    },
-    payments: {
-      title: 'Recent payments',
-      description: 'Latest payments received.',
-      empty: 'No payments recorded.',
-      methods: {
-        cash: 'Cash',
-        credit: 'Credit',
-        debit: 'Debit',
-        pix: 'PIX',
-        transfer: 'Transfer',
-        check: 'Check',
-        other: 'Other'
-      }
-    },
-    form: {
-      direction: 'Direction',
-      category: 'Category',
-      amount: 'Amount',
-      description: 'Description',
-      descriptionPlaceholder: 'Describe the movement...',
-      date: 'Date',
-      save: 'Save',
-      cancel: 'Cancel'
-    },
-    filters: {
-      title: 'Filters',
-      period: 'Period',
-      direction: 'Direction',
-      category: 'Category',
-      today: 'Today',
-      thisWeek: 'This week',
-      thisMonth: 'This month',
-      lastMonth: 'Last month',
-      allDirections: 'All directions',
-      allCategories: 'All categories'
     }
   },
   petTimeline: {
@@ -1070,12 +959,7 @@ export const enUSMessages: AppMessages = {
     title: 'Billing and next cycle',
     description:
       'Show how services become invoices, payments, and a clear preview of the next monthly cycle.',
-    filtersTitle: 'Invoice filters',
-    filtersDescription:
-      'Refine the finance list by client or lifecycle without losing the commercial story behind each document.',
-    nextCycleTitle: 'Next cycle billing preview',
-    pipelineTitle: 'Billing pipeline',
-    pipelineDescription: 'Review invoice status, open balance, and the finance record behind each charge.'
+    nextCycleTitle: 'Next cycle billing preview'
   },
   workspaceSettings: {
     eyebrow: 'Settings',

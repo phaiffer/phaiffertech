@@ -2,22 +2,13 @@
 
 import Link from 'next/link';
 import { FormEvent, useCallback, useEffect, useMemo, useState } from 'react';
-import { ArrowRightLeft, Package, TriangleAlert, TrendingUp, type LucideIcon } from 'lucide-react';
+import { Search, X } from 'lucide-react';
 import { PetModuleSubnav } from '@/modules/pet/pet-module-subnav';
 import { PermissionGuard } from '@/shared/auth/PermissionGuard';
 import { usePermissions } from '@/shared/auth/usePermissions';
-import {
-  sharedCompactTextClass,
-  sharedFilterToolbarClass,
-  sharedFormActionsClass,
-  sharedInlineActionsClass,
-  sharedPageStackClass,
-  sharedReminderSurfaceClass
-} from '@/shared/components/public-visual-system';
-import { StatusBadge } from '@/shared/dashboard/status-badge';
+import { sharedFormActionsClass, sharedPageStackClass } from '@/shared/components/public-visual-system';
 import { useAppI18n, useAppMessages } from '@/shared/i18n/app-i18n-provider';
 import { formatDateTimeForLocale } from '@/shared/i18n/formatters';
-import { ApiClientError } from '@/shared/lib/http';
 import { resolvePageItems, resolveTotalItems } from '@/shared/lib/pagination';
 import {
   PetLookupFeedback,
@@ -31,14 +22,14 @@ import { PetInventoryMovement, PetProduct } from '@/shared/types/pet';
 import { ConfirmDialog } from '@/shared/ui/confirm-dialog';
 import { DataTable, DataTableColumn } from '@/shared/ui/data-table';
 import { FormInput } from '@/shared/ui/form-input';
+import { FormSection } from '@/shared/ui/form-section';
 import { FormSelect } from '@/shared/ui/form-select';
-import { PageSection } from '@/shared/ui/page-section';
 import { PageTitle } from '@/shared/ui/page-title';
 import { Pagination } from '@/shared/ui/pagination';
-import { SearchBar } from '@/shared/ui/search-bar';
 import { resolveApiErrorMessage } from '@/shared/lib/api-error-message';
 
-const pageSize = 10;
+const pageSize = 14;
+const WATCHLIST_LIMIT = 8;
 
 const initialPage: PageResponse<PetInventoryMovement> = {
   items: [],
@@ -49,6 +40,7 @@ const initialPage: PageResponse<PetInventoryMovement> = {
 };
 
 type InventoryMessages = ReturnType<typeof useAppMessages>['petInventory'];
+type StockTone = 'danger' | 'warn' | 'done';
 
 function applyTemplate(template: string, values: Record<string, string | number>) {
   return Object.entries(values).reduce(
@@ -82,11 +74,11 @@ function formatMovementSource(value: string | null | undefined, messages: Invent
   }
 }
 
-function resolveStockHealth(product: PetProduct, messages: InventoryMessages) {
+function resolveStockHealth(product: PetProduct, messages: InventoryMessages): { label: string; tone: StockTone; detail: string } {
   if (product.currentQuantity <= product.minimumQuantity) {
     return {
       label: messages.health.belowMinimum,
-      status: 'alert',
+      tone: 'danger',
       detail: applyTemplate(messages.health.belowMinimumDetail, {
         value: product.minimumQuantity,
         unit: product.unitOfMeasure
@@ -97,7 +89,7 @@ function resolveStockHealth(product: PetProduct, messages: InventoryMessages) {
   if (product.currentQuantity <= product.reorderPoint) {
     return {
       label: messages.health.reorderNow,
-      status: 'warn',
+      tone: 'warn',
       detail: applyTemplate(messages.health.reorderNowDetail, {
         value: product.reorderPoint,
         unit: product.unitOfMeasure
@@ -107,61 +99,17 @@ function resolveStockHealth(product: PetProduct, messages: InventoryMessages) {
 
   return {
     label: messages.health.healthy,
-    status: 'ok',
+    tone: 'done',
     detail: messages.health.healthyDetail
   };
 }
 
-type InventorySpotlightCardProps = {
-  icon: LucideIcon;
-  label: string;
-  value: string;
-  detail: string;
-  tone?: 'default' | 'accent' | 'warning' | 'danger';
-};
-
-function InventorySpotlightCard({
-  icon: Icon,
-  label,
-  value,
-  detail,
-  tone = 'default'
-}: InventorySpotlightCardProps) {
-  const toneClass = tone === 'accent'
-    ? 'border-transparent bg-[linear-gradient(135deg,var(--accent),var(--pet-teal))] text-white '
-    : tone === 'danger'
-      ? 'border-red-200 bg-white '
-    : tone === 'warning'
-      ? 'border-amber-200/80 bg-white'
-      : 'border-slate-200/90 bg-white';
-
+function StockDot({ tone, label }: { tone: StockTone; label: string }) {
   return (
-    <div className={`rounded-2xl border p-5  ${toneClass}`}>
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <p className={`text-xs font-semibold uppercase tracking-[0.16em] ${tone === 'accent' ? 'text-white/72' : 'text-slate-600'}`}>
-            {label}
-          </p>
-          <p className={`mt-3 text-3xl font-bold tracking-[-0.03em] ${tone === 'accent' ? 'text-white' : 'text-slate-900'}`}>
-            {value}
-          </p>
-        </div>
-        <span
-          className={`flex h-11 w-11 items-center justify-center rounded-xl ${
-            tone === 'accent'
-              ? 'bg-white/12 text-white'
-              : tone === 'danger'
-                ? 'bg-red-100 text-red-700'
-              : tone === 'warning'
-                ? 'bg-amber-100 text-amber-700'
-                : 'bg-[color:var(--accent)]/10 text-[color:var(--accent)]'
-          }`}
-        >
-          <Icon className="h-5 w-5" />
-        </span>
-      </div>
-      <p className={`mt-3 ${tone === 'accent' ? 'text-sm leading-6 text-white/80' : sharedCompactTextClass}`}>{detail}</p>
-    </div>
+    <span className="inline-flex items-center gap-1.5 whitespace-nowrap text-sm text-[var(--ink-2)]">
+      <span className="ui-status-dot" data-status={tone} aria-hidden="true" />
+      {label}
+    </span>
   );
 }
 
@@ -183,6 +131,7 @@ export function PetInventoryPage() {
   const [productFilterId, setProductFilterId] = useState('');
   const [movementTypeFilter, setMovementTypeFilter] = useState('');
 
+  const [isEditorOpen, setIsEditorOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [productId, setProductId] = useState('');
   const [movementType, setMovementType] = useState('IN');
@@ -204,7 +153,7 @@ export function PetInventoryPage() {
 
   const productOptions = useMemo(() => ([
     { value: '', label: messages.filters.allProducts },
-    ...products.map((item) => ({ value: item.id, label: `${item.name} (${item.currentQuantity ?? item.stockQuantity})` }))
+    ...products.map((item) => ({ value: item.id, label: item.name }))
   ]), [messages.filters.allProducts, products]);
 
   const formProductOptions = useMemo(() => ([
@@ -269,52 +218,11 @@ export function PetInventoryPage() {
   const rows = resolvePageItems(pageData);
   const totalItems = resolveTotalItems(pageData);
   const productsLookupUnavailable = lookupIssues.some((issue) => issue.key === 'products');
-  const activeFilterCount = [search, productFilterId, movementTypeFilter].filter(Boolean).length;
-  const lowStockProducts = products.filter((product) => product.currentQuantity <= product.reorderPoint);
-  const criticalLowStockProducts = products.filter((product) => product.currentQuantity <= product.minimumQuantity);
-  const movedUnitsOnPage = rows.reduce((total, item) => total + item.quantity, 0);
-  const outboundMovementsOnPage = rows.filter((item) => item.movementType === 'OUT').length;
-
-  const inventorySignals = [
-    {
-      key: 'catalog-products',
-      icon: Package,
-      label: messages.summary.trackedLabel,
-      value: new Intl.NumberFormat(locale).format(products.length),
-      detail: messages.summary.trackedDetail,
-      tone: 'default' as const
-    },
-    {
-      key: 'critical-products',
-      icon: TriangleAlert,
-      label: messages.summary.belowMinimumLabel,
-      value: new Intl.NumberFormat(locale).format(criticalLowStockProducts.length),
-      detail: criticalLowStockProducts.length > 0
-        ? messages.summary.belowMinimumDetail
-        : messages.summary.belowMinimumSafe,
-      tone: criticalLowStockProducts.length > 0 ? 'danger' as const : 'default' as const
-    },
-    {
-      key: 'reorder-products',
-      icon: TrendingUp,
-      label: messages.summary.reorderLabel,
-      value: new Intl.NumberFormat(locale).format(lowStockProducts.length),
-      detail: lowStockProducts.length > 0
-        ? messages.summary.reorderDetail
-        : messages.summary.reorderSafe,
-      tone: lowStockProducts.length > 0 ? 'warning' as const : 'default' as const
-    },
-    {
-      key: 'outbound-movements',
-      icon: ArrowRightLeft,
-      label: messages.summary.outboundLabel,
-      value: new Intl.NumberFormat(locale).format(outboundMovementsOnPage),
-      detail: activeFilterCount > 0
-        ? messages.summary.filteredDetail
-        : applyTemplate(messages.summary.visibleQuantityDetail, { value: movedUnitsOnPage }),
-      tone: 'default' as const
-    }
-  ];
+  const hasActiveFilters = Boolean(search || productFilterId || movementTypeFilter);
+  // Product counts come from the catalog lookup (up to 200 products), not from the movement page.
+  const reorderProducts = products.filter((product) => product.currentQuantity <= product.reorderPoint);
+  const belowMinimumProducts = products.filter((product) => product.currentQuantity <= product.minimumQuantity);
+  const numberFormat = new Intl.NumberFormat(locale);
 
   function resetForm() {
     setEditingId(null);
@@ -324,13 +232,23 @@ export function PetInventoryPage() {
     setNotes('');
   }
 
-  function scrollToMovementForm() {
-    document.getElementById('pet-inventory-form-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  function closeEditor() {
+    resetForm();
+    setIsEditorOpen(false);
+  }
+
+  function scrollToEditor() {
+    window.requestAnimationFrame(() => {
+      document.getElementById('pet-inventory-editor')?.scrollIntoView?.({ behavior: 'smooth', block: 'start' });
+    });
   }
 
   function beginCreateMovement() {
     resetForm();
-    scrollToMovementForm();
+    setError(null);
+    setSuccess(null);
+    setIsEditorOpen(true);
+    scrollToEditor();
   }
 
   function beginEdit(item: PetInventoryMovement) {
@@ -341,7 +259,8 @@ export function PetInventoryPage() {
     setNotes(item.notes ?? '');
     setError(null);
     setSuccess(null);
-    scrollToMovementForm();
+    setIsEditorOpen(true);
+    scrollToEditor();
   }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -373,7 +292,7 @@ export function PetInventoryPage() {
         setSuccess(messages.feedback.created);
       }
 
-      resetForm();
+      closeEditor();
       await Promise.all([
         load(pageData.page, search, productFilterId, movementTypeFilter),
         loadProducts()
@@ -408,14 +327,7 @@ export function PetInventoryPage() {
       key: 'createdAt',
       header: messages.columns.recorded,
       render: (item) => (
-        <div>
-          <p className="font-medium text-slate-900">
-            {formatDateTimeForLocale(locale, item.createdAt)}
-          </p>
-          <p className={`mt-1 ${sharedCompactTextClass}`}>
-            {messages.columns.updated} {formatDateTimeForLocale(locale, item.updatedAt)}
-          </p>
-        </div>
+        <span className="ui-mono whitespace-nowrap text-[var(--ink-2)]">{formatDateTimeForLocale(locale, item.createdAt)}</span>
       )
     },
     {
@@ -427,25 +339,13 @@ export function PetInventoryPage() {
 
         return (
           <div>
-            <p className="font-medium text-slate-900">
+            <p className="font-medium text-[var(--ink)]">
               {item.productName
-                ? (item.productSku ? `${item.productName} (${item.productSku})` : item.productName)
+                ? item.productName
                 : resolvePetLookupLabel(products, item.productId, (entry) => entry.name, messages.columns.product, productsLookupUnavailable)}
             </p>
-            {product ? (
-              <p className={`mt-1 ${sharedCompactTextClass}`}>
-                {applyTemplate(messages.columns.stockLine, {
-                  quantity: product.currentQuantity,
-                  unit: product.unitOfMeasure,
-                  reorder: product.reorderPoint
-                })}
-              </p>
-            ) : null}
-            {stockHealth ? (
-              <div className="mt-2">
-                <StatusBadge status={stockHealth.status} />
-              </div>
-            ) : null}
+            {item.productSku ? <p className="ui-mono text-xs text-[var(--muted)]">{item.productSku}</p> : null}
+            {stockHealth ? <StockDot tone={stockHealth.tone} label={stockHealth.label} /> : null}
           </div>
         );
       }
@@ -454,18 +354,12 @@ export function PetInventoryPage() {
       key: 'movementType',
       header: messages.columns.movement,
       render: (item) => (
-        <div>
-          <StatusBadge status={item.movementType === 'IN' ? 'active' : 'warn'} />
-          <p className={`mt-2 ${sharedCompactTextClass}`}>
-            {formatMovementType(item.movementType, messages)} {item.quantity}{' '}
-            {item.quantity === 1 ? messages.columns.unit : messages.columns.units}
-          </p>
-          <p className={`mt-1 ${sharedCompactTextClass}`}>
-            {item.movementType === 'IN'
-              ? messages.columns.returnedLine
-              : messages.columns.outboundLine}
-          </p>
-        </div>
+        <span className="inline-flex items-center gap-1.5 whitespace-nowrap text-sm text-[var(--ink)]">
+          <span className="ui-status-dot" data-status={item.movementType === 'IN' ? 'done' : 'warn'} aria-hidden="true" />
+          {formatMovementType(item.movementType, messages)}{' '}
+          <span className="ui-mono">{item.quantity}</span>{' '}
+          {item.quantity === 1 ? messages.columns.unit : messages.columns.units}
+        </span>
       )
     },
     {
@@ -473,14 +367,9 @@ export function PetInventoryPage() {
       header: messages.columns.source,
       render: (item) => (
         <div>
-          <p className="font-medium text-slate-900">
-            {formatMovementSource(item.sourceType, messages)}
-          </p>
-          <p className={`mt-1 ${sharedCompactTextClass}`}>
+          <p className="text-[var(--ink)]">{formatMovementSource(item.sourceType, messages)}</p>
+          <p className="line-clamp-1 max-w-xs text-xs text-[var(--muted)]">
             {item.reason ?? item.notes ?? messages.columns.noOperationalNote}
-          </p>
-          <p className={`mt-1 ${sharedCompactTextClass}`}>
-            {messages.columns.reasonDetail}
           </p>
         </div>
       )
@@ -488,37 +377,25 @@ export function PetInventoryPage() {
     {
       key: 'balance',
       header: messages.columns.balanceImpact,
+      className: 'text-right',
       render: (item) => (
-        <div>
-          <p className="font-medium text-slate-900">
-            {item.quantityBefore} to {item.quantityAfter}
-          </p>
-          <p className={`mt-1 ${sharedCompactTextClass}`}>
-            {applyTemplate(messages.columns.balanceChanged, { quantity: item.quantity })}
-          </p>
-        </div>
+        <span className="ui-mono whitespace-nowrap text-[var(--ink)]">
+          {item.quantityBefore} → {item.quantityAfter}
+        </span>
       )
     },
     {
       key: 'actions',
       header: messages.columns.actions,
       render: (item) => (
-        <div className={sharedInlineActionsClass}>
+        <div className="flex items-center gap-2 whitespace-nowrap">
           <PermissionGuard permission="pet.inventory.update">
-            <button
-              type="button"
-              onClick={() => beginEdit(item)}
-              className="ui-inline-button"
-            >
+            <button type="button" onClick={() => beginEdit(item)} className="ui-inline-button">
               {commonButtons.edit}
             </button>
           </PermissionGuard>
           <PermissionGuard permission="pet.inventory.delete">
-            <button
-              type="button"
-              onClick={() => setDeleteCandidate(item)}
-              className="ui-inline-danger-button"
-            >
+            <button type="button" onClick={() => setDeleteCandidate(item)} className="ui-inline-danger-button">
               {commonButtons.delete}
             </button>
           </PermissionGuard>
@@ -536,11 +413,11 @@ export function PetInventoryPage() {
         <PetModuleSubnav />
 
         <PageTitle
-          eyebrow={messages.eyebrow}
           title={messages.title}
+          count={loading ? undefined : totalItems}
           description={messages.description}
           actions={(
-            <div className="flex flex-wrap gap-3">
+            <div className="flex flex-wrap gap-2">
               <Link href="/pet/products" className="ui-secondary-button">
                 {messages.openProducts}
               </Link>
@@ -556,134 +433,131 @@ export function PetInventoryPage() {
         {error ? <div className="ui-notice-error">{error}</div> : null}
         {success ? <div className="ui-notice-success">{success}</div> : null}
 
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-          {inventorySignals.map((card) => (
-            <InventorySpotlightCard
-              key={card.key}
-              icon={card.icon}
-              label={card.label}
-              value={card.value}
-              detail={card.detail}
-              tone={card.tone}
-            />
-          ))}
-        </div>
+        {!productsLookupUnavailable ? (
+          <dl className="grid gap-4 border-y border-[color:var(--line)] py-3 sm:grid-cols-3">
+            {[
+              { label: messages.summary.trackedLabel, value: products.length, tone: undefined },
+              { label: messages.summary.belowMinimumLabel, value: belowMinimumProducts.length, tone: belowMinimumProducts.length > 0 ? 'text-[var(--danger)]' : undefined },
+              { label: messages.summary.reorderLabel, value: reorderProducts.length, tone: reorderProducts.length > 0 ? 'text-[var(--warn)]' : undefined }
+            ].map((item) => (
+              <div key={item.label}>
+                <dt className="text-xs text-[var(--muted)]">{item.label}</dt>
+                <dd className={`ui-mono mt-0.5 text-lg font-semibold ${item.tone ?? 'text-[var(--ink)]'}`}>
+                  {numberFormat.format(item.value)}
+                </dd>
+              </div>
+            ))}
+          </dl>
+        ) : null}
 
-        <PageSection
-          tone="muted"
-          title={messages.watchTitle}
-          description={messages.watchDescription}
-        >
+        <section aria-labelledby="pet-inventory-watch-title" className="space-y-2">
+          <h2 id="pet-inventory-watch-title" className="text-sm font-semibold text-[var(--ink)]">{messages.watchTitle}</h2>
           {productsLookupUnavailable ? (
-            <div className="ui-notice-warning">
-              {messages.lookup.healthWarning}
-            </div>
-          ) : lowStockProducts.length === 0 ? (
-            <div className="ui-notice-neutral">
-              {messages.feedback.healthy}
-            </div>
+            <div className="ui-notice-warning">{messages.lookup.healthWarning}</div>
+          ) : reorderProducts.length === 0 ? (
+            <p className="text-sm text-[var(--muted)]">{messages.feedback.healthy}</p>
           ) : (
-            <div className="grid gap-4 lg:grid-cols-2 xl:grid-cols-3">
-              {lowStockProducts.slice(0, 6).map((product) => {
+            <ul className="divide-y divide-[color:var(--line-soft)] rounded-md border border-[color:var(--line)]">
+              {reorderProducts.slice(0, WATCHLIST_LIMIT).map((product) => {
                 const stockHealth = resolveStockHealth(product, messages);
                 return (
-                  <div
-                    key={product.id}
-                    className={`rounded-md border p-5 shadow-xs ${
-                      stockHealth.status === 'alert'
-                        ? 'border-red-200 bg-red-50'
-                        : 'border-amber-200 bg-amber-50'
-                    }`}
-                  >
-                    <div className="flex items-start justify-between gap-3">
-                      <div>
-                        <p className="text-sm font-semibold text-slate-950">{product.name}</p>
-                        <p className={`mt-1 ${sharedCompactTextClass}`}>SKU {product.sku}</p>
-                      </div>
-                      <StatusBadge status={stockHealth.status} />
+                  <li key={product.id} className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 px-3 py-2">
+                    <div className="min-w-0">
+                      <p className="font-medium text-[var(--ink)]">{product.name}</p>
+                      <p className="text-xs text-[var(--muted)]">{stockHealth.detail}</p>
                     </div>
-                    <p className={`mt-4 text-lg font-semibold ${stockHealth.status === 'alert' ? 'text-red-800' : 'text-amber-800'}`}>
-                      {product.currentQuantity} {product.unitOfMeasure}
-                    </p>
-                    <p className={`mt-2 ${sharedCompactTextClass}`}>
-                      {messages.health.belowMinimum} {product.minimumQuantity} - {messages.health.reorderNow} {product.reorderPoint}
-                    </p>
-                    <p className={`mt-2 ${sharedCompactTextClass}`}>{stockHealth.detail}</p>
-                  </div>
+                    <div className="flex items-center gap-4">
+                      <span className="ui-mono text-sm text-[var(--ink)]">{product.currentQuantity} {product.unitOfMeasure}</span>
+                      <StockDot tone={stockHealth.tone} label={stockHealth.label} />
+                    </div>
+                  </li>
                 );
               })}
-            </div>
+            </ul>
           )}
+        </section>
 
-          {criticalLowStockProducts.length > 0 ? (
-            <div className="ui-notice-warning mt-5">
-              {applyTemplate(messages.feedback.criticalWarning, { count: criticalLowStockProducts.length })}
-            </div>
-          ) : null}
-        </PageSection>
-
-        <PageSection
-          tone="muted"
-          title={messages.filters.title}
-          description={messages.filters.description}
+        <form
+          role="search"
+          aria-label={messages.filters.searchLabel}
+          onSubmit={(event) => {
+            event.preventDefault();
+            setSearch(searchInput.trim());
+          }}
+          className="flex flex-wrap items-center gap-2"
         >
-          <div className={sharedFilterToolbarClass}>
-            <div className="grid gap-3 xl:grid-cols-[minmax(0,1.35fr)_minmax(0,0.95fr)_minmax(0,0.8fr)] xl:items-end">
-              <SearchBar
-                label={messages.filters.searchLabel}
-                value={searchInput}
-                onChange={setSearchInput}
-                placeholder={messages.filters.searchPlaceholder}
-              />
-              <FormSelect
-                label={messages.filters.productLabel}
-                value={productFilterId}
-                options={productOptions}
-                onChange={setProductFilterId}
-                disabled={productsLookupUnavailable}
-              />
-              <FormSelect
-                label={messages.filters.directionLabel}
-                value={movementTypeFilter}
-                options={movementTypeOptions}
-                onChange={setMovementTypeFilter}
-              />
-            </div>
-
-            <div className={sharedFormActionsClass}>
-              <button
-                type="button"
-                onClick={() => setSearch(searchInput)}
-                className="ui-primary-button"
-              >
-                {messages.filters.apply}
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setSearchInput('');
-                  setSearch('');
-                  setProductFilterId('');
-                  setMovementTypeFilter('');
-                }}
-                className="ui-inline-button"
-              >
-                {messages.filters.clear}
-              </button>
-            </div>
-          </div>
-        </PageSection>
+          <label className="ui-field-shell flex min-h-9 min-w-[16rem] flex-1 items-center gap-2 rounded-md border border-[color:var(--control)] px-3 md:max-w-md">
+            <Search className="h-3.5 w-3.5 shrink-0 text-[var(--muted)]" aria-hidden="true" />
+            <span className="sr-only">{messages.filters.searchLabel}</span>
+            <input
+              type="search"
+              value={searchInput}
+              onChange={(event) => setSearchInput(event.target.value)}
+              placeholder={messages.filters.searchPlaceholder}
+              className="min-w-0 flex-1 bg-transparent py-1.5 text-sm text-[var(--ink)] outline-none placeholder:text-[var(--muted)]"
+            />
+          </label>
+          <label className="ui-filter-chip max-w-full" data-active={productFilterId ? 'true' : 'false'}>
+            <span>{messages.filters.productLabel}</span>
+            <select
+              value={productFilterId}
+              onChange={(event) => setProductFilterId(event.target.value)}
+              disabled={productsLookupUnavailable}
+              className="max-w-[12rem] truncate bg-transparent font-medium text-[var(--ink)] outline-none"
+            >
+              {productOptions.map((option) => (
+                <option key={option.value} value={option.value}>{option.label}</option>
+              ))}
+            </select>
+          </label>
+          <label className="ui-filter-chip max-w-full" data-active={movementTypeFilter ? 'true' : 'false'}>
+            <span>{messages.filters.directionLabel}</span>
+            <select
+              value={movementTypeFilter}
+              onChange={(event) => setMovementTypeFilter(event.target.value)}
+              className="max-w-[12rem] truncate bg-transparent font-medium text-[var(--ink)] outline-none"
+            >
+              {movementTypeOptions.map((option) => (
+                <option key={option.value} value={option.value}>{option.label}</option>
+              ))}
+            </select>
+          </label>
+          <button type="submit" className="ui-secondary-button">{messages.filters.searchLabel}</button>
+          {hasActiveFilters ? (
+            <button
+              type="button"
+              onClick={() => {
+                setSearchInput('');
+                setSearch('');
+                setProductFilterId('');
+                setMovementTypeFilter('');
+              }}
+              className="inline-flex min-h-9 items-center gap-1 px-1 text-sm text-[var(--ink-2)] hover:text-[var(--ink)]"
+            >
+              <X className="h-3.5 w-3.5" aria-hidden="true" />
+              {messages.filters.clear}
+            </button>
+          ) : null}
+        </form>
 
         <PetLookupFeedback issues={lookupIssues} />
 
-        <div id="pet-inventory-form-section">
-          <PageSection
-            title={editingId ? messages.form.editTitle : messages.form.createTitle}
-            description={messages.form.description}
-          >
-            <PermissionGuard permission={editingId ? 'pet.inventory.update' : 'pet.inventory.create'}>
-              <form onSubmit={handleSubmit} className="space-y-5">
-                <div className="grid gap-4 xl:grid-cols-2">
+        {isEditorOpen ? (
+          <PermissionGuard permission={editingId ? 'pet.inventory.update' : 'pet.inventory.create'}>
+            <section
+              id="pet-inventory-editor"
+              aria-labelledby="pet-inventory-editor-title"
+              className="scroll-mt-4 rounded-md border border-[color:var(--line)] p-4"
+            >
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <h2 id="pet-inventory-editor-title" className="text-sm font-semibold text-[var(--ink)]">
+                    {editingId ? messages.form.editTitle : messages.form.createTitle}
+                  </h2>
+                  <p className="text-xs text-[var(--muted)]">{messages.form.description}</p>
+                </div>
+
+                <FormSection title={messages.form.sectionMovement}>
                   <FormSelect
                     label={messages.form.productLabel}
                     value={productId}
@@ -702,6 +576,7 @@ export function PetInventoryPage() {
                     value={quantity}
                     onChange={setQuantity}
                     type="number"
+                    min="1"
                     required
                   />
                   <FormInput
@@ -710,19 +585,10 @@ export function PetInventoryPage() {
                     onChange={setNotes}
                     placeholder={messages.form.notePlaceholder}
                   />
-                </div>
-
-                <div className={sharedReminderSurfaceClass}>
-                  <p className="text-sm font-medium text-[color:var(--app-shell-heading)]">{messages.form.reminderTitle}</p>
-                  <p className={`mt-1 ${sharedCompactTextClass}`}>
-                    {messages.form.reminderDescription}
-                  </p>
-                </div>
+                </FormSection>
 
                 {productsLookupUnavailable ? (
-                  <div className="ui-notice-warning">
-                    {messages.lookup.movementWarning}
-                  </div>
+                  <div className="ui-notice-warning">{messages.lookup.movementWarning}</div>
                 ) : null}
 
                 <div className={sharedFormActionsClass}>
@@ -733,25 +599,17 @@ export function PetInventoryPage() {
                   >
                     {submitting ? messages.form.saving : editingId ? messages.form.update : messages.form.create}
                   </button>
-                  {editingId ? (
-                    <button
-                      type="button"
-                      onClick={resetForm}
-                      className="ui-secondary-button"
-                    >
-                      {messages.form.cancel}
-                    </button>
-                  ) : null}
+                  <button type="button" onClick={closeEditor} className="ui-secondary-button">
+                    {messages.form.cancel}
+                  </button>
                 </div>
               </form>
-            </PermissionGuard>
-          </PageSection>
-        </div>
+            </section>
+          </PermissionGuard>
+        ) : null}
 
-        <PageSection
-          title={messages.ledger.title}
-          description={messages.ledger.description}
-        >
+        <section aria-labelledby="pet-inventory-ledger-title" className="space-y-2">
+          <h2 id="pet-inventory-ledger-title" className="text-sm font-semibold text-[var(--ink)]">{messages.ledger.title}</h2>
           <DataTable
             columns={columns}
             rows={rows}
@@ -776,15 +634,14 @@ export function PetInventoryPage() {
               )
             }}
           />
-          <div className="pt-5">
-            <Pagination
-              page={pageData.page}
-              totalPages={pageData.totalPages}
-              totalElements={totalItems}
-              onPageChange={(page) => void load(page, search, productFilterId, movementTypeFilter)}
-            />
-          </div>
-        </PageSection>
+          <Pagination
+            page={pageData.page}
+            totalPages={pageData.totalPages}
+            totalElements={totalItems}
+            pageSize={pageSize}
+            onPageChange={(page) => void load(page, search, productFilterId, movementTypeFilter)}
+          />
+        </section>
 
         <ConfirmDialog
           open={deleteCandidate !== null}

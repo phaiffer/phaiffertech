@@ -224,7 +224,9 @@ describe('PetInvoicesPage', () => {
     expect(screen.getByText('Next cycle projection')).toBeInTheDocument();
     expect(screen.getByText('Banho e tosa 4x · 2 sessions left')).toBeInTheDocument();
     expect(screen.getByText('The renewal message is ready to send when the plan reaches its second-to-last visit.')).toBeInTheDocument();
-    expect(screen.getByText('Open balance')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Billing and next cycle' })).toBeInTheDocument();
+    expect(screen.getByText(/^Open R\$\s?100\.00$/)).toBeInTheDocument();
+    expect(screen.getByText('1-1 of 1')).toBeInTheDocument();
     expect(screen.getAllByText('Ana Costa').length).toBeGreaterThan(0);
 
     fireEvent.click(screen.getByRole('button', { name: 'View financial record' }));

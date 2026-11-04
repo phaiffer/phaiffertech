@@ -2,23 +2,17 @@
 
 import Link from 'next/link';
 import { FormEvent, useCallback, useEffect, useMemo, useState } from 'react';
-import { AlertTriangle, ArrowUpRight, Clock3, Receipt, WalletCards, type LucideIcon } from 'lucide-react';
+import { Search, X } from 'lucide-react';
 import { PetModuleSubnav } from '@/modules/pet/pet-module-subnav';
 import { PermissionGuard } from '@/shared/auth/PermissionGuard';
 import { usePermissions } from '@/shared/auth/usePermissions';
 import {
-  sharedCompactTextClass,
-  sharedFieldHintClass,
-  sharedFilterToolbarClass,
   sharedFormActionsClass,
-  sharedInlineActionsClass,
-  sharedPageStackClass,
-  sharedReminderSurfaceClass
+  sharedPageStackClass
 } from '@/shared/components/public-visual-system';
 import { StatusBadge } from '@/shared/dashboard/status-badge';
-import { useAppMessages } from '@/shared/i18n/app-i18n-provider';
+import { useAppI18n, useAppMessages } from '@/shared/i18n/app-i18n-provider';
 import type { AppMessages } from '@/shared/i18n/messages/pt-br';
-import { ApiClientError } from '@/shared/lib/http';
 import { resolvePageItems, resolveTotalItems } from '@/shared/lib/pagination';
 import {
   PetLookupFeedback,
@@ -35,15 +29,16 @@ import { ConfirmDialog } from '@/shared/ui/confirm-dialog';
 import { DataTable, DataTableColumn } from '@/shared/ui/data-table';
 import { DateTimeInput } from '@/shared/ui/datetime-input';
 import { FormInput } from '@/shared/ui/form-input';
+import { FormSection } from '@/shared/ui/form-section';
 import { FormSelect } from '@/shared/ui/form-select';
 import { PageSection } from '@/shared/ui/page-section';
 import { PageTitle } from '@/shared/ui/page-title';
 import { Pagination } from '@/shared/ui/pagination';
-import { SearchBar } from '@/shared/ui/search-bar';
 import { resolveApiErrorMessage } from '@/shared/lib/api-error-message';
 
-const pageSize = 10;
+const pageSize = 14;
 const financePreviewSize = 8;
+const NEXT_CYCLE_PREVIEW_LIMIT = 6;
 
 type InvoicesCopy = AppMessages['screens']['petInvoices'];
 
@@ -115,17 +110,17 @@ function toIsoDate(value: string) {
   return new Date(value).toISOString();
 }
 
-function formatDateTime(copy: AppMessages['screens']['petInvoices'], value?: string | null, fallback = copy.notRecorded) {
+function formatDateTimeIn(locale: string, copy: InvoicesCopy, value?: string | null, fallback = copy.notRecorded) {
   if (!value) {
     return fallback;
   }
 
-  return new Date(value).toLocaleString('pt-BR');
+  return new Date(value).toLocaleString(locale, { dateStyle: 'short', timeStyle: 'short' });
 }
 
-function formatCurrency(value: number, currency = 'BRL') {
+function formatCurrencyIn(locale: string, value: number, currency = 'BRL') {
   try {
-    return new Intl.NumberFormat('pt-BR', { style: 'currency', currency }).format(value);
+    return new Intl.NumberFormat(locale, { style: 'currency', currency }).format(value);
   } catch {
     return `${currency} ${value.toFixed(2)}`;
   }
@@ -179,8 +174,8 @@ function formatPaymentEventSource(copy: InvoicesCopy, event: FinancePaymentEvent
     : copy.eventSourceSystem.replace('{channel}', channel);
 }
 
-function formatCycleLabel(date: Date) {
-  return new Intl.DateTimeFormat('pt-BR', { month: 'long', year: 'numeric' }).format(date);
+function formatCycleLabel(locale: string, date: Date) {
+  return new Intl.DateTimeFormat(locale, { month: 'long', year: 'numeric' }).format(date);
 }
 
 function buildCollectionReference(clientId: string, cycleDate: Date) {
@@ -282,68 +277,25 @@ function isOverdueInvoice(invoice: PetInvoice) {
     && new Date(invoice.dueAt as string).getTime() < Date.now();
 }
 
-function statToneClass(tone: 'default' | 'warning' | 'danger' = 'default') {
-  if (tone === 'warning') {
-    return 'border-amber-200/80 bg-white';
-  }
-
-  if (tone === 'danger') {
-    return 'border-red-200/80 bg-white';
-  }
-
-  return 'border-slate-200/90 bg-white';
-}
-
-const billingPanelClass =
-  'rounded-3xl border border-slate-200/90 bg-white p-5 ';
-
-const billingPanelMutedClass =
-  'rounded-2xl border border-slate-200/80 bg-slate-50 p-4';
-
-const billingPanelEyebrowClass = 'text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--accent)]';
-const billingPanelTitleClass = 'mt-2 text-[1.15rem] font-semibold text-slate-950';
-const billingPanelTextClass = 'mt-1 text-sm leading-6 text-slate-900';
-const billingDetailLabelClass = 'text-xs font-semibold uppercase tracking-[0.16em] text-slate-800';
-const billingPrimaryValueClass = 'mt-1 text-xl font-bold tracking-[-0.03em] text-slate-900';
-const billingDetailValueClass = 'mt-1 text-sm leading-6 text-slate-900';
-
-type SnapshotCardProps = {
-  icon: LucideIcon;
-  label: string;
-  value: string;
-  detail: string;
-  tone?: 'default' | 'warning' | 'danger';
-};
-
-function SnapshotCard({ icon: Icon, label, value, detail, tone = 'default' }: SnapshotCardProps) {
-  return (
-    <div className={`rounded-3xl border p-4  ${statToneClass(tone)}`}>
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-800">
-            {label}
-          </p>
-          <p className="mt-3 text-[2rem] font-bold tracking-[-0.04em] text-slate-900">{value}</p>
-        </div>
-        <span className={`flex h-11 w-11 items-center justify-center rounded-2xl ${
-          tone === 'danger'
-            ? 'bg-red-100 text-red-700'
-            : tone === 'warning'
-              ? 'bg-amber-100 text-amber-700'
-              : 'bg-[color:var(--accent)]/10 text-[color:var(--accent)]'
-        }`}>
-          <Icon className="h-5 w-5" />
-        </span>
-      </div>
-      <p className="mt-3 text-sm leading-6 text-slate-800">{detail}</p>
-    </div>
-  );
-}
+// Comanda v2 panel styles: hairline borders, no uppercase labels, amounts in mono.
+const billingPanelClass = 'rounded-md border border-[color:var(--line)] p-4';
+const billingPanelMutedClass = 'rounded-md border border-[color:var(--line-soft)] bg-[color:var(--bg-subtle)] p-3';
+const billingPanelEyebrowClass = 'text-xs text-[var(--muted)]';
+const billingPanelTitleClass = 'mt-0.5 text-sm font-semibold text-[var(--ink)]';
+const billingPanelTextClass = 'mt-1 text-sm text-[var(--ink-2)]';
+const billingDetailLabelClass = 'text-xs text-[var(--muted)]';
+const billingPrimaryValueClass = 'ui-mono mt-0.5 text-lg font-semibold text-[var(--ink)]';
+const billingDetailValueClass = 'mt-0.5 text-sm text-[var(--ink)]';
+const compactTextClass = 'text-xs text-[var(--muted)]';
 
 export function PetInvoicesPage() {
   const copy = useAppMessages().screens.petInvoices;
   const messages = useAppMessages().petInvoices;
+  const { locale } = useAppI18n();
   const { hasPermission } = usePermissions();
+  const formatDateTime = (copyArg: InvoicesCopy, value?: string | null, fallback = copyArg.notRecorded) =>
+    formatDateTimeIn(locale, copyArg, value, fallback);
+  const formatCurrency = (value: number, currency = 'BRL') => formatCurrencyIn(locale, value, currency);
   const [pageData, setPageData] = useState<PageResponse<PetInvoice>>(initialPage);
   const [clients, setClients] = useState<PetClient[]>([]);
   const [lookupIssues, setLookupIssues] = useState<PetLookupIssue[]>([]);
@@ -356,6 +308,7 @@ export function PetInvoicesPage() {
   const [clientFilterId, setClientFilterId] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
 
+  const [isEditorOpen, setIsEditorOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [clientId, setClientId] = useState('');
   const [totalAmount, setTotalAmount] = useState('');
@@ -619,12 +572,8 @@ export function PetInvoicesPage() {
 
   const totalItems = resolveTotalItems(pageData);
   const clientsLookupUnavailable = lookupIssues.some((issue) => issue.key === 'clients');
-  const activeFilterCount = [search, clientFilterId, statusFilter].filter(Boolean).length;
-  const visibleOpenBalance = rows.reduce((total, invoice) => total + invoice.outstandingAmount, 0);
-  const visibleTotalInvoiced = rows.reduce((total, invoice) => total + invoice.totalAmount, 0);
-  const paymentCount = rows.reduce((total, invoice) => total + invoice.payments.length, 0);
-  const overdueCount = rows.filter((invoice) => isOverdueInvoice(invoice)).length;
-  const nextCycleLabel = formatCycleLabel(getNextCycleDateRange().start);
+  const hasActiveFilters = Boolean(search || clientFilterId || statusFilter);
+  const nextCycleLabel = formatCycleLabel(locale, getNextCycleDateRange().start);
   const nextCyclePreviewRows = useMemo<NextCyclePreviewRow[]>(() => {
     const appointmentsByClient = new Map<string, PetAppointment[]>();
 
@@ -692,11 +641,15 @@ export function PetInvoicesPage() {
   const nextCyclePenultimateClients = nextCyclePreviewRows.filter((row) => (row.remainingSessions ?? 99) === 2).length;
 
   function scrollToInvoiceForm() {
-    document.getElementById('pet-invoice-form-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    window.requestAnimationFrame(() => {
+      document.getElementById('pet-invoice-form-section')?.scrollIntoView?.({ behavior: 'smooth', block: 'start' });
+    });
   }
 
   function scrollToFinanceReview() {
-    document.getElementById('pet-invoice-finance-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    window.requestAnimationFrame(() => {
+      document.getElementById('pet-invoice-finance-section')?.scrollIntoView?.({ behavior: 'smooth', block: 'start' });
+    });
   }
 
   function resetForm() {
@@ -718,8 +671,16 @@ export function PetInvoicesPage() {
     setPaymentNotes('');
   }
 
+  function closeEditor() {
+    resetForm();
+    setIsEditorOpen(false);
+  }
+
   function beginCreateInvoice() {
     resetForm();
+    setError(null);
+    setSuccess(null);
+    setIsEditorOpen(true);
     scrollToInvoiceForm();
   }
 
@@ -739,6 +700,7 @@ export function PetInvoicesPage() {
     setReviewInvoiceId(item.id);
     setError(null);
     setSuccess(null);
+    setIsEditorOpen(true);
     scrollToInvoiceForm();
   }
 
@@ -807,7 +769,7 @@ export function PetInvoicesPage() {
         setSuccess(copy.created);
       }
 
-      resetForm();
+      closeEditor();
       await load(pageData.page, search, clientFilterId, statusFilter);
     } catch (err) {
       setError(resolveApiErrorMessage(err, copy.saveError));
@@ -879,12 +841,12 @@ export function PetInvoicesPage() {
       key: 'issuedAt',
       header: copy.columnDocument,
       render: (item) => (
-        <div>
-          <p className="font-medium text-slate-900">
+        <div className="whitespace-nowrap">
+          <p className="ui-mono text-[var(--ink)]">
             {formatDateTime(copy, item.issuedAt, copy.draftNotIssued)}
           </p>
-          <p className={`mt-1 ${sharedCompactTextClass}`}>
-            {copy.dueOn} {formatDateTime(copy, item.dueAt, copy.noDueDate)}
+          <p className={compactTextClass}>
+            {copy.dueOn} <span className="ui-mono">{formatDateTime(copy, item.dueAt, copy.noDueDate)}</span>
           </p>
         </div>
       )
@@ -894,17 +856,17 @@ export function PetInvoicesPage() {
       header: copy.client,
       render: (item) => (
         <div>
-          <p className="font-medium text-slate-900">
+          <p className="font-medium text-[var(--ink)]">
             {item.clientName ?? resolvePetLookupLabel(
               clients,
               item.clientId,
               (client) => client.name ?? client.fullName,
-              'Cliente',
+              copy.client,
               clientsLookupUnavailable
             )}
           </p>
-          <p className={`mt-1 ${sharedCompactTextClass}`}>
-            {clients.find((client) => client.id === item.clientId)?.email ?? item.clientId}
+          <p className={`line-clamp-1 max-w-xs ${compactTextClass}`}>
+            {item.businessContextLabel ?? item.description ?? copy.manualInvoice}
           </p>
         </div>
       )
@@ -913,31 +875,25 @@ export function PetInvoicesPage() {
       key: 'context',
       header: copy.businessContext,
       render: (item) => (
-        <div>
-          <p className="font-medium text-slate-900">
-            {item.businessContextLabel ?? item.description ?? copy.manualInvoice}
-          </p>
-          <p className={`mt-1 ${sharedCompactTextClass}`}>
-            {item.businessContextType ? formatBusinessContextLabel(copy, item.businessContextType) : copy.manualFlow}
-            {item.financeInvoiceId ? copy.linkedFinancialRecord : ''}
-          </p>
-        </div>
+        <span className="text-sm text-[var(--ink-2)]">
+          {item.businessContextType ? formatBusinessContextLabel(copy, item.businessContextType) : copy.manualFlow}
+        </span>
       )
     },
     {
       key: 'finance',
       header: copy.columnFinancialPosition,
+      className: 'text-right',
       render: (item) => (
-        <div>
-          <p className="font-medium text-slate-900">
-            {formatCurrency(item.totalAmount)}
-          </p>
-          <p className={`mt-1 ${sharedCompactTextClass}`}>
-            {copy.paidLabel} {formatCurrency(item.paidAmount)} {copy.openSeparator} {formatCurrency(item.outstandingAmount)}
-          </p>
-          <p className={`mt-1 ${sharedCompactTextClass}`}>
-            {item.outstandingAmount > 0 ? copy.stillOpen : copy.settled}
-          </p>
+        <div className="whitespace-nowrap">
+          <p className="ui-mono font-medium text-[var(--ink)]">{formatCurrency(item.totalAmount)}</p>
+          {item.outstandingAmount > 0 ? (
+            <p className="ui-mono text-xs text-[var(--warn)]">
+              {copy.openAmount} {formatCurrency(item.outstandingAmount)}
+            </p>
+          ) : (
+            <p className={compactTextClass}>{copy.settled}</p>
+          )}
         </div>
       )
     },
@@ -945,17 +901,12 @@ export function PetInvoicesPage() {
       key: 'lifecycle',
       header: copy.cycle,
       render: (item) => (
-        <div className="space-y-2">
+        <div>
           <StatusBadge status={item.status} />
-          <p className={sharedCompactTextClass}>
-            {item.paidAt
-              ? copy.paidOnDate.replace('{date}', formatDateTime(copy, item.paidAt))
-              : item.canceledAt
-                ? copy.canceledOnDate.replace('{date}', formatDateTime(copy, item.canceledAt))
-                : copy.paymentRecordsCount.replace('{count}', String(item.payments.length))}
-          </p>
           {isOverdueInvoice(item) ? (
-            <p className="text-xs text-red-700">{copy.overdue}</p>
+            <p className="text-xs text-[var(--danger)]">{copy.overdue}</p>
+          ) : item.paidAt ? (
+            <p className={compactTextClass}>{copy.paidOnDate.replace('{date}', formatDateTime(copy, item.paidAt))}</p>
           ) : null}
         </div>
       )
@@ -963,8 +914,8 @@ export function PetInvoicesPage() {
     {
       key: 'actions',
       header: copy.actions,
-          render: (item) => (
-        <div className={sharedInlineActionsClass}>
+      render: (item) => (
+        <div className="flex flex-wrap items-center gap-2">
           <button
             type="button"
             onClick={() => reviewInvoice(item)}
@@ -1017,20 +968,20 @@ export function PetInvoicesPage() {
         <PetModuleSubnav />
 
         <PageTitle
-          eyebrow={copy.eyebrow}
           title={messages.title}
+          count={loading ? undefined : totalItems}
           description={messages.description}
           actions={(
             <div className="flex flex-wrap gap-2">
-              <PermissionGuard permission="pet.invoice.create">
-                <button type="button" onClick={beginCreateInvoice} className="ui-primary-button">
-                  {copy.issueInvoice}
-                </button>
-              </PermissionGuard>
               <PermissionGuard permission="pet.dashboard.read">
                 <Link href="/pet/insights" className="ui-secondary-button">
                   {copy.openInsights}
                 </Link>
+              </PermissionGuard>
+              <PermissionGuard permission="pet.invoice.create">
+                <button type="button" onClick={beginCreateInvoice} className="ui-primary-button">
+                  {copy.issueInvoice}
+                </button>
               </PermissionGuard>
             </div>
           )}
@@ -1039,150 +990,221 @@ export function PetInvoicesPage() {
         {error ? <div className="ui-notice-error">{error}</div> : null}
         {success ? <div className="ui-notice-success">{success}</div> : null}
 
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-          <SnapshotCard
-            icon={Receipt}
-            label={copy.metricInvoices}
-            value={new Intl.NumberFormat('pt-BR').format(totalItems)}
-            detail={activeFilterCount > 0
-              ? copy.metricInvoicesFiltered
-              : copy.metricInvoicesAll}
+        <form
+          role="search"
+          aria-label={copy.search}
+          onSubmit={(event) => {
+            event.preventDefault();
+            setSearch(searchInput.trim());
+          }}
+          className="flex flex-wrap items-center gap-2"
+        >
+          <label className="ui-field-shell flex min-h-9 min-w-[16rem] flex-1 items-center gap-2 rounded-md border border-[color:var(--control)] px-3 md:max-w-md">
+            <Search className="h-3.5 w-3.5 shrink-0 text-[var(--muted)]" aria-hidden="true" />
+            <span className="sr-only">{copy.search}</span>
+            <input
+              type="search"
+              value={searchInput}
+              onChange={(event) => setSearchInput(event.target.value)}
+              placeholder={copy.searchPlaceholder}
+              className="min-w-0 flex-1 bg-transparent py-1.5 text-sm text-[var(--ink)] outline-none placeholder:text-[var(--muted)]"
+            />
+          </label>
+          <label className="ui-filter-chip max-w-full" data-active={clientFilterId ? 'true' : 'false'}>
+            <span>{copy.client}</span>
+            <select
+              value={clientFilterId}
+              onChange={(event) => setClientFilterId(event.target.value)}
+              disabled={clientsLookupUnavailable}
+              className="max-w-[12rem] truncate bg-transparent font-medium text-[var(--ink)] outline-none"
+            >
+              {clientOptions.map((option) => (
+                <option key={option.value} value={option.value}>{option.label}</option>
+              ))}
+            </select>
+          </label>
+          <label className="ui-filter-chip max-w-full" data-active={statusFilter ? 'true' : 'false'}>
+            <span>{copy.cycle}</span>
+            <select
+              value={statusFilter}
+              onChange={(event) => setStatusFilter(event.target.value)}
+              className="max-w-[12rem] truncate bg-transparent font-medium text-[var(--ink)] outline-none"
+            >
+              {buildStatusOptions(copy).map((option) => (
+                <option key={option.value} value={option.value}>{option.label}</option>
+              ))}
+            </select>
+          </label>
+          <button type="submit" className="ui-secondary-button">{copy.search}</button>
+          {hasActiveFilters ? (
+            <button
+              type="button"
+              onClick={() => {
+                setSearchInput('');
+                setSearch('');
+                setClientFilterId('');
+                setStatusFilter('');
+              }}
+              className="inline-flex min-h-9 items-center gap-1 px-1 text-sm text-[var(--ink-2)] hover:text-[var(--ink)]"
+            >
+              <X className="h-3.5 w-3.5" aria-hidden="true" />
+              {copy.clearFilters}
+            </button>
+          ) : null}
+        </form>
+
+        <PetLookupFeedback issues={lookupIssues} />
+
+        {isEditorOpen ? (
+          <PermissionGuard permission={editingId ? 'pet.invoice.update' : 'pet.invoice.create'}>
+            <section
+              id="pet-invoice-form-section"
+              aria-labelledby="pet-invoice-editor-title"
+              className="scroll-mt-4 rounded-md border border-[color:var(--line)] p-4"
+            >
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <h2 id="pet-invoice-editor-title" className="text-sm font-semibold text-[var(--ink)]">
+                    {editingId ? copy.updateInvoice : copy.issueInvoice}
+                  </h2>
+                  <p className="text-xs text-[var(--muted)]">{copy.formDescription}</p>
+                </div>
+
+                <FormSection title={copy.sectionCharge}>
+                  <FormSelect
+                    label={copy.client}
+                    value={clientId}
+                    options={formClientOptions}
+                    onChange={setClientId}
+                    disabled={clientsLookupUnavailable}
+                  />
+                  <FormInput
+                    label={copy.totalAmount}
+                    value={totalAmount}
+                    onChange={setTotalAmount}
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    required
+                  />
+                  <FormInput
+                    label={copy.operationalDescription}
+                    value={description}
+                    onChange={setDescription}
+                    placeholder={copy.descriptionPlaceholder}
+                    wrapperClassName="md:col-span-2"
+                  />
+                </FormSection>
+
+                <FormSection title={copy.sectionCycle}>
+                  <FormSelect
+                    label={copy.cycle}
+                    value={status}
+                    options={buildFormStatusOptions(copy)}
+                    onChange={setStatus}
+                  />
+                  <DateTimeInput
+                    label={copy.issuedOn}
+                    value={issuedAt}
+                    onChange={setIssuedAt}
+                    required={status !== 'DRAFT'}
+                  />
+                  <DateTimeInput
+                    label={copy.dueOn}
+                    value={dueAt}
+                    onChange={setDueAt}
+                  />
+                </FormSection>
+
+                {clientsLookupUnavailable ? (
+                  <div className="ui-notice-warning">{copy.clientAccessRequired}</div>
+                ) : null}
+
+                <div className={sharedFormActionsClass}>
+                  <button
+                    type="submit"
+                    disabled={submitting || clientsLookupUnavailable}
+                    className="ui-primary-button"
+                  >
+                    {submitting ? copy.savingInvoice : editingId ? copy.updateInvoice : copy.issueInvoice}
+                  </button>
+                  <button type="button" onClick={closeEditor} className="ui-secondary-button">
+                    {copy.cancelEdit}
+                  </button>
+                </div>
+              </form>
+            </section>
+          </PermissionGuard>
+        ) : null}
+
+        <div className="space-y-2">
+          <DataTable
+            columns={columns}
+            rows={rows}
+            getRowKey={(row) => row.id}
+            loading={loading}
+            loadingTitle={copy.loadingTitle}
+            loadingDescription={copy.loadingDescription}
+            emptyState={{
+              title: copy.emptyTitle,
+              description: copy.emptyDescription,
+              action: hasPermission('pet.invoice.create') ? (
+                <button type="button" onClick={beginCreateInvoice} className="ui-primary-button">
+                  {copy.issueFirst}
+                </button>
+              ) : undefined
+            }}
           />
-          <SnapshotCard
-            icon={ArrowUpRight}
-            label={copy.metricBilled}
-            value={formatCurrency(visibleTotalInvoiced)}
-            detail={copy.metricBilledDetail}
-          />
-          <SnapshotCard
-            icon={WalletCards}
-            label={copy.metricOpenBalance}
-            value={formatCurrency(visibleOpenBalance)}
-            detail={copy.metricOpenBalanceDetail}
-            tone={visibleOpenBalance > 0 ? 'warning' : 'default'}
-          />
-          <SnapshotCard
-            icon={AlertTriangle}
-            label={copy.metricAttention}
-            value={String(overdueCount)}
-            detail={copy.paymentRecordsVisible.replace('{count}', String(paymentCount))}
-            tone={overdueCount > 0 ? 'danger' : 'default'}
+          <Pagination
+            page={pageData.page}
+            totalPages={pageData.totalPages}
+            totalElements={totalItems}
+            pageSize={pageSize}
+            onPageChange={(page) => void load(page, search, clientFilterId, statusFilter)}
           />
         </div>
 
-        <PageSection
-          tone="muted"
-          title={messages.filtersTitle}
-          description={messages.filtersDescription}
-        >
-          <div className={sharedFilterToolbarClass}>
-            <div className="grid gap-3 xl:grid-cols-[minmax(0,1.35fr)_minmax(0,0.9fr)_minmax(0,0.7fr)] xl:items-end">
-              <SearchBar
-                label={copy.search}
-                value={searchInput}
-                onChange={setSearchInput}
-                placeholder={copy.searchPlaceholder}
-              />
-              <FormSelect
-                label={copy.client}
-                value={clientFilterId}
-                options={clientOptions}
-                onChange={setClientFilterId}
-                disabled={clientsLookupUnavailable}
-              />
-              <FormSelect
-                label={copy.cycle}
-                value={statusFilter}
-                options={buildStatusOptions(copy)}
-                onChange={setStatusFilter}
-              />
-            </div>
-
-            <div className={sharedFormActionsClass}>
-              <button
-                type="button"
-                onClick={() => setSearch(searchInput)}
-                className="ui-primary-button"
-              >
-                {copy.applyFilters}
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setSearchInput('');
-                  setSearch('');
-                  setClientFilterId('');
-                  setStatusFilter('');
-                }}
-                className="ui-inline-button"
-              >
-                {copy.clearFilters}
-              </button>
-            </div>
+        <section aria-labelledby="pet-invoice-next-cycle-title" className="space-y-3">
+          <div className="flex flex-wrap items-baseline justify-between gap-2">
+            <h2 id="pet-invoice-next-cycle-title" className="text-sm font-semibold text-[var(--ink)]">{messages.nextCycleTitle}</h2>
+            <p className="text-xs text-[var(--muted)]">{copy.nextCyclePreviewDescription.replace('{cycle}', nextCycleLabel)}</p>
           </div>
-        </PageSection>
-
-        <PageSection
-          tone="muted"
-          title={messages.nextCycleTitle}
-          description={copy.nextCyclePreviewDescription.replace('{cycle}', nextCycleLabel)}
-        >
           {previewError ? <div className="ui-notice-warning">{previewError}</div> : null}
           {previewLoading ? (
-            <div className="ui-notice-neutral">{copy.nextCycleLoading}</div>
+            <p className="text-sm text-[var(--muted)]">{copy.nextCycleLoading}</p>
           ) : nextCyclePreviewRows.length === 0 ? (
-            <div className="ui-notice-neutral">
-              {copy.nextCycleEmpty}
-            </div>
+            <p className="text-sm text-[var(--muted)]">{copy.nextCycleEmpty}</p>
           ) : (
-            <div className="space-y-4">
-              <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-                <SnapshotCard
-                  icon={WalletCards}
-                  label={copy.nextCycleProjection}
-                  value={formatCurrency(nextCycleProjectedTotal)}
-                  detail={copy.nextCycleProjectionDetail}
-                />
-                <SnapshotCard
-                  icon={Receipt}
-                  label={copy.recurringClients}
-                  value={String(nextCycleRecurringClients)}
-                  detail={copy.recurringClientsDetail}
-                />
-                <SnapshotCard
-                  icon={Clock3}
-                  label={copy.penultimateAlerts}
-                  value={String(nextCyclePenultimateClients)}
-                  detail={copy.penultimateAlertsDetail}
-                  tone={nextCyclePenultimateClients > 0 ? 'warning' : 'default'}
-                />
-                <SnapshotCard
-                  icon={ArrowUpRight}
-                  label={copy.petTaxiClients}
-                  value={String(nextCyclePetTaxiClients)}
-                  detail={copy.petTaxiClientsDetail}
-                />
-              </div>
+            <>
+              <dl className="grid gap-4 border-y border-[color:var(--line)] py-3 sm:grid-cols-2 xl:grid-cols-4">
+                {[
+                  { label: copy.nextCycleProjection, value: formatCurrency(nextCycleProjectedTotal), tone: undefined },
+                  { label: copy.recurringClients, value: String(nextCycleRecurringClients), tone: undefined },
+                  { label: copy.penultimateAlerts, value: String(nextCyclePenultimateClients), tone: nextCyclePenultimateClients > 0 ? 'text-[var(--warn)]' : undefined },
+                  { label: copy.petTaxiClients, value: String(nextCyclePetTaxiClients), tone: undefined }
+                ].map((item) => (
+                  <div key={item.label}>
+                    <dt className="text-xs text-[var(--muted)]">{item.label}</dt>
+                    <dd className={`ui-mono mt-0.5 text-lg font-semibold ${item.tone ?? 'text-[var(--ink)]'}`}>{item.value}</dd>
+                  </div>
+                ))}
+              </dl>
 
-              <div className="grid gap-4 lg:grid-cols-2">
-                {nextCyclePreviewRows.slice(0, 6).map((row) => (
-                  <div key={row.reference} className={billingPanelClass}>
+              <ul className="grid gap-3 lg:grid-cols-2">
+                {nextCyclePreviewRows.slice(0, NEXT_CYCLE_PREVIEW_LIMIT).map((row) => (
+                  <li key={row.reference} className={billingPanelClass}>
                     <div className="flex flex-wrap items-start justify-between gap-3">
                       <div>
-                        <p className={billingPanelEyebrowClass}>{copy.billingDetail}</p>
-                        <p className={billingPanelTitleClass}>{row.clientName}</p>
-                        <p className={billingPanelTextClass}>{row.reference}</p>
+                        <p className="font-medium text-[var(--ink)]">{row.clientName}</p>
+                        <p className="ui-mono text-xs text-[var(--muted)]">{row.reference}</p>
                       </div>
-                      <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium ${
-                        row.billingType === 'Recurring'
-                          ? 'bg-emerald-100 text-emerald-800'
-                          : 'bg-slate-100 text-slate-800'
-                      }`}>
+                      <span className="inline-flex items-center gap-1.5 whitespace-nowrap text-xs text-[var(--ink-2)]">
+                        <span className="ui-status-dot" data-status={row.billingType === 'Recurring' ? 'done' : 'waiting'} aria-hidden="true" />
                         {row.billingType === 'Recurring' ? copy.recurring : copy.oneOff}
                       </span>
                     </div>
 
-                    <dl className="mt-4 grid gap-4 sm:grid-cols-2">
+                    <dl className="mt-3 grid gap-3 sm:grid-cols-2">
                       <div>
                         <dt className={billingDetailLabelClass}>{copy.projectedAmount}</dt>
                         <dd className={billingPrimaryValueClass}>{formatCurrency(row.projectedDue)}</dd>
@@ -1205,135 +1227,19 @@ export function PetInvoicesPage() {
                       </div>
                       <div>
                         <dt className={billingDetailLabelClass}>{copy.extras}</dt>
-                        <dd className={billingDetailValueClass}>
+                        <dd className={`ui-mono ${billingDetailValueClass}`}>
                           {formatCurrency(row.extrasTotal)}{row.petTaxiTotal > 0 ? copy.petTaxiAmount.replace('{amount}', formatCurrency(row.petTaxiTotal)) : ''}
                         </dd>
                       </div>
                     </dl>
 
                     <p className={billingPanelTextClass}>{row.note}</p>
-                  </div>
+                  </li>
                 ))}
-              </div>
-            </div>
+              </ul>
+            </>
           )}
-        </PageSection>
-
-        <PetLookupFeedback issues={lookupIssues} />
-
-        <div id="pet-invoice-form-section">
-          <PageSection
-            title={editingId ? copy.updateInvoice : copy.issueInvoice}
-            description={copy.formDescription}
-          >
-            <PermissionGuard permission={editingId ? 'pet.invoice.update' : 'pet.invoice.create'}>
-              <form onSubmit={handleSubmit} className="space-y-5">
-                <div className="grid gap-4 xl:grid-cols-2">
-                  <FormSelect
-                    label={copy.client}
-                    value={clientId}
-                    options={formClientOptions}
-                    onChange={setClientId}
-                    disabled={clientsLookupUnavailable}
-                  />
-                  <FormInput
-                    label={copy.totalAmount}
-                    value={totalAmount}
-                    onChange={setTotalAmount}
-                    type="number"
-                    required
-                  />
-                  <FormSelect
-                    label={copy.cycle}
-                    value={status}
-                    options={buildFormStatusOptions(copy)}
-                    onChange={setStatus}
-                  />
-                  <DateTimeInput
-                    label={copy.issuedOn}
-                    value={issuedAt}
-                    onChange={setIssuedAt}
-                    required={status !== 'DRAFT'}
-                  />
-                  <DateTimeInput
-                    label={copy.dueOn}
-                    value={dueAt}
-                    onChange={setDueAt}
-                  />
-                  <FormInput
-                    label={copy.operationalDescription}
-                    value={description}
-                    onChange={setDescription}
-                    placeholder={copy.descriptionPlaceholder}
-                  />
-                </div>
-
-                <div className={sharedReminderSurfaceClass}>
-                  <p className="text-sm font-medium text-[color:var(--app-shell-heading)]">{copy.cycleReminder}</p>
-                  <p className={`mt-1 ${sharedCompactTextClass}`}>
-                    {copy.cycleReminderDescription}
-                  </p>
-                </div>
-
-                {clientsLookupUnavailable ? (
-                  <div className="ui-notice-warning">
-                    {copy.clientAccessRequired}
-                  </div>
-                ) : null}
-
-                <div className={sharedFormActionsClass}>
-                  <button
-                    type="submit"
-                    disabled={submitting || clientsLookupUnavailable}
-                    className="ui-primary-button"
-                  >
-                    {submitting ? copy.savingInvoice : editingId ? copy.updateInvoice : copy.issueInvoice}
-                  </button>
-                  {editingId ? (
-                    <button
-                      type="button"
-                      onClick={resetForm}
-                      className="ui-secondary-button"
-                    >
-                      {copy.cancelEdit}
-                    </button>
-                  ) : null}
-                </div>
-              </form>
-            </PermissionGuard>
-          </PageSection>
-        </div>
-
-        <PageSection
-          title={messages.pipelineTitle}
-          description={messages.pipelineDescription}
-        >
-          <DataTable
-            columns={columns}
-            rows={rows}
-            getRowKey={(row) => row.id}
-            loading={loading}
-            loadingTitle={copy.loadingTitle}
-            loadingDescription={copy.loadingDescription}
-            emptyState={{
-              title: copy.emptyTitle,
-              description: copy.emptyDescription,
-              action: hasPermission('pet.invoice.create') ? (
-                <button type="button" onClick={beginCreateInvoice} className="ui-primary-button">
-                  {copy.issueFirst}
-                </button>
-              ) : undefined
-            }}
-          />
-          <div className="pt-5">
-            <Pagination
-              page={pageData.page}
-              totalPages={pageData.totalPages}
-              totalElements={totalItems}
-              onPageChange={(page) => void load(page, search, clientFilterId, statusFilter)}
-            />
-          </div>
-        </PageSection>
+        </section>
 
         {reviewedInvoice ? (
           <div id="pet-invoice-finance-section">
@@ -1556,7 +1462,7 @@ export function PetInvoicesPage() {
                       />
                     </div>
 
-                    <p className={`mt-4 ${sharedFieldHintClass}`}>
+                    <p className={`mt-4 ${compactTextClass}`}>
                       {copy.openBeforePayment} {formatCurrency(reviewedInvoice.outstandingAmount)}
                     </p>
 
@@ -1623,21 +1529,21 @@ export function PetInvoicesPage() {
                           <div className="flex flex-wrap items-start justify-between gap-3">
                             <div>
                               <p className="text-sm font-semibold text-[color:var(--app-shell-heading)]">
-                                {formatCurrency(payment.amount)} via {formatMethodLabel(copy, payment.method)}
+                                {copy.paymentLine.replace('{amount}', formatCurrency(payment.amount)).replace('{method}', formatMethodLabel(copy, payment.method))}
                               </p>
-                              <p className={`mt-1 ${sharedCompactTextClass}`}>
+                              <p className={`mt-1 ${compactTextClass}`}>
                                 {copy.receivedOn} {formatDateTime(copy, payment.receivedAt)}
                               </p>
                             </div>
                             <StatusBadge status={payment.status} />
                           </div>
                           {payment.referenceCode ? (
-                            <p className={`mt-3 ${sharedCompactTextClass}`}>
+                            <p className={`mt-3 ${compactTextClass}`}>
                               {copy.reference} {payment.referenceCode}
                             </p>
                           ) : null}
                           {payment.notes ? (
-                            <p className={`mt-1 ${sharedCompactTextClass}`}>{payment.notes}</p>
+                            <p className={`mt-1 ${compactTextClass}`}>{payment.notes}</p>
                           ) : null}
                         </div>
                       ))
@@ -1678,7 +1584,7 @@ export function PetInvoicesPage() {
                             <p className="text-sm font-semibold text-[color:var(--app-shell-heading)]">
                               {formatDirectionLabel(copy, movement.direction)} • {formatCurrency(movement.amount, movement.currency)}
                             </p>
-                            <p className={`mt-1 ${sharedCompactTextClass}`}>
+                            <p className={`mt-1 ${compactTextClass}`}>
                               {copy.movementOn
                                 .replace('{category}', formatCategoryLabel(copy, movement.category))
                                 .replace('{date}', formatDateTime(copy, movement.occurredAt))}
@@ -1686,7 +1592,7 @@ export function PetInvoicesPage() {
                           </div>
                           <StatusBadge status={movement.direction === 'IN' ? 'paid' : 'canceled'} />
                         </div>
-                        <p className={`mt-3 ${sharedCompactTextClass}`}>
+                        <p className={`mt-3 ${compactTextClass}`}>
                           {movement.description ?? copy.noCashDescription}
                         </p>
                       </div>
@@ -1719,7 +1625,7 @@ export function PetInvoicesPage() {
                         <p className="text-sm font-semibold text-[color:var(--app-shell-heading)]">
                           {formatPaymentEventLabel(copy, event.eventType)}
                         </p>
-                        <p className={`mt-1 ${sharedCompactTextClass}`}>
+                        <p className={`mt-1 ${compactTextClass}`}>
                           {formatDateTime(copy, event.occurredAt)} • {formatPaymentEventSource(copy, event)}
                         </p>
                       </li>

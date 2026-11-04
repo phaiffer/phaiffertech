@@ -16,8 +16,8 @@ Os protótipos de referência estão nesta pasta (`*.dc.html`; a direção visua
 | 2 | Operação: Hoje, Agenda, PDV (com atalhos) | Concluída | #101 |
 | 3 | Cadastros: Clientes, cadastro de cliente, Contatos, Pets, cadastro de pet, Perfil do pet | Concluída | #103 |
 | 4 | Operação de serviço: Serviços, Planos, Follow-up, Equipe, Fechamento | Concluída | #104 |
-| 5 | Dinheiro e estoque: Estoque/Produtos, Financeiro, Caixa, Cobrança | **Próxima** | |
-| 6 | Clínica, Comercial e Insights | Pendente | |
+| 5 | Dinheiro e estoque: Estoque/Produtos, Financeiro, Caixa, Cobrança | Concluída | #105 |
+| 6 | Clínica, Comercial e Insights | **Próxima** | |
 | 7 | Conta e admin: Login, Esqueci/Redefinir senha, Configurações, Usuários, Ambientes | Pendente | |
 
 Depois da fase 7, o próximo trabalho combinado com o dono do projeto é o **Projeto de Aplicação da pós PUCPR** (ver "Depois do redesign", no fim).
@@ -71,15 +71,18 @@ Depois da fase 7, o próximo trabalho combinado com o dono do projeto é o **Pro
 - Após apagar arquivos, o `next dev` pode manter o módulo antigo em cache: reinicie o servidor de dev.
 - **Não rode `npm run build` com o `next dev` ligado**: os dois usam a pasta `.next`, o build a sobrescreve e o servidor de dev passa a servir páginas sem CSS (`layout.css` 404). Para recuperar: pare o dev, apague `apps/frontend/.next` e suba de novo. Prefira deixar o build para o CI.
 - Para subir o ambiente local sem Docker: `.\scripts\start-local-backend.ps1` e `.\scripts\start-local-frontend.ps1` na raiz (PostgreSQL local na porta 5432). Se der `EADDRINUSE` / "Port 8080 was already in use", há um servidor antigo nas portas 3000/8080.
+- O hook local do Claude Code troca o travessão por vírgula e espaço ao gravar arquivos: um travessão usado como marcador de "sem valor" aparece na tela como uma vírgula solta. Use `'-'`.
 - Dados de exemplo do seed do backend têm palavras sem acento ("Pastor Alemao", "Shampoo hipoalergenico"); é dado, não texto de tela.
 - O PDV **não registra vendas** (checkout simulado desde antes do redesign; a tela avisa). Não "consertar" dentro do redesign sem combinar com o dono: é funcionalidade nova.
 
-## Próximo passo concreto: fase 5 (Dinheiro e estoque)
+## Próximo passo concreto: fase 6 (Clínica, Comercial e Insights)
 
-Referências: `Estoque.dc.html`, `Financeiro.dc.html`, `Caixa.dc.html`, `Cobranca.dc.html` (siga a direção visual de `v2/Clientes.dc.html`). Componentes: `src/modules/pet/pet-inventory-page.tsx`, `pet-products-page.tsx`, `modules/inventory/inventory-hub-page.tsx`, `modules/pet/finance-dashboard.tsx`, `modules/finance/finance-cash-page.tsx`, `pet-invoices-page.tsx`, `modules/finance/finance-invoices-page.tsx`, `finance-payments-page.tsx`.
+Referências: `Clinica.dc.html`, `Prontuario.dc.html`, `TimelineClinica.dc.html`, `Comercial.dc.html`, `Lead.dc.html`, `Insights.dc.html` (siga a direção visual de `v2/Clientes.dc.html`). Componentes: `src/modules/pet/clinic-dashboard.tsx`, `pet-medical-records-page.tsx`, `pet-medical-sections.tsx`, `clinic-timeline-page.tsx`, `pet-commercial-page.tsx`, `pet-commercial-pipeline-page.tsx`, `pet-commercial-deals-page.tsx`, `pet-commercial-lead-form-page.tsx`, `pet-commercial-leads-page.tsx`, `pet-insights-page.tsx`.
 
-- Mesmo padrão das fases 3 e 4 (ver `clients-page.tsx`, `pet-services-page.tsx`): contagem no título (`PageTitle count`), `DataTable` densa, filtros como `.ui-filter-chip`, `Pagination` com `pageSize`, editor que abre sob demanda com `FormSection` (`src/shared/ui/form-section.tsx`), valores com `formatCurrencyForLocale` e `.ui-mono`, datas com `formatDateForLocale`. Liga/desliga em linha: `.ui-switch` (`<button role="switch" aria-checked>`).
+- Mesmo padrão das fases 3 a 5 (ver `clients-page.tsx`, `pet-services-page.tsx`, `modules/finance/finance-cash-page.tsx`): contagem no título (`PageTitle count`), `DataTable` densa, filtros com `FilterChip` (`src/shared/ui/filter-chip.tsx`), `Pagination` com `pageSize`, editor que abre sob demanda com `FormSection` (`src/shared/ui/form-section.tsx`), valores com `formatCurrencyForLocale` e `.ui-mono`, datas com `formatDateForLocale`. Liga/desliga em linha: `.ui-switch` (`<button role="switch" aria-checked>`).
+- Pendência das fases 3 e 4 que entra aqui: `modules/crm/contacts-page.tsx`, `contact-form-page.tsx`, `tasks-page.tsx`, `notes-page.tsx` e `activity-page.tsx` ainda têm textos fixos fora do i18n; tarefas e notas ainda têm o formulário sempre aberto (ver GAPS).
 - Remover cartões de métrica que contam só a página atual ou mostram números fixos; registrar no GAPS o que o design pede e a API não dá.
+- **Confira se a tela usa dados reais**: procure constantes de dados no início do arquivo (o Financeiro mostrava tudo fictício) e compare os valores de filtros com os enums do backend (os de `/finance` nunca filtravam nada).
 - Valores em dinheiro nunca com `'pt-BR'` fixo: use o `locale` de `useAppI18n()`.
 - Textos novos nos catálogos `screens-pt-br.ts` / `screens-en-us.ts`; testes rodam em en-US.
 

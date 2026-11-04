@@ -611,15 +611,12 @@ const ptBRMessages = {
   },
   petInventory: {
     noPermission: 'Você não tem permissão para visualizar o estoque.',
-    eyebrow: 'Operação Pet',
     title: 'Estoque e reposição',
     description:
       'Mantenha banho, tosa e varejo visíveis com alertas abaixo do mínimo, contexto de reposição e histórico de movimentação confiável.',
     openProducts: 'Abrir produtos',
     recordMovement: 'Registrar movimento',
     watchTitle: 'Radar de saúde do estoque',
-    watchDescription:
-      'Mantenha os riscos mais importantes de reposição visíveis antes de virar atraso de atendimento, perda de add-on ou compra emergencial.',
     movementTypes: {
       all: 'Todos os tipos',
       inbound: 'Entrada',
@@ -645,16 +642,8 @@ const ptBRMessages = {
     },
     summary: {
       trackedLabel: 'Produtos monitorados',
-      trackedDetail: 'Catálogo visível para consumo de banho e tosa, recepção e apoio ao varejo.',
       belowMinimumLabel: 'Abaixo do mínimo',
-      belowMinimumDetail: 'Esses itens já podem pressionar o próximo ciclo de banho e tosa ou a venda no balcão.',
-      belowMinimumSafe: 'Nenhum item está abaixo da quantidade mínima agora.',
-      reorderLabel: 'Reposição imediata',
-      reorderDetail: 'Esses produtos estão no ponto de reposição e não devem esperar a próxima contagem.',
-      reorderSafe: 'Nenhum item está no ponto de reposição neste momento.',
-      outboundLabel: 'Saídas visíveis',
-      filteredDetail: 'A contagem reflete o recorte operacional filtrado.',
-      visibleQuantityDetail: 'Quantidade movimentada nesta página: {value} unidade(s).'
+      reorderLabel: 'Reposição imediata'
     },
     lookup: {
       productsLabel: 'Produtos',
@@ -671,22 +660,19 @@ const ptBRMessages = {
       created: 'Movimentação de estoque registrada com sucesso.',
       updated: 'Movimentação de estoque atualizada com sucesso.',
       removed: 'Movimentação de estoque removida com sucesso.',
-      healthy: 'Nenhum produto está abaixo do ponto de reposição agora. O catálogo compartilhado parece saudável neste momento.',
-      criticalWarning: '{count} produto(s) já caíram abaixo da quantidade mínima e devem ser repostos antes do próximo dia forte.'
+      healthy: 'Nenhum produto está abaixo do ponto de reposição agora. O catálogo compartilhado parece saudável neste momento.'
     },
     filters: {
-      title: 'Filtros de estoque',
-      description: 'Recorte o histórico por produto ou direção sem perder o contexto operacional de cada ajuste.',
       searchLabel: 'Busca',
       searchPlaceholder: 'Motivo, nota, origem ou produto',
       productLabel: 'Produto',
       directionLabel: 'Direção',
-      apply: 'Aplicar filtros',
       clear: 'Limpar filtros',
       allProducts: 'Todos os produtos',
       selectProduct: 'Selecione um produto'
     },
     form: {
+      sectionMovement: 'Movimentação',
       createTitle: 'Registrar movimentação de estoque',
       editTitle: 'Ajustar movimentação de estoque',
       description: 'Registre o motivo operacional de cada variação para que estoque, recepção e cobrança contem a mesma história.',
@@ -695,8 +681,6 @@ const ptBRMessages = {
       quantityLabel: 'Quantidade',
       noteLabel: 'Nota operacional',
       notePlaceholder: 'Shampoo usado no banho, venda no varejo, ajuste manual de contagem...',
-      reminderTitle: 'Lembrete do operador',
-      reminderDescription: 'Deixe o motivo explicito para alinhar recepção, execução do banho, estoque e cobrança durante a demo.',
       saving: 'Salvando movimentação...',
       update: 'Atualizar movimentação',
       create: 'Criar movimentação',
@@ -704,7 +688,6 @@ const ptBRMessages = {
     },
     ledger: {
       title: 'Razão de estoque',
-      description: 'Revise o que mudou, por que mudou e qual foi o efeito no saldo visível do produto.',
       loadingTitle: 'Carregando operações de estoque',
       loadingDescription: 'Preparando o histórico mais recente de movimentação deste workspace.',
       emptyTitle: 'Nenhuma movimentação registrada',
@@ -713,18 +696,12 @@ const ptBRMessages = {
     },
     columns: {
       recorded: 'Registrado em',
-      updated: 'Atualizado em',
       product: 'Produto',
       movement: 'Movimento',
       source: 'Origem',
       balanceImpact: 'Impacto no saldo',
       actions: 'Ações',
-      stockLine: 'Estoque {quantity} {unit} · Repor em {reorder}',
-      returnedLine: 'O estoque voltou para a prateleira ou foi reabastecido.',
-      outboundLine: 'O estoque saiu da prateleira por venda, uso ou ajuste.',
       noOperationalNote: 'Nenhuma nota operacional registrada.',
-      reasonDetail: 'Mantenha o motivo explicito para que estoque, cobrança e operação leiam a mesma história.',
-      balanceChanged: 'O saldo visível mudou {quantity} unidade(s).',
       unit: 'unidade',
       units: 'unidades'
     },
@@ -806,94 +783,6 @@ const ptBRMessages = {
     dialog: {
       title: 'Remover profissional?',
       description: '"{name}" será removido deste workspace.'
-    }
-  },
-  petFinance: {
-    eyebrow: 'Gestão Financeira',
-    title: 'Caixa e Financeiro',
-    description: 'Acompanhe entradas, saídas, pagamentos e o fluxo de caixa do seu petshop.',
-    noPermission: 'Você não possui permissão para acessar o módulo financeiro.',
-    loading: 'Carregando dados financeiros...',
-    actions: {
-      newMovement: 'Nova movimentação',
-      newInvoice: 'Nova fatura',
-      viewReport: 'Ver relatório',
-      exportData: 'Exportar'
-    },
-    stats: {
-      todayBalance: 'Saldo do dia',
-      todayIncome: 'Entradas hoje',
-      todayExpenses: 'Saídas hoje',
-      pendingPayments: 'Pagamentos pendentes',
-      monthRevenue: 'Receita do mês',
-      openInvoices: 'Faturas em aberto'
-    },
-    cashMovements: {
-      title: 'Movimentações de caixa',
-      description: 'Histórico de entradas e saídas do caixa.',
-      empty: 'Nenhuma movimentação registrada hoje.',
-      emptyDescription: 'Registre a primeira entrada ou saída para iniciar o controle.',
-      inbound: 'Entrada',
-      outbound: 'Saída',
-      categories: {
-        sale: 'Venda',
-        service: 'Serviço',
-        refund: 'Reembolso',
-        expense: 'Despesa',
-        withdrawal: 'Retirada',
-        deposit: 'Deposito',
-        adjustment: 'Ajuste',
-        other: 'Outros'
-      }
-    },
-    invoices: {
-      title: 'Faturas recentes',
-      description: 'Acompanhe o status das faturas emitidas.',
-      empty: 'Nenhuma fatura encontrada.',
-      status: {
-        draft: 'Rascunho',
-        issued: 'Emitida',
-        paid: 'Paga',
-        partiallyPaid: 'Parcialmente paga',
-        overdue: 'Vencida',
-        canceled: 'Cancelada'
-      }
-    },
-    payments: {
-      title: 'Pagamentos recentes',
-      description: 'Últimos pagamentos recebidos.',
-      empty: 'Nenhum pagamento registrado.',
-      methods: {
-        cash: 'Dinheiro',
-        credit: 'Crédito',
-        debit: 'Débito',
-        pix: 'PIX',
-        transfer: 'Transferência',
-        check: 'Cheque',
-        other: 'Outros'
-      }
-    },
-    form: {
-      direction: 'Direção',
-      category: 'Categoria',
-      amount: 'Valor',
-      description: 'Descrição',
-      descriptionPlaceholder: 'Descreva a movimentação...',
-      date: 'Data',
-      save: 'Salvar',
-      cancel: 'Cancelar'
-    },
-    filters: {
-      title: 'Filtros',
-      period: 'Período',
-      direction: 'Direção',
-      category: 'Categoria',
-      today: 'Hoje',
-      thisWeek: 'Esta semana',
-      thisMonth: 'Este mês',
-      lastMonth: 'Mês passado',
-      allDirections: 'Todas as direções',
-      allCategories: 'Todas as categorias'
     }
   },
   petTimeline: {
@@ -1077,12 +966,7 @@ const ptBRMessages = {
     title: 'Cobrança e próximo ciclo',
     description:
       'Mostre como os serviços viram faturas, pagamentos e uma previsão clara do próximo ciclo mensal.',
-    filtersTitle: 'Filtros de cobrança',
-    filtersDescription:
-      'Refine a lista financeira por cliente ou ciclo sem perder a história comercial por trás de cada documento.',
-    nextCycleTitle: 'Previsão de cobrança do próximo ciclo',
-    pipelineTitle: 'Pipeline de cobrança',
-    pipelineDescription: 'Revise status, saldo em aberto e o registro financeiro por trás de cada cobrança.'
+    nextCycleTitle: 'Previsão de cobrança do próximo ciclo'
   },
   workspaceSettings: {
     eyebrow: 'Configurações',

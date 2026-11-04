@@ -1,42 +1,23 @@
 'use client';
 
-import Link from 'next/link';
 import { useCallback, useEffect, useState } from 'react';
-import {
-  sharedCompactTextClass,
-  sharedFilterToolbarClass,
-  sharedPageStackClass
-} from '@/shared/components/public-visual-system';
+import { sharedPageStackClass } from '@/shared/components/public-visual-system';
 import { StatusBadge } from '@/shared/dashboard/status-badge';
-import { ApiClientError } from '@/shared/lib/http';
+import { useAppI18n, useAppMessages } from '@/shared/i18n/app-i18n-provider';
+import { formatCurrencyForLocale, formatDateForLocale } from '@/shared/i18n/formatters';
+import { resolveApiErrorMessage } from '@/shared/lib/api-error-message';
 import { resolvePageItems, resolveTotalItems } from '@/shared/lib/pagination';
 import { financeService } from '@/shared/services/finance-service';
 import { notificationService } from '@/shared/services/notification-service';
 import { PageResponse } from '@/shared/types/common';
 import { FinanceInvoice } from '@/shared/types/finance';
 import { DataTable, DataTableColumn } from '@/shared/ui/data-table';
-import { FormSelect } from '@/shared/ui/form-select';
-import { PageSection } from '@/shared/ui/page-section';
+import { FilterChip } from '@/shared/ui/filter-chip';
 import { PageTitle } from '@/shared/ui/page-title';
 import { Pagination } from '@/shared/ui/pagination';
-import { resolveApiErrorMessage } from '@/shared/lib/api-error-message';
 
-const pageSize = 20;
-
-const statusOptions = [
-  { value: '', label: 'All statuses' },
-  { value: 'DRAFT', label: 'Draft' },
-  { value: 'ISSUED', label: 'Issued' },
-  { value: 'PAID', label: 'Paid' },
-  { value: 'CANCELED', label: 'Canceled' }
-];
-
-const sourceModuleOptions = [
-  { value: '', label: 'All modules' },
-  { value: 'PET', label: 'Gestão Pet' },
-  { value: 'CRM', label: 'CRM' },
-  { value: 'MANUAL', label: 'Manual' }
-];
+const pageSize = 14;
+const OVERDUE_NOTIFICATION_KEY = 'finance-overdue-invoices';
 
 const initialPage: PageResponse<FinanceInvoice> = {
   items: [],
@@ -46,88 +27,15 @@ const initialPage: PageResponse<FinanceInvoice> = {
   size: pageSize
 };
 
-function formatCurrency(value: number, currency = 'BRL') {
-  try {
-    return new Intl.NumberFormat('pt-BR', { style: 'currency', currency }).format(value);
-  } catch {
-    return `${currency} ${value.toFixed(2)}`;
-  }
+// The notification summary carries the overdue total as the leading number of its title.
+function parseLeadingCount(title: string) {
+  const match = title.match(/^\d+/);
+  return match ? parseInt(match[0], 10) : 0;
 }
-
-function formatDate(value?: string | null, fallback = '—') {
-  if (!value) return fallback;
-  return new Date(value).toLocaleDateString('pt-BR');
-}
-
-const columns: DataTableColumn<FinanceInvoice>[] = [
-  {
-    key: 'id',
-    header: 'ID',
-    render: (row) => (
-      <span className={`${sharedCompactTextClass} font-mono text-xs`} title={row.id}>
-        {row.id.slice(0, 8)}…
-      </span>
-    )
-  },
-  {
-    key: 'sourceModule',
-    header: 'Módulo',
-    render: (row) => <span className={sharedCompactTextClass}>{row.sourceModule}</span>
-  },
-  {
-    key: 'counterpartyName',
-    header: 'Contraparte',
-    render: (row) => <span className={sharedCompactTextClass}>{row.counterpartyName ?? '—'}</span>
-  },
-  {
-    key: 'status',
-    header: 'Status',
-    render: (row) => <StatusBadge status={row.status} />
-  },
-  {
-    key: 'totalAmount',
-    header: 'Total',
-    render: (row) => (
-      <span className="text-sm font-medium text-foreground">
-        {formatCurrency(row.totalAmount, row.currency)}
-      </span>
-    )
-  },
-  {
-    key: 'paidAmount',
-    header: 'Pago',
-    render: (row) => (
-      <span className={sharedCompactTextClass}>{formatCurrency(row.paidAmount, row.currency)}</span>
-    )
-  },
-  {
-    key: 'outstandingAmount',
-    header: 'Pendente',
-    render: (row) => (
-      <span
-        className={
-          row.outstandingAmount > 0
-            ? 'text-sm font-medium text-warning'
-            : sharedCompactTextClass
-        }
-      >
-        {formatCurrency(row.outstandingAmount, row.currency)}
-      </span>
-    )
-  },
-  {
-    key: 'issuedAt',
-    header: 'Emissão',
-    render: (row) => <span className={sharedCompactTextClass}>{formatDate(row.issuedAt)}</span>
-  },
-  {
-    key: 'dueAt',
-    header: 'Vencimento',
-    render: (row) => <span className={sharedCompactTextClass}>{formatDate(row.dueAt)}</span>
-  }
-];
 
 export function FinanceInvoicesPage() {
+  const copy = useAppMessages().screens.financeInvoices;
+  const { locale } = useAppI18n();
   const [pageData, setPageData] = useState<PageResponse<FinanceInvoice>>(initialPage);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -147,12 +55,12 @@ export function FinanceInvoicesPage() {
         });
         setPageData(data);
       } catch (err) {
-        setError(resolveApiErrorMessage(err, 'Erro ao carregar faturas.'));
+        setError(resolveApiErrorMessage(err, copy.loadError));
       } finally {
         setLoading(false);
       }
     },
-    []
+    [copy]
   );
 
   useEffect(() => {
@@ -161,89 +69,140 @@ export function FinanceInvoicesPage() {
 
   useEffect(() => {
     notificationService.getSummary().then((summary) => {
-      const overdueItem = summary.items.find((i) => i.key === 'finance-overdue-invoices');
-      if (overdueItem) {
-        const match = overdueItem.title.match(/^\d+/);
-        setOverdueCount(match ? parseInt(match[0], 10) : 0);
-      }
-    }).catch(() => { /* non-critical */ });
+      const overdueItem = summary.items.find((item) => item.key === OVERDUE_NOTIFICATION_KEY);
+      setOverdueCount(overdueItem ? parseLeadingCount(overdueItem.title) : 0);
+    }).catch(() => {
+      // Non-critical: the overdue notice is only a shortcut to the issued filter.
+    });
   }, []);
 
   const rows = resolvePageItems(pageData);
   const totalItems = resolveTotalItems(pageData);
+  const sourceLabels: Record<string, string> = {
+    PET: copy.sourcePet,
+    CRM: copy.sourceCrm,
+    MANUAL: copy.sourceManual
+  };
+
+  const columns: DataTableColumn<FinanceInvoice>[] = [
+    {
+      key: 'counterpartyName',
+      header: copy.columnCounterparty,
+      render: (row) => (
+        <div>
+          <p className="font-medium text-[var(--ink)]">{row.counterpartyName ?? '-'}</p>
+          <p className="ui-mono text-xs text-[var(--muted)]" title={row.id}>
+            {sourceLabels[row.sourceModule] ?? row.sourceModule} · {row.id.slice(0, 8)}…
+          </p>
+        </div>
+      )
+    },
+    {
+      key: 'status',
+      header: copy.status,
+      render: (row) => <StatusBadge status={row.status} />
+    },
+    {
+      key: 'totalAmount',
+      header: copy.columnTotal,
+      className: 'text-right',
+      render: (row) => (
+        <span className="ui-mono whitespace-nowrap font-medium text-[var(--ink)]">
+          {formatCurrencyForLocale(locale, row.totalAmount, row.currency)}
+        </span>
+      )
+    },
+    {
+      key: 'outstandingAmount',
+      header: copy.columnOpen,
+      className: 'text-right',
+      render: (row) => (
+        <span className={`ui-mono whitespace-nowrap ${row.outstandingAmount > 0 ? 'text-[var(--warn)]' : 'text-[var(--muted)]'}`}>
+          {formatCurrencyForLocale(locale, row.outstandingAmount, row.currency)}
+        </span>
+      )
+    },
+    {
+      key: 'issuedAt',
+      header: copy.columnIssued,
+      render: (row) => (
+        <span className="ui-mono whitespace-nowrap text-[var(--ink-2)]">{row.issuedAt ? formatDateForLocale(locale, row.issuedAt) : '-'}</span>
+      )
+    },
+    {
+      key: 'dueAt',
+      header: copy.columnDue,
+      render: (row) => (
+        <span className="ui-mono whitespace-nowrap text-[var(--ink-2)]">{row.dueAt ? formatDateForLocale(locale, row.dueAt) : '-'}</span>
+      )
+    }
+  ];
 
   return (
     <div className={sharedPageStackClass}>
       <PageTitle
-        title="Faturas"
-        eyebrow="Finance"
-        description="Visão consolidada de todas as faturas geradas pela plataforma."
+        title={copy.title}
+        count={loading ? undefined : totalItems}
+        description={copy.description}
       />
 
-      {overdueCount > 0 && (
-        <div className="flex items-start gap-3 rounded-2xl border border-destructive/30 bg-destructive/5 px-5 py-4">
-          <span className="mt-0.5 h-2 w-2 flex-shrink-0 rounded-full bg-destructive" />
+      {overdueCount > 0 ? (
+        <div className="ui-notice-warning flex flex-wrap items-center justify-between gap-3">
           <div>
-            <p className="text-sm font-semibold text-destructive">
-              {overdueCount} fatura{overdueCount === 1 ? '' : 's'} em atraso
-            </p>
-            <p className="mt-0.5 text-xs text-destructive/80">
-              Faturas emitidas com vencimento ultrapassado precisam de acompanhamento de pagamento.{' '}
-              <Link
-                href="?status=ISSUED"
-                className="font-semibold underline underline-offset-2"
-                onClick={() => setStatusFilter('ISSUED')}
-              >
-                Ver faturas emitidas
-              </Link>
-            </p>
+            <p className="font-medium">{copy.overdueTitle.replace('{count}', String(overdueCount))}</p>
+            <p className="text-xs">{copy.overdueDescription}</p>
           </div>
+          {statusFilter !== 'ISSUED' ? (
+            <button type="button" onClick={() => setStatusFilter('ISSUED')} className="ui-secondary-button">
+              {copy.overdueAction}
+            </button>
+          ) : null}
         </div>
-      )}
+      ) : null}
 
-      <PageSection title="Filtros">
-        <div className={`${sharedFilterToolbarClass} sm:grid-cols-2`}>
-          <FormSelect
-            label="Status"
-            value={statusFilter}
-            onChange={setStatusFilter}
-            options={statusOptions}
-          />
-          <FormSelect
-            label="Módulo de origem"
-            value={sourceModuleFilter}
-            onChange={setSourceModuleFilter}
-            options={sourceModuleOptions}
-          />
-        </div>
-      </PageSection>
+      <div className="flex flex-wrap items-center gap-2">
+        <FilterChip
+          label={copy.status}
+          value={statusFilter}
+          onChange={setStatusFilter}
+          options={[
+            { value: '', label: copy.allStatuses },
+            { value: 'DRAFT', label: copy.statusDraft },
+            { value: 'ISSUED', label: copy.statusIssued },
+            { value: 'PAID', label: copy.statusPaid },
+            { value: 'CANCELED', label: copy.statusCanceled }
+          ]}
+        />
+        <FilterChip
+          label={copy.source}
+          value={sourceModuleFilter}
+          onChange={setSourceModuleFilter}
+          options={[
+            { value: '', label: copy.allSources },
+            ...Object.entries(sourceLabels).map(([value, label]) => ({ value, label }))
+          ]}
+        />
+      </div>
 
-      <PageSection
-        title="Faturas"
-        description={
-          loading
-            ? 'Carregando…'
-            : `${totalItems} fatura${totalItems !== 1 ? 's' : ''} encontrada${totalItems !== 1 ? 's' : ''}`
-        }
-      >
-        {error && (
-          <p className="mb-4 rounded-xl border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">
-            {error}
-          </p>
-        )}
+      {error ? <div className="ui-notice-error">{error}</div> : null}
+
+      <div className="space-y-2">
         <DataTable
           columns={columns}
           rows={rows}
           loading={loading}
           getRowKey={(row) => row.id}
+          loadingTitle={copy.loadingTitle}
+          emptyState={{ title: copy.emptyTitle, description: copy.emptyDescription }}
         />
         <Pagination
           page={pageData.page}
           totalPages={pageData.totalPages}
           totalElements={totalItems}
-          onPageChange={(p) => void load(p, statusFilter, sourceModuleFilter)}
+          pageSize={pageSize}
+          onPageChange={(page) => void load(page, statusFilter, sourceModuleFilter)}
         />
-      </PageSection>
+      </div>
     </div>
   );
 }
