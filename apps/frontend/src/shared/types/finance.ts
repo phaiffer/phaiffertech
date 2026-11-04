@@ -47,7 +47,7 @@ export type FinancePayment = {
   method: string;
   amount: number;
   currency: string;
-  paidAt?: string | null;
+  receivedAt?: string | null;
   referenceCode?: string | null;
   notes?: string | null;
   createdAt: string;

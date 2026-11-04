@@ -1,33 +1,26 @@
 'use client';
 
 import { FormEvent, useCallback, useEffect, useState } from 'react';
+import { Search, X } from 'lucide-react';
 import { PermissionGuard } from '@/shared/auth/PermissionGuard';
-import {
-  sharedFilterToolbarClass,
-  sharedFormActionsClass,
-  sharedInlineActionsClass,
-  sharedPageStackClass
-} from '@/shared/components/public-visual-system';
-import { MetricGrid } from '@/shared/dashboard/metric-grid';
-import { ApiClientError } from '@/shared/lib/http';
+import { sharedFormActionsClass, sharedPageStackClass } from '@/shared/components/public-visual-system';
+import { useAppI18n, useAppMessages } from '@/shared/i18n/app-i18n-provider';
+import { formatCurrencyForLocale } from '@/shared/i18n/formatters';
+import type { AppMessages } from '@/shared/i18n/messages/pt-br';
+import { resolveApiErrorMessage } from '@/shared/lib/api-error-message';
 import { resolvePageItems, resolveTotalItems } from '@/shared/lib/pagination';
 import { petService } from '@/shared/services/pet-service';
 import { PageResponse } from '@/shared/types/common';
-import { DashboardSummaryCard } from '@/shared/types/dashboard';
 import { PetProduct } from '@/shared/types/pet';
 import { ConfirmDialog } from '@/shared/ui/confirm-dialog';
 import { DataTable, DataTableColumn } from '@/shared/ui/data-table';
 import { FormInput } from '@/shared/ui/form-input';
+import { FormSection } from '@/shared/ui/form-section';
 import { FormSelect } from '@/shared/ui/form-select';
-import { PageSection } from '@/shared/ui/page-section';
 import { PageTitle } from '@/shared/ui/page-title';
 import { Pagination } from '@/shared/ui/pagination';
-import { SearchBar } from '@/shared/ui/search-bar';
-import { useAppMessages } from '@/shared/i18n/app-i18n-provider';
-import type { AppMessages } from '@/shared/i18n/messages/pt-br';
-import { resolveApiErrorMessage } from '@/shared/lib/api-error-message';
 
-const pageSize = 10;
+const pageSize = 14;
 
 const initialPage: PageResponse<PetProduct> = {
   items: [],
@@ -44,8 +37,13 @@ function buildCategoryOptions(copy: AppMessages['screens']['petProducts']) {
   ];
 }
 
+function isAtReorderPoint(item: PetProduct) {
+  return item.currentQuantity <= item.reorderPoint;
+}
+
 export function PetProductsPage() {
   const copy = useAppMessages().screens.petProducts;
+  const { locale } = useAppI18n();
   const [pageData, setPageData] = useState<PageResponse<PetProduct>>(initialPage);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -54,6 +52,7 @@ export function PetProductsPage() {
   const [searchInput, setSearchInput] = useState('');
   const [search, setSearch] = useState('');
 
+  const [isEditorOpen, setIsEditorOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [name, setName] = useState('');
   const [sku, setSku] = useState('');
@@ -96,13 +95,23 @@ export function PetProductsPage() {
     setReorderPoint('5');
   }
 
-  function scrollToProductForm() {
-    document.getElementById('pet-product-form-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  function closeEditor() {
+    resetForm();
+    setIsEditorOpen(false);
+  }
+
+  function scrollToEditor() {
+    window.requestAnimationFrame(() => {
+      document.getElementById('pet-product-editor')?.scrollIntoView?.({ behavior: 'smooth', block: 'start' });
+    });
   }
 
   function beginCreateProduct() {
     resetForm();
-    scrollToProductForm();
+    setError(null);
+    setSuccess(null);
+    setIsEditorOpen(true);
+    scrollToEditor();
   }
 
   function beginEdit(item: PetProduct) {
@@ -117,7 +126,8 @@ export function PetProductsPage() {
     setReorderPoint(String(item.reorderPoint));
     setError(null);
     setSuccess(null);
-    scrollToProductForm();
+    setIsEditorOpen(true);
+    scrollToEditor();
   }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -162,7 +172,7 @@ export function PetProductsPage() {
         await petService.createProduct(payload);
         setSuccess(copy.created);
       }
-      resetForm();
+      closeEditor();
       await load(pageData.page, search);
     } catch (err) {
       setError(resolveApiErrorMessage(err, copy.saveError));
@@ -188,39 +198,7 @@ export function PetProductsPage() {
 
   const rows = resolvePageItems(pageData);
   const totalItems = resolveTotalItems(pageData);
-  const activeFilterCount = [search].filter(Boolean).length;
-  const lowStockCount = rows.filter((item) => item.currentQuantity <= item.reorderPoint).length;
-  const totalVisibleUnits = rows.reduce((total, item) => total + item.currentQuantity, 0);
-  const summaryCards: DashboardSummaryCard[] = [
-    {
-      key: 'products-in-scope',
-      label: copy.metricProducts,
-      value: totalItems,
-      trend: activeFilterCount > 0
-        ? copy.metricProductsFiltered
-        : copy.metricProductsAll
-    },
-    {
-      key: 'visible-stock-units',
-      label: copy.metricStock,
-      value: totalVisibleUnits,
-      trend: copy.metricStockDetail
-    },
-    {
-      key: 'low-stock-products',
-      label: copy.metricLowStock,
-      value: lowStockCount,
-      trend: copy.metricLowStockDetail
-    },
-    {
-      key: 'product-filters',
-      label: copy.metricFilters,
-      value: activeFilterCount,
-      trend: activeFilterCount > 0
-        ? copy.metricFiltersActive
-        : copy.metricFiltersNone
-    }
-  ];
+  const hasActiveFilters = Boolean(search);
 
   const columns: DataTableColumn<PetProduct>[] = [
     {
@@ -228,55 +206,65 @@ export function PetProductsPage() {
       header: copy.columnProduct,
       render: (item) => (
         <div>
-          <p className="font-medium text-slate-900">{item.name}</p>
-          <p className="mt-1 text-sm text-[color:var(--app-shell-muted)]">SKU {item.sku}</p>
+          <p className="font-medium text-[var(--ink)]">{item.name}</p>
+          <p className="ui-mono text-xs text-[var(--muted)]">SKU {item.sku}</p>
         </div>
       )
     },
     {
       key: 'category',
       header: copy.category,
-      render: (item) => item.category === 'PET_VETERINARY_SUPPLY' ? copy.categoryVeterinary : copy.categoryRetail
+      render: (item) => (
+        <span className="text-sm text-[var(--ink-2)]">
+          {item.category === 'PET_VETERINARY_SUPPLY' ? copy.categoryVeterinary : copy.categoryRetail}
+        </span>
+      )
     },
     {
       key: 'price',
       header: copy.price,
-      render: (item) => item.price.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
+      className: 'text-right',
+      render: (item) => <span className="ui-mono whitespace-nowrap">{formatCurrencyForLocale(locale, item.price)}</span>
     },
     {
       key: 'inventory',
       header: copy.columnInventory,
       render: (item) => (
-        <div>
-          <p className="font-medium text-slate-900">
+        <div className="whitespace-nowrap">
+          <p className="ui-mono text-[var(--ink)]">
             {item.currentQuantity} {item.unitOfMeasure}
           </p>
-          <p className="mt-1 text-sm text-[color:var(--app-shell-muted)]">
+          <p className="text-xs text-[var(--muted)]">
             {copy.minimumShort} {item.minimumQuantity} {copy.reorderAt} {item.reorderPoint}
           </p>
         </div>
       )
     },
     {
+      key: 'status',
+      header: copy.columnStatus,
+      render: (item) => {
+        const needsRestock = isAtReorderPoint(item);
+        return (
+          <span className="inline-flex items-center gap-1.5 whitespace-nowrap text-sm text-[var(--ink-2)]">
+            <span className="ui-status-dot" data-status={needsRestock ? 'warn' : 'done'} aria-hidden="true" />
+            {needsRestock ? copy.statusRestock : copy.statusOk}
+          </span>
+        );
+      }
+    },
+    {
       key: 'actions',
       header: copy.actions,
       render: (item) => (
-        <div className={sharedInlineActionsClass}>
+        <div className="flex items-center gap-2 whitespace-nowrap">
           <PermissionGuard permission="pet.product.update">
-            <button
-              type="button"
-              onClick={() => beginEdit(item)}
-              className="ui-inline-button"
-            >
+            <button type="button" onClick={() => beginEdit(item)} className="ui-inline-button">
               {copy.edit}
             </button>
           </PermissionGuard>
           <PermissionGuard permission="pet.product.delete">
-            <button
-              type="button"
-              onClick={() => setDeleteCandidate(item)}
-              className="ui-inline-danger-button"
-            >
+            <button type="button" onClick={() => setDeleteCandidate(item)} className="ui-inline-danger-button">
               {copy.delete}
             </button>
           </PermissionGuard>
@@ -292,8 +280,8 @@ export function PetProductsPage() {
     >
       <div className={sharedPageStackClass}>
         <PageTitle
-          eyebrow="Gestão Pet"
           title={copy.title}
+          count={loading ? undefined : totalItems}
           description={copy.description}
           actions={(
             <PermissionGuard permission="pet.product.create">
@@ -304,122 +292,116 @@ export function PetProductsPage() {
           )}
         />
 
-        <MetricGrid cards={summaryCards} columns="md:grid-cols-2 xl:grid-cols-4" />
-
-        <PageSection
-          tone="muted"
-          title={copy.filtersTitle}
-          description={copy.filtersDescription}
+        <form
+          role="search"
+          aria-label={copy.search}
+          onSubmit={(event) => {
+            event.preventDefault();
+            setSearch(searchInput.trim());
+          }}
+          className="flex flex-wrap items-center gap-2"
         >
-          <div className={sharedFilterToolbarClass}>
-            <div className="grid gap-3 xl:grid-cols-[minmax(0,1.45fr)] xl:items-end">
-              <SearchBar
-                label={copy.search}
-                value={searchInput}
-                onChange={setSearchInput}
-                placeholder={copy.searchPlaceholder}
-              />
-            </div>
-            <div className={sharedFormActionsClass}>
-              <button
-                type="button"
-                onClick={() => setSearch(searchInput)}
-                className="ui-primary-button"
-              >
-                {copy.search}
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setSearchInput('');
-                  setSearch('');
-                }}
-                className="ui-inline-button"
-              >
-                {copy.clear}
-              </button>
-              <p className="text-sm text-[color:var(--app-shell-muted)]">
-                {activeFilterCount > 0
-                  ? copy.filteredHint
-                  : copy.noFiltersHint}
-              </p>
-            </div>
-          </div>
-        </PageSection>
-
-        <PermissionGuard permission={editingId ? 'pet.product.update' : 'pet.product.create'}>
-          <div id="pet-product-form-section">
-            <PageSection
-              title={editingId ? copy.editProduct : copy.createProduct}
-              description={copy.formDescription}
+          <label className="ui-field-shell flex min-h-9 min-w-[16rem] flex-1 items-center gap-2 rounded-md border border-[color:var(--control)] px-3 md:max-w-md">
+            <Search className="h-3.5 w-3.5 shrink-0 text-[var(--muted)]" aria-hidden="true" />
+            <span className="sr-only">{copy.search}</span>
+            <input
+              type="search"
+              value={searchInput}
+              onChange={(event) => setSearchInput(event.target.value)}
+              placeholder={copy.searchPlaceholder}
+              className="min-w-0 flex-1 bg-transparent py-1.5 text-sm text-[var(--ink)] outline-none placeholder:text-[var(--muted)]"
+            />
+          </label>
+          <button type="submit" className="ui-secondary-button">{copy.search}</button>
+          {hasActiveFilters ? (
+            <button
+              type="button"
+              onClick={() => {
+                setSearchInput('');
+                setSearch('');
+              }}
+              className="inline-flex min-h-9 items-center gap-1 px-1 text-sm text-[var(--ink-2)] hover:text-[var(--ink)]"
             >
-              <form onSubmit={handleSubmit} className="space-y-5">
-                <div className="grid gap-4 xl:grid-cols-2 2xl:grid-cols-3">
-                  <FormInput label={copy.name} value={name} onChange={setName} required />
-                  <FormInput label="SKU" value={sku} onChange={setSku} required />
-                  <FormSelect label={copy.category} value={category} options={buildCategoryOptions(copy)} onChange={setCategory} />
-                  <FormInput label={copy.price} value={price} onChange={setPrice} type="number" required />
-                  <FormInput label={copy.currentQuantity} value={stockQuantity} onChange={setStockQuantity} type="number" required />
-                  <FormInput label={copy.unit} value={unitOfMeasure} onChange={setUnitOfMeasure} required />
-                  <FormInput label={copy.minimumQuantity} value={minimumQuantity} onChange={setMinimumQuantity} type="number" required />
-                  <FormInput label={copy.reorderPoint} value={reorderPoint} onChange={setReorderPoint} type="number" required />
-                </div>
-
-                <div className={sharedFormActionsClass}>
-                  <button
-                    type="submit"
-                    disabled={submitting}
-                    className="ui-primary-button"
-                  >
-                    {submitting ? copy.saving : editingId ? copy.updateProduct : copy.createProduct}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={resetForm}
-                    className="ui-secondary-button"
-                  >
-                    {editingId ? copy.cancelEdit : copy.resetForm}
-                  </button>
-                </div>
-              </form>
-            </PageSection>
-          </div>
-        </PermissionGuard>
+              <X className="h-3.5 w-3.5" aria-hidden="true" />
+              {copy.clear}
+            </button>
+          ) : null}
+        </form>
 
         {error ? <div className="ui-notice-error">{error}</div> : null}
         {success ? <div className="ui-notice-success">{success}</div> : null}
 
-        <PageSection
-          title={copy.listTitle}
-          description={copy.listDescription}
-          actions={<p className="text-sm text-[color:var(--app-shell-muted)]">{copy.total} {totalItems} {copy.productsCount}</p>}
-        >
-          <div className="space-y-5">
-            <DataTable
-              columns={columns}
-              rows={rows}
-              getRowKey={(row) => row.id}
-              loading={loading}
-              loadingTitle={copy.loadingTitle}
-              loadingDescription={copy.loadingDescription}
-              emptyState={{
-                title: copy.emptyTitle,
-                description: activeFilterCount > 0
-                  ? copy.emptyFiltered
-                  : copy.emptyDescription,
-                action: (
-                  <PermissionGuard permission="pet.product.create">
-                    <button type="button" onClick={beginCreateProduct} className="ui-primary-button">
-                      {copy.createFirst}
-                    </button>
-                  </PermissionGuard>
-                )
-              }}
-            />
+        {isEditorOpen ? (
+          <PermissionGuard permission={editingId ? 'pet.product.update' : 'pet.product.create'}>
+            <section
+              id="pet-product-editor"
+              aria-labelledby="pet-product-editor-title"
+              className="scroll-mt-4 rounded-md border border-[color:var(--line)] p-4"
+            >
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <h2 id="pet-product-editor-title" className="text-sm font-semibold text-[var(--ink)]">
+                    {editingId ? copy.editProduct : copy.addProduct}
+                  </h2>
+                  <p className="text-xs text-[var(--muted)]">{copy.formDescription}</p>
+                </div>
 
-            <Pagination page={pageData.page} totalPages={pageData.totalPages} totalElements={totalItems} onPageChange={(page) => void load(page, search)} />
-          </div>
-        </PageSection>
+                <FormSection title={copy.sectionProduct}>
+                  <FormInput label={copy.name} value={name} onChange={setName} required />
+                  <FormInput label="SKU" value={sku} onChange={setSku} required />
+                  <FormSelect label={copy.category} value={category} options={buildCategoryOptions(copy)} onChange={setCategory} />
+                  <FormInput label={copy.price} value={price} onChange={setPrice} type="number" step="0.01" min="0" required />
+                </FormSection>
+
+                <FormSection title={copy.sectionStock}>
+                  <FormInput label={copy.currentQuantity} value={stockQuantity} onChange={setStockQuantity} type="number" min="0" required />
+                  <FormInput label={copy.unit} value={unitOfMeasure} onChange={setUnitOfMeasure} required />
+                  <FormInput label={copy.minimumQuantity} value={minimumQuantity} onChange={setMinimumQuantity} type="number" min="0" required />
+                  <FormInput label={copy.reorderPoint} value={reorderPoint} onChange={setReorderPoint} type="number" min="0" required />
+                </FormSection>
+
+                <div className={sharedFormActionsClass}>
+                  <button type="submit" disabled={submitting} className="ui-primary-button">
+                    {submitting ? copy.saving : editingId ? copy.updateProduct : copy.createProduct}
+                  </button>
+                  <button type="button" onClick={closeEditor} className="ui-secondary-button">
+                    {copy.cancelEdit}
+                  </button>
+                </div>
+              </form>
+            </section>
+          </PermissionGuard>
+        ) : null}
+
+        <div className="space-y-2">
+          <DataTable
+            columns={columns}
+            rows={rows}
+            getRowKey={(row) => row.id}
+            loading={loading}
+            loadingTitle={copy.loadingTitle}
+            loadingDescription={copy.loadingDescription}
+            emptyState={{
+              title: copy.emptyTitle,
+              description: hasActiveFilters ? copy.emptyFiltered : copy.emptyDescription,
+              action: (
+                <PermissionGuard permission="pet.product.create">
+                  <button type="button" onClick={beginCreateProduct} className="ui-primary-button">
+                    {copy.createFirst}
+                  </button>
+                </PermissionGuard>
+              )
+            }}
+          />
+
+          <Pagination
+            page={pageData.page}
+            totalPages={pageData.totalPages}
+            totalElements={totalItems}
+            pageSize={pageSize}
+            onPageChange={(page) => void load(page, search)}
+          />
+        </div>
 
         <ConfirmDialog
           open={deleteCandidate !== null}

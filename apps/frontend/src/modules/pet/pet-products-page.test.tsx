@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { PetProductsPage } from '@/modules/pet/pet-products-page';
 
@@ -64,9 +64,24 @@ describe('PetProductsPage', () => {
       expect(petServiceMock.listProducts).toHaveBeenCalledTimes(1);
     });
 
-    expect(screen.getByText('Low stock on this page')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Products' })).toBeInTheDocument();
     expect(screen.getByText('Recovery Food Pack')).toBeInTheDocument();
     expect(screen.getAllByText('Retail product').length).toBeGreaterThan(0);
     expect(screen.getByText('Min 2 • Restock at 4')).toBeInTheDocument();
+    expect(screen.getByText('Restock')).toBeInTheDocument();
+    expect(screen.getByText('1-1 of 1')).toBeInTheDocument();
+  });
+
+  it('opens the product editor only when adding or editing', async () => {
+    render(<PetProductsPage />);
+    await screen.findByText('Recovery Food Pack');
+
+    expect(screen.queryByRole('group', { name: 'Stock and restock' })).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Edit' }));
+
+    expect(screen.getByRole('heading', { name: 'Edit product' })).toBeInTheDocument();
+    expect(screen.getByRole('group', { name: 'Stock and restock' })).toBeInTheDocument();
+    expect(screen.getByLabelText('Restock point')).toHaveValue(4);
   });
 });
