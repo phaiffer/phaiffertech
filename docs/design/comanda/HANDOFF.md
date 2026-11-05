@@ -18,7 +18,7 @@ Os protótipos de referência estão nesta pasta (`*.dc.html`; a direção visua
 | 4 | Operação de serviço: Serviços, Planos, Follow-up, Equipe, Fechamento | Concluída | #104 |
 | 5 | Dinheiro e estoque: Estoque/Produtos, Financeiro, Caixa, Cobrança | Concluída | #105 |
 | 6 | Clínica, Comercial e Insights | Concluída | #106 |
-| 7 | Conta e admin: Login, Esqueci/Redefinir senha, Configurações, Usuários, Ambientes | **Em revisão** (branch `feat/redesign-fase-7`) | #107 |
+| 7 | Conta e admin: Login, Esqueci/Redefinir senha, Configurações, Usuários, Ambientes | Concluída | #107 |
 
 Depois da fase 7, o próximo trabalho combinado com o dono do projeto é o **Projeto de Aplicação da pós PUCPR** (ver "Depois do redesign", no fim).
 
@@ -78,9 +78,9 @@ Depois da fase 7, o próximo trabalho combinado com o dono do projeto é o **Pro
 - Dados de exemplo do seed do backend têm palavras sem acento ("Pastor Alemao", "Shampoo hipoalergenico"); é dado, não texto de tela.
 - O PDV **não registra vendas** (checkout simulado desde antes do redesign; a tela avisa). Não "consertar" dentro do redesign sem combinar com o dono: é funcionalidade nova.
 
-## Próximo passo concreto: merge da fase 7 e Projeto de Aplicação
+## Próximo passo concreto: Projeto de Aplicação
 
-As sete fases estão feitas; falta a revisão e o merge da fase 7. Depois, siga para "Depois do redesign", no fim deste arquivo. O bloco abaixo fica como referência do padrão usado nas fases 3 a 6.
+As sete fases do redesign estão concluídas. O trabalho segue em [docs/pucpr/CONTEXTO-PROJETO-APLICACAO.md](../../pucpr/CONTEXTO-PROJETO-APLICACAO.md). O bloco abaixo fica como referência do padrão usado nas fases 3 a 6.
 
 ## Referência: fase 6 (Clínica, Comercial e Insights)
 
