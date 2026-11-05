@@ -5,7 +5,6 @@ import { resolveApiErrorMessage } from '@/shared/lib/api-error-message';
 import { authService } from '@/shared/services/auth-service';
 import type { AuthenticatedUser } from '@/shared/types/auth';
 import { FormInput } from '@/shared/ui/form-input';
-import { PageSection } from '@/shared/ui/page-section';
 
 type AccountSecurityPanelProps = {
   user: AuthenticatedUser | null;
@@ -57,66 +56,54 @@ export function AccountSecurityPanel({ user }: AccountSecurityPanelProps) {
   }
 
   return (
-    <PageSection title={copy.title} description={copy.description}>
-      <div className="grid gap-5 xl:grid-cols-[minmax(0,0.82fr)_minmax(0,1.18fr)]">
-        <div className="space-y-3">
-          <div className="ui-surface-muted p-4 lg:p-5">
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--app-shell-muted)]">
-              {copy.activeAccount}
-            </p>
-            <div className="mt-3 space-y-3 text-sm text-[color:var(--app-shell-text)]">
-              <div>
-                <p className="font-semibold text-[color:var(--app-shell-heading)]">{user.fullName}</p>
-                <p className="text-[color:var(--app-shell-muted)]">{user.email}</p>
-              </div>
-              <div>
-                <p className="font-semibold text-[color:var(--app-shell-heading)]">{copy.tenant}</p>
-                <p className="text-[color:var(--app-shell-muted)]">{user.tenantName} ({user.tenantCode})</p>
-              </div>
-            </div>
-          </div>
+    <section className="space-y-3 border-t border-[color:var(--line)] pt-4">
+      <div>
+        <h2 className="text-sm font-semibold text-[var(--ink)]">{copy.title}</h2>
+        <p className="text-sm text-[var(--ink-2)]">{copy.description}</p>
+      </div>
 
-          <div className="ui-notice-warning">{copy.signOutWarning}</div>
+      <p className="text-sm text-[var(--ink-2)]">
+        <span className="font-medium text-[var(--ink)]">{user.fullName}</span> · {user.email} · {user.tenantName}
+      </p>
 
-          <div className="ui-notice-neutral">{copy.forgotPasswordHint}</div>
-        </div>
-
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {error ? (
-            <div className="ui-notice-error">{error}</div>
-          ) : null}
-
+      <form onSubmit={handleSubmit} className="max-w-3xl space-y-4">
+        <div className="grid gap-4 md:grid-cols-3">
           <FormInput
             label={copy.currentPassword}
             value={currentPassword}
             onChange={setCurrentPassword}
             type="password"
-            description={copy.currentPasswordDescription}
+            autoComplete="current-password"
             required
           />
-
           <FormInput
             label={copy.newPassword}
             value={newPassword}
             onChange={setNewPassword}
             type="password"
+            autoComplete="new-password"
             description={copy.newPasswordDescription}
             required
           />
-
           <FormInput
             label={copy.confirmNewPassword}
             value={confirmNewPassword}
             onChange={setConfirmNewPassword}
             type="password"
+            autoComplete="new-password"
             required
           />
+        </div>
 
-          <button type="submit" disabled={submitting} className="ui-primary-button">
-            {submitting ? copy.submitting : copy.submit}
-          </button>
-        </form>
-      </div>
-    </PageSection>
+        {error ? <div className="ui-notice-error">{error}</div> : null}
+
+        <button type="submit" disabled={submitting} className="ui-primary-button">
+          {submitting ? copy.submitting : copy.submit}
+        </button>
+      </form>
+
+      <p className="text-xs text-[var(--ink-2)]">{copy.signOutWarning}</p>
+      <p className="text-xs text-[var(--ink-2)]">{copy.forgotPasswordHint}</p>
+    </section>
   );
 }

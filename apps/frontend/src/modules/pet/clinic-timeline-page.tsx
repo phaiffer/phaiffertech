@@ -72,7 +72,10 @@ export function ClinicTimelinePage({ showSubnav = false }: { showSubnav?: boolea
   const timelineError = t.errors.timeline;
 
   useEffect(() => {
-    if (!canReadMedicalRecords) {
+    // The API only answers per pet or appointment; calling it without one is always a 400.
+    if (!canReadMedicalRecords || !filters.petId) {
+      setTimeline(null);
+      setError(null);
       setLoading(false);
       return;
     }
@@ -81,7 +84,7 @@ export function ClinicTimelinePage({ showSubnav = false }: { showSubnav?: boolea
     setLoading(true);
     setError(null);
 
-    petService.getClinicalTimeline({ petId: filters.petId || undefined, limit: TIMELINE_LIMIT })
+    petService.getClinicalTimeline({ petId: filters.petId, limit: TIMELINE_LIMIT })
       .then((result) => {
         if (active) {
           setTimeline(result);
@@ -151,7 +154,7 @@ export function ClinicTimelinePage({ showSubnav = false }: { showSubnav?: boolea
       <PageTitle
         title={t.timeline.title}
         description={t.timeline.description}
-        count={loading ? undefined : filteredEvents.length}
+        count={loading || !filters.petId ? undefined : filteredEvents.length}
       />
 
       <div className="flex flex-wrap items-center gap-2">
@@ -159,7 +162,7 @@ export function ClinicTimelinePage({ showSubnav = false }: { showSubnav?: boolea
           label={t.timeline.filterPet}
           value={filters.petId}
           onChange={(petId) => setFilters((current) => ({ ...current, petId }))}
-          options={[{ value: '', label: t.timeline.all }, ...pets.map((pet) => ({ value: pet.id, label: pet.name }))]}
+          options={[{ value: '', label: t.timeline.selectPet }, ...pets.map((pet) => ({ value: pet.id, label: pet.name }))]}
         />
         <FilterChip
           label={t.timeline.filterType}
@@ -188,7 +191,9 @@ export function ClinicTimelinePage({ showSubnav = false }: { showSubnav?: boolea
       {loading ? <div className="ui-notice-neutral">{t.loading}</div> : null}
       {error ? <div className="ui-notice-error">{error}</div> : null}
 
-      {!loading && !error && groups.length === 0 ? (
+      {!filters.petId ? <p className="text-sm text-[var(--muted)]">{t.timeline.selectPetHint}</p> : null}
+
+      {filters.petId && !loading && !error && groups.length === 0 ? (
         <div>
           <p className="text-sm font-medium text-[var(--ink)]">{t.timeline.empty}</p>
           <p className="text-sm text-[var(--muted)]">{t.timeline.emptyHint}</p>

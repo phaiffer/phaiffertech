@@ -69,8 +69,8 @@ describe('UsersPage authorization', () => {
     });
 
     expect(await screen.findByText('Operator One')).toBeInTheDocument();
-    expect(screen.getAllByText('Workspace One').length).toBeGreaterThan(0);
-    expect(screen.queryByRole('button', { name: 'Create user' })).not.toBeInTheDocument();
+    expect(screen.getByText('Operator')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'New user' })).not.toBeInTheDocument();
   });
 
   it('renders the guided empty state for a tenant without users', async () => {
@@ -86,7 +86,7 @@ describe('UsersPage authorization', () => {
     render(<UsersPage />);
 
     expect(await screen.findByText('No users in this workspace yet')).toBeInTheDocument();
-    expect(screen.getByText('Create the first user to start assigning roles and controlled access inside this workspace.')).toBeInTheDocument();
-    expect(screen.getByText(/The current list is scoped to/)).toBeInTheDocument();
+    expect(screen.getByText('Create the first user to give your team access.')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Users' })).toHaveAttribute('href', '/users');
   });
 });

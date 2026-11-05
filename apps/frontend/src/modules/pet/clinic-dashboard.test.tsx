@@ -6,6 +6,7 @@ const { petServiceMock } = vi.hoisted(() => ({
   petServiceMock: {
     listAppointments: vi.fn(),
     listVaccinations: vi.fn(),
+    listMedicalRecords: vi.fn(),
     getClinicalTimeline: vi.fn()
   }
 }));
@@ -53,7 +54,18 @@ describe('ClinicDashboard', () => {
       { id: 'vac-2', petId: 'pet-3', petName: 'Luna', vaccineName: 'Giardia', nextDueAt: daysFromNow(5) },
       { id: 'vac-3', petId: 'pet-4', petName: 'Thor', vaccineName: 'Gripe', nextDueAt: daysFromNow(60) }
     ], 450));
-    petServiceMock.getClinicalTimeline.mockResolvedValue({ totalEvents: 0, events: [] });
+    petServiceMock.listMedicalRecords.mockResolvedValue(page([
+      { id: 'rec-1', petId: 'pet-5', petName: 'Rex', professionalName: 'Dra. Carla', description: 'Otite leve', createdAt: daysFromNow(-1) }
+    ]));
+  });
+
+  it('builds recent records from the list, because the timeline requires a pet', async () => {
+    render(<ClinicDashboard />);
+
+    expect(await screen.findByRole('link', { name: 'Rex' })).toHaveAttribute('href', '/pet/pets/pet-5/timeline');
+    expect(screen.getByText('Otite leve')).toBeInTheDocument();
+    expect(petServiceMock.listMedicalRecords).toHaveBeenCalledWith(0, 8, '');
+    expect(petServiceMock.getClinicalTimeline).not.toHaveBeenCalled();
   });
 
   it('counts clinical visits and vaccinations and links only to routes that exist', async () => {
@@ -71,12 +83,12 @@ describe('ClinicDashboard', () => {
     expect(screen.getByText('Based on 3 of 450 recorded vaccinations.')).toBeInTheDocument();
   });
 
-  it('reports a timeline failure instead of showing it as empty', async () => {
-    petServiceMock.getClinicalTimeline.mockRejectedValue(new Error('boom'));
+  it('reports a records failure instead of showing it as empty', async () => {
+    petServiceMock.listMedicalRecords.mockRejectedValue(new Error('boom'));
 
     render(<ClinicDashboard />);
 
-    expect(await screen.findByText('Unable to load the clinical timeline.')).toBeInTheDocument();
+    expect(await screen.findByText('Unable to load recent records.')).toBeInTheDocument();
     expect(screen.queryByText('No clinical events recorded.')).not.toBeInTheDocument();
   });
 

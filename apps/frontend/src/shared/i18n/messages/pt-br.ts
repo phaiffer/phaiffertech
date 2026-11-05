@@ -99,7 +99,7 @@ const ptBRMessages = {
   login: {
     title: 'Acessar workspace',
     description: 'Entre com o workspace e suas credenciais para abrir a operação.',
-    tenantCodeLabel: 'Empresa ou workspace',
+    tenantCodeLabel: 'Código do ambiente',
     emailLabel: 'E-mail',
     passwordLabel: 'Senha',
     submitLabel: 'Entrar',
@@ -939,6 +939,8 @@ const ptBRMessages = {
       title: 'Linha do tempo clínica',
       description: 'Prontuários, vacinas e prescrições em ordem cronológica.',
       recentTitle: 'Registros recentes',
+      selectPet: 'Selecione',
+      selectPetHint: 'Selecione um pet para ver o histórico clínico dele.',
       viewAll: 'Ver linha do tempo',
       empty: 'Nenhum evento clínico registrado.',
       emptyHint: 'Registre prontuários, vacinas ou prescrições para construir o histórico clínico.',
@@ -968,6 +970,7 @@ const ptBRMessages = {
     errors: {
       appointments: 'Não foi possível carregar os atendimentos de hoje.',
       timeline: 'Não foi possível carregar a linha do tempo clínica.',
+      records: 'Não foi possível carregar os registros recentes.',
       vaccinations: 'Não foi possível carregar as vacinas pendentes.'
     }
   },

@@ -932,6 +932,8 @@ export const enUSMessages: AppMessages = {
       title: 'Clinical timeline',
       description: 'Medical records, vaccinations, and prescriptions in chronological order.',
       recentTitle: 'Recent records',
+      selectPet: 'Select',
+      selectPetHint: 'Select a pet to see its clinical history.',
       viewAll: 'View timeline',
       empty: 'No clinical events recorded.',
       emptyHint: 'Add medical records, vaccinations, or prescriptions to build the clinical history.',
@@ -961,6 +963,7 @@ export const enUSMessages: AppMessages = {
     errors: {
       appointments: 'Unable to load today\'s appointments.',
       timeline: 'Unable to load the clinical timeline.',
+      records: 'Unable to load recent records.',
       vaccinations: 'Unable to load pending vaccinations.'
     }
   },

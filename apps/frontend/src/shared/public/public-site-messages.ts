@@ -46,9 +46,9 @@ export const publicSiteMessages = {
       passwordResetNotice: 'Senha redefinida com sucesso. Entre novamente com a nova credencial.'
     },
     forgotPassword: {
-      title: 'Redefinir senha',
-      description: 'Informe o workspace e o e-mail da conta para solicitar um link de redefinição.',
-      tenantCodeLabel: 'Empresa ou workspace',
+      title: 'Esqueci a senha',
+      description: 'Informe o código do ambiente e o e-mail da conta para receber um link.',
+      tenantCodeLabel: 'Código do ambiente',
       emailLabel: 'E-mail',
       submitLabel: 'Enviar link de redefinição',
       loadingLabel: 'Enviando...',
