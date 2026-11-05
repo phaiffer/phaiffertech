@@ -17,7 +17,7 @@ Os protótipos de referência estão nesta pasta (`*.dc.html`; a direção visua
 | 3 | Cadastros: Clientes, cadastro de cliente, Contatos, Pets, cadastro de pet, Perfil do pet | Concluída | #103 |
 | 4 | Operação de serviço: Serviços, Planos, Follow-up, Equipe, Fechamento | Concluída | #104 |
 | 5 | Dinheiro e estoque: Estoque/Produtos, Financeiro, Caixa, Cobrança | Concluída | #105 |
-| 6 | Clínica, Comercial e Insights | **Em andamento** (branch `feat/redesign-fase-6`) | |
+| 6 | Clínica, Comercial e Insights | **Em revisão** (branch `feat/redesign-fase-6`) | #106 |
 | 7 | Conta e admin: Login, Esqueci/Redefinir senha, Configurações, Usuários, Ambientes | Pendente | |
 
 Depois da fase 7, o próximo trabalho combinado com o dono do projeto é o **Projeto de Aplicação da pós PUCPR** (ver "Depois do redesign", no fim).
