@@ -74,12 +74,12 @@ Estados: **implementado** existe e é usado; **parcial** existe, com lacuna indi
 
 | Fato | Evidência | Estado |
 | --- | --- | --- |
-| CI com build, testes, lint e build do frontend | `.github/workflows/ci.yml` | Implementado |
+| CI com build, testes, lint e build do frontend | `.github/workflows/ci.yml` | Implementado; sem análise de dependências ou de código |
 | Testes de integração com Testcontainers | `support/IntegrationTestContainersConfig.java`, `AbstractIntegrationTest.java`; 33 arquivos citam a base | Implementado |
 | Migrações versionadas | `flyway-core`, `db/migration` | Implementado |
 
 ## Itens não verificados
 
-- Resolvido em 2026-11-05: não há produção hoje. Segundo o autor, o ambiente ficou no ar por um período e foi desligado pelo custo mensal de R$ 290. Os workflows confirmam deploys no Cloud Run, com o último sucesso em 2026-04-01; a aplicação do Terraform segue sem confirmação direta.
+- Resolvido em 2026-11-05: não há produção hoje. Segundo o autor, o ambiente ficou no ar por um período e foi desligado pelo custo mensal de R$ 290. Os workflows confirmam deploys no Cloud Run, disparados manualmente (`workflow_dispatch`), com o último sucesso em 2026-04-01; o autor relata que o app já estava desativado antes disso, sem data exata; a aplicação do Terraform segue sem confirmação direta.
 - Resolvido em 2026-11-05: o webhook do WhatsApp **não** é idempotente. `MessageWebhookService` grava um evento a cada recebimento, sem checar repetição, e `message_delivery_events` (`V70`) só tem índice comum em `provider_message_id`.
 - O bloqueio de billing da Meta é informação do autor; não há como confirmar pelo código.
