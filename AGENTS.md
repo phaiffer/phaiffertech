@@ -2,11 +2,11 @@
 
 Monorepo da plataforma Gestão Pet (backend Java/Spring Boot em `apps/backend`, frontend Next.js em `apps/frontend`). Visão geral em [README.md](README.md) e arquitetura em [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 
-## Trabalho em andamento: redesign "Comanda v2" do frontend
+## Redesign "Comanda v2" do frontend
 
-Antes de qualquer tarefa de frontend, leia **[docs/design/comanda/HANDOFF.md](docs/design/comanda/HANDOFF.md)**. Ele diz em que fase o redesign está, o que já foi feito, como trabalhar e qual é o próximo passo. A especificação completa está em [docs/design/comanda/PROMPT-INTEGRACAO.md](docs/design/comanda/PROMPT-INTEGRACAO.md) e as lacunas de dados em [docs/design/comanda/GAPS.md](docs/design/comanda/GAPS.md).
+As 7 fases foram concluídas e mergeadas (PRs #100 a #107). O histórico está em [docs/design/comanda/HANDOFF.md](docs/design/comanda/HANDOFF.md), a especificação em [docs/design/comanda/PROMPT-INTEGRACAO.md](docs/design/comanda/PROMPT-INTEGRACAO.md) e as lacunas de dados em [docs/design/comanda/GAPS.md](docs/design/comanda/GAPS.md).
 
-Se o usuário pedir para "continuar o redesign", siga a próxima fase pendente na tabela do HANDOFF e, ao terminar, atualize a tabela.
+Ao mexer em telas do frontend, consulte esses documentos e registre novas lacunas no `GAPS.md`.
 
 ## Regras do dono do projeto
 
