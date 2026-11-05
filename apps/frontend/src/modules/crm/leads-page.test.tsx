@@ -87,13 +87,13 @@ describe('CrmLeadsPage', () => {
       expect(crmServiceMock.listLeads).toHaveBeenCalledTimes(1);
     });
 
-    fireEvent.change(screen.getByLabelText('Company'), { target: { value: 'company-1' } });
+    fireEvent.change(screen.getByLabelText(/^Account/), { target: { value: 'company-1' } });
 
     await waitFor(() => {
       expect(crmServiceMock.listContacts).toHaveBeenLastCalledWith(0, 100, '', {
         companyId: 'company-1'
       });
-      expect(crmServiceMock.listLeads).toHaveBeenLastCalledWith(0, 10, '', {
+      expect(crmServiceMock.listLeads).toHaveBeenLastCalledWith(0, 14, '', {
         status: undefined,
         source: undefined,
         companyId: 'company-1',
@@ -101,10 +101,10 @@ describe('CrmLeadsPage', () => {
       });
     });
 
-    fireEvent.change(screen.getByLabelText('Contato'), { target: { value: 'contact-1' } });
+    fireEvent.change(screen.getByLabelText(/^Contact/), { target: { value: 'contact-1' } });
 
     await waitFor(() => {
-      expect(crmServiceMock.listLeads).toHaveBeenLastCalledWith(0, 10, '', {
+      expect(crmServiceMock.listLeads).toHaveBeenLastCalledWith(0, 14, '', {
         status: undefined,
         source: undefined,
         companyId: 'company-1',
@@ -117,19 +117,19 @@ describe('CrmLeadsPage', () => {
   });
 
   it('uses the Pet commercial surface without reviving CRM routes', async () => {
-    render(<CrmLeadsPage surface="pet" />);
+    render(<CrmLeadsPage />);
 
     await waitFor(() => {
       expect(crmServiceMock.listLeads).toHaveBeenCalledTimes(1);
     });
 
-    expect(screen.getByText('Leads comerciais')).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Novo lead comercial' })).toHaveAttribute('href', '/pet/commercial/leads/new');
+    expect(screen.getByRole('heading', { name: 'Leads' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'New lead' })).toHaveAttribute('href', '/pet/commercial/leads/new');
 
-    fireEvent.change(screen.getByLabelText('Conta comercial'), { target: { value: 'company-1' } });
+    fireEvent.change(screen.getByLabelText(/^Account/), { target: { value: 'company-1' } });
 
     await waitFor(() => {
-      expect(crmServiceMock.listLeads).toHaveBeenLastCalledWith(0, 10, '', {
+      expect(crmServiceMock.listLeads).toHaveBeenLastCalledWith(0, 14, '', {
         status: undefined,
         source: undefined,
         companyId: 'company-1',
@@ -137,6 +137,6 @@ describe('CrmLeadsPage', () => {
       });
     });
 
-    expect(screen.getByLabelText('Contato de apoio')).toBeInTheDocument();
+    expect(screen.getByLabelText(/^Contact/)).toBeInTheDocument();
   });
 });

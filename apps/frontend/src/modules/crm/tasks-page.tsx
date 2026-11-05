@@ -1,83 +1,47 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { FormEvent, useCallback, useEffect, useState } from 'react';
+import { CrmRelatedReferenceType, resolveEditableReferenceType } from '@/modules/crm/crm-related-reference-catalog';
 import {
-  buildReferenceContextLine,
-  buildReferenceHeadline,
-  resolveCanonicalReference
-} from '@/modules/crm/crm-reference-utils';
-import {
-  buildRelatedReferenceOptions,
-  buildRelatedReferencePayload,
-  buildRelatedReferenceTypeOptions,
-  CrmRelatedReferenceType,
-  normalizeRelatedReferenceType,
-  resolveEditableReferenceType
-} from '@/modules/crm/crm-related-reference-catalog';
+  readRelationFilterFromUrl,
+  ReferenceCell,
+  RelationFields,
+  RelationFilterChips,
+  resolveRowReference,
+  useFollowUpReferences
+} from '@/modules/crm/follow-up-shared';
 import { PermissionGuard } from '@/shared/auth/PermissionGuard';
-import { usePermissions } from '@/shared/auth/usePermissions';
+import { sharedInlineActionsClass, sharedPageStackClass } from '@/shared/components/public-visual-system';
 import { StatusBadge } from '@/shared/dashboard/status-badge';
-import { ApiClientError } from '@/shared/lib/http';
+import { useAppI18n, useAppMessages } from '@/shared/i18n/app-i18n-provider';
+import { formatDateForLocale } from '@/shared/i18n/formatters';
+import { resolveApiErrorMessage } from '@/shared/lib/api-error-message';
 import { resolvePageItems, resolveTotalItems } from '@/shared/lib/pagination';
-import { crmService, CreateTaskInput, UpdateTaskInput } from '@/shared/services/crm-service';
+import { CreateTaskInput, UpdateTaskInput } from '@/shared/services/crm-service';
 import { petFollowUpService } from '@/shared/services/pet-follow-up-service';
-import { petService } from '@/shared/services/pet-service';
-import { CrmCompany, CrmContact, CrmDeal, CrmLead, CrmTask } from '@/shared/types/crm';
 import { PageResponse } from '@/shared/types/common';
-import { PetAppointment, PetClient, PetProfile } from '@/shared/types/pet';
+import { CrmTask } from '@/shared/types/crm';
 import { ConfirmDialog } from '@/shared/ui/confirm-dialog';
 import { DataTable, DataTableColumn } from '@/shared/ui/data-table';
 import { DateInput } from '@/shared/ui/date-input';
+import { FilterChip } from '@/shared/ui/filter-chip';
 import { FormInput } from '@/shared/ui/form-input';
 import { FormSelect } from '@/shared/ui/form-select';
-import { PageTitle } from '@/shared/ui/page-title';
 import { Pagination } from '@/shared/ui/pagination';
 import { SearchBar } from '@/shared/ui/search-bar';
-import { resolveApiErrorMessage } from '@/shared/lib/api-error-message';
 
-const pageSize = 10;
-const statusOptions = [
-  { value: '', label: 'Todos' },
-  { value: 'OPEN', label: 'Em aberto' },
-  { value: 'IN_PROGRESS', label: 'Em progresso' },
-  { value: 'DONE', label: 'Concluida' }
-];
-const priorityOptions = [
-  { value: '', label: 'Todas' },
-  { value: 'LOW', label: 'Baixa' },
-  { value: 'MEDIUM', label: 'Media' },
-  { value: 'HIGH', label: 'Alta' }
-];
+const pageSize = 14;
 const initialPage: PageResponse<CrmTask> = { items: [], totalItems: 0, totalPages: 0, page: 0, size: pageSize };
-const emptyCommonPage: PageResponse<CrmCompany | CrmContact | CrmLead | CrmDeal | PetClient | PetProfile | PetAppointment> = {
-  items: [],
-  totalItems: 0,
-  totalPages: 0,
-  page: 0,
-  size: 100
-};
 
-type CrmTasksPageProps = {
-  surface?: 'crm' | 'pet';
-};
-
-const petFollowUpRelationTypes = new Set<CrmRelatedReferenceType>(['PET.CLIENT', 'PET.PROFILE', 'PET.APPOINTMENT']);
-
-export function CrmTasksPage({ surface = 'crm' }: CrmTasksPageProps) {
-  const { hasPermission } = usePermissions();
-  const isPetSurface = surface === 'pet';
-  const taskService = isPetSurface ? petFollowUpService : crmService;
+export function CrmTasksPage() {
+  const { locale } = useAppI18n();
+  const copy = useAppMessages().screens.petFollowUp;
+  const { typeOptions, recordOptions, error: referencesError } = useFollowUpReferences();
   const [pageData, setPageData] = useState<PageResponse<CrmTask>>(initialPage);
-  const [companies, setCompanies] = useState<CrmCompany[]>([]);
-  const [contacts, setContacts] = useState<CrmContact[]>([]);
-  const [leads, setLeads] = useState<CrmLead[]>([]);
-  const [deals, setDeals] = useState<CrmDeal[]>([]);
-  const [petClients, setPetClients] = useState<PetClient[]>([]);
-  const [petProfiles, setPetProfiles] = useState<PetProfile[]>([]);
-  const [petAppointments, setPetAppointments] = useState<PetAppointment[]>([]);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [editorOpen, setEditorOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [deleteCandidate, setDeleteCandidate] = useState<CrmTask | null>(null);
   const [filtersReady, setFiltersReady] = useState(false);
@@ -94,95 +58,24 @@ export function CrmTasksPage({ surface = 'crm' }: CrmTasksPageProps) {
   const [dueDate, setDueDate] = useState('');
   const [status, setStatus] = useState('OPEN');
   const [priority, setPriority] = useState('MEDIUM');
-  const [relationType, setRelationType] = useState<CrmRelatedReferenceType>(isPetSurface ? 'PET.CLIENT' : 'COMPANY');
+  const [relationType, setRelationType] = useState<CrmRelatedReferenceType>('PET.CLIENT');
   const [relationId, setRelationId] = useState('');
-
-  const canReadPetClients = hasPermission('pet.client.read');
-  const canReadPetProfiles = hasPermission('pet.profile.read');
-  const canReadPetAppointments = hasPermission('pet.appointment.read');
-  const relationTypeOptions = useMemo(
-    () => buildRelatedReferenceTypeOptions({
-      canReadPetClients,
-      canReadPetProfiles,
-      canReadPetAppointments
-    }).filter((option) => !isPetSurface || petFollowUpRelationTypes.has(option.value)),
-    [canReadPetAppointments, canReadPetClients, canReadPetProfiles, isPetSurface]
-  );
-  const relationFilterTypeOptions = [{ value: '', label: 'Todos' }, ...relationTypeOptions];
-  const pageTitle = isPetSurface ? 'Tarefas de follow-up da Gestão Pet' : 'CRM Tasks';
-  const pageDescription = isPetSurface
-    ? 'Centralize tarefas operacionais ligadas a clientes, pets e atendimentos. Novos registros entram pelo contexto da Gestão Pet enquanto vínculos históricos continuam legíveis para compatibilidade.'
-    : 'Tarefas vinculadas a registros do CRM e, quando permitido, a referências canônicas da Gestão Pet.';
-  const permissionFallback = isPetSurface
-    ? 'Você não possui permissão para visualizar tarefas de follow-up da Gestão Pet.'
-    : 'Você não possui permissão para visualizar tarefas.';
-  const relationHint = isPetSurface
-    ? 'Novas tarefas desta superfície usam referências da Gestão Pet. Vínculos legados continuam visíveis em modo compatível até a absorção completa.'
-    : 'Os vínculos CRM legados continuam compatíveis. Referências Pet aparecem quando o usuário possui leitura do recurso correspondente e são enviadas pelo tipo canônico.';
-
-  useEffect(() => {
-    if (!relationTypeOptions.some((option) => option.value === relationType) && relationTypeOptions[0]) {
-      setRelationType(relationTypeOptions[0].value);
-      setRelationId('');
-    }
-  }, [relationType, relationTypeOptions]);
-
-  useEffect(() => {
-    if (relationTypeFilter && !relationTypeOptions.some((option) => option.value === relationTypeFilter)) {
-      setRelationTypeFilter('');
-      setRelationIdFilter('');
-    }
-  }, [relationTypeFilter, relationTypeOptions]);
-
-  useEffect(() => {
-    async function loadSupportingData() {
-      try {
-        const [companiesPage, contactsPage, leadsPage, dealsPage, petClientsPage, petProfilesPage, petAppointmentsPage] = await Promise.all([
-          isPetSurface ? Promise.resolve(emptyCommonPage as PageResponse<CrmCompany>) : crmService.listCompanies(0, 100),
-          isPetSurface ? Promise.resolve(emptyCommonPage as PageResponse<CrmContact>) : crmService.listContacts(0, 100),
-          isPetSurface ? Promise.resolve(emptyCommonPage as PageResponse<CrmLead>) : crmService.listLeads(0, 100),
-          isPetSurface ? Promise.resolve(emptyCommonPage as PageResponse<CrmDeal>) : crmService.listDeals(0, 100),
-          canReadPetClients ? petService.listClients(0, 100) : Promise.resolve(emptyCommonPage as PageResponse<PetClient>),
-          canReadPetProfiles ? petService.listProfiles(0, 100) : Promise.resolve(emptyCommonPage as PageResponse<PetProfile>),
-          canReadPetAppointments ? petService.listAppointments(0, 100) : Promise.resolve(emptyCommonPage as PageResponse<PetAppointment>)
-        ]);
-        setCompanies(resolvePageItems(companiesPage));
-        setContacts(resolvePageItems(contactsPage));
-        setLeads(resolvePageItems(leadsPage));
-        setDeals(resolvePageItems(dealsPage));
-        setPetClients(resolvePageItems(petClientsPage));
-        setPetProfiles(resolvePageItems(petProfilesPage));
-        setPetAppointments(resolvePageItems(petAppointmentsPage));
-      } catch (err) {
-        setError(resolveApiErrorMessage(err, 'Erro ao carregar referências de tarefa.'));
-      }
-    }
-
-    void loadSupportingData();
-  }, [canReadPetAppointments, canReadPetClients, canReadPetProfiles, isPetSurface]);
 
   useEffect(() => {
     if (filtersReady) {
       return;
     }
 
-    const params = typeof window === 'undefined'
-      ? new URLSearchParams()
-      : new URLSearchParams(window.location.search);
-    const initialRelationType = normalizeRelatedReferenceType(params.get('relatedReferenceType'));
-    const allowedRelationType = initialRelationType && relationTypeOptions.some((option) => option.value === initialRelationType)
-      ? initialRelationType
-      : '';
-
-    const initialSearch = params.get('search')?.trim() ?? '';
+    const initial = readRelationFilterFromUrl(typeOptions);
+    const initialSearch = initial.params.get('search')?.trim() ?? '';
     setSearchInput(initialSearch);
     setSearch(initialSearch);
-    setStatusFilter(params.get('status')?.trim() ?? '');
-    setPriorityFilter(params.get('priority')?.trim() ?? '');
-    setRelationTypeFilter(allowedRelationType);
-    setRelationIdFilter(allowedRelationType ? (params.get('relatedId')?.trim() ?? '') : '');
+    setStatusFilter(initial.params.get('status')?.trim() ?? '');
+    setPriorityFilter(initial.params.get('priority')?.trim() ?? '');
+    setRelationTypeFilter(initial.relationType);
+    setRelationIdFilter(initial.relationId);
     setFiltersReady(true);
-  }, [filtersReady, relationTypeOptions]);
+  }, [filtersReady, typeOptions]);
 
   const load = useCallback(async (
     page: number,
@@ -195,7 +88,7 @@ export function CrmTasksPage({ surface = 'crm' }: CrmTasksPageProps) {
     setLoading(true);
     setError(null);
     try {
-      const result = await taskService.listTasks(page, pageSize, currentSearch, {
+      const result = await petFollowUpService.listTasks(page, pageSize, currentSearch, {
         status: currentStatus || undefined,
         priority: currentPriority || undefined,
         relatedReferenceType: currentRelationType || undefined,
@@ -203,49 +96,57 @@ export function CrmTasksPage({ surface = 'crm' }: CrmTasksPageProps) {
       });
       setPageData(result);
     } catch (err) {
-      setError(resolveApiErrorMessage(err, 'Erro ao carregar tarefas.'));
+      setError(resolveApiErrorMessage(err, copy.tasksLoadError));
     } finally {
       setLoading(false);
     }
-  }, [taskService]);
+  }, [copy.tasksLoadError]);
 
   useEffect(() => {
-    if (!filtersReady) {
-      return;
+    if (filtersReady) {
+      void load(0, search, statusFilter, priorityFilter, relationTypeFilter, relationIdFilter);
     }
-    void load(0, search, statusFilter, priorityFilter, relationTypeFilter, relationIdFilter);
   }, [filtersReady, load, priorityFilter, relationIdFilter, relationTypeFilter, search, statusFilter]);
 
-  function relationOptions(currentRelationType: CrmRelatedReferenceType) {
-    return buildRelatedReferenceOptions(currentRelationType, {
-      companies,
-      contacts,
-      leads,
-      deals,
-      petClients,
-      petProfiles,
-      petAppointments
-    });
+  function reload() {
+    return load(pageData.page, search, statusFilter, priorityFilter, relationTypeFilter, relationIdFilter);
   }
 
   function resetForm() {
+    setEditorOpen(false);
     setEditingId(null);
     setTitle('');
     setDescription('');
     setDueDate('');
     setStatus('OPEN');
     setPriority('MEDIUM');
-    setRelationType(relationTypeOptions[0]?.value ?? (isPetSurface ? 'PET.CLIENT' : 'COMPANY'));
     setRelationId('');
   }
 
-  function relationPayload(id: string) {
-    return buildRelatedReferencePayload(relationType, id);
+  function openNewTask() {
+    resetForm();
+    setRelationType(typeOptions[0]?.value ?? 'PET.CLIENT');
+    setError(null);
+    setEditorOpen(true);
   }
 
-  async function handleSubmit() {
+  function openEditTask(row: CrmTask, editableRelation: CrmRelatedReferenceType) {
+    setEditingId(row.id);
+    setTitle(row.title);
+    setDescription(row.description ?? '');
+    setDueDate(row.dueDate ? row.dueDate.slice(0, 10) : '');
+    setStatus(row.status);
+    setPriority(row.priority);
+    setRelationType(editableRelation);
+    setRelationId(row.relatedId);
+    setError(null);
+    setEditorOpen(true);
+  }
+
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
     if (!title.trim() || !relationId) {
-      setError('Título e vínculo são obrigatórios.');
+      setError(copy.taskRequired);
       return;
     }
 
@@ -255,111 +156,117 @@ export function CrmTasksPage({ surface = 'crm' }: CrmTasksPageProps) {
       dueDate: dueDate ? new Date(`${dueDate}T12:00:00Z`).toISOString() : undefined,
       status,
       priority,
-      ...relationPayload(relationId)
+      relatedReferenceType: relationType,
+      relatedId: relationId
     };
 
     setSaving(true);
     setError(null);
     try {
       if (editingId) {
-        await taskService.updateTask(editingId, payload as UpdateTaskInput);
+        await petFollowUpService.updateTask(editingId, payload as UpdateTaskInput);
       } else {
-        await taskService.createTask(payload);
+        await petFollowUpService.createTask(payload);
       }
       resetForm();
-      await load(pageData.page, search, statusFilter, priorityFilter, relationTypeFilter, relationIdFilter);
+      await reload();
     } catch (err) {
-      setError(resolveApiErrorMessage(err, 'Erro ao salvar tarefa.'));
+      setError(resolveApiErrorMessage(err, copy.taskSaveError));
     } finally {
       setSaving(false);
     }
   }
 
   async function handleDelete() {
-    if (!deleteCandidate) return;
-    try {
-      await taskService.deleteTask(deleteCandidate.id);
-      setDeleteCandidate(null);
-      await load(pageData.page, search, statusFilter, priorityFilter, relationTypeFilter, relationIdFilter);
-    } catch (err) {
-      setError(resolveApiErrorMessage(err, 'Erro ao excluir tarefa.'));
+    if (!deleteCandidate) {
+      return;
     }
+
+    try {
+      await petFollowUpService.deleteTask(deleteCandidate.id);
+      setDeleteCandidate(null);
+      await reload();
+    } catch (err) {
+      setError(resolveApiErrorMessage(err, copy.taskDeleteError));
+    }
+  }
+
+  function clearFilters() {
+    setSearchInput('');
+    setSearch('');
+    setStatusFilter('');
+    setPriorityFilter('');
+    setRelationTypeFilter('');
+    setRelationIdFilter('');
   }
 
   const rows = resolvePageItems(pageData);
   const totalItems = resolveTotalItems(pageData);
+  const statusOptions = [
+    { value: 'OPEN', label: copy.statusOpen },
+    { value: 'IN_PROGRESS', label: copy.statusInProgress },
+    { value: 'DONE', label: copy.statusDone }
+  ];
+  const priorityOptions = [
+    { value: 'LOW', label: copy.priorityLow },
+    { value: 'MEDIUM', label: copy.priorityMedium },
+    { value: 'HIGH', label: copy.priorityHigh }
+  ];
+
   const columns: DataTableColumn<CrmTask>[] = [
-    { key: 'title', header: 'Tarefa', render: (row) => row.title },
+    {
+      key: 'title',
+      header: copy.columnTask,
+      render: (row) => (
+        <div>
+          <p className="font-medium text-[var(--ink)]">{row.title}</p>
+          {row.description ? <p className="text-xs text-[var(--ink-2)]">{row.description}</p> : null}
+        </div>
+      )
+    },
     {
       key: 'relation',
-      header: 'Vínculo',
-      render: (row) => {
-        const relation = resolveCanonicalReference({
-          compatibilityType: row.relatedType,
-          referenceType: row.relatedReferenceType,
-          moduleCode: row.relatedModule,
-          entityType: row.relatedEntityType
-        });
-
-        return (
-          <div>
-            <p className="font-medium text-[color:var(--app-shell-heading)]">{buildReferenceHeadline(relation, row.relatedDisplayName)}</p>
-            <p className="text-xs text-[color:var(--app-shell-muted)]">{buildReferenceContextLine(relation, row.relatedId, row.relatedDisplayContext)}</p>
-          </div>
-        );
-      }
+      header: copy.columnRelation,
+      render: (row) => (
+        <ReferenceCell
+          reference={resolveRowReference(row)}
+          displayName={row.relatedDisplayName}
+          displayContext={row.relatedDisplayContext}
+        />
+      )
     },
-    { key: 'dueDate', header: 'Prazo', render: (row) => row.dueDate ? new Date(row.dueDate).toLocaleDateString('pt-BR') : '-' },
-    { key: 'status', header: 'Status', render: (row) => <StatusBadge status={row.status} /> },
-    { key: 'priority', header: 'Prioridade', render: (row) => <StatusBadge status={row.priority} /> },
+    {
+      key: 'dueDate',
+      header: copy.fieldDueDate,
+      render: (row) => (
+        <span className="ui-mono whitespace-nowrap text-[var(--ink-2)]">
+          {formatDateForLocale(locale, row.dueDate, '-', { timeZone: 'UTC' })}
+        </span>
+      )
+    },
+    { key: 'status', header: copy.filterStatus, render: (row) => <StatusBadge status={row.status} /> },
+    { key: 'priority', header: copy.filterPriority, render: (row) => <StatusBadge status={row.priority} /> },
     {
       key: 'actions',
-      header: 'Ações',
+      header: copy.columnActions,
       render: (row) => {
-        const relation = resolveCanonicalReference({
-          compatibilityType: row.relatedType,
-          referenceType: row.relatedReferenceType,
-          moduleCode: row.relatedModule,
-          entityType: row.relatedEntityType
-        });
-        const editableRelation = resolveEditableReferenceType(relation);
-        const canEditRelation = editableRelation
-          ? relationTypeOptions.some((option) => option.value === editableRelation)
-          : false;
+        const editableRelation = resolveEditableReferenceType(resolveRowReference(row));
+        const canEditRelation = typeOptions.some((option) => option.value === editableRelation);
 
         return (
-          <div className="flex gap-2">
+          <div className={sharedInlineActionsClass}>
             <PermissionGuard permission="crm.task.update">
-              {canEditRelation && editableRelation ? (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setEditingId(row.id);
-                    setTitle(row.title);
-                    setDescription(row.description ?? '');
-                    setDueDate(row.dueDate ? row.dueDate.slice(0, 10) : '');
-                    setStatus(row.status);
-                    setPriority(row.priority);
-                    setRelationType(editableRelation);
-                    setRelationId(row.relatedId);
-                  }}
-                  className="ui-inline-button"
-                >
-                  Editar
+              {editableRelation && canEditRelation ? (
+                <button type="button" onClick={() => openEditTask(row, editableRelation)} className="ui-inline-button">
+                  {copy.edit}
                 </button>
               ) : (
-                <span className="inline-flex items-center rounded-lg border border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-panel-muted)] px-2 py-1 text-xs font-medium text-[color:var(--app-shell-muted)]">
-                  Somente leitura
-                </span>
+                <span className="text-xs text-[var(--muted)]">{copy.readOnly}</span>
               )}
             </PermissionGuard>
             <PermissionGuard permission="crm.task.delete">
-              <button
-                type="button"
-                onClick={() => setDeleteCandidate(row)}
-                className="ui-inline-danger-button"
-              >
-                Excluir
+              <button type="button" onClick={() => setDeleteCandidate(row)} className="ui-inline-danger-button">
+                {copy.delete}
               </button>
             </PermissionGuard>
           </div>
@@ -368,89 +275,97 @@ export function CrmTasksPage({ surface = 'crm' }: CrmTasksPageProps) {
     }
   ];
 
+  const newTaskButton = (
+    <PermissionGuard permission="crm.task.create">
+      <button type="button" onClick={openNewTask} className="ui-primary-button">{copy.newTask}</button>
+    </PermissionGuard>
+  );
+
   return (
     <PermissionGuard
       permission="crm.task.read"
-      fallback={<div className="ui-notice-warning">{permissionFallback}</div>}
+      fallback={<div className="ui-notice-warning">{copy.tasksNoPermission}</div>}
     >
-      <div className="space-y-5">
-        {isPetSurface
-          ? <h2 className="text-sm font-semibold text-[var(--ink)]">{pageTitle}</h2>
-          : <PageTitle title={pageTitle} description={pageDescription} />}
-
-        <div className={`grid gap-3 xl:grid-cols-[1fr_160px_160px_180px_220px_auto_auto] ${isPetSurface ? 'border-b border-[color:var(--line)] pb-3' : 'ui-surface-panel p-4'}`}>
-          <SearchBar value={searchInput} onChange={setSearchInput} placeholder="Título, descrição, prioridade" />
-          <FormSelect label="Status" value={statusFilter} options={statusOptions} onChange={setStatusFilter} />
-          <FormSelect label="Prioridade" value={priorityFilter} options={priorityOptions} onChange={setPriorityFilter} />
-          <FormSelect
-            label="Tipo de vínculo"
-            value={relationTypeFilter}
-            options={relationFilterTypeOptions}
-            onChange={(value) => {
-              setRelationTypeFilter(value as CrmRelatedReferenceType | '');
-              setRelationIdFilter('');
-            }}
-          />
-          <FormSelect
-            label="Registro vinculado"
-            value={relationIdFilter}
-            options={[
-              { value: '', label: relationTypeFilter ? 'Todos' : 'Selecione um tipo' },
-              ...(relationTypeFilter ? relationOptions(relationTypeFilter) : [])
-            ]}
-            onChange={setRelationIdFilter}
-            disabled={!relationTypeFilter}
-          />
-          <button type="button" onClick={() => setSearch(searchInput)} className="ui-primary-button">
-            Buscar
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              setSearchInput('');
-              setSearch('');
-              setStatusFilter('');
-              setPriorityFilter('');
-              setRelationTypeFilter('');
-              setRelationIdFilter('');
-            }}
-            className="ui-secondary-button"
-          >
-            Limpar
-          </button>
+      <div className={sharedPageStackClass}>
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <h2 className="text-sm font-semibold text-[var(--ink)]">
+            {copy.tasksTitle}
+            {loading ? null : <span className="ui-mono ml-2 font-normal text-[var(--muted)]">{totalItems}</span>}
+          </h2>
+          {newTaskButton}
         </div>
 
-        <PermissionGuard permission={editingId ? 'crm.task.update' : 'crm.task.create'}>
-          <div className={`grid gap-3 md:grid-cols-2 ${isPetSurface ? 'rounded-md border border-[color:var(--line)] p-4' : 'ui-surface-panel p-4'}`}>
-            <FormInput label="Título" value={title} onChange={setTitle} required />
-            <FormInput label="Descrição" value={description} onChange={setDescription} />
-            <DateInput label="Prazo" value={dueDate} onChange={setDueDate} />
-            <FormSelect label="Status" value={status} options={statusOptions.filter((option) => option.value)} onChange={setStatus} />
-            <FormSelect label="Prioridade" value={priority} options={priorityOptions.filter((option) => option.value)} onChange={setPriority} />
-            <FormSelect label="Tipo de vínculo" value={relationType} options={relationTypeOptions} onChange={(value) => { setRelationType(value as CrmRelatedReferenceType); setRelationId(''); }} />
-            <FormSelect label="Registro vinculado" value={relationId} options={[{ value: '', label: 'Selecione' }, ...relationOptions(relationType)]} onChange={setRelationId} />
-            <p className="text-xs text-[color:var(--app-shell-muted)] md:col-span-2">
-              {relationHint}
-            </p>
-            <div className="flex gap-2 md:col-span-2">
-              <button
-                type="button"
-                disabled={saving || !title.trim()}
-                onClick={() => void handleSubmit()}
-                className="ui-primary-button"
-              >
-                {editingId ? 'Salvar tarefa' : 'Criar tarefa'}
-              </button>
-              <button type="button" onClick={resetForm} className="ui-secondary-button">
-                Cancelar
-              </button>
-            </div>
+        <form
+          className="flex flex-wrap items-end gap-2"
+          onSubmit={(event) => {
+            event.preventDefault();
+            setSearch(searchInput);
+          }}
+        >
+          <div className="min-w-[14rem] flex-1">
+            <SearchBar label={copy.search} value={searchInput} onChange={setSearchInput} placeholder={copy.tasksSearchPlaceholder} />
           </div>
-        </PermissionGuard>
+          <FilterChip
+            label={copy.filterStatus}
+            value={statusFilter}
+            options={[{ value: '', label: copy.all }, ...statusOptions]}
+            onChange={setStatusFilter}
+          />
+          <FilterChip
+            label={copy.filterPriority}
+            value={priorityFilter}
+            options={[{ value: '', label: copy.allPriorities }, ...priorityOptions]}
+            onChange={setPriorityFilter}
+          />
+          <RelationFilterChips
+            relationType={relationTypeFilter}
+            relationId={relationIdFilter}
+            typeOptions={typeOptions}
+            recordOptions={recordOptions}
+            onRelationTypeChange={setRelationTypeFilter}
+            onRelationIdChange={setRelationIdFilter}
+          />
+          <button type="submit" className="ui-secondary-button">{copy.search}</button>
+          <button type="button" onClick={clearFilters} className="ui-inline-button">{copy.clear}</button>
+        </form>
 
+        {editorOpen ? (
+          <PermissionGuard permission={editingId ? 'crm.task.update' : 'crm.task.create'}>
+            <form onSubmit={handleSubmit} className="grid gap-3 rounded-md border border-[color:var(--line)] p-4 md:grid-cols-2">
+              <h3 className="text-sm font-semibold text-[var(--ink)] md:col-span-2">{editingId ? copy.editTask : copy.newTask}</h3>
+              <FormInput label={copy.fieldTitle} value={title} onChange={setTitle} required />
+              <FormInput label={copy.fieldDescription} value={description} onChange={setDescription} />
+              <DateInput label={copy.fieldDueDate} value={dueDate} onChange={setDueDate} />
+              <FormSelect label={copy.filterStatus} value={status} options={statusOptions} onChange={setStatus} />
+              <FormSelect label={copy.filterPriority} value={priority} options={priorityOptions} onChange={setPriority} />
+              <RelationFields
+                relationType={relationType}
+                relationId={relationId}
+                typeOptions={typeOptions}
+                recordOptions={recordOptions}
+                onRelationTypeChange={setRelationType}
+                onRelationIdChange={setRelationId}
+              />
+              <div className="flex gap-2 md:col-span-2">
+                <button type="submit" disabled={saving} className="ui-primary-button">
+                  {editingId ? copy.saveTask : copy.createTask}
+                </button>
+                <button type="button" onClick={resetForm} className="ui-secondary-button">{copy.cancel}</button>
+              </div>
+            </form>
+          </PermissionGuard>
+        ) : null}
+
+        {referencesError ? <div className="ui-notice-error">{referencesError}</div> : null}
         {error ? <div className="ui-notice-error">{error}</div> : null}
 
-        <DataTable columns={columns} rows={rows} getRowKey={(row) => row.id} loading={loading} emptyMessage="Nenhuma tarefa encontrada." />
+        <DataTable
+          columns={columns}
+          rows={rows}
+          getRowKey={(row) => row.id}
+          loading={loading}
+          emptyState={{ title: copy.tasksEmptyTitle, description: copy.tasksEmptyDescription, action: newTaskButton }}
+        />
 
         <Pagination
           page={pageData.page}
@@ -462,9 +377,10 @@ export function CrmTasksPage({ surface = 'crm' }: CrmTasksPageProps) {
 
         <ConfirmDialog
           open={Boolean(deleteCandidate)}
-          title="Excluir tarefa"
-          description={deleteCandidate ? `Confirma a exclusão de ${deleteCandidate.title}?` : undefined}
-          confirmLabel="Excluir"
+          title={copy.taskDeleteTitle}
+          description={deleteCandidate ? copy.taskDeleteDescription.replace('{title}', deleteCandidate.title) : undefined}
+          confirmLabel={copy.delete}
+          cancelLabel={copy.cancel}
           onCancel={() => setDeleteCandidate(null)}
           onConfirm={() => void handleDelete()}
         />

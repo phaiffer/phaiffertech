@@ -7,7 +7,7 @@ export function PetClientSupportContactsPage() {
   return (
     <div className="space-y-5">
       <PetModuleSubnav />
-      <CrmContactsPage surface="pet" />
+      <CrmContactsPage />
     </div>
   );
 }

@@ -11,36 +11,6 @@ export type CanonicalReferenceContext = {
   referenceType: string | null;
   moduleCode: string | null;
   entityType: string | null;
-  moduleLabel: string;
-  entityLabel: string;
-};
-
-const editableCrmEntityTypes = new Set(['COMPANY', 'CONTACT', 'LEAD', 'DEAL']);
-
-const moduleLabels: Record<string, string> = {
-  CRM: 'CRM',
-  // Historical IOT references can still exist in stored CRM relations.
-  IOT: 'Legacy',
-  PET: 'Pet'
-};
-
-const entityLabels: Record<string, string> = {
-  ACTIVITY: 'Activity',
-  APPOINTMENT: 'Appointment',
-  CLIENT: 'Client',
-  COMPANY: 'Company',
-  CONTACT: 'Contact',
-  DEAL: 'Deal',
-  DEVICE: 'Device',
-  LEAD: 'Lead',
-  MAINTENANCE: 'Maintenance',
-  MEDICAL_RECORD: 'Medical Record',
-  NOTE: 'Note',
-  PRESCRIPTION: 'Prescription',
-  PROFILE: 'Profile',
-  SERVICE: 'Service',
-  TASK: 'Task',
-  VACCINATION: 'Vaccination'
 };
 
 function normalizeToken(value?: string | null) {
@@ -78,18 +48,6 @@ function parseModuleEntity(referenceType?: string | null) {
   return { moduleCode, entityType };
 }
 
-function humanizeToken(value?: string | null) {
-  const normalized = normalizeToken(value);
-  if (!normalized) {
-    return 'Reference';
-  }
-
-  return normalized
-    .split('_')
-    .map((segment) => segment.charAt(0) + segment.slice(1).toLowerCase())
-    .join(' ');
-}
-
 export function resolveCanonicalReference(input: CanonicalReferenceInput): CanonicalReferenceContext {
   const compatibilityType = normalizeToken(input.compatibilityType);
   const canonicalReferenceType = normalizeToken(input.referenceType ?? input.fallbackReferenceType);
@@ -121,53 +79,6 @@ export function resolveCanonicalReference(input: CanonicalReferenceInput): Canon
     compatibilityType: resolvedCompatibilityType ?? null,
     referenceType: referenceType ?? null,
     moduleCode: moduleCode ?? null,
-    entityType: entityType ?? null,
-    moduleLabel: moduleCode ? (moduleLabels[moduleCode] ?? moduleCode) : 'Reference',
-    entityLabel: entityType ? (entityLabels[entityType] ?? humanizeToken(entityType)) : 'Reference'
+    entityType: entityType ?? null
   };
-}
-
-export function buildReferenceSummary(context: CanonicalReferenceContext) {
-  return context.moduleCode && context.entityType
-    ? `${context.moduleLabel} / ${context.entityLabel}`
-    : (context.compatibilityType ?? 'Sem vínculo');
-}
-
-export function buildReferenceHeadline(context: CanonicalReferenceContext, displayName?: string | null) {
-  const normalizedDisplayName = displayName?.trim();
-  return normalizedDisplayName || buildReferenceSummary(context);
-}
-
-export function buildReferenceDetail(context: CanonicalReferenceContext, relatedId?: string | null) {
-  const detailLabel = context.moduleCode === 'IOT'
-    ? null
-    : (context.referenceType ?? context.compatibilityType);
-  const parts = [detailLabel];
-  if (relatedId) {
-    parts.push(relatedId.slice(0, 8));
-  }
-  return parts.filter(Boolean).join(' · ');
-}
-
-export function buildReferenceContextLine(
-  context: CanonicalReferenceContext,
-  relatedId?: string | null,
-  displayContext?: string | null
-) {
-  const parts = [buildReferenceSummary(context)];
-  const normalizedContext = displayContext?.trim();
-  if (normalizedContext) {
-    parts.push(normalizedContext);
-  }
-  const detail = buildReferenceDetail(context, relatedId);
-  if (detail) {
-    parts.push(detail);
-  }
-  return parts.filter(Boolean).join(' · ');
-}
-
-export function isCrmEditableReference(context: CanonicalReferenceContext) {
-  return context.moduleCode === 'CRM'
-    && Boolean(context.entityType)
-    && editableCrmEntityTypes.has(context.entityType as string);
 }

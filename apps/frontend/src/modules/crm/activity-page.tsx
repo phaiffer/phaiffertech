@@ -1,262 +1,136 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
+import { resolveCanonicalReference } from '@/modules/crm/crm-reference-utils';
+import { CrmRelatedReferenceType } from '@/modules/crm/crm-related-reference-catalog';
 import {
-  buildReferenceContextLine,
-  buildReferenceHeadline,
-  resolveCanonicalReference
-} from '@/modules/crm/crm-reference-utils';
-import {
-  buildRelatedReferenceOptions,
-  buildRelatedReferenceTypeOptions,
-  CrmRelatedReferenceType,
-  normalizeRelatedReferenceType
-} from '@/modules/crm/crm-related-reference-catalog';
+  readRelationFilterFromUrl,
+  ReferenceCell,
+  RelationFilterChips,
+  resolveRowReference,
+  useFollowUpReferences
+} from '@/modules/crm/follow-up-shared';
 import { PermissionGuard } from '@/shared/auth/PermissionGuard';
-import { usePermissions } from '@/shared/auth/usePermissions';
-import { ApiClientError } from '@/shared/lib/http';
-import { resolvePageItems, resolveTotalItems } from '@/shared/lib/pagination';
-import { crmService } from '@/shared/services/crm-service';
-import { petFollowUpService } from '@/shared/services/pet-follow-up-service';
-import { petService } from '@/shared/services/pet-service';
-import { CrmActivityItem, CrmCompany, CrmContact, CrmDeal, CrmLead } from '@/shared/types/crm';
-import { PageResponse } from '@/shared/types/common';
-import { PetAppointment, PetClient, PetProfile } from '@/shared/types/pet';
-import { DataTable, DataTableColumn } from '@/shared/ui/data-table';
-import { FormSelect } from '@/shared/ui/form-select';
-import { PageTitle } from '@/shared/ui/page-title';
-import { Pagination } from '@/shared/ui/pagination';
+import { sharedPageStackClass } from '@/shared/components/public-visual-system';
+import { useAppI18n, useAppMessages } from '@/shared/i18n/app-i18n-provider';
+import { formatDateTimeForLocale } from '@/shared/i18n/formatters';
 import { resolveApiErrorMessage } from '@/shared/lib/api-error-message';
+import { resolvePageItems, resolveTotalItems } from '@/shared/lib/pagination';
+import { petFollowUpService } from '@/shared/services/pet-follow-up-service';
+import { PageResponse } from '@/shared/types/common';
+import { CrmActivityItem } from '@/shared/types/crm';
+import { DataTable, DataTableColumn } from '@/shared/ui/data-table';
+import { Pagination } from '@/shared/ui/pagination';
 
-const pageSize = 10;
+const pageSize = 14;
 const initialPage: PageResponse<CrmActivityItem> = { items: [], totalItems: 0, totalPages: 0, page: 0, size: pageSize };
-const emptyCommonPage: PageResponse<CrmCompany | CrmContact | CrmLead | CrmDeal | PetClient | PetProfile | PetAppointment> = {
-  items: [],
-  totalItems: 0,
-  totalPages: 0,
-  page: 0,
-  size: 100
-};
 
-type CrmActivityPageProps = {
-  surface?: 'crm' | 'pet';
-};
-
-const petFollowUpRelationTypes = new Set<CrmRelatedReferenceType>(['PET.CLIENT', 'PET.PROFILE', 'PET.APPOINTMENT']);
-
-function payloadSummary(payload: Record<string, unknown>) {
-  const json = JSON.stringify(payload);
-  if (!json || json === '{}') {
-    return '-';
-  }
-  return json.length > 120 ? `${json.slice(0, 117)}...` : json;
-}
-
-export function CrmActivityPage({ surface = 'crm' }: CrmActivityPageProps) {
-  const { hasPermission } = usePermissions();
-  const isPetSurface = surface === 'pet';
-  const activityService = isPetSurface ? petFollowUpService : crmService;
+export function CrmActivityPage() {
+  const { locale } = useAppI18n();
+  const copy = useAppMessages().screens.petFollowUp;
+  const { typeOptions, recordOptions, error: referencesError } = useFollowUpReferences();
   const [pageData, setPageData] = useState<PageResponse<CrmActivityItem>>(initialPage);
-  const [companies, setCompanies] = useState<CrmCompany[]>([]);
-  const [contacts, setContacts] = useState<CrmContact[]>([]);
-  const [leads, setLeads] = useState<CrmLead[]>([]);
-  const [deals, setDeals] = useState<CrmDeal[]>([]);
-  const [petClients, setPetClients] = useState<PetClient[]>([]);
-  const [petProfiles, setPetProfiles] = useState<PetProfile[]>([]);
-  const [petAppointments, setPetAppointments] = useState<PetAppointment[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [filtersReady, setFiltersReady] = useState(false);
   const [relationTypeFilter, setRelationTypeFilter] = useState<CrmRelatedReferenceType | ''>('');
   const [relationIdFilter, setRelationIdFilter] = useState('');
 
-  const canReadPetClients = hasPermission('pet.client.read');
-  const canReadPetProfiles = hasPermission('pet.profile.read');
-  const canReadPetAppointments = hasPermission('pet.appointment.read');
-  const relationTypeOptions = useMemo(
-    () => buildRelatedReferenceTypeOptions({
-      canReadPetClients,
-      canReadPetProfiles,
-      canReadPetAppointments
-    }).filter((option) => !isPetSurface || petFollowUpRelationTypes.has(option.value)),
-    [canReadPetAppointments, canReadPetClients, canReadPetProfiles, isPetSurface]
-  );
-  const relationFilterTypeOptions = [{ value: '', label: 'Todos' }, ...relationTypeOptions];
-  const pageTitle = isPetSurface ? 'Atividade de follow-up da Gestão Pet' : 'CRM Activity';
-  const pageDescription = isPetSurface
-    ? 'Acompanhe a trilha de tarefas e notas ligadas a clientes, pets e atendimentos. Eventos históricos continuam legíveis enquanto o fluxo é absorvido pela Gestão Pet.'
-    : 'Feed auditável com contexto canônico da entidade CRM e do vínculo relacionado quando houver referência cross-module.';
-  const permissionFallback = isPetSurface
-    ? 'Você não possui permissão para visualizar a atividade de follow-up da Gestão Pet.'
-    : 'Você não possui permissão para visualizar a atividade do CRM.';
-
-  useEffect(() => {
-    if (relationTypeFilter && !relationTypeOptions.some((option) => option.value === relationTypeFilter)) {
-      setRelationTypeFilter('');
-      setRelationIdFilter('');
-    }
-  }, [relationTypeFilter, relationTypeOptions]);
-
-  useEffect(() => {
-    async function loadSupportingData() {
-      try {
-        const [companiesPage, contactsPage, leadsPage, dealsPage, petClientsPage, petProfilesPage, petAppointmentsPage] = await Promise.all([
-          isPetSurface ? Promise.resolve(emptyCommonPage as PageResponse<CrmCompany>) : crmService.listCompanies(0, 100),
-          isPetSurface ? Promise.resolve(emptyCommonPage as PageResponse<CrmContact>) : crmService.listContacts(0, 100),
-          isPetSurface ? Promise.resolve(emptyCommonPage as PageResponse<CrmLead>) : crmService.listLeads(0, 100),
-          isPetSurface ? Promise.resolve(emptyCommonPage as PageResponse<CrmDeal>) : crmService.listDeals(0, 100),
-          canReadPetClients ? petService.listClients(0, 100) : Promise.resolve(emptyCommonPage as PageResponse<PetClient>),
-          canReadPetProfiles ? petService.listProfiles(0, 100) : Promise.resolve(emptyCommonPage as PageResponse<PetProfile>),
-          canReadPetAppointments ? petService.listAppointments(0, 100) : Promise.resolve(emptyCommonPage as PageResponse<PetAppointment>)
-        ]);
-        setCompanies(resolvePageItems(companiesPage));
-        setContacts(resolvePageItems(contactsPage));
-        setLeads(resolvePageItems(leadsPage));
-        setDeals(resolvePageItems(dealsPage));
-        setPetClients(resolvePageItems(petClientsPage));
-        setPetProfiles(resolvePageItems(petProfilesPage));
-        setPetAppointments(resolvePageItems(petAppointmentsPage));
-      } catch (err) {
-        setError(resolveApiErrorMessage(err, 'Erro ao carregar referências de atividade.'));
-      }
-    }
-
-    void loadSupportingData();
-  }, [canReadPetAppointments, canReadPetClients, canReadPetProfiles, isPetSurface]);
-
   useEffect(() => {
     if (filtersReady) {
       return;
     }
 
-    const params = typeof window === 'undefined'
-      ? new URLSearchParams()
-      : new URLSearchParams(window.location.search);
-    const initialRelationType = normalizeRelatedReferenceType(params.get('relatedReferenceType'));
-    const allowedRelationType = initialRelationType && relationTypeOptions.some((option) => option.value === initialRelationType)
-      ? initialRelationType
-      : '';
-
-    setRelationTypeFilter(allowedRelationType);
-    setRelationIdFilter(allowedRelationType ? (params.get('relatedId')?.trim() ?? '') : '');
+    const initial = readRelationFilterFromUrl(typeOptions);
+    setRelationTypeFilter(initial.relationType);
+    setRelationIdFilter(initial.relationId);
     setFiltersReady(true);
-  }, [filtersReady, relationTypeOptions]);
+  }, [filtersReady, typeOptions]);
 
   const load = useCallback(async (page: number, currentRelationType: CrmRelatedReferenceType | '', currentRelationId: string) => {
     setLoading(true);
     setError(null);
     try {
-      const result = await activityService.listActivity(page, pageSize, {
+      const result = await petFollowUpService.listActivity(page, pageSize, {
         relatedReferenceType: currentRelationType || undefined,
         relatedId: currentRelationId || undefined
       });
       setPageData(result);
     } catch (err) {
-      setError(resolveApiErrorMessage(err, 'Erro ao carregar atividade.'));
+      setError(resolveApiErrorMessage(err, copy.activityLoadError));
     } finally {
       setLoading(false);
     }
-  }, [activityService]);
+  }, [copy.activityLoadError]);
 
   useEffect(() => {
-    if (!filtersReady) {
-      return;
+    if (filtersReady) {
+      void load(0, relationTypeFilter, relationIdFilter);
     }
-    void load(0, relationTypeFilter, relationIdFilter);
   }, [filtersReady, load, relationIdFilter, relationTypeFilter]);
-
-  function relationOptions(currentRelationType: CrmRelatedReferenceType) {
-    return buildRelatedReferenceOptions(currentRelationType, {
-      companies,
-      contacts,
-      leads,
-      deals,
-      petClients,
-      petProfiles,
-      petAppointments
-    });
-  }
 
   const rows = resolvePageItems(pageData);
   const totalItems = resolveTotalItems(pageData);
+  const eventLabels: Record<string, string> = copy.events;
   const columns: DataTableColumn<CrmActivityItem>[] = [
-    { key: 'eventType', header: 'Evento', render: (row) => row.eventType },
+    {
+      key: 'eventType',
+      header: copy.columnEvent,
+      render: (row) => <span className="text-[var(--ink)]">{eventLabels[row.eventType] ?? row.eventType}</span>
+    },
     {
       key: 'entity',
-      header: 'Entidade',
-      render: (row) => {
-        const entity = resolveCanonicalReference({
-          referenceType: row.entityReferenceType,
-          moduleCode: row.entityModule,
-          entityType: row.entityType,
-          fallbackReferenceType: row.entity.replace('_', '.')
-        });
-
-        return (
-          <div>
-            <p className="font-medium text-[color:var(--app-shell-heading)]">{buildReferenceHeadline(entity)}</p>
-            <p className="text-xs text-[color:var(--app-shell-muted)]">{buildReferenceContextLine(entity, row.entityId)}</p>
-          </div>
-        );
-      }
+      header: copy.columnEntity,
+      render: (row) => (
+        <ReferenceCell
+          reference={resolveCanonicalReference({
+            referenceType: row.entityReferenceType,
+            moduleCode: row.entityModule,
+            entityType: row.entityType,
+            fallbackReferenceType: row.entity.replace('_', '.')
+          })}
+        />
+      )
     },
     {
       key: 'related',
-      header: 'Relacionado a',
-      render: (row) => {
-        if (!row.relatedId) {
-          return '-';
-        }
-
-        const relation = resolveCanonicalReference({
-          compatibilityType: row.relatedType,
-          referenceType: row.relatedReferenceType,
-          moduleCode: row.relatedModule,
-          entityType: row.relatedEntityType
-        });
-
-        return (
-          <div>
-            <p className="font-medium text-[color:var(--app-shell-heading)]">{buildReferenceHeadline(relation, row.relatedDisplayName)}</p>
-            <p className="text-xs text-[color:var(--app-shell-muted)]">{buildReferenceContextLine(relation, row.relatedId, row.relatedDisplayContext)}</p>
-          </div>
-        );
-      }
+      header: copy.columnRelated,
+      render: (row) => (row.relatedId ? (
+        <ReferenceCell
+          reference={resolveRowReference(row)}
+          displayName={row.relatedDisplayName}
+          displayContext={row.relatedDisplayContext}
+        />
+      ) : '-')
     },
-    { key: 'user', header: 'Usuário', render: (row) => row.userId ?? '-' },
-    { key: 'payload', header: 'Payload', render: (row) => payloadSummary(row.payload) },
-    { key: 'createdAt', header: 'Data', render: (row) => new Date(row.createdAt).toLocaleString('pt-BR') }
+    {
+      key: 'createdAt',
+      header: copy.columnDate,
+      render: (row) => (
+        <span className="ui-mono whitespace-nowrap text-[var(--ink-2)]">{formatDateTimeForLocale(locale, row.createdAt)}</span>
+      )
+    }
   ];
 
   return (
     <PermissionGuard
       permission="crm.activity.read"
-      fallback={<div className="ui-notice-warning">{permissionFallback}</div>}
+      fallback={<div className="ui-notice-warning">{copy.activityNoPermission}</div>}
     >
-      <div className="space-y-5">
-        {isPetSurface
-          ? <h2 className="text-sm font-semibold text-[var(--ink)]">{pageTitle}</h2>
-          : <PageTitle title={pageTitle} description={pageDescription} />}
+      <div className={sharedPageStackClass}>
+        <h2 className="text-sm font-semibold text-[var(--ink)]">
+          {copy.activityTitle}
+          {loading ? null : <span className="ui-mono ml-2 font-normal text-[var(--muted)]">{totalItems}</span>}
+        </h2>
 
-        <div className={`grid gap-3 xl:grid-cols-[180px_220px_auto] ${isPetSurface ? 'border-b border-[color:var(--line)] pb-3' : 'ui-surface-panel p-4'}`}>
-          <FormSelect
-            label="Tipo de vínculo"
-            value={relationTypeFilter}
-            options={relationFilterTypeOptions}
-            onChange={(value) => {
-              setRelationTypeFilter(value as CrmRelatedReferenceType | '');
-              setRelationIdFilter('');
-            }}
-          />
-          <FormSelect
-            label="Registro vinculado"
-            value={relationIdFilter}
-            options={[
-              { value: '', label: relationTypeFilter ? 'Todos' : 'Selecione um tipo' },
-              ...(relationTypeFilter ? relationOptions(relationTypeFilter) : [])
-            ]}
-            onChange={setRelationIdFilter}
-            disabled={!relationTypeFilter}
+        <div className="flex flex-wrap items-end gap-2">
+          <RelationFilterChips
+            relationType={relationTypeFilter}
+            relationId={relationIdFilter}
+            typeOptions={typeOptions}
+            recordOptions={recordOptions}
+            onRelationTypeChange={setRelationTypeFilter}
+            onRelationIdChange={setRelationIdFilter}
           />
           <button
             type="button"
@@ -264,15 +138,22 @@ export function CrmActivityPage({ surface = 'crm' }: CrmActivityPageProps) {
               setRelationTypeFilter('');
               setRelationIdFilter('');
             }}
-            className="ui-secondary-button"
+            className="ui-inline-button"
           >
-            Limpar
+            {copy.clear}
           </button>
         </div>
 
+        {referencesError ? <div className="ui-notice-error">{referencesError}</div> : null}
         {error ? <div className="ui-notice-error">{error}</div> : null}
 
-        <DataTable columns={columns} rows={rows} getRowKey={(row) => row.id} loading={loading} emptyMessage="Nenhum evento encontrado." />
+        <DataTable
+          columns={columns}
+          rows={rows}
+          getRowKey={(row) => row.id}
+          loading={loading}
+          emptyState={{ title: copy.activityEmptyTitle, description: copy.activityEmptyDescription }}
+        />
 
         <Pagination
           page={pageData.page}

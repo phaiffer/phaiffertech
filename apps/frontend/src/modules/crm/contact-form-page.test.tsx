@@ -7,7 +7,6 @@ const { hasPermissionMock, crmServiceMock, pushMock } = vi.hoisted(() => ({
   hasPermissionMock: vi.fn(),
   pushMock: vi.fn(),
   crmServiceMock: {
-    listCompanies: vi.fn(),
     getContact: vi.fn(),
     createContact: vi.fn(),
     updateContact: vi.fn()
@@ -31,108 +30,81 @@ vi.mock('@/shared/services/crm-service', () => ({
   crmService: crmServiceMock
 }));
 
-function createPageResponse<T>(items: T[]) {
-  return {
-    items,
-    totalItems: items.length,
-    totalPages: 1,
-    page: 0,
-    size: 100
-  };
-}
+const storedContact = {
+  id: 'contact-1',
+  firstName: 'Legacy',
+  status: 'ACTIVE',
+  createdAt: '2026-03-10T09:00:00Z',
+  updatedAt: '2026-03-10T09:00:00Z'
+};
 
 describe('ContactFormPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
 
     hasPermissionMock.mockReturnValue(true);
-    crmServiceMock.listCompanies.mockResolvedValue(createPageResponse([
-      {
-        id: 'company-1',
-        name: 'Acme Vet',
-        status: 'ACTIVE',
-        createdAt: '2026-03-10T09:00:00Z',
-        updatedAt: '2026-03-10T09:00:00Z'
-      }
-    ]));
-    crmServiceMock.createContact.mockResolvedValue({
-      id: 'contact-1',
-      firstName: 'Ana',
-      companyId: 'company-1',
-      company: 'Acme Vet',
-      status: 'ACTIVE',
-      createdAt: '2026-03-10T09:00:00Z',
-      updatedAt: '2026-03-10T09:00:00Z'
-    });
-    crmServiceMock.updateContact.mockResolvedValue({
-      id: 'contact-1',
-      firstName: 'Ana',
-      company: 'Legacy Org',
-      status: 'ACTIVE',
-      createdAt: '2026-03-10T09:00:00Z',
-      updatedAt: '2026-03-10T09:00:00Z'
-    });
+    crmServiceMock.createContact.mockResolvedValue(storedContact);
+    crmServiceMock.updateContact.mockResolvedValue(storedContact);
   });
 
-  it('prioritizes companyId when a company is selected', async () => {
+  it('creates a contact without legacy company fields and returns to the list', async () => {
     render(<ContactFormPage />);
 
-    await waitFor(() => {
-      expect(crmServiceMock.listCompanies).toHaveBeenCalledTimes(1);
-    });
+    expect(screen.queryByLabelText('Company')).not.toBeInTheDocument();
 
-    fireEvent.change(screen.getByLabelText('Nome'), { target: { value: 'Ana' } });
-    fireEvent.change(screen.getByLabelText('Company vinculada'), { target: { value: 'company-1' } });
-    fireEvent.click(screen.getByRole('button', { name: 'Criar contato' }));
+    fireEvent.change(screen.getByLabelText('First name'), { target: { value: 'Ana' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Create support contact' }));
 
     await waitFor(() => {
       expect(crmServiceMock.createContact).toHaveBeenCalledTimes(1);
     });
 
     const payload = crmServiceMock.createContact.mock.calls[0][0];
-
-    expect(payload).toMatchObject({
-      firstName: 'Ana',
-      companyId: 'company-1',
-      status: 'ACTIVE'
-    });
+    expect(payload).toMatchObject({ firstName: 'Ana', status: 'ACTIVE' });
     expect(payload).not.toHaveProperty('company');
-    expect(screen.queryByLabelText('Empresa manual (compatibilidade)')).not.toBeInTheDocument();
+    expect(payload).not.toHaveProperty('companyId');
+    expect(await screen.findByText('Support contact created.')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(pushMock).toHaveBeenCalledWith('/pet/clients/contacts');
+    }, { timeout: 1500 });
   });
 
-  it('keeps manual company compatibility for legacy contacts without companyId', async () => {
-    crmServiceMock.getContact.mockResolvedValue({
-      id: 'contact-1',
-      firstName: 'Legacy',
-      company: 'Legacy Org',
-      status: 'ACTIVE',
-      createdAt: '2026-03-10T09:00:00Z',
-      updatedAt: '2026-03-10T09:00:00Z'
-    });
+  it('keeps the manual company of a legacy contact editable', async () => {
+    crmServiceMock.getContact.mockResolvedValue({ ...storedContact, company: 'Legacy Org' });
 
     render(<ContactFormPage contactId="contact-1" />);
 
-    await waitFor(() => {
-      expect(crmServiceMock.getContact).toHaveBeenCalledWith('contact-1');
-    });
+    expect(await screen.findByLabelText('Company')).toHaveValue('Legacy Org');
 
-    expect(screen.getByLabelText('Empresa manual (compatibilidade)')).toHaveValue('Legacy Org');
-
-    fireEvent.change(screen.getByLabelText('Nome'), { target: { value: 'Legacy Updated' } });
-    fireEvent.click(screen.getByRole('button', { name: 'Atualizar contato' }));
+    fireEvent.change(screen.getByLabelText('First name'), { target: { value: 'Legacy Updated' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Update support contact' }));
 
     await waitFor(() => {
       expect(crmServiceMock.updateContact).toHaveBeenCalledTimes(1);
     });
 
     const payload = crmServiceMock.updateContact.mock.calls[0][1];
-
-    expect(payload).toMatchObject({
-      firstName: 'Legacy Updated',
-      company: 'Legacy Org',
-      status: 'ACTIVE'
-    });
+    expect(payload).toMatchObject({ firstName: 'Legacy Updated', company: 'Legacy Org', status: 'ACTIVE' });
     expect(payload).not.toHaveProperty('companyId');
+  });
+
+  it('preserves the company link of a legacy contact on save', async () => {
+    crmServiceMock.getContact.mockResolvedValue({ ...storedContact, companyId: 'company-1', company: 'Acme Vet' });
+
+    render(<ContactFormPage contactId="contact-1" />);
+
+    expect(await screen.findByLabelText('Company')).toBeDisabled();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Update support contact' }));
+
+    await waitFor(() => {
+      expect(crmServiceMock.updateContact).toHaveBeenCalledTimes(1);
+    });
+
+    const payload = crmServiceMock.updateContact.mock.calls[0][1];
+    expect(payload).toMatchObject({ companyId: 'company-1' });
+    expect(payload).not.toHaveProperty('company');
   });
 
   it('shows the permission fallback when contact write access is missing', () => {
@@ -140,43 +112,18 @@ describe('ContactFormPage', () => {
 
     render(<ContactFormPage />);
 
-    expect(screen.getByText('Você não possui permissão para esta ação.')).toBeInTheDocument();
+    expect(screen.getByText('You do not have permission to manage support contacts.')).toBeInTheDocument();
   });
 
-  it('surfaces lookup errors without breaking the manual fallback', async () => {
-    crmServiceMock.listCompanies.mockRejectedValue(new ApiClientError('Companies unavailable', 403));
+  it('shows API errors returned while saving', async () => {
+    crmServiceMock.createContact.mockRejectedValue(new ApiClientError('Contact invalid', 400));
 
     render(<ContactFormPage />);
 
-    await waitFor(() => {
-      expect(screen.getByText('Companies unavailable')).toBeInTheDocument();
-    });
+    fireEvent.change(screen.getByLabelText('First name'), { target: { value: 'Ana' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Create support contact' }));
 
-    expect(screen.getByLabelText('Empresa manual (compatibilidade)')).toBeInTheDocument();
-  });
-
-  it('uses the Pet support-contact surface without loading companies', async () => {
-    render(<ContactFormPage surface="pet" />);
-
-    await waitFor(() => {
-      expect(screen.getByText('Novo contato de apoio')).toBeInTheDocument();
-    });
-
-    expect(crmServiceMock.listCompanies).not.toHaveBeenCalled();
-    expect(screen.queryByLabelText('Company vinculada')).not.toBeInTheDocument();
-    expect(screen.getByLabelText('Contexto legado (opcional)')).toBeInTheDocument();
-
-    fireEvent.change(screen.getByLabelText('Nome do contato de apoio'), { target: { value: 'Ana' } });
-    fireEvent.click(screen.getByRole('button', { name: 'Criar contato de apoio' }));
-
-    await waitFor(() => {
-      expect(crmServiceMock.createContact).toHaveBeenCalledTimes(1);
-    });
-
-    expect(crmServiceMock.createContact.mock.calls[0][0]).toMatchObject({
-      firstName: 'Ana',
-      status: 'ACTIVE'
-    });
+    expect(await screen.findByText('Contact invalid')).toBeInTheDocument();
     expect(pushMock).not.toHaveBeenCalled();
   });
 });

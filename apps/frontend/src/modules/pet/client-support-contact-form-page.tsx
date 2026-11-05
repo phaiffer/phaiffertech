@@ -11,7 +11,7 @@ export function PetClientSupportContactFormPage({ contactId }: PetClientSupportC
   return (
     <div className="space-y-5">
       <PetModuleSubnav />
-      <ContactFormPage contactId={contactId} surface="pet" />
+      <ContactFormPage contactId={contactId} />
     </div>
   );
 }

@@ -28,7 +28,7 @@ function createPageResponse<T>(items: T[]) {
     totalItems: items.length,
     totalPages: 1,
     page: 0,
-    size: 10
+    size: 14
   };
 }
 
@@ -37,15 +37,6 @@ describe('CrmContactsPage', () => {
     vi.clearAllMocks();
 
     hasPermissionMock.mockReturnValue(true);
-    crmServiceMock.listCompanies.mockResolvedValue(createPageResponse([
-      {
-        id: 'company-1',
-        name: 'Acme Vet',
-        status: 'ACTIVE',
-        createdAt: '2026-03-10T09:00:00Z',
-        updatedAt: '2026-03-10T09:00:00Z'
-      }
-    ]));
     crmServiceMock.listContacts.mockResolvedValue(createPageResponse([
       {
         id: 'contact-1',
@@ -60,35 +51,25 @@ describe('CrmContactsPage', () => {
     ]));
   });
 
-  it('uses the existing company filter supported by crmService', async () => {
+  it('lists support contacts without loading companies or showing the legacy company', async () => {
     render(<CrmContactsPage />);
 
-    await waitFor(() => {
-      expect(crmServiceMock.listContacts).toHaveBeenCalledTimes(1);
-    });
-
-    fireEvent.change(screen.getByLabelText('Company'), { target: { value: 'company-1' } });
-
-    await waitFor(() => {
-      expect(crmServiceMock.listContacts).toHaveBeenLastCalledWith(0, 10, '', {
-        status: undefined,
-        companyId: 'company-1'
-      });
-    });
-
-    expect(screen.getAllByText('Acme Vet').length).toBeGreaterThan(0);
-  });
-
-  it('renders the Pet support-contact surface without exposing the CRM company filter', async () => {
-    render(<CrmContactsPage surface="pet" />);
-
-    await waitFor(() => {
-      expect(crmServiceMock.listContacts).toHaveBeenCalledTimes(1);
-    });
+    expect(await screen.findByText('Ana Silva')).toBeInTheDocument();
 
     expect(crmServiceMock.listCompanies).not.toHaveBeenCalled();
-    expect(screen.getByRole('heading', { name: 'Contatos de apoio' })).toBeInTheDocument();
-    expect(screen.queryByLabelText('Company')).not.toBeInTheDocument();
-    expect(screen.getByText('Contexto legado')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /Support contacts/ })).toBeInTheDocument();
+    expect(screen.queryByText('Acme Vet')).not.toBeInTheDocument();
+    expect(screen.getAllByRole('link', { name: 'New support contact' })[0]).toHaveAttribute('href', '/pet/clients/contacts/new');
+  });
+
+  it('filters by status through the shared contact service', async () => {
+    render(<CrmContactsPage />);
+
+    await screen.findByText('Ana Silva');
+    fireEvent.change(screen.getByLabelText('Status'), { target: { value: 'INACTIVE' } });
+
+    await waitFor(() => {
+      expect(crmServiceMock.listContacts).toHaveBeenLastCalledWith(0, 14, '', { status: 'INACTIVE' });
+    });
   });
 });

@@ -178,7 +178,7 @@ export function PetModuleSubnav() {
 
   return (
     // Comanda v2: simple tabs, underline on the active one.
-    <nav className="overflow-x-auto border-b border-[color:var(--line)]">
+    <nav className="overflow-x-auto overflow-y-hidden border-b border-[color:var(--line)]">
       <div className="flex min-w-max items-center gap-4">
         {items.map((item) => {
           const active = isActive(pathname, item.href);

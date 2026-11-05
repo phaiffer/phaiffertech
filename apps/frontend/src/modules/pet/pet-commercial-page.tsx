@@ -11,71 +11,60 @@ import {
   type PetCommercialTabKey
 } from '@/shared/auth/pet-commercial-permissions';
 import { usePermissions } from '@/shared/auth/usePermissions';
-
-const commercialTabs: Array<{ key: PetCommercialTabKey; label: string; permission: string }> = [
-  { key: 'leads', label: 'Leads', permission: petCommercialTabPermissions.leads },
-  { key: 'deals', label: 'Negócios', permission: petCommercialTabPermissions.deals },
-  { key: 'pipeline', label: 'Pipeline', permission: petCommercialTabPermissions.pipeline }
-];
+import { sharedPageStackClass } from '@/shared/components/public-visual-system';
+import { useAppMessages } from '@/shared/i18n/app-i18n-provider';
 
 function buildTabHref(pathname: string, key: PetCommercialTabKey) {
   return key === 'leads' ? pathname : `${pathname}?tab=${key}`;
 }
 
 export function PetCommercialPage() {
+  const copy = useAppMessages().screens.petCommercial;
   const { hasPermission } = usePermissions();
   const pathname = usePathname() ?? '/pet/commercial';
   const searchParams = useSearchParams();
   const requestedTab = searchParams.get('tab');
+  const commercialTabs: Array<{ key: PetCommercialTabKey; label: string; permission: string }> = [
+    { key: 'leads', label: copy.tabLeads, permission: petCommercialTabPermissions.leads },
+    { key: 'deals', label: copy.tabDeals, permission: petCommercialTabPermissions.deals },
+    { key: 'pipeline', label: copy.tabStages, permission: petCommercialTabPermissions.pipeline }
+  ];
   const visibleTabs = commercialTabs.filter((tab) => hasPermission(tab.permission));
   const activeTab = visibleTabs.find((tab) => tab.key === requestedTab) ?? visibleTabs[0] ?? null;
 
   return (
-    <div className="space-y-5">
+    <div className={sharedPageStackClass}>
       <PetModuleSubnav />
 
       {activeTab ? (
         <>
-          <section className="ui-surface-panel space-y-4 p-4">
-            <div className="space-y-2">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[color:var(--accent)]">
-                Gestão Comercial
-              </p>
-              <p className="max-w-3xl text-sm text-[color:var(--app-shell-muted)]">
-                Leads, negócios e pipeline entram na operação pet como uma capacidade comercial única. A infraestrutura
-                legada continua por baixo apenas como camada temporária de compatibilidade enquanto a consolidação
-                avança com segurança.
-              </p>
-            </div>
+          <nav aria-label={copy.tabsLabel} className="flex gap-4 overflow-x-auto overflow-y-hidden border-b border-[color:var(--line)]">
+            {visibleTabs.map((tab) => {
+              const active = tab.key === activeTab.key;
 
-            <div className="flex flex-wrap gap-2">
-              {visibleTabs.map((tab) => {
-                const active = tab.key === activeTab.key;
-
-                return (
-                  <Link
-                    key={tab.key}
-                    href={buildTabHref(pathname, tab.key)}
-                    className={`inline-flex h-10 items-center rounded-md px-3.5 text-sm font-medium transition-all duration-200 ${
-                      active
-                        ? 'text-white shadow-sm'
-                        : 'border border-[color:var(--app-shell-border)] bg-white text-[color:var(--app-shell-heading)] hover:bg-[color:var(--app-shell-panel-muted)]'
-                    }`}
-                    style={active ? { background: 'var(--accent)' } : undefined}
-                  >
-                    {tab.label}
-                  </Link>
-                );
-              })}
-            </div>
-          </section>
+              return (
+                <Link
+                  key={tab.key}
+                  href={buildTabHref(pathname, tab.key)}
+                  aria-current={active ? 'page' : undefined}
+                  className={`-mb-px whitespace-nowrap border-b-2 py-2 text-sm ${
+                    active
+                      ? 'border-[color:var(--ink)] font-medium text-[var(--ink)]'
+                      : 'border-transparent text-[var(--ink-2)] hover:text-[var(--ink)]'
+                  }`}
+                >
+                  {tab.label}
+                </Link>
+              );
+            })}
+          </nav>
 
           {activeTab.key === 'leads' ? <PetCommercialLeadsPage /> : null}
           {activeTab.key === 'deals' ? <PetCommercialDealsPage /> : null}
           {activeTab.key === 'pipeline' ? <PetCommercialPipelinePage /> : null}
         </>
       ) : (
-        <div className="ui-notice-warning">Você não possui permissão para visualizar o comercial da operação.</div>
+        <div className="ui-notice-warning">{copy.noPermission}</div>
       )}
     </div>
   );

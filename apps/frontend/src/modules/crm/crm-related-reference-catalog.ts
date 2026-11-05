@@ -1,21 +1,9 @@
 import { CanonicalReferenceContext, resolveCanonicalReference } from '@/modules/crm/crm-reference-utils';
-import { CrmCompany, CrmContact, CrmDeal, CrmLead } from '@/shared/types/crm';
 import { PetAppointment, PetClient, PetProfile } from '@/shared/types/pet';
 
-export type CrmRelatedReferenceType =
-  | 'COMPANY'
-  | 'CONTACT'
-  | 'LEAD'
-  | 'DEAL'
-  | 'PET.CLIENT'
-  | 'PET.PROFILE'
-  | 'PET.APPOINTMENT';
+export type CrmRelatedReferenceType = 'PET.CLIENT' | 'PET.PROFILE' | 'PET.APPOINTMENT';
 
-type ReferenceCatalogInput = {
-  companies: CrmCompany[];
-  contacts: CrmContact[];
-  leads: CrmLead[];
-  deals: CrmDeal[];
+export type RelatedReferenceCatalog = {
   petClients: PetClient[];
   petProfiles: PetProfile[];
   petAppointments: PetAppointment[];
@@ -27,22 +15,23 @@ type AvailablePetReferences = {
   canReadPetAppointments: boolean;
 };
 
-export function buildRelatedReferenceTypeOptions(available: AvailablePetReferences) {
-  const options: Array<{ value: CrmRelatedReferenceType; label: string }> = [
-    { value: 'COMPANY', label: 'Empresa CRM' },
-    { value: 'CONTACT', label: 'Contato CRM' },
-    { value: 'LEAD', label: 'Lead CRM' },
-    { value: 'DEAL', label: 'Negócio CRM' }
-  ];
+type RelatedReferenceLabels = {
+  client: string;
+  pet: string;
+  appointment: string;
+};
+
+export function buildRelatedReferenceTypeOptions(available: AvailablePetReferences, labels: RelatedReferenceLabels) {
+  const options: Array<{ value: CrmRelatedReferenceType; label: string }> = [];
 
   if (available.canReadPetClients) {
-    options.push({ value: 'PET.CLIENT', label: 'Cliente Pet' });
+    options.push({ value: 'PET.CLIENT', label: labels.client });
   }
   if (available.canReadPetProfiles) {
-    options.push({ value: 'PET.PROFILE', label: 'Pet' });
+    options.push({ value: 'PET.PROFILE', label: labels.pet });
   }
   if (available.canReadPetAppointments) {
-    options.push({ value: 'PET.APPOINTMENT', label: 'Atendimento Pet' });
+    options.push({ value: 'PET.APPOINTMENT', label: labels.appointment });
   }
 
   return options;
@@ -50,56 +39,25 @@ export function buildRelatedReferenceTypeOptions(available: AvailablePetReferenc
 
 export function buildRelatedReferenceOptions(
   referenceType: CrmRelatedReferenceType,
-  input: ReferenceCatalogInput
+  catalog: RelatedReferenceCatalog
 ) {
   switch (referenceType) {
-    case 'CONTACT':
-      return input.contacts.map((item) => ({ value: item.id, label: `${item.firstName} ${item.lastName ?? ''}`.trim() }));
-    case 'LEAD':
-      return input.leads.map((item) => ({ value: item.id, label: item.name }));
-    case 'DEAL':
-      return input.deals.map((item) => ({ value: item.id, label: item.title }));
-    case 'PET.CLIENT':
-      return input.petClients.map((item) => ({ value: item.id, label: item.fullName ?? item.name }));
     case 'PET.PROFILE':
-      return input.petProfiles.map((item) => ({ value: item.id, label: item.name }));
+      return catalog.petProfiles.map((item) => ({ value: item.id, label: item.name }));
     case 'PET.APPOINTMENT':
-      return input.petAppointments.map((item) => ({
+      return catalog.petAppointments.map((item) => ({
         value: item.id,
         label: [item.serviceName, item.petName].filter(Boolean).join(' · ') || item.id
       }));
-    case 'COMPANY':
+    case 'PET.CLIENT':
     default:
-      return input.companies.map((item) => ({ value: item.id, label: item.name }));
+      return catalog.petClients.map((item) => ({ value: item.id, label: item.fullName ?? item.name }));
   }
-}
-
-export function buildRelatedReferencePayload(referenceType: CrmRelatedReferenceType, relatedId: string) {
-  if (referenceType.startsWith('PET.')) {
-    return {
-      relatedReferenceType: referenceType,
-      relatedId
-    };
-  }
-
-  return {
-    companyId: referenceType === 'COMPANY' ? relatedId : undefined,
-    contactId: referenceType === 'CONTACT' ? relatedId : undefined,
-    leadId: referenceType === 'LEAD' ? relatedId : undefined,
-    dealId: referenceType === 'DEAL' ? relatedId : undefined
-  };
 }
 
 export function resolveEditableReferenceType(context: CanonicalReferenceContext): CrmRelatedReferenceType | null {
-  if (context.moduleCode === 'CRM' && context.entityType) {
-    const crmType = context.entityType as CrmRelatedReferenceType;
-    if (crmType === 'COMPANY' || crmType === 'CONTACT' || crmType === 'LEAD' || crmType === 'DEAL') {
-      return crmType;
-    }
-  }
-
   if (context.referenceType === 'PET.CLIENT' || context.referenceType === 'PET.PROFILE' || context.referenceType === 'PET.APPOINTMENT') {
-    return context.referenceType as CrmRelatedReferenceType;
+    return context.referenceType;
   }
 
   return null;
@@ -110,11 +68,5 @@ export function normalizeRelatedReferenceType(value?: string | null): CrmRelated
     return null;
   }
 
-  const context = resolveCanonicalReference({
-    compatibilityType: value,
-    referenceType: value,
-    fallbackReferenceType: value
-  });
-
-  return resolveEditableReferenceType(context);
+  return resolveEditableReferenceType(resolveCanonicalReference({ referenceType: value }));
 }

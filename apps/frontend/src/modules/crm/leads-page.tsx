@@ -2,60 +2,26 @@
 
 import Link from 'next/link';
 import { useCallback, useEffect, useState } from 'react';
-import {
-  sharedCompactTextClass,
-  sharedFilterToolbarClass,
-  sharedFormActionsClass,
-  sharedInlineActionsClass,
-  sharedPageStackClass
-} from '@/shared/components/public-visual-system';
+import { sharedInlineActionsClass, sharedPageStackClass } from '@/shared/components/public-visual-system';
 import { petCommercialPermissions } from '@/shared/auth/pet-commercial-permissions';
+import { PermissionGuard } from '@/shared/auth/PermissionGuard';
 import { StatusBadge } from '@/shared/dashboard/status-badge';
-import { petCommercialService } from '@/shared/services/pet-commercial-service';
-import { ApiClientError } from '@/shared/lib/http';
+import { useAppI18n, useAppMessages } from '@/shared/i18n/app-i18n-provider';
+import { formatDateTimeForLocale } from '@/shared/i18n/formatters';
+import { resolveApiErrorMessage } from '@/shared/lib/api-error-message';
 import { resolvePageItems, resolveTotalItems } from '@/shared/lib/pagination';
+import { petCommercialService } from '@/shared/services/pet-commercial-service';
 import { PageResponse } from '@/shared/types/common';
 import { PetCommercialAccount, PetCommercialLead, PetCommercialSupportContact } from '@/shared/types/pet-commercial';
+import { ConfirmDialog } from '@/shared/ui/confirm-dialog';
 import { DataTable, DataTableColumn } from '@/shared/ui/data-table';
-import { FormSelect } from '@/shared/ui/form-select';
-import { PageSection } from '@/shared/ui/page-section';
+import { FilterChip } from '@/shared/ui/filter-chip';
 import { PageTitle } from '@/shared/ui/page-title';
 import { Pagination } from '@/shared/ui/pagination';
 import { SearchBar } from '@/shared/ui/search-bar';
-import { ConfirmDialog } from '@/shared/ui/confirm-dialog';
-import { PermissionGuard } from '@/shared/auth/PermissionGuard';
-import { resolveApiErrorMessage } from '@/shared/lib/api-error-message';
 
-const pageSize = 10;
-const statusOptions = [
-  { value: '', label: 'Todos' },
-  { value: 'NEW', label: 'NEW' },
-  { value: 'QUALIFIED', label: 'QUALIFIED' },
-  { value: 'WON', label: 'WON' },
-  { value: 'LOST', label: 'LOST' }
-];
-
-const petStatusOptions = [
-  { value: '', label: 'Todos' },
-  { value: 'NEW', label: 'Novo' },
-  { value: 'QUALIFIED', label: 'Qualificado' },
-  { value: 'WON', label: 'Convertido' },
-  { value: 'LOST', label: 'Perdido' }
-];
-
-const sourceOptions = [
-  { value: '', label: 'Todas' },
-  { value: 'WEBSITE', label: 'WEBSITE' },
-  { value: 'EVENT', label: 'EVENT' },
-  { value: 'REFERRAL', label: 'REFERRAL' }
-];
-
-const petSourceOptions = [
-  { value: '', label: 'Todas' },
-  { value: 'WEBSITE', label: 'Website' },
-  { value: 'EVENT', label: 'Evento' },
-  { value: 'REFERRAL', label: 'Indicacao' }
-];
+const pageSize = 14;
+const basePath = '/pet/commercial/leads';
 
 const initialPage: PageResponse<PetCommercialLead> = {
   items: [],
@@ -65,22 +31,15 @@ const initialPage: PageResponse<PetCommercialLead> = {
   size: pageSize
 };
 
-function formatDateTime(value: string) {
-  return new Intl.DateTimeFormat('pt-BR', {
-    dateStyle: 'short',
-    timeStyle: 'short'
-  }).format(new Date(value));
+function contactLabel(contact: PetCommercialSupportContact) {
+  return `${contact.firstName} ${contact.lastName ?? ''}`.trim();
 }
 
-type CrmLeadsPageProps = {
-  surface?: 'crm' | 'pet';
-};
-
-export function CrmLeadsPage({ surface = 'crm' }: CrmLeadsPageProps) {
-  const isPetSurface = surface === 'pet';
+export function CrmLeadsPage() {
+  const { locale } = useAppI18n();
+  const copy = useAppMessages().screens.petCommercial;
   const commercialService = petCommercialService;
   const leadPermissions = petCommercialPermissions.leads;
-  const basePath = isPetSurface ? '/pet/commercial/leads' : '/crm/leads';
   const [pageData, setPageData] = useState<PageResponse<PetCommercialLead>>(initialPage);
   const [companies, setCompanies] = useState<PetCommercialAccount[]>([]);
   const [contacts, setContacts] = useState<PetCommercialSupportContact[]>([]);
@@ -103,19 +62,15 @@ export function CrmLeadsPage({ surface = 'crm' }: CrmLeadsPageProps) {
     setLoadingCompanies(true);
     commercialService.listCompanies(0, 100)
       .then((companiesPage) => {
-        if (!active) {
-          return;
+        if (active) {
+          setCompanies(resolvePageItems(companiesPage));
         }
-        setCompanies(resolvePageItems(companiesPage));
       })
       .catch((err) => {
-        if (!active) {
-          return;
+        if (active) {
+          const message = resolveApiErrorMessage(err, copy.accountsLoadError);
+          setError((current) => current ?? message);
         }
-        const message = resolveApiErrorMessage(err, isPetSurface
-            ? 'Erro ao carregar contas comerciais para filtro.'
-            : 'Erro ao carregar companies para filtro.');
-        setError((current) => current ?? message);
       })
       .finally(() => {
         if (active) {
@@ -126,7 +81,7 @@ export function CrmLeadsPage({ surface = 'crm' }: CrmLeadsPageProps) {
     return () => {
       active = false;
     };
-  }, [commercialService, isPetSurface]);
+  }, [commercialService, copy.accountsLoadError]);
 
   useEffect(() => {
     let active = true;
@@ -136,19 +91,15 @@ export function CrmLeadsPage({ surface = 'crm' }: CrmLeadsPageProps) {
       companyId: companyFilterId || undefined
     })
       .then((contactsPage) => {
-        if (!active) {
-          return;
+        if (active) {
+          setContacts(resolvePageItems(contactsPage));
         }
-        setContacts(resolvePageItems(contactsPage));
       })
       .catch((err) => {
-        if (!active) {
-          return;
+        if (active) {
+          const message = resolveApiErrorMessage(err, copy.contactsLoadError);
+          setError((current) => current ?? message);
         }
-        const message = resolveApiErrorMessage(err, isPetSurface
-            ? 'Erro ao carregar contatos de apoio para filtro.'
-            : 'Erro ao carregar contatos para filtro.');
-        setError((current) => current ?? message);
       })
       .finally(() => {
         if (active) {
@@ -159,7 +110,7 @@ export function CrmLeadsPage({ surface = 'crm' }: CrmLeadsPageProps) {
     return () => {
       active = false;
     };
-  }, [commercialService, companyFilterId, isPetSurface]);
+  }, [commercialService, companyFilterId, copy.contactsLoadError]);
 
   const load = useCallback(async (
     page: number,
@@ -180,17 +131,14 @@ export function CrmLeadsPage({ surface = 'crm' }: CrmLeadsPageProps) {
       });
       setPageData(result);
     } catch (err) {
-      const message = resolveApiErrorMessage(err, isPetSurface
-          ? 'Erro ao carregar leads comerciais.'
-          : 'Erro ao carregar leads.');
-      setError(message);
+      setError(resolveApiErrorMessage(err, copy.leadsLoadError));
     } finally {
       setLoading(false);
     }
-  }, [commercialService, isPetSurface]);
+  }, [commercialService, copy.leadsLoadError]);
 
   useEffect(() => {
-    load(0, search, statusFilter, sourceFilter, companyFilterId, contactFilterId);
+    void load(0, search, statusFilter, sourceFilter, companyFilterId, contactFilterId);
   }, [companyFilterId, contactFilterId, load, search, sourceFilter, statusFilter]);
 
   async function handleConfirmDelete() {
@@ -203,110 +151,96 @@ export function CrmLeadsPage({ surface = 'crm' }: CrmLeadsPageProps) {
       setDeleteCandidate(null);
       await load(pageData.page, search, statusFilter, sourceFilter, companyFilterId, contactFilterId);
     } catch (err) {
-      const message = resolveApiErrorMessage(err, isPetSurface
-          ? 'Erro ao remover lead comercial.'
-          : 'Erro ao excluir lead.');
-      setError(message);
+      setError(resolveApiErrorMessage(err, copy.leadDeleteError));
     }
+  }
+
+  function clearFilters() {
+    setSearchInput('');
+    setSearch('');
+    setStatusFilter('');
+    setSourceFilter('');
+    setCompanyFilterId('');
+    setContactFilterId('');
   }
 
   const rows = resolvePageItems(pageData);
   const totalItems = resolveTotalItems(pageData);
-  const availableStatusOptions = isPetSurface ? petStatusOptions : statusOptions;
-  const availableSourceOptions = isPetSurface ? petSourceOptions : sourceOptions;
-  const companyOptions = [
-    {
-      value: '',
-      label: loadingCompanies
-        ? (isPetSurface ? 'Carregando contas comerciais...' : 'Carregando companies...')
-        : (isPetSurface ? 'Todas as contas comerciais' : 'Todas as companies')
-    },
-    ...companies.map((company) => ({
-      value: company.id,
-      label: company.name
-    }))
+  const sourceLabels: Record<string, string> = {
+    WEBSITE: copy.sourceWebsite,
+    EVENT: copy.sourceEvent,
+    REFERRAL: copy.sourceReferral
+  };
+  const statusOptions = [
+    { value: '', label: copy.all },
+    { value: 'NEW', label: copy.statusNew },
+    { value: 'QUALIFIED', label: copy.statusQualified },
+    { value: 'NEGOTIATION', label: copy.statusNegotiation },
+    { value: 'WON', label: copy.statusWon },
+    { value: 'LOST', label: copy.statusLost }
   ];
-  const contactOptions = [
-    {
-      value: '',
-      label: loadingContacts
-        ? (isPetSurface ? 'Carregando contatos de apoio...' : 'Carregando contatos...')
-        : (isPetSurface ? 'Todos os contatos de apoio' : 'Todos os contatos')
-    },
-    ...contacts.map((contact) => ({
-      value: contact.id,
-      label: `${contact.firstName} ${contact.lastName ?? ''}`.trim()
-    }))
+  const sourceOptions = [
+    { value: '', label: copy.all },
+    ...Object.entries(sourceLabels).map(([value, label]) => ({ value, label }))
   ];
   const companyName = (companyId?: string) => companies.find((company) => company.id === companyId)?.name ?? '-';
   const contactName = (contactId?: string) => {
     const contact = contacts.find((item) => item.id === contactId);
-    return contact ? `${contact.firstName} ${contact.lastName ?? ''}`.trim() : '-';
+    return contact ? contactLabel(contact) : '-';
   };
-  const activeFilterCount = [search, statusFilter, sourceFilter, companyFilterId, contactFilterId].filter(Boolean).length;
 
   const columns: DataTableColumn<PetCommercialLead>[] = [
     {
       key: 'lead',
-      header: isPetSurface ? 'Lead comercial' : 'Lead',
+      header: copy.columnLead,
       render: (lead) => (
         <div>
-          <p className="font-medium text-[color:var(--app-shell-heading)]">{lead.name}</p>
-          <p className={`mt-1 ${sharedCompactTextClass}`}>
-            {lead.email ?? 'Sem email'}
-            {lead.phone ? ` • ${lead.phone}` : ''}
+          <p className="font-medium text-[var(--ink)]">{lead.name}</p>
+          <p className="text-xs text-[var(--ink-2)]">
+            {lead.email ?? copy.noEmail}
+            {lead.phone ? ` · ${lead.phone}` : ''}
           </p>
         </div>
       )
     },
     {
       key: 'source',
-      header: 'Origem',
+      header: copy.columnSource,
+      render: (lead) => (lead.source ? sourceLabels[lead.source] ?? lead.source : copy.noSource)
+    },
+    {
+      key: 'account',
+      header: copy.columnAccount,
       render: (lead) => (
         <div>
-          <p className="font-medium text-[color:var(--app-shell-heading)]">{lead.source ?? 'Sem origem definida'}</p>
-          <p className={`mt-1 ${sharedCompactTextClass}`}>Atualizado em {formatDateTime(lead.updatedAt)}</p>
+          <p className="text-[var(--ink)]">{companyName(lead.companyId)}</p>
+          <p className="text-xs text-[var(--ink-2)]">{contactName(lead.contactId)}</p>
         </div>
       )
     },
     {
-      key: 'relationship',
-      header: isPetSurface ? 'Contexto comercial' : 'Relacionamento',
+      key: 'updatedAt',
+      header: copy.columnUpdatedAt,
       render: (lead) => (
-        <div>
-          <p className="font-medium text-[color:var(--app-shell-heading)]">{companyName(lead.companyId)}</p>
-          <p className={`mt-1 ${sharedCompactTextClass}`}>
-            {isPetSurface ? 'Contato de apoio' : 'Contato'}: {contactName(lead.contactId)}
-          </p>
-        </div>
+        <span className="ui-mono whitespace-nowrap text-[var(--ink-2)]">{formatDateTimeForLocale(locale, lead.updatedAt)}</span>
       )
     },
     {
       key: 'status',
-      header: 'Status',
+      header: copy.columnStatus,
       render: (lead) => <StatusBadge status={lead.status} />
     },
     {
       key: 'actions',
-      header: 'Ações',
+      header: copy.columnActions,
       render: (lead) => (
         <div className={sharedInlineActionsClass}>
           <PermissionGuard permission={leadPermissions.update}>
-            <Link
-              href={`${basePath}/${lead.id}`}
-              className="ui-inline-button"
-            >
-              Editar
-            </Link>
+            <Link href={`${basePath}/${lead.id}`} className="ui-inline-button">{copy.edit}</Link>
           </PermissionGuard>
-
           <PermissionGuard permission={leadPermissions.delete}>
-            <button
-              type="button"
-              onClick={() => setDeleteCandidate(lead)}
-              className="ui-inline-danger-button"
-            >
-              Excluir
+            <button type="button" onClick={() => setDeleteCandidate(lead)} className="ui-inline-danger-button">
+              {copy.delete}
             </button>
           </PermissionGuard>
         </div>
@@ -314,168 +248,81 @@ export function CrmLeadsPage({ surface = 'crm' }: CrmLeadsPageProps) {
     }
   ];
 
+  const newLeadLink = (
+    <PermissionGuard permission={leadPermissions.create}>
+      <Link href={`${basePath}/new`} className="ui-primary-button">{copy.newLead}</Link>
+    </PermissionGuard>
+  );
+
   return (
     <PermissionGuard
       permission={leadPermissions.read}
-      fallback={(
-        <div className="ui-notice-warning">
-          {isPetSurface
-            ? 'Você não possui permissão para visualizar o comercial da Gestão Pet.'
-            : 'Você não possui permissão para visualizar leads.'}
-        </div>
-      )}
+      fallback={<div className="ui-notice-warning">{copy.noPermission}</div>}
     >
       <div className={sharedPageStackClass}>
         <PageTitle
-          eyebrow={isPetSurface ? 'Gestão Pet · Comercial' : 'CRM workspace'}
-          title={isPetSurface ? 'Leads comerciais' : 'Leads'}
-          description={isPetSurface
-            ? 'Concentre captura, origem e contexto de conversão sem reabrir uma superfície comercial legada.'
-            : 'Keep intake, source, and relationship context visible without turning the page into an admin panel.'}
-          actions={(
-            <PermissionGuard permission={leadPermissions.create}>
-              <Link
-                href={`${basePath}/new`}
-                className="ui-primary-button"
-              >
-                {isPetSurface ? 'Novo lead comercial' : 'Novo lead'}
-              </Link>
-            </PermissionGuard>
-          )}
+          title={copy.leadsTitle}
+          description={copy.leadsDescription}
+          count={totalItems}
+          actions={newLeadLink}
         />
 
-        <PageSection
-          tone="muted"
-          title={isPetSurface ? 'Filtros comerciais' : 'Filters'}
-          description={isPetSurface
-            ? 'Refine a fila por status, origem e contexto comercial sem tirar a Gestão Pet do centro da navegação.'
-            : 'Refine the queue by status, source, company, and contact.'}
+        <form
+          className="flex flex-wrap items-end gap-2"
+          onSubmit={(event) => {
+            event.preventDefault();
+            setSearch(searchInput);
+          }}
         >
-          <div className={sharedFilterToolbarClass}>
-            <div className="grid gap-3 xl:grid-cols-[minmax(0,1.45fr)_repeat(4,minmax(0,0.82fr))] xl:items-end">
-              <SearchBar
-                label={isPetSurface ? 'Buscar' : 'Search'}
-                value={searchInput}
-                onChange={setSearchInput}
-                placeholder={isPetSurface ? 'Nome, email, origem ou contexto' : 'Nome, email, origem'}
-              />
-              <FormSelect
-                label="Status"
-                value={statusFilter}
-                options={availableStatusOptions}
-                onChange={setStatusFilter}
-              />
-              <FormSelect
-                label={isPetSurface ? 'Origem comercial' : 'Origem'}
-                value={sourceFilter}
-                options={availableSourceOptions}
-                onChange={setSourceFilter}
-              />
-              <FormSelect
-                label={isPetSurface ? 'Conta comercial' : 'Company'}
-                value={companyFilterId}
-                options={companyOptions}
-                onChange={(value) => {
-                  setCompanyFilterId(value);
-                  setContactFilterId('');
-                }}
-                disabled={loadingCompanies}
-              />
-              <FormSelect
-                label={isPetSurface ? 'Contato de apoio' : 'Contato'}
-                value={contactFilterId}
-                options={contactOptions}
-                onChange={setContactFilterId}
-                disabled={loadingContacts}
-              />
-            </div>
-            <div className={sharedFormActionsClass}>
-              <button
-                type="button"
-                onClick={() => setSearch(searchInput)}
-                className="ui-primary-button"
-              >
-                {isPetSurface ? 'Buscar' : 'Buscar'}
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setSearchInput('');
-                  setSearch('');
-                  setStatusFilter('');
-                  setSourceFilter('');
-                  setCompanyFilterId('');
-                  setContactFilterId('');
-                }}
-                className="ui-secondary-button"
-              >
-                Limpar
-              </button>
-              <p className="text-sm text-[color:var(--app-shell-muted)]">
-                {activeFilterCount > 0
-                  ? `${activeFilterCount} filtro(s) ativos na fila comercial.`
-                  : isPetSurface
-                    ? 'Sem filtros ativos. Mostrando a entrada comercial mais ampla.'
-                    : 'Sem filtros ativos no momento.'}
-              </p>
-            </div>
+          <div className="min-w-[14rem] flex-1">
+            <SearchBar value={searchInput} onChange={setSearchInput} placeholder={copy.leadsSearchPlaceholder} />
           </div>
-        </PageSection>
+          <FilterChip label={copy.filterStatus} value={statusFilter} options={statusOptions} onChange={setStatusFilter} />
+          <FilterChip label={copy.filterSource} value={sourceFilter} options={sourceOptions} onChange={setSourceFilter} />
+          <FilterChip
+            label={copy.filterAccount}
+            value={companyFilterId}
+            options={[{ value: '', label: copy.all }, ...companies.map((company) => ({ value: company.id, label: company.name }))]}
+            onChange={(value) => {
+              setCompanyFilterId(value);
+              setContactFilterId('');
+            }}
+            disabled={loadingCompanies}
+          />
+          <FilterChip
+            label={copy.filterContact}
+            value={contactFilterId}
+            options={[{ value: '', label: copy.all }, ...contacts.map((contact) => ({ value: contact.id, label: contactLabel(contact) }))]}
+            onChange={setContactFilterId}
+            disabled={loadingContacts}
+          />
+          <button type="submit" className="ui-secondary-button">{copy.search}</button>
+          <button type="button" onClick={clearFilters} className="ui-inline-button">{copy.clear}</button>
+        </form>
 
-        {error ? (
-          <div className="ui-notice-error">{error}</div>
-        ) : null}
+        {error ? <div className="ui-notice-error">{error}</div> : null}
 
-        <PageSection
-          title={isPetSurface ? 'Fila de leads comerciais' : 'Lead queue'}
-          description={isPetSurface
-            ? 'Acompanhe captação, qualificação e próximos passos de conversão antes da passagem para cliente.'
-            : 'Open leads with source, relationship context, and next actions.'}
-          actions={(
-            <p className="text-sm text-[color:var(--app-shell-muted)]">
-              {isPetSurface ? `Total de ${totalItems} lead(s)` : `Total ${totalItems} lead(s)`}
-            </p>
-          )}
-        >
-          <div className="space-y-5">
-            <DataTable
-              columns={columns}
-              rows={rows}
-              getRowKey={(row) => row.id}
-              loading={loading}
-              emptyState={{
-                title: isPetSurface ? 'Nenhum lead comercial encontrado' : 'Nenhum lead encontrado',
-                description: isPetSurface
-                  ? 'Abra o primeiro lead para iniciar a captação comercial da Gestão Pet neste workspace.'
-                  : 'Abra o primeiro lead para iniciar a fila comercial deste workspace.',
-                action: (
-                  <PermissionGuard permission={leadPermissions.create}>
-                    <Link href={`${basePath}/new`} className="ui-primary-button">
-                      {isPetSurface ? 'Novo lead comercial' : 'Novo lead'}
-                    </Link>
-                  </PermissionGuard>
-                )
-              }}
-            />
+        <DataTable
+          columns={columns}
+          rows={rows}
+          getRowKey={(row) => row.id}
+          loading={loading}
+          emptyState={{ title: copy.leadsEmptyTitle, description: copy.leadsEmptyDescription, action: newLeadLink }}
+        />
 
-            <Pagination
-              page={pageData.page}
-              totalPages={pageData.totalPages}
-              totalElements={totalItems}
-              onPageChange={(nextPage) => load(nextPage, search, statusFilter, sourceFilter, companyFilterId, contactFilterId)}
-            />
-          </div>
-        </PageSection>
+        <Pagination
+          page={pageData.page}
+          totalPages={pageData.totalPages}
+          totalElements={totalItems}
+          pageSize={pageSize}
+          onPageChange={(nextPage) => void load(nextPage, search, statusFilter, sourceFilter, companyFilterId, contactFilterId)}
+        />
 
         <ConfirmDialog
           open={Boolean(deleteCandidate)}
-          title={isPetSurface ? 'Remover lead comercial' : 'Excluir lead'}
-          description={deleteCandidate
-            ? (isPetSurface
-              ? `Remover ${deleteCandidate.name} da fila comercial da Gestão Pet?`
-              : `Confirma a exclusão de ${deleteCandidate.name}?`)
-            : undefined}
-          confirmLabel={isPetSurface ? 'Remover' : 'Excluir'}
+          title={copy.leadDeleteTitle}
+          description={deleteCandidate ? copy.leadDeleteDescription.replace('{name}', deleteCandidate.name) : undefined}
+          confirmLabel={copy.leadDeleteConfirm}
           onCancel={() => setDeleteCandidate(null)}
           onConfirm={handleConfirmDelete}
         />
