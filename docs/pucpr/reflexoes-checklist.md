@@ -4,7 +4,7 @@ Respostas do autor, organizadas em 2026-11-05. O Guia trata o Checklist como apo
 
 ## Bloco 1: aprendizados do curso
 
-- **Contextos, metodologias e ferramentas mais relevantes:** `[PREENCHER]`
+- **Contextos, metodologias e ferramentas mais relevantes:** a modularização foi o aprendizado mais relevante: o autor aprendeu muito sobre a etapa modular de um projeto, e isso se liga à escolha pelo monólito, feita pela forma como o projeto estava sendo desenhado e por já estar acostumado a trabalhar assim. A segurança também ganhou peso: depois de Cybersecurity e de Projetando Arquitetura com Segurança, o foco na proteção de dados pessoais e bancários dobrou, para que os clientes tenham mais confiança no sistema.
 - **Segurança e proteção de dados:** depois de Cybersecurity e de Projetando Arquitetura com Segurança, o foco na proteção de dados pessoais e bancários dobrou. Manter o sistema seguro é o que dá aos clientes mais confiança nele.
 - **As arquiteturas valem para qualquer contexto?** Tudo depende do que está sendo feito e para quê. O autor optou pelo monólito pela forma como o projeto estava sendo desenhado e por já estar acostumado a trabalhar assim. Microsserviços também são uma ótima maneira de fazer projetos: a escolha depende da situação que se quer alcançar.
 
