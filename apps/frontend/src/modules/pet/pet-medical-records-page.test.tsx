@@ -34,9 +34,14 @@ vi.mock('@/shared/auth/usePermissions', () => ({
 }));
 
 vi.mock('next/navigation', () => ({
+  usePathname: () => '/pet/medical-records',
   useSearchParams: () => ({
     get: searchParamGetMock
   })
+}));
+
+vi.mock('@/modules/pet/pet-module-subnav', () => ({
+  PetModuleSubnav: () => null
 }));
 
 vi.mock('@/shared/services/pet-service', () => ({
@@ -113,13 +118,13 @@ describe('PetMedicalRecordsPage', () => {
       expect(petServiceMock.listVaccinations).toHaveBeenCalledTimes(1);
     });
 
-    expect(screen.getByText('Controle de aplicações e próximos reforços.')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 2, name: /Vaccinations/ })).toBeInTheDocument();
     const vaccinationRow = screen.getByText('Raiva').closest('tr');
 
     expect(vaccinationRow).not.toBeNull();
     expect(within(vaccinationRow as HTMLTableRowElement).getByText('Nina')).toBeInTheDocument();
-    expect(screen.queryByText('Histórico clínico e evoluções por pet.')).not.toBeInTheDocument();
-    expect(screen.queryByText('Prescrições vinculadas ao histórico do atendimento.')).not.toBeInTheDocument();
+    expect(screen.queryByRole('heading', { level: 2, name: /Medical records/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole('heading', { level: 2, name: /Prescriptions/ })).not.toBeInTheDocument();
     expect(petServiceMock.listMedicalRecords).not.toHaveBeenCalled();
     expect(petServiceMock.listPrescriptions).not.toHaveBeenCalled();
     expect(petServiceMock.getClinicalTimeline).not.toHaveBeenCalled();
@@ -128,7 +133,7 @@ describe('PetMedicalRecordsPage', () => {
   it('mostra fallback quando o usuário não possui nenhuma permissão médica', async () => {
     render(<PetMedicalRecordsPage />);
 
-    expect(screen.getByText('Você não possui permissão para visualizar workflows médicos do Pet.')).toBeInTheDocument();
+    expect(screen.getByText('You do not have permission to view clinical records.')).toBeInTheDocument();
 
     await waitFor(() => {
       expect(petServiceMock.listProfiles).not.toHaveBeenCalled();
@@ -153,9 +158,40 @@ describe('PetMedicalRecordsPage', () => {
     });
 
     expect(
-      screen.getByText('Selecione um pet ou abra um atendimento para visualizar a timeline clinica consolidada.')
+      screen.getByText('Select a pet or open an appointment to see the clinical history.')
     ).toBeInTheDocument();
     expect(petServiceMock.getClinicalTimeline).not.toHaveBeenCalled();
+  });
+
+  it('mostra a falha de cada lista e tira o aviso quando a lista volta a carregar', async () => {
+    setGrantedPermissions(['pet.medical-record.read', 'pet.vaccination.read']);
+    petServiceMock.listMedicalRecords.mockRejectedValue(new Error('network'));
+    petServiceMock.listVaccinations.mockRejectedValue(new Error('network'));
+
+    render(<PetMedicalRecordsPage />);
+
+    expect(await screen.findByText('Unable to load medical records.')).toBeInTheDocument();
+    expect(await screen.findByText('Unable to load vaccinations.')).toBeInTheDocument();
+
+    petServiceMock.listMedicalRecords.mockResolvedValue(createPageResponse([]));
+    petServiceMock.listVaccinations.mockResolvedValue(createPageResponse([]));
+    fireEvent.change(screen.getByRole('searchbox'), { target: { value: 'Nina' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Search' }));
+
+    await waitFor(() => {
+      expect(screen.queryByText('Unable to load medical records.')).not.toBeInTheDocument();
+      expect(screen.queryByText('Unable to load vaccinations.')).not.toBeInTheDocument();
+    });
+  });
+
+  it('abre o editor de prontuário quando a Clínica pede um novo registro', async () => {
+    setGrantedPermissions(['pet.profile.read', 'pet.professional.read', 'pet.medical-record.read', 'pet.medical-record.create']);
+    searchParamGetMock.mockImplementation((key: string) => ({ tab: 'records', novo: '1' } as Record<string, string>)[key] ?? null);
+
+    render(<PetMedicalRecordsPage />);
+
+    expect(await screen.findByLabelText('Description')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Create record' })).toBeInTheDocument();
   });
 
   it('usa o atendimento selecionado como contexto clínico do prontuário', async () => {
@@ -263,7 +299,7 @@ describe('PetMedicalRecordsPage', () => {
     });
 
     await waitFor(() => {
-      expect(petServiceMock.listMedicalRecords).toHaveBeenCalledWith(0, 5, '', {
+      expect(petServiceMock.listMedicalRecords).toHaveBeenCalledWith(0, 14, '', {
         petId: 'pet-1',
         professionalId: 'professional-1',
         appointmentId: 'appointment-1'
@@ -278,19 +314,21 @@ describe('PetMedicalRecordsPage', () => {
       });
     });
 
-    expect(screen.getByText('Atendimento em contexto clínico ativo.')).toBeInTheDocument();
-    expect(screen.getByText('Timeline clinica do atendimento atual.')).toBeInTheDocument();
+    expect(await screen.findByText('Recording for an appointment.')).toBeInTheDocument();
+    expect(await screen.findByText('History of the current appointment.')).toBeInTheDocument();
     expect(screen.getByText('Raiva')).toBeInTheDocument();
     expect(screen.getByText('Otite')).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Ver histórico completo' })).toHaveAttribute(
+    expect(screen.getByRole('link', { name: 'View full history' })).toHaveAttribute(
       'href',
       '/pet/medical-records'
     );
-    expect(screen.getByText('Atendimento ativo para Nina.')).toBeInTheDocument();
+    expect(screen.getByText(/Consulta clínica for Nina \(Owner Example\) with Dr Example/)).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole('button', { name: 'Prontuários' }));
-    fireEvent.change(screen.getByLabelText('Descrição'), { target: { value: 'Observação inicial' } });
-    fireEvent.click(screen.getByRole('button', { name: 'Criar prontuário' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Medical records' }));
+    expect(screen.queryByLabelText('Description')).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'New record' }));
+    fireEvent.change(screen.getByLabelText('Description'), { target: { value: 'Observação inicial' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Create record' }));
 
     await waitFor(() => {
       expect(petServiceMock.createMedicalRecord).toHaveBeenCalledWith({

@@ -1,20 +1,17 @@
 'use client';
 
-import { FormEventHandler } from 'react';
-import { petMedicalRoutePermissions } from '@/modules/pet/pet-medical-permissions';
+import { FormEventHandler, ReactNode } from 'react';
+import { ClinicEventType } from '@/modules/pet/clinic-shared';
 import { resolvePetLookupLabel } from '@/modules/pet/pet-lookup-feedback';
 import { PermissionGuard } from '@/shared/auth/PermissionGuard';
-import {
-  sharedCompactTextClass,
-  sharedFilterToolbarClass,
-  sharedFormActionsClass,
-  sharedInlineActionsClass
-} from '@/shared/components/public-visual-system';
+import { sharedFormActionsClass, sharedInlineActionsClass } from '@/shared/components/public-visual-system';
+import { useAppI18n, useAppMessages } from '@/shared/i18n/app-i18n-provider';
+import { formatDateTimeForLocale } from '@/shared/i18n/formatters';
+import type { AppMessages } from '@/shared/i18n/messages/pt-br';
 import { resolvePageItems, resolveTotalItems } from '@/shared/lib/pagination';
 import { PageResponse } from '@/shared/types/common';
 import {
   PetClinicalTimeline,
-  PetClinicalTimelineEvent,
   PetMedicalRecord,
   PetPrescription,
   PetProfessional,
@@ -23,11 +20,11 @@ import {
 } from '@/shared/types/pet';
 import { DataTable, DataTableColumn } from '@/shared/ui/data-table';
 import { DateTimeInput } from '@/shared/ui/datetime-input';
+import { FilterChip } from '@/shared/ui/filter-chip';
 import { FormInput } from '@/shared/ui/form-input';
 import { FormSelect } from '@/shared/ui/form-select';
 import { FormTextarea } from '@/shared/ui/form-textarea';
 import { Pagination } from '@/shared/ui/pagination';
-import { PageSection } from '@/shared/ui/page-section';
 import { SearchBar } from '@/shared/ui/search-bar';
 
 export type PetSelectOption = {
@@ -35,79 +32,50 @@ export type PetSelectOption = {
   label: string;
 };
 
-function renderClinicalAppointmentLabel(
-  appointmentServiceName?: string,
-  appointmentScheduledAt?: string
-) {
-  if (!appointmentServiceName && !appointmentScheduledAt) {
-    return 'Fluxo avulso';
-  }
+type MedicalCopy = AppMessages['screens']['petMedical'];
+type AppLocale = ReturnType<typeof useAppI18n>['locale'];
 
-  const appointmentDate = appointmentScheduledAt
-    ? new Date(appointmentScheduledAt).toLocaleString('pt-BR')
-    : 'Data não informada';
+type ColumnContext = {
+  copy: MedicalCopy;
+  locale: AppLocale;
+};
+
+function renderClinicalAppointment(
+  { copy, locale }: ColumnContext,
+  serviceName?: string,
+  scheduledAt?: string
+) {
+  if (!serviceName && !scheduledAt) {
+    return <span className="text-[var(--muted)]">{copy.standalone}</span>;
+  }
 
   return (
     <div>
-      <div className="font-medium text-slate-900">
-        {appointmentServiceName ?? 'Atendimento vinculado'}
-      </div>
-      <div className="text-xs text-[color:var(--app-shell-muted)]">{appointmentDate}</div>
+      <div className="text-[var(--ink)]">{serviceName ?? copy.linkedAppointment}</div>
+      {scheduledAt ? (
+        <div className="ui-mono text-xs text-[var(--ink-2)]">{formatDateTimeForLocale(locale, scheduledAt)}</div>
+      ) : null}
     </div>
   );
 }
 
-function resolveClinicalEventLabel(eventType: string) {
-  switch (eventType) {
-    case 'MEDICAL_RECORD':
-      return 'Prontuario';
-    case 'VACCINATION':
-      return 'Vacinacao';
-    case 'PRESCRIPTION':
-      return 'Prescricao';
-    default:
-      return 'Evento clinico';
-  }
-}
-
-function resolveClinicalEventBadgeClass(eventType: string) {
-  switch (eventType) {
-    case 'MEDICAL_RECORD':
-      return 'border-info/30 bg-info-muted text-info';
-    case 'VACCINATION':
-      return 'border-success/30 bg-success-muted text-success';
-    case 'PRESCRIPTION':
-      return 'border-warning/30 bg-warning-muted text-warning';
-    default:
-      return 'border-border bg-surface-inset text-muted';
-  }
-}
-
-function renderClinicalContextSummary(data: PetClinicalTimeline) {
-  if (data.appointmentId) {
-    return (
-      <div className="ui-notice-info">
-        <div className="font-medium">Timeline clinica do atendimento atual.</div>
-        <div>
-          {data.appointmentServiceName ?? 'Atendimento vinculado'}
-          {data.petName ? ` para ${data.petName}` : ''}
-          {data.appointmentScheduledAt ? ` em ${new Date(data.appointmentScheduledAt).toLocaleString('pt-BR')}` : ''}
-          {data.appointmentStatus ? ` (${data.appointmentStatus})` : ''}.
-        </div>
-      </div>
-    );
-  }
-
-  if (data.petName || data.petId) {
-    return (
-      <div className="ui-notice-neutral">
-        <span className="font-medium">Timeline clinica do pet:</span>{' '}
-        {data.petName ?? data.petId}
-      </div>
-    );
-  }
-
-  return null;
+function renderRowActions(
+  copy: MedicalCopy,
+  updatePermission: string,
+  deletePermission: string,
+  onEdit: () => void,
+  onDelete: () => void
+) {
+  return (
+    <div className={sharedInlineActionsClass}>
+      <PermissionGuard permission={updatePermission}>
+        <button type="button" onClick={onEdit} className="ui-inline-button">{copy.edit}</button>
+      </PermissionGuard>
+      <PermissionGuard permission={deletePermission}>
+        <button type="button" onClick={onDelete} className="ui-inline-danger-button">{copy.delete}</button>
+      </PermissionGuard>
+    </div>
+  );
 }
 
 type PetClinicalTimelineSectionProps = {
@@ -117,128 +85,69 @@ type PetClinicalTimelineSectionProps = {
   ready: boolean;
 };
 
-export function PetClinicalTimelineSection({
-  data,
-  loading,
-  error,
-  ready
-}: PetClinicalTimelineSectionProps) {
+export function PetClinicalTimelineSection({ data, loading, error, ready }: PetClinicalTimelineSectionProps) {
+  const { locale } = useAppI18n();
+  const copy = useAppMessages().screens.petMedical;
   const events = data?.events ?? [];
-  const hiddenCount = data ? Math.max(data.totalEvents - events.length, 0) : 0;
+  const settled = ready && !loading && !error;
 
   return (
-    <PageSection
-      title="Linha do Tempo Clínica"
-      description="Leitura consolidada do historico recente por pet e atendimento."
-      contentClassName="space-y-4"
-    >
-      {!ready ? (
-        <div className="ui-notice-neutral">
-          Selecione um pet ou abra um atendimento para visualizar a timeline clinica consolidada.
-        </div>
-      ) : null}
-
-      {ready && loading ? (
-        <div className="ui-notice-info">
-          Carregando timeline clinica...
-        </div>
-      ) : null}
-
-      {ready && !loading && error ? (
-        <div className="ui-notice-error">
-          {error}
-        </div>
-      ) : null}
-
-      {ready && !loading && !error && data ? renderClinicalContextSummary(data) : null}
-
-      {ready && !loading && !error && events.length > 0 ? (
-        <div className="space-y-3">
-          {hiddenCount > 0 ? (
-            <div className="text-xs text-[color:var(--app-shell-muted)]">
-              Exibindo os {events.length} eventos mais recentes de um total de {data?.totalEvents}.
-            </div>
-          ) : null}
-
-          <div className="space-y-3">
-            {events.map((event) => (
-              <ClinicalTimelineEventCard key={event.eventId} event={event} />
-            ))}
-          </div>
-        </div>
-      ) : null}
-
-      {ready && !loading && !error && data && events.length === 0 ? (
-        <div className="ui-notice-neutral">
-          Nenhum evento clinico encontrado para o contexto atual.
-        </div>
-      ) : null}
-    </PageSection>
-  );
-}
-
-function ClinicalTimelineEventCard({ event }: { event: PetClinicalTimelineEvent }) {
-  return (
-    <article className="ui-surface-muted rounded-2xl p-4 lg:p-5">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div className="space-y-2">
-          <div className="flex flex-wrap items-center gap-2">
-            <span className={`rounded-full border px-2 py-1 text-xs font-medium ${resolveClinicalEventBadgeClass(event.eventType)}`}>
-              {resolveClinicalEventLabel(event.eventType)}
-            </span>
-            <h4 className="text-sm font-semibold text-[color:var(--app-shell-heading)]">{event.title}</h4>
-          </div>
-
-          {event.summary ? <p className="text-sm text-[color:var(--app-shell-text)]">{event.summary}</p> : null}
-
-          <div className="flex flex-wrap gap-3 text-xs text-[color:var(--app-shell-muted)]">
-            <span>{new Date(event.occurredAt).toLocaleString('pt-BR')}</span>
-            {event.petName ? <span>Pet: {event.petName}</span> : null}
-            {event.professionalName ? <span>Profissional: {event.professionalName}</span> : null}
-            {event.appointmentServiceName ? (
-              <span>
-                Atendimento: {event.appointmentServiceName}
-                {event.appointmentScheduledAt ? ` (${new Date(event.appointmentScheduledAt).toLocaleString('pt-BR')})` : ''}
-              </span>
-            ) : (
-              <span>Fluxo avulso</span>
-            )}
-          </div>
-        </div>
+    <section aria-labelledby="clinical-history" className="space-y-3">
+      <div>
+        <h2 id="clinical-history" className="text-sm font-semibold text-[var(--ink)]">{copy.timelineTitle}</h2>
+        <p className="text-xs text-[var(--muted)]">{copy.timelineDescription}</p>
       </div>
-    </article>
-  );
-}
 
-type TextAreaFieldProps = {
-  label: string;
-  value: string;
-  onChange: (value: string) => void;
-  required?: boolean;
-  wrapperClassName?: string;
-  rows?: number;
-  description?: string;
-};
+      {!ready ? <div className="ui-notice-neutral">{copy.timelineSelectHint}</div> : null}
+      {ready && loading ? <div className="ui-notice-info">{copy.timelineLoading}</div> : null}
+      {ready && !loading && error ? <div className="ui-notice-error">{error}</div> : null}
 
-function TextAreaField({
-  label,
-  value,
-  onChange,
-  required = false,
-  wrapperClassName,
-  rows = 4,
-  description
-}: TextAreaFieldProps) {
-  return (
-    <FormTextarea
-      label={label}
-      value={value}
-      onChange={onChange}
-      required={required}
-      rows={rows}
-      wrapperClassName={wrapperClassName}
-      description={description}
-    />
+      {settled && data?.appointmentId ? (
+        <div className="ui-notice-info">
+          <div className="font-medium">{copy.timelineAppointment}</div>
+          <div>
+            {copy.timelineAppointmentDetail
+              .replace('{service}', data.appointmentServiceName ?? copy.linkedAppointment)
+              .replace('{pet}', data.petName ?? '-')}
+            {data.appointmentScheduledAt ? ` · ${formatDateTimeForLocale(locale, data.appointmentScheduledAt)}` : ''}
+          </div>
+        </div>
+      ) : null}
+
+      {settled && data && !data.appointmentId && data.petName ? (
+        <p className="text-sm text-[var(--ink-2)]">{copy.timelinePet.replace('{pet}', data.petName)}</p>
+      ) : null}
+
+      {settled && events.length > 0 ? (
+        <ul className="divide-y divide-[color:var(--line-soft)]">
+          {events.map((event) => (
+            <li key={event.eventId} className="grid gap-1 py-2 text-sm sm:grid-cols-[10rem_8rem_minmax(0,1fr)] sm:gap-3">
+              <span className="ui-mono text-xs text-[var(--ink-2)]">{formatDateTimeForLocale(locale, event.occurredAt)}</span>
+              <ClinicEventType type={event.eventType} />
+              <div className="min-w-0">
+                <p className="font-medium text-[var(--ink)]">{event.title}</p>
+                {event.summary ? <p className="text-[var(--ink-2)]">{event.summary}</p> : null}
+                <p className="text-xs text-[var(--muted)]">
+                  {[event.petName, event.professionalName, event.appointmentServiceName ?? copy.standalone]
+                    .filter(Boolean)
+                    .join(' · ')}
+                </p>
+              </div>
+            </li>
+          ))}
+        </ul>
+      ) : null}
+
+      {settled && data && events.length === 0 ? <p className="text-sm text-[var(--muted)]">{copy.timelineEmpty}</p> : null}
+
+      {settled && data && data.totalEvents > events.length ? (
+        <p className="text-xs text-[var(--muted)]">
+          {copy.timelinePartial
+            .replace('{shown}', String(events.length))
+            .replace('{total}', String(data.totalEvents))}
+        </p>
+      ) : null}
+    </section>
   );
 }
 
@@ -273,64 +182,42 @@ export function PetMedicalFilters({
   onSearch,
   onClear
 }: PetMedicalFiltersProps) {
+  const copy = useAppMessages().screens.petMedical;
+
   return (
-    <PageSection
-      tone="muted"
-      title="Clinical filters"
-      description="Refine the shared clinical workspace by pet, professional, and text search without collapsing the controls into a crowded toolbar."
+    <form
+      className="flex flex-wrap items-end gap-2"
+      onSubmit={(event) => {
+        event.preventDefault();
+        onSearch();
+      }}
     >
-      <div className={sharedFilterToolbarClass}>
-        <div
-          className={
-            showProfessionalFilter
-              ? 'grid gap-3 xl:grid-cols-[minmax(0,1.4fr)_240px_240px] xl:items-end'
-              : 'grid gap-3 xl:grid-cols-[minmax(0,1.4fr)_240px] xl:items-end'
-          }
-        >
-          <SearchBar
-            value={searchInput}
-            onChange={onSearchInputChange}
-            placeholder="Descrição, diagnóstico, medicação ou vacina"
-          />
-          <FormSelect
-            label="Pet"
-            value={petFilterId}
-            options={petOptions}
-            onChange={onPetFilterIdChange}
-            disabled={petLookupUnavailable}
-          />
-          {showProfessionalFilter ? (
-            <FormSelect
-              label="Profissional"
-              value={professionalFilterId}
-              options={professionalOptions}
-              onChange={onProfessionalFilterIdChange}
-              disabled={professionalsLookupUnavailable}
-            />
-          ) : null}
-        </div>
-        <div className={sharedFormActionsClass}>
-          <button
-            type="button"
-            onClick={onSearch}
-            className="ui-primary-button"
-          >
-            Buscar
-          </button>
-          <button
-            type="button"
-            onClick={onClear}
-            className="ui-secondary-button"
-          >
-            Limpar
-          </button>
-        </div>
+      <div className="min-w-[14rem] flex-1">
+        <SearchBar value={searchInput} onChange={onSearchInputChange} placeholder={copy.searchPlaceholder} />
       </div>
-    </PageSection>
+      <FilterChip
+        label={copy.filterPet}
+        value={petFilterId}
+        options={petOptions}
+        onChange={onPetFilterIdChange}
+        disabled={petLookupUnavailable}
+      />
+      {showProfessionalFilter ? (
+        <FilterChip
+          label={copy.filterProfessional}
+          value={professionalFilterId}
+          options={professionalOptions}
+          onChange={onProfessionalFilterIdChange}
+          disabled={professionalsLookupUnavailable}
+        />
+      ) : null}
+      <button type="submit" className="ui-secondary-button">{copy.searchAction}</button>
+      <button type="button" onClick={onClear} className="ui-inline-button">{copy.clearAction}</button>
+    </form>
   );
 }
 
-type CreatePetMedicalRecordColumnsArgs = {
+type CreatePetMedicalRecordColumnsArgs = ColumnContext & {
   pets: PetProfile[];
   professionals: PetProfessional[];
   petLookupUnavailable: boolean;
@@ -340,6 +227,8 @@ type CreatePetMedicalRecordColumnsArgs = {
 };
 
 export function createPetMedicalRecordColumns({
+  copy,
+  locale,
   pets,
   professionals,
   petLookupUnavailable,
@@ -350,59 +239,38 @@ export function createPetMedicalRecordColumns({
   return [
     {
       key: 'pet',
-      header: 'Pet',
+      header: copy.columnPet,
       render: (item) =>
-        item.petName ?? resolvePetLookupLabel(pets, item.petId, (pet) => pet.name, 'Pet', petLookupUnavailable)
+        item.petName ?? resolvePetLookupLabel(pets, item.petId, (pet) => pet.name, copy.columnPet, petLookupUnavailable)
     },
     {
       key: 'professional',
-      header: 'Profissional',
+      header: copy.columnProfessional,
       render: (item) =>
         item.professionalName ??
         resolvePetLookupLabel(
           professionals,
           item.professionalId,
           (professional) => professional.name,
-          'Profissional',
+          copy.columnProfessional,
           professionalsLookupUnavailable
         )
     },
     {
       key: 'appointment',
-      header: 'Atendimento',
-      render: (item) => renderClinicalAppointmentLabel(item.appointmentServiceName, item.appointmentScheduledAt)
+      header: copy.columnAppointment,
+      render: (item) => renderClinicalAppointment({ copy, locale }, item.appointmentServiceName, item.appointmentScheduledAt)
     },
-    { key: 'description', header: 'Descrição', render: (item) => item.description },
+    { key: 'description', header: copy.columnDescription, render: (item) => <span className="line-clamp-2">{item.description}</span> },
     {
       key: 'actions',
-      header: 'Ações',
-      render: (item) => (
-        <div className={sharedInlineActionsClass}>
-          <PermissionGuard permission="pet.medical-record.update">
-            <button
-              type="button"
-              onClick={() => onEdit(item)}
-              className="ui-inline-button"
-            >
-              Editar
-            </button>
-          </PermissionGuard>
-          <PermissionGuard permission="pet.medical-record.delete">
-            <button
-              type="button"
-              onClick={() => onDelete(item)}
-              className="ui-inline-danger-button"
-            >
-              Excluir
-            </button>
-          </PermissionGuard>
-        </div>
-      )
+      header: copy.columnActions,
+      render: (item) => renderRowActions(copy, 'pet.medical-record.update', 'pet.medical-record.delete', () => onEdit(item), () => onDelete(item))
     }
   ];
 }
 
-type CreatePetVaccinationColumnsArgs = {
+type CreatePetVaccinationColumnsArgs = ColumnContext & {
   pets: PetProfile[];
   petLookupUnavailable: boolean;
   onEdit: (item: PetVaccination) => void;
@@ -410,6 +278,8 @@ type CreatePetVaccinationColumnsArgs = {
 };
 
 export function createPetVaccinationColumns({
+  copy,
+  locale,
   pets,
   petLookupUnavailable,
   onEdit,
@@ -418,51 +288,35 @@ export function createPetVaccinationColumns({
   return [
     {
       key: 'pet',
-      header: 'Pet',
+      header: copy.columnPet,
       render: (item) =>
-        item.petName ?? resolvePetLookupLabel(pets, item.petId, (pet) => pet.name, 'Pet', petLookupUnavailable)
+        item.petName ?? resolvePetLookupLabel(pets, item.petId, (pet) => pet.name, copy.columnPet, petLookupUnavailable)
+    },
+    { key: 'vaccineName', header: copy.columnVaccine, render: (item) => item.vaccineName },
+    {
+      key: 'appliedAt',
+      header: copy.columnAppliedAt,
+      render: (item) => <span className="ui-mono whitespace-nowrap">{formatDateTimeForLocale(locale, item.appliedAt)}</span>
+    },
+    {
+      key: 'nextDueAt',
+      header: copy.columnNextDueAt,
+      render: (item) => <span className="ui-mono whitespace-nowrap">{item.nextDueAt ? formatDateTimeForLocale(locale, item.nextDueAt) : '-'}</span>
     },
     {
       key: 'appointment',
-      header: 'Atendimento',
-      render: (item) => renderClinicalAppointmentLabel(item.appointmentServiceName, item.appointmentScheduledAt)
-    },
-    { key: 'vaccineName', header: 'Vacina', render: (item) => item.vaccineName },
-    {
-      key: 'appliedAt',
-      header: 'Aplicada em',
-      render: (item) => new Date(item.appliedAt).toLocaleString('pt-BR')
+      header: copy.columnAppointment,
+      render: (item) => renderClinicalAppointment({ copy, locale }, item.appointmentServiceName, item.appointmentScheduledAt)
     },
     {
       key: 'actions',
-      header: 'Ações',
-      render: (item) => (
-        <div className={sharedInlineActionsClass}>
-          <PermissionGuard permission="pet.vaccination.update">
-            <button
-              type="button"
-              onClick={() => onEdit(item)}
-              className="ui-inline-button"
-            >
-              Editar
-            </button>
-          </PermissionGuard>
-          <PermissionGuard permission="pet.vaccination.delete">
-            <button
-              type="button"
-              onClick={() => onDelete(item)}
-              className="ui-inline-danger-button"
-            >
-              Excluir
-            </button>
-          </PermissionGuard>
-        </div>
-      )
+      header: copy.columnActions,
+      render: (item) => renderRowActions(copy, 'pet.vaccination.update', 'pet.vaccination.delete', () => onEdit(item), () => onDelete(item))
     }
   ];
 }
 
-type CreatePetPrescriptionColumnsArgs = {
+type CreatePetPrescriptionColumnsArgs = ColumnContext & {
   pets: PetProfile[];
   professionals: PetProfessional[];
   petLookupUnavailable: boolean;
@@ -472,6 +326,8 @@ type CreatePetPrescriptionColumnsArgs = {
 };
 
 export function createPetPrescriptionColumns({
+  copy,
+  locale,
   pets,
   professionals,
   petLookupUnavailable,
@@ -482,63 +338,183 @@ export function createPetPrescriptionColumns({
   return [
     {
       key: 'pet',
-      header: 'Pet',
+      header: copy.columnPet,
       render: (item) =>
-        item.petName ?? resolvePetLookupLabel(pets, item.petId, (pet) => pet.name, 'Pet', petLookupUnavailable)
+        item.petName ?? resolvePetLookupLabel(pets, item.petId, (pet) => pet.name, copy.columnPet, petLookupUnavailable)
     },
-    { key: 'medication', header: 'Medicamento', render: (item) => item.medication },
+    { key: 'medication', header: copy.columnMedication, render: (item) => item.medication },
     {
       key: 'professional',
-      header: 'Profissional',
+      header: copy.columnProfessional,
       render: (item) =>
         item.professionalName ??
         resolvePetLookupLabel(
           professionals,
           item.professionalId,
           (professional) => professional.name,
-          'Profissional',
+          copy.columnProfessional,
           professionalsLookupUnavailable
         )
     },
     {
       key: 'appointment',
-      header: 'Atendimento',
-      render: (item) => renderClinicalAppointmentLabel(item.appointmentServiceName, item.appointmentScheduledAt)
+      header: copy.columnAppointment,
+      render: (item) => renderClinicalAppointment({ copy, locale }, item.appointmentServiceName, item.appointmentScheduledAt)
     },
     {
       key: 'actions',
-      header: 'Ações',
-      render: (item) => (
-        <div className={sharedInlineActionsClass}>
-          <PermissionGuard permission="pet.prescription.update">
-            <button
-              type="button"
-              onClick={() => onEdit(item)}
-              className="ui-inline-button"
-            >
-              Editar
-            </button>
-          </PermissionGuard>
-          <PermissionGuard permission="pet.prescription.delete">
-            <button
-              type="button"
-              onClick={() => onDelete(item)}
-              className="ui-inline-danger-button"
-            >
-              Excluir
-            </button>
-          </PermissionGuard>
-        </div>
-      )
+      header: copy.columnActions,
+      render: (item) => renderRowActions(copy, 'pet.prescription.update', 'pet.prescription.delete', () => onEdit(item), () => onDelete(item))
     }
   ];
 }
 
-type PetMedicalRecordSectionProps = {
-  editingId: string | null;
+type ClinicalListSectionProps<T> = {
+  headingId: string;
+  title: string;
+  newLabel: string;
+  createPermission: string;
+  readPermission: string;
+  editorOpen: boolean;
+  onNew: () => void;
+  editor: ReactNode;
+  columns: DataTableColumn<T>[];
+  pageData: PageResponse<T>;
+  pageSize: number;
+  loading: boolean;
+  emptyTitle: string;
+  onPageChange: (page: number) => void;
+  getRowKey: (row: T) => string;
+};
+
+function ClinicalListSection<T>({
+  headingId,
+  title,
+  newLabel,
+  createPermission,
+  readPermission,
+  editorOpen,
+  onNew,
+  editor,
+  columns,
+  pageData,
+  pageSize,
+  loading,
+  emptyTitle,
+  onPageChange,
+  getRowKey
+}: ClinicalListSectionProps<T>) {
+  const total = resolveTotalItems(pageData);
+
+  return (
+    <section aria-labelledby={headingId} className="space-y-3">
+      <div className="flex items-center justify-between gap-2">
+        <h2 id={headingId} className="text-sm font-semibold text-[var(--ink)]">
+          {title} <span className="ui-mono font-normal text-[var(--ink-2)]">{total}</span>
+        </h2>
+        {!editorOpen ? (
+          <PermissionGuard permission={createPermission}>
+            <button type="button" onClick={onNew} className="ui-primary-button">{newLabel}</button>
+          </PermissionGuard>
+        ) : null}
+      </div>
+
+      {editorOpen ? editor : null}
+
+      <PermissionGuard permission={readPermission}>
+        <div className="space-y-3">
+          <DataTable
+            columns={columns}
+            rows={resolvePageItems(pageData)}
+            getRowKey={getRowKey}
+            loading={loading}
+            emptyState={{ title: emptyTitle, description: '' }}
+          />
+          <Pagination
+            page={pageData.page}
+            totalPages={pageData.totalPages}
+            totalElements={total}
+            pageSize={pageSize}
+            onPageChange={onPageChange}
+          />
+        </div>
+      </PermissionGuard>
+    </section>
+  );
+}
+
+type ClinicalEditorProps = {
+  permission: string;
+  title: string;
   onSubmit: FormEventHandler<HTMLFormElement>;
+  children: ReactNode;
+  appointmentContextDescription?: string | null;
+  blockedMessage: string;
+  formReady: boolean;
+  submitting: boolean;
+  submitLabel: string;
+  onCancel: () => void;
+};
+
+function ClinicalEditor({
+  permission,
+  title,
+  onSubmit,
+  children,
+  appointmentContextDescription,
+  blockedMessage,
+  formReady,
+  submitting,
+  submitLabel,
+  onCancel
+}: ClinicalEditorProps) {
+  const copy = useAppMessages().screens.petMedical;
+
+  return (
+    <PermissionGuard permission={permission}>
+      <form
+        onSubmit={onSubmit}
+        aria-label={title}
+        className="grid gap-4 rounded-md border border-[color:var(--line)] p-4 md:grid-cols-2"
+      >
+        {children}
+        <div className="space-y-3 md:col-span-2">
+          {appointmentContextDescription ? <div className="ui-notice-info">{appointmentContextDescription}</div> : null}
+          {!formReady ? <div className="ui-notice-warning">{blockedMessage}</div> : null}
+          <div className={sharedFormActionsClass}>
+            <button type="submit" disabled={submitting || !formReady} className="ui-primary-button">
+              {submitting ? copy.saving : submitLabel}
+            </button>
+            <button type="button" onClick={onCancel} className="ui-secondary-button">{copy.cancel}</button>
+          </div>
+        </div>
+      </form>
+    </PermissionGuard>
+  );
+}
+
+type SharedSectionProps<T> = {
+  editingId: string | null;
+  editorOpen: boolean;
+  onNew: () => void;
+  onSubmit: FormEventHandler<HTMLFormElement>;
+  formPetOptions: PetSelectOption[];
   petId: string;
   onPetIdChange: (value: string) => void;
+  petLookupUnavailable: boolean;
+  lockPetSelection: boolean;
+  appointmentContextDescription?: string | null;
+  formReady: boolean;
+  submitting: boolean;
+  onCancelEdit: () => void;
+  columns: DataTableColumn<T>[];
+  pageData: PageResponse<T>;
+  pageSize: number;
+  loading: boolean;
+  onPageChange: (page: number) => void;
+};
+
+type PetMedicalRecordSectionProps = SharedSectionProps<PetMedicalRecord> & {
   professionalId: string;
   onProfessionalIdChange: (value: string) => void;
   description: string;
@@ -547,133 +523,74 @@ type PetMedicalRecordSectionProps = {
   onDiagnosisChange: (value: string) => void;
   treatment: string;
   onTreatmentChange: (value: string) => void;
-  formPetOptions: PetSelectOption[];
   formProfessionalOptions: PetSelectOption[];
-  petLookupUnavailable: boolean;
   professionalsLookupUnavailable: boolean;
-  lockPetSelection: boolean;
   lockProfessionalSelection: boolean;
-  appointmentContextDescription?: string | null;
-  formReady: boolean;
-  submitting: boolean;
-  onCancelEdit: () => void;
-  columns: DataTableColumn<PetMedicalRecord>[];
-  pageData: PageResponse<PetMedicalRecord>;
-  loading: boolean;
-  onPageChange: (page: number) => void;
 };
 
-export function PetMedicalRecordSection({
-  editingId,
-  onSubmit,
-  petId,
-  onPetIdChange,
-  professionalId,
-  onProfessionalIdChange,
-  description,
-  onDescriptionChange,
-  diagnosis,
-  onDiagnosisChange,
-  treatment,
-  onTreatmentChange,
-  formPetOptions,
-  formProfessionalOptions,
-  petLookupUnavailable,
-  professionalsLookupUnavailable,
-  lockPetSelection,
-  lockProfessionalSelection,
-  appointmentContextDescription,
-  formReady,
-  submitting,
-  onCancelEdit,
-  columns,
-  pageData,
-  loading,
-  onPageChange
-}: PetMedicalRecordSectionProps) {
+export function PetMedicalRecordSection(props: PetMedicalRecordSectionProps) {
+  const copy = useAppMessages().screens.petMedical;
+  const { editingId } = props;
+
   return (
-    <PageSection
-      title="Prontuários"
-      description="Histórico clínico e evoluções por pet."
-      contentClassName="space-y-5"
-    >
-      <PermissionGuard permission={editingId ? 'pet.medical-record.update' : 'pet.medical-record.create'}>
-        <div className="ui-surface-muted rounded-2xl p-4 lg:p-5">
-          <form onSubmit={onSubmit} className="grid gap-4 xl:grid-cols-2">
-            <FormSelect
-              label="Pet"
-              value={petId}
-              options={formPetOptions}
-              onChange={onPetIdChange}
-              disabled={petLookupUnavailable || lockPetSelection}
-            />
-            <FormSelect
-              label="Profissional"
-              value={professionalId}
-              options={formProfessionalOptions}
-              onChange={onProfessionalIdChange}
-              disabled={professionalsLookupUnavailable || lockProfessionalSelection}
-            />
-            <TextAreaField
-              label="Descrição"
-              value={description}
-              onChange={onDescriptionChange}
-              required
-              wrapperClassName="xl:col-span-2"
-              rows={4}
-            />
-            <TextAreaField label="Diagnóstico" value={diagnosis} onChange={onDiagnosisChange} rows={4} />
-            <TextAreaField label="Tratamento" value={treatment} onChange={onTreatmentChange} rows={4} />
-
-            <div className="space-y-3 xl:col-span-2">
-              {appointmentContextDescription ? (
-                <div className="ui-notice-info">
-                  {appointmentContextDescription}
-                </div>
-              ) : null}
-              {!formReady ? (
-                <div className="ui-notice-warning">
-                  O formulário de prontuário depende das referências de pets e profissionais.
-                </div>
-              ) : null}
-              <div className={sharedFormActionsClass}>
-                <button
-                  type="submit"
-                  disabled={submitting || !formReady}
-                  className="ui-primary-button"
-                >
-                  {submitting ? 'Salvando...' : editingId ? 'Atualizar prontuário' : 'Criar prontuário'}
-                </button>
-                {editingId ? (
-                  <button
-                    type="button"
-                    onClick={onCancelEdit}
-                    className="ui-secondary-button"
-                  >
-                    Cancelar edição
-                  </button>
-                ) : null}
-              </div>
-            </div>
-          </form>
-        </div>
-      </PermissionGuard>
-
-      <PermissionGuard permission="pet.medical-record.read">
-        <div className="space-y-4">
-          <DataTable columns={columns} rows={resolvePageItems(pageData)} getRowKey={(row) => row.id} loading={loading} emptyMessage="Nenhum prontuário encontrado." />
-          <Pagination page={pageData.page} totalPages={pageData.totalPages} totalElements={resolveTotalItems(pageData)} onPageChange={onPageChange} />
-        </div>
-      </PermissionGuard>
-    </PageSection>
+    <ClinicalListSection
+      headingId="medical-records-list"
+      title={copy.recordsTitle}
+      newLabel={copy.newRecord}
+      createPermission="pet.medical-record.create"
+      readPermission="pet.medical-record.read"
+      editorOpen={props.editorOpen}
+      onNew={props.onNew}
+      columns={props.columns}
+      pageData={props.pageData}
+      pageSize={props.pageSize}
+      loading={props.loading}
+      emptyTitle={copy.recordsEmpty}
+      onPageChange={props.onPageChange}
+      getRowKey={(row) => row.id}
+      editor={(
+        <ClinicalEditor
+          permission={editingId ? 'pet.medical-record.update' : 'pet.medical-record.create'}
+          title={editingId ? copy.updateRecord : copy.newRecord}
+          onSubmit={props.onSubmit}
+          appointmentContextDescription={props.appointmentContextDescription}
+          blockedMessage={copy.recordFormBlocked}
+          formReady={props.formReady}
+          submitting={props.submitting}
+          submitLabel={editingId ? copy.updateRecord : copy.createRecord}
+          onCancel={props.onCancelEdit}
+        >
+          <FormSelect
+            label={copy.filterPet}
+            value={props.petId}
+            options={props.formPetOptions}
+            onChange={props.onPetIdChange}
+            disabled={props.petLookupUnavailable || props.lockPetSelection}
+          />
+          <FormSelect
+            label={copy.filterProfessional}
+            value={props.professionalId}
+            options={props.formProfessionalOptions}
+            onChange={props.onProfessionalIdChange}
+            disabled={props.professionalsLookupUnavailable || props.lockProfessionalSelection}
+          />
+          <FormTextarea
+            label={copy.fieldDescription}
+            value={props.description}
+            onChange={props.onDescriptionChange}
+            required
+            rows={4}
+            wrapperClassName="md:col-span-2"
+          />
+          <FormTextarea label={copy.fieldDiagnosis} value={props.diagnosis} onChange={props.onDiagnosisChange} rows={4} />
+          <FormTextarea label={copy.fieldTreatment} value={props.treatment} onChange={props.onTreatmentChange} rows={4} />
+        </ClinicalEditor>
+      )}
+    />
   );
 }
 
-type PetVaccinationSectionProps = {
-  editingId: string | null;
-  onSubmit: FormEventHandler<HTMLFormElement>;
-  petId: string;
-  onPetIdChange: (value: string) => void;
+type PetVaccinationSectionProps = SharedSectionProps<PetVaccination> & {
   vaccineName: string;
   onVaccineNameChange: (value: string) => void;
   appliedAt: string;
@@ -682,114 +599,64 @@ type PetVaccinationSectionProps = {
   onNextDueAtChange: (value: string) => void;
   notes: string;
   onNotesChange: (value: string) => void;
-  formPetOptions: PetSelectOption[];
-  petLookupUnavailable: boolean;
-  lockPetSelection: boolean;
-  appointmentContextDescription?: string | null;
-  formReady: boolean;
-  submitting: boolean;
-  onCancelEdit: () => void;
-  columns: DataTableColumn<PetVaccination>[];
-  pageData: PageResponse<PetVaccination>;
-  loading: boolean;
-  onPageChange: (page: number) => void;
 };
 
-export function PetVaccinationSection({
-  editingId,
-  onSubmit,
-  petId,
-  onPetIdChange,
-  vaccineName,
-  onVaccineNameChange,
-  appliedAt,
-  onAppliedAtChange,
-  nextDueAt,
-  onNextDueAtChange,
-  notes,
-  onNotesChange,
-  formPetOptions,
-  petLookupUnavailable,
-  lockPetSelection,
-  appointmentContextDescription,
-  formReady,
-  submitting,
-  onCancelEdit,
-  columns,
-  pageData,
-  loading,
-  onPageChange
-}: PetVaccinationSectionProps) {
+export function PetVaccinationSection(props: PetVaccinationSectionProps) {
+  const copy = useAppMessages().screens.petMedical;
+  const { editingId } = props;
+
   return (
-    <PageSection
-      title="Vacinações"
-      description="Controle de aplicações e próximos reforços."
-      contentClassName="space-y-5"
-    >
-      <PermissionGuard permission={editingId ? 'pet.vaccination.update' : 'pet.vaccination.create'}>
-        <div className="ui-surface-muted rounded-2xl p-4 lg:p-5">
-          <form onSubmit={onSubmit} className="grid gap-4 xl:grid-cols-2">
-            <FormSelect
-              label="Pet"
-              value={petId}
-              options={formPetOptions}
-              onChange={onPetIdChange}
-              disabled={petLookupUnavailable || lockPetSelection}
-            />
-            <FormInput label="Vacina" value={vaccineName} onChange={onVaccineNameChange} required />
-            <DateTimeInput label="Aplicada em" value={appliedAt} onChange={onAppliedAtChange} required />
-            <DateTimeInput label="Próximo reforço" value={nextDueAt} onChange={onNextDueAtChange} />
-            <TextAreaField label="Notas" value={notes} onChange={onNotesChange} wrapperClassName="xl:col-span-2" />
-
-            <div className="space-y-3 xl:col-span-2">
-              {appointmentContextDescription ? (
-                <div className="ui-notice-info">
-                  {appointmentContextDescription}
-                </div>
-              ) : null}
-              {!formReady ? (
-                <div className="ui-notice-warning">
-                  O formulário de vacinação depende da referência de pets.
-                </div>
-              ) : null}
-              <div className={sharedFormActionsClass}>
-                <button
-                  type="submit"
-                  disabled={submitting || !formReady}
-                  className="ui-primary-button"
-                >
-                  {submitting ? 'Salvando...' : editingId ? 'Atualizar vacinação' : 'Criar vacinação'}
-                </button>
-                {editingId ? (
-                  <button
-                    type="button"
-                    onClick={onCancelEdit}
-                    className="ui-secondary-button"
-                  >
-                    Cancelar edição
-                  </button>
-                ) : null}
-              </div>
-            </div>
-          </form>
-        </div>
-      </PermissionGuard>
-
-      <PermissionGuard permission="pet.vaccination.read">
-        <div className="space-y-4">
-          <DataTable columns={columns} rows={resolvePageItems(pageData)} getRowKey={(row) => row.id} loading={loading} emptyMessage="Nenhuma vacinação encontrada." />
-          <Pagination page={pageData.page} totalPages={pageData.totalPages} totalElements={resolveTotalItems(pageData)} onPageChange={onPageChange} />
-        </div>
-      </PermissionGuard>
-    </PageSection>
+    <ClinicalListSection
+      headingId="vaccinations-list"
+      title={copy.vaccinationsTitle}
+      newLabel={copy.newVaccination}
+      createPermission="pet.vaccination.create"
+      readPermission="pet.vaccination.read"
+      editorOpen={props.editorOpen}
+      onNew={props.onNew}
+      columns={props.columns}
+      pageData={props.pageData}
+      pageSize={props.pageSize}
+      loading={props.loading}
+      emptyTitle={copy.vaccinationsEmpty}
+      onPageChange={props.onPageChange}
+      getRowKey={(row) => row.id}
+      editor={(
+        <ClinicalEditor
+          permission={editingId ? 'pet.vaccination.update' : 'pet.vaccination.create'}
+          title={editingId ? copy.updateVaccination : copy.newVaccination}
+          onSubmit={props.onSubmit}
+          appointmentContextDescription={props.appointmentContextDescription}
+          blockedMessage={copy.vaccinationFormBlocked}
+          formReady={props.formReady}
+          submitting={props.submitting}
+          submitLabel={editingId ? copy.updateVaccination : copy.createVaccination}
+          onCancel={props.onCancelEdit}
+        >
+          <FormSelect
+            label={copy.filterPet}
+            value={props.petId}
+            options={props.formPetOptions}
+            onChange={props.onPetIdChange}
+            disabled={props.petLookupUnavailable || props.lockPetSelection}
+          />
+          <FormInput label={copy.fieldVaccine} value={props.vaccineName} onChange={props.onVaccineNameChange} required />
+          <DateTimeInput label={copy.fieldAppliedAt} value={props.appliedAt} onChange={props.onAppliedAtChange} required />
+          <DateTimeInput label={copy.fieldNextDueAt} value={props.nextDueAt} onChange={props.onNextDueAtChange} />
+          <FormTextarea
+            label={copy.fieldNotes}
+            value={props.notes}
+            onChange={props.onNotesChange}
+            rows={4}
+            wrapperClassName="md:col-span-2"
+          />
+        </ClinicalEditor>
+      )}
+    />
   );
 }
 
-type PetPrescriptionSectionProps = {
-  editingId: string | null;
-  onSubmit: FormEventHandler<HTMLFormElement>;
-  petId: string;
-  onPetIdChange: (value: string) => void;
+type PetPrescriptionSectionProps = SharedSectionProps<PetPrescription> & {
   professionalId: string;
   onProfessionalIdChange: (value: string) => void;
   medication: string;
@@ -798,132 +665,74 @@ type PetPrescriptionSectionProps = {
   onDosageChange: (value: string) => void;
   instructions: string;
   onInstructionsChange: (value: string) => void;
-  formPetOptions: PetSelectOption[];
   formProfessionalOptions: PetSelectOption[];
-  petLookupUnavailable: boolean;
   professionalsLookupUnavailable: boolean;
-  lockPetSelection: boolean;
   lockProfessionalSelection: boolean;
-  appointmentContextDescription?: string | null;
-  formReady: boolean;
-  submitting: boolean;
-  onCancelEdit: () => void;
-  columns: DataTableColumn<PetPrescription>[];
-  pageData: PageResponse<PetPrescription>;
-  loading: boolean;
-  onPageChange: (page: number) => void;
 };
 
-export function PetPrescriptionSection({
-  editingId,
-  onSubmit,
-  petId,
-  onPetIdChange,
-  professionalId,
-  onProfessionalIdChange,
-  medication,
-  onMedicationChange,
-  dosage,
-  onDosageChange,
-  instructions,
-  onInstructionsChange,
-  formPetOptions,
-  formProfessionalOptions,
-  petLookupUnavailable,
-  professionalsLookupUnavailable,
-  lockPetSelection,
-  lockProfessionalSelection,
-  appointmentContextDescription,
-  formReady,
-  submitting,
-  onCancelEdit,
-  columns,
-  pageData,
-  loading,
-  onPageChange
-}: PetPrescriptionSectionProps) {
+export function PetPrescriptionSection(props: PetPrescriptionSectionProps) {
+  const copy = useAppMessages().screens.petMedical;
+  const { editingId } = props;
+
   return (
-    <PageSection
-      title="Prescriptions"
-      description="Prescrições vinculadas ao histórico do atendimento."
-      contentClassName="space-y-5"
-    >
-      <PermissionGuard permission={editingId ? 'pet.prescription.update' : 'pet.prescription.create'}>
-        <div className="ui-surface-muted rounded-2xl p-4 lg:p-5">
-          <form onSubmit={onSubmit} className="grid gap-4 xl:grid-cols-2">
-            <FormSelect
-              label="Pet"
-              value={petId}
-              options={formPetOptions}
-              onChange={onPetIdChange}
-              disabled={petLookupUnavailable || lockPetSelection}
-            />
-            <FormSelect
-              label="Profissional"
-              value={professionalId}
-              options={formProfessionalOptions}
-              onChange={onProfessionalIdChange}
-              disabled={professionalsLookupUnavailable || lockProfessionalSelection}
-            />
-            <FormInput label="Medicamento" value={medication} onChange={onMedicationChange} required />
-            <FormInput label="Dosagem" value={dosage} onChange={onDosageChange} />
-            <TextAreaField
-              label="Instruções"
-              value={instructions}
-              onChange={onInstructionsChange}
-              wrapperClassName="xl:col-span-2"
-            />
-
-            <div className="space-y-3 xl:col-span-2">
-              {appointmentContextDescription ? (
-                <div className="ui-notice-info">
-                  {appointmentContextDescription}
-                </div>
-              ) : null}
-              {!formReady ? (
-                <div className="ui-notice-warning">
-                  O formulário de prescrição depende das referências de pets e profissionais.
-                </div>
-              ) : null}
-              <div className={sharedFormActionsClass}>
-                <button
-                  type="submit"
-                  disabled={submitting || !formReady}
-                  className="ui-primary-button"
-                >
-                  {submitting ? 'Salvando...' : editingId ? 'Atualizar prescrição' : 'Criar prescrição'}
-                </button>
-                {editingId ? (
-                  <button
-                    type="button"
-                    onClick={onCancelEdit}
-                    className="ui-secondary-button"
-                  >
-                    Cancelar edição
-                  </button>
-                ) : null}
-              </div>
-            </div>
-          </form>
-        </div>
-      </PermissionGuard>
-
-      <PermissionGuard permission="pet.prescription.read">
-        <div className="space-y-4">
-          <DataTable columns={columns} rows={resolvePageItems(pageData)} getRowKey={(row) => row.id} loading={loading} emptyMessage="Nenhuma prescrição encontrada." />
-          <Pagination page={pageData.page} totalPages={pageData.totalPages} totalElements={resolveTotalItems(pageData)} onPageChange={onPageChange} />
-        </div>
-      </PermissionGuard>
-    </PageSection>
+    <ClinicalListSection
+      headingId="prescriptions-list"
+      title={copy.prescriptionsTitle}
+      newLabel={copy.newPrescription}
+      createPermission="pet.prescription.create"
+      readPermission="pet.prescription.read"
+      editorOpen={props.editorOpen}
+      onNew={props.onNew}
+      columns={props.columns}
+      pageData={props.pageData}
+      pageSize={props.pageSize}
+      loading={props.loading}
+      emptyTitle={copy.prescriptionsEmpty}
+      onPageChange={props.onPageChange}
+      getRowKey={(row) => row.id}
+      editor={(
+        <ClinicalEditor
+          permission={editingId ? 'pet.prescription.update' : 'pet.prescription.create'}
+          title={editingId ? copy.updatePrescription : copy.newPrescription}
+          onSubmit={props.onSubmit}
+          appointmentContextDescription={props.appointmentContextDescription}
+          blockedMessage={copy.prescriptionFormBlocked}
+          formReady={props.formReady}
+          submitting={props.submitting}
+          submitLabel={editingId ? copy.updatePrescription : copy.createPrescription}
+          onCancel={props.onCancelEdit}
+        >
+          <FormSelect
+            label={copy.filterPet}
+            value={props.petId}
+            options={props.formPetOptions}
+            onChange={props.onPetIdChange}
+            disabled={props.petLookupUnavailable || props.lockPetSelection}
+          />
+          <FormSelect
+            label={copy.filterProfessional}
+            value={props.professionalId}
+            options={props.formProfessionalOptions}
+            onChange={props.onProfessionalIdChange}
+            disabled={props.professionalsLookupUnavailable || props.lockProfessionalSelection}
+          />
+          <FormInput label={copy.fieldMedication} value={props.medication} onChange={props.onMedicationChange} required />
+          <FormInput label={copy.fieldDosage} value={props.dosage} onChange={props.onDosageChange} />
+          <FormTextarea
+            label={copy.fieldInstructions}
+            value={props.instructions}
+            onChange={props.onInstructionsChange}
+            rows={4}
+            wrapperClassName="md:col-span-2"
+          />
+        </ClinicalEditor>
+      )}
+    />
   );
 }
 
 export function PetMedicalPageFallback() {
-  return (
-    <div className="ui-notice-warning">
-      Você não possui permissão para visualizar workflows médicos do Pet.
-    </div>
-  );
-}
+  const copy = useAppMessages().screens.petMedical;
 
-export const petMedicalRouteGuardPermissions = petMedicalRoutePermissions;
+  return <div className="ui-notice-warning">{copy.noPermission}</div>;
+}

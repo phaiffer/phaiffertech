@@ -71,20 +71,41 @@ describe('CrmDealsPage', () => {
     });
 
     expect(
-      screen.getByText('The Kanban board requires at least one pipeline stage to be configured.')
+      screen.getByText('The funnel needs at least one stage.')
     ).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Configure pipeline stages' })).toHaveAttribute('href', '/crm/pipeline');
+    expect(screen.getByRole('link', { name: 'Configure stages' })).toHaveAttribute('href', '/pet/commercial?tab=pipeline');
   });
 
-  it('uses the Pet commercial pipeline setup route on the absorbed surface', async () => {
-    render(<CrmDealsPage surface="pet" />);
+  it('keeps a deal without amount unset when it is dragged to another stage', async () => {
+    const nextStage = { id: 's2', name: 'Proposal', position: 2, color: '#3b82f6' };
+    crmServiceMock.listPipelineStages.mockResolvedValue(createPageResponse([mockStage, nextStage]));
+    crmServiceMock.listDeals.mockResolvedValue(createPageResponse([{ ...mockDeal, amount: null }]));
+    crmServiceMock.updateDeal.mockResolvedValue({});
+
+    render(<CrmDealsPage />);
+
+    await screen.findByText('Deal One');
+    fireEvent.drop(screen.getByRole('region', { name: 'Proposal' }), {
+      dataTransfer: { getData: () => 'd1' }
+    });
+
+    await waitFor(() => {
+      expect(crmServiceMock.updateDeal).toHaveBeenCalledWith('d1', expect.objectContaining({
+        amount: undefined,
+        pipelineStageId: 's2'
+      }));
+    });
+  });
+
+  it('shows the funnel title on the commercial surface', async () => {
+    render(<CrmDealsPage />);
 
     await waitFor(() => {
       expect(crmServiceMock.listDeals).toHaveBeenCalledTimes(1);
     });
 
-    expect(screen.getByText('Negocios comerciais')).toBeInTheDocument();
-    expect(await screen.findByRole('link', { name: 'Configurar pipeline comercial' })).toHaveAttribute('href', '/pet/commercial?tab=pipeline');
+    expect(screen.getByRole('heading', { name: 'Funnel' })).toBeInTheDocument();
+    expect(await screen.findByRole('link', { name: 'Configure stages' })).toHaveAttribute('href', '/pet/commercial?tab=pipeline');
   });
 
   it('renders kanban board when stages and deals exist', async () => {

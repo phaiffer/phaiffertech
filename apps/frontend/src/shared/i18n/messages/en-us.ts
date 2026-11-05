@@ -900,58 +900,68 @@ export const enUSMessages: AppMessages = {
     }
   },
   petClinic: {
-    eyebrow: 'Veterinary Clinic',
-    title: 'Clinical Dashboard',
-    description: 'Track clinical appointments, pending vaccinations, medical records, and prescriptions in one operational view.',
-    noPermission: 'You do not have permission to view the clinical dashboard.',
-    loading: 'Loading the clinical overview...',
+    title: 'Clinic',
+    description: 'Today\'s clinical appointments, pending vaccinations, and recent records.',
+    noPermission: 'You do not have permission to view the clinic.',
+    loading: 'Loading the clinic...',
+    tabs: {
+      label: 'Clinic sections',
+      overview: 'Overview',
+      records: 'Medical records',
+      timeline: 'Timeline'
+    },
     actions: {
-      viewTimeline: 'View timeline',
-      newRecord: 'New record',
-      newVaccination: 'Add vaccination',
-      newPrescription: 'New prescription'
+      newRecord: 'New record'
     },
     stats: {
-      clinicalAppointments: 'Clinical appointments',
-      clinicalAppointmentsDetail: 'consultations and procedures today',
-      pendingVaccinations: 'Pending vaccinations',
-      pendingVaccinationsDetail: 'next 14 days',
-      todayRecords: 'Today records',
-      todayRecordsDetail: 'clinical records created',
-      activePrescriptions: 'Active prescriptions',
-      activePrescriptionsDetail: 'last 30 days'
+      clinicalAppointments: 'Clinical appointments today',
+      overdueVaccinations: 'Overdue vaccinations',
+      upcomingVaccinations: 'Vaccinations due in 14 days'
     },
     vaccinations: {
       title: 'Pending vaccinations',
-      description: 'Pets with vaccinations due soon or already overdue',
       empty: 'No pending vaccinations in the next 14 days.',
-      dueIn: 'Due in {days} days',
-      dueToday: 'Due today',
-      overdue: 'Overdue by {days} days',
-      scheduleAction: 'Schedule',
-      viewPet: 'View pet'
+      dueIn: 'in {days} days',
+      dueInOne: 'tomorrow',
+      dueToday: 'due today',
+      overdue: 'overdue by {days} days',
+      overdueOne: 'overdue by 1 day',
+      partial: 'Based on {shown} of {total} recorded vaccinations.'
     },
     timeline: {
-      title: 'Recent clinical timeline',
-      description: 'Latest clinical events recorded',
-      viewAll: 'View full timeline',
+      title: 'Clinical timeline',
+      description: 'Medical records, vaccinations, and prescriptions in chronological order.',
+      recentTitle: 'Recent records',
+      viewAll: 'View timeline',
       empty: 'No clinical events recorded.',
+      emptyHint: 'Add medical records, vaccinations, or prescriptions to build the clinical history.',
+      filterPet: 'Pet',
+      filterType: 'Type',
+      filterProfessional: 'Professional',
+      all: 'All',
+      clearFilters: 'Clear filters',
+      partial: 'Showing the latest {shown} of {total} events.',
       types: {
-        medicalRecord: 'Medical Record',
+        medicalRecord: 'Medical record',
         vaccination: 'Vaccination',
         prescription: 'Prescription'
       }
     },
     appointments: {
       title: 'Clinical appointments today',
-      description: 'Scheduled veterinary consultations and procedures',
-      empty: 'No clinical appointments scheduled for today.'
+      empty: 'No clinical appointments scheduled for today.',
+      columnTime: 'Time',
+      columnPet: 'Pet',
+      columnService: 'Service',
+      columnProfessional: 'Professional',
+      columnStatus: 'Status',
+      columnRecord: 'Record',
+      openRecord: 'Open'
     },
     errors: {
+      appointments: 'Unable to load today\'s appointments.',
       timeline: 'Unable to load the clinical timeline.',
-      vaccinations: 'Unable to load pending vaccinations.',
-      records: 'Unable to load medical records.',
-      prescriptions: 'Unable to load prescriptions.'
+      vaccinations: 'Unable to load pending vaccinations.'
     }
   },
   petInvoices: {

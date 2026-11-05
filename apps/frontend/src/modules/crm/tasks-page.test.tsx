@@ -5,10 +5,6 @@ import { CrmTasksPage } from '@/modules/crm/tasks-page';
 const { hasPermissionMock, crmServiceMock, petServiceMock } = vi.hoisted(() => ({
   hasPermissionMock: vi.fn(),
   crmServiceMock: {
-    listCompanies: vi.fn(),
-    listContacts: vi.fn(),
-    listLeads: vi.fn(),
-    listDeals: vi.fn(),
     listTasks: vi.fn(),
     createTask: vi.fn(),
     updateTask: vi.fn(),
@@ -42,74 +38,46 @@ function createPageResponse<T>(items: T[]) {
     totalItems: items.length,
     totalPages: 1,
     page: 0,
-    size: 10
+    size: 14
   };
 }
+
+const appointmentTask = {
+  id: 'task-2',
+  title: 'Follow-up do atendimento',
+  dueDate: '2026-03-12T12:00:00Z',
+  status: 'OPEN',
+  priority: 'MEDIUM',
+  relatedType: 'PET.APPOINTMENT',
+  relatedReferenceType: 'PET.APPOINTMENT',
+  relatedModule: 'PET',
+  relatedEntityType: 'APPOINTMENT',
+  relatedId: '87654321-1234-1234-1234-abcdefabcdef',
+  relatedDisplayName: 'Consulta clinica',
+  relatedDisplayContext: 'Nina',
+  createdAt: '2026-03-10T09:00:00Z',
+  updatedAt: '2026-03-10T09:00:00Z'
+};
 
 describe('CrmTasksPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    window.history.pushState({}, '', '/crm/tasks');
+    window.history.pushState({}, '', '/pet/follow-up');
 
     hasPermissionMock.mockReturnValue(true);
-    crmServiceMock.listCompanies.mockResolvedValue(createPageResponse([]));
-    crmServiceMock.listContacts.mockResolvedValue(createPageResponse([]));
-    crmServiceMock.listLeads.mockResolvedValue(createPageResponse([]));
-    crmServiceMock.listDeals.mockResolvedValue(createPageResponse([]));
-    crmServiceMock.listTasks.mockResolvedValue(createPageResponse([
+    crmServiceMock.listTasks.mockResolvedValue(createPageResponse([appointmentTask]));
+    crmServiceMock.createTask.mockResolvedValue(appointmentTask);
+    petServiceMock.listClients.mockResolvedValue(createPageResponse([
       {
-        id: 'task-1',
-        title: 'Ligar para cliente',
-        status: 'OPEN',
-        priority: 'HIGH',
-        relatedType: 'COMPANY',
-        relatedReferenceType: 'CRM.COMPANY',
-        relatedModule: 'CRM',
-        relatedEntityType: 'COMPANY',
-        relatedId: '12345678-1234-1234-1234-1234567890ab',
+        id: 'client-1',
+        name: 'Tutor Pet',
+        fullName: 'Tutor Pet',
+        status: 'ACTIVE',
         createdAt: '2026-03-10T09:00:00Z',
         updatedAt: '2026-03-10T09:00:00Z'
       }
     ]));
-    petServiceMock.listClients.mockResolvedValue(createPageResponse([]));
     petServiceMock.listProfiles.mockResolvedValue(createPageResponse([]));
-    petServiceMock.listAppointments.mockResolvedValue(createPageResponse([]));
-  });
-
-  it('renders canonical CRM relation context and keeps legacy CRM editing compatible', async () => {
-    render(<CrmTasksPage />);
-
-    await waitFor(() => {
-      expect(crmServiceMock.listTasks).toHaveBeenCalledTimes(1);
-    });
-
-    expect(screen.getByText('CRM / Company')).toBeInTheDocument();
-    expect(screen.getByText('CRM / Company · CRM.COMPANY · 12345678')).toBeInTheDocument();
-
-    fireEvent.click(screen.getByRole('button', { name: 'Editar' }));
-
-    expect(screen.getAllByLabelText('Tipo de vínculo')[1]).toHaveValue('COMPANY');
-    expect(screen.getByLabelText('Título')).toHaveValue('Ligar para cliente');
-  });
-
-  it('renders enriched pet references and allows editing when the matching pet permission is available', async () => {
-    crmServiceMock.listTasks.mockResolvedValue(createPageResponse([
-      {
-        id: 'task-2',
-        title: 'Follow-up do atendimento',
-        status: 'OPEN',
-        priority: 'MEDIUM',
-        relatedType: 'PET.APPOINTMENT',
-        relatedReferenceType: 'PET.APPOINTMENT',
-        relatedModule: 'PET',
-        relatedEntityType: 'APPOINTMENT',
-        relatedId: '87654321-1234-1234-1234-abcdefabcdef',
-        relatedDisplayName: 'Consulta clinica',
-        relatedDisplayContext: 'Nina · 2026-03-10T14:00:00Z',
-        createdAt: '2026-03-10T09:00:00Z',
-        updatedAt: '2026-03-10T09:00:00Z'
-      }
-    ]));
     petServiceMock.listAppointments.mockResolvedValue(createPageResponse([
       {
         id: '87654321-1234-1234-1234-abcdefabcdef',
@@ -125,71 +93,115 @@ describe('CrmTasksPage', () => {
         updatedAt: '2026-03-10T09:00:00Z'
       }
     ]));
-
-    render(<CrmTasksPage />);
-
-    await waitFor(() => {
-      expect(crmServiceMock.listTasks).toHaveBeenCalledTimes(1);
-    });
-
-    expect(screen.getByText('Consulta clinica')).toBeInTheDocument();
-    expect(screen.getByText('Pet / Appointment · Nina · 2026-03-10T14:00:00Z · PET.APPOINTMENT · 87654321')).toBeInTheDocument();
-
-    fireEvent.click(screen.getByRole('button', { name: 'Editar' }));
-
-    expect(screen.getAllByLabelText('Tipo de vínculo')[1]).toHaveValue('PET.APPOINTMENT');
-    expect(screen.getAllByLabelText('Registro vinculado')[1]).toHaveValue('87654321-1234-1234-1234-abcdefabcdef');
   });
 
-  it('applies canonical relation filters from the query string for pet references', async () => {
-    window.history.pushState({}, '', '/crm/tasks?relatedReferenceType=PET.CLIENT&relatedId=client-99');
-    petServiceMock.listClients.mockResolvedValue(createPageResponse([
-      {
-        id: 'client-99',
-        name: 'Tutor Pet',
-        fullName: 'Tutor Pet',
-        status: 'ACTIVE',
-        createdAt: '2026-03-10T09:00:00Z',
-        updatedAt: '2026-03-10T09:00:00Z'
-      }
-    ]));
+  it('pins the list to pet references and shows them without technical tokens', async () => {
+    render(<CrmTasksPage />);
+
+    expect(await screen.findByText('Follow-up do atendimento')).toBeInTheDocument();
+
+    expect(crmServiceMock.listTasks).toHaveBeenCalledWith(0, 14, '', {
+      status: undefined,
+      priority: undefined,
+      relatedReferenceType: undefined,
+      relatedId: undefined,
+      relatedModule: 'PET'
+    });
+    expect(screen.getByText('Appointment · Nina')).toBeInTheDocument();
+    expect(screen.queryByText(/PET\.APPOINTMENT/)).not.toBeInTheDocument();
+  });
+
+  it('keeps the editor closed until the user asks for it', async () => {
+    render(<CrmTasksPage />);
+
+    await screen.findByText('Follow-up do atendimento');
+    expect(screen.queryByLabelText('Title')).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'New task' }));
+    expect(screen.getByLabelText('Title')).toHaveValue('');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+    expect(screen.queryByLabelText('Title')).not.toBeInTheDocument();
+  });
+
+  it('edits a task with its stored pet reference', async () => {
+    render(<CrmTasksPage />);
+
+    await screen.findByText('Follow-up do atendimento');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Edit' }));
+
+    expect(screen.getByLabelText('Title')).toHaveValue('Follow-up do atendimento');
+    expect(screen.getByLabelText('Due date')).toHaveValue('2026-03-12');
+    expect(screen.getAllByLabelText('Link type')[1]).toHaveValue('PET.APPOINTMENT');
+    await waitFor(() => {
+      expect(screen.getAllByLabelText('Linked record')[1]).toHaveValue('87654321-1234-1234-1234-abcdefabcdef');
+    });
+  });
+
+  it('asks for a link before creating a task', async () => {
+    render(<CrmTasksPage />);
+
+    await screen.findByText('Follow-up do atendimento');
+    fireEvent.click(screen.getByRole('button', { name: 'New task' }));
+    fireEvent.change(screen.getByLabelText('Title'), { target: { value: 'Ligar para o tutor' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Create task' }));
+
+    expect(await screen.findByText('Title and link are required.')).toBeInTheDocument();
+    expect(crmServiceMock.createTask).not.toHaveBeenCalled();
+  });
+
+  it('creates a task with the canonical pet reference', async () => {
+    render(<CrmTasksPage />);
+
+    await screen.findByText('Follow-up do atendimento');
+    fireEvent.click(screen.getByRole('button', { name: 'New task' }));
+    fireEvent.change(screen.getByLabelText('Title'), { target: { value: 'Ligar para o tutor' } });
+    await screen.findByRole('option', { name: 'Tutor Pet' });
+    fireEvent.change(screen.getAllByLabelText('Linked record')[1], { target: { value: 'client-1' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Create task' }));
+
+    await waitFor(() => {
+      expect(crmServiceMock.createTask).toHaveBeenCalledWith(expect.objectContaining({
+        title: 'Ligar para o tutor',
+        status: 'OPEN',
+        priority: 'MEDIUM',
+        relatedReferenceType: 'PET.CLIENT',
+        relatedId: 'client-1'
+      }));
+    });
+    await waitFor(() => {
+      expect(screen.queryByLabelText('Title')).not.toBeInTheDocument();
+    });
+  });
+
+  it('applies relation filters from the query string', async () => {
+    window.history.pushState({}, '', '/pet/follow-up?relatedReferenceType=PET.CLIENT&relatedId=client-1');
 
     render(<CrmTasksPage />);
 
     await waitFor(() => {
-      expect(crmServiceMock.listTasks).toHaveBeenCalledWith(0, 10, '', {
+      expect(crmServiceMock.listTasks).toHaveBeenCalledWith(0, 14, '', {
         status: undefined,
         priority: undefined,
         relatedReferenceType: 'PET.CLIENT',
-        relatedId: 'client-99'
+        relatedId: 'client-1',
+        relatedModule: 'PET'
       });
     });
 
-    expect(screen.getAllByLabelText('Tipo de vínculo')[0]).toHaveValue('PET.CLIENT');
-    expect(screen.getAllByLabelText('Registro vinculado')[0]).toHaveValue('client-99');
+    expect(screen.getByLabelText('Link type')).toHaveValue('PET.CLIENT');
+    await waitFor(() => {
+      expect(screen.getByLabelText('Linked record')).toHaveValue('client-1');
+    });
   });
 
-  it('switches to the Pet follow-up surface while keeping legacy compatibility readable', async () => {
-    petServiceMock.listClients.mockResolvedValue(createPageResponse([
-      {
-        id: 'client-1',
-        name: 'Tutor Pet',
-        fullName: 'Tutor Pet',
-        status: 'ACTIVE',
-        createdAt: '2026-03-10T09:00:00Z',
-        updatedAt: '2026-03-10T09:00:00Z'
-      }
-    ]));
+  it('shows a lookup failure without hiding the task list', async () => {
+    petServiceMock.listClients.mockRejectedValue(new Error('network'));
 
-    render(<CrmTasksPage surface="pet" />);
+    render(<CrmTasksPage />);
 
-    await waitFor(() => {
-      expect(crmServiceMock.listTasks).toHaveBeenCalledTimes(1);
-    });
-
-    expect(screen.getByText('Tarefas de follow-up da Gestão Pet')).toBeInTheDocument();
-    expect(screen.getByText(/Novas tarefas desta superfície usam referências da Gestão Pet/i)).toBeInTheDocument();
-    expect(screen.queryByRole('option', { name: 'Empresa CRM' })).not.toBeInTheDocument();
-    expect(screen.getAllByRole('option', { name: 'Cliente Pet' }).length).toBeGreaterThan(0);
+    expect(await screen.findByText('Follow-up do atendimento')).toBeInTheDocument();
+    expect(await screen.findByText('Unable to load clients, pets and appointments for linking.')).toBeInTheDocument();
   });
 });

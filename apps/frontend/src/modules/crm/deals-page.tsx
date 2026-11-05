@@ -4,13 +4,12 @@ import { type DragEvent, useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { PermissionGuard } from '@/shared/auth/PermissionGuard';
 import { petCommercialPermissions } from '@/shared/auth/pet-commercial-permissions';
-import {
-  sharedFilterToolbarClass,
-  sharedFormActionsClass,
-  sharedPageStackClass
-} from '@/shared/components/public-visual-system';
+import { sharedFormActionsClass, sharedPageStackClass } from '@/shared/components/public-visual-system';
 import { StatusBadge } from '@/shared/dashboard/status-badge';
-import { ApiClientError } from '@/shared/lib/http';
+import { useAppI18n, useAppMessages } from '@/shared/i18n/app-i18n-provider';
+import { formatCurrencyForLocale, formatDateForLocale } from '@/shared/i18n/formatters';
+import type { AppMessages } from '@/shared/i18n/messages/pt-br';
+import { resolveApiErrorMessage } from '@/shared/lib/api-error-message';
 import { resolvePageItems, resolveTotalItems } from '@/shared/lib/pagination';
 import {
   petCommercialService,
@@ -29,72 +28,51 @@ import {
 } from '@/shared/types/pet-commercial';
 import { ConfirmDialog } from '@/shared/ui/confirm-dialog';
 import { DateInput } from '@/shared/ui/date-input';
+import { FilterChip } from '@/shared/ui/filter-chip';
 import { FormInput } from '@/shared/ui/form-input';
+import { FormSection } from '@/shared/ui/form-section';
 import { FormSelect } from '@/shared/ui/form-select';
-import { PageSection } from '@/shared/ui/page-section';
 import { PageTitle } from '@/shared/ui/page-title';
 import { Pagination } from '@/shared/ui/pagination';
 import { SearchBar } from '@/shared/ui/search-bar';
-import { resolveApiErrorMessage } from '@/shared/lib/api-error-message';
 
 const pageSize = 50;
-const statusOptions = [
-  { value: '', label: 'All' },
-  { value: 'OPEN', label: 'OPEN' },
-  { value: 'WON', label: 'WON' },
-  { value: 'LOST', label: 'LOST' }
-];
-const petStatusOptions = [
-  { value: '', label: 'Todos' },
-  { value: 'OPEN', label: 'Em aberto' },
-  { value: 'WON', label: 'Convertido' },
-  { value: 'LOST', label: 'Perdido' }
-];
+const pipelinePath = '/pet/commercial?tab=pipeline';
 const initialPage: PageResponse<PetCommercialDeal> = { items: [], totalItems: 0, totalPages: 0, page: 0, size: pageSize };
 
-/* ─── Finance status helpers ─────────────────────────────────────────────── */
+type CommercialCopy = AppMessages['screens']['petCommercial'];
 
-function resolveFinanceStatus(
-  invoice: FinanceInvoice | undefined,
-  isPetSurface: boolean
-): { label: string; className: string } {
+function resolveFinanceStatus(invoice: FinanceInvoice | undefined, copy: CommercialCopy) {
   if (!invoice) {
-    return { label: isPetSurface ? 'Sem fatura' : 'No invoice', className: 'text-[color:var(--app-shell-muted)]' };
+    return { label: copy.invoiceNone, tone: 'waiting' };
   }
-  if (invoice.status === 'PAID') {
-    return { label: isPetSurface ? 'Pagamento concluido' : 'Payment completed', className: 'text-emerald-600 dark:text-emerald-400' };
-  }
-  if (invoice.status === 'ISSUED') {
-    return { label: isPetSurface ? 'Aguardando pagamento' : 'Awaiting payment', className: 'text-amber-600 dark:text-amber-400' };
-  }
-  if (invoice.status === 'DRAFT') {
-    return { label: isPetSurface ? 'Fatura em rascunho' : 'Draft invoice', className: 'text-blue-600 dark:text-blue-400' };
-  }
-  if (invoice.status === 'CANCELED') {
-    return { label: isPetSurface ? 'Fatura cancelada' : 'Invoice canceled', className: 'text-[color:var(--app-shell-muted)] line-through' };
-  }
-  return { label: isPetSurface ? 'Fatura pendente' : 'Invoice pending', className: 'text-[color:var(--app-shell-muted)]' };
-}
-
-function formatCurrency(amount: number, currency: string, locale: string) {
-  try {
-    return new Intl.NumberFormat(locale, { style: 'currency', currency }).format(amount);
-  } catch {
-    return `${currency} ${amount}`;
+  switch (invoice.status) {
+    case 'PAID':
+      return { label: copy.invoicePaid, tone: 'done' };
+    case 'ISSUED':
+      return { label: copy.invoiceIssued, tone: 'warn' };
+    case 'DRAFT':
+      return { label: copy.invoiceDraft, tone: 'waiting' };
+    case 'CANCELED':
+      return { label: copy.invoiceCanceled, tone: 'danger' };
+    default:
+      return { label: copy.invoicePending, tone: 'waiting' };
   }
 }
 
-/* ─── Component ──────────────────────────────────────────────────────────── */
+// Calendar dates arrive without a time; reading them in local time would show the previous day in Brazil.
+function todayKey() {
+  const now = new Date();
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const day = String(now.getDate()).padStart(2, '0');
+  return `${now.getFullYear()}-${month}-${day}`;
+}
 
-type CrmDealsPageProps = {
-  surface?: 'crm' | 'pet';
-};
-
-export function CrmDealsPage({ surface = 'crm' }: CrmDealsPageProps) {
-  const isPetSurface = surface === 'pet';
+export function CrmDealsPage() {
+  const { locale } = useAppI18n();
+  const copy = useAppMessages().screens.petCommercial;
   const commercialService = petCommercialService;
   const dealPermissions = petCommercialPermissions.deals;
-  const pipelinePath = isPetSurface ? '/pet/commercial?tab=pipeline' : '/crm/pipeline';
   const [pageData, setPageData] = useState<PageResponse<PetCommercialDeal>>(initialPage);
   const [companies, setCompanies] = useState<PetCommercialAccount[]>([]);
   const [contacts, setContacts] = useState<PetCommercialSupportContact[]>([]);
@@ -108,7 +86,6 @@ export function CrmDealsPage({ surface = 'crm' }: CrmDealsPageProps) {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [deleteCandidate, setDeleteCandidate] = useState<PetCommercialDeal | null>(null);
 
-  // Kanban & Drawer state
   const [isEditorOpen, setIsEditorOpen] = useState(false);
   const [isDragUpdating, setIsDragUpdating] = useState(false);
 
@@ -139,15 +116,11 @@ export function CrmDealsPage({ surface = 'crm' }: CrmDealsPageProps) {
       setCompanies(resolvePageItems(companiesPage));
       setContacts(resolvePageItems(contactsPage));
       setLeads(resolvePageItems(leadsPage));
-      setStages(resolvePageItems(stagesPage).sort((a, b) => a.position - b.position));
+      setStages([...resolvePageItems(stagesPage)].sort((a, b) => a.position - b.position));
     } catch (err) {
-      setError(
-        resolveApiErrorMessage(err, isPetSurface
-            ? 'Nao foi possivel carregar as dependencias do comercial da Gestão Pet.'
-            : 'Unable to load deal dependencies for the CRM workspace.')
-      );
+      setError(resolveApiErrorMessage(err, copy.dealsSupportLoadError));
     }
-  }, [commercialService, isPetSurface]);
+  }, [commercialService, copy.dealsSupportLoadError]);
 
   const loadInvoices = useCallback(async () => {
     try {
@@ -160,7 +133,7 @@ export function CrmDealsPage({ surface = 'crm' }: CrmDealsPageProps) {
       }
       setInvoicesByDealId(map);
     } catch {
-      // Finance context is non-critical — silently ignore errors
+      // The finance status is optional context: users without finance access still see the funnel.
     }
   }, []);
 
@@ -180,15 +153,11 @@ export function CrmDealsPage({ surface = 'crm' }: CrmDealsPageProps) {
       setPageData(result);
       await loadInvoices();
     } catch (err) {
-      setError(
-        resolveApiErrorMessage(err, isPetSurface
-            ? 'Nao foi possivel carregar os negocios comerciais.'
-            : 'Unable to load CRM deals.')
-      );
+      setError(resolveApiErrorMessage(err, copy.dealsLoadError));
     } finally {
       setLoading(false);
     }
-  }, [commercialService, isPetSurface, loadInvoices]);
+  }, [commercialService, copy.dealsLoadError, loadInvoices]);
 
   useEffect(() => {
     void loadSupportingData();
@@ -234,7 +203,7 @@ export function CrmDealsPage({ surface = 'crm' }: CrmDealsPageProps) {
 
   async function handleSubmit() {
     if (!companyId || !pipelineStageId || !title.trim()) {
-      setError(isPetSurface ? 'Titulo, conta comercial e etapa do pipeline sao obrigatorios.' : 'Title, company, and pipeline stage are required.');
+      setError(copy.dealRequired);
       return;
     }
 
@@ -263,11 +232,7 @@ export function CrmDealsPage({ surface = 'crm' }: CrmDealsPageProps) {
       resetForm();
       await load(pageData.page, search, statusFilter, companyFilterId);
     } catch (err) {
-      setError(
-        resolveApiErrorMessage(err, isPetSurface
-            ? 'Nao foi possivel salvar o negocio comercial.'
-            : 'Unable to save the deal.')
-      );
+      setError(resolveApiErrorMessage(err, copy.dealSaveError));
     } finally {
       setSaving(false);
     }
@@ -281,11 +246,7 @@ export function CrmDealsPage({ surface = 'crm' }: CrmDealsPageProps) {
       setIsEditorOpen(false);
       await load(pageData.page, search, statusFilter, companyFilterId);
     } catch (err) {
-      setError(
-        resolveApiErrorMessage(err, isPetSurface
-            ? 'Nao foi possivel remover o negocio selecionado.'
-            : 'Unable to delete the selected deal.')
-      );
+      setError(resolveApiErrorMessage(err, copy.dealDeleteError));
     }
   }
 
@@ -308,22 +269,20 @@ export function CrmDealsPage({ surface = 'crm' }: CrmDealsPageProps) {
       });
       await loadInvoices();
     } catch (err) {
-      setError(
-        resolveApiErrorMessage(err, isPetSurface
-            ? 'Nao foi possivel gerar a fatura deste negocio.'
-            : 'Unable to generate invoice for this deal.')
-      );
+      setError(resolveApiErrorMessage(err, copy.invoiceGenerateError));
     } finally {
       setGeneratingInvoice(false);
     }
   }
+
+  const rows = resolvePageItems(pageData);
 
   async function handleDropDeal(e: DragEvent, stageId: string) {
     e.preventDefault();
     const dealId = e.dataTransfer.getData('dealId');
     if (!dealId || isDragUpdating) return;
 
-    const deal = rows.find(d => d.id === dealId);
+    const deal = rows.find((d) => d.id === dealId);
     if (!deal || deal.pipelineStageId === stageId) return;
 
     setIsDragUpdating(true);
@@ -331,7 +290,7 @@ export function CrmDealsPage({ surface = 'crm' }: CrmDealsPageProps) {
       const payload: UpdatePetCommercialDealInput = {
         title: deal.title,
         description: deal.description ?? undefined,
-        amount: String(deal.amount) ? Number(deal.amount) : undefined,
+        amount: deal.amount ?? undefined,
         currency: deal.currency,
         status: deal.status,
         companyId: deal.companyId,
@@ -344,490 +303,352 @@ export function CrmDealsPage({ surface = 'crm' }: CrmDealsPageProps) {
       await commercialService.updateDeal(dealId, payload);
       await load(pageData.page, search, statusFilter, companyFilterId);
     } catch (err) {
-      setError(
-        resolveApiErrorMessage(err, isPetSurface
-            ? 'Nao foi possivel mover o negocio.'
-            : 'Unable to move deal.')
-      );
+      setError(resolveApiErrorMessage(err, copy.dealMoveError));
     } finally {
       setIsDragUpdating(false);
     }
   }
 
-  function handleDragStart(e: DragEvent, dealId: string) {
-    e.dataTransfer.setData('dealId', dealId);
-  }
-
-  function handleDragOver(e: DragEvent) {
-    e.preventDefault();
-  }
-
-  const activeFilterCount = [search, statusFilter, companyFilterId].filter(Boolean).length;
-  const availableStatusOptions = isPetSurface ? petStatusOptions : statusOptions;
-  const formStatusOptions = availableStatusOptions.filter((option) => option.value);
-  const companyOptions = [{
-    value: '',
-    label: isPetSurface ? 'Selecionar conta comercial' : 'Select a company'
-  }, ...companies.map((item) => ({ value: item.id, label: item.name }))];
-  const filterCompanyOptions = [{
-    value: '',
-    label: isPetSurface ? 'Todas as contas comerciais' : 'All companies'
-  }, ...companies.map((item) => ({ value: item.id, label: item.name }))];
-  const stageOptions = [{
-    value: '',
-    label: isPetSurface ? 'Selecionar etapa do pipeline' : 'Select a pipeline stage'
-  }, ...stages.map((item) => ({ value: item.id, label: `${item.position}. ${item.name}` }))];
-  const contactOptions = [{
-    value: '',
-    label: isPetSurface ? 'Sem contato de apoio vinculado' : 'No linked contact'
-  }, ...contacts.map((item) => ({ value: item.id, label: `${item.firstName} ${item.lastName ?? ''}`.trim() }))];
-  const leadOptions = [{
-    value: '',
-    label: isPetSurface ? 'Sem lead vinculado' : 'No linked lead'
-  }, ...leads.map((item) => ({ value: item.id, label: item.name }))];
+  const statusOptions = [
+    { value: 'OPEN', label: copy.statusOpen },
+    { value: 'WON', label: copy.statusWon },
+    { value: 'LOST', label: copy.statusLost }
+  ];
   const companyName = (id?: string) => companies.find((item) => item.id === id)?.name ?? '-';
-
-  const rows = resolvePageItems(pageData);
   const totalItems = resolveTotalItems(pageData);
-  const openDealsOnPage = rows.filter((row) => row.status === 'OPEN').length;
+  const today = todayKey();
 
-  function formatDealAmount(row: PetCommercialDeal) {
-    if (!row.amount) return isPetSurface ? 'Sem valor definido' : 'No amount defined';
-    return formatCurrency(row.amount, row.currency, isPetSurface ? 'pt-BR' : 'en-US');
+  function formatDealDate(value: string) {
+    return formatDateForLocale(locale, value, '', { timeZone: 'UTC' });
   }
 
-  const columnsData = stages.map(stage => ({
+  const columnsData = stages.map((stage) => ({
     stage,
-    deals: rows.filter(r => r.pipelineStageId === stage.id)
+    deals: rows.filter((row) => row.pipelineStageId === stage.id)
   }));
-  const uncategorizedDeals = rows.filter(r => !stages.some(s => s.id === r.pipelineStageId));
-  if (uncategorizedDeals.length > 0) {
-    columnsData.push({
-      stage: {
-        id: '',
-        name: isPetSurface ? 'Sem etapa definida' : 'Uncategorized',
-        position: 99,
-        color: '#475569'
-      } as PetCommercialPipelineStage,
-      deals: uncategorizedDeals
-    });
-  }
+  const uncategorizedDeals = rows.filter((row) => !stages.some((stage) => stage.id === row.pipelineStageId));
+  const boardColumns = uncategorizedDeals.length > 0
+    ? [...columnsData, { stage: null, deals: uncategorizedDeals }]
+    : columnsData;
+  const editingDeal = editingId ? rows.find((row) => row.id === editingId) : undefined;
+  const editingInvoice = editingId ? invoicesByDealId.get(editingId) : undefined;
+  const editingFinance = resolveFinanceStatus(editingInvoice, copy);
 
   return (
     <PermissionGuard
       permission={dealPermissions.read}
-      fallback={(
-        <div className="ui-notice-warning">
-          {isPetSurface
-            ? 'Voce nao possui permissao para visualizar o comercial da Gestão Pet.'
-            : 'You do not have permission to view CRM deals.'}
-        </div>
-      )}
+      fallback={<div className="ui-notice-warning">{copy.noPermission}</div>}
     >
       <div className={sharedPageStackClass}>
         <PageTitle
-          eyebrow={isPetSurface ? 'Gestão Pet · Comercial' : 'CRM workspace'}
-          title={isPetSurface ? 'Negocios comerciais' : 'Deals'}
-          description={isPetSurface
-            ? 'Acompanhe o pipeline comercial da Gestão Pet sem reabrir uma superficie comercial legada.'
-            : 'Track opportunities on a single board without turning the page into a reporting layer.'}
+          title={copy.dealsTitle}
+          description={copy.dealsDescription}
+          count={totalItems}
           actions={(
             <PermissionGuard permission={dealPermissions.create}>
-              <button type="button" onClick={beginCreateDeal} className="ui-primary-button">
-                {isPetSurface ? 'Novo negocio comercial' : 'Add deal'}
-              </button>
+              <button type="button" onClick={beginCreateDeal} className="ui-primary-button">{copy.newDeal}</button>
             </PermissionGuard>
           )}
         />
 
-        <PageSection
-          tone="muted"
-          title={isPetSurface ? 'Filtros comerciais' : 'Filters'}
-          description={isPetSurface
-            ? 'Refine o quadro por busca, status e conta comercial para manter a conversao sob controle.'
-            : 'Focus the board by search, lifecycle, and account.'}
+        <form
+          className="flex flex-wrap items-end gap-2"
+          onSubmit={(event) => {
+            event.preventDefault();
+            setSearch(searchInput);
+          }}
         >
-          <div className={sharedFilterToolbarClass}>
-            <div className="grid gap-3 xl:grid-cols-[minmax(0,1.45fr)_220px_260px] xl:items-end">
-              <SearchBar
-                label={isPetSurface ? 'Buscar' : 'Search'}
-                value={searchInput}
-                onChange={setSearchInput}
-                placeholder={isPetSurface ? 'Titulo, resumo ou moeda' : 'Title, summary, or currency'}
-              />
-              <FormSelect label="Status" value={statusFilter} options={availableStatusOptions} onChange={setStatusFilter} />
-              <FormSelect
-                label={isPetSurface ? 'Conta comercial' : 'Company'}
-                value={companyFilterId}
-                options={filterCompanyOptions}
-                onChange={setCompanyFilterId}
-              />
-            </div>
-
-            <div className={sharedFormActionsClass}>
-              <button type="button" onClick={() => setSearch(searchInput)} className="ui-primary-button">
-                {isPetSurface ? 'Buscar' : 'Search'}
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setSearchInput('');
-                  setSearch('');
-                  setStatusFilter('');
-                  setCompanyFilterId('');
-                }}
-                className="ui-secondary-button"
-              >
-                {isPetSurface ? 'Limpar' : 'Clear'}
-              </button>
-              <p className="text-sm text-[color:var(--app-shell-muted)]">
-                {activeFilterCount > 0
-                  ? isPetSurface
-                    ? `${activeFilterCount} filtro(s) ativos atualizando o quadro comercial.`
-                    : `${activeFilterCount} filter(s) updating the board view.`
-                  : isPetSurface
-                    ? 'Sem filtros ativos no quadro comercial.'
-                    : 'No active filters.'}
-              </p>
-            </div>
+          <div className="min-w-[14rem] flex-1">
+            <SearchBar value={searchInput} onChange={setSearchInput} placeholder={copy.dealsSearchPlaceholder} />
           </div>
-        </PageSection>
+          <FilterChip
+            label={copy.filterStatus}
+            value={statusFilter}
+            options={[{ value: '', label: copy.all }, ...statusOptions]}
+            onChange={setStatusFilter}
+          />
+          <FilterChip
+            label={copy.filterAccount}
+            value={companyFilterId}
+            options={[{ value: '', label: copy.all }, ...companies.map((item) => ({ value: item.id, label: item.name }))]}
+            onChange={setCompanyFilterId}
+          />
+          <button type="submit" className="ui-secondary-button">{copy.search}</button>
+          <button
+            type="button"
+            onClick={() => {
+              setSearchInput('');
+              setSearch('');
+              setStatusFilter('');
+              setCompanyFilterId('');
+            }}
+            className="ui-inline-button"
+          >
+            {copy.clear}
+          </button>
+        </form>
 
         {error ? <div className="ui-notice-error">{error}</div> : null}
 
-        <PageSection
-          title={isPetSurface ? 'Pipeline comercial' : 'Pipeline board'}
-          description={isPetSurface
-            ? 'Mova oportunidades por etapa e abra um negocio apenas quando precisar aprofundar os detalhes.'
-            : 'Move opportunities by stage and open a deal only when you need details.'}
-          actions={(
-            <p className="text-sm text-[color:var(--app-shell-muted)]">
-              {isPetSurface
-                ? `${openDealsOnPage} negocio(s) em aberto · ${stages.length} etapa(s) · ${totalItems} no total`
-                : `${openDealsOnPage} open deal(s) · ${stages.length} stage(s) · ${totalItems} total`}
-            </p>
-          )}
-        >
-          <div className="flex gap-6 overflow-x-auto pb-8 pt-1">
-            {loading && rows.length === 0 ? (
-              <div className="w-full py-20 text-center text-[color:var(--app-shell-muted)]">
-                {isPetSurface ? 'Carregando pipeline comercial...' : 'Loading pipeline data...'}
-              </div>
-            ) : stages.length === 0 && !loading ? (
-              <div className="ui-notice-neutral w-full">
-                {isPetSurface
-                  ? 'O quadro comercial precisa de pelo menos uma etapa de pipeline configurada.'
-                  : 'The Kanban board requires at least one pipeline stage to be configured.'}
-                <div className="mt-3 flex gap-2">
-                  <Link href={pipelinePath} className="ui-secondary-button">
-                    {isPetSurface ? 'Configurar pipeline comercial' : 'Configure pipeline stages'}
-                  </Link>
-                </div>
-              </div>
-            ) : (
-              columnsData.map(({ stage, deals }) => (
-                <div
-                  key={stage.id || 'uncat'}
-                  className="flex min-w-[320px] max-w-[320px] shrink-0 flex-col rounded-xl border border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-panel-muted)] p-3"
-                  onDragOver={handleDragOver}
-                  onDrop={(e) => stage.id ? handleDropDeal(e, stage.id) : undefined}
-                >
-                  <div className="mb-4 flex items-center justify-between px-1">
-                    <div className="flex items-center gap-2">
-                      <div className="h-3 w-3 rounded-full" style={{ backgroundColor: stage.color || '#94a3b8' }} />
-                      <h3 className="text-sm font-semibold uppercase tracking-wider text-[color:var(--app-shell-heading)]">{stage.name}</h3>
-                    </div>
-                    <span className="rounded-full border border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-surface)] px-2.5 py-0.5 text-xs font-medium text-[color:var(--app-shell-muted)]">
-                      {deals.length}
-                    </span>
-                  </div>
-
-                  <div className="flex min-h-[150px] flex-col gap-3">
-                    {deals.map((deal) => {
-                      const invoice = invoicesByDealId.get(deal.id);
-                      const fs = resolveFinanceStatus(invoice, isPetSurface);
-                      return (
-                        <div
-                          key={deal.id}
-                          draggable={!isDragUpdating}
-                          onDragStart={(e) => handleDragStart(e, deal.id)}
-                          onClick={() => beginEditDeal(deal)}
-                          className="group cursor-grab rounded-lg border border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-surface)] p-4 shadow-sm transition-all duration-200 hover:border-blue-500/40 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 active:cursor-grabbing"
-                          tabIndex={0}
-                          role="button"
-                        >
-                          <div className="mb-3 flex items-start justify-between gap-2">
-                            <p className="line-clamp-2 font-semibold leading-tight text-[color:var(--app-shell-heading)]">{deal.title}</p>
-                            {deal.status !== 'OPEN' ? <StatusBadge status={deal.status} /> : null}
-                          </div>
-
-                          <div className="space-y-2">
-                            <p className="line-clamp-1 text-sm font-medium text-[color:var(--app-shell-muted)]">
-                              {companyName(deal.companyId)}
-                            </p>
-
-                            <div className="flex items-center justify-between border-t border-[color:var(--app-shell-border)] pt-2 text-sm">
-                              <span className="font-semibold text-emerald-600 dark:text-emerald-400">
-                                {formatDealAmount(deal)}
-                              </span>
-                              <span className={new Date(deal.expectedCloseDate || '2099') < new Date()
-                                ? 'text-xs font-medium text-red-500'
-                                : 'text-xs text-[color:var(--app-shell-muted)]'}>
-                                {deal.expectedCloseDate
-                                  ? new Date(deal.expectedCloseDate).toLocaleDateString(isPetSurface ? 'pt-BR' : 'en-US')
-                                  : isPetSurface
-                                    ? 'Sem data'
-                                    : 'No date'}
-                              </span>
-                            </div>
-
-                            <p className={`text-[11px] font-medium ${fs.className}`}>
-                              {fs.label}
-                            </p>
-                          </div>
-                        </div>
-                      );
-                    })}
-                    {deals.length === 0 ? (
-                      <div className="flex h-24 items-center justify-center rounded-lg border-2 border-dashed border-[color:var(--app-shell-border)] bg-transparent">
-                        <span className="text-sm text-[color:var(--app-shell-muted)] opacity-60">
-                          {isPetSurface ? 'Solte negocios aqui' : 'Drop deals here'}
-                        </span>
-                      </div>
-                    ) : null}
-                  </div>
-                </div>
-              ))
-            )}
+        {loading && rows.length === 0 ? (
+          <div className="ui-notice-neutral">{copy.dealsLoading}</div>
+        ) : stages.length === 0 && !loading ? (
+          <div className="ui-notice-neutral">
+            {copy.dealsSetupRequired}
+            <div className="mt-3">
+              <Link href={pipelinePath} className="ui-secondary-button">{copy.dealsSetupAction}</Link>
+            </div>
           </div>
-        </PageSection>
+        ) : (
+          <div className="-mx-1 flex gap-3 overflow-x-auto px-1 pb-3">
+            {boardColumns.map(({ stage, deals }) => (
+              <section
+                key={stage?.id ?? 'no-stage'}
+                aria-label={stage?.name ?? copy.noStage}
+                className="flex w-72 shrink-0 flex-col gap-2 rounded-md bg-[var(--bg-subtle)] p-2"
+                onDragOver={(event) => event.preventDefault()}
+                onDrop={(event) => (stage ? void handleDropDeal(event, stage.id) : undefined)}
+              >
+                <div className="flex items-center justify-between gap-2 px-1">
+                  <h2 className="flex min-w-0 items-center gap-2 text-sm font-semibold text-[var(--ink)]">
+                    <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ backgroundColor: stage?.color || 'var(--muted)' }} aria-hidden="true" />
+                    <span className="truncate">{stage?.name ?? copy.noStage}</span>
+                  </h2>
+                  <span className="ui-mono text-xs text-[var(--ink-2)]">{deals.length}</span>
+                </div>
 
-        {pageData.totalPages > 1 && (
-          <Pagination page={pageData.page} totalPages={pageData.totalPages} totalElements={totalItems} onPageChange={(nextPage) => void load(nextPage, search, statusFilter, companyFilterId)} />
+                <div className="flex min-h-24 flex-col gap-2">
+                  {deals.map((deal) => {
+                    const finance = resolveFinanceStatus(invoicesByDealId.get(deal.id), copy);
+                    const overdue = deal.status === 'OPEN'
+                      && Boolean(deal.expectedCloseDate)
+                      && (deal.expectedCloseDate ?? '').slice(0, 10) < today;
+
+                    return (
+                      <button
+                        key={deal.id}
+                        type="button"
+                        draggable={!isDragUpdating}
+                        onDragStart={(event) => event.dataTransfer.setData('dealId', deal.id)}
+                        onClick={() => beginEditDeal(deal)}
+                        className="block w-full cursor-grab rounded-md border border-[color:var(--line)] bg-[var(--bg)] p-3 text-left text-sm hover:border-[color:var(--ink-2)] active:cursor-grabbing"
+                      >
+                        <span className="flex items-start justify-between gap-2">
+                          <span className="line-clamp-2 font-medium text-[var(--ink)]">{deal.title}</span>
+                          {deal.status !== 'OPEN' ? <StatusBadge status={deal.status} /> : null}
+                        </span>
+                        <span className="mt-1 block truncate text-xs text-[var(--ink-2)]">{companyName(deal.companyId)}</span>
+                        <span className="mt-2 flex items-center justify-between gap-2 border-t border-dashed border-[color:var(--line)] pt-2 text-xs">
+                          <span className="ui-mono font-semibold text-[var(--ink)]">
+                            {deal.amount ? formatCurrencyForLocale(locale, deal.amount, deal.currency) : copy.noAmount}
+                          </span>
+                          <span className={`ui-mono ${overdue ? 'text-[var(--danger)]' : 'text-[var(--ink-2)]'}`}>
+                            {deal.expectedCloseDate ? formatDealDate(deal.expectedCloseDate) : copy.noDate}
+                          </span>
+                        </span>
+                        <span className="mt-1.5 inline-flex items-center gap-1.5 text-xs text-[var(--ink-2)]">
+                          <span className="ui-status-dot" data-status={finance.tone} aria-hidden="true" />
+                          {finance.label}
+                        </span>
+                      </button>
+                    );
+                  })}
+                  {deals.length === 0 ? (
+                    <div className="flex h-20 items-center justify-center rounded-md border border-dashed border-[color:var(--line)]">
+                      <span className="text-xs text-[var(--muted)]">{copy.dropHere}</span>
+                    </div>
+                  ) : null}
+                </div>
+              </section>
+            ))}
+          </div>
         )}
 
-        {/* SIDE DRAWER */}
-        {isEditorOpen && (
-          <div className="fixed inset-0 z-50 flex justify-end bg-black/40 backdrop-blur-sm transition-opacity">
-            <div className="w-full max-w-xl h-full overflow-y-auto bg-[color:var(--app-shell-surface)] p-[var(--space-6)] shadow-2xl animate-in slide-in-from-right duration-300 border-l border-[color:var(--app-shell-border)]">
-              <div className="mb-8 flex items-center justify-between">
-                <div>
-                  <h2 className="text-2xl font-bold tracking-tight text-[color:var(--app-shell-heading)]">
-                    {isPetSurface
-                      ? editingId ? 'Editar negocio comercial' : 'Novo negocio comercial'
-                      : editingId ? 'Edit deal' : 'Create deal'}
-                  </h2>
-                  <p className="text-sm mt-1 text-[color:var(--app-shell-muted)]">
-                    {isPetSurface
-                      ? editingId
-                        ? 'Atualize detalhes, previsao e vinculos do negocio.'
-                        : 'Adicione uma nova oportunidade ao pipeline comercial.'
-                      : editingId
-                        ? 'Update opportunity details and forecast.'
-                        : 'Add a new opportunity to the pipeline.'}
-                  </p>
-                </div>
-                <button
-                  onClick={() => setIsEditorOpen(false)}
-                  className="rounded-full p-2 text-[color:var(--app-shell-muted)] hover:bg-[color:var(--app-shell-panel-muted)] hover:text-[color:var(--app-shell-heading)] focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  aria-label="Close panel"
-                >
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+        {pageData.totalPages > 1 ? (
+          <Pagination
+            page={pageData.page}
+            totalPages={pageData.totalPages}
+            totalElements={totalItems}
+            pageSize={pageSize}
+            onPageChange={(nextPage) => void load(nextPage, search, statusFilter, companyFilterId)}
+          />
+        ) : null}
+
+        {isEditorOpen ? (
+          <div className="fixed inset-0 z-50 flex justify-end bg-black/40">
+            <div
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="deal-editor-title"
+              className="h-full w-full max-w-xl overflow-y-auto border-l border-[color:var(--line)] bg-[var(--bg)] p-5"
+            >
+              <div className="mb-5 flex items-center justify-between gap-3">
+                <h2 id="deal-editor-title" className="text-lg font-semibold text-[var(--ink)]">
+                  {editingId ? copy.editDeal : copy.newDeal}
+                </h2>
+                <button type="button" onClick={() => setIsEditorOpen(false)} className="ui-secondary-button">
+                  {copy.closePanel}
                 </button>
               </div>
 
-              <div className="space-y-6">
-                <PermissionGuard
-                  permission={editingId ? dealPermissions.update : dealPermissions.create}
-                  fallback={(
-                    <div className="ui-notice-error">
-                      {isPetSurface
-                        ? 'Permissao insuficiente para salvar este negocio comercial.'
-                        : 'Missing permissions to save this deal.'}
-                    </div>
-                  )}
+              <PermissionGuard
+                permission={editingId ? dealPermissions.update : dealPermissions.create}
+                fallback={<div className="ui-notice-error">{copy.dealSaveNoPermission}</div>}
+              >
+                <form
+                  className="space-y-5"
+                  onSubmit={(event) => {
+                    event.preventDefault();
+                    void handleSubmit();
+                  }}
                 >
-                  <form className="space-y-6 flex flex-col h-full" onSubmit={(e) => { e.preventDefault(); void handleSubmit(); }}>
-
-                    <div className="grid gap-5 sm:grid-cols-2">
-                      <div className="sm:col-span-2">
-                        <FormInput
-                          label={isPetSurface ? 'Titulo do negocio' : 'Deal title'}
-                          placeholder={isPetSurface ? 'Ex.: Plano premium anual' : 'e.g. Enterprise License Expansion'}
-                          value={title}
-                          onChange={setTitle}
-                          required
-                        />
-                      </div>
-
-                      <div className="sm:col-span-2">
-                        <FormInput
-                          label={isPetSurface ? 'Resumo comercial' : 'Commercial summary'}
-                          value={description}
-                          onChange={setDescription}
-                        />
-                      </div>
-
-                      <FormSelect
-                        label={isPetSurface ? 'Conta comercial' : 'Company'}
-                        value={companyId}
-                        options={companyOptions}
-                        onChange={setCompanyId}
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div className="sm:col-span-2">
+                      <FormInput
+                        label={copy.fieldDealTitle}
+                        placeholder={copy.fieldDealTitlePlaceholder}
+                        value={title}
+                        onChange={setTitle}
+                        required
                       />
-                      <FormSelect
-                        label={isPetSurface ? 'Etapa do pipeline' : 'Pipeline stage'}
-                        value={pipelineStageId}
-                        options={stageOptions}
-                        onChange={setPipelineStageId}
-                      />
-
-                      <FormInput label={isPetSurface ? 'Valor' : 'Amount'} value={amount} onChange={setAmount} type="number" />
-                      <FormSelect label="Currency" value={currency} options={[{ value: 'BRL', label: 'BRL' }, { value: 'USD', label: 'USD' }, { value: 'EUR', label: 'EUR' }]} onChange={setCurrency} />
-
-                      <DateInput
-                        label={isPetSurface ? 'Data prevista de fechamento' : 'Expected close date'}
-                        value={expectedCloseDate}
-                        onChange={setExpectedCloseDate}
-                      />
-                      <FormSelect label="Status" value={status} options={formStatusOptions} onChange={setStatus} />
-
-                      <div className="sm:col-span-2 pt-4 border-t border-[color:var(--app-shell-border)] grid gap-5 sm:grid-cols-2">
-                        <h3 className="sm:col-span-2 text-sm font-semibold uppercase tracking-wider text-[color:var(--app-shell-muted)]">
-                          {isPetSurface ? 'Vinculos opcionais' : 'Optional Linkages'}
-                        </h3>
-                        <FormSelect
-                          label={isPetSurface ? 'Contato de apoio principal' : 'Primary contact'}
-                          value={contactId}
-                          options={contactOptions}
-                          onChange={setContactId}
-                        />
-                        <FormSelect
-                          label={isPetSurface ? 'Lead de origem' : 'Source lead'}
-                          value={leadId}
-                          options={leadOptions}
-                          onChange={setLeadId}
-                        />
-                      </div>
-
-                      {/* Finance section — visible only when editing an existing deal */}
-                      {editingId && (() => {
-                        const deal = rows.find(r => r.id === editingId);
-                        const invoice = invoicesByDealId.get(editingId);
-                        const fs = resolveFinanceStatus(invoice, isPetSurface);
-                        return (
-                          <div className="sm:col-span-2 pt-4 border-t border-[color:var(--app-shell-border)] space-y-3">
-                            <div className="flex items-center justify-between">
-                              <h3 className="text-sm font-semibold uppercase tracking-wider text-[color:var(--app-shell-muted)]">
-                                {isPetSurface ? 'Financeiro' : 'Finance'}
-                              </h3>
-                              {invoice && (
-                                <Link
-                                  href="/finance/invoices"
-                                  className="text-xs text-blue-600 dark:text-blue-400 hover:underline"
-                                  onClick={() => setIsEditorOpen(false)}
-                                >
-                                  {isPetSurface ? 'Abrir no financeiro ->' : 'View in Finance ->'}
-                                </Link>
-                              )}
-                            </div>
-
-                            {invoice ? (
-                              <div className="rounded-xl border border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-panel-muted)] p-4 space-y-2">
-                                <div className="flex items-center justify-between">
-                                  <span className={`text-sm font-medium ${fs.className}`}>{fs.label}</span>
-                                  {invoice.totalAmount > 0 && (
-                                    <span className="text-sm font-semibold text-[color:var(--app-shell-heading)]">
-                                      {formatCurrency(invoice.totalAmount, invoice.currency, isPetSurface ? 'pt-BR' : 'en-US')}
-                                    </span>
-                                  )}
-                                </div>
-                                {invoice.outstandingAmount > 0 && invoice.status !== 'PAID' && (
-                                  <p className="text-xs text-[color:var(--app-shell-muted)]">
-                                    {isPetSurface ? 'Em aberto:' : 'Outstanding:'} {formatCurrency(invoice.outstandingAmount, invoice.currency, isPetSurface ? 'pt-BR' : 'en-US')}
-                                  </p>
-                                )}
-                                {invoice.paidAt && (
-                                  <p className="text-xs text-emerald-600 dark:text-emerald-400">
-                                    {isPetSurface ? 'Pago em ' : 'Paid on '}{new Date(invoice.paidAt).toLocaleDateString(isPetSurface ? 'pt-BR' : 'en-US')}
-                                  </p>
-                                )}
-                              </div>
-                            ) : (
-                              <div className="rounded-xl border border-dashed border-[color:var(--app-shell-border)] bg-[color:var(--app-shell-panel-muted)] p-4 space-y-3">
-                                {deal?.amount ? (
-                                  <>
-                                    <p className="text-sm text-[color:var(--app-shell-muted)]">
-                                      {isPetSurface ? 'Ainda nao existe fatura para este negocio.' : 'No invoice yet for this deal.'}
-                                    </p>
-                                    <PermissionGuard permission="finance.invoice.create">
-                                      <button
-                                        type="button"
-                                        disabled={generatingInvoice}
-                                        onClick={() => deal && void handleGenerateInvoice(deal)}
-                                        className="ui-secondary-button text-sm"
-                                      >
-                                        {generatingInvoice
-                                          ? isPetSurface ? 'Gerando...' : 'Generating...'
-                                          : isPetSurface ? 'Gerar fatura' : 'Generate invoice'}
-                                      </button>
-                                    </PermissionGuard>
-                                  </>
-                                ) : (
-                                  <p className="text-sm text-[color:var(--app-shell-muted)]">
-                                    {isPetSurface
-                                      ? 'Defina um valor no negocio para habilitar a geracao de fatura.'
-                                      : 'Set a deal amount to enable invoice generation.'}
-                                  </p>
-                                )}
-                              </div>
-                            )}
-                          </div>
-                        );
-                      })()}
                     </div>
+                    <div className="sm:col-span-2">
+                      <FormInput label={copy.fieldSummary} value={description} onChange={setDescription} />
+                    </div>
+                    <FormSelect
+                      label={copy.fieldAccount}
+                      value={companyId}
+                      options={[{ value: '', label: copy.selectAccount }, ...companies.map((item) => ({ value: item.id, label: item.name }))]}
+                      onChange={setCompanyId}
+                    />
+                    <FormSelect
+                      label={copy.fieldStage}
+                      value={pipelineStageId}
+                      options={[{ value: '', label: copy.selectStage }, ...stages.map((item) => ({ value: item.id, label: `${item.position}. ${item.name}` }))]}
+                      onChange={setPipelineStageId}
+                    />
+                    <FormInput label={copy.fieldAmount} value={amount} onChange={setAmount} type="number" />
+                    <FormSelect
+                      label={copy.fieldCurrency}
+                      value={currency}
+                      options={[{ value: 'BRL', label: 'BRL' }, { value: 'USD', label: 'USD' }, { value: 'EUR', label: 'EUR' }]}
+                      onChange={setCurrency}
+                    />
+                    <DateInput label={copy.fieldExpectedClose} value={expectedCloseDate} onChange={setExpectedCloseDate} />
+                    <FormSelect label={copy.filterStatus} value={status} options={statusOptions} onChange={setStatus} />
+                  </div>
 
-                    <div className="mt-8 pt-6 border-t border-[color:var(--app-shell-border)] flex flex-wrap items-center justify-between gap-4">
-                      <div className="flex gap-3">
-                        <button
-                          type="submit"
-                          disabled={saving || !title.trim() || !companyId || !pipelineStageId}
-                          className="ui-primary-button"
-                        >
-                          {saving
-                            ? isPetSurface ? 'Salvando...' : 'Saving...'
-                            : isPetSurface
-                              ? editingId ? 'Salvar negocio' : 'Adicionar ao pipeline'
-                              : editingId ? 'Save changes' : 'Add to board'}
-                        </button>
-                        <button type="button" onClick={() => setIsEditorOpen(false)} className="ui-secondary-button">
-                          {isPetSurface ? 'Cancelar' : 'Cancel'}
-                        </button>
+                  <FormSection title={copy.sectionLinks}>
+                    <FormSelect
+                      label={copy.fieldContact}
+                      value={contactId}
+                      options={[
+                        { value: '', label: copy.noLinkedContact },
+                        ...contacts.map((item) => ({ value: item.id, label: `${item.firstName} ${item.lastName ?? ''}`.trim() }))
+                      ]}
+                      onChange={setContactId}
+                    />
+                    <FormSelect
+                      label={copy.fieldSourceLead}
+                      value={leadId}
+                      options={[{ value: '', label: copy.noLinkedLead }, ...leads.map((item) => ({ value: item.id, label: item.name }))]}
+                      onChange={setLeadId}
+                    />
+                  </FormSection>
+
+                  {editingId ? (
+                    <section aria-labelledby="deal-finance" className="space-y-2 border-t border-[color:var(--line)] pt-4">
+                      <div className="flex items-center justify-between gap-2">
+                        <h3 id="deal-finance" className="text-sm font-semibold text-[var(--ink)]">{copy.sectionFinance}</h3>
+                        {editingInvoice ? (
+                          <Link
+                            href="/finance/invoices"
+                            onClick={() => setIsEditorOpen(false)}
+                            className="text-sm text-[var(--ink-2)] underline-offset-2 hover:text-[var(--ink)] hover:underline"
+                          >
+                            {copy.viewInFinance}
+                          </Link>
+                        ) : null}
                       </div>
 
-                      {editingId && (
-                        <PermissionGuard permission={dealPermissions.delete}>
-                          <button type="button" onClick={() => setDeleteCandidate(rows.find(r => r.id === editingId) || null)} className="text-red-600 hover:text-red-700 font-medium text-sm px-3 py-2 rounded-md hover:bg-red-50 dark:hover:bg-red-950/30">
-                            {isPetSurface ? 'Remover negocio' : 'Delete deal'}
-                          </button>
-                        </PermissionGuard>
+                      {editingInvoice ? (
+                        <div className="space-y-1 text-sm">
+                          <p className="flex items-center justify-between gap-2">
+                            <span className="inline-flex items-center gap-1.5 text-[var(--ink)]">
+                              <span className="ui-status-dot" data-status={editingFinance.tone} aria-hidden="true" />
+                              {editingFinance.label}
+                            </span>
+                            {editingInvoice.totalAmount > 0 ? (
+                              <span className="ui-mono font-semibold text-[var(--ink)]">
+                                {formatCurrencyForLocale(locale, editingInvoice.totalAmount, editingInvoice.currency)}
+                              </span>
+                            ) : null}
+                          </p>
+                          {editingInvoice.outstandingAmount > 0 && editingInvoice.status !== 'PAID' ? (
+                            <p className="text-xs text-[var(--ink-2)]">
+                              {copy.invoiceOutstanding}{' '}
+                              <span className="ui-mono">{formatCurrencyForLocale(locale, editingInvoice.outstandingAmount, editingInvoice.currency)}</span>
+                            </p>
+                          ) : null}
+                          {editingInvoice.paidAt ? (
+                            <p className="text-xs text-[var(--ink-2)]">
+                              {copy.invoicePaidOn.replace('{date}', formatDateForLocale(locale, editingInvoice.paidAt))}
+                            </p>
+                          ) : null}
+                        </div>
+                      ) : editingDeal?.amount ? (
+                        <div className="space-y-2">
+                          <p className="text-sm text-[var(--ink-2)]">{copy.invoiceMissing}</p>
+                          <PermissionGuard permission="finance.invoice.create">
+                            <button
+                              type="button"
+                              disabled={generatingInvoice}
+                              onClick={() => void handleGenerateInvoice(editingDeal)}
+                              className="ui-secondary-button"
+                            >
+                              {generatingInvoice ? copy.generatingInvoice : copy.generateInvoice}
+                            </button>
+                          </PermissionGuard>
+                        </div>
+                      ) : (
+                        <p className="text-sm text-[var(--ink-2)]">{copy.invoiceNeedsAmount}</p>
                       )}
+                    </section>
+                  ) : null}
+
+                  <div className="flex flex-wrap items-center justify-between gap-3 border-t border-[color:var(--line)] pt-4">
+                    <div className={sharedFormActionsClass}>
+                      <button
+                        type="submit"
+                        disabled={saving || !title.trim() || !companyId || !pipelineStageId}
+                        className="ui-primary-button"
+                      >
+                        {saving ? copy.saving : editingId ? copy.saveDeal : copy.addDeal}
+                      </button>
+                      <button type="button" onClick={() => setIsEditorOpen(false)} className="ui-secondary-button">
+                        {copy.cancel}
+                      </button>
                     </div>
-                  </form>
-                </PermissionGuard>
-              </div>
+
+                    {editingDeal ? (
+                      <PermissionGuard permission={dealPermissions.delete}>
+                        <button type="button" onClick={() => setDeleteCandidate(editingDeal)} className="ui-inline-danger-button">
+                          {copy.deleteDeal}
+                        </button>
+                      </PermissionGuard>
+                    ) : null}
+                  </div>
+                </form>
+              </PermissionGuard>
             </div>
           </div>
-        )}
+        ) : null}
 
         <ConfirmDialog
           open={Boolean(deleteCandidate)}
-          title={isPetSurface ? 'Remover negocio comercial' : 'Delete opportunity'}
-          description={deleteCandidate
-            ? (isPetSurface
-              ? `Confirma a remocao permanente de "${deleteCandidate.title}" do pipeline comercial?`
-              : `Are you sure you want to permanently remove "${deleteCandidate.title}" from the pipeline? This action cannot be undone.`)
-            : undefined}
-          confirmLabel={isPetSurface ? 'Remover' : 'Delete forever'}
+          title={copy.dealDeleteTitle}
+          description={deleteCandidate ? copy.dealDeleteDescription.replace('{title}', deleteCandidate.title) : undefined}
+          confirmLabel={copy.dealDeleteConfirm}
           onCancel={() => setDeleteCandidate(null)}
           onConfirm={() => void handleDelete()}
         />

@@ -1,9 +1,11 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { FormEvent, useCallback, useEffect, useState } from 'react';
 import { PermissionGuard } from '@/shared/auth/PermissionGuard';
 import { petCommercialPermissions } from '@/shared/auth/pet-commercial-permissions';
-import { ApiClientError } from '@/shared/lib/http';
+import { sharedPageStackClass } from '@/shared/components/public-visual-system';
+import { useAppMessages } from '@/shared/i18n/app-i18n-provider';
+import { resolveApiErrorMessage } from '@/shared/lib/api-error-message';
 import { resolvePageItems, resolveTotalItems } from '@/shared/lib/pagination';
 import {
   petCommercialService,
@@ -19,27 +21,20 @@ import { FormSelect } from '@/shared/ui/form-select';
 import { PageTitle } from '@/shared/ui/page-title';
 import { Pagination } from '@/shared/ui/pagination';
 import { SearchBar } from '@/shared/ui/search-bar';
-import { resolveApiErrorMessage } from '@/shared/lib/api-error-message';
 
-const pageSize = 10;
-const defaultOptions = [
-  { value: 'false', label: 'Não' },
-  { value: 'true', label: 'Sim' }
-];
+const pageSize = 14;
+const defaultColor = '#475569';
 const initialPage: PageResponse<PetCommercialPipelineStage> = { items: [], totalItems: 0, totalPages: 0, page: 0, size: pageSize };
 
-type CrmPipelinePageProps = {
-  surface?: 'crm' | 'pet';
-};
-
-export function CrmPipelinePage({ surface = 'crm' }: CrmPipelinePageProps) {
-  const isPetSurface = surface === 'pet';
+export function CrmPipelinePage() {
+  const copy = useAppMessages().screens.petCommercial;
   const commercialService = petCommercialService;
   const pipelinePermissions = petCommercialPermissions.pipeline;
   const [pageData, setPageData] = useState<PageResponse<PetCommercialPipelineStage>>(initialPage);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isEditorOpen, setIsEditorOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [deleteCandidate, setDeleteCandidate] = useState<PetCommercialPipelineStage | null>(null);
   const [searchInput, setSearchInput] = useState('');
@@ -47,7 +42,7 @@ export function CrmPipelinePage({ surface = 'crm' }: CrmPipelinePageProps) {
   const [name, setName] = useState('');
   const [code, setCode] = useState('');
   const [position, setPosition] = useState('');
-  const [color, setColor] = useState('#475569');
+  const [color, setColor] = useState(defaultColor);
   const [isDefault, setIsDefault] = useState('false');
 
   const load = useCallback(async (page: number, currentSearch: string) => {
@@ -57,33 +52,41 @@ export function CrmPipelinePage({ surface = 'crm' }: CrmPipelinePageProps) {
       const result = await commercialService.listPipelineStages(page, pageSize, currentSearch);
       setPageData(result);
     } catch (err) {
-      setError(
-        resolveApiErrorMessage(err, isPetSurface
-            ? 'Erro ao carregar o pipeline comercial.'
-            : 'Erro ao carregar pipeline.')
-      );
+      setError(resolveApiErrorMessage(err, copy.stagesLoadError));
     } finally {
       setLoading(false);
     }
-  }, [commercialService, isPetSurface]);
+  }, [commercialService, copy.stagesLoadError]);
 
   useEffect(() => {
     void load(0, search);
   }, [load, search]);
 
-  function resetForm() {
+  function closeEditor() {
+    setIsEditorOpen(false);
     setEditingId(null);
     setName('');
     setCode('');
     setPosition('');
-    setColor('#475569');
+    setColor(defaultColor);
     setIsDefault('false');
   }
 
-  async function handleSubmit() {
+  function beginEdit(row: PetCommercialPipelineStage) {
+    setEditingId(row.id);
+    setName(row.name);
+    setCode(row.code);
+    setPosition(String(row.position));
+    setColor(row.color ?? defaultColor);
+    setIsDefault(String(row.isDefault));
+    setIsEditorOpen(true);
+  }
+
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
     const numericPosition = Number(position);
     if (!name.trim() || !numericPosition) {
-      setError(isPetSurface ? 'Nome e posicao sao obrigatorios.' : 'Nome e posicao sao obrigatorios.');
+      setError(copy.stageRequired);
       return;
     }
 
@@ -103,14 +106,10 @@ export function CrmPipelinePage({ surface = 'crm' }: CrmPipelinePageProps) {
       } else {
         await commercialService.createPipelineStage(payload);
       }
-      resetForm();
+      closeEditor();
       await load(pageData.page, search);
     } catch (err) {
-      setError(
-        resolveApiErrorMessage(err, isPetSurface
-            ? 'Erro ao salvar etapa do pipeline comercial.'
-            : 'Erro ao salvar etapa.')
-      );
+      setError(resolveApiErrorMessage(err, copy.stageSaveError));
     } finally {
       setSaving(false);
     }
@@ -123,60 +122,46 @@ export function CrmPipelinePage({ surface = 'crm' }: CrmPipelinePageProps) {
       setDeleteCandidate(null);
       await load(pageData.page, search);
     } catch (err) {
-      setError(
-        resolveApiErrorMessage(err, isPetSurface
-            ? 'Erro ao excluir etapa do pipeline comercial.'
-            : 'Erro ao excluir etapa.')
-      );
+      setError(resolveApiErrorMessage(err, copy.stageDeleteError));
     }
   }
 
   const rows = resolvePageItems(pageData);
   const totalItems = resolveTotalItems(pageData);
+  const defaultOptions = [
+    { value: 'false', label: copy.no },
+    { value: 'true', label: copy.yes }
+  ];
   const columns: DataTableColumn<PetCommercialPipelineStage>[] = [
-    { key: 'name', header: 'Etapa', render: (row) => row.name },
-    { key: 'code', header: 'Código', render: (row) => row.code },
-    { key: 'position', header: 'Posição', render: (row) => row.position },
     {
-      key: 'color',
-      header: 'Cor',
+      key: 'position',
+      header: copy.columnPosition,
+      className: 'text-right ui-mono',
+      render: (row) => row.position
+    },
+    {
+      key: 'name',
+      header: copy.columnStage,
       render: (row) => (
-        <span className="inline-flex items-center gap-2">
-          <span className="h-3 w-3 rounded-full border border-[color:var(--app-shell-border)]" style={{ backgroundColor: row.color ?? '#475569' }} />
-          {row.color ?? '#475569'}
+        <span className="inline-flex items-center gap-2 font-medium text-[var(--ink)]">
+          <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: row.color ?? defaultColor }} aria-hidden="true" />
+          {row.name}
         </span>
       )
     },
-    { key: 'default', header: 'Padrão', render: (row) => (row.isDefault ? 'Sim' : 'Não') },
+    { key: 'code', header: copy.columnCode, render: (row) => <span className="ui-mono text-[var(--ink-2)]">{row.code}</span> },
+    { key: 'color', header: copy.columnColor, render: (row) => <span className="ui-mono text-[var(--ink-2)]">{row.color ?? defaultColor}</span> },
+    { key: 'default', header: copy.columnDefault, render: (row) => (row.isDefault ? copy.yes : copy.no) },
     {
       key: 'actions',
-      header: 'Ações',
+      header: copy.columnActions,
       render: (row) => (
         <div className="flex gap-2">
           <PermissionGuard permission={pipelinePermissions.update}>
-            <button
-              type="button"
-              onClick={() => {
-                setEditingId(row.id);
-                setName(row.name);
-                setCode(row.code);
-                setPosition(String(row.position));
-                setColor(row.color ?? '#475569');
-                setIsDefault(String(row.isDefault));
-              }}
-              className="ui-inline-button"
-            >
-              Editar
-            </button>
+            <button type="button" onClick={() => beginEdit(row)} className="ui-inline-button">{copy.edit}</button>
           </PermissionGuard>
           <PermissionGuard permission={pipelinePermissions.delete}>
-            <button
-              type="button"
-              onClick={() => setDeleteCandidate(row)}
-              className="ui-inline-danger-button"
-            >
-              Excluir
-            </button>
+            <button type="button" onClick={() => setDeleteCandidate(row)} className="ui-inline-danger-button">{copy.delete}</button>
           </PermissionGuard>
         </div>
       )
@@ -186,62 +171,60 @@ export function CrmPipelinePage({ surface = 'crm' }: CrmPipelinePageProps) {
   return (
     <PermissionGuard
       permission={pipelinePermissions.read}
-      fallback={(
-        <div className="ui-notice-warning">
-          {isPetSurface
-            ? 'Voce nao possui permissao para visualizar o comercial da Gestão Pet.'
-            : 'Voce nao possui permissao para visualizar o pipeline.'}
-        </div>
-      )}
+      fallback={<div className="ui-notice-warning">{copy.noPermission}</div>}
     >
-      <div className="space-y-5">
+      <div className={sharedPageStackClass}>
         <PageTitle
-          eyebrow={isPetSurface ? 'Gestão Pet · Comercial' : 'CRM workspace'}
-          title={isPetSurface ? 'Pipeline comercial' : 'CRM Pipeline'}
-          description={isPetSurface
-            ? 'Gerencie as etapas do pipeline comercial da Gestão Pet mantendo o backend atual apenas como compatibilidade.'
-            : 'Gestao das etapas do pipeline comercial.'}
+          title={copy.stagesTitle}
+          description={copy.stagesDescription}
+          count={totalItems}
+          actions={!isEditorOpen ? (
+            <PermissionGuard permission={pipelinePermissions.create}>
+              <button type="button" onClick={() => setIsEditorOpen(true)} className="ui-primary-button">{copy.newStage}</button>
+            </PermissionGuard>
+          ) : undefined}
         />
 
-        <div className="grid gap-3 ui-surface-panel p-4 md:grid-cols-[1fr_auto_auto]">
-          <SearchBar
-            label={isPetSurface ? 'Buscar etapa' : undefined}
-            value={searchInput}
-            onChange={setSearchInput}
-            placeholder={isPetSurface ? 'Nome ou codigo da etapa comercial' : 'Nome ou codigo da etapa'}
-          />
-          <button type="button" onClick={() => setSearch(searchInput)} className="ui-primary-button">
-            {isPetSurface ? 'Buscar' : 'Buscar'}
-          </button>
-          <button type="button" onClick={() => { setSearchInput(''); setSearch(''); }} className="ui-secondary-button">
-            {isPetSurface ? 'Limpar' : 'Limpar'}
-          </button>
-        </div>
-
-        <PermissionGuard permission={editingId ? pipelinePermissions.update : pipelinePermissions.create}>
-          <div className="grid gap-3 ui-surface-panel p-4 md:grid-cols-2">
-            <FormInput label={isPetSurface ? 'Nome da etapa' : 'Nome'} value={name} onChange={setName} required />
-            <FormInput label="Codigo" value={code} onChange={setCode} />
-            <FormInput label="Posicao" value={position} onChange={setPosition} type="number" required />
-            <FormInput label="Cor" value={color} onChange={setColor} />
-            <FormSelect label={isPetSurface ? 'Etapa padrao' : 'Etapa padrao'} value={isDefault} options={defaultOptions} onChange={setIsDefault} />
-            <div className="flex gap-2 md:col-span-2">
-              <button
-                type="button"
-                disabled={saving || !name.trim()}
-                onClick={() => void handleSubmit()}
-                className="ui-primary-button"
-              >
-                {editingId
-                  ? isPetSurface ? 'Salvar etapa comercial' : 'Salvar etapa'
-                  : isPetSurface ? 'Criar etapa comercial' : 'Criar etapa'}
-              </button>
-              <button type="button" onClick={resetForm} className="ui-secondary-button">
-                {isPetSurface ? 'Cancelar' : 'Cancelar'}
-              </button>
-            </div>
+        <form
+          className="flex flex-wrap items-end gap-2"
+          onSubmit={(event) => {
+            event.preventDefault();
+            setSearch(searchInput);
+          }}
+        >
+          <div className="min-w-[14rem] flex-1">
+            <SearchBar value={searchInput} onChange={setSearchInput} placeholder={copy.stagesSearchPlaceholder} />
           </div>
-        </PermissionGuard>
+          <button type="submit" className="ui-secondary-button">{copy.search}</button>
+          <button
+            type="button"
+            onClick={() => {
+              setSearchInput('');
+              setSearch('');
+            }}
+            className="ui-inline-button"
+          >
+            {copy.clear}
+          </button>
+        </form>
+
+        {isEditorOpen ? (
+          <PermissionGuard permission={editingId ? pipelinePermissions.update : pipelinePermissions.create}>
+            <form onSubmit={handleSubmit} className="grid gap-4 rounded-md border border-[color:var(--line)] p-4 md:grid-cols-2">
+              <FormInput label={copy.fieldStageName} value={name} onChange={setName} required />
+              <FormInput label={copy.fieldCode} value={code} onChange={setCode} />
+              <FormInput label={copy.fieldPosition} value={position} onChange={setPosition} type="number" required />
+              <FormInput label={copy.fieldColor} value={color} onChange={setColor} />
+              <FormSelect label={copy.fieldDefaultStage} value={isDefault} options={defaultOptions} onChange={setIsDefault} />
+              <div className="flex gap-2 md:col-span-2">
+                <button type="submit" disabled={saving || !name.trim()} className="ui-primary-button">
+                  {saving ? copy.saving : editingId ? copy.saveStage : copy.createStage}
+                </button>
+                <button type="button" onClick={closeEditor} className="ui-secondary-button">{copy.cancel}</button>
+              </div>
+            </form>
+          </PermissionGuard>
+        ) : null}
 
         {error ? <div className="ui-notice-error">{error}</div> : null}
 
@@ -250,16 +233,22 @@ export function CrmPipelinePage({ surface = 'crm' }: CrmPipelinePageProps) {
           rows={rows}
           getRowKey={(row) => row.id}
           loading={loading}
-          emptyMessage={isPetSurface ? 'Nenhuma etapa comercial encontrada.' : 'Nenhuma etapa encontrada.'}
+          emptyState={{ title: copy.stagesEmpty, description: '' }}
         />
 
-        <Pagination page={pageData.page} totalPages={pageData.totalPages} totalElements={totalItems} onPageChange={(nextPage) => void load(nextPage, search)} />
+        <Pagination
+          page={pageData.page}
+          totalPages={pageData.totalPages}
+          totalElements={totalItems}
+          pageSize={pageSize}
+          onPageChange={(nextPage) => void load(nextPage, search)}
+        />
 
         <ConfirmDialog
           open={Boolean(deleteCandidate)}
-          title={isPetSurface ? 'Excluir etapa comercial' : 'Excluir etapa'}
-          description={deleteCandidate ? `Confirma a exclusao de ${deleteCandidate.name}?` : undefined}
-          confirmLabel={isPetSurface ? 'Excluir' : 'Excluir'}
+          title={copy.stageDeleteTitle}
+          description={deleteCandidate ? copy.stageDeleteDescription.replace('{name}', deleteCandidate.name) : undefined}
+          confirmLabel={copy.delete}
           onCancel={() => setDeleteCandidate(null)}
           onConfirm={() => void handleDelete()}
         />

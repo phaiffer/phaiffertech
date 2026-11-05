@@ -94,8 +94,8 @@ describe('LeadFormPage', () => {
       expect(crmServiceMock.listContacts).toHaveBeenCalledTimes(1);
     });
 
-    fireEvent.change(screen.getByLabelText('Nome'), { target: { value: 'Lead Acme' } });
-    fireEvent.change(screen.getByLabelText('Company relacionada'), { target: { value: 'company-1' } });
+    fireEvent.change(screen.getByLabelText('Name'), { target: { value: 'Lead Acme' } });
+    fireEvent.change(screen.getByLabelText('Commercial account'), { target: { value: 'company-1' } });
 
     await waitFor(() => {
       expect(crmServiceMock.listContacts).toHaveBeenLastCalledWith(0, 100, '', {
@@ -103,9 +103,9 @@ describe('LeadFormPage', () => {
       });
     });
 
-    fireEvent.change(screen.getByLabelText('Contato relacionado'), { target: { value: 'contact-1' } });
-    fireEvent.change(screen.getByLabelText('Observações comerciais'), { target: { value: 'Cliente interessado em onboarding' } });
-    fireEvent.click(screen.getByRole('button', { name: 'Criar lead' }));
+    fireEvent.change(screen.getByLabelText('Contact'), { target: { value: 'contact-1' } });
+    fireEvent.change(screen.getByLabelText('Commercial notes'), { target: { value: 'Cliente interessado em onboarding' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Create lead' }));
 
     await waitFor(() => {
       expect(crmServiceMock.createLead).toHaveBeenCalledTimes(1);
@@ -120,6 +120,14 @@ describe('LeadFormPage', () => {
     });
   });
 
+  it('keeps a stored status that is outside the standard options', async () => {
+    crmServiceMock.getLead.mockResolvedValue({ id: 'lead-1', name: 'Lead Acme', status: 'CLOSED_WON' });
+
+    render(<LeadFormPage leadId="lead-1" />);
+
+    expect(await screen.findByLabelText('Status')).toHaveValue('CLOSED_WON');
+  });
+
   it('shows API errors returned while saving the lead', async () => {
     crmServiceMock.createLead.mockRejectedValue(new ApiClientError('Lead invalid', 400));
 
@@ -129,8 +137,8 @@ describe('LeadFormPage', () => {
       expect(crmServiceMock.listCompanies).toHaveBeenCalledTimes(1);
     });
 
-    fireEvent.change(screen.getByLabelText('Nome'), { target: { value: 'Lead error' } });
-    fireEvent.click(screen.getByRole('button', { name: 'Criar lead' }));
+    fireEvent.change(screen.getByLabelText('Name'), { target: { value: 'Lead error' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Create lead' }));
 
     await waitFor(() => {
       expect(screen.getByText('Lead invalid')).toBeInTheDocument();
@@ -138,14 +146,14 @@ describe('LeadFormPage', () => {
   });
 
   it('returns to the Pet commercial surface after creating a lead on the absorbed route', async () => {
-    render(<LeadFormPage surface="pet" />);
+    render(<LeadFormPage />);
 
     await waitFor(() => {
       expect(crmServiceMock.listCompanies).toHaveBeenCalledTimes(1);
     });
 
-    fireEvent.change(screen.getByLabelText('Nome do lead'), { target: { value: 'Lead Pet' } });
-    fireEvent.change(screen.getByLabelText('Conta comercial (legado)'), { target: { value: 'company-1' } });
+    fireEvent.change(screen.getByLabelText('Name'), { target: { value: 'Lead Pet' } });
+    fireEvent.change(screen.getByLabelText('Commercial account'), { target: { value: 'company-1' } });
 
     await waitFor(() => {
       expect(crmServiceMock.listContacts).toHaveBeenLastCalledWith(0, 100, '', {
@@ -153,7 +161,7 @@ describe('LeadFormPage', () => {
       });
     });
 
-    fireEvent.click(screen.getByRole('button', { name: 'Criar lead comercial' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Create lead' }));
 
     await waitFor(() => {
       expect(crmServiceMock.createLead).toHaveBeenCalledWith({

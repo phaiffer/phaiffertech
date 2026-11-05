@@ -5,10 +5,6 @@ import { CrmNotesPage } from '@/modules/crm/notes-page';
 const { hasPermissionMock, crmServiceMock, petServiceMock } = vi.hoisted(() => ({
   hasPermissionMock: vi.fn(),
   crmServiceMock: {
-    listCompanies: vi.fn(),
-    listContacts: vi.fn(),
-    listLeads: vi.fn(),
-    listDeals: vi.fn(),
     listNotes: vi.fn(),
     createNote: vi.fn(),
     updateNote: vi.fn(),
@@ -42,27 +38,34 @@ function createPageResponse<T>(items: T[]) {
     totalItems: items.length,
     totalPages: 1,
     page: 0,
-    size: 10
+    size: 14
   };
 }
+
+const clientId = '87654321-4321-4321-4321-1234567890ab';
 
 describe('CrmNotesPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    window.history.pushState({}, '', '/crm/notes');
+    window.history.pushState({}, '', '/pet/follow-up?tab=notes');
 
     hasPermissionMock.mockReturnValue(true);
-    crmServiceMock.listCompanies.mockResolvedValue(createPageResponse([]));
-    crmServiceMock.listContacts.mockResolvedValue(createPageResponse([]));
-    crmServiceMock.listLeads.mockResolvedValue(createPageResponse([]));
-    crmServiceMock.listDeals.mockResolvedValue(createPageResponse([]));
     crmServiceMock.listNotes.mockResolvedValue(createPageResponse([]));
-    petServiceMock.listClients.mockResolvedValue(createPageResponse([]));
+    petServiceMock.listClients.mockResolvedValue(createPageResponse([
+      {
+        id: clientId,
+        name: 'Ana Tutor',
+        fullName: 'Ana Tutor',
+        createdAt: '2026-03-10T09:00:00Z',
+        updatedAt: '2026-03-10T09:00:00Z',
+        status: 'ACTIVE'
+      }
+    ]));
     petServiceMock.listProfiles.mockResolvedValue(createPageResponse([]));
     petServiceMock.listAppointments.mockResolvedValue(createPageResponse([]));
   });
 
-  it('renders enriched pet client references and keeps them editable when the pet lookup is available', async () => {
+  it('renders pet client references and keeps them editable', async () => {
     crmServiceMock.listNotes.mockResolvedValue(createPageResponse([
       {
         id: 'note-1',
@@ -71,7 +74,7 @@ describe('CrmNotesPage', () => {
         relatedReferenceType: 'PET.CLIENT',
         relatedModule: 'PET',
         relatedEntityType: 'CLIENT',
-        relatedId: '87654321-4321-4321-4321-1234567890ab',
+        relatedId: clientId,
         relatedDisplayName: 'Ana Tutor',
         relatedDisplayContext: 'ana@example.test',
         createdBy: 'Ana',
@@ -79,37 +82,27 @@ describe('CrmNotesPage', () => {
         updatedAt: '2026-03-10T09:00:00Z'
       }
     ]));
-    petServiceMock.listClients.mockResolvedValue(createPageResponse([
-      {
-        id: '87654321-4321-4321-4321-1234567890ab',
-        name: 'Ana Tutor',
-        fullName: 'Ana Tutor',
-        createdAt: '2026-03-10T09:00:00Z',
-        updatedAt: '2026-03-10T09:00:00Z',
-        status: 'ACTIVE'
-      }
-    ]));
 
     render(<CrmNotesPage />);
 
+    expect(await screen.findByText('Cliente veio do Pet')).toBeInTheDocument();
+    expect(screen.getByText('Client · ana@example.test')).toBeInTheDocument();
+    expect(screen.queryByLabelText('Content')).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Edit' }));
+
+    expect(screen.getByLabelText('Content')).toHaveValue('Cliente veio do Pet');
+    expect(screen.getAllByLabelText('Link type')[1]).toHaveValue('PET.CLIENT');
     await waitFor(() => {
-      expect(crmServiceMock.listNotes).toHaveBeenCalledTimes(1);
+      expect(screen.getAllByLabelText('Linked record')[1]).toHaveValue(clientId);
     });
-
-    expect(screen.getByText('Ana Tutor')).toBeInTheDocument();
-    expect(screen.getByText('Pet / Client · ana@example.test · PET.CLIENT · 87654321')).toBeInTheDocument();
-
-    fireEvent.click(screen.getByRole('button', { name: 'Editar' }));
-
-    expect(screen.getAllByLabelText('Tipo de vínculo')[1]).toHaveValue('PET.CLIENT');
-    expect(screen.getAllByLabelText('Registro vinculado')[1]).toHaveValue('87654321-4321-4321-4321-1234567890ab');
   });
 
-  it('keeps historical external placeholders read-only in the CRM form', async () => {
+  it('keeps references it cannot edit read-only', async () => {
     crmServiceMock.listNotes.mockResolvedValue(createPageResponse([
       {
         id: 'note-2',
-        content: 'Placeholder externo',
+        content: 'Registro antigo',
         relatedType: 'IOT.DEVICE',
         relatedReferenceType: 'IOT.DEVICE',
         relatedModule: 'IOT',
@@ -123,39 +116,47 @@ describe('CrmNotesPage', () => {
 
     render(<CrmNotesPage />);
 
-    await waitFor(() => {
-      expect(crmServiceMock.listNotes).toHaveBeenCalledTimes(1);
-    });
-
-    expect(screen.getByText('Legacy / Device')).toBeInTheDocument();
-    expect(screen.getByText('Legacy / Device · 12345678')).toBeInTheDocument();
-    expect(screen.getByText('Somente leitura')).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Editar' })).not.toBeInTheDocument();
+    expect(await screen.findByText('Device')).toBeInTheDocument();
+    expect(screen.getByText('Read only')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Edit' })).not.toBeInTheDocument();
   });
 
-  it('applies canonical note filters from the query string for pet references', async () => {
-    window.history.pushState({}, '', '/crm/notes?relatedReferenceType=PET.CLIENT&relatedId=87654321-4321-4321-4321-1234567890ab');
-    petServiceMock.listClients.mockResolvedValue(createPageResponse([
-      {
-        id: '87654321-4321-4321-4321-1234567890ab',
-        name: 'Ana Tutor',
-        fullName: 'Ana Tutor',
-        createdAt: '2026-03-10T09:00:00Z',
-        updatedAt: '2026-03-10T09:00:00Z',
-        status: 'ACTIVE'
-      }
-    ]));
+  it('creates a note with the canonical pet reference', async () => {
+    crmServiceMock.createNote.mockResolvedValue({ id: 'note-3' });
+
+    render(<CrmNotesPage />);
+
+    fireEvent.click((await screen.findAllByRole('button', { name: 'New note' }))[0]);
+    fireEvent.change(screen.getByLabelText('Content'), { target: { value: 'Prefere contato à tarde' } });
+    await screen.findByRole('option', { name: 'Ana Tutor' });
+    fireEvent.change(screen.getAllByLabelText('Linked record')[1], { target: { value: clientId } });
+    fireEvent.click(screen.getByRole('button', { name: 'Create note' }));
+
+    await waitFor(() => {
+      expect(crmServiceMock.createNote).toHaveBeenCalledWith({
+        content: 'Prefere contato à tarde',
+        relatedReferenceType: 'PET.CLIENT',
+        relatedId: clientId
+      });
+    });
+  });
+
+  it('applies relation filters from the query string', async () => {
+    window.history.pushState({}, '', `/pet/follow-up?tab=notes&relatedReferenceType=PET.CLIENT&relatedId=${clientId}`);
 
     render(<CrmNotesPage />);
 
     await waitFor(() => {
-      expect(crmServiceMock.listNotes).toHaveBeenCalledWith(0, 10, '', {
+      expect(crmServiceMock.listNotes).toHaveBeenCalledWith(0, 14, '', {
         relatedReferenceType: 'PET.CLIENT',
-        relatedId: '87654321-4321-4321-4321-1234567890ab'
+        relatedId: clientId,
+        relatedModule: 'PET'
       });
     });
 
-    expect(screen.getAllByLabelText('Tipo de vínculo')[0]).toHaveValue('PET.CLIENT');
-    expect(screen.getAllByLabelText('Registro vinculado')[0]).toHaveValue('87654321-4321-4321-4321-1234567890ab');
+    expect(screen.getByLabelText('Link type')).toHaveValue('PET.CLIENT');
+    await waitFor(() => {
+      expect(screen.getByLabelText('Linked record')).toHaveValue(clientId);
+    });
   });
 });

@@ -11,7 +11,7 @@ export function PetCommercialLeadFormPage({ leadId }: PetCommercialLeadFormPageP
   return (
     <div className="space-y-5">
       <PetModuleSubnav />
-      <LeadFormPage leadId={leadId} surface="pet" />
+      <LeadFormPage leadId={leadId} />
     </div>
   );
 }

@@ -907,58 +907,68 @@ const ptBRMessages = {
     }
   },
   petClinic: {
-    eyebrow: 'Clínica Veterinária',
-    title: 'Dashboard Clínico',
-    description: 'Acompanhe atendimentos clínicos, vacinas pendentes, prontuários e prescrições em uma única visão operacional.',
-    noPermission: 'Você não possui permissão para visualizar o dashboard clínico.',
-    loading: 'Carregando o panorama clínico...',
+    title: 'Clínica',
+    description: 'Atendimentos clínicos do dia, vacinas pendentes e registros recentes.',
+    noPermission: 'Você não possui permissão para visualizar a clínica.',
+    loading: 'Carregando a clínica...',
+    tabs: {
+      label: 'Seções da clínica',
+      overview: 'Painel',
+      records: 'Prontuários',
+      timeline: 'Linha do tempo'
+    },
     actions: {
-      viewTimeline: 'Ver timeline',
-      newRecord: 'Novo prontuário',
-      newVaccination: 'Registrar vacina',
-      newPrescription: 'Nova prescrição'
+      newRecord: 'Novo prontuário'
     },
     stats: {
-      clinicalAppointments: 'Atendimentos clínicos',
-      clinicalAppointmentsDetail: 'consultas e procedimentos hoje',
-      pendingVaccinations: 'Vacinas pendentes',
-      pendingVaccinationsDetail: 'próximos 14 dias',
-      todayRecords: 'Prontuários hoje',
-      todayRecordsDetail: 'registros clínicos criados',
-      activePrescriptions: 'Prescrições ativas',
-      activePrescriptionsDetail: 'últimos 30 dias'
+      clinicalAppointments: 'Atendimentos clínicos hoje',
+      overdueVaccinations: 'Vacinas vencidas',
+      upcomingVaccinations: 'Vacinas a vencer em 14 dias'
     },
     vaccinations: {
       title: 'Vacinas pendentes',
-      description: 'Pets com vacinas próximas do vencimento ou já vencidas',
       empty: 'Nenhuma vacina pendente nos próximos 14 dias.',
-      dueIn: 'Vence em {days} dias',
-      dueToday: 'Vence hoje',
-      overdue: 'Vencida há {days} dias',
-      scheduleAction: 'Agendar',
-      viewPet: 'Ver pet'
+      dueIn: 'em {days} dias',
+      dueInOne: 'amanhã',
+      dueToday: 'vence hoje',
+      overdue: 'vencida há {days} dias',
+      overdueOne: 'vencida há 1 dia',
+      partial: 'Considera {shown} de {total} vacinas registradas.'
     },
     timeline: {
-      title: 'Timeline clínica recente',
-      description: 'Últimos eventos clínicos registrados',
-      viewAll: 'Ver timeline completa',
+      title: 'Linha do tempo clínica',
+      description: 'Prontuários, vacinas e prescrições em ordem cronológica.',
+      recentTitle: 'Registros recentes',
+      viewAll: 'Ver linha do tempo',
       empty: 'Nenhum evento clínico registrado.',
+      emptyHint: 'Registre prontuários, vacinas ou prescrições para construir o histórico clínico.',
+      filterPet: 'Pet',
+      filterType: 'Tipo',
+      filterProfessional: 'Profissional',
+      all: 'Todos',
+      clearFilters: 'Limpar filtros',
+      partial: 'Mostrando os {shown} eventos mais recentes de {total}.',
       types: {
         medicalRecord: 'Prontuário',
-        vaccination: 'Vacinação',
+        vaccination: 'Vacina',
         prescription: 'Prescrição'
       }
     },
     appointments: {
       title: 'Atendimentos clínicos hoje',
-      description: 'Consultas e procedimentos veterinários agendados',
-      empty: 'Nenhum atendimento clínico agendado para hoje.'
+      empty: 'Nenhum atendimento clínico agendado para hoje.',
+      columnTime: 'Hora',
+      columnPet: 'Pet',
+      columnService: 'Serviço',
+      columnProfessional: 'Profissional',
+      columnStatus: 'Status',
+      columnRecord: 'Prontuário',
+      openRecord: 'Abrir'
     },
     errors: {
-      timeline: 'Não foi possível carregar a timeline clínica.',
-      vaccinations: 'Não foi possível carregar as vacinas pendentes.',
-      records: 'Não foi possível carregar os prontuários.',
-      prescriptions: 'Não foi possível carregar as prescrições.'
+      appointments: 'Não foi possível carregar os atendimentos de hoje.',
+      timeline: 'Não foi possível carregar a linha do tempo clínica.',
+      vaccinations: 'Não foi possível carregar as vacinas pendentes.'
     }
   },
   petInvoices: {

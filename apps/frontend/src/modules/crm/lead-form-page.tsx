@@ -1,48 +1,37 @@
 'use client';
 
-import { FormEvent, useEffect, useMemo, useState } from 'react';
-import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import {
-  sharedCompactTextClass,
-  sharedFormActionsClass,
-  sharedPageStackClass
-} from '@/shared/components/public-visual-system';
+import { useRouter } from 'next/navigation';
+import { FormEvent, useEffect, useMemo, useState } from 'react';
+import { PermissionGuard } from '@/shared/auth/PermissionGuard';
 import { petCommercialPermissions } from '@/shared/auth/pet-commercial-permissions';
+import { sharedFormActionsClass, sharedPageStackClass } from '@/shared/components/public-visual-system';
+import { useAppMessages } from '@/shared/i18n/app-i18n-provider';
+import { resolveApiErrorMessage } from '@/shared/lib/api-error-message';
+import { resolvePageItems } from '@/shared/lib/pagination';
 import {
   petCommercialService,
   type CreatePetCommercialLeadInput,
   type UpdatePetCommercialLeadInput
 } from '@/shared/services/pet-commercial-service';
-import { ApiClientError } from '@/shared/lib/http';
-import { resolvePageItems } from '@/shared/lib/pagination';
 import { PetCommercialAccount, PetCommercialSupportContact } from '@/shared/types/pet-commercial';
 import { FormInput } from '@/shared/ui/form-input';
+import { FormSection } from '@/shared/ui/form-section';
 import { FormSelect } from '@/shared/ui/form-select';
 import { FormTextarea } from '@/shared/ui/form-textarea';
-import { PageSection } from '@/shared/ui/page-section';
 import { PageTitle } from '@/shared/ui/page-title';
-import { PermissionGuard } from '@/shared/auth/PermissionGuard';
-import { resolveApiErrorMessage } from '@/shared/lib/api-error-message';
 
-const statusOptions = [
-  { value: 'NEW', label: 'NEW' },
-  { value: 'QUALIFIED', label: 'QUALIFIED' },
-  { value: 'WON', label: 'WON' },
-  { value: 'LOST', label: 'LOST' }
-];
+const listPath = '/pet/commercial?tab=leads';
 
 type LeadFormPageProps = {
   leadId?: string;
-  surface?: 'crm' | 'pet';
 };
 
-export function LeadFormPage({ leadId, surface = 'crm' }: LeadFormPageProps) {
+export function LeadFormPage({ leadId }: LeadFormPageProps) {
   const router = useRouter();
-  const isPetSurface = surface === 'pet';
+  const copy = useAppMessages().screens.petCommercial;
   const isEdit = Boolean(leadId);
   const commercialService = petCommercialService;
-  const listPath = isPetSurface ? '/pet/commercial?tab=leads' : '/crm/leads';
   const leadPermissions = petCommercialPermissions.leads;
   const requiredPermission = isEdit ? leadPermissions.update : leadPermissions.create;
 
@@ -70,19 +59,15 @@ export function LeadFormPage({ leadId, surface = 'crm' }: LeadFormPageProps) {
     setLoadingCompanies(true);
     commercialService.listCompanies(0, 100)
       .then((companiesPage) => {
-        if (!active) {
-          return;
+        if (active) {
+          setCompanies(resolvePageItems(companiesPage));
         }
-        setCompanies(resolvePageItems(companiesPage));
       })
       .catch((err) => {
-        if (!active) {
-          return;
+        if (active) {
+          const message = resolveApiErrorMessage(err, copy.accountsLoadError);
+          setError((current) => current ?? message);
         }
-        const message = resolveApiErrorMessage(err, isPetSurface
-            ? 'Erro ao carregar contas comerciais para o lead.'
-            : 'Erro ao carregar companies para o lead.');
-        setError((current) => current ?? message);
       })
       .finally(() => {
         if (active) {
@@ -93,7 +78,7 @@ export function LeadFormPage({ leadId, surface = 'crm' }: LeadFormPageProps) {
     return () => {
       active = false;
     };
-  }, [commercialService, isPetSurface]);
+  }, [commercialService, copy.accountsLoadError]);
 
   useEffect(() => {
     let active = true;
@@ -103,19 +88,15 @@ export function LeadFormPage({ leadId, surface = 'crm' }: LeadFormPageProps) {
       companyId: companyId || undefined
     })
       .then((contactsPage) => {
-        if (!active) {
-          return;
+        if (active) {
+          setContacts(resolvePageItems(contactsPage));
         }
-        setContacts(resolvePageItems(contactsPage));
       })
       .catch((err) => {
-        if (!active) {
-          return;
+        if (active) {
+          const message = resolveApiErrorMessage(err, copy.contactsLoadError);
+          setError((current) => current ?? message);
         }
-        const message = resolveApiErrorMessage(err, isPetSurface
-            ? 'Erro ao carregar contatos de apoio para o lead.'
-            : 'Erro ao carregar contatos para vínculo.');
-        setError((current) => current ?? message);
       })
       .finally(() => {
         if (active) {
@@ -126,7 +107,7 @@ export function LeadFormPage({ leadId, surface = 'crm' }: LeadFormPageProps) {
     return () => {
       active = false;
     };
-  }, [commercialService, companyId, isPetSurface]);
+  }, [commercialService, companyId, copy.contactsLoadError]);
 
   useEffect(() => {
     if (!isEdit || !leadId) {
@@ -150,13 +131,9 @@ export function LeadFormPage({ leadId, surface = 'crm' }: LeadFormPageProps) {
         setStatus(lead.status ?? 'NEW');
       })
       .catch((err) => {
-        if (!active) {
-          return;
+        if (active) {
+          setError(resolveApiErrorMessage(err, copy.leadLoadError));
         }
-        const message = resolveApiErrorMessage(err, isPetSurface
-            ? 'Erro ao carregar lead comercial.'
-            : 'Erro ao carregar lead.');
-        setError(message);
       })
       .finally(() => {
         if (active) {
@@ -167,41 +144,30 @@ export function LeadFormPage({ leadId, surface = 'crm' }: LeadFormPageProps) {
     return () => {
       active = false;
     };
-  }, [commercialService, isEdit, isPetSurface, leadId]);
+  }, [commercialService, copy.leadLoadError, isEdit, leadId]);
 
-  const title = useMemo(() => {
-    if (isPetSurface) {
-      return isEdit ? 'Editar lead comercial' : 'Novo lead comercial';
-    }
-
-    return isEdit ? 'Editar lead' : 'Novo lead';
-  }, [isEdit, isPetSurface]);
+  // The API stores the status as free text, so a value outside this list must stay selectable.
+  const statusOptions = useMemo(() => {
+    const options = [
+      { value: 'NEW', label: copy.statusNew },
+      { value: 'QUALIFIED', label: copy.statusQualified },
+      { value: 'NEGOTIATION', label: copy.statusNegotiation },
+      { value: 'WON', label: copy.statusWon },
+      { value: 'LOST', label: copy.statusLost }
+    ];
+    return options.some((option) => option.value === status) ? options : [...options, { value: status, label: status }];
+  }, [copy, status]);
   const companyOptions = useMemo(() => [
-    {
-      value: '',
-      label: loadingCompanies
-        ? (isPetSurface ? 'Carregando contas comerciais...' : 'Carregando companies...')
-        : (isPetSurface ? 'Sem conta comercial vinculada' : 'Sem company vinculada')
-    },
-    ...companies.map((company) => ({
-      value: company.id,
-      label: company.name
-    }))
-  ], [companies, isPetSurface, loadingCompanies]);
+    { value: '', label: copy.noLinkedAccount },
+    ...companies.map((company) => ({ value: company.id, label: company.name }))
+  ], [companies, copy.noLinkedAccount]);
   const contactOptions = useMemo(() => [
-    {
-      value: '',
-      label: loadingContacts
-        ? (isPetSurface ? 'Carregando contatos de apoio...' : 'Carregando contatos...')
-        : (isPetSurface ? 'Nenhum contato de apoio relacionado' : 'Nenhum contato relacionado')
-    },
+    { value: '', label: copy.noLinkedContact },
     ...contacts.map((contact) => ({
       value: contact.id,
       label: `${contact.firstName} ${contact.lastName ?? ''}`.trim()
     }))
-  ], [contacts, isPetSurface, loadingContacts]);
-  const selectedCompanyLabel = companyOptions.find((option) => option.value === companyId)?.label ?? (isPetSurface ? 'Sem conta comercial vinculada' : 'Sem company vinculada');
-  const selectedContactLabel = contactOptions.find((option) => option.value === contactId)?.label ?? (isPetSurface ? 'Nenhum contato de apoio relacionado' : 'Nenhum contato relacionado');
+  ], [contacts, copy.noLinkedContact]);
 
   function handleCompanyChange(nextCompanyId: string) {
     setCompanyId(nextCompanyId);
@@ -227,23 +193,17 @@ export function LeadFormPage({ leadId, surface = 'crm' }: LeadFormPageProps) {
       };
 
       if (isEdit && leadId) {
-        const payload: UpdatePetCommercialLeadInput = {
-          ...basePayload,
-          status
-        };
+        const payload: UpdatePetCommercialLeadInput = { ...basePayload, status };
         await commercialService.updateLead(leadId, payload);
-        setSuccess(isPetSurface ? 'Lead comercial atualizado com sucesso.' : 'Lead atualizado com sucesso.');
+        setSuccess(copy.leadUpdated);
       } else {
         await commercialService.createLead(basePayload);
-        setSuccess(isPetSurface ? 'Lead comercial criado com sucesso.' : 'Lead criado com sucesso.');
+        setSuccess(copy.leadCreated);
       }
 
       setTimeout(() => router.push(listPath), 600);
     } catch (err) {
-      const message = resolveApiErrorMessage(err, isPetSurface
-          ? 'Erro ao salvar lead comercial.'
-          : 'Erro ao salvar lead.');
-      setError(message);
+      setError(resolveApiErrorMessage(err, copy.leadSaveError));
     } finally {
       setSubmitting(false);
     }
@@ -252,141 +212,60 @@ export function LeadFormPage({ leadId, surface = 'crm' }: LeadFormPageProps) {
   return (
     <PermissionGuard
       permission={requiredPermission}
-      fallback={(
-        <div className="ui-notice-warning">
-          {isPetSurface
-            ? 'Você não possui permissão para esta ação comercial da Gestão Pet.'
-            : 'Você não possui permissão para esta ação.'}
-        </div>
-      )}
+      fallback={<div className="ui-notice-warning">{copy.leadActionNoPermission}</div>}
     >
       <div className={sharedPageStackClass}>
         <PageTitle
-          eyebrow={isPetSurface ? 'Gestão Pet · Comercial' : 'CRM workspace'}
-          title={title}
-          description={isPetSurface
-            ? 'Cadastre e qualifique leads no contexto comercial da Gestão Pet. Os vínculos de conta e contato permanecem como camada temporária de compatibilidade.'
-            : 'Formulário de cadastro/edição de lead comercial.'}
-          actions={(
-            <Link href={listPath} className="ui-secondary-button">
-              {isPetSurface ? 'Voltar para o comercial' : 'Voltar para listagem'}
-            </Link>
-          )}
+          title={isEdit ? copy.editLead : copy.newLead}
+          description={copy.leadFormDescription}
+          actions={<Link href={listPath} className="ui-secondary-button">{copy.backToCommercial}</Link>}
         />
 
         {loading ? (
-          <PageSection>
-            <div className="text-sm text-[color:var(--app-shell-muted)]">
-              {isPetSurface ? 'Carregando lead comercial...' : 'Carregando lead...'}
-            </div>
-          </PageSection>
+          <div className="ui-notice-neutral">{copy.leadLoading}</div>
         ) : (
-          <>
-            <PageSection
-              tone="muted"
-              title={isPetSurface ? 'Contexto comercial' : 'Workflow context'}
-              description={isPetSurface
-                ? 'Mantenha captação, relacionamento e conversão legados explícitos antes de editar o payload do lead.'
-                : 'Keep the commercial mode, relationship links, and downstream CRM context explicit before editing the lead payload itself.'}
-            >
-              <div className="grid gap-4 xl:grid-cols-2">
-                <div className="ui-surface-muted p-4 lg:p-5">
-                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--tenant-accent)]">
-                    {isPetSurface ? 'Modo comercial' : 'Record mode'}
-                  </p>
-                  <p className="mt-3 text-base font-semibold text-[color:var(--app-shell-heading)]">
-                    {isPetSurface
-                      ? (isEdit ? 'Atualizando um lead em andamento' : 'Capturando um novo lead comercial')
-                      : (isEdit ? 'Updating an existing lead' : 'Creating a new lead')}
-                  </p>
-                  <p className={`mt-2 ${sharedCompactTextClass}`}>
-                    {isPetSurface
-                      ? 'Mantenha qualificação, contexto de relacionamento e notas alinhados para que o lead siga coerente dentro do comercial da Gestão Pet.'
-                      : 'Keep qualification, relationship context, and notes aligned so list and detail pages read the same way across the CRM workspace.'}
-                  </p>
-                </div>
+          <form onSubmit={handleSubmit} className="max-w-3xl space-y-6">
+            <FormSection title={copy.sectionIdentification}>
+              <FormInput label={copy.fieldLeadName} value={name} onChange={setName} required />
+              <FormSelect label={copy.filterStatus} value={status} options={statusOptions} onChange={setStatus} />
+              <FormInput label={copy.fieldEmail} value={email} onChange={setEmail} type="email" />
+              <FormInput label={copy.fieldPhone} value={phone} onChange={setPhone} />
+              <FormInput label={copy.fieldSource} value={source} onChange={setSource} />
+            </FormSection>
 
-                <div className="ui-surface-muted p-4 lg:p-5">
-                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--tenant-accent)]">
-                    {isPetSurface ? 'Contexto atual' : 'Current relationship'}
-                  </p>
-                  <p className="mt-3 text-base font-semibold text-[color:var(--app-shell-heading)]">
-                    {selectedCompanyLabel}
-                  </p>
-                  <p className={`mt-2 ${sharedCompactTextClass}`}>
-                    {isPetSurface ? 'Contato de apoio' : 'Contact'}: {selectedContactLabel}
-                  </p>
-                </div>
-              </div>
-            </PageSection>
+            <FormSection title={copy.sectionRelationship}>
+              <FormSelect
+                label={copy.fieldAccount}
+                value={companyId}
+                options={companyOptions}
+                onChange={handleCompanyChange}
+                disabled={loadingCompanies}
+              />
+              <FormSelect
+                label={copy.fieldContact}
+                value={contactId}
+                options={contactOptions}
+                onChange={setContactId}
+                disabled={loadingContacts}
+              />
+            </FormSection>
 
-            <PageSection
-              title={isPetSurface
-                ? (isEdit ? 'Detalhes do lead comercial' : 'Captação do lead comercial')
-                : (isEdit ? 'Lead details' : 'Lead capture')}
-              description={isPetSurface
-                ? 'Agrupe identidade, relacionamento e notas comerciais para preparar a conversão sem reviver uma superfície separada de CRM.'
-                : 'Group the core identity fields, relationship selectors, and sales notes so the form stays dense without feeling cramped.'}
-            >
-              <form onSubmit={handleSubmit} className="space-y-6">
-                <div className="grid gap-4 xl:grid-cols-2">
-                  <FormInput label={isPetSurface ? 'Nome do lead' : 'Nome'} value={name} onChange={setName} required />
-                  <FormSelect label="Status" value={status} options={statusOptions} onChange={setStatus} />
-                  <FormInput label={isPetSurface ? 'Email do lead' : 'Email'} value={email} onChange={setEmail} type="email" />
-                  <FormInput label={isPetSurface ? 'Telefone do lead' : 'Telefone'} value={phone} onChange={setPhone} />
-                  <FormInput label={isPetSurface ? 'Origem comercial' : 'Origem'} value={source} onChange={setSource} />
-                  <div className="hidden xl:block" />
-                </div>
+            <FormSection title={copy.sectionNotes}>
+              <FormTextarea
+                label={copy.fieldNotes}
+                value={notes}
+                onChange={setNotes}
+                rows={5}
+                wrapperClassName="md:col-span-2"
+              />
+            </FormSection>
 
-                <div className="grid gap-4 xl:grid-cols-2">
-                  <FormSelect
-                    label={isPetSurface ? 'Conta comercial (legado)' : 'Company relacionada'}
-                    value={companyId}
-                    options={companyOptions}
-                    onChange={handleCompanyChange}
-                    disabled={loadingCompanies}
-                    description={isPetSurface
-                      ? 'A conta comercial continua disponível apenas como compatibilidade enquanto o modelo da Gestão Pet absorve a conversão.'
-                      : 'A seleção da company mantém o vínculo comercial e redefine a lista de contatos disponíveis.'}
-                  />
-                  <FormSelect
-                    label={isPetSurface ? 'Contato de apoio (opcional)' : 'Contato relacionado'}
-                    value={contactId}
-                    options={contactOptions}
-                    onChange={setContactId}
-                    disabled={loadingContacts}
-                    description={isPetSurface
-                      ? 'Use um contato de apoio quando ele ainda for necessário para preservar o relacionamento legado do lead.'
-                      : 'O contato acompanha a company selecionada quando houver relacionamento comercial definido.'}
-                  />
-                </div>
-
-                <FormTextarea
-                  label="Observações comerciais"
-                  value={notes}
-                  onChange={setNotes}
-                  rows={5}
-                  description={isPetSurface
-                    ? 'Use este campo para registrar o contexto comercial que precisa sobreviver entre captação, qualificação e conversão para cliente.'
-                    : 'Use este campo para registrar o contexto comercial que precisa sobreviver entre a captura, a qualificação e a conversão.'}
-                />
-
-                <div className={sharedFormActionsClass}>
-                  <button
-                    type="submit"
-                    disabled={submitting}
-                    className="ui-primary-button"
-                  >
-                    {submitting
-                      ? 'Salvando...'
-                      : isPetSurface
-                        ? isEdit ? 'Atualizar lead comercial' : 'Criar lead comercial'
-                        : isEdit ? 'Atualizar lead' : 'Criar lead'}
-                  </button>
-                </div>
-              </form>
-            </PageSection>
-          </>
+            <div className={sharedFormActionsClass}>
+              <button type="submit" disabled={submitting} className="ui-primary-button">
+                {submitting ? copy.saving : isEdit ? copy.updateLead : copy.createLead}
+              </button>
+            </div>
+          </form>
         )}
 
         {error ? <div className="ui-notice-error">{error}</div> : null}

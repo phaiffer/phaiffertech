@@ -26,15 +26,15 @@ vi.mock('@/modules/pet/pet-module-subnav', () => ({
 }));
 
 vi.mock('@/modules/crm/tasks-page', () => ({
-  CrmTasksPage: ({ surface }: { surface?: string }) => <div>tasks-surface:{surface}</div>
+  CrmTasksPage: () => <div>tasks-tab</div>
 }));
 
 vi.mock('@/modules/crm/notes-page', () => ({
-  CrmNotesPage: ({ surface }: { surface?: string }) => <div>notes-surface:{surface}</div>
+  CrmNotesPage: () => <div>notes-tab</div>
 }));
 
 vi.mock('@/modules/crm/activity-page', () => ({
-  CrmActivityPage: ({ surface }: { surface?: string }) => <div>activity-surface:{surface}</div>
+  CrmActivityPage: () => <div>activity-tab</div>
 }));
 
 describe('PetFollowUpPage', () => {
@@ -50,7 +50,7 @@ describe('PetFollowUpPage', () => {
 
     expect(screen.getByTestId('pet-subnav')).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Grooming follow-up' })).toBeInTheDocument();
-    expect(screen.getByText('tasks-surface:pet')).toBeInTheDocument();
+    expect(screen.getByText('tasks-tab')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Tasks' })).toHaveAttribute('href', '/pet/follow-up');
   });
 
@@ -59,8 +59,8 @@ describe('PetFollowUpPage', () => {
 
     render(<PetFollowUpPage />);
 
-    expect(screen.getByText('notes-surface:pet')).toBeInTheDocument();
-    expect(screen.queryByText('tasks-surface:pet')).not.toBeInTheDocument();
+    expect(screen.getByText('notes-tab')).toBeInTheDocument();
+    expect(screen.queryByText('tasks-tab')).not.toBeInTheDocument();
   });
 
   it('shows a warning when no follow-up capability is available', () => {

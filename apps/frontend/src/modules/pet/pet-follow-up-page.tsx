@@ -38,7 +38,7 @@ export function PetFollowUpPage() {
       {activeTab ? (
         <>
           <PageTitle title={copy.title} description={copy.description} />
-          <nav aria-label={copy.tabsLabel} className="flex gap-1 overflow-x-auto border-b border-[color:var(--line)]">
+          <nav aria-label={copy.tabsLabel} className="flex gap-1 overflow-x-auto overflow-y-hidden border-b border-[color:var(--line)]">
               {visibleTabs.map((tab) => {
                 const active = tab.key === activeTab.key;
 
@@ -59,9 +59,9 @@ export function PetFollowUpPage() {
               })}
           </nav>
 
-          {activeTab.key === 'tasks' ? <CrmTasksPage surface="pet" /> : null}
-          {activeTab.key === 'notes' ? <CrmNotesPage surface="pet" /> : null}
-          {activeTab.key === 'activity' ? <CrmActivityPage surface="pet" /> : null}
+          {activeTab.key === 'tasks' ? <CrmTasksPage /> : null}
+          {activeTab.key === 'notes' ? <CrmNotesPage /> : null}
+          {activeTab.key === 'activity' ? <CrmActivityPage /> : null}
         </>
       ) : (
         <div className="ui-notice-warning">{copy.noPermission}</div>

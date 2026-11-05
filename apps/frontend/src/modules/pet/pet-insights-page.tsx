@@ -1,55 +1,77 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
-import { sharedPageStackClass } from '@/shared/components/public-visual-system';
-import { SimpleBarChart } from '@/shared/dashboard/simple-bar-chart';
-import { EmptyStateCard } from '@/shared/dashboard/empty-state-card';
+import { useCallback, useEffect, useState, type ReactNode } from 'react';
 import { PermissionGuard } from '@/shared/auth/PermissionGuard';
-import { ApiClientError } from '@/shared/lib/http';
-import { petService } from '@/shared/services/pet-service';
-import type { PetInsightsSummary } from '@/shared/types/pet';
-import { PageSection } from '@/shared/ui/page-section';
-import { PageTitle } from '@/shared/ui/page-title';
-import {
-  sharedCompactTextClass,
-  sharedPanelSurfaceClass,
-  sharedSectionHeadingClass
-} from '@/shared/components/public-visual-system';
-import { workspacePanelSurfaceStyle } from '@/shared/modules/module-workspace-visual';
-import { useAppMessages } from '@/shared/i18n/app-i18n-provider';
+import { sharedPageStackClass } from '@/shared/components/public-visual-system';
+import { EmptyStateCard } from '@/shared/dashboard/empty-state-card';
+import { StatusBadge } from '@/shared/dashboard/status-badge';
+import { useAppI18n, useAppMessages } from '@/shared/i18n/app-i18n-provider';
 import { resolveApiErrorMessage } from '@/shared/lib/api-error-message';
+import { petService } from '@/shared/services/pet-service';
+import type { DashboardCountMetric } from '@/shared/types/dashboard';
+import type { PetInsightsSummary } from '@/shared/types/pet';
+import { PageTitle } from '@/shared/ui/page-title';
 
-function ClientGrowthPanel({ thisMonth, lastMonth }: { thisMonth: number; lastMonth: number }) {
-  const copy = useAppMessages().screens.petInsights;
-  const delta = thisMonth - lastMonth;
-  const deltaSign = delta > 0 ? '+' : '';
-  const trendLabel = lastMonth === 0
-    ? null
-    : copy.deltaVsLastMonth.replace('{delta}', `${deltaSign}${delta}`);
+type MetricBarsProps = {
+  metrics: DashboardCountMetric[];
+  emptyMessage: string;
+  showShare?: boolean;
+  renderLabel?: (metric: DashboardCountMetric) => ReactNode;
+};
+
+function MetricBars({ metrics, emptyMessage, showShare = false, renderLabel }: MetricBarsProps) {
+  const { locale } = useAppI18n();
+
+  if (metrics.length === 0) {
+    return <p className="text-sm text-[var(--muted)]">{emptyMessage}</p>;
+  }
+
+  const maxValue = Math.max(...metrics.map((metric) => metric.value), 1);
+  const total = metrics.reduce((sum, metric) => sum + metric.value, 0);
+  const numberFormat = new Intl.NumberFormat(locale);
+  const shareFormat = new Intl.NumberFormat(locale, { style: 'percent', maximumFractionDigits: 0 });
 
   return (
-    <div className={`${sharedPanelSurfaceClass} p-5`} style={workspacePanelSurfaceStyle}>
-      <h3 className={sharedSectionHeadingClass}>{copy.clientGrowthChart}</h3>
-      <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <div>
-          <p className={`${sharedCompactTextClass} mb-1`}>{copy.thisMonth}</p>
-          <p className="text-2xl font-bold text-foreground">{thisMonth}</p>
-          {trendLabel ? (
-            <p className={`mt-1 ${sharedCompactTextClass} ${delta >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-500 dark:text-red-400'}`}>
-              {trendLabel}
-            </p>
-          ) : null}
-        </div>
-        <div>
-          <p className={`${sharedCompactTextClass} mb-1`}>{copy.lastMonth}</p>
-          <p className="text-2xl font-bold text-foreground">{lastMonth}</p>
-        </div>
+    <ul className="space-y-2.5">
+      {metrics.map((metric) => (
+        <li key={metric.key} className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-1 text-sm sm:grid-cols-[minmax(0,12rem)_minmax(0,1fr)_auto]">
+          <span className="truncate text-[var(--ink)]">{renderLabel ? renderLabel(metric) : metric.label}</span>
+          <span className="order-last col-span-2 h-2 overflow-hidden rounded-sm bg-[var(--bg-subtle)] sm:order-none sm:col-span-1" aria-hidden="true">
+            <span className="block h-full rounded-sm bg-[var(--ink)]" style={{ width: `${Math.max((metric.value / maxValue) * 100, 2)}%` }} />
+          </span>
+          <span className="ui-mono whitespace-nowrap text-right text-[var(--ink)]">
+            {numberFormat.format(metric.value)}
+            {showShare && total > 0 ? (
+              <span className="ml-2 text-xs text-[var(--muted)]">{shareFormat.format(metric.value / total)}</span>
+            ) : null}
+          </span>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+type InsightSectionProps = {
+  id: string;
+  title: string;
+  description: string;
+  children: ReactNode;
+};
+
+function InsightSection({ id, title, description, children }: InsightSectionProps) {
+  return (
+    <section aria-labelledby={id} className="space-y-3">
+      <div>
+        <h2 id={id} className="text-sm font-semibold text-[var(--ink)]">{title}</h2>
+        <p className="text-xs text-[var(--muted)]">{description}</p>
       </div>
-    </div>
+      {children}
+    </section>
   );
 }
 
 export function PetInsightsPage() {
+  const { locale } = useAppI18n();
   const copy = useAppMessages().screens.petInsights;
   const [insights, setInsights] = useState<PetInsightsSummary | null>(null);
   const [loading, setLoading] = useState(false);
@@ -82,70 +104,61 @@ export function PetInsightsPage() {
     || insights.appointmentsByStatus.length > 0
   );
 
+  const numberFormat = new Intl.NumberFormat(locale);
+  const delta = insights ? insights.newClientsThisMonth - insights.newClientsLastMonth : 0;
+  const deltaLabel = insights && insights.newClientsLastMonth > 0
+    ? copy.deltaVsLastMonth.replace('{delta}', `${delta > 0 ? '+' : ''}${numberFormat.format(delta)}`)
+    : null;
+  const totalAppointments = insights?.appointmentsByStatus.reduce((sum, metric) => sum + metric.value, 0) ?? 0;
+
   return (
     <PermissionGuard
       permission="pet.dashboard.read"
       fallback={<div className="ui-notice-warning">{copy.insightsNoPermission}</div>}
     >
       <div className={sharedPageStackClass}>
-        <PageTitle
-          eyebrow="Gestão Pet"
-          title={copy.insightsTitle}
-          description={copy.insightsDescription}
-        />
+        <PageTitle title={copy.insightsTitle} description={copy.insightsDescription} />
 
         {loading ? <div className="ui-notice-neutral">{copy.insightsLoading}</div> : null}
         {error ? <div className="ui-notice-error">{error}</div> : null}
 
         {insights && hasData ? (
           <>
-            <PageSection
-              title={copy.clientGrowth}
-              description={copy.clientGrowthDescription}
-            >
-              <ClientGrowthPanel
-                thisMonth={insights.newClientsThisMonth}
-                lastMonth={insights.newClientsLastMonth}
-              />
-            </PageSection>
+            <dl className="grid gap-4 border-y border-[color:var(--line)] py-3 sm:grid-cols-3">
+              <div>
+                <dt className="text-xs text-[var(--muted)]">{copy.newClientsThisMonth}</dt>
+                <dd className="ui-mono mt-0.5 text-lg font-semibold text-[var(--ink)]">{numberFormat.format(insights.newClientsThisMonth)}</dd>
+                {deltaLabel ? (
+                  <dd className={`text-xs ${delta < 0 ? 'text-[var(--danger)]' : 'text-[var(--ink-2)]'}`}>{deltaLabel}</dd>
+                ) : null}
+              </div>
+              <div>
+                <dt className="text-xs text-[var(--muted)]">{copy.newClientsLastMonth}</dt>
+                <dd className="ui-mono mt-0.5 text-lg font-semibold text-[var(--ink)]">{numberFormat.format(insights.newClientsLastMonth)}</dd>
+              </div>
+              <div>
+                <dt className="text-xs text-[var(--muted)]">{copy.totalAppointments}</dt>
+                <dd className="ui-mono mt-0.5 text-lg font-semibold text-[var(--ink)]">{numberFormat.format(totalAppointments)}</dd>
+              </div>
+            </dl>
 
-            <PageSection
-              title={copy.topServices}
-              description={copy.topServicesDescription}
-            >
-              <SimpleBarChart
-                title={copy.topServicesChart}
-                metrics={insights.topServices}
-                emptyMessage={copy.topServicesEmpty}
-              />
-            </PageSection>
+            <div className="grid gap-8 xl:grid-cols-2">
+              <InsightSection id="insights-top-services" title={copy.topServices} description={copy.topServicesDescription}>
+                <MetricBars metrics={insights.topServices} emptyMessage={copy.topServicesEmpty} />
+              </InsightSection>
 
-            <div className="grid gap-5 xl:grid-cols-2">
-              {insights.speciesMix.length > 0 ? (
-                <PageSection
-                  title={copy.petMix}
-                  description={copy.petMixDescription}
-                >
-                  <SimpleBarChart
-                    title={copy.petMixChart}
-                    metrics={insights.speciesMix}
-                    emptyMessage={copy.petMixEmpty}
-                  />
-                </PageSection>
-              ) : null}
+              <InsightSection id="insights-status" title={copy.appointmentStatus} description={copy.appointmentStatusDescription}>
+                <MetricBars
+                  metrics={insights.appointmentsByStatus}
+                  emptyMessage={copy.appointmentStatusEmpty}
+                  showShare
+                  renderLabel={(metric) => <StatusBadge status={metric.key} />}
+                />
+              </InsightSection>
 
-              {insights.appointmentsByStatus.length > 0 ? (
-                <PageSection
-                  title={copy.appointmentStatus}
-                  description={copy.appointmentStatusDescription}
-                >
-                  <SimpleBarChart
-                    title={copy.appointmentStatusChart}
-                    metrics={insights.appointmentsByStatus}
-                    emptyMessage={copy.appointmentStatusEmpty}
-                  />
-                </PageSection>
-              ) : null}
+              <InsightSection id="insights-pet-mix" title={copy.petMix} description={copy.petMixDescription}>
+                <MetricBars metrics={insights.speciesMix} emptyMessage={copy.petMixEmpty} showShare />
+              </InsightSection>
             </div>
           </>
         ) : !loading && !error ? (

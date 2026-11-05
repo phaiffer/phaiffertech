@@ -17,7 +17,7 @@ Os protótipos de referência estão nesta pasta (`*.dc.html`; a direção visua
 | 3 | Cadastros: Clientes, cadastro de cliente, Contatos, Pets, cadastro de pet, Perfil do pet | Concluída | #103 |
 | 4 | Operação de serviço: Serviços, Planos, Follow-up, Equipe, Fechamento | Concluída | #104 |
 | 5 | Dinheiro e estoque: Estoque/Produtos, Financeiro, Caixa, Cobrança | Concluída | #105 |
-| 6 | Clínica, Comercial e Insights | **Próxima** | |
+| 6 | Clínica, Comercial e Insights | **Em revisão** (branch `feat/redesign-fase-6`) | #106 |
 | 7 | Conta e admin: Login, Esqueci/Redefinir senha, Configurações, Usuários, Ambientes | Pendente | |
 
 Depois da fase 7, o próximo trabalho combinado com o dono do projeto é o **Projeto de Aplicação da pós PUCPR** (ver "Depois do redesign", no fim).
@@ -72,15 +72,19 @@ Depois da fase 7, o próximo trabalho combinado com o dono do projeto é o **Pro
 - **Não rode `npm run build` com o `next dev` ligado**: os dois usam a pasta `.next`, o build a sobrescreve e o servidor de dev passa a servir páginas sem CSS (`layout.css` 404). Para recuperar: pare o dev, apague `apps/frontend/.next` e suba de novo. Prefira deixar o build para o CI.
 - Para subir o ambiente local sem Docker: `.\scripts\start-local-backend.ps1` e `.\scripts\start-local-frontend.ps1` na raiz (PostgreSQL local na porta 5432). Se der `EADDRINUSE` / "Port 8080 was already in use", há um servidor antigo nas portas 3000/8080.
 - O hook local do Claude Code troca o travessão por vírgula e espaço ao gravar arquivos: um travessão usado como marcador de "sem valor" aparece na tela como uma vírgula solta. Use `'-'`.
+- O plano do seed não inclui o módulo clínico: `/pet/clinic` abre, mas vacinas, prontuários e linha do tempo respondem 403. Para conferir layout, injete dados no navegador ou use um plano com o módulo.
+- Na automação de navegador, o `getBoundingClientRect` usa pixels CSS (viewport de 1920px), enquanto o clique usa as coordenadas da captura de tela (1568px). Use as coordenadas da captura; misturar as duas faz o clique errar o formulário de login.
 - Dados de exemplo do seed do backend têm palavras sem acento ("Pastor Alemao", "Shampoo hipoalergenico"); é dado, não texto de tela.
 - O PDV **não registra vendas** (checkout simulado desde antes do redesign; a tela avisa). Não "consertar" dentro do redesign sem combinar com o dono: é funcionalidade nova.
 
 ## Próximo passo concreto: fase 6 (Clínica, Comercial e Insights)
 
+**Estado em 2026-11-05:** Insights, Clínica, Linha do tempo, Prontuários, Comercial, Contatos de apoio e Follow-up estão refeitos e no i18n, com `tsc`, lint e testes passando. Conferidas no navegador em desktop, 390px e tema escuro. A Atividade do demo não tem eventos, então a tabela preenchida foi coberta só por teste. **Falta:** abrir a PR e aguardar o merge.
+
 Referências: `Clinica.dc.html`, `Prontuario.dc.html`, `TimelineClinica.dc.html`, `Comercial.dc.html`, `Lead.dc.html`, `Insights.dc.html` (siga a direção visual de `v2/Clientes.dc.html`). Componentes: `src/modules/pet/clinic-dashboard.tsx`, `pet-medical-records-page.tsx`, `pet-medical-sections.tsx`, `clinic-timeline-page.tsx`, `pet-commercial-page.tsx`, `pet-commercial-pipeline-page.tsx`, `pet-commercial-deals-page.tsx`, `pet-commercial-lead-form-page.tsx`, `pet-commercial-leads-page.tsx`, `pet-insights-page.tsx`.
 
 - Mesmo padrão das fases 3 a 5 (ver `clients-page.tsx`, `pet-services-page.tsx`, `modules/finance/finance-cash-page.tsx`): contagem no título (`PageTitle count`), `DataTable` densa, filtros com `FilterChip` (`src/shared/ui/filter-chip.tsx`), `Pagination` com `pageSize`, editor que abre sob demanda com `FormSection` (`src/shared/ui/form-section.tsx`), valores com `formatCurrencyForLocale` e `.ui-mono`, datas com `formatDateForLocale`. Liga/desliga em linha: `.ui-switch` (`<button role="switch" aria-checked>`).
-- Pendência das fases 3 e 4 que entra aqui: `modules/crm/contacts-page.tsx`, `contact-form-page.tsx`, `tasks-page.tsx`, `notes-page.tsx` e `activity-page.tsx` ainda têm textos fixos fora do i18n; tarefas e notas ainda têm o formulário sempre aberto (ver GAPS).
+- As pendências das fases 3 e 4 (`contacts-page`, `contact-form-page`, `tasks-page`, `notes-page` e `activity-page`) foram resolvidas nesta fase. O aviso "1 issue" do Next com atributos `data-gr-*` no `<body>` vem da extensão Grammarly, não do código.
 - Remover cartões de métrica que contam só a página atual ou mostram números fixos; registrar no GAPS o que o design pede e a API não dá.
 - **Confira se a tela usa dados reais**: procure constantes de dados no início do arquivo (o Financeiro mostrava tudo fictício) e compare os valores de filtros com os enums do backend (os de `/finance` nunca filtravam nada).
 - Valores em dinheiro nunca com `'pt-BR'` fixo: use o `locale` de `useAppI18n()`.

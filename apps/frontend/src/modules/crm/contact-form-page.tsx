@@ -1,95 +1,52 @@
 'use client';
 
-import { FormEvent, useEffect, useMemo, useState } from 'react';
-import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { crmService } from '@/shared/services/crm-service';
+import { useRouter } from 'next/navigation';
+import { FormEvent, useEffect, useState } from 'react';
+import { PermissionGuard } from '@/shared/auth/PermissionGuard';
+import { sharedFormActionsClass, sharedPageStackClass } from '@/shared/components/public-visual-system';
+import { useAppMessages } from '@/shared/i18n/app-i18n-provider';
+import { resolveApiErrorMessage } from '@/shared/lib/api-error-message';
 import { petClientContactSupportService } from '@/shared/services/pet-client-contact-support-service';
-import { ApiClientError } from '@/shared/lib/http';
-import { resolvePageItems } from '@/shared/lib/pagination';
-import { CrmCompany } from '@/shared/types/crm';
 import { FormInput } from '@/shared/ui/form-input';
+import { FormSection } from '@/shared/ui/form-section';
 import { FormSelect } from '@/shared/ui/form-select';
 import { PageTitle } from '@/shared/ui/page-title';
-import { PermissionGuard } from '@/shared/auth/PermissionGuard';
-import { resolveApiErrorMessage } from '@/shared/lib/api-error-message';
 
-const statusOptions = [
-  { value: 'ACTIVE', label: 'ACTIVE' },
-  { value: 'INACTIVE', label: 'INACTIVE' }
-];
+const listPath = '/pet/clients/contacts';
 
 type ContactFormPageProps = {
   contactId?: string;
-  surface?: 'crm' | 'pet';
 };
 
-export function ContactFormPage({ contactId, surface = 'crm' }: ContactFormPageProps) {
+export function ContactFormPage({ contactId }: ContactFormPageProps) {
   const router = useRouter();
-  const isPetSurface = surface === 'pet';
+  const copy = useAppMessages().screens.petSupportContacts;
   const isEdit = Boolean(contactId);
-  const contactService = isPetSurface ? petClientContactSupportService : crmService;
-  const basePath = isPetSurface ? '/pet/clients/contacts' : '/crm/contacts';
   const requiredPermission = isEdit ? 'crm.contact.update' : 'crm.contact.create';
 
   const [loading, setLoading] = useState(isEdit);
-  const [loadingCompanies, setLoadingCompanies] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
-  const [companies, setCompanies] = useState<CrmCompany[]>([]);
 
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [companyId, setCompanyId] = useState('');
-  const [manualCompany, setManualCompany] = useState('');
+  const [legacyCompany, setLegacyCompany] = useState('');
+  const [hasLegacyCompany, setHasLegacyCompany] = useState(false);
   const [status, setStatus] = useState('ACTIVE');
 
   useEffect(() => {
-    if (isPetSurface) {
-      setCompanies([]);
-      setLoadingCompanies(false);
-      return;
-    }
-
-    let active = true;
-
-    setLoadingCompanies(true);
-    crmService.listCompanies(0, 100)
-      .then((companiesPage) => {
-        if (!active) {
-          return;
-        }
-        setCompanies(resolvePageItems(companiesPage));
-      })
-      .catch((err) => {
-        if (!active) {
-          return;
-        }
-        const message = resolveApiErrorMessage(err, 'Erro ao carregar companies para vínculo.');
-        setError((current) => current ?? message);
-      })
-      .finally(() => {
-        if (active) {
-          setLoadingCompanies(false);
-        }
-      });
-
-    return () => {
-      active = false;
-    };
-  }, [isPetSurface]);
-
-  useEffect(() => {
-    if (!isEdit || !contactId) {
+    if (!contactId) {
       return;
     }
 
     let active = true;
     setLoading(true);
-    contactService.getContact(contactId)
+    petClientContactSupportService.getContact(contactId)
       .then((contact) => {
         if (!active) {
           return;
@@ -99,17 +56,14 @@ export function ContactFormPage({ contactId, surface = 'crm' }: ContactFormPageP
         setEmail(contact.email ?? '');
         setPhone(contact.phone ?? '');
         setCompanyId(contact.companyId ?? '');
-        setManualCompany(contact.company ?? '');
+        setLegacyCompany(contact.company ?? '');
+        setHasLegacyCompany(Boolean(contact.companyId || contact.company));
         setStatus(contact.status ?? 'ACTIVE');
       })
       .catch((err) => {
-        if (!active) {
-          return;
+        if (active) {
+          setError(resolveApiErrorMessage(err, copy.contactLoadError));
         }
-        const message = resolveApiErrorMessage(err, isPetSurface
-            ? 'Erro ao carregar contato de apoio.'
-            : 'Erro ao carregar contato.');
-        setError(message);
       })
       .finally(() => {
         if (active) {
@@ -120,29 +74,7 @@ export function ContactFormPage({ contactId, surface = 'crm' }: ContactFormPageP
     return () => {
       active = false;
     };
-  }, [contactId, contactService, isEdit, isPetSurface]);
-
-  const title = useMemo(() => {
-    if (isPetSurface) {
-      return isEdit ? 'Editar contato de apoio' : 'Novo contato de apoio';
-    }
-
-    return isEdit ? 'Editar contato' : 'Novo contato';
-  }, [isEdit, isPetSurface]);
-  const companyOptions = useMemo(() => [
-    { value: '', label: loadingCompanies ? 'Carregando companies...' : 'Sem vínculo com company' },
-    ...companies.map((company) => ({
-      value: company.id,
-      label: company.name
-    }))
-  ], [companies, loadingCompanies]);
-
-  function handleCompanyChange(nextCompanyId: string) {
-    setCompanyId(nextCompanyId);
-    if (nextCompanyId) {
-      setManualCompany('');
-    }
-  }
+  }, [contactId, copy.contactLoadError]);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -151,34 +83,29 @@ export function ContactFormPage({ contactId, surface = 'crm' }: ContactFormPageP
     setSuccess(null);
 
     try {
-      const normalizedCompanyId = companyId.trim() || undefined;
-      const normalizedManualCompany = normalizedCompanyId
-        ? undefined
-        : manualCompany.trim() || undefined;
+      const linkedCompanyId = companyId.trim() || undefined;
+      const manualCompany = linkedCompanyId ? undefined : legacyCompany.trim() || undefined;
       const payload = {
         firstName,
         lastName: lastName || undefined,
         email: email || undefined,
         phone: phone || undefined,
-        ...(normalizedCompanyId ? { companyId: normalizedCompanyId } : {}),
-        ...(normalizedManualCompany ? { company: normalizedManualCompany } : {}),
+        ...(linkedCompanyId ? { companyId: linkedCompanyId } : {}),
+        ...(manualCompany ? { company: manualCompany } : {}),
         status
       };
 
-      if (isEdit && contactId) {
-        await contactService.updateContact(contactId, payload);
-        setSuccess(isPetSurface ? 'Contato de apoio atualizado com sucesso.' : 'Contato atualizado com sucesso.');
+      if (contactId) {
+        await petClientContactSupportService.updateContact(contactId, payload);
+        setSuccess(copy.updated);
       } else {
-        await contactService.createContact(payload);
-        setSuccess(isPetSurface ? 'Contato de apoio criado com sucesso.' : 'Contato criado com sucesso.');
+        await petClientContactSupportService.createContact(payload);
+        setSuccess(copy.created);
       }
 
-      setTimeout(() => router.push(basePath), 600);
+      setTimeout(() => router.push(listPath), 600);
     } catch (err) {
-      const message = resolveApiErrorMessage(err, isPetSurface
-          ? 'Erro ao salvar contato de apoio.'
-          : 'Erro ao salvar contato.');
-      setError(message);
+      setError(resolveApiErrorMessage(err, copy.saveError));
     } finally {
       setSubmitting(false);
     }
@@ -187,100 +114,52 @@ export function ContactFormPage({ contactId, surface = 'crm' }: ContactFormPageP
   return (
     <PermissionGuard
       permission={requiredPermission}
-      fallback={(
-        <div className="ui-notice-warning">
-          {isPetSurface
-            ? 'Você não possui permissão para gerenciar contatos de apoio.'
-            : 'Você não possui permissão para esta ação.'}
-        </div>
-      )}
+      fallback={<div className="ui-notice-warning">{copy.formNoPermission}</div>}
     >
-      <div className="space-y-5">
+      <div className={sharedPageStackClass}>
         <PageTitle
-          title={title}
-          description={isPetSurface
-            ? 'Cadastre contatos adicionais, financeiros ou operacionais usados no relacionamento com clientes da Gestão Pet. Campos de company ficam apenas como compatibilidade legada.'
-            : 'Formulário de cadastro/edição de contato CRM.'}
+          title={isEdit ? copy.editContact : copy.newContact}
+          description={copy.formDescription}
+          actions={<Link href={listPath} className="ui-secondary-button">{copy.backToList}</Link>}
         />
 
-        <div className="flex justify-end">
-          <Link href={basePath} className="ui-secondary-button">
-            {isPetSurface ? 'Voltar para contatos de apoio' : 'Voltar para listagem'}
-          </Link>
-        </div>
-
         {loading ? (
-          <div className="ui-surface-panel px-4 py-6 text-sm text-[color:var(--app-shell-muted)]">
-            {isPetSurface ? 'Carregando contato de apoio...' : 'Carregando contato...'}
-          </div>
+          <div className="ui-notice-neutral">{copy.contactLoading}</div>
         ) : (
-          <form onSubmit={handleSubmit} className="grid gap-3 ui-surface-panel p-4 md:grid-cols-2">
-            <FormInput
-              label={isPetSurface ? 'Nome do contato de apoio' : 'Nome'}
-              value={firstName}
-              onChange={setFirstName}
-              required
-            />
-            <FormInput
-              label={isPetSurface ? 'Sobrenome ou complemento' : 'Sobrenome'}
-              value={lastName}
-              onChange={setLastName}
-            />
-            <FormInput
-              label={isPetSurface ? 'E-mail do contato' : 'Email'}
-              value={email}
-              onChange={setEmail}
-              type="email"
-            />
-            <FormInput
-              label={isPetSurface ? 'Telefone do contato' : 'Telefone'}
-              value={phone}
-              onChange={setPhone}
-            />
-            {!isPetSurface ? (
+          <form onSubmit={handleSubmit} className="max-w-3xl space-y-6">
+            <FormSection title={copy.sectionIdentification}>
+              <FormInput label={copy.fieldFirstName} value={firstName} onChange={setFirstName} required />
+              <FormInput label={copy.fieldLastName} value={lastName} onChange={setLastName} />
+              <FormInput label={copy.fieldEmail} value={email} onChange={setEmail} type="email" />
+              <FormInput label={copy.fieldPhone} value={phone} onChange={setPhone} />
               <FormSelect
-                label="Company vinculada"
-                value={companyId}
-                options={companyOptions}
-                onChange={handleCompanyChange}
-                disabled={loadingCompanies}
+                label={copy.filterStatus}
+                value={status}
+                options={[
+                  { value: 'ACTIVE', label: copy.statusActive },
+                  { value: 'INACTIVE', label: copy.statusInactive }
+                ]}
+                onChange={setStatus}
               />
-            ) : null}
-            <FormSelect label="Status" value={status} options={statusOptions} onChange={setStatus} />
+            </FormSection>
 
-            {isPetSurface && companyId ? (
-              <div className="md:col-span-2 ui-notice-neutral">
-                Vínculo legado com company preservado automaticamente{manualCompany ? `: ${manualCompany}.` : '.'}
-              </div>
-            ) : null}
-
-            {(!companyId || isPetSurface) ? (
-              <div className="md:col-span-2 space-y-2">
+            {hasLegacyCompany ? (
+              <FormSection title={copy.sectionLegacy}>
                 <FormInput
-                  label={isPetSurface ? 'Contexto legado (opcional)' : 'Empresa manual (compatibilidade)'}
-                  value={manualCompany}
-                  onChange={setManualCompany}
-                  disabled={isPetSurface && Boolean(companyId)}
+                  label={copy.fieldLegacyCompany}
+                  value={legacyCompany}
+                  onChange={setLegacyCompany}
+                  disabled={Boolean(companyId)}
                 />
-                <p className="text-xs text-[color:var(--app-shell-muted)]">
-                  {isPetSurface
-                    ? 'Use este campo apenas quando precisar preservar uma referência histórica de company para um contato antigo.'
-                    : 'Use este campo apenas quando o contato ainda não estiver vinculado a uma company cadastrada.'}
+                <p className="text-xs text-[var(--ink-2)] md:col-span-2">
+                  {companyId ? copy.legacyLinkedHint : copy.legacyManualHint}
                 </p>
-              </div>
+              </FormSection>
             ) : null}
 
-            <div className="md:col-span-2 flex gap-2">
-              <button
-                type="submit"
-                disabled={submitting}
-                className="ui-primary-button"
-              >
-                {submitting
-                  ? 'Salvando...'
-                  : isPetSurface
-                    ? isEdit ? 'Atualizar contato de apoio' : 'Criar contato de apoio'
-                    : isEdit ? 'Atualizar contato' : 'Criar contato'}
+            <div className={sharedFormActionsClass}>
+              <button type="submit" disabled={submitting} className="ui-primary-button">
+                {submitting ? copy.saving : isEdit ? copy.updateContact : copy.createContact}
               </button>
             </div>
           </form>
