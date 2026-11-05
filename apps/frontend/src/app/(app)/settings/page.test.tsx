@@ -4,6 +4,10 @@ import SettingsPage from '@/app/(app)/settings/page';
 import type { FrontendPlatformState } from '@/shared/platform/frontend-platform.types';
 import type { AuthenticatedUser } from '@/shared/types/auth';
 
+vi.mock('@/modules/account/account-tabs', () => ({
+  AccountTabs: () => null
+}));
+
 const { currentPlatformState } = vi.hoisted(() => ({
   currentPlatformState: {
     user: {
@@ -185,7 +189,7 @@ describe('SettingsPage', () => {
 
     expect(screen.getByRole('heading', { name: 'Workspace settings' })).toBeInTheDocument();
     expect(screen.getByText('Platform administration')).toBeInTheDocument();
-    expect(screen.getAllByText('Full platform visibility')).toHaveLength(2);
+    expect(screen.getByText('Full platform visibility')).toBeInTheDocument();
     expect(screen.getByText('Brand preview')).toBeInTheDocument();
     expect(screen.queryByText('Theme')).not.toBeInTheDocument();
     expect(screen.getByText('Contracted modules')).toBeInTheDocument();
@@ -222,7 +226,7 @@ describe('SettingsPage', () => {
     render(<SettingsPage />);
 
     expect(screen.getByText('Support mode')).toBeInTheDocument();
-    expect(screen.getAllByText('Customer boundary')).toHaveLength(2);
+    expect(screen.getByText('Customer boundary')).toBeInTheDocument();
     expect(screen.getByText('Internal support on customer contract')).toBeInTheDocument();
     expect(screen.queryByText('Platform administration')).not.toBeInTheDocument();
   });

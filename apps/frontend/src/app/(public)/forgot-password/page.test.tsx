@@ -38,6 +38,7 @@ describe('ForgotPasswordPage', () => {
       });
     });
 
-    expect(screen.getByText('If an account matches this workspace and email, we will send a reset link shortly.')).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Check your email' })).toBeInTheDocument();
+    expect(screen.getByText(/If admin@local\.test is registered in this workspace/)).toBeInTheDocument();
   });
 });

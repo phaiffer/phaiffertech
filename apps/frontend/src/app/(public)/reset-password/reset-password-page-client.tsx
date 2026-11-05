@@ -3,26 +3,20 @@
 import { FormEvent, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { BrandMark, PetMark } from '@/shared/components/brand-assets';
+import { AuthScreen } from '@/modules/account/auth-screen';
+import { buildLoginVisualContext } from '@/shared/components/public-visual-system';
+import { useAppMessages } from '@/shared/i18n/app-i18n-provider';
+import { resolveApiErrorMessage } from '@/shared/lib/api-error-message';
+import { ApiClientError } from '@/shared/lib/http';
 import {
   clearImpersonationBackupSession,
   clearSession,
   setAuthNotice
 } from '@/shared/lib/session';
-import { ApiClientError } from '@/shared/lib/http';
-import { resolveApiErrorMessage } from '@/shared/lib/api-error-message';
-import { authService } from '@/shared/services/auth-service';
-import {
-  buildLoginVisualContext,
-  publicPrimaryButtonClass,
-  sharedCompactTextClass,
-  sharedInputClass,
-  sharedInputLabelClass,
-  sharedPanelSurfaceClass,
-  sharedSecondaryButtonClass
-} from '@/shared/components/public-visual-system';
-import { usePublicSite } from '@/shared/public/public-site-provider';
 import { getPublicSiteMessages } from '@/shared/public/public-site-messages';
+import { usePublicSite } from '@/shared/public/public-site-provider';
+import { authService } from '@/shared/services/auth-service';
+import { FormInput } from '@/shared/ui/form-input';
 
 type ResetPasswordPageClientProps = {
   token: string | null;
@@ -30,6 +24,7 @@ type ResetPasswordPageClientProps = {
 
 export default function ResetPasswordPageClient({ token }: ResetPasswordPageClientProps) {
   const router = useRouter();
+  const copy = useAppMessages().screens.accountAccess;
   const { locale } = usePublicSite();
   const t = getPublicSiteMessages(locale).resetPassword;
   const [newPassword, setNewPassword] = useState('');
@@ -38,16 +33,6 @@ export default function ResetPasswordPageClient({ token }: ResetPasswordPageClie
   const [error, setError] = useState<string | null>(null);
   const [invalidLink, setInvalidLink] = useState(token === null);
   const visualContext = useMemo(() => buildLoginVisualContext(), []);
-
-  function handleNewPasswordChange(value: string) {
-    setNewPassword(value);
-    setError(null);
-  }
-
-  function handleConfirmNewPasswordChange(value: string) {
-    setConfirmNewPassword(value);
-    setError(null);
-  }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -66,11 +51,7 @@ export default function ResetPasswordPageClient({ token }: ResetPasswordPageClie
     setSubmitting(true);
 
     try {
-      await authService.confirmPasswordReset({
-        token,
-        newPassword,
-        confirmNewPassword
-      });
+      await authService.confirmPasswordReset({ token, newPassword, confirmNewPassword });
       clearSession();
       clearImpersonationBackupSession();
       setAuthNotice('password-reset');
@@ -88,110 +69,68 @@ export default function ResetPasswordPageClient({ token }: ResetPasswordPageClie
   }
 
   return (
-    <div className="min-h-screen bg-background" style={visualContext.containerStyle}>
-      <main className="mx-auto flex min-h-screen w-full max-w-5xl items-center justify-center px-6 py-12">
-        <div className="w-full max-w-[420px]">
-          <Link href="/" className="mb-8 inline-flex items-center gap-3 text-foreground">
-            <PetMark className="h-14 w-14" />
-            <div>
-              <span className="block text-lg font-semibold tracking-tight">Gestão Pet</span>
-              <span className="mt-1 inline-flex items-center gap-1.5 text-[10px] font-medium uppercase tracking-[0.16em] text-slate-500">
-                <BrandMark
-                  priority
-                  className="h-4 w-4 rounded-[0.45rem] p-[0.08rem]"
-                  imageClassName="scale-[1.08]"
-                  style={visualContext.brandMarkStyle}
-                />
-                PhaifferTech
-              </span>
-              <span className="mt-1 block text-[11px] uppercase tracking-[0.18em] text-muted">{t.title}</span>
-            </div>
-          </Link>
+    <AuthScreen style={visualContext.containerStyle}>
+      {invalidLink ? (
+        <>
+          <div>
+            <h1 className="text-2xl font-semibold text-[var(--ink)]">{t.invalidTitle}</h1>
+            <p className="mt-1 text-sm text-[var(--ink-2)]">{t.invalidDescription}</p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <Link href="/forgot-password" className="ui-primary-button">{t.requestNewLinkLabel}</Link>
+            <Link href="/login" className="ui-secondary-button">{t.backToLoginLabel}</Link>
+          </div>
+        </>
+      ) : (
+        <>
+          <div>
+            <h1 className="text-2xl font-semibold text-[var(--ink)]">{t.title}</h1>
+            <p className="mt-1 text-sm text-[var(--ink-2)]">{t.description}</p>
+          </div>
 
-          <section className={`${sharedPanelSurfaceClass} p-7 sm:p-8`} style={visualContext.cardStyle}>
-            {invalidLink ? (
-              <div className="space-y-5">
-                <div>
-                  <h1 className="text-2xl font-semibold tracking-tight text-foreground">{t.invalidTitle}</h1>
-                  <p className={`mt-2 ${sharedCompactTextClass}`}>{t.invalidDescription}</p>
-                </div>
-                <div className="flex flex-col gap-3 sm:flex-row">
-                  <Link
-                    href="/forgot-password"
-                    className={publicPrimaryButtonClass}
-                    style={{ backgroundImage: 'linear-gradient(135deg, var(--tenant-accent), var(--pet-teal))' }}
-                  >
-                    {t.requestNewLinkLabel}
-                  </Link>
-                  <Link href="/login" className={sharedSecondaryButtonClass}>
-                    {t.backToLoginLabel}
-                  </Link>
-                </div>
-              </div>
-            ) : (
-              <>
-                <div className="mb-6">
-                  <h1 className="text-2xl font-semibold tracking-tight text-foreground">{t.title}</h1>
-                  <p className={`mt-2 ${sharedCompactTextClass}`}>{t.description}</p>
-                </div>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <FormInput
+              id="new-password"
+              type="password"
+              label={t.newPasswordLabel}
+              value={newPassword}
+              onChange={(value) => {
+                setNewPassword(value);
+                setError(null);
+              }}
+              description={copy.resetPasswordHint}
+              minLength={8}
+              maxLength={72}
+              autoComplete="new-password"
+              disabled={submitting}
+              required
+            />
+            <FormInput
+              id="confirm-new-password"
+              type="password"
+              label={t.confirmNewPasswordLabel}
+              value={confirmNewPassword}
+              onChange={(value) => {
+                setConfirmNewPassword(value);
+                setError(null);
+              }}
+              minLength={8}
+              maxLength={72}
+              autoComplete="new-password"
+              disabled={submitting}
+              required
+            />
 
-                <form onSubmit={handleSubmit} className="space-y-4">
-                  <div>
-                    <label htmlFor="new-password" className={sharedInputLabelClass}>
-                      {t.newPasswordLabel}
-                    </label>
-                    <input
-                      id="new-password"
-                      type="password"
-                      value={newPassword}
-                      onChange={(event) => handleNewPasswordChange(event.target.value)}
-                      className={sharedInputClass}
-                      minLength={8}
-                      maxLength={72}
-                      autoComplete="new-password"
-                      disabled={submitting}
-                      required
-                    />
-                  </div>
+            {error ? <div role="alert" className="ui-notice-error">{error}</div> : null}
 
-                  <div>
-                    <label htmlFor="confirm-new-password" className={sharedInputLabelClass}>
-                      {t.confirmNewPasswordLabel}
-                    </label>
-                    <input
-                      id="confirm-new-password"
-                      type="password"
-                      value={confirmNewPassword}
-                      onChange={(event) => handleConfirmNewPasswordChange(event.target.value)}
-                      className={sharedInputClass}
-                      minLength={8}
-                      maxLength={72}
-                      autoComplete="new-password"
-                      disabled={submitting}
-                      required
-                    />
-                  </div>
+            <button type="submit" disabled={submitting} className="ui-primary-button w-full">
+              {submitting ? t.loadingLabel : t.submitLabel}
+            </button>
+          </form>
 
-                  {error ? (
-                    <div className="rounded-lg border border-destructive/30 bg-destructive-muted px-3 py-2.5 text-sm text-destructive">
-                      {error}
-                    </div>
-                  ) : null}
-
-                  <button
-                    type="submit"
-                    disabled={submitting}
-                    className={`${publicPrimaryButtonClass} w-full disabled:cursor-not-allowed disabled:opacity-50`}
-                    style={{ backgroundImage: 'linear-gradient(135deg, var(--tenant-accent), var(--pet-teal))' }}
-                  >
-                    {submitting ? t.loadingLabel : t.submitLabel}
-                  </button>
-                </form>
-              </>
-            )}
-          </section>
-        </div>
-      </main>
-    </div>
+          <p className="text-xs text-[var(--ink-2)]">{copy.resetSessionsNote}</p>
+        </>
+      )}
+    </AuthScreen>
   );
 }

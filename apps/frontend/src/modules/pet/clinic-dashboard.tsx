@@ -12,14 +12,14 @@ import { resolveApiErrorMessage } from '@/shared/lib/api-error-message';
 import { resolvePageItems, resolveTotalItems } from '@/shared/lib/pagination';
 import { useFrontendPlatform } from '@/shared/platform/use-frontend-platform';
 import { petService } from '@/shared/services/pet-service';
-import type { PetAppointment, PetClinicalTimeline, PetVaccination } from '@/shared/types/pet';
+import type { PetAppointment, PetMedicalRecord, PetVaccination } from '@/shared/types/pet';
 import { DataTable, DataTableColumn } from '@/shared/ui/data-table';
 import { PageTitle } from '@/shared/ui/page-title';
 
 const VACCINATION_SAMPLE_SIZE = 200;
 const VACCINATION_WINDOW_DAYS = 14;
 const VISIBLE_VACCINATIONS = 8;
-const RECENT_EVENTS = 8;
+const RECENT_RECORDS = 8;
 const DAY_MS = 86_400_000;
 
 // The API has no clinical flag on services, so clinical visits are recognized by service name.
@@ -29,20 +29,20 @@ type DashboardState = {
   appointments: PetAppointment[];
   vaccinations: PetVaccination[];
   vaccinationTotal: number;
-  timeline: PetClinicalTimeline | null;
+  records: PetMedicalRecord[];
   appointmentsFailed: boolean;
   vaccinationsFailed: boolean;
-  timelineFailed: boolean;
+  recordsFailed: boolean;
 };
 
 const initialState: DashboardState = {
   appointments: [],
   vaccinations: [],
   vaccinationTotal: 0,
-  timeline: null,
+  records: [],
   appointmentsFailed: false,
   vaccinationsFailed: false,
-  timelineFailed: false
+  recordsFailed: false
 };
 
 function startOfDay(date = new Date()) {
@@ -81,7 +81,7 @@ export function ClinicDashboard({ showSubnav = false }: { showSubnav?: boolean }
 
   const appointmentsError = t.errors.appointments;
   const vaccinationsError = t.errors.vaccinations;
-  const timelineError = t.errors.timeline;
+  const recordsError = t.errors.records;
 
   useEffect(() => {
     if (!canReadClinic) {
@@ -101,28 +101,30 @@ export function ClinicDashboard({ showSubnav = false }: { showSubnav?: boolean }
           })
         : Promise.resolve(null),
       canReadVaccinations ? petService.listVaccinations(0, VACCINATION_SAMPLE_SIZE, '') : Promise.resolve(null),
-      canReadMedicalRecords ? petService.getClinicalTimeline({ limit: RECENT_EVENTS }) : Promise.resolve(null)
-    ]).then(([appointmentsResult, vaccinationsResult, timelineResult]) => {
+      // The clinical timeline only works per pet or appointment, so "recent" comes from this list.
+      canReadMedicalRecords ? petService.listMedicalRecords(0, RECENT_RECORDS, '') : Promise.resolve(null)
+    ]).then(([appointmentsResult, vaccinationsResult, recordsResult]) => {
       if (!active) {
         return;
       }
 
       const appointmentsPage = appointmentsResult.status === 'fulfilled' ? appointmentsResult.value : null;
       const vaccinationsPage = vaccinationsResult.status === 'fulfilled' ? vaccinationsResult.value : null;
+      const recordsPage = recordsResult.status === 'fulfilled' ? recordsResult.value : null;
 
       setState({
         appointments: appointmentsPage ? resolvePageItems(appointmentsPage) : [],
         vaccinations: vaccinationsPage ? resolvePageItems(vaccinationsPage) : [],
         vaccinationTotal: vaccinationsPage ? resolveTotalItems(vaccinationsPage) : 0,
-        timeline: timelineResult.status === 'fulfilled' ? timelineResult.value : null,
+        records: recordsPage ? resolvePageItems(recordsPage) : [],
         appointmentsFailed: appointmentsResult.status === 'rejected',
         vaccinationsFailed: vaccinationsResult.status === 'rejected',
-        timelineFailed: timelineResult.status === 'rejected'
+        recordsFailed: recordsResult.status === 'rejected'
       });
       setErrors([
         appointmentsResult.status === 'rejected' ? resolveApiErrorMessage(appointmentsResult.reason, appointmentsError) : null,
         vaccinationsResult.status === 'rejected' ? resolveApiErrorMessage(vaccinationsResult.reason, vaccinationsError) : null,
-        timelineResult.status === 'rejected' ? resolveApiErrorMessage(timelineResult.reason, timelineError) : null
+        recordsResult.status === 'rejected' ? resolveApiErrorMessage(recordsResult.reason, recordsError) : null
       ].filter((message): message is string => Boolean(message)));
       setLoading(false);
     });
@@ -130,7 +132,7 @@ export function ClinicDashboard({ showSubnav = false }: { showSubnav?: boolean }
     return () => {
       active = false;
     };
-  }, [appointmentsError, canReadAppointments, canReadClinic, canReadMedicalRecords, canReadVaccinations, timelineError, vaccinationsError]);
+  }, [appointmentsError, canReadAppointments, canReadClinic, canReadMedicalRecords, canReadVaccinations, recordsError, vaccinationsError]);
 
   const clinicalAppointments = useMemo(
     () => state.appointments.filter((appointment) => (
@@ -213,7 +215,6 @@ export function ClinicDashboard({ showSubnav = false }: { showSubnav?: boolean }
       tone: 'text-[var(--ink)]'
     }
   ];
-  const events = state.timeline?.events ?? [];
 
   return (
     <div className={sharedPageStackClass}>
@@ -292,18 +293,20 @@ export function ClinicDashboard({ showSubnav = false }: { showSubnav?: boolean }
               {t.timeline.viewAll}
             </Link>
           </div>
-          {state.timelineFailed ? null : !loading && events.length === 0 ? (
+          {state.recordsFailed ? null : !loading && state.records.length === 0 ? (
             <p className="text-sm text-[var(--muted)]">{t.timeline.empty}</p>
           ) : (
             <ul className="divide-y divide-[color:var(--line-soft)]">
-              {events.map((event) => (
-                <li key={event.eventId} className="grid gap-1 py-2 text-sm sm:grid-cols-[7rem_8rem_minmax(0,1fr)] sm:gap-3">
-                  <span className="ui-mono text-xs text-[var(--ink-2)]">{formatDateForLocale(locale, event.occurredAt)}</span>
-                  <ClinicEventType type={event.eventType} />
+              {state.records.map((record) => (
+                <li key={record.id} className="grid gap-1 py-2 text-sm sm:grid-cols-[7rem_8rem_minmax(0,1fr)] sm:gap-3">
+                  <span className="ui-mono text-xs text-[var(--ink-2)]">{formatDateForLocale(locale, record.createdAt)}</span>
+                  <ClinicEventType type="MEDICAL_RECORD" />
                   <span className="min-w-0">
-                    <span className="font-medium text-[var(--ink)]">{event.petName ?? event.title}</span>
-                    {event.petName ? <span className="text-[var(--ink-2)]"> · {event.title}</span> : null}
-                    {event.summary ? <span className="block truncate text-xs text-[var(--muted)]">{event.summary}</span> : null}
+                    <Link href={petProfileHref(record.petId)} className="font-medium text-[var(--ink)] underline-offset-2 hover:underline">
+                      {record.petName ?? '-'}
+                    </Link>
+                    <span className="text-[var(--ink-2)]"> · {record.professionalName ?? '-'}</span>
+                    <span className="block truncate text-xs text-[var(--muted)]">{record.description}</span>
                   </span>
                 </li>
               ))}

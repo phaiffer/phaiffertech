@@ -2,23 +2,18 @@
 
 import { FormEvent, useMemo, useState } from 'react';
 import Link from 'next/link';
-import { BrandMark, PetMark } from '@/shared/components/brand-assets';
-import { resolveApiErrorMessage } from '@/shared/lib/api-error-message';
-import { authService } from '@/shared/services/auth-service';
-import {
-  buildLoginVisualContext,
-  publicPrimaryButtonClass,
-  sharedCompactTextClass,
-  sharedInputClass,
-  sharedInputLabelClass,
-  sharedPanelSurfaceClass
-} from '@/shared/components/public-visual-system';
-import { usePublicSite } from '@/shared/public/public-site-provider';
-import { getPublicSiteMessages } from '@/shared/public/public-site-messages';
+import { AuthScreen } from '@/modules/account/auth-screen';
+import { buildLoginVisualContext } from '@/shared/components/public-visual-system';
 import { useAppMessages } from '@/shared/i18n/app-i18n-provider';
+import { resolveApiErrorMessage } from '@/shared/lib/api-error-message';
+import { getPublicSiteMessages } from '@/shared/public/public-site-messages';
+import { usePublicSite } from '@/shared/public/public-site-provider';
+import { authService } from '@/shared/services/auth-service';
+import { FormInput } from '@/shared/ui/form-input';
 
 export default function ForgotPasswordPageClient() {
-  const copy = useAppMessages().screens.shell;
+  const screens = useAppMessages().screens;
+  const copy = screens.accountAccess;
   const { locale } = usePublicSite();
   const t = getPublicSiteMessages(locale).forgotPassword;
   const [tenantCode, setTenantCode] = useState('');
@@ -26,24 +21,8 @@ export default function ForgotPasswordPageClient() {
   const [email, setEmail] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState(false);
+  const [sentTo, setSentTo] = useState<string | null>(null);
   const visualContext = useMemo(() => buildLoginVisualContext(committedTenantCode), [committedTenantCode]);
-
-  function handleTenantCodeChange(value: string) {
-    setTenantCode(value);
-    setError(null);
-    setSuccess(false);
-  }
-
-  function commitTenantCodeVisual(value: string) {
-    setCommittedTenantCode(value.trim());
-  }
-
-  function handleEmailChange(value: string) {
-    setEmail(value);
-    setError(null);
-    setSuccess(false);
-  }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -51,11 +30,8 @@ export default function ForgotPasswordPageClient() {
     setSubmitting(true);
 
     try {
-      await authService.requestPasswordReset({
-        tenantCode,
-        email
-      });
-      setSuccess(true);
+      await authService.requestPasswordReset({ tenantCode, email });
+      setSentTo(email);
     } catch (err) {
       setError(resolveApiErrorMessage(err, t.errorFallback));
     } finally {
@@ -63,106 +39,78 @@ export default function ForgotPasswordPageClient() {
     }
   }
 
+  const backToLogin = (
+    <Link href="/login" className="text-sm font-medium text-[var(--ink)] underline-offset-2 hover:underline">
+      {t.backToLoginLabel}
+    </Link>
+  );
+
   return (
-    <div className="min-h-screen bg-background" style={visualContext.containerStyle}>
-      <main className="mx-auto flex min-h-screen w-full max-w-5xl items-center justify-center px-6 py-12">
-        <div className="w-full max-w-[420px]">
-          <Link href="/" className="mb-8 inline-flex items-center gap-3 text-foreground">
-            <PetMark className="h-14 w-14" />
-            <div>
-              <span className="block text-lg font-semibold tracking-tight">Gestão Pet</span>
-              <span className="mt-1 inline-flex items-center gap-1.5 text-[10px] font-medium uppercase tracking-[0.16em] text-slate-500">
-                <BrandMark
-                  priority
-                  className="h-4 w-4 rounded-[0.45rem] p-[0.08rem]"
-                  imageClassName="scale-[1.08]"
-                  style={visualContext.brandMarkStyle}
-                />
-                PhaifferTech
-              </span>
-              <span className="mt-1 block text-[11px] uppercase tracking-[0.18em] text-muted">{t.title}</span>
-            </div>
-          </Link>
+    <AuthScreen style={visualContext.containerStyle}>
+      {sentTo ? (
+        <>
+          <div>
+            <h1 className="text-2xl font-semibold text-[var(--ink)]">{copy.forgotSuccessTitle}</h1>
+            <p className="mt-1 text-sm text-[var(--ink-2)]">{copy.forgotSuccessDescription.replace('{email}', sentTo)}</p>
+          </div>
+          <button type="button" onClick={() => setSentTo(null)} className="ui-secondary-button">
+            {copy.forgotSendAgain}
+          </button>
+          <div>{backToLogin}</div>
+        </>
+      ) : (
+        <>
+          <div>
+            <h1 className="text-2xl font-semibold text-[var(--ink)]">{t.title}</h1>
+            <p className="mt-1 text-sm text-[var(--ink-2)]">{t.description}</p>
+          </div>
 
-          <section className={`${sharedPanelSurfaceClass} p-7 sm:p-8`} style={visualContext.cardStyle}>
-            <div className="mb-6">
-              <h1 className="text-2xl font-semibold tracking-tight text-foreground">{t.title}</h1>
-              <p className={`mt-2 ${sharedCompactTextClass}`}>{t.description}</p>
-            </div>
+          <form onSubmit={handleSubmit} autoComplete="off" className="space-y-4">
+            <FormInput
+              id="tenant-code"
+              name="tenantCode"
+              label={t.tenantCodeLabel}
+              value={tenantCode}
+              onChange={(value) => {
+                setTenantCode(value);
+                setError(null);
+              }}
+              onBlur={(event) => setCommittedTenantCode(event.target.value.trim())}
+              autoComplete="section-pet organization"
+              autoCapitalize="none"
+              autoCorrect="off"
+              spellCheck={false}
+              data-lpignore="true"
+              data-1p-ignore="true"
+              placeholder="tenant-code"
+              disabled={submitting}
+              required
+            />
+            <FormInput
+              id="email"
+              name="email"
+              type="email"
+              label={t.emailLabel}
+              value={email}
+              onChange={(value) => {
+                setEmail(value);
+                setError(null);
+              }}
+              placeholder={screens.shell.emailPlaceholder}
+              disabled={submitting}
+              required
+            />
 
-            <form onSubmit={handleSubmit} autoComplete="off" className="space-y-4">
-              <div>
-                <label htmlFor="tenant-code" className={sharedInputLabelClass}>
-                  {t.tenantCodeLabel}
-                </label>
-                <input
-                  id="tenant-code"
-                  name="tenantCode"
-                  type="text"
-                  value={tenantCode}
-                  onChange={(event) => handleTenantCodeChange(event.target.value)}
-                  onBlur={(event) => commitTenantCodeVisual(event.target.value)}
-                  className={sharedInputClass}
-                  placeholder="tenant-code"
-                  autoComplete="section-pet organization"
-                  autoCapitalize="none"
-                  autoCorrect="off"
-                  spellCheck={false}
-                  data-lpignore="true"
-                  data-1p-ignore="true"
-                  disabled={submitting}
-                  required
-                />
-              </div>
+            {error ? <div role="alert" className="ui-notice-error">{error}</div> : null}
 
-              <div>
-                <label htmlFor="email" className={sharedInputLabelClass}>
-                  {t.emailLabel}
-                </label>
-                <input
-                  id="email"
-                  name="email"
-                  type="email"
-                  value={email}
-                  onChange={(event) => handleEmailChange(event.target.value)}
-                  className={sharedInputClass}
-                  placeholder={copy.emailPlaceholder}
-                  autoComplete="email"
-                  inputMode="email"
-                  autoCapitalize="none"
-                  autoCorrect="off"
-                  spellCheck={false}
-                  disabled={submitting}
-                  required
-                />
-              </div>
+            <button type="submit" disabled={submitting} className="ui-primary-button w-full">
+              {submitting ? t.loadingLabel : t.submitLabel}
+            </button>
+          </form>
 
-              {success ? <div className="ui-notice-info">{t.successNotice}</div> : null}
-
-              {error ? (
-                <div className="rounded-lg border border-destructive/30 bg-destructive-muted px-3 py-2.5 text-sm text-destructive">
-                  {error}
-                </div>
-              ) : null}
-
-              <button
-                type="submit"
-                disabled={submitting}
-                className={`${publicPrimaryButtonClass} w-full disabled:cursor-not-allowed disabled:opacity-50`}
-                style={{ backgroundImage: 'linear-gradient(135deg, var(--tenant-accent), var(--pet-teal))' }}
-              >
-                {submitting ? t.loadingLabel : t.submitLabel}
-              </button>
-            </form>
-
-            <div className="mt-5 text-sm text-muted">
-              <Link href="/login" className="transition-colors hover:text-foreground" style={{ color: 'var(--tenant-accent)' }}>
-                {t.backToLoginLabel}
-              </Link>
-            </div>
-          </section>
-        </div>
-      </main>
-    </div>
+          {backToLogin}
+        </>
+      )}
+    </AuthScreen>
   );
 }
